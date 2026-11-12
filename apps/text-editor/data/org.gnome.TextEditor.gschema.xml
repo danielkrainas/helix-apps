@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the keys Helix Text Editor uses. Install only
+     when the schema is not already provided by the system. -->
+<schemalist>
+  <enum id="org.gnome.TextEditor.IndentStyle">
+    <value value="1" nick="tab"/>
+    <value value="2" nick="space"/>
+  </enum>
+  <enum id="org.gnome.TextEditor.StyleVariant">
+    <value value="0" nick="follow"/>
+    <value value="1" nick="light"/>
+    <value value="2" nick="dark"/>
+  </enum>
+  <schema path="/org/gnome/TextEditor/" id="org.gnome.TextEditor">
+    <key type="b" name="show-line-numbers"><default>false</default><summary>Show line numbers</summary></key>
+    <key type="b" name="wrap-text"><default>true</default><summary>Wrap text</summary></key>
+    <key type="u" name="tab-width"><range min="1" max="32"/><default>8</default><summary>Tab width</summary></key>
+    <key name="indent-style" enum="org.gnome.TextEditor.IndentStyle"><default>'tab'</default><summary>Indentation style</summary></key>
+    <key type="b" name="auto-indent"><default>true</default><summary>Automatic indentation</summary></key>
+    <key type="b" name="highlight-current-line"><default>false</default><summary>Highlight current line</summary></key>
+    <key type="b" name="use-system-font"><default>true</default><summary>Use the system monospace font</summary></key>
+    <key type="s" name="custom-font"><default>'Monospace 11'</default><summary>Custom font</summary></key>
+    <key name="style-variant" enum="org.gnome.TextEditor.StyleVariant"><default>'follow'</default><summary>Style variant</summary></key>
+    <key type="b" name="restore-session"><default>true</default><summary>Restore session</summary></key>
+    <key type="b" name="show-right-margin"><default>false</default><summary>Show right margin</summary></key>
+    <key type="u" name="right-margin-position"><range min="1" max="1000"/><default>80</default><summary>Right margin position</summary></key>
+  </schema>
+</schemalist>

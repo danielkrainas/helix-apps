@@ -1,0 +1,22 @@
+[package]
+name = "helix-text-editor"
+description = "Text editor for the Helix desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "helix-text-editor"
+path = "src/main.rs"
+
+[dependencies]
+gtk.workspace = true
+adw.workspace = true
+helix-app-common.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+encoding_rs = "0.8"
+chardetng = "0.1"
+regex = "1"

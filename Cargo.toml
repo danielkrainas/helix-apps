@@ -11,6 +11,7 @@ members = [
     "apps/fonts",
     "apps/image-viewer",
     "apps/clocks",
+    "apps/text-editor",
 ]
 resolver = "2"
 
