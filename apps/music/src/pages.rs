@@ -1,0 +1,999 @@
+//! Views and pages: albums grid, artists, songs, playlists, search, album /
+//! artist / playlist pages, Now Playing and preferences.
+
+use adw::prelude::*;
+use gtk::{gio, glib};
+use std::path::{Path, PathBuf};
+use std::rc::Rc;
+
+use crate::model::{self, format_duration, format_total};
+use crate::playlist::{self, EntryInfo, Playlist, Smart};
+use crate::ui::{music_dir, set_heart_icon, sync_heart, toast, App, RowHandle};
+
+/// Which playlist a page shows.
+#[derive(Clone, Debug, PartialEq)]
+pub enum PlRef {
+    Smart(Smart),
+    User(PathBuf),
+}
+
+/// Where a track row lives (decides its menu and activation).
+#[derive(Clone)]
+pub enum RowCtx {
+    Plain,
+    Playlist(PathBuf),
+    Queue,
+}
+
+fn label(text: &str, classes: &[&str]) -> gtk::Label {
+    gtk::Label::builder().label(text).xalign(0.0).ellipsize(gtk::pango::EllipsizeMode::End).css_classes(classes.to_vec()).build()
+}
+
+fn scrolled(child: &impl IsA<gtk::Widget>, max: i32) -> gtk::ScrolledWindow {
+    let clamp = adw::Clamp::builder()
+        .maximum_size(max)
+        .child(child)
+        .margin_top(18)
+        .margin_bottom(24)
+        .margin_start(12)
+        .margin_end(12)
+        .build();
+    gtk::ScrolledWindow::builder().child(&clamp).hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).build()
+}
+
+fn page(title: &str, tag: Option<&str>, content: &impl IsA<gtk::Widget>) -> adw::NavigationPage {
+    let tv = adw::ToolbarView::new();
+    tv.add_top_bar(&adw::HeaderBar::new());
+    tv.set_content(Some(content));
+    let p = adw::NavigationPage::builder().title(title).child(&tv).build();
+    if let Some(t) = tag {
+        p.set_tag(Some(t));
+    }
+    p
+}
+
+fn pill(label: &str, icon: &str, suggested: bool) -> gtk::Button {
+    let content = adw::ButtonContent::builder().label(label).icon_name(icon).build();
+    let b = gtk::Button::builder().child(&content).css_classes(["pill"]).build();
+    if suggested {
+        b.add_css_class("suggested-action");
+    }
+    b
+}
+
+fn boxed(i: usize) -> glib::BoxedAnyObject {
+    glib::BoxedAnyObject::new(i)
+}
+
+fn unboxed(o: &glib::Object) -> usize {
+    o.downcast_ref::<glib::BoxedAnyObject>().map(|b| *b.borrow::<usize>()).unwrap_or(0)
+}
+
+impl App {
+    pub fn build_views(self: &Rc<Self>) {
+        // Albums grid.
+        let factory = gtk::SignalListItemFactory::new();
+        factory.connect_setup(|_, item| {
+            let item = item.downcast_ref::<gtk::ListItem>().unwrap();
+            let img = gtk::Image::builder().pixel_size(160).css_classes(["hm-cover"]).build();
+            let title = label("", &["heading"]);
+            let artist = label("", &["dim-label"]);
+            title.set_max_width_chars(18);
+            artist.set_max_width_chars(18);
+            let b = gtk::Box::new(gtk::Orientation::Vertical, 4);
+            b.add_css_class("hm-tile");
+            b.append(&img);
+            b.append(&title);
+            b.append(&artist);
+            item.set_child(Some(&b));
+        });
+        let w = Rc::downgrade(self);
+        factory.connect_bind(move |_, item| {
+            let Some(app) = w.upgrade() else { return };
+            let item = item.downcast_ref::<gtk::ListItem>().unwrap();
+            let ai = unboxed(&item.item().unwrap());
+            let lib = app.lib();
+            let Some(album) = lib.albums.get(ai) else { return };
+            let b = item.child().and_downcast::<gtk::Box>().unwrap();
+            let img = b.first_child().and_downcast::<gtk::Image>().unwrap();
+            let title = img.next_sibling().and_downcast::<gtk::Label>().unwrap();
+            let artist = title.next_sibling().and_downcast::<gtk::Label>().unwrap();
+            app.set_cover(&img, album.cover.as_deref());
+            title.set_label(&album.title);
+            artist.set_label(&album.artist);
+            b.set_tooltip_text(Some(&format!("{} — {}", album.title, album.artist)));
+        });
+        let grid = gtk::GridView::builder()
+            .model(&gtk::NoSelection::new(Some(self.albums_model.clone())))
+            .factory(&factory)
+            .single_click_activate(true)
+            .max_columns(12)
+            .min_columns(1)
+            .build();
+        let w = Rc::downgrade(self);
+        grid.connect_activate(move |g, pos| {
+            if let (Some(app), Some(obj)) = (w.upgrade(), g.model().and_then(|m| m.item(pos))) {
+                app.show_album(unboxed(&obj));
+            }
+        });
+        let albums_scroll = gtk::ScrolledWindow::builder().child(&grid).hscrollbar_policy(gtk::PolicyType::Never).build();
+        self.stack.add_titled_with_icon(&albums_scroll, Some("albums"), "Albums", "media-optical-cd-audio-symbolic");
+
+        // Artists.
+        let w = Rc::downgrade(self);
+        self.artists_list.connect_row_activated(move |_, row| {
+            if let Some(app) = w.upgrade() {
+                app.show_artist(row.index() as usize);
+            }
+        });
+        self.stack.add_titled_with_icon(&scrolled(&self.artists_list, 700), Some("artists"), "Artists", "system-users-symbolic");
+
+        // Songs.
+        let songs = self.build_songs_view();
+        self.stack.add_titled_with_icon(&songs, Some("songs"), "Songs", "emblem-music-symbolic");
+
+        // Playlists.
+        let pl_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        let new_btn = gtk::Button::builder().label("New Playlist…").action_name("win.new-playlist").halign(gtk::Align::End).css_classes(["pill"]).build();
+        pl_box.append(&new_btn);
+        pl_box.append(&self.playlists_list);
+        let w = Rc::downgrade(self);
+        self.playlists_list.connect_row_activated(move |_, row| {
+            let Some(app) = w.upgrade() else { return };
+            let i = row.index() as usize;
+            let r = if i < Smart::ALL.len() {
+                PlRef::Smart(Smart::ALL[i])
+            } else {
+                match app.playlists.borrow().get(i - Smart::ALL.len()) {
+                    Some(p) => PlRef::User(p.file.clone()),
+                    None => return,
+                }
+            };
+            app.show_playlist(r);
+        });
+        self.stack.add_titled_with_icon(&scrolled(&pl_box, 700), Some("playlists"), "Playlists", "view-list-symbolic");
+
+        let empty_btn = gtk::Button::builder().label("Add Folder…").action_name("win.add-folder").halign(gtk::Align::Center).css_classes(["pill", "suggested-action"]).build();
+        self.empty_page.set_child(Some(&empty_btn));
+
+        let a = gio::SimpleAction::new("queue-remove", Some(glib::VariantTy::UINT32));
+        let w = Rc::downgrade(self);
+        a.connect_activate(move |_, v| {
+            if let (Some(app), Some(i)) = (w.upgrade(), v.and_then(|v| v.get::<u32>())) {
+                let was_current = app.queue.borrow_mut().remove(i as usize);
+                if was_current {
+                    let playing = app.playing.get();
+                    if app.queue.borrow().is_empty() {
+                        app.stop();
+                    } else {
+                        app.start_current(playing);
+                    }
+                }
+                app.update_next_uri();
+                app.update_now_playing();
+            }
+        });
+        self.window.add_action(&a);
+    }
+
+    fn build_songs_view(self: &Rc<Self>) -> gtk::ScrolledWindow {
+        let cv = gtk::ColumnView::builder().single_click_activate(true).show_row_separators(false).css_classes(["data-table"]).build();
+        let w = Rc::downgrade(self);
+        let text_col = |title: &str, expand: bool, get: fn(&model::Track, &App) -> String| {
+            let f = gtk::SignalListItemFactory::new();
+            f.connect_setup(|_, item| {
+                let item = item.downcast_ref::<gtk::ListItem>().unwrap();
+                item.set_child(Some(&label("", &[])));
+            });
+            let w = w.clone();
+            f.connect_bind(move |_, item| {
+                let Some(app) = w.upgrade() else { return };
+                let item = item.downcast_ref::<gtk::ListItem>().unwrap();
+                let i = unboxed(&item.item().unwrap());
+                let lib = app.lib();
+                if let (Some(t), Some(l)) = (lib.tracks.get(i), item.child().and_downcast::<gtk::Label>()) {
+                    l.set_label(&get(t, &app));
+                }
+            });
+            gtk::ColumnViewColumn::builder().title(title).factory(&f).expand(expand).resizable(true).build()
+        };
+        let sorter = |key: fn(&model::Track, &App) -> SortKey| {
+            let w = w.clone();
+            gtk::CustomSorter::new(move |a, b| {
+                let Some(app) = w.upgrade() else { return gtk::Ordering::Equal };
+                let lib = app.lib();
+                let (ta, tb) = (lib.tracks.get(unboxed(a)), lib.tracks.get(unboxed(b)));
+                match (ta, tb) {
+                    (Some(ta), Some(tb)) => key(ta, &app).cmp(&key(tb, &app)).into(),
+                    _ => gtk::Ordering::Equal,
+                }
+            })
+        };
+
+        // Playing indicator.
+        let f = gtk::SignalListItemFactory::new();
+        f.connect_setup(|_, item| {
+            let item = item.downcast_ref::<gtk::ListItem>().unwrap();
+            item.set_child(Some(&gtk::Image::new()));
+        });
+        let wi = w.clone();
+        f.connect_bind(move |_, item| {
+            let Some(app) = wi.upgrade() else { return };
+            let item = item.downcast_ref::<gtk::ListItem>().unwrap();
+            let i = unboxed(&item.item().unwrap());
+            let lib = app.lib();
+            let playing = lib.tracks.get(i).is_some_and(|t| app.queue.borrow().current() == Some(&t.path));
+            if let Some(img) = item.child().and_downcast::<gtk::Image>() {
+                img.set_icon_name(playing.then_some("media-playback-start-symbolic"));
+            }
+        });
+        cv.append_column(&gtk::ColumnViewColumn::builder().factory(&f).fixed_width(32).build());
+
+        let title = text_col("Title", true, |t, _| t.title.clone());
+        title.set_sorter(Some(&sorter(|t, _| SortKey::Text(model::sort_key(&t.title)))));
+        let artist = text_col("Artist", true, |t, _| t.artist_name().to_string());
+        artist.set_sorter(Some(&sorter(|t, _| SortKey::Text(model::sort_key(t.artist_name())))));
+        let album = text_col("Album", true, |t, _| t.album_name().to_string());
+        album.set_sorter(Some(&sorter(|t, _| SortKey::Text(model::sort_key(t.album_name())))));
+        let length = text_col("Length", false, |t, _| format_duration(t.duration_ms));
+        length.set_sorter(Some(&sorter(|t, _| SortKey::Num(t.duration_ms))));
+        let plays = text_col("Plays", false, |t, app| app.stats.borrow().plays(&t.path).to_string());
+        plays.set_sorter(Some(&sorter(|t, app| SortKey::Num(app.stats.borrow().plays(&t.path) as u64))));
+        for c in [&title, &artist, &album, &length, &plays] {
+            cv.append_column(c);
+        }
+
+        // Favourite toggle.
+        let f = gtk::SignalListItemFactory::new();
+        let ws = w.clone();
+        f.connect_setup(move |_, item| {
+            let item = item.downcast_ref::<gtk::ListItem>().unwrap();
+            let heart = gtk::ToggleButton::builder().icon_name("non-starred-symbolic").css_classes(["flat"]).build();
+            let ws = ws.clone();
+            let it = item.downgrade();
+            heart.connect_toggled(move |h| {
+                set_heart_icon(h);
+                let (Some(app), Some(item)) = (ws.upgrade(), it.upgrade()) else { return };
+                let Some(obj) = item.item() else { return };
+                let lib = app.lib();
+                if let Some(t) = lib.tracks.get(unboxed(&obj)) {
+                    app.set_favorite(&t.path, h.is_active());
+                }
+            });
+            item.set_child(Some(&heart));
+        });
+        let wb = w.clone();
+        f.connect_bind(move |_, item| {
+            let Some(app) = wb.upgrade() else { return };
+            let item = item.downcast_ref::<gtk::ListItem>().unwrap();
+            let i = unboxed(&item.item().unwrap());
+            let fav = app.lib().tracks.get(i).is_some_and(|t| app.stats.borrow().is_favorite(&t.path));
+            if let Some(h) = item.child().and_downcast::<gtk::ToggleButton>() {
+                sync_heart(&h, fav);
+            }
+        });
+        cv.append_column(&gtk::ColumnViewColumn::builder().factory(&f).fixed_width(48).build());
+
+        self.songs_sorted.set_sorter(cv.sorter().as_ref());
+        cv.set_model(Some(&gtk::NoSelection::new(Some(self.songs_sorted.clone()))));
+        let w = Rc::downgrade(self);
+        cv.connect_activate(move |_, pos| {
+            let Some(app) = w.upgrade() else { return };
+            let model = &app.songs_sorted;
+            let order: Vec<usize> = (0..model.n_items()).filter_map(|i| model.item(i)).map(|o| unboxed(&o)).collect();
+            app.play_tracks(&order, pos as usize, None);
+        });
+        gtk::ScrolledWindow::builder().child(&cv).hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).build()
+    }
+
+    /// Rebuilds all library views from the current library.
+    pub fn refresh_library_views(self: &Rc<Self>) {
+        let lib = self.lib();
+        let albums: Vec<glib::BoxedAnyObject> = (0..lib.albums.len()).map(boxed).collect();
+        self.albums_model.splice(0, self.albums_model.n_items(), &albums);
+        let songs: Vec<glib::BoxedAnyObject> = lib.all_tracks_by_album().into_iter().map(boxed).collect();
+        self.songs_model.splice(0, self.songs_model.n_items(), &songs);
+
+        self.artists_list.remove_all();
+        for a in &lib.artists {
+            let n = a.albums.len();
+            let row = adw::ActionRow::builder()
+                .title(glib::markup_escape_text(&a.name))
+                .subtitle(if n == 1 { "1 album".to_string() } else { format!("{n} albums") })
+                .activatable(true)
+                .build();
+            row.add_prefix(&gtk::Image::from_icon_name("avatar-default-symbolic"));
+            row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+            self.artists_list.append(&row);
+        }
+        self.refresh_playlists_list();
+        self.update_main_stack();
+        if self.search_bar.is_search_mode() {
+            self.show_search(&self.search_entry.text());
+        }
+        // Pages showing stale indices are closed.
+        if self.nav.visible_page().and_then(|p| p.tag()).as_deref() != Some("now-playing") {
+            self.nav.pop_to_tag("root");
+        }
+        self.update_now_playing();
+    }
+
+    pub fn refresh_playlists_list(&self) {
+        self.playlists_list.remove_all();
+        let lib = self.lib();
+        let stats = self.stats.borrow();
+        for s in Smart::ALL {
+            let n = s.tracks(&lib, &stats).len();
+            let row = adw::ActionRow::builder().title(s.title()).subtitle(songs_count(n)).activatable(true).build();
+            row.add_prefix(&gtk::Image::from_icon_name(s.icon()));
+            row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+            self.playlists_list.append(&row);
+        }
+        for p in self.playlists.borrow().iter() {
+            let row = adw::ActionRow::builder()
+                .title(glib::markup_escape_text(&p.name))
+                .subtitle(songs_count(p.entries.len()))
+                .activatable(true)
+                .build();
+            row.add_prefix(&gtk::Image::from_icon_name("view-list-symbolic"));
+            row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+            self.playlists_list.append(&row);
+        }
+    }
+
+    // ----- track rows ------------------------------------------------------
+
+    pub fn track_row(self: &Rc<Self>, idx: usize, number: &str, show_artist: bool, ctx: &RowCtx, pos: usize) -> gtk::ListBoxRow {
+        let lib = self.lib();
+        let t = &lib.tracks[idx];
+        let num = gtk::Label::builder().label(number).css_classes(["dim-label", "numeric", "hm-num"]).build();
+        let indicator = gtk::Stack::new();
+        indicator.add_named(&num, Some("number"));
+        indicator.add_named(&gtk::Image::from_icon_name("media-playback-start-symbolic"), Some("playing"));
+        let text = gtk::Box::new(gtk::Orientation::Vertical, 2);
+        text.set_hexpand(true);
+        text.set_valign(gtk::Align::Center);
+        text.append(&label(&t.title, &[]));
+        if show_artist {
+            text.append(&label(t.artist_name(), &["dim-label", "caption"]));
+        }
+        let dur = gtk::Label::builder().label(format_duration(t.duration_ms)).css_classes(["dim-label", "numeric"]).build();
+        let heart = gtk::ToggleButton::builder().valign(gtk::Align::Center).css_classes(["flat"]).build();
+        sync_heart(&heart, self.stats.borrow().is_favorite(&t.path));
+        let path = t.path.clone();
+        let w = Rc::downgrade(self);
+        heart.connect_toggled(move |h| {
+            set_heart_icon(h);
+            if let Some(app) = w.upgrade() {
+                app.set_favorite(&path, h.is_active());
+            }
+        });
+
+        let menu = gio::Menu::new();
+        let item = |label: &str, action: &str, target: glib::Variant| {
+            let it = gio::MenuItem::new(Some(label), None);
+            it.set_action_and_target_value(Some(action), Some(&target));
+            it
+        };
+        let ti = (idx as u32).to_variant();
+        let s1 = gio::Menu::new();
+        if !matches!(ctx, RowCtx::Queue) {
+            s1.append_item(&item("Play Next", "win.play-next", ti.clone()));
+            s1.append_item(&item("Add to Queue", "win.queue-add", ti.clone()));
+        }
+        s1.append_item(&item("Add to Playlist…", "win.add-to-playlist", ti.clone()));
+        s1.append_item(&item("Go to Album", "win.go-album", ti));
+        menu.append_section(None, &s1);
+        match ctx {
+            RowCtx::Playlist(file) => {
+                let target = (file.to_string_lossy().into_owned(), pos as u32).to_variant();
+                menu.append_item(&item("Remove from Playlist", "win.playlist-remove", target));
+            }
+            RowCtx::Queue => menu.append_item(&item("Remove from Queue", "win.queue-remove", (pos as u32).to_variant())),
+            RowCtx::Plain => {}
+        }
+        let more = gtk::MenuButton::builder().icon_name("view-more-symbolic").valign(gtk::Align::Center).css_classes(["flat"]).tooltip_text("More").build();
+        more.set_create_popup_func(move |mb| {
+            if mb.menu_model().is_none() {
+                mb.set_menu_model(Some(&menu));
+            }
+        });
+
+        let b = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+        b.set_margin_top(6);
+        b.set_margin_bottom(6);
+        b.set_margin_start(12);
+        b.set_margin_end(6);
+        b.append(&indicator);
+        b.append(&text);
+        b.append(&dur);
+        b.append(&heart);
+        b.append(&more);
+        let row = gtk::ListBoxRow::builder().child(&b).activatable(true).build();
+        let playing = self.queue.borrow().current() == Some(&t.path);
+        indicator.set_visible_child_name(if playing { "playing" } else { "number" });
+        self.register_row(RowHandle { path: t.path.clone(), indicator: indicator.downgrade(), heart: heart.downgrade() });
+        row
+    }
+
+    /// A boxed list of track rows; activating one plays `tracks` from there.
+    pub fn track_list(self: &Rc<Self>, tracks: &[usize], numbers: impl Fn(usize, usize) -> String, show_artist: bool, ctx: RowCtx, positions: Option<&[usize]>, play_from: Option<(Vec<usize>, usize)>) -> gtk::ListBox {
+        let list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).build();
+        for (n, &t) in tracks.iter().enumerate() {
+            let pos = positions.map_or(n, |p| p[n]);
+            list.append(&self.track_row(t, &numbers(n, t), show_artist, &ctx, pos));
+        }
+        let (tracks, offset) = play_from.unwrap_or_else(|| (tracks.to_vec(), 0));
+        let w = Rc::downgrade(self);
+        list.connect_row_activated(move |_, row| {
+            if let Some(app) = w.upgrade() {
+                app.play_tracks(&tracks, offset + row.index() as usize, None);
+            }
+        });
+        list
+    }
+
+    fn header_block(self: &Rc<Self>, cover: Option<&str>, title: &str, subtitle: &str, detail: &str, tracks: Vec<usize>) -> (gtk::Box, gtk::Box) {
+        let img = gtk::Image::builder().pixel_size(160).css_classes(["hm-cover"]).build();
+        self.set_cover(&img, cover);
+        let info = gtk::Box::new(gtk::Orientation::Vertical, 6);
+        info.set_valign(gtk::Align::Center);
+        let t = label(title, &["title-1"]);
+        t.set_wrap(true);
+        t.set_ellipsize(gtk::pango::EllipsizeMode::None);
+        info.append(&t);
+        if !subtitle.is_empty() {
+            info.append(&label(subtitle, &["title-4"]));
+        }
+        info.append(&label(detail, &["dim-label"]));
+        let buttons = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        buttons.set_margin_top(6);
+        let play = pill("Play", "media-playback-start-symbolic", true);
+        let shuffle = pill("Shuffle", "media-playlist-shuffle-symbolic", false);
+        play.set_sensitive(!tracks.is_empty());
+        shuffle.set_sensitive(!tracks.is_empty());
+        let (w, t1) = (Rc::downgrade(self), tracks.clone());
+        play.connect_clicked(move |_| {
+            if let Some(app) = w.upgrade() {
+                app.play_tracks(&t1, 0, Some(false));
+            }
+        });
+        let w = Rc::downgrade(self);
+        shuffle.connect_clicked(move |_| {
+            if let Some(app) = w.upgrade() {
+                app.play_tracks(&tracks, 0, Some(true));
+            }
+        });
+        buttons.append(&play);
+        buttons.append(&shuffle);
+        info.append(&buttons);
+        let header = gtk::Box::new(gtk::Orientation::Horizontal, 18);
+        header.append(&img);
+        header.append(&info);
+        (header, buttons)
+    }
+
+    // ----- pages -------------------------------------------------------------
+
+    pub fn show_album(self: &Rc<Self>, ai: usize) {
+        let lib = self.lib();
+        let Some(album) = lib.albums.get(ai) else { return };
+        let mut detail = Vec::new();
+        if let Some(y) = album.year {
+            detail.push(y.to_string());
+        }
+        detail.push(songs_count(album.tracks.len()));
+        detail.push(format_total(album.duration_ms));
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        let (header, _) = self.header_block(album.cover.as_deref(), &album.title, &album.artist, &detail.join(" · "), album.tracks.clone());
+        content.append(&header);
+
+        let discs: Vec<u32> = {
+            let mut d: Vec<u32> = album.tracks.iter().map(|&t| lib.tracks[t].disc.unwrap_or(1)).collect();
+            d.dedup();
+            d
+        };
+        let mut offset = 0;
+        for disc in &discs {
+            let part: Vec<usize> = album.tracks.iter().copied().filter(|&t| lib.tracks[t].disc.unwrap_or(1) == *disc).collect();
+            if discs.len() > 1 {
+                content.append(&label(&format!("Disc {disc}"), &["heading", "hm-disc"]));
+            }
+            let lib2 = lib.clone();
+            let list = self.track_list(
+                &part,
+                move |n, t| lib2.tracks[t].track.map_or_else(|| (n + 1).to_string(), |x| x.to_string()),
+                album.various || album.tracks.iter().any(|&t| lib.tracks[t].artist_name() != album.artist),
+                RowCtx::Plain,
+                None,
+                // Activation plays the whole album from this disc's offset.
+                Some((album.tracks.clone(), offset)),
+            );
+            offset += part.len();
+            content.append(&list);
+        }
+        self.nav.push(&page(&album.title, None, &scrolled(&content, 800)));
+    }
+
+    pub fn show_artist(self: &Rc<Self>, ar: usize) {
+        let lib = self.lib();
+        let Some(artist) = lib.artists.get(ar) else { return };
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        let all: Vec<usize> = artist.albums.iter().flat_map(|&a| lib.artist_tracks_in_album(&artist.name, a)).collect();
+        let total: u64 = all.iter().map(|&t| lib.tracks[t].duration_ms).sum();
+        let first_cover = artist.albums.iter().find_map(|&a| lib.albums[a].cover.clone());
+        let (header, _) = self.header_block(
+            first_cover.as_deref(),
+            &artist.name,
+            "",
+            &format!("{} · {} · {}", if artist.albums.len() == 1 { "1 album".into() } else { format!("{} albums", artist.albums.len()) }, songs_count(all.len()), format_total(total)),
+            all,
+        );
+        content.append(&header);
+        for &ai in &artist.albums {
+            let album = &lib.albums[ai];
+            let tracks = lib.artist_tracks_in_album(&artist.name, ai);
+            let img = gtk::Image::builder().pixel_size(48).css_classes(["hm-cover"]).build();
+            self.set_cover(&img, album.cover.as_deref());
+            let text = gtk::Box::new(gtk::Orientation::Vertical, 2);
+            text.set_valign(gtk::Align::Center);
+            text.append(&label(&album.title, &["heading"]));
+            text.append(&label(&album.year.map(|y| y.to_string()).unwrap_or_default(), &["dim-label", "caption"]));
+            let hb = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+            hb.append(&img);
+            hb.append(&text);
+            let btn = gtk::Button::builder().child(&hb).css_classes(["flat"]).halign(gtk::Align::Start).margin_top(12).build();
+            let w = Rc::downgrade(self);
+            btn.connect_clicked(move |_| {
+                if let Some(app) = w.upgrade() {
+                    app.show_album(ai);
+                }
+            });
+            content.append(&btn);
+            let lib2 = lib.clone();
+            content.append(&self.track_list(
+                &tracks,
+                move |n, t| lib2.tracks[t].track.map_or_else(|| (n + 1).to_string(), |x| x.to_string()),
+                album.various,
+                RowCtx::Plain,
+                None,
+                None,
+            ));
+        }
+        self.nav.push(&page(&artist.name, None, &scrolled(&content, 800)));
+    }
+
+    pub fn show_playlist(self: &Rc<Self>, r: PlRef) {
+        let title = match &r {
+            PlRef::Smart(s) => s.title().to_string(),
+            PlRef::User(f) => self.playlists.borrow().iter().find(|p| &p.file == f).map(|p| p.name.clone()).unwrap_or_default(),
+        };
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        *self.playlist_view.borrow_mut() = Some((content.downgrade(), r.clone()));
+        self.fill_playlist(&content, &r);
+        let p = page(&title, Some("playlist"), &scrolled(&content, 800));
+        self.nav.push(&p);
+    }
+
+    fn fill_playlist(self: &Rc<Self>, content: &gtk::Box, r: &PlRef) {
+        while let Some(c) = content.first_child() {
+            content.remove(&c);
+        }
+        let lib = self.lib();
+        let (name, tracks, positions, ctx) = match r {
+            PlRef::Smart(s) => {
+                let t = s.tracks(&lib, &self.stats.borrow());
+                let n = t.len();
+                (s.title().to_string(), t, (0..n).collect::<Vec<_>>(), RowCtx::Plain)
+            }
+            PlRef::User(file) => {
+                let pls = self.playlists.borrow();
+                let Some(pl) = pls.iter().find(|p| &p.file == file) else { return };
+                let mut tracks = Vec::new();
+                let mut positions = Vec::new();
+                for (i, e) in pl.entries.iter().enumerate() {
+                    if let Some(t) = lib.index_of(e) {
+                        tracks.push(t);
+                        positions.push(i);
+                    }
+                }
+                (pl.name.clone(), tracks, positions, RowCtx::Playlist(file.clone()))
+            }
+        };
+        let total: u64 = tracks.iter().map(|&t| lib.tracks[t].duration_ms).sum();
+        let cover = tracks.iter().find_map(|&t| lib.tracks[t].cover.clone());
+        let (header, buttons) = self.header_block(cover.as_deref(), &name, "", &format!("{} · {}", songs_count(tracks.len()), format_total(total)), tracks.clone());
+        if let PlRef::User(file) = r {
+            let rename = gtk::Button::builder().icon_name("document-edit-symbolic").tooltip_text("Rename Playlist").css_classes(["circular"]).build();
+            let delete = gtk::Button::builder().icon_name("user-trash-symbolic").tooltip_text("Delete Playlist").css_classes(["circular", "destructive-action"]).build();
+            let (w, f) = (Rc::downgrade(self), file.clone());
+            rename.connect_clicked(move |_| {
+                if let Some(app) = w.upgrade() {
+                    app.new_playlist_dialog(Some(f.clone()));
+                }
+            });
+            let (w, f) = (Rc::downgrade(self), file.clone());
+            delete.connect_clicked(move |_| {
+                if let Some(app) = w.upgrade() {
+                    app.delete_playlist_dialog(&f);
+                }
+            });
+            buttons.append(&rename);
+            buttons.append(&delete);
+        }
+        content.append(&header);
+        if tracks.is_empty() {
+            let empty = adw::StatusPage::builder().icon_name("view-list-symbolic").title("No Songs").build();
+            empty.set_description(Some(match r {
+                PlRef::User(_) => "Add songs with “Add to Playlist…” in a song’s menu.",
+                PlRef::Smart(Smart::Favorites) => "Mark songs as favorites with the star button.",
+                _ => "Songs will appear here as you listen.",
+            }));
+            content.append(&empty);
+        } else {
+            let show_numbers = matches!(r, PlRef::User(_));
+            content.append(&self.track_list(&tracks, move |n, _| if show_numbers { (n + 1).to_string() } else { String::new() }, true, ctx, Some(&positions), None));
+        }
+    }
+
+    pub fn refresh_playlist_view(self: &Rc<Self>) {
+        let cur = self.playlist_view.borrow().clone();
+        if let Some((w, r)) = cur {
+            if let Some(content) = w.upgrade() {
+                self.fill_playlist(&content, &r);
+            }
+        }
+        self.refresh_playlists_list();
+    }
+
+    pub fn show_now_playing(self: &Rc<Self>) {
+        if self.nav.visible_page().and_then(|p| p.tag()).as_deref() == Some("now-playing") {
+            return;
+        }
+        if self.nav.find_page("now-playing").is_some() {
+            self.nav.pop_to_tag("now-playing");
+            return;
+        }
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        let img = gtk::Image::builder().pixel_size(256).css_classes(["hm-cover"]).halign(gtk::Align::Center).build();
+        let title = gtk::Label::builder().css_classes(["title-2"]).wrap(true).justify(gtk::Justification::Center).build();
+        let sub = gtk::Label::builder().css_classes(["dim-label"]).wrap(true).justify(gtk::Justification::Center).build();
+        content.append(&img);
+        content.append(&title);
+        content.append(&sub);
+        content.append(&label("Queue", &["heading", "hm-disc"]));
+        let list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).build();
+        content.append(&list);
+        let w = Rc::downgrade(self);
+        list.connect_row_activated(move |_, row| {
+            let Some(app) = w.upgrade() else { return };
+            let idx = row.widget_name().parse::<usize>().ok();
+            if let Some(i) = idx {
+                app.queue.borrow_mut().jump(i);
+                app.start_current(true);
+            }
+        });
+        // The header labels live in the list's parent; refresh_queue_view
+        // reaches them through these widget names.
+        img.set_widget_name("np-cover");
+        title.set_widget_name("np-title");
+        sub.set_widget_name("np-sub");
+        *self.queue_view.borrow_mut() = Some(list.downgrade());
+        self.nav.push(&page("Now Playing", Some("now-playing"), &scrolled(&content, 700)));
+        self.refresh_queue_view();
+    }
+
+    pub fn refresh_queue_view(self: &Rc<Self>) {
+        let Some(list) = self.queue_view.borrow().as_ref().and_then(|w| w.upgrade()) else { return };
+        let Some(content) = list.parent().and_downcast::<gtk::Box>() else { return };
+        let track = self.current_track();
+        let mut child = content.first_child();
+        while let Some(c) = child {
+            match c.widget_name().as_str() {
+                "np-cover" => {
+                    if let Some(img) = c.downcast_ref::<gtk::Image>() {
+                        self.set_cover(img, track.as_ref().and_then(|t| t.cover.as_deref()));
+                    }
+                }
+                "np-title" => {
+                    if let Some(l) = c.downcast_ref::<gtk::Label>() {
+                        l.set_label(track.as_ref().map_or("Nothing Playing", |t| t.title.as_str()));
+                    }
+                }
+                "np-sub" => {
+                    if let Some(l) = c.downcast_ref::<gtk::Label>() {
+                        l.set_label(&track.as_ref().map(|t| format!("{} — {}", t.artist_name(), t.album_name())).unwrap_or_default());
+                    }
+                }
+                _ => {}
+            }
+            child = c.next_sibling();
+        }
+        list.remove_all();
+        let lib = self.lib();
+        let order: Vec<(usize, PathBuf)> = self.queue.borrow().in_play_order().into_iter().map(|(i, p)| (i, p.clone())).collect();
+        for (n, (item_idx, path)) in order.iter().enumerate().take(500) {
+            let Some(t) = lib.index_of(path) else { continue };
+            let row = self.track_row(t, &(n + 1).to_string(), true, &RowCtx::Queue, *item_idx);
+            row.set_widget_name(&item_idx.to_string());
+            list.append(&row);
+        }
+    }
+
+    pub fn show_search(self: &Rc<Self>, query: &str) {
+        let b = &self.search_box;
+        while let Some(c) = b.first_child() {
+            b.remove(&c);
+        }
+        let lib = self.lib();
+        let r = lib.search(query);
+        self.update_main_stack();
+        if query.trim().is_empty() {
+            return;
+        }
+        if r.is_empty() {
+            let s = adw::StatusPage::builder().icon_name("system-search-symbolic").title("No Results").description("Try a different search").build();
+            b.append(&s);
+            return;
+        }
+        if !r.albums.is_empty() {
+            b.append(&label("Albums", &["heading"]));
+            let list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).build();
+            for &ai in r.albums.iter().take(50) {
+                let a = &lib.albums[ai];
+                let row = adw::ActionRow::builder().title(glib::markup_escape_text(&a.title)).subtitle(glib::markup_escape_text(&a.artist)).activatable(true).build();
+                let img = gtk::Image::builder().pixel_size(40).css_classes(["hm-cover"]).build();
+                self.set_cover(&img, a.cover.as_deref());
+                row.add_prefix(&img);
+                list.append(&row);
+            }
+            let (w, albums) = (Rc::downgrade(self), r.albums.clone());
+            list.connect_row_activated(move |_, row| {
+                if let Some(app) = w.upgrade() {
+                    app.show_album(albums[row.index() as usize]);
+                }
+            });
+            b.append(&list);
+        }
+        if !r.artists.is_empty() {
+            b.append(&label("Artists", &["heading"]));
+            let list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).build();
+            for &ar in r.artists.iter().take(50) {
+                let row = adw::ActionRow::builder().title(glib::markup_escape_text(&lib.artists[ar].name)).activatable(true).build();
+                row.add_prefix(&gtk::Image::from_icon_name("avatar-default-symbolic"));
+                list.append(&row);
+            }
+            let (w, artists) = (Rc::downgrade(self), r.artists.clone());
+            list.connect_row_activated(move |_, row| {
+                if let Some(app) = w.upgrade() {
+                    app.show_artist(artists[row.index() as usize]);
+                }
+            });
+            b.append(&list);
+        }
+        if !r.tracks.is_empty() {
+            b.append(&label("Songs", &["heading"]));
+            let tracks: Vec<usize> = r.tracks.iter().copied().take(200).collect();
+            b.append(&self.track_list(&tracks, |_, _| String::new(), true, RowCtx::Plain, None, None));
+        }
+    }
+
+    // ----- playlist editing ----------------------------------------------------
+
+    fn entry_info(&self) -> impl Fn(&Path) -> Option<EntryInfo> {
+        let lib = self.lib();
+        move |p: &Path| {
+            lib.track_by_path(p).map(|t| EntryInfo { seconds: t.duration_ms / 1000, artist: t.artist_name().into(), title: t.title.clone() })
+        }
+    }
+
+    fn save_playlist(&self, pl: &Playlist) {
+        if let Err(e) = playlist::save(pl, self.entry_info()) {
+            self.toasts.add_toast(toast(&format!("Cannot save playlist: {e}")));
+        }
+    }
+
+    fn reload_playlists(self: &Rc<Self>) {
+        *self.playlists.borrow_mut() = playlist::load_all(&App::data_dir().join("playlists"));
+        self.refresh_playlist_view();
+    }
+
+    /// Creates a playlist (`rename == None`) or renames one.
+    pub fn new_playlist_dialog(self: &Rc<Self>, rename: Option<PathBuf>) {
+        self.playlist_name_dialog(rename, Vec::new());
+    }
+
+    fn playlist_name_dialog(self: &Rc<Self>, rename: Option<PathBuf>, add: Vec<usize>) {
+        let current = rename.as_ref().and_then(|f| self.playlists.borrow().iter().find(|p| &p.file == f).map(|p| p.name.clone()));
+        let dialog = adw::AlertDialog::new(Some(if rename.is_some() { "Rename Playlist" } else { "New Playlist" }), None);
+        let entry = gtk::Entry::builder().placeholder_text("Playlist Name").activates_default(true).text(current.unwrap_or_default()).build();
+        dialog.set_extra_child(Some(&entry));
+        dialog.add_response("cancel", "_Cancel");
+        let ok = if rename.is_some() { "_Rename" } else { "_Create" };
+        dialog.add_response("ok", ok);
+        dialog.set_response_appearance("ok", adw::ResponseAppearance::Suggested);
+        dialog.set_default_response(Some("ok"));
+        dialog.set_close_response("cancel");
+        dialog.set_response_enabled("ok", !entry.text().trim().is_empty());
+        let d = dialog.clone();
+        entry.connect_changed(move |e| d.set_response_enabled("ok", !e.text().trim().is_empty()));
+        let w = Rc::downgrade(self);
+        let entry2 = entry.clone();
+        dialog.connect_response(Some("ok"), move |_, _| {
+            let entry = &entry2;
+            let Some(app) = w.upgrade() else { return };
+            let name = entry.text().trim().to_string();
+            if name.is_empty() {
+                return;
+            }
+            let lib = app.lib();
+            match &rename {
+                Some(file) => {
+                    let found = app.playlists.borrow().iter().find(|p| &p.file == file).cloned();
+                    if let Some(mut pl) = found {
+                        pl.name = name.clone();
+                        app.save_playlist(&pl);
+                    }
+                    app.reload_playlists();
+                    if let Some(p) = app.nav.visible_page().filter(|p| p.tag().as_deref() == Some("playlist")) {
+                        p.set_title(&name);
+                    }
+                }
+                None => {
+                    let dir = App::data_dir().join("playlists");
+                    let _ = std::fs::create_dir_all(&dir);
+                    let pl = Playlist {
+                        file: playlist::new_file_for(&dir, &name),
+                        name,
+                        entries: add.iter().map(|&i| lib.tracks[i].path.clone()).collect(),
+                    };
+                    app.save_playlist(&pl);
+                    app.reload_playlists();
+                    if !add.is_empty() {
+                        app.toasts.add_toast(toast(&format!("Added to “{}”", pl.name)));
+                    }
+                }
+            }
+        });
+        dialog.present(Some(&self.window));
+        entry.grab_focus();
+    }
+
+    pub fn add_to_playlist_dialog(self: &Rc<Self>, tracks: Vec<usize>) {
+        let dialog = adw::AlertDialog::new(Some("Add to Playlist"), None);
+        let list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).build();
+        let new_row = adw::ActionRow::builder().title("New Playlist…").activatable(true).build();
+        new_row.add_prefix(&gtk::Image::from_icon_name("list-add-symbolic"));
+        list.append(&new_row);
+        let files: Vec<PathBuf> = self.playlists.borrow().iter().map(|p| p.file.clone()).collect();
+        for p in self.playlists.borrow().iter() {
+            let row = adw::ActionRow::builder().title(glib::markup_escape_text(&p.name)).subtitle(songs_count(p.entries.len())).activatable(true).build();
+            row.add_prefix(&gtk::Image::from_icon_name("view-list-symbolic"));
+            list.append(&row);
+        }
+        let sw = gtk::ScrolledWindow::builder().child(&list).propagate_natural_height(true).max_content_height(360).hscrollbar_policy(gtk::PolicyType::Never).build();
+        dialog.set_extra_child(Some(&sw));
+        dialog.add_response("cancel", "_Cancel");
+        dialog.set_close_response("cancel");
+        let w = Rc::downgrade(self);
+        let d = dialog.clone();
+        list.connect_row_activated(move |_, row| {
+            let Some(app) = w.upgrade() else { return };
+            d.close();
+            let i = row.index() as usize;
+            if i == 0 {
+                app.playlist_name_dialog(None, tracks.clone());
+                return;
+            }
+            let Some(file) = files.get(i - 1) else { return };
+            let found = app.playlists.borrow().iter().find(|p| &p.file == file).cloned();
+            if let Some(mut pl) = found {
+                let lib = app.lib();
+                pl.entries.extend(tracks.iter().map(|&t| lib.tracks[t].path.clone()));
+                app.save_playlist(&pl);
+                app.toasts.add_toast(toast(&format!("Added to “{}”", pl.name)));
+                app.reload_playlists();
+            }
+        });
+        dialog.present(Some(&self.window));
+    }
+
+    pub fn remove_from_playlist(self: &Rc<Self>, file: &Path, pos: usize) {
+        let found = self.playlists.borrow().iter().find(|p| p.file == file).cloned();
+        if let Some(mut pl) = found {
+            if pos < pl.entries.len() {
+                pl.entries.remove(pos);
+                self.save_playlist(&pl);
+                self.reload_playlists();
+            }
+        }
+    }
+
+    fn delete_playlist_dialog(self: &Rc<Self>, file: &Path) {
+        let name = self.playlists.borrow().iter().find(|p| p.file == file).map(|p| p.name.clone()).unwrap_or_default();
+        let dialog = adw::AlertDialog::new(Some("Delete Playlist?"), Some(&format!("“{name}” will be permanently deleted. The songs stay in your library.")));
+        dialog.add_response("cancel", "_Cancel");
+        dialog.add_response("delete", "_Delete");
+        dialog.set_response_appearance("delete", adw::ResponseAppearance::Destructive);
+        dialog.set_close_response("cancel");
+        let (w, f) = (Rc::downgrade(self), file.to_path_buf());
+        dialog.connect_response(Some("delete"), move |_, _| {
+            let Some(app) = w.upgrade() else { return };
+            if let Err(e) = std::fs::remove_file(&f) {
+                app.toasts.add_toast(toast(&format!("Cannot delete playlist: {e}")));
+                return;
+            }
+            *app.playlist_view.borrow_mut() = None;
+            app.nav.pop();
+            app.reload_playlists();
+        });
+        dialog.present(Some(&self.window));
+    }
+
+    // ----- preferences ---------------------------------------------------------
+
+    pub fn show_preferences(self: &Rc<Self>) {
+        let dialog = adw::PreferencesDialog::new();
+        let page = adw::PreferencesPage::new();
+        let folders = adw::PreferencesGroup::builder().title("Library Folders").description("Music in these folders appears in your library").build();
+        let add = gtk::Button::builder().icon_name("list-add-symbolic").tooltip_text("Add Folder…").css_classes(["flat"]).valign(gtk::Align::Center).build();
+        folders.set_header_suffix(Some(&add));
+        let main = adw::ActionRow::builder().title(glib::markup_escape_text(&music_dir().display().to_string())).subtitle("Music folder").build();
+        main.add_prefix(&gtk::Image::from_icon_name("folder-music-symbolic"));
+        folders.add(&main);
+        for f in self.state.borrow().folders.clone() {
+            let row = adw::ActionRow::builder().title(glib::markup_escape_text(&f.display().to_string())).build();
+            row.add_prefix(&gtk::Image::from_icon_name("folder-symbolic"));
+            let rm = gtk::Button::builder().icon_name("user-trash-symbolic").tooltip_text("Remove Folder").css_classes(["flat"]).valign(gtk::Align::Center).build();
+            let (w, g, r) = (Rc::downgrade(self), folders.downgrade(), row.downgrade());
+            rm.connect_clicked(move |_| {
+                if let (Some(app), Some(g), Some(r)) = (w.upgrade(), g.upgrade(), r.upgrade()) {
+                    g.remove(&r);
+                    app.remove_folder(&f);
+                }
+            });
+            row.add_suffix(&rm);
+            folders.add(&row);
+        }
+        let (w, d) = (Rc::downgrade(self), dialog.downgrade());
+        add.connect_clicked(move |_| {
+            if let (Some(app), Some(d)) = (w.upgrade(), d.upgrade()) {
+                d.close();
+                app.add_folder_dialog();
+            }
+        });
+        page.add(&folders);
+
+        let playback = adw::PreferencesGroup::builder().title("Playback").build();
+        let inhibit = adw::SwitchRow::builder()
+            .title("Inhibit Suspend")
+            .subtitle("Keep the computer awake while music plays")
+            .active(self.prefs.get("inhibit-suspend", false))
+            .build();
+        let w = Rc::downgrade(self);
+        inhibit.connect_active_notify(move |r| {
+            if let Some(app) = w.upgrade() {
+                app.prefs.set("inhibit-suspend", r.is_active());
+                app.update_inhibit();
+            }
+        });
+        playback.add(&inhibit);
+        page.add(&playback);
+        dialog.add(&page);
+        dialog.present(Some(&self.window));
+    }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+enum SortKey {
+    Text(String),
+    Num(u64),
+}
+
+fn songs_count(n: usize) -> String {
+    if n == 1 {
+        "1 song".into()
+    } else {
+        format!("{n} songs")
+    }
+}
