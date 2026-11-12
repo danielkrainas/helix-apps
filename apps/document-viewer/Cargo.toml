@@ -1,0 +1,25 @@
+[package]
+name = "helix-document-viewer"
+description = "Document (PDF) viewer for the Helix desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "helix-document-viewer"
+path = "src/main.rs"
+
+[dependencies]
+gtk.workspace = true
+adw.workspace = true
+helix-app-common.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+async-channel = "2"
+poppler = { package = "poppler-rs", version = "0.24.1", features = ["v22_7"] }
+cairo = { package = "cairo-rs", version = "0.20", features = ["pdf", "v1_16"] }
+
+[dev-dependencies]
+tempfile = "3"
