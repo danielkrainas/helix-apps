@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the GWeather unit keys Helix Weather uses.
+     Install only when the schema is not already provided by the system. -->
+<schemalist>
+  <enum id="org.gnome.GWeather4.TemperatureUnit">
+    <value value="1" nick="default"/>
+    <value value="2" nick="kelvin"/>
+    <value value="3" nick="centigrade"/>
+    <value value="4" nick="fahrenheit"/>
+  </enum>
+  <enum id="org.gnome.GWeather4.SpeedUnit">
+    <value value="1" nick="default"/>
+    <value value="2" nick="ms"/>
+    <value value="3" nick="kph"/>
+    <value value="4" nick="mph"/>
+    <value value="5" nick="knots"/>
+    <value value="6" nick="bft"/>
+  </enum>
+  <enum id="org.gnome.GWeather4.PressureUnit">
+    <value value="1" nick="default"/>
+    <value value="2" nick="kpa"/>
+    <value value="3" nick="hpa"/>
+    <value value="4" nick="mb"/>
+    <value value="5" nick="mm-hg"/>
+    <value value="6" nick="inch-hg"/>
+    <value value="7" nick="atm"/>
+  </enum>
+  <schema path="/org/gnome/GWeather4/" id="org.gnome.GWeather4">
+    <key name="temperature-unit" enum="org.gnome.GWeather4.TemperatureUnit"><default>'default'</default><summary>Temperature unit</summary></key>
+    <key name="speed-unit" enum="org.gnome.GWeather4.SpeedUnit"><default>'default'</default><summary>Distance unit</summary></key>
+    <key name="pressure-unit" enum="org.gnome.GWeather4.PressureUnit"><default>'default'</default><summary>Pressure unit</summary></key>
+  </schema>
+</schemalist>

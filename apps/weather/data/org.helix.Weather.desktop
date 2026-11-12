@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Weather
+Comment=Show weather conditions and forecast
+Keywords=forecast;temperature;
+Exec=helix-weather
+Icon=weather-few-clouds
+Terminal=false
+Type=Application
+Categories=GTK;Utility;
+StartupNotify=true
+DBusActivatable=false
