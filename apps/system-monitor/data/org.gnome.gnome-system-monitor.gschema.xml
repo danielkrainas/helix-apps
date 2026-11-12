@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the keys Helix System Monitor uses. Install
+     only when the schema is not already provided by the system. -->
+<schemalist>
+  <schema id="org.gnome.gnome-system-monitor" path="/org/gnome/gnome-system-monitor/">
+    <key name="window-width" type="i"><default>700</default><summary>Main window width</summary></key>
+    <key name="window-height" type="i"><default>500</default><summary>Main window height</summary></key>
+    <key name="maximized" type="b"><default>false</default><summary>Main window is maximized</summary></key>
+    <key name="solaris-mode" type="b"><default>true</default><summary>Divide CPU usage by CPU count</summary></key>
+    <key name="process-memory-in-iec" type="b"><default>false</default><summary>Show process memory in IEC units</summary></key>
+    <key name="kill-dialog" type="b"><default>true</default><summary>Show warning dialog when ending or killing processes</summary></key>
+    <key name="update-interval" type="i"><default>3000</default><summary>Time in milliseconds between updates of the process view</summary></key>
+    <key name="show-all-fs" type="b"><default>false</default><summary>Show all file systems</summary></key>
+    <key name="disks-interval" type="i"><default>5000</default><summary>Time in milliseconds between updates of the devices list</summary></key>
+    <key name="graph-data-points" type="i"><default>60</default><summary>Number of data points in resource graphs</summary></key>
+    <key name="show-whose-processes" type="s">
+      <choices><choice value="all"/><choice value="user"/><choice value="active"/></choices>
+      <default>'user'</default><summary>Which processes to show</summary>
+    </key>
+    <key name="current-tab" type="s">
+      <choices><choice value="processes"/><choice value="resources"/><choice value="disks"/></choices>
+      <default>'processes'</default><summary>Last shown tab</summary>
+    </key>
+    <key name="mem-color" type="s"><default>'#e01b24'</default><summary>Memory graph color</summary></key>
+    <key name="swap-color" type="s"><default>'#33d17a'</default><summary>Swap graph color</summary></key>
+    <key name="net-in-color" type="s"><default>'#3584e4'</default><summary>Network receive graph color</summary></key>
+    <key name="net-out-color" type="s"><default>'#e66100'</default><summary>Network send graph color</summary></key>
+    <key name="network-in-bits" type="b"><default>false</default><summary>Show network speed in bits</summary></key>
+    <key name="resources-memory-in-iec" type="b"><default>false</default><summary>Show memory in the resources view in IEC units</summary></key>
+  </schema>
+</schemalist>

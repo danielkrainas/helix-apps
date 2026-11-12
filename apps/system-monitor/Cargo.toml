@@ -1,0 +1,19 @@
+[package]
+name = "helix-system-monitor"
+description = "System monitor for the Helix desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "helix-system-monitor"
+path = "src/main.rs"
+
+[dependencies]
+gtk.workspace = true
+adw.workspace = true
+helix-app-common.workspace = true
+libc = "0.2"
+async-channel = "2"

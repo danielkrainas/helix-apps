@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=System Monitor
+Comment=View current processes and monitor system state
+Keywords=Monitor;System;Process;CPU;Memory;Network;History;Usage;Performance;Task;Manager;Activity;
+Exec=helix-system-monitor
+Icon=utilities-system-monitor
+Terminal=false
+Type=Application
+Categories=GTK;System;Monitor;
+StartupNotify=true
+DBusActivatable=false
