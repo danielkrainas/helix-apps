@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+  "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+  <!ENTITY app "Demo">
+]>
+<article id="index">
+  <articleinfo><title>&app; Manual</title></articleinfo>
+  <para>This manual describes &app; &mdash; a demo.</para>
+  <sect1 id="usage"><title>Usage</title>
+    <para>Choose <menuchoice><guimenu>File</guimenu><guimenuitem>Open</guimenuitem></menuchoice>.
+      See <xref linkend="opts"/>.</para>
+    <programlisting>demo --open file.txt</programlisting>
+    <warning><para>Back up your files.</para></warning>
+  </sect1>
+  <sect1 id="opts"><title>Options</title>
+    <variablelist>
+      <varlistentry><term><option>--open</option></term><listitem><para>Opens a file.</para></listitem></varlistentry>
+    </variablelist>
+  </sect1>
+</article>

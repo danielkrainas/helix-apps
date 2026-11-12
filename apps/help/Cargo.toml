@@ -1,0 +1,19 @@
+[package]
+name = "helix-help"
+description = "Help viewer for the Helix desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "helix-help"
+path = "src/main.rs"
+
+[dependencies]
+gtk.workspace = true
+adw.workspace = true
+helix-app-common.workspace = true
+webkit6 = "0.4"
+roxmltree = "0.20"
