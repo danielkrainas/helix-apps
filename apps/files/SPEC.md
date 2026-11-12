@@ -2,6 +2,10 @@
 
 Drop-in replacement for GNOME Files (Nautilus).
 
+- **App ID**: `org.helix.Files`
+- **Binary**: `helix-files`
+- **Crate**: `apps/files`
+
 ## Purpose
 File manager for local and remote locations.
 
@@ -19,3 +23,243 @@ File manager for local and remote locations.
 ## Non-goals
 - Exact visual clone of current Nautilus.
 - Extensions API compatibility.
+
+---
+
+## Behaviour (derived spec)
+
+All file access goes through GIO (`GFile`), so every location GVFS can
+handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
+`network:///` …) works like a local folder. Folder listings use
+`GtkDirectoryList` (asynchronous, monitored for changes).
+
+### Window
+- `AdwApplicationWindow` containing an `AdwOverlaySplitView`:
+  - **Sidebar** (collapses into an overlay below 600sp; a toggle button
+    appears in the content header; `F9` toggles): a list of places:
+    1. *Home*, *Recent* (`recent:///`), *Trash* (`trash:///`).
+    2. XDG user directories that exist and are not `$HOME`: Desktop,
+       Documents, Downloads, Music, Pictures, Videos.
+    3. GTK bookmarks from `$XDG_CONFIG_HOME/gtk-3.0/bookmarks`
+       (format: one `URI[ space label]` per line). The file is monitored
+       and the section refreshes when it changes.
+    4. Devices: mounts and volumes from `GVolumeMonitor`. Mounted items
+       show an eject (if `can-eject`) or unmount button; unmounted
+       volumes mount on click (with a `GtkMountOperation` for passwords).
+    5. *Network* (`network:///`) and *Other Locations*.
+  - Right-click on a bookmark row: *Rename…*, *Remove*. On any row:
+    *Open in New Tab*, *Open in New Window*.
+  - Rows are drop targets: dropping files on a place moves/copies into it.
+  - **Content**: header bar with back / forward buttons, the path bar
+    (title), search toggle, view toggle (grid ⇄ list), view options menu
+    (sort, zoom, show hidden) and the main menu; an operations button
+    (visible while file operations run) opens the progress popover.
+    Below it an `AdwTabBar` (auto-hidden with one tab), a search bar, then
+    the `AdwTabView`. A status line at the bottom shows
+    "N items" / "N items selected (size)".
+- **Other Locations** is an internal page (`other-locations:` pseudo
+  location) listing *Computer* (`file:///`), all volumes/mounts, *Networks*
+  (`network:///`) and a *Connect to Server* entry that accepts any URI and
+  mounts it (`g_file_mount_enclosing_volume`).
+- Trash location shows a banner with *Empty Trash…*; items have *Restore*
+  and *Delete Permanently* in the context menu.
+- When a location is not mounted (`G_IO_ERROR_NOT_MOUNTED`) it is mounted
+  automatically with a `GtkMountOperation` and reloaded. Other errors show
+  an `AdwStatusPage` with the message.
+
+### Path bar
+- Breadcrumb buttons for each ancestor of the current location. A path
+  under `$HOME` starts with a *Home* crumb; other local paths start with
+  the root `/` crumb; other URI schemes start with the URI root (shown as
+  host name, or a friendly name for `trash`, `recent`, `network`).
+  Clicking a crumb navigates there.
+- `Ctrl+L` switches to an editable entry showing the path (local) or URI
+  (remote). Enter navigates (`g_file_parse_name`, so `~/x`, `/abs`, and
+  any URI work). Escape returns to breadcrumbs. Pref
+  `always-use-location-entry` keeps the entry permanently.
+
+### Navigation & history
+- Per-tab back/forward history (`Alt+Left`, `Alt+Right`, mouse buttons
+  `mouse-back-button`/`mouse-forward-button` when
+  `mouse-use-extra-buttons`), parent (`Alt+Up`), home (`Alt+Home`),
+  reload (`F5`, `Ctrl+R`).
+- Going up/back to a folder re-selects the child that was navigated from.
+- Tabs: `Ctrl+T` new tab (same location), `Ctrl+W` closes the tab (the
+  window when it is the last), `Ctrl+PageUp/PageDown` switch tabs (AdwTabView
+  defaults); `Ctrl+N` new window. *Open in New Tab* / *Open in New Window*
+  in the folder context menu.
+
+### Views
+- **Grid** (`GtkGridView`): icon + name (wrapped, up to 3 lines).
+  Zoom levels (`org.gnome.nautilus.icon-view default-zoom-level`):
+  small 48px, small-plus 64, medium 96, large 128, extra-large 256.
+- **List** (`GtkColumnView`): Name (with icon), Size, Type, Modified;
+  click headers to sort. Visible columns follow
+  `org.gnome.nautilus.list-view default-visible-columns` (`size`, `type`,
+  `date_modified`; name always shown). Zoom (`default-zoom-level`):
+  small 16px, medium 32, large 48.
+- `Ctrl+1` grid, `Ctrl+2` list (`default-folder-viewer`
+  `icon-view`/`list-view` is the initial view and is updated on toggle).
+  `Ctrl+plus` / `Ctrl+minus` / `Ctrl+0` zoom in/out/reset.
+- Thumbnails: existing thumbnails from the freedesktop thumbnail cache
+  (`thumbnail::path`) are shown in the grid when allowed by
+  `show-image-thumbnails` (`never`, `local-only`, `always`); loaded
+  asynchronously. Otherwise the themed icon for the content type.
+- Hidden files (dot-files and backup files `*~`) are shown when
+  `show-hidden-files` is true (`Ctrl+H` toggles and saves).
+- Sorting: by name (natural, case-insensitive: `file2` < `file10`), size,
+  type (description), modification time; ascending or reversed
+  (`default-sort-order`, `default-sort-in-reverse-order`; `atime`,
+  `btime`, `starred` fall back to name). Folders first when
+  `org.gtk.gtk4.Settings.FileChooser sort-directories-first` is true.
+  Ties are broken by name.
+- Dates: `simple` shows "HH:MM" for today, "Yesterday", weekday within a
+  week, "D Mon" within the year, else "D Mon YYYY"; `detailed` shows the
+  full date and time.
+- Activation: double-click (or single click when `click-policy` is
+  `single`) / Enter opens. Folders and mountables navigate; other files
+  open in the default application (`GtkFileLauncher`) and are added to
+  recent files. Items with `standard::target-uri` (recent, network) open
+  their target.
+- Typing while the window has focus starts a search (search bar key
+  capture).
+
+### Selection & context menus
+- Multi-selection (`GtkMultiSelection`); `Ctrl+A` select all,
+  `Shift+Ctrl+I` invert selection.
+- Item context menu: Open, Open With…, Open in New Tab / Window (folders),
+  Cut, Copy, Rename…, Move to Trash, Delete Permanently (if
+  `show-delete-permanently`), Create Link (if `show-create-link`),
+  Restore / Delete Permanently (in Trash), Copy Location, Properties.
+- Background menu: New Folder…, Paste, Select All, Add to Bookmarks,
+  Properties (of the current folder).
+
+### Operations
+- **New Folder** (`Shift+Ctrl+N`): dialog with name validation (no `/`,
+  not `.`/`..`, not existing); creates and selects it.
+- **Rename** (`F2`): dialog with the name pre-selected up to the
+  extension; uses `g_file_set_display_name`. Undoable (`Ctrl+Z`).
+- **Cut / Copy / Paste** (`Ctrl+X/C/V`): the clipboard holds a
+  `GdkFileList` (exported as `text/uri-list`), plus
+  `x-special/gnome-copied-files` (`copy|cut\nURI…`) for interop and
+  `text/plain` paths. Paste reads our own state first, else
+  `x-special/gnome-copied-files`, else a file list. A cut is cleared
+  after a successful paste.
+- **Move to Trash** (`Delete`): `g_file_trash`; a toast "N items moved to
+  Trash" offers *Undo* (also `Ctrl+Z`), which restores the most recently
+  trashed entries whose `trash::orig-path` matches. If the filesystem has
+  no trash the job fails for those items and reports it.
+- **Delete Permanently** (`Shift+Delete`): confirmation dialog, then
+  recursive delete.
+- **Restore** (in Trash): moves back to `trash::orig-path`, creating
+  missing parent folders.
+- **Empty Trash**: confirmation, then deletes all top-level items of
+  `trash:///`.
+- **Drag and drop**: items are drag sources (`GdkFileList`). Drop targets:
+  the view background (current folder), folder items, sidebar places.
+  Default action: move when source and destination are on the same
+  filesystem, copy otherwise; holding Ctrl forces copy, Shift forces
+  move. Dropping onto the folder the items already live in does nothing.
+- **Create Link**: symbolic link "Link to NAME" in the same folder.
+- Copy/move/trash/delete/restore/empty run on a worker thread with a
+  `GCancellable`. A pre-scan computes item count and total bytes; the
+  progress popover shows one row per job (title, progress bar, details,
+  cancel button). A toast reports completion or failure.
+- **Naming**: pasting into the folder the items came from creates
+  "name (copy).ext", then "name (copy 2).ext", … (multi-dot archive
+  extensions like `.tar.gz` stay intact; dot-files keep their name as
+  the stem; copying "a (copy).txt" yields "a (copy 2).txt").
+- **Conflicts** (destination exists, different source): dialog with
+  *Skip*, *Keep Both* (copy naming), *Replace* (or *Merge* when both are
+  folders) and *Cancel*, plus an "Apply to all" check box.
+- Moving or copying a folder into itself or a descendant is refused.
+
+### Search
+- `Ctrl+F` shows the search bar; typing searches recursively under the
+  current folder on a worker thread, case-insensitive substring match on
+  names, results streamed incrementally into the view (with a
+  "Searching…" indicator). `recursive-search`: `always`, `local-only`
+  (recursive only for native files; remote folders search direct
+  children only), `never`. Hidden files and directories are skipped
+  unless hidden files are shown. Closing the search returns to the folder
+  listing.
+
+### Properties
+- `Alt+Return` / `Ctrl+I`. For one item: icon, name, type, size (for
+  folders computed recursively in the background, updating live:
+  "N items, totalling X"), parent folder, link target, modified /
+  accessed / created times, free space of the filesystem, and
+  permissions (owner/group/others read, write, execute switches for
+  files supporting `unix::mode`; changes applied immediately). For
+  several items: count and combined size.
+
+### Open With
+- Dialog listing applications for the content type
+  (`g_app_info_get_recommended_for_type`, then all others for the type),
+  with *Open* and "Always use for this file type"
+  (`g_app_info_set_as_default_for_type`).
+
+### Preferences dialog (`Ctrl+,`)
+Default view, sort folders before files, click policy, show hidden
+files, show "Delete Permanently", show "Create Link", recursive search,
+show thumbnails, date format, always use location entry.
+
+### GSettings
+`org.gnome.nautilus.preferences`: `default-folder-viewer` (enum
+`icon-view|list-view`), `show-hidden-files` (b), `click-policy` (enum
+`single|double`), `show-delete-permanently` (b), `show-create-link` (b),
+`recursive-search` (enum `always|local-only|never`),
+`show-image-thumbnails` (enum `always|local-only|never`),
+`default-sort-order` (enum `name|size|type|mtime|atime|btime|starred`),
+`default-sort-in-reverse-order` (b), `date-time-format` (enum
+`simple|detailed`), `always-use-location-entry` (b),
+`mouse-use-extra-buttons` (b), `mouse-back-button` (u),
+`mouse-forward-button` (u).
+`org.gnome.nautilus.window-state`: `initial-size` (`(ii)`),
+`maximized` (b).
+`org.gnome.nautilus.list-view`: `default-zoom-level` (enum
+`small|medium|large`), `default-visible-columns` (as).
+`org.gnome.nautilus.icon-view`: `default-zoom-level` (enum
+`small|small-plus|medium|large|extra-large`).
+`org.gtk.gtk4.Settings.FileChooser`: `sort-directories-first` (b).
+Missing schemas fall back to in-memory defaults (`helix-app-common::Prefs`).
+`data/org.gnome.nautilus.gschema.xml` holds only these keys for systems
+without Nautilus installed.
+
+### D-Bus
+- The application is unique (`org.helix.Files`); launching again opens a
+  window in the running instance.
+- Implements `org.freedesktop.FileManager1` at
+  `/org/freedesktop/FileManager1` (name requested without replacement):
+  `ShowFolders(as uris, s startup_id)` opens each folder in a new window,
+  `ShowItems(as, s)` opens each item's parent with the item selected,
+  `ShowItemProperties(as, s)` opens the parent and the properties dialog.
+
+### Command line
+`helix-files [URI|PATH…]` opens each location in a window (a regular file
+opens its folder with the file selected). `-w/--new-window` forces a new
+window even without arguments, `-s/--select` selects the given items in
+their parents, `-q/--quit` quits the running instance.
+
+### Keyboard shortcuts (summary)
+`Ctrl+L` location, `Ctrl+F` search, `Ctrl+T`/`Ctrl+W` tab, `Ctrl+N`
+window, `Ctrl+1`/`Ctrl+2` view, `Ctrl+H` hidden files, `Ctrl+D`
+bookmark, `F2` rename, `Delete` trash, `Shift+Delete` delete,
+`Ctrl+X/C/V` clipboard, `Ctrl+A` select all, `Ctrl+Z` undo,
+`Alt+Return`/`Ctrl+I` properties, `Shift+Ctrl+N` new folder, `F5` reload,
+`F9` sidebar, `Ctrl+,` preferences, `Ctrl+Q` quit.
+
+## Deferred
+- Starred files (needs Tracker/LocalSearch).
+- Acting as the `org.freedesktop.impl.portal.FileChooser` backend.
+- Tree (expandable) list view, compressing/extracting archives,
+  batch rename, scripts, "Open in Terminal", folder item counts in the
+  size column (`show-directory-item-counts`).
+- Generating new thumbnails (only existing cached thumbnails are shown).
+
+## Open questions
+- Should Helix Files act as the FileChooser portal backend (as Nautilus
+  does in recent GNOME), or leave that to `helix-desktop`'s portal?
+- Should `org.freedesktop.FileManager1` be requested with
+  `ALLOW_REPLACEMENT | REPLACE` so Helix Files takes over from a running
+  Nautilus? Currently it only claims the name when free.

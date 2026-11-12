@@ -1,0 +1,18 @@
+[package]
+name = "helix-files"
+description = "File manager for the Helix desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "helix-files"
+path = "src/main.rs"
+
+[dependencies]
+gtk.workspace = true
+adw.workspace = true
+helix-app-common.workspace = true
+async-channel = "2"
