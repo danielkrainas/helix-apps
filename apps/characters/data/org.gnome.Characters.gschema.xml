@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the keys Helix Characters uses. Install only
+     when the schema is not already provided by the system. -->
+<schemalist>
+  <schema path="/org/gnome/Characters/" id="org.gnome.Characters">
+    <key type="s" name="font"><default>''</default><summary>Font to display characters</summary></key>
+    <key type="as" name="recent-characters"><default>[]</default><summary>Recently used characters</summary></key>
+    <key type="u" name="max-recent-characters"><default>100</default><summary>Maximum recent characters</summary></key>
+  </schema>
+</schemalist>
