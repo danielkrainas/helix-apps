@@ -920,6 +920,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-settings-app"
+version = "0.1.0"
+dependencies = [
+ "async-channel",
+ "gtk4",
+ "helix-app-common",
+ "libadwaita",
+ "zbus",
+]
+
+[[package]]
 name = "helix-system-monitor"
 version = "0.1.0"
 dependencies = [

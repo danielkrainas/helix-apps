@@ -12,6 +12,7 @@ members = [
     "apps/image-viewer",
     "apps/clocks",
     "apps/text-editor",
+    "apps/settings",
 ]
 resolver = "2"
 
