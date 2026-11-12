@@ -1277,6 +1277,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-web"
+version = "0.1.0"
+dependencies = [
+ "gio",
+ "gtk4",
+ "helix-app-common",
+ "libadwaita",
+ "serde",
+ "serde_json",
+ "webkit6",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

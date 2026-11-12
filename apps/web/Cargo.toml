@@ -1,0 +1,21 @@
+[package]
+name = "helix-web"
+description = "Web browser for the Helix desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "helix-web"
+path = "src/main.rs"
+
+[dependencies]
+gtk.workspace = true
+adw.workspace = true
+helix-app-common.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+gio = { workspace = true, features = ["v2_70"] }
+webkit6 = { version = "0.4", features = ["v2_46"] }
