@@ -15,6 +15,7 @@ members = [
     "apps/settings",
     "apps/disks",
     "apps/files",
+    "apps/terminal",
 ]
 resolver = "2"
 

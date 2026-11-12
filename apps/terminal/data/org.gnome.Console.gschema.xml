@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the keys Helix Terminal uses, written from
+     the published org.gnome.Console key list. Install only when the schema
+     is not already provided by the system. -->
+<schemalist>
+  <enum id="org.gnome.Console.Theme">
+    <value value="0" nick="night"/>
+    <value value="1" nick="day"/>
+    <value value="2" nick="hacker"/>
+    <value value="3" nick="auto"/>
+  </enum>
+  <schema path="/org/gnome/Console/" id="org.gnome.Console">
+    <key name="theme" enum="org.gnome.Console.Theme"><default>'night'</default><summary>Colour theme</summary></key>
+    <key type="d" name="font-scale"><default>1.0</default><summary>Font scaling</summary></key>
+    <key type="x" name="scrollback-lines"><default>10000</default><summary>Number of lines to keep in scrollback</summary></key>
+    <key type="b" name="ignore-scrollback-limit"><default>false</default><summary>Keep unlimited scrollback</summary></key>
+    <key type="b" name="use-system-font"><default>true</default><summary>Use the system monospace font</summary></key>
+    <key type="s" name="custom-font"><default>''</default><summary>Custom font</summary></key>
+    <key type="b" name="audible-bell"><default>true</default><summary>Audible bell</summary></key>
+    <key type="b" name="visual-bell"><default>true</default><summary>Visual bell</summary></key>
+    <key type="b" name="restore-window-size"><default>true</default><summary>Restore window size</summary></key>
+    <key type="(ii)" name="last-window-size"><default>(-1, -1)</default><summary>Last window size</summary></key>
+    <key type="b" name="last-window-maximised"><default>false</default><summary>Last window maximised state</summary></key>
+  </schema>
+</schemalist>
