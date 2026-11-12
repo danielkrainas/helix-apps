@@ -2,6 +2,7 @@
 members = [
     "crates/helix-app-common",
     "apps/calculator",
+    "apps/disks",
 ]
 resolver = "2"
 
