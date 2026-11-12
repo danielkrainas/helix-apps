@@ -1,0 +1,204 @@
+//! Process dialogs: properties, change priority, end/kill confirmation.
+
+use adw::prelude::*;
+use gtk::glib;
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use crate::control::{self, Action};
+use crate::format;
+use crate::proc_view::ProcessObject;
+use crate::sampler::{self, ProcessInfo};
+
+fn opt_size(v: Option<u64>, iec: bool) -> String {
+    v.map(|b| format::size(b, iec)).unwrap_or_else(|| "N/A".into())
+}
+
+fn property_rows(p: &ProcessInfo, iec: bool) -> Vec<(&'static str, String)> {
+    let started = glib::DateTime::from_unix_local(p.start_time as i64)
+        .ok()
+        .and_then(|d| d.format("%c").ok())
+        .map(|s| s.to_string())
+        .unwrap_or_default();
+    vec![
+        ("Process Name", p.name.clone()),
+        ("User", format!("{} ({})", p.user, p.uid)),
+        ("Status", format::state(p.state).to_string()),
+        ("Memory", opt_size(p.memory, iec)),
+        ("Virtual Memory", opt_size(p.vm_size, iec)),
+        ("Resident Memory", opt_size(p.vm_rss, iec)),
+        ("Shared Memory", opt_size(p.shared, iec)),
+        ("CPU", format::percent(p.cpu)),
+        ("CPU Time", format::cpu_time(p.cpu_ticks, sampler::clock_ticks())),
+        ("Started", started),
+        ("Nice", p.nice.to_string()),
+        ("Priority", format::priority(p.nice).to_string()),
+        ("ID", p.pid.to_string()),
+        ("Parent ID", p.ppid.to_string()),
+        ("Threads", p.threads.to_string()),
+        ("Command Line", p.cmdline.clone()),
+    ]
+}
+
+/// Shows a live-updating properties dialog for `obj`.
+pub fn show_properties(parent: &impl IsA<gtk::Widget>, obj: &ProcessObject, iec: bool) {
+    let info = obj.info().clone();
+    let group = adw::PreferencesGroup::new();
+    let mut values = Vec::new();
+    for (title, value) in property_rows(&info, iec) {
+        let row = adw::ActionRow::builder().title(title).build();
+        let label = gtk::Label::builder()
+            .label(&value)
+            .selectable(true)
+            .wrap(true)
+            .wrap_mode(gtk::pango::WrapMode::WordChar)
+            .xalign(1.0)
+            .max_width_chars(40)
+            .build();
+        label.add_css_class("dim-label");
+        row.add_suffix(&label);
+        group.add(&row);
+        values.push(label);
+    }
+    let page = adw::PreferencesPage::new();
+    page.add(&group);
+    let toolbar = adw::ToolbarView::new();
+    toolbar.add_top_bar(&adw::HeaderBar::new());
+    toolbar.set_content(Some(&page));
+    let dialog = adw::Dialog::builder()
+        .title(format!("{} (PID {})", info.name, info.pid))
+        .content_width(460)
+        .content_height(620)
+        .child(&toolbar)
+        .build();
+
+    let handler = obj.connect_notify_local(None, move |obj, _| {
+        for (label, (_, value)) in values.iter().zip(property_rows(&obj.info(), iec)) {
+            if label.label() != value {
+                label.set_label(&value);
+            }
+        }
+    });
+    let obj_c = obj.clone();
+    let handler = RefCell::new(Some(handler));
+    dialog.connect_closed(move |_| {
+        if let Some(h) = handler.borrow_mut().take() {
+            obj_c.disconnect(h);
+        }
+    });
+    dialog.present(Some(parent));
+}
+
+/// Asks for a new nice value and applies it; errors go to `on_error`.
+pub fn change_priority(parent: &impl IsA<gtk::Widget>, obj: &ProcessObject, on_error: Rc<dyn Fn(String)>) {
+    let (pid, name, nice) = {
+        let i = obj.info();
+        (i.pid, i.name.clone(), i.nice)
+    };
+    let dialog = adw::AlertDialog::builder()
+        .heading(format!("Change Priority of “{name}” (PID {pid})"))
+        .body("Lower nice values mean higher priority. Raising a process's priority usually requires administrator privileges.")
+        .build();
+    dialog.add_responses(&[("cancel", "_Cancel"), ("change", "Change _Priority")]);
+    dialog.set_response_appearance("change", adw::ResponseAppearance::Suggested);
+    dialog.set_default_response(Some("change"));
+    dialog.set_close_response("cancel");
+
+    let content = gtk::Box::new(gtk::Orientation::Vertical, 6);
+    let scale = gtk::Scale::with_range(gtk::Orientation::Horizontal, -20.0, 19.0, 1.0);
+    scale.set_value(nice as f64);
+    scale.set_digits(0);
+    scale.set_draw_value(true);
+    scale.set_hexpand(true);
+    let mut first: Option<gtk::CheckButton> = None;
+    let mut custom_selected = true;
+    let mut checks = Vec::new();
+    for (label, value) in format::PRIORITY_PRESETS {
+        let check = gtk::CheckButton::with_label(&format!("{label} ({value})"));
+        if let Some(f) = &first {
+            check.set_group(Some(f));
+        } else {
+            first = Some(check.clone());
+        }
+        if value == nice {
+            check.set_active(true);
+            custom_selected = false;
+        }
+        let s = scale.clone();
+        check.connect_toggled(move |c| {
+            if c.is_active() {
+                s.set_value(value as f64);
+            }
+        });
+        content.append(&check);
+        checks.push(check);
+    }
+    let custom = gtk::CheckButton::with_label("Custom");
+    custom.set_group(first.as_ref());
+    custom.set_active(custom_selected);
+    content.append(&custom);
+    content.append(&scale);
+    {
+        let custom = custom.clone();
+        scale.connect_value_changed(move |s| {
+            let v = s.value().round() as i32;
+            let preset = format::PRIORITY_PRESETS.iter().position(|(_, n)| *n == v);
+            match preset {
+                Some(i) => {
+                    if !checks[i].is_active() {
+                        checks[i].set_active(true);
+                    }
+                }
+                None => custom.set_active(true),
+            }
+        });
+    }
+    dialog.set_extra_child(Some(&content));
+    dialog.connect_response(Some("change"), move |_, _| {
+        let v = scale.value().round() as i32;
+        if let Err(e) = control::renice(pid, v) {
+            on_error(format!("Cannot change priority of “{name}”: {e}"));
+        }
+    });
+    dialog.present(Some(parent));
+}
+
+/// Sends `action` to `obj`, asking first for End/Kill when `confirm`.
+pub fn signal_process(
+    parent: &impl IsA<gtk::Widget>,
+    obj: &ProcessObject,
+    action: Action,
+    confirm: bool,
+    on_done: Rc<dyn Fn(Result<(), String>)>,
+) {
+    let (pid, name) = {
+        let i = obj.info();
+        (i.pid, i.name.clone())
+    };
+    let run = move || {
+        on_done(control::send(pid, action).map_err(|e| format!("Cannot {} “{name}”: {e}", action.verb().to_lowercase())));
+    };
+    if !(confirm && action.needs_confirmation()) {
+        run();
+        return;
+    }
+    let (heading, body, button) = match action {
+        Action::Kill => (
+            format!("Kill “{}”?", obj.info().name),
+            "Killing a process stops it immediately without letting it save its work. Unsaved data may be lost.",
+            "_Kill Process",
+        ),
+        _ => (
+            format!("End “{}”?", obj.info().name),
+            "Ending a process asks it to quit. Unsaved data may be lost, and ending system processes can make the session unstable.",
+            "_End Process",
+        ),
+    };
+    let dialog = adw::AlertDialog::builder().heading(heading).body(body).build();
+    dialog.add_responses(&[("cancel", "_Cancel"), ("ok", button)]);
+    dialog.set_response_appearance("ok", adw::ResponseAppearance::Destructive);
+    dialog.set_default_response(Some("cancel"));
+    dialog.set_close_response("cancel");
+    dialog.connect_response(Some("ok"), move |_, _| run());
+    dialog.present(Some(parent));
+}
