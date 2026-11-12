@@ -1,0 +1,9 @@
+<page xmlns="http://projectmallard.org/1.0/" type="guide" id="index">
+  <info><title type="text">Demo Help</title></info>
+  <title>Demo Help</title>
+  <media type="image" src="figures/logo.svg" width="120"/>
+  <p>Welcome to the demo document.</p>
+  <section id="basics">
+    <title>Basics</title>
+  </section>
+</page>

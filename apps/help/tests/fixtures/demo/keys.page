@@ -1,0 +1,17 @@
+<page xmlns="http://projectmallard.org/1.0/" type="topic" id="keys">
+  <info>
+    <link type="guide" xref="index#basics"/>
+    <desc>Shortcut keys for common tasks.</desc>
+  </info>
+  <title>Keyboard shortcuts</title>
+  <table>
+    <thead><tr><td><p>Keys</p></td><td><p>Action</p></td></tr></thead>
+    <tbody>
+      <tr><td><p><keyseq><key>Ctrl</key><key>N</key></keyseq></p></td><td><p>New widget</p></td></tr>
+      <tr><td><p><key>F1</key></p></td><td><p>Help</p></td></tr>
+    </tbody>
+  </table>
+  <terms>
+    <item><title>Widget</title><p>A thing you make.</p></item>
+  </terms>
+</page>

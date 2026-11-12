@@ -1,0 +1,19 @@
+<page xmlns="http://projectmallard.org/1.0/" xmlns:if="http://projectmallard.org/if/1.0/" type="topic" id="start">
+  <info>
+    <link type="guide" xref="index#basics"/>
+    <link type="seealso" xref="keys"/>
+    <desc>Open the app and make your first widget.</desc>
+  </info>
+  <title>Getting started</title>
+  <steps>
+    <item><p>Open <guiseq><gui>Activities</gui><gui>Demo</gui></guiseq>.</p></item>
+    <item><p>Press <keyseq><key>Ctrl</key><key>N</key></keyseq>.</p></item>
+  </steps>
+  <note style="tip"><p>Widgets are saved automatically.</p></note>
+  <if:choose>
+    <if:when test="platform:unity"><p>Unity only.</p></if:when>
+    <if:else><p>On GNOME and Helix, use the Activities overview.</p></if:else>
+  </if:choose>
+  <code>demo --new-widget</code>
+  <p>Visit <link href="https://example.org/">the website</link>.</p>
+</page>
