@@ -1,0 +1,23 @@
+[package]
+name = "helix-disk-usage"
+description = "Disk usage analyzer for the Helix desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "helix-disk-usage"
+path = "src/main.rs"
+
+[dependencies]
+gtk.workspace = true
+adw.workspace = true
+helix-app-common.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3"
