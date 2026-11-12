@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the keys Helix Disk Usage Analyzer uses.
+     Install only when the schema is not already provided by the system. -->
+<schemalist>
+  <schema path="/org/gnome/baobab/" id="org.gnome.baobab">
+    <key type="as" name="excluded-uris">
+      <default>[]</default>
+      <summary>Excluded locations URIs</summary>
+      <description>A list of URIs for locations to be excluded from scanning.</description>
+    </key>
+    <key type="s" name="active-chart">
+      <default>'rings'</default>
+      <summary>Active Chart</summary>
+      <description>Which type of chart should be displayed ('rings' or 'treemap').</description>
+    </key>
+  </schema>
+</schemalist>

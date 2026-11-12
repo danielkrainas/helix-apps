@@ -6,6 +6,7 @@ members = [
     "apps/tour",
     "apps/system-monitor",
     "apps/logs",
+    "apps/disk-usage",
 ]
 resolver = "2"
 
