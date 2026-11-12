@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Disks
+Comment=Manage drives and media
+Keywords=disk;drive;volume;partition;format;mount;smart;image;iso;usb;
+Exec=helix-disks
+Icon=org.gnome.DiskUtility
+Terminal=false
+Type=Application
+Categories=GTK;System;Utility;
+StartupNotify=true
+DBusActivatable=false

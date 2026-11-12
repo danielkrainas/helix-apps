@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the keys Helix Disks uses. Install only
+     when the schema is not already provided by the system. -->
+<schemalist>
+  <schema id="org.gnome.Disks" path="/org/gnome/disks/">
+    <key name="image-dir-uri" type="s">
+      <default>''</default>
+      <summary>Folder used for disk images</summary>
+      <description>URI of the folder last used to create, restore or attach a disk image. Empty means the user's Documents folder.</description>
+    </key>
+  </schema>
+</schemalist>

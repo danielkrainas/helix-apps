@@ -13,6 +13,7 @@ members = [
     "apps/clocks",
     "apps/text-editor",
     "apps/settings",
+    "apps/disks",
 ]
 resolver = "2"
 
