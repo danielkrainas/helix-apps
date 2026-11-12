@@ -10,6 +10,7 @@ members = [
     "apps/weather",
     "apps/fonts",
     "apps/image-viewer",
+    "apps/clocks",
 ]
 resolver = "2"
 
