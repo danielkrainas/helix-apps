@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schemas for the keys Helix Settings uses, written from the
+     published key lists (gsettings-desktop-schemas, mutter, gnome-shell,
+     gnome-settings-daemon, geoclue). Install only when the system does not
+     already provide these schemas. Enum ids are Helix-private; the nicks match
+     GNOME so stored values are interchangeable. -->
+<schemalist>
+  <enum id="org.helix.Settings.compat.ColorScheme">
+    <value value="0" nick="default"/>
+    <value value="1" nick="prefer-dark"/>
+    <value value="2" nick="prefer-light"/>
+  </enum>
+  <enum id="org.helix.Settings.compat.AccentColor">
+    <value value="0" nick="blue"/>
+    <value value="1" nick="teal"/>
+    <value value="2" nick="green"/>
+    <value value="3" nick="yellow"/>
+    <value value="4" nick="orange"/>
+    <value value="5" nick="red"/>
+    <value value="6" nick="pink"/>
+    <value value="7" nick="purple"/>
+    <value value="8" nick="slate"/>
+  </enum>
+  <enum id="org.helix.Settings.compat.ClockFormat">
+    <value value="0" nick="24h"/>
+    <value value="1" nick="12h"/>
+  </enum>
+  <enum id="org.helix.Settings.compat.AccelProfile">
+    <value value="0" nick="default"/>
+    <value value="1" nick="flat"/>
+    <value value="2" nick="adaptive"/>
+    <value value="3" nick="custom"/>
+  </enum>
+  <enum id="org.helix.Settings.compat.SendEvents">
+    <value value="0" nick="enabled"/>
+    <value value="1" nick="disabled"/>
+    <value value="2" nick="disabled-on-external-mouse"/>
+  </enum>
+  <enum id="org.helix.Settings.compat.ClickMethod">
+    <value value="0" nick="default"/>
+    <value value="1" nick="none"/>
+    <value value="2" nick="areas"/>
+    <value value="3" nick="fingers"/>
+  </enum>
+  <enum id="org.helix.Settings.compat.PowerButton">
+    <value value="0" nick="nothing"/>
+    <value value="1" nick="suspend"/>
+    <value value="2" nick="hibernate"/>
+    <value value="3" nick="interactive"/>
+  </enum>
+  <enum id="org.helix.Settings.compat.SleepType">
+    <value value="0" nick="blank"/>
+    <value value="1" nick="suspend"/>
+    <value value="2" nick="shutdown"/>
+    <value value="3" nick="hibernate"/>
+    <value value="4" nick="interactive"/>
+    <value value="5" nick="nothing"/>
+    <value value="6" nick="logout"/>
+  </enum>
+  <schema id="org.gnome.desktop.interface" path="/org/gnome/desktop/interface/">
+    <key name="color-scheme" enum="org.helix.Settings.compat.ColorScheme">
+      <default>'default'</default>
+    </key>
+    <key name="accent-color" enum="org.helix.Settings.compat.AccentColor">
+      <default>'blue'</default>
+    </key>
+    <key name="text-scaling-factor" type="d">
+      <default>1.0</default>
+      <range min="0.5" max="3.0"/>
+    </key>
+    <key name="cursor-size" type="i">
+      <default>24</default>
+    </key>
+    <key name="enable-animations" type="b">
+      <default>true</default>
+    </key>
+    <key name="overlay-scrolling" type="b">
+      <default>true</default>
+    </key>
+    <key name="cursor-blink" type="b">
+      <default>true</default>
+    </key>
+    <key name="locate-pointer" type="b">
+      <default>false</default>
+    </key>
+    <key name="enable-hot-corners" type="b">
+      <default>true</default>
+    </key>
+    <key name="show-battery-percentage" type="b">
+      <default>false</default>
+    </key>
+    <key name="clock-format" enum="org.helix.Settings.compat.ClockFormat">
+      <default>'24h'</default>
+    </key>
+    <key name="clock-show-weekday" type="b">
+      <default>false</default>
+    </key>
+    <key name="clock-show-date" type="b">
+      <default>true</default>
+    </key>
+    <key name="clock-show-seconds" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.background" path="/org/gnome/desktop/background/">
+    <key name="picture-uri" type="s">
+      <default>''</default>
+    </key>
+    <key name="picture-uri-dark" type="s">
+      <default>''</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.peripherals.mouse" path="/org/gnome/desktop/peripherals/mouse/">
+    <key name="left-handed" type="b">
+      <default>false</default>
+    </key>
+    <key name="speed" type="d">
+      <default>0.0</default>
+      <range min="-1.0" max="1.0"/>
+    </key>
+    <key name="accel-profile" enum="org.helix.Settings.compat.AccelProfile">
+      <default>'default'</default>
+    </key>
+    <key name="natural-scroll" type="b">
+      <default>false</default>
+    </key>
+    <key name="double-click" type="i">
+      <default>400</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.peripherals.touchpad" path="/org/gnome/desktop/peripherals/touchpad/">
+    <key name="send-events" enum="org.helix.Settings.compat.SendEvents">
+      <default>'enabled'</default>
+    </key>
+    <key name="disable-while-typing" type="b">
+      <default>true</default>
+    </key>
+    <key name="speed" type="d">
+      <default>0.0</default>
+      <range min="-1.0" max="1.0"/>
+    </key>
+    <key name="click-method" enum="org.helix.Settings.compat.ClickMethod">
+      <default>'fingers'</default>
+    </key>
+    <key name="tap-to-click" type="b">
+      <default>true</default>
+    </key>
+    <key name="two-finger-scrolling-enabled" type="b">
+      <default>true</default>
+    </key>
+    <key name="edge-scrolling-enabled" type="b">
+      <default>false</default>
+    </key>
+    <key name="natural-scroll" type="b">
+      <default>true</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.peripherals.keyboard" path="/org/gnome/desktop/peripherals/keyboard/">
+    <key name="repeat" type="b">
+      <default>true</default>
+    </key>
+    <key name="delay" type="u">
+      <default>500</default>
+    </key>
+    <key name="repeat-interval" type="u">
+      <default>30</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.input-sources" path="/org/gnome/desktop/input-sources/">
+    <key name="sources" type="a(ss)">
+      <default>[]</default>
+    </key>
+    <key name="per-window" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.a11y" path="/org/gnome/desktop/a11y/">
+    <key name="always-show-universal-access-status" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.a11y.interface" path="/org/gnome/desktop/a11y/interface/">
+    <key name="high-contrast" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.a11y.applications" path="/org/gnome/desktop/a11y/applications/">
+    <key name="screen-reader-enabled" type="b">
+      <default>false</default>
+    </key>
+    <key name="screen-magnifier-enabled" type="b">
+      <default>false</default>
+    </key>
+    <key name="screen-keyboard-enabled" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.a11y.keyboard" path="/org/gnome/desktop/a11y/keyboard/">
+    <key name="stickykeys-enable" type="b">
+      <default>false</default>
+    </key>
+    <key name="slowkeys-enable" type="b">
+      <default>false</default>
+    </key>
+    <key name="bouncekeys-enable" type="b">
+      <default>false</default>
+    </key>
+    <key name="mousekeys-enable" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.session" path="/org/gnome/desktop/session/">
+    <key name="idle-delay" type="u">
+      <default>300</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.screensaver" path="/org/gnome/desktop/screensaver/">
+    <key name="lock-enabled" type="b">
+      <default>true</default>
+    </key>
+    <key name="lock-delay" type="u">
+      <default>0</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.notifications" path="/org/gnome/desktop/notifications/">
+    <key name="show-banners" type="b">
+      <default>true</default>
+    </key>
+    <key name="show-in-lock-screen" type="b">
+      <default>true</default>
+    </key>
+    <key name="application-children" type="as">
+      <default>[]</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.notifications.application">
+    <key name="enable" type="b">
+      <default>true</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.privacy" path="/org/gnome/desktop/privacy/">
+    <key name="remember-recent-files" type="b">
+      <default>true</default>
+    </key>
+    <key name="recent-files-max-age" type="i">
+      <default>-1</default>
+    </key>
+    <key name="remove-old-trash-files" type="b">
+      <default>false</default>
+    </key>
+    <key name="remove-old-temp-files" type="b">
+      <default>false</default>
+    </key>
+    <key name="old-files-age" type="u">
+      <default>30</default>
+    </key>
+    <key name="disable-camera" type="b">
+      <default>false</default>
+    </key>
+    <key name="disable-microphone" type="b">
+      <default>false</default>
+    </key>
+    <key name="report-technical-problems" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.system.location" path="/org/gnome/system/location/">
+    <key name="enabled" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.mutter" path="/org/gnome/mutter/">
+    <key name="edge-tiling" type="b">
+      <default>false</default>
+    </key>
+    <key name="dynamic-workspaces" type="b">
+      <default>false</default>
+    </key>
+    <key name="workspaces-only-on-primary" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.wm.preferences" path="/org/gnome/desktop/wm/preferences/">
+    <key name="num-workspaces" type="i">
+      <default>4</default>
+      <range min="1" max="36"/>
+    </key>
+  </schema>
+  <schema id="org.gnome.shell.app-switcher" path="/org/gnome/shell/app-switcher/">
+    <key name="current-workspace-only" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.settings-daemon.plugins.power" path="/org/gnome/settings-daemon/plugins/power/">
+    <key name="idle-dim" type="b">
+      <default>true</default>
+    </key>
+    <key name="power-button-action" enum="org.helix.Settings.compat.PowerButton">
+      <default>'suspend'</default>
+    </key>
+    <key name="sleep-inactive-ac-timeout" type="i">
+      <default>900</default>
+    </key>
+    <key name="sleep-inactive-ac-type" enum="org.helix.Settings.compat.SleepType">
+      <default>'suspend'</default>
+    </key>
+    <key name="sleep-inactive-battery-timeout" type="i">
+      <default>900</default>
+    </key>
+    <key name="sleep-inactive-battery-type" enum="org.helix.Settings.compat.SleepType">
+      <default>'suspend'</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.datetime" path="/org/gnome/desktop/datetime/">
+    <key name="automatic-timezone" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.calendar" path="/org/gnome/desktop/calendar/">
+    <key name="show-weekdate" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+</schemalist>
