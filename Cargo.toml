@@ -3,6 +3,7 @@ members = [
     "crates/helix-app-common",
     "apps/calculator",
     "apps/characters",
+    "apps/tour",
 ]
 resolver = "2"
 
