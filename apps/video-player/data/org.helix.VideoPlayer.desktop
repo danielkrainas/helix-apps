@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Video Player
+Comment=Play videos
+Keywords=Video;Movie;Film;Clip;Player;Media;
+Exec=helix-video-player %U
+Icon=video-player
+Terminal=false
+Type=Application
+Categories=GTK;AudioVideo;Video;Player;
+MimeType=video/mp4;video/x-matroska;video/webm;video/ogg;video/quicktime;video/x-msvideo;video/mpeg;video/x-flv;video/3gpp;video/3gpp2;video/x-ms-wmv;video/mp2t;video/x-ogm+ogg;application/ogg;
+StartupNotify=true
+DBusActivatable=false
