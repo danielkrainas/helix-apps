@@ -895,6 +895,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-files"
+version = "0.1.0"
+dependencies = [
+ "async-channel",
+ "gtk4",
+ "helix-app-common",
+ "libadwaita",
+]
+
+[[package]]
 name = "helix-fonts"
 version = "0.1.0"
 dependencies = [
