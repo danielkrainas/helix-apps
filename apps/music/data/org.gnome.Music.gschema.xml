@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the keys Helix Music uses. Install only
+     when the schema is not already provided by the system. -->
+<schemalist>
+  <enum id="org.gnome.Music.RepeatMode">
+    <value value="0" nick="none"/>
+    <value value="1" nick="song"/>
+    <value value="2" nick="all"/>
+    <value value="3" nick="shuffle"/>
+  </enum>
+  <schema path="/org/gnome/Music/" id="org.gnome.Music">
+    <key type="ai" name="window-size"><default>[800, 600]</default><summary>Window size</summary></key>
+    <key type="b" name="window-maximized"><default>false</default><summary>Window maximized</summary></key>
+    <key name="repeat" enum="org.gnome.Music.RepeatMode"><default>'none'</default><summary>Playback repeat mode</summary></key>
+    <key type="b" name="inhibit-suspend"><default>false</default><summary>Inhibit system suspend while playing</summary></key>
+  </schema>
+</schemalist>

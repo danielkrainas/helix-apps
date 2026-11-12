@@ -21,6 +21,7 @@ members = [
     "apps/audio-player",
     "apps/help",
     "apps/web",
+    "apps/music",
 ]
 resolver = "2"
 
