@@ -8,6 +8,7 @@ members = [
     "apps/logs",
     "apps/disk-usage",
     "apps/weather",
+    "apps/fonts",
 ]
 resolver = "2"
 
