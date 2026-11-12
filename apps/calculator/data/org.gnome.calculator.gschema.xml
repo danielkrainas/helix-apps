@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the keys Helix Calculator uses. Install only
+     when the schema is not already provided by the system. -->
+<schemalist>
+  <enum id="org.gnome.calculator.NumberFormat">
+    <value value="0" nick="automatic"/>
+    <value value="1" nick="fixed"/>
+    <value value="2" nick="scientific"/>
+    <value value="3" nick="engineering"/>
+  </enum>
+  <enum id="org.gnome.calculator.AngleUnit">
+    <value value="0" nick="radians"/>
+    <value value="1" nick="degrees"/>
+    <value value="2" nick="gradians"/>
+  </enum>
+  <enum id="org.gnome.calculator.ButtonMode">
+    <value value="0" nick="basic"/>
+    <value value="1" nick="advanced"/>
+    <value value="2" nick="financial"/>
+    <value value="3" nick="programming"/>
+    <value value="4" nick="keyboard"/>
+  </enum>
+  <schema path="/org/gnome/calculator/" id="org.gnome.calculator">
+    <key type="i" name="accuracy"><default>9</default><summary>Accuracy value</summary></key>
+    <key type="i" name="word-size"><default>64</default><summary>Word size</summary></key>
+    <key type="i" name="base"><default>10</default><summary>Numeric base</summary></key>
+    <key type="b" name="show-thousands"><default>false</default><summary>Show thousands separators</summary></key>
+    <key type="b" name="show-zeroes"><default>false</default><summary>Show trailing zeroes</summary></key>
+    <key name="number-format" enum="org.gnome.calculator.NumberFormat"><default>'automatic'</default><summary>Number format</summary></key>
+    <key name="angle-units" enum="org.gnome.calculator.AngleUnit"><default>'degrees'</default><summary>Angle units</summary></key>
+    <key name="button-mode" enum="org.gnome.calculator.ButtonMode"><default>'basic'</default><summary>Button mode</summary></key>
+    <key type="b" name="window-maximized"><default>false</default><summary>Window maximized</summary></key>
+    <key type="(ii)" name="window-size"><default>(360, 616)</default><summary>Window size</summary></key>
+  </schema>
+</schemalist>

@@ -1,0 +1,19 @@
+[package]
+name = "helix-calculator"
+description = "Calculator for the Helix desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "helix-calculator"
+path = "src/main.rs"
+
+[dependencies]
+gtk.workspace = true
+adw.workspace = true
+helix-app-common.workspace = true
+serde.workspace = true
+serde_json.workspace = true
