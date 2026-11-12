@@ -1,0 +1,19 @@
+[package]
+name = "helix-terminal"
+description = "Terminal emulator for the Helix desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "helix-terminal"
+path = "src/main.rs"
+
+[dependencies]
+gtk.workspace = true
+adw.workspace = true
+helix-app-common.workspace = true
+vte4 = { version = "0.8", features = ["v0_76"] }
+libc = "0.2"
