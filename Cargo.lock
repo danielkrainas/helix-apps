@@ -1047,6 +1047,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-camera"
+version = "0.1.0"
+dependencies = [
+ "async-channel",
+ "gio",
+ "glib",
+ "gstreamer",
+ "gstreamer-app",
+ "gstreamer-video",
+ "gtk4",
+ "helix-app-common",
+ "libadwaita",
+ "serde",
+ "serde_json",
+ "zbus",
+]
+
+[[package]]
 name = "helix-characters"
 version = "0.1.0"
 dependencies = [

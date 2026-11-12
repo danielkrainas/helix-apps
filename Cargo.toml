@@ -17,6 +17,7 @@ members = [
     "apps/files",
     "apps/terminal",
     "apps/video-player",
+    "apps/camera",
 ]
 resolver = "2"
 
