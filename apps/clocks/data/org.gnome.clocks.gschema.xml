@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the keys Helix Clocks uses. Install only
+     when the schema is not already provided by the system. -->
+<schemalist>
+  <enum id="org.gnome.clocks.PanelId">
+    <value value="0" nick="world"/>
+    <value value="1" nick="alarm"/>
+    <value value="2" nick="stopwatch"/>
+    <value value="3" nick="timer"/>
+  </enum>
+  <schema path="/org/gnome/clocks/" id="org.gnome.clocks">
+    <key type="aa{sv}" name="world-clocks"><default>[]</default><summary>Configured world clocks</summary><description>List of world clocks to show.</description></key>
+    <key type="aa{sv}" name="alarms"><default>[]</default><summary>Configured alarms</summary><description>List of alarms set.</description></key>
+    <key type="aa{sv}" name="timers"><default>[]</default><summary>Configured timers</summary><description>List of timers set.</description></key>
+    <key type="b" name="geolocation"><default>true</default><summary>Geolocation support</summary><description>Turn geolocation support on and off.</description></key>
+  </schema>
+  <schema path="/org/gnome/clocks/state/window/" id="org.gnome.clocks.state.window">
+    <key type="(ii)" name="size"><default>(870, 690)</default><summary>Window size</summary></key>
+    <key type="b" name="maximized"><default>false</default><summary>Window maximized</summary></key>
+    <key name="panel-id" enum="org.gnome.clocks.PanelId"><default>'world'</default><summary>Panel state</summary></key>
+  </schema>
+</schemalist>

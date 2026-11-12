@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Clocks
+Comment=Clocks for world times, plus alarms, stopwatch and a timer
+Keywords=time;timer;alarm;world clock;stopwatch;time zone;
+Exec=helix-clocks
+Icon=org.gnome.clocks
+Terminal=false
+Type=Application
+Categories=GTK;Utility;Clock;
+StartupNotify=true
+X-GNOME-UsesNotifications=true
+DBusActivatable=false
