@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the keys Helix Logs uses. Install only
+     when the schema is not already provided by the system. -->
+<schemalist>
+  <enum id="org.gnome.Logs.GlSortOrder">
+    <value nick="ascending-time" value="0"/>
+    <value nick="descending-time" value="1"/>
+  </enum>
+  <schema id="org.gnome.Logs" path="/org/gnome/logs/">
+    <key name="ignore-warning" type="b">
+      <default>false</default>
+      <summary>Ignore the insufficient-permission warning</summary>
+    </key>
+    <key name="sort-order" enum="org.gnome.Logs.GlSortOrder">
+      <default>'descending-time'</default>
+      <summary>Order of rows in the event list</summary>
+    </key>
+  </schema>
+</schemalist>

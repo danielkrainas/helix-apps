@@ -492,6 +492,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-logs"
+version = "0.1.0"
+dependencies = [
+ "async-channel",
+ "gtk4",
+ "helix-app-common",
+ "libadwaita",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "helix-system-monitor"
 version = "0.1.0"
 dependencies = [

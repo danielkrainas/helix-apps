@@ -1,0 +1,20 @@
+[package]
+name = "helix-logs"
+description = "System log viewer for the Helix desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "helix-logs"
+path = "src/main.rs"
+
+[dependencies]
+gtk.workspace = true
+adw.workspace = true
+helix-app-common.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+async-channel = "2"
