@@ -1036,6 +1036,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-audio-player"
+version = "0.1.0"
+dependencies = [
+ "async-channel",
+ "gstreamer",
+ "gstreamer-app",
+ "gtk4",
+ "helix-app-common",
+ "libadwaita",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "zbus",
+]
+
+[[package]]
 name = "helix-calculator"
 version = "0.1.0"
 dependencies = [
