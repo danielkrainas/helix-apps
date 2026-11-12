@@ -1,0 +1,22 @@
+[Desktop Entry]
+Name=Web
+GenericName=Web Browser
+Comment=Browse the web
+Keywords=web;browser;internet;
+Exec=helix-web %U
+Icon=web-browser
+Terminal=false
+Type=Application
+Categories=GTK;Network;WebBrowser;
+MimeType=text/html;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true
+DBusActivatable=false
+Actions=new-window;new-private-window;
+
+[Desktop Action new-window]
+Name=New Window
+Exec=helix-web --new-window
+
+[Desktop Action new-private-window]
+Name=New Private Window
+Exec=helix-web --private

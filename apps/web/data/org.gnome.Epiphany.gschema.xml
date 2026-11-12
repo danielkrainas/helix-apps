@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GNOME-compatible schema for the keys Helix Web uses. Install only when
+     the schema is not already provided by the system. -->
+<schemalist>
+  <enum id="org.gnome.Epiphany.RestoreSessionPolicy">
+    <value value="0" nick="always"/>
+    <value value="1" nick="crashed"/>
+    <value value="2" nick="never"/>
+  </enum>
+  <schema path="/org/gnome/epiphany/" id="org.gnome.Epiphany">
+    <key type="s" name="homepage-url">
+      <default>'about:overview'</default>
+      <summary>Home page</summary>
+    </key>
+    <key name="restore-session-policy" enum="org.gnome.Epiphany.RestoreSessionPolicy">
+      <default>'always'</default>
+      <summary>Whether to restore tabs on startup</summary>
+    </key>
+    <child schema="org.gnome.Epiphany.web" name="web"/>
+  </schema>
+  <schema path="/org/gnome/epiphany/web/" id="org.gnome.Epiphany.web">
+    <key type="b" name="enable-popups">
+      <default>false</default>
+      <summary>Allow popups</summary>
+    </key>
+    <key type="s" name="cookies-policy">
+      <choices>
+        <choice value="always"/>
+        <choice value="no-third-party"/>
+        <choice value="never"/>
+      </choices>
+      <default>'no-third-party'</default>
+      <summary>Cookie accept policy</summary>
+    </key>
+    <key type="d" name="default-zoom-level">
+      <default>1.0</default>
+      <summary>Default zoom level for new pages</summary>
+    </key>
+  </schema>
+</schemalist>
