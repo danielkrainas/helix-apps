@@ -11,7 +11,11 @@ use std::rc::{Rc, Weak};
 use std::time::Duration;
 
 use crate::alarm::{self, Alarm, AlarmEntry, Event, RingState, Weekdays};
+use crate::background;
 use crate::clock::{Clock, SystemClock};
+use crate::gwdb;
+use crate::location;
+use crate::sound::{self, Sound};
 use crate::stopwatch::{self, Stopwatch};
 use crate::store::{self, WorldClock};
 use crate::sun::{self, SunTimes};
@@ -32,6 +36,31 @@ const PAGES: [(&str, &str, &str); 4] = [
 pub fn run() -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
     helix_app_common::install_standard_actions(&app, "Clocks", "World clocks, alarms, a stopwatch and timers");
+    app.add_main_option(
+        "hidden",
+        glib::Char::from(0),
+        glib::OptionFlags::NONE,
+        glib::OptionArg::None,
+        "Run in the background to ring alarms, without opening a window",
+        None,
+    );
+    let hidden = Rc::new(Cell::new(false));
+    {
+        let hidden = hidden.clone();
+        app.connect_handle_local_options(move |app, opts| {
+            if opts.contains("hidden") {
+                if app.register(None::<&gio::Cancellable>).is_err() {
+                    return 1;
+                }
+                if app.is_remote() {
+                    // Already running: nothing to do (and no window to show).
+                    return 0;
+                }
+                hidden.set(true);
+            }
+            -1
+        });
+    }
     app.connect_startup(|_| load_css());
     let ui: Rc<RefCell<Option<Rc<Ui>>>> = Rc::default();
     app.connect_activate(move |app| {
@@ -40,7 +69,17 @@ pub fn run() -> glib::ExitCode {
             Some(u) => u.window.present(),
             None => {
                 let u = Ui::build(app);
-                u.window.present();
+                if hidden.replace(false) {
+                    // Started at login: stay hidden while alarms need us,
+                    // otherwise there is nothing to do.
+                    if !u.has_active_alarms() {
+                        u.window.set_hide_on_close(false);
+                        u.window.destroy();
+                        return;
+                    }
+                } else {
+                    u.window.present();
+                }
                 *ui.borrow_mut() = Some(u);
             }
         }
@@ -129,8 +168,17 @@ struct Ui {
     alarms: RefCell<Vec<AlarmEntry>>,
     alarm_stack: gtk::Stack,
     alarm_list: gtk::ListBox,
+    alarm_note: gtk::Label,
     ringing: RefCell<HashMap<String, adw::AlertDialog>>,
     id_salt: Cell<u64>,
+    player: RefCell<sound::Player>,
+    hold: RefCell<Option<gio::ApplicationHoldGuard>>,
+    /// The `autostart` value last sent to the Background portal.
+    autostart_requested: Cell<Option<bool>>,
+    /// GWeather location database (station codes), if installed.
+    gw: Option<Rc<gwdb::Db>>,
+    /// The geolocated current place, once known.
+    here: RefCell<Option<WorldClock>>,
 
     // Stopwatch
     stopwatch: RefCell<Stopwatch>,
@@ -161,7 +209,9 @@ impl Ui {
             .unwrap_or(chrono_tz::UTC);
         let now = clock.now();
 
-        let world = prefs.get_variant("world-clocks").map(|v| store::world_clocks_from_variant(&v, &db)).unwrap_or_default();
+        let gw = gwdb::Db::load().map(Rc::new);
+        let world =
+            prefs.get_variant("world-clocks").map(|v| store::world_clocks_from_variant(&v, &db, gw.as_deref())).unwrap_or_default();
         let mut alarms: Vec<AlarmEntry> = prefs
             .get_variant("alarms")
             .map(|v| store::alarms_from_variant(&v))
@@ -225,7 +275,7 @@ impl Ui {
         let alarm_empty = adw::StatusPage::builder()
             .icon_name("alarm-symbolic")
             .title("No Alarms")
-            .description("Alarms only ring while Clocks is running")
+            .description("Use the + button to add alarms")
             .vexpand(true)
             .build();
         let alarm_add = gtk::Button::builder().label("_Add Alarm").use_underline(true).halign(gtk::Align::Center).build();
@@ -236,6 +286,7 @@ impl Ui {
         let alarm_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
         alarm_box.append(&alarm_list);
         let note = label("Alarms only ring while Clocks is running.", &["dim-label", "caption"]);
+        note.set_visible(false);
         alarm_box.append(&note);
         alarm_stack.add_named(&scrolled_clamped(&alarm_box), Some("list"));
 
@@ -309,8 +360,14 @@ impl Ui {
             alarms: RefCell::new(alarms),
             alarm_stack,
             alarm_list,
+            alarm_note: note,
             ringing: RefCell::default(),
             id_salt: Cell::new(0),
+            player: RefCell::default(),
+            hold: RefCell::default(),
+            autostart_requested: Cell::new(None),
+            gw,
+            here: RefCell::default(),
             stopwatch: RefCell::default(),
             sw_time,
             sw_split,
@@ -379,6 +436,7 @@ impl Ui {
         ui.update_stopwatch();
         ui.update_header();
         ui.update_keep_alive();
+        ui.locate();
 
         let weak2 = weak.clone();
         glib::timeout_add_local(Duration::from_millis(100), move || match weak2.upgrade() {
@@ -500,11 +558,82 @@ impl Ui {
         self.app.set_accels_for_action("win.show-help-overlay", &["<Control>question"]);
     }
 
-    /// Keep the process alive (window hides on close) while an alarm is
-    /// enabled or a timer runs, so they can still fire.
+    fn has_active_alarms(&self) -> bool {
+        self.alarms.borrow().iter().any(|e| e.alarm.active)
+    }
+
+    /// Keep the process alive (application hold; the window hides on close)
+    /// while an alarm is enabled or a timer runs, so they can still fire,
+    /// and ask the Background portal for permission and login autostart
+    /// while alarms are enabled.
     fn update_keep_alive(&self) {
-        let keep = self.alarms.borrow().iter().any(|e| e.alarm.active) || self.timers.borrow().iter().any(Timer::is_running);
+        let alarms = self.has_active_alarms();
+        let keep = alarms || self.timers.borrow().iter().any(Timer::is_running);
         self.window.set_hide_on_close(keep);
+        {
+            let mut hold = self.hold.borrow_mut();
+            if keep && hold.is_none() {
+                *hold = Some(self.app.hold());
+            } else if !keep {
+                hold.take();
+            }
+        }
+        let prev = self.autostart_requested.get();
+        // Only withdraw autostart after having asked for it in this session.
+        if prev != Some(alarms) && (alarms || prev.is_some()) {
+            self.autostart_requested.set(Some(alarms));
+            let note = self.alarm_note.downgrade();
+            glib::spawn_future_local(async move {
+                let r = gio::spawn_blocking(move || background::request(APP_ID, alarms)).await;
+                let granted = match r {
+                    Ok(Ok(g)) => g.background,
+                    Ok(Err(e)) => {
+                        eprintln!("helix-clocks: background portal: {e}");
+                        false
+                    }
+                    Err(_) => false,
+                };
+                if let Some(note) = note.upgrade() {
+                    note.set_visible(alarms && !granted);
+                }
+            });
+        }
+    }
+
+    /// Looks up the current place (Location portal / GeoClue) once, if the
+    /// `geolocation` setting allows it.
+    fn locate(self: &Rc<Self>) {
+        if !self.prefs.get("geolocation", true) {
+            return;
+        }
+        let weak = Rc::downgrade(self);
+        glib::spawn_future_local(async move {
+            let r = gio::spawn_blocking(|| location::locate(APP_ID, Duration::from_secs(30))).await;
+            let Some(ui) = weak.upgrade() else { return };
+            match r {
+                Ok(Ok(fix)) => {
+                    let here = ui.place_at((fix.latitude, fix.longitude));
+                    ui.here.replace(Some(here));
+                    ui.rebuild_world();
+                }
+                Ok(Err(e)) => eprintln!("helix-clocks: location unavailable: {e}"),
+                Err(_) => {}
+            }
+        });
+    }
+
+    /// Names a position: the nearest GWeather city (within 100 km) with its
+    /// zone, else the nearest `zone1970.tab` city's zone.
+    fn place_at(&self, at: (f64, f64)) -> WorldClock {
+        let tz_city = tz::nearest(&self.db, at);
+        let city = self.gw.as_deref().and_then(|g| g.nearest_city(at, 100.0));
+        let zone = city
+            .and_then(|c| c.tz.as_deref())
+            .and_then(tz::zone_by_id)
+            .or(tz_city.map(|l| l.zone))
+            .unwrap_or(self.local);
+        let name = city.map(|c| c.name.clone()).unwrap_or_else(|| tz::city_from_zone(zone.name()));
+        WorldClock { name, zone, coords: Some(at), country: city.and_then(|c| c.country.clone()), station: None }
     }
 
     fn tick(self: &Rc<Self>) {
@@ -530,12 +659,14 @@ impl Ui {
         let mut rows = Vec::new();
         let mut entries: Vec<(WorldClock, bool)> = Vec::new();
         if self.prefs.get("geolocation", true) {
+            let located = self.here.borrow().clone();
             let here = self.db.iter().find(|l| l.zone == self.local);
-            let mut wc = here.map(WorldClock::from_location).unwrap_or(WorldClock {
+            let mut wc = located.or_else(|| here.map(WorldClock::from_location)).unwrap_or(WorldClock {
                 name: tz::city_from_zone(self.local.name()),
                 zone: self.local,
                 coords: None,
                 country: None,
+                station: None,
             });
             wc.country = Some("Current Location".into());
             entries.push((wc, false));
@@ -583,7 +714,7 @@ impl Ui {
     }
 
     fn save_world(&self) {
-        self.prefs.set_variant("world-clocks", store::world_clocks_to_variant(&self.world.borrow()));
+        self.prefs.set_variant("world-clocks", store::world_clocks_to_variant(&self.world.borrow(), self.gw.as_deref()));
     }
 
     fn is_day(zone: Tz, coords: Option<(f64, f64)>, now: DateTime<Utc>) -> bool {
@@ -1046,8 +1177,13 @@ impl Ui {
             }
             any_ringing |= e.is_ringing();
         }
-        if any_ringing && now.timestamp() % 2 == 0 {
-            beep();
+        {
+            let mut player = self.player.borrow_mut();
+            if any_ringing && player.failed() && now.timestamp() % 2 == 0 {
+                beep();
+            } else if !any_ringing && player.playing() == Some(Sound::Alarm) {
+                player.stop();
+            }
         }
         if events.is_empty() {
             return;
@@ -1078,7 +1214,9 @@ impl Ui {
         n.add_button_with_target_value("Stop", "app.alarm-stop", Some(&a.id.to_variant()));
         n.set_default_action("app.activate");
         self.app.send_notification(Some(&format!("alarm-{}", a.id)), &n);
-        beep();
+        if self.player.borrow().playing() != Some(Sound::Alarm) && !self.player.borrow_mut().play(Sound::Alarm) {
+            beep();
+        }
 
         if self.ringing.borrow().contains_key(&a.id) {
             return;
@@ -1109,6 +1247,9 @@ impl Ui {
             d.force_close();
         }
         self.app.withdraw_notification(&format!("alarm-{id}"));
+        if self.ringing.borrow().is_empty() && self.player.borrow().playing() == Some(Sound::Alarm) {
+            self.player.borrow_mut().stop();
+        }
     }
 
     fn respond_alarm(self: &Rc<Self>, id: &str, snooze: bool) {
@@ -1396,9 +1537,12 @@ impl Ui {
             n.set_icon(&gio::ThemedIcon::new("timer-symbolic"));
             n.set_default_action("app.activate");
             self.app.send_notification(Some("timer"), &n);
-            beep();
-            for delay in [400, 800] {
-                glib::timeout_add_local_once(Duration::from_millis(delay), beep);
+            let alarm_ringing = self.player.borrow().playing() == Some(Sound::Alarm);
+            if !alarm_ringing && !self.player.borrow_mut().play(Sound::Timer) {
+                beep();
+                for delay in [400, 800] {
+                    glib::timeout_add_local_once(Duration::from_millis(delay), beep);
+                }
             }
             self.update_keep_alive();
         }

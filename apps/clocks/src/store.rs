@@ -2,6 +2,7 @@
 //! (`aa{sv}`). See SPEC.md for the dictionary layouts.
 
 use crate::alarm::{Alarm, Weekdays};
+use crate::gwdb;
 use crate::timer::Timer;
 use crate::tz::{self, Location};
 use chrono_tz::Tz;
@@ -17,11 +18,14 @@ pub struct WorldClock {
     /// (lat, lon) degrees.
     pub coords: Option<(f64, f64)>,
     pub country: Option<String>,
+    /// GWeather weather station (METAR code, (lat, lon) degrees), kept so
+    /// GNOME-written entries round-trip unchanged.
+    pub station: Option<(String, (f64, f64))>,
 }
 
 impl WorldClock {
     pub fn from_location(l: &Location) -> Self {
-        WorldClock { name: l.city.clone(), zone: l.zone, coords: l.coords, country: l.country.clone() }
+        WorldClock { name: l.city.clone(), zone: l.zone, coords: l.coords, country: l.country.clone(), station: None }
     }
 }
 
@@ -40,9 +44,23 @@ fn array(items: Vec<Variant>) -> Variant {
     Variant::array_from_iter_with_type(glib::VariantTy::VARDICT, items)
 }
 
-pub fn world_clock_to_variant(c: &WorldClock) -> Variant {
-    let coords: Vec<(f64, f64)> = c.coords.map(|(la, lo)| vec![(la.to_radians(), lo.to_radians())]).unwrap_or_default();
-    let ser: SerializedLocation = (c.name.clone(), String::new(), true, coords, Vec::new());
+fn radians(c: Option<(f64, f64)>) -> Vec<(f64, f64)> {
+    c.map(|(la, lo)| vec![(la.to_radians(), lo.to_radians())]).unwrap_or_default()
+}
+
+/// Serializes like GNOME Clocks: `{'location': <(uint32 2, <(name, code,
+/// true, [city], [station])>)>}`. The station is the entry's own or, with
+/// the GWeather database, the one nearest to the city.
+pub fn world_clock_to_variant(c: &WorldClock, gw: Option<&gwdb::Db>) -> Variant {
+    let station = c.station.clone().or_else(|| {
+        let s = gw?.nearest_station(c.coords?)?;
+        Some((s.code.clone(), s.coords))
+    });
+    let (code, st_coords) = match station {
+        Some((code, co)) => (code, Some(co)),
+        None => (String::new(), None),
+    };
+    let ser: SerializedLocation = (c.name.clone(), code, true, radians(c.coords), radians(st_coords));
     let location = ToVariant::to_variant(&(GWEATHER_FORMAT_VERSION, ToVariant::to_variant(&ser)));
     let d = VariantDict::new(None);
     d.insert_value("location", &location);
@@ -50,39 +68,48 @@ pub fn world_clock_to_variant(c: &WorldClock) -> Variant {
     d.end()
 }
 
-pub fn world_clocks_to_variant(cs: &[WorldClock]) -> Variant {
-    array(cs.iter().map(world_clock_to_variant).collect())
+pub fn world_clocks_to_variant(cs: &[WorldClock], gw: Option<&gwdb::Db>) -> Variant {
+    array(cs.iter().map(|c| world_clock_to_variant(c, gw)).collect())
 }
 
-/// Reads one world-clock dictionary; `db` resolves coordinates to zones
-/// when no `helix-timezone` entry is present.
-pub fn world_clock_from_dict(d: &VariantDict, db: &[Location]) -> Option<WorldClock> {
+/// Reads one world-clock dictionary. The zone comes from `helix-timezone`,
+/// else the GWeather station's zone (`gw`), else the `zone1970.tab` city
+/// nearest to the coordinates (`db`).
+pub fn world_clock_from_dict(d: &VariantDict, db: &[Location], gw: Option<&gwdb::Db>) -> Option<WorldClock> {
     let explicit = d.lookup::<String>("helix-timezone").ok().flatten().and_then(|z| tz::zone_by_id(&z));
     let loc = d.lookup_value("location", None).map(|v| if v.type_() == glib::VariantTy::VARIANT { v.as_variant().unwrap_or(v) } else { v });
     let mut name = None;
     let mut coords = None;
+    let mut station = None;
     if let Some(loc) = loc {
         if let Some((_version, inner)) = loc.get::<(u32, Variant)>() {
-            if let Some((n, _code, _is_city, city, station)) = inner.get::<SerializedLocation>() {
+            if let Some((n, code, _is_city, city, st)) = inner.get::<SerializedLocation>() {
                 name = Some(n);
-                coords = city.first().or(station.first()).map(|(la, lo)| (la.to_degrees(), lo.to_degrees()));
+                let deg = |v: &Vec<(f64, f64)>| v.first().map(|(la, lo)| (la.to_degrees(), lo.to_degrees()));
+                coords = deg(&city).or(deg(&st));
+                if !code.is_empty() {
+                    station = deg(&st).map(|c| (code, c));
+                }
             }
         }
     }
+    let gw_station = station.as_ref().and_then(|(code, _)| gw?.station(code));
+    let gw_zone = gw_station.and_then(|s| s.tz.as_deref()).and_then(tz::zone_by_id);
     let nearest = coords.and_then(|c| tz::nearest(db, c));
-    let zone = explicit.or(nearest.map(|l| l.zone))?;
+    let zone = explicit.or(gw_zone).or(nearest.map(|l| l.zone))?;
     let known = db.iter().find(|l| l.zone == zone);
     let name = name.filter(|n| !n.is_empty()).unwrap_or_else(|| tz::city_from_zone(zone.name()));
-    // The country is only known for the zone's own principal city; a
-    // coordinate-resolved place may lie in a neighbouring country.
-    let country = known.filter(|l| l.city == name).and_then(|l| l.country.clone());
-    Some(WorldClock { name, zone, coords: coords.or(known.and_then(|l| l.coords)), country })
+    // The country is known for the zone's own principal city or from the
+    // station; a coordinate-resolved place may lie in a neighbouring country.
+    let country =
+        known.filter(|l| l.city == name).and_then(|l| l.country.clone()).or_else(|| gw_station.and_then(|s| s.country.clone()));
+    Some(WorldClock { name, zone, coords: coords.or(known.and_then(|l| l.coords)), country, station })
 }
 
-pub fn world_clocks_from_variant(v: &Variant, db: &[Location]) -> Vec<WorldClock> {
+pub fn world_clocks_from_variant(v: &Variant, db: &[Location], gw: Option<&gwdb::Db>) -> Vec<WorldClock> {
     let mut out: Vec<WorldClock> = Vec::new();
     for d in dicts(v) {
-        if let Some(c) = world_clock_from_dict(&d, db) {
+        if let Some(c) = world_clock_from_dict(&d, db, gw) {
             if !out.iter().any(|o| o.zone == c.zone && o.name == c.name) {
                 out.push(c);
             }
@@ -180,9 +207,9 @@ mod tests {
     #[test]
     fn world_clocks_roundtrip() {
         let cs = vec![WorldClock::from_location(&db()[1]), WorldClock::from_location(&db()[0])];
-        let v = world_clocks_to_variant(&cs);
+        let v = world_clocks_to_variant(&cs, None);
         assert_eq!(v.type_().as_str(), "aa{sv}");
-        let back = world_clocks_from_variant(&v, &db());
+        let back = world_clocks_from_variant(&v, &db(), None);
         assert_eq!(back.len(), 2);
         assert_eq!(back[0].zone, chrono_tz::Asia::Tokyo);
         assert_eq!(back[0].name, "Tokyo");
@@ -209,11 +236,37 @@ mod tests {
         let d = VariantDict::new(None);
         d.insert_value("location", &loc);
         let v = array(vec![d.end()]);
-        let back = world_clocks_from_variant(&v, &db());
+        let back = world_clocks_from_variant(&v, &db(), None);
         assert_eq!(back.len(), 1);
         assert_eq!(back[0].name, "Munich");
         assert_eq!(back[0].zone, chrono_tz::Europe::Berlin);
         assert_eq!(back[0].country, None, "country is not guessed from coordinates");
+        // With the GWeather database the station gives zone and country, and
+        // the entry is written back unchanged.
+        let gw = gwdb::Db::parse(gwdb::FIXTURE).unwrap();
+        let back = world_clocks_from_variant(&v, &[], Some(&gw));
+        assert_eq!(back[0].zone, chrono_tz::Europe::Berlin);
+        assert_eq!(back[0].country.as_deref(), Some("Germany"));
+        let again = world_clocks_to_variant(&back, Some(&gw));
+        let inner = VariantDict::new(Some(&again.child_value(0))).lookup_value("location", None).unwrap();
+        let got = inner.child_value(1).as_variant().unwrap().get::<SerializedLocation>().unwrap();
+        assert_eq!((got.0.as_str(), got.1.as_str(), got.2), ("Munich", "EDDM", true));
+        assert!((got.3[0].0 - ser.3[0].0).abs() < 1e-12 && (got.4[0].1 - ser.4[0].1).abs() < 1e-12);
+    }
+
+    #[test]
+    fn helix_entries_get_nearest_station_code() {
+        let gw = gwdb::Db::parse(gwdb::FIXTURE).unwrap();
+        let mut c = WorldClock::from_location(&db()[0]);
+        c.name = "Munich".into();
+        c.coords = Some((48.15, 11.583333));
+        let v = world_clocks_to_variant(&[c], Some(&gw));
+        let loc = VariantDict::new(Some(&v.child_value(0))).lookup_value("location", None).unwrap();
+        let (_, code, is_city, city, st) = loc.child_value(1).as_variant().unwrap().get::<SerializedLocation>().unwrap();
+        assert_eq!(code, "EDDM");
+        assert!(is_city);
+        assert!((city[0].0.to_degrees() - 48.15).abs() < 1e-9);
+        assert!((st[0].0.to_degrees() - 48.35).abs() < 1e-9);
     }
 
     #[test]
@@ -221,8 +274,8 @@ mod tests {
         let d = VariantDict::new(None);
         d.insert_value("location", &Variant::from_variant(&"nonsense".to_variant()));
         let v = array(vec![d.end()]);
-        assert!(world_clocks_from_variant(&v, &db()).is_empty());
-        assert!(world_clocks_from_variant(&5i32.to_variant(), &db()).is_empty());
+        assert!(world_clocks_from_variant(&v, &db(), None).is_empty());
+        assert!(world_clocks_from_variant(&5i32.to_variant(), &db(), None).is_empty());
         assert!(alarms_from_variant(&"x".to_variant()).is_empty());
     }
 
@@ -234,7 +287,7 @@ mod tests {
             active: false,
             hour: 6,
             minute: 45,
-            days: Weekdays::from_numbers(&[1, 2, 3, 4, 5]),
+            days: Weekdays::from_numbers(&[0, 1, 2, 3, 4]),
             ring_minutes: 3,
             snooze_minutes: 7,
         };
