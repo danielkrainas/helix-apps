@@ -33,6 +33,19 @@ View images.
 - Header bar: *Open* button (start), a window title showing the file name
   with `n / total` position in the folder as subtitle, and (end) the primary
   menu and a *Properties* toggle button.
+- **Thumbnail strip**: a bottom bar (horizontal `gtk::ListView` in a
+  scrolled window) with one 64 px square thumbnail per image of the list,
+  shown when the list has more than one image and hidden in fullscreen /
+  slideshow. The current image is selected and scrolled into view; clicking
+  a thumbnail shows that image. Thumbnails (longest side 128 px) are
+  produced by two worker threads per window: a valid freedesktop thumbnail
+  (`$XDG_CACHE_HOME/thumbnails/{normal,large}/<md5(uri)>.png` whose
+  `Thumb::MTime` equals the file's mtime) is reused, otherwise the image is
+  decoded at that size (pixbuf with embedded orientation; the Rust decoder
+  for formats without a pixbuf loader). The thumbnail cache is only read,
+  never written. Only thumbnails of bound (visible) rows are requested and
+  requests for rows scrolled away are skipped; up to 2000 textures are kept
+  per window.
 - Several windows are possible (`app.new-window`, Ctrl+N); each has its own
   image list.
 
@@ -97,8 +110,9 @@ View images.
   otherwise. Pan offsets are clamped so no blank space appears beyond the
   image edges.
 - Double-click toggles between best fit and 100 % around the pointer.
-- **Rotate** left/right (90° steps) changes the view only; the file is never
-  modified. Rotation is reset when another image is shown.
+- **Rotate** left/right (90° steps) changes the view; the file is only
+  modified by an explicit **Save Rotation** (see below). An unsaved rotation
+  is discarded when another image is shown.
 - Scaling filter: trilinear when shrinking, linear up to 300 %, nearest
   neighbour above (so pixels are visible when zoomed far in).
 - Overlay controls on the image (previous / next buttons at the sides; a
@@ -121,6 +135,27 @@ View images.
   (`48.85840° N, 2.29450° E`, with a button opening a `geo:` URI via
   `gtk::UriLauncher`).
 
+### Saving a rotation
+- *Save Rotation* (Ctrl+S, primary menu, and a save button that appears in
+  the overlay controls while the view is rotated) is enabled when the view
+  rotation is not 0°, the image is not animated and its format is JPEG,
+  PNG, TIFF or BMP (the gdk-pixbuf savers). Other formats (GIF, WebP, QOI,
+  SVG, HEIF/AVIF, …) cannot be saved.
+- Runs on a worker thread: the file is decoded again with gdk-pixbuf, its
+  EXIF orientation and then the view rotation are applied to the pixels
+  (what is displayed is what is written), and it is re-encoded in the same
+  format.
+- Metadata kept where practical: JPEG keeps the original EXIF APP1 segment
+  with its Orientation tag reset to 1 (other tags, including
+  PixelX/YDimension, are copied unchanged), the ICC profile, quality 95;
+  PNG keeps the ICC profile and common `tEXt` chunks (Title, Author,
+  Description, Copyright, Creation Time, Software, Comment, Source); TIFF
+  keeps the ICC profile.
+- The new data is written to a hidden temporary file in the same folder
+  (`.<name>.helix-save-<pid>`), given the original permissions and renamed
+  over the original. On success a toast “Image saved” is shown and the
+  image is reloaded (rotation back to 0°); errors are shown as a toast.
+
 ### Actions (primary menu and shortcuts)
 | Action | Shortcut | Behaviour |
 |---|---|---|
@@ -135,32 +170,33 @@ View images.
 | Zoom in / out | Ctrl+= / Ctrl++ / Ctrl+KP_Add, Ctrl+- / Ctrl+KP_Subtract, Ctrl+scroll, pinch | |
 | Best fit | Ctrl+0 | |
 | 100 % / 200 % | Ctrl+1 / Ctrl+2 | |
-| Rotate right / left | Ctrl+R / Ctrl+Shift+R | View only |
+| Rotate right / left | Ctrl+R / Ctrl+Shift+R | View rotation |
+| Save Rotation | Ctrl+S | Re-encode the rotated image into its file |
 | Properties | F9, Alt+Return | Toggle sidebar |
 | Fullscreen | F11 | Toggle; Esc leaves |
 | Slideshow | F5 | Toggle |
 | Close window / Quit | Ctrl+W / Ctrl+Q | |
 
 ### GSettings
-None. The `org.gnome.Loupe` schema is not read: nothing the app currently
-persists has an established public key (see open questions), so no schema is
-shipped.
+`org.gnome.Loupe` (through `Prefs`; in memory when the schema is not
+installed): `show-properties` (`b`, default false) — initial state of the
+Properties sidebar, written whenever it is shown or hidden.
+`data/org.gnome.Loupe.gschema.xml` holds just this key, copied from the
+published schema.
 
 ### Command line
 `helix-image-viewer [FILE|DIR|URI ...]` (see *Opening images*).
+Testing: `HELIX_IMAGE_VIEWER_SMOKE=1` runs a scripted walk-through (rotate,
+save, next, properties, last, first, quit) — only use it on scratch
+copies, since it rewrites the opened image.
 
 ## Deferred
-- Thumbnail sidebar / strip (listed in the stub). The image list and
-  navigation exist; a thumbnail strip needs a thumbnailer cache design.
-- Saving a rotated image back to disk.
 - Printing.
 - Preloading neighbouring images, colour management, HDR.
 
-## Open questions
-- **Save rotation?** Rotation is view-only. Should Helix offer “Save” of the
-  rotated image (rewriting the EXIF orientation tag for JPEG losslessly, or
-  re-encoding other formats)? Loupe historically did not modify files.
-- **Thumbnail sidebar**: the stub lists one but Loupe has none. Keep, drop,
-  or implement as an optional bottom strip?
-- **GSettings**: Is there a Loupe key worth carrying over (e.g. a
-  “show properties” flag)? None is used today.
+## Decisions
+- Save rotation: an explicit *Save Rotation* action re-encodes the rotated
+  image into its file through the pixbuf pipeline, keeping metadata where
+  practical.
+- Thumbnails: kept as a bottom thumbnail strip.
+- GSettings: the real `org.gnome.Loupe` key `show-properties` is used.

@@ -6,6 +6,8 @@ mod folder;
 mod metadata;
 mod natsort;
 mod orientation;
+mod save;
+mod thumbs;
 mod trash;
 mod ui;
 mod view;

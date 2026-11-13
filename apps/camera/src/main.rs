@@ -7,6 +7,7 @@ mod encoders;
 mod naming;
 mod pipeline;
 mod portal;
+mod qr;
 mod settings;
 mod ui;
 

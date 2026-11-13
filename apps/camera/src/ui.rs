@@ -6,12 +6,14 @@ use crate::devices::SourceMode;
 use crate::encoders::{self, VideoFormat};
 use crate::naming::{self, CaptureKind};
 use crate::pipeline::{self, Frame};
-use crate::settings::Settings;
+use crate::qr;
+use crate::settings::{self, Settings};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
 use std::rc::Rc;
+use helix_app_common::Prefs;
 use std::time::Instant;
 
 pub const APP_ID: &str = "org.helix.Camera";
@@ -31,11 +33,19 @@ struct Ui {
     switcher: gtk::Button,
     photo_toggle: gtk::ToggleButton,
     video_toggle: gtk::ToggleButton,
+    qr_revealer: gtk::Revealer,
+    qr_label: gtk::Label,
+    qr_open: gtk::Button,
 }
 
 struct State {
     ui: Ui,
     settings: RefCell<Settings>,
+    prefs: Prefs,
+    qr: qr::Scanner,
+    qr_throttle: Cell<qr::Throttle>,
+    qr_tracker: RefCell<qr::Tracker>,
+    qr_text: RefCell<Option<String>>,
     handle: RefCell<Option<controller::Handle>>,
     countdown: Cell<Countdown>,
     countdown_timer: RefCell<Option<glib::SourceId>>,
@@ -58,7 +68,7 @@ impl State {
     }
 
     fn save_settings(&self) {
-        let _ = self.settings.borrow().save_to(&Settings::path());
+        let _ = self.settings.borrow().save(&self.prefs, &Settings::path());
     }
 
     fn video_mode(&self) -> bool {
@@ -67,6 +77,11 @@ impl State {
 
     fn toast(&self, msg: &str) {
         self.ui.toasts.add_toast(adw::Toast::new(msg));
+    }
+
+    /// Whether preview frames should be scanned for QR codes.
+    fn scanning(&self) -> bool {
+        self.streaming.get() && !self.video_mode() && !self.recording.get() && !self.busy.get()
     }
 }
 
@@ -123,7 +138,9 @@ fn load_css() {
          .flash { background: white; }
          .rec-label { background: #e01b24; color: white; border-radius: 9999px;
                       padding: 2px 10px; font-weight: bold; font-feature-settings: \"tnum\"; }
-         .controls { padding: 12px 18px; }",
+         .controls { padding: 12px 18px; }
+         .qr-banner { margin: 12px; padding: 6px 6px 6px 14px; border-radius: 12px;
+                      background: alpha(black, 0.75); color: white; }",
     );
     gtk::style_context_add_provider_for_display(
         &gdk::Display::default().expect("display"),
@@ -159,14 +176,16 @@ fn build(app: &adw::Application) -> Rc<State> {
     gst::init().ok();
     let formats = encoders::availability(&encoders::gst_has);
     let photos_ok = encoders::can_take_photos(&encoders::gst_has);
-    let settings = Settings::load_from(&Settings::path());
+    let prefs = Prefs::new(settings::SCHEMA);
+    let settings = Settings::load(&prefs, &Settings::path());
     let mode = SourceMode::from_env();
 
     let window = adw::ApplicationWindow::builder()
         .application(app)
         .title("Camera")
-        .default_width(640)
-        .default_height(560)
+        .default_width(settings.window_width)
+        .default_height(settings.window_height)
+        .maximized(settings.is_maximized)
         .build();
 
     // Viewfinder area.
@@ -201,6 +220,46 @@ fn build(app: &adw::Application) -> Rc<State> {
     overlay.add_overlay(&flash);
     overlay.add_overlay(&countdown_label);
     overlay.add_overlay(&rec_label);
+
+    // QR-code banner at the bottom of the viewfinder.
+    let qr_label = gtk::Label::builder()
+        .ellipsize(gtk::pango::EllipsizeMode::End)
+        .max_width_chars(40)
+        .hexpand(true)
+        .xalign(0.0)
+        .selectable(true)
+        .build();
+    let qr_icon = gtk::Image::from_gicon(&gio::ThemedIcon::from_names(&["qr-code-symbolic", "insert-link-symbolic"]));
+    let qr_copy = gtk::Button::builder()
+        .icon_name("edit-copy-symbolic")
+        .tooltip_text("Copy")
+        .action_name("win.qr-copy")
+        .css_classes(["flat", "circular"])
+        .build();
+    let qr_open = gtk::Button::builder()
+        .label("Open")
+        .action_name("win.qr-open")
+        .css_classes(["suggested-action", "pill"])
+        .build();
+    let qr_close = gtk::Button::builder()
+        .icon_name("window-close-symbolic")
+        .tooltip_text("Dismiss")
+        .action_name("win.qr-dismiss")
+        .css_classes(["flat", "circular"])
+        .build();
+    let qr_box = gtk::Box::builder().spacing(8).css_classes(["qr-banner"]).build();
+    qr_box.append(&qr_icon);
+    qr_box.append(&qr_label);
+    qr_box.append(&qr_copy);
+    qr_box.append(&qr_open);
+    qr_box.append(&qr_close);
+    let qr_revealer = gtk::Revealer::builder()
+        .child(&qr_box)
+        .transition_type(gtk::RevealerTransitionType::SlideUp)
+        .valign(gtk::Align::End)
+        .halign(gtk::Align::Center)
+        .build();
+    overlay.add_overlay(&qr_revealer);
 
     // Controls.
     let gallery_image = gtk::Picture::builder()
@@ -300,8 +359,16 @@ fn build(app: &adw::Application) -> Rc<State> {
             switcher,
             photo_toggle,
             video_toggle,
+            qr_revealer,
+            qr_label,
+            qr_open,
         },
         settings: RefCell::new(settings),
+        prefs,
+        qr: qr::Scanner::spawn(),
+        qr_throttle: Cell::new(qr::Throttle::default()),
+        qr_tracker: RefCell::new(qr::Tracker::default()),
+        qr_text: RefCell::new(None),
         handle: RefCell::new(Some(handle)),
         countdown: Cell::new(Countdown::Idle),
         countdown_timer: RefCell::new(None),
@@ -327,6 +394,26 @@ fn build(app: &adw::Application) -> Rc<State> {
         while let Ok(frame) = frames.recv().await {
             let Some(state) = weak.upgrade() else { break };
             state.ui.viewfinder.set_paintable(Some(&texture(&frame)));
+            if state.scanning() {
+                let mut t = state.qr_throttle.get();
+                if t.ready(Instant::now(), qr::SCAN_INTERVAL) {
+                    state.qr.offer(frame);
+                }
+                state.qr_throttle.set(t);
+            }
+        }
+    });
+    // QR scan results.
+    let weak = Rc::downgrade(&state);
+    let results = state.qr.results.clone();
+    glib::spawn_future_local(async move {
+        while let Ok(result) = results.recv().await {
+            let Some(state) = weak.upgrade() else { break };
+            if !state.scanning() {
+                continue;
+            }
+            let change = state.qr_tracker.borrow_mut().update(result);
+            apply_qr(&state, change);
         }
     });
     // Worker events.
@@ -345,6 +432,16 @@ fn build(app: &adw::Application) -> Rc<State> {
     let weak = Rc::downgrade(&state);
     state.ui.window.connect_close_request(move |_| {
         if let Some(state) = weak.upgrade() {
+            {
+                let w = &state.ui.window;
+                let mut s = state.settings.borrow_mut();
+                s.is_maximized = w.is_maximized();
+                if !s.is_maximized {
+                    let (width, height) = w.default_size();
+                    (s.window_width, s.window_height) = (width, height);
+                }
+            }
+            state.save_settings();
             stop_countdown(&state);
             // Joins the worker, which finalizes any running recording.
             state.handle.borrow_mut().take();
@@ -371,6 +468,9 @@ fn smoke_script(state: &Rc<State>) {
         (6500, "win.mode", Some("video")),
         (7000, "win.shutter", None),
         (9000, "win.shutter", None),
+        (10000, "smoke:qr", None),
+        (10300, "win.qr-copy", None),
+        (10600, "win.qr-dismiss", None),
         (11000, "win.next-camera", None),
         (12500, "app.quit", None),
     ];
@@ -379,10 +479,40 @@ fn smoke_script(state: &Rc<State>) {
         glib::timeout_add_local_once(std::time::Duration::from_millis(ms), move || {
             let Some(s) = weak.upgrade() else { return };
             eprintln!("smoke: {action} {target:?}");
+            if action == "smoke:qr" {
+                let change = s.qr_tracker.borrow_mut().update(Some("https://example.org/helix".into()));
+                apply_qr(&s, change);
+                return;
+            }
             let arg = target.map(|t| t.to_variant());
             let _ = WidgetExt::activate_action(&s.ui.window, action, arg.as_ref());
         });
     }
+}
+
+fn apply_qr(state: &State, change: Option<qr::Change>) {
+    match change {
+        None => {}
+        Some(qr::Change::Show(text)) => {
+            let uri = qr::openable_uri(&text);
+            state.ui.qr_label.set_label(&text);
+            state.ui.qr_label.set_tooltip_text(Some(&text));
+            state.ui.qr_open.set_visible(uri.is_some());
+            state.ui.qr_revealer.set_reveal_child(true);
+            *state.qr_text.borrow_mut() = Some(text);
+        }
+        Some(qr::Change::Hide) => {
+            state.ui.qr_revealer.set_reveal_child(false);
+            state.qr_text.borrow_mut().take();
+        }
+    }
+}
+
+/// Hides the QR banner and forgets the current code (mode change, camera
+/// switch, errors).
+fn reset_qr(state: &State) {
+    let change = state.qr_tracker.borrow_mut().reset();
+    apply_qr(state, change);
 }
 
 fn texture(frame: &Frame) -> gdk::Texture {
@@ -398,6 +528,42 @@ fn texture(frame: &Frame) -> gdk::Texture {
 
 fn install_actions(state: &Rc<State>) {
     let win = &state.ui.window;
+
+    let qr_copy = gio::SimpleAction::new("qr-copy", None);
+    let weak = Rc::downgrade(state);
+    qr_copy.connect_activate(move |_, _| {
+        let Some(s) = weak.upgrade() else { return };
+        let Some(text) = s.qr_text.borrow().clone() else { return };
+        WidgetExt::display(&s.ui.window).clipboard().set_text(&text);
+        s.toast("Copied to clipboard");
+    });
+    win.add_action(&qr_copy);
+
+    let qr_open = gio::SimpleAction::new("qr-open", None);
+    let weak = Rc::downgrade(state);
+    qr_open.connect_activate(move |_, _| {
+        let Some(s) = weak.upgrade() else { return };
+        let Some(uri) = s.qr_text.borrow().as_deref().and_then(qr::openable_uri) else { return };
+        let launcher = gtk::UriLauncher::new(&uri);
+        let weak = Rc::downgrade(&s);
+        launcher.launch(Some(&s.ui.window), None::<&gio::Cancellable>, move |res| {
+            if let (Err(e), Some(s)) = (res, weak.upgrade()) {
+                if !e.matches(gtk::DialogError::Dismissed) {
+                    s.toast(&format!("Could not open link: {}", e.message()));
+                }
+            }
+        });
+    });
+    win.add_action(&qr_open);
+
+    let qr_dismiss = gio::SimpleAction::new("qr-dismiss", None);
+    let weak = Rc::downgrade(state);
+    qr_dismiss.connect_activate(move |_, _| {
+        let Some(s) = weak.upgrade() else { return };
+        s.qr_tracker.borrow_mut().dismiss();
+        apply_qr(&s, Some(qr::Change::Hide));
+    });
+    win.add_action(&qr_dismiss);
 
     let shutter = gio::SimpleAction::new("shutter", None);
     let weak = Rc::downgrade(state);
@@ -438,6 +604,9 @@ fn install_actions(state: &Rc<State>) {
         }
         s.settings.borrow_mut().capture_mode = m;
         s.save_settings();
+        if s.video_mode() {
+            reset_qr(&s);
+        }
         update_controls(&s);
     });
     win.add_action(&mode);
@@ -447,6 +616,7 @@ fn install_actions(state: &Rc<State>) {
     next.connect_activate(move |_, _| {
         if let Some(s) = weak.upgrade() {
             if !s.recording.get() {
+                reset_qr(&s);
                 s.send(Command::NextCamera);
             }
         }
@@ -696,6 +866,7 @@ fn show_status(state: &Rc<State>, st: &Status) {
     if state.recording.get() || state.busy.get() {
         end_recording(state);
     }
+    reset_qr(state);
     stop_countdown(state);
     state.countdown.set(Countdown::Idle);
     state.ui.stack.set_visible_child_name("status");

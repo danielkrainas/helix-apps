@@ -27,7 +27,7 @@ Play audio files.
 
 Helix Audio Player is a deliberately small, single-file player in the spirit
 of Decibels: open one file, see its waveform, play it. There is no playlist
-or queue (see *Open questions*).
+or queue (see *Decisions*).
 
 ### Window
 - One `AdwApplicationWindow` (default 600×420, minimum 360×300). The header
@@ -151,7 +151,6 @@ against the CWD) and starts playing. `--help`, `--version`.
   `$XDG_CONFIG_HOME/helix-audio-player/window.json`. Nothing else (last
   file, volume, rate) persists across runs.
 
-## Open questions
-- The stub mentions a "playlist or queue"; this implementation follows
-  Decibels and plays a single file. A queue (multiple files from argv/drop,
-  Next/Previous over MPRIS) could be added if wanted.
+## Decisions
+- No queue or playlist: the app stays a single-file player (the stub's
+  "playlist or queue" is intentionally not implemented).

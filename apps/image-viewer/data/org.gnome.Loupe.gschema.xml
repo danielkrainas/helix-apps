@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GNOME-compatible schema for the org.gnome.Loupe key Helix Image Viewer
+     uses (name, type and default as published by GNOME Loupe). Install only
+     when the schema is not already provided by the system. -->
+<schemalist>
+  <schema path="/org/gnome/Loupe/" id="org.gnome.Loupe" gettext-domain="loupe">
+    <key name="show-properties" type="b">
+      <default>false</default>
+      <summary>Show the image properties sidebar</summary>
+    </key>
+  </schema>
+</schemalist>

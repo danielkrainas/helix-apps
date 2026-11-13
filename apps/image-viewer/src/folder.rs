@@ -122,6 +122,15 @@ impl Playlist {
         self.index
     }
 
+    pub fn files(&self) -> &[PathBuf] {
+        &self.files
+    }
+
+    /// Makes the image at `i` current. Returns whether it changed.
+    pub fn go_to(&mut self, i: usize) -> bool {
+        i < self.files.len() && self.jump(i)
+    }
+
     pub fn current(&self) -> Option<&Path> {
         self.index.and_then(|i| self.files.get(i)).map(PathBuf::as_path)
     }

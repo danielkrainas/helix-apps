@@ -27,8 +27,13 @@ Play video files.
 ## Behaviour (derived spec)
 
 ### Window
-- One `AdwApplicationWindow` per process (`NON_UNIQUE`, like the image
-  viewer). Default size 960×600. Content: an `AdwToastOverlay` around a
+- **Single instance**: a unique `GApplication` (`HANDLES_OPEN`). Launching
+  the app again (CLI or the desktop file's `Exec=helix-video-player %U`)
+  forwards the file to the running instance over D-Bus
+  (`org.gtk.Application.Open`) and exits; the running window opens it
+  (saving the previous video's position first) and is presented. Without a
+  file the running window is just presented. One `AdwApplicationWindow`
+  per instance, created on first activate/open. Default size 960×600. Content: an `AdwToastOverlay` around a
   `GtkStack` with three pages:
   - **empty** – header bar + `AdwStatusPage` “Watch Videos” with an
     *Open…* button and the hint “Drag and drop videos here”.
@@ -49,8 +54,11 @@ Play video files.
 ### Opening videos
 - **Command line**: `helix-video-player [FILE|URI]` – the first argument is
   opened (relative paths and `file://` URIs resolved via
-  `gio::File::for_commandline_arg`; other URIs gstreamer can handle are
-  passed through). `-h/--help` prints usage; unknown options exit 2.
+  `gio::File::for_commandline_arg` in the launching process, so relative
+  paths work when forwarded; other URIs gstreamer can handle are passed
+  through). It is handed to `GApplication` as `-- <uri>`, so it reaches the
+  `open` handler of the primary instance. `-h/--help` prints usage;
+  unknown options exit 2.
 - **Open dialog** (Ctrl+O, header button, empty-state button): a
   `gtk::FileDialog` (FileChooser portal when available) with a *Videos*
   (`video/*`) filter and an *All Files* filter.
@@ -170,10 +178,21 @@ Frame step forward uses a GStreamer `Step` event (1 buffer); backward is
 an accurate seek to position − one frame duration (from the caps
 framerate, 1/25 s when unknown).
 
-### GSettings
-None. Showtime does not publish documented playback-preference keys we
-could carry over, and everything this app remembers (resume positions) is
-per-file data kept in the data dir. No schema is shipped.
+### Remembered settings
+- `org.gnome.totem` has no volume or playback-speed keys (its keys cover
+  colour balance, subtitles, plugins, …), so these are app-private:
+  `$XDG_CONFIG_HOME/helix-video-player/settings.json`
+  `{"volume": 0.0–1.0 (linear), "rate": 0.5–2.0}` (defaults 1.0 / 1.0;
+  out-of-range values are clamped, invalid ones reset).
+- Volume (slider, Up/Down keys, MPRIS `Volume`) and speed (speed menu,
+  MPRIS `Rate`) changes are written 500 ms after the last change (and on
+  window close; written via a temporary file + rename). Mute is not
+  remembered.
+- At start the volume is applied to `playbin`; the speed is applied to each
+  opened video once it has prerolled (loading resets the pipeline to 1×),
+  and the speed menu / MPRIS `Rate` show the remembered value from the
+  start.
+- No GSettings schema is read or shipped.
 
 ### Environment variables
 - `HELIX_AUDIO_SINK` – GStreamer bin description used as the audio sink.
@@ -183,9 +202,8 @@ per-file data kept in the data dir. No schema is shipped.
 - Playlists / next-previous file navigation.
 - Hardware-accelerated (GL/dmabuf) frame upload.
 
-## Open questions
-- **GSettings**: should a Helix-specific schema persist volume / playback
-  speed between sessions? Nothing is persisted today.
-- **Single instance**: Showtime opens files in the running instance; this
-  app runs one window per process. Switch to a unique application with
-  `HANDLES_OPEN`?
+## Decisions
+- Single instance: files opened from the CLI / desktop file go to the
+  running window (unique application with `HANDLES_OPEN`).
+- Volume and playback speed are remembered across sessions in an
+  app-private JSON file (no suitable `org.gnome.totem` keys exist).

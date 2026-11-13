@@ -11,7 +11,7 @@ Take photos and videos from webcams.
 
 ## Main windows
 - Preview with capture controls.
-- Gallery of recent captures.
+- Gallery of recent captures (v1: reduced to "open last capture", see Decisions).
 
 ## Contracts used
 - PipeWire / V4L2 for camera access.
@@ -26,7 +26,7 @@ Take photos and videos from webcams.
 ## Behaviour (derived spec)
 
 ### Window
-- One `AdwApplicationWindow` (default 640×560, dark colour scheme forced like
+- One `AdwApplicationWindow` (default 800×640, size/maximized restored from GSettings, dark colour scheme forced like
   other camera apps). A transparent header bar holds the primary menu
   (*Countdown* submenu, *Video Format* submenu, *Play Shutter Sound*
   toggle, *Keyboard Shortcuts*, *About Camera*).
@@ -132,11 +132,45 @@ recorded without sound.
   forces the audio sink to `fakesink` so nothing is played).
 
 ### Settings
-No `org.gnome.Snapshot` keys are used (key names/types not confirmed from
-public documentation). Preferences are stored in
-`$XDG_CONFIG_HOME/helix-camera/settings.json`: `countdown` (0/3/5/10),
-`capture_mode` (`photo`/`video`), `video_format` (`webm-vp8`/`webm-vp9`/
-`mp4-h264`), `play_shutter_sound` (bool), `last_camera` (device name).
+GSettings schema `org.gnome.Snapshot` (read through `Prefs`, so settings
+carry over from/to GNOME Snapshot); `data/org.gnome.Snapshot.gschema.xml`
+holds only these keys, copied from the published schema, for systems where
+Snapshot is not installed:
+| Key | Type | Use |
+|---|---|---|
+| `countdown` | `i` | countdown delay in seconds (0/3/5/10; other values → 0) |
+| `capture-mode` | enum `picture`/`video` | photo / video mode |
+| `play-shutter-sound` | `b` | shutter sound toggle |
+| `last-camera-id` | `s` | name of the last selected camera (`""` = none) |
+| `window-width`, `window-height`, `is-maximized` | `i`, `i`, `b` | window state, saved on close |
+
+App-private `$XDG_CONFIG_HOME/helix-camera/settings.json` holds only
+`video_format` (`webm-vp8`/`webm-vp9`/`mp4-h264`): Snapshot's `video-format`
+enum only knows `vp8webm`, so it cannot store our choices and is not
+touched. When the Snapshot schema is not installed at all, the JSON file
+stores every setting instead (`countdown`, `capture_mode`, `video_format`,
+`play_shutter_sound`, `last_camera`, `window_width`, `window_height`,
+`is_maximized`).
+
+### QR codes
+- In photo mode, while streaming and not busy, the preview is scanned for
+  QR codes: at most one frame every 400 ms is offered to a scanner thread
+  through a one-slot channel (frames are dropped while a scan is running),
+  so the main thread never decodes. The scanner converts RGBA to luma,
+  downsamples so the longest side is ≤ 960 px and decodes with the
+  pure-Rust `rqrr` crate; if the direct read fails, a horizontally mirrored
+  read is tried (front-camera previews are mirrored).
+- A detected code shows a banner sliding up at the bottom of the
+  viewfinder: QR icon, the decoded text (ellipsized, selectable, full text
+  in the tooltip), **Copy** (clipboard + "Copied to clipboard" toast),
+  **Open** (only for `http(s)://`, `ftp://`, `mailto:`, `tel:`, `sms:`,
+  `geo:` URIs or a bare `www.` host, launched with `gtk::UriLauncher` /
+  OpenURI portal; other schemes such as `file:` are never opened) and a
+  **Dismiss** button.
+- Debouncing: the banner stays while the same code is seen, changes when a
+  different one is decoded, and hides after 3 consecutive scans without a
+  code. A dismissed code is not shown again until it has left the view.
+  Switching to video mode, switching camera or losing the stream hides it.
 
 ### Shortcuts
 | Key | Action |
@@ -155,15 +189,13 @@ public documentation). Preferences are stored in
 Environment (testing): `HELIX_CAMERA_SOURCE=test|none|denied`,
 `HELIX_CAMERA_OUTPUT_DIR`, `HELIX_CAMERA_PORTAL=0|1`, `HELIX_CAMERA_SILENT`
 (no shutter sound), `HELIX_CAMERA_SMOKE=1` (with `test`: scripted photo,
-countdown photo, short video, camera switch, quit — for headless smoke
-tests).
+countdown photo, short video, an injected QR result with copy/dismiss, camera
+switch, quit — for headless smoke tests).
 
-## Open questions
-- **QR code detection** (Snapshot detects QR codes in the viewfinder and
-  offers to open/copy them): deferred — needs a decoding crate
-  (e.g. `rqrr`) and UI design decisions.
-- **GSettings**: should Helix adopt `org.gnome.Snapshot` keys once the key
-  list is confirmed? Currently a private JSON file is used.
-- An in-app gallery/viewer of recent captures (the stub lists one) is
-  reduced to the "open last capture" button; captures open in the default
-  image/video viewer.
+## Decisions
+- QR codes: detected on the live preview (`rqrr`, throttled, off the main
+  thread) with copy/open actions.
+- GSettings: the real `org.gnome.Snapshot` keys are used where they exist;
+  an app-private JSON file holds the rest (video format).
+- Gallery: no in-app gallery for v1; "Open last capture" opens the newest
+  capture in the default viewer.
