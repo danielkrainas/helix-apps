@@ -1,7 +1,7 @@
 //! GTK user interface.
 
 use adw::prelude::*;
-use gtk::{gio, glib, pango};
+use gtk::{gio, glib};
 use helix_app_common::Prefs;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
@@ -11,6 +11,7 @@ use crate::category::{self, Category};
 use crate::charinfo;
 use crate::recent;
 use crate::search;
+use crate::winstate;
 
 pub const APP_ID: &str = "org.helix.Characters";
 const SCHEMA: &str = "org.gnome.Characters";
@@ -52,35 +53,35 @@ pub fn run(initial_search: Option<String>) -> glib::ExitCode {
         }
         app.window.present();
     });
+    // Ctrl+Q quits without close-request; save every remaining window.
+    app.connect_shutdown(|gapp| {
+        for w in gapp.windows() {
+            save_geometry(&w);
+        }
+    });
     app.run_with_args(&[std::env::args().next().unwrap_or_default()])
 }
 
-fn load_css(font_family: Option<String>) {
-    let mut css = String::from(
+/// Window geometry is app-private: `org.gnome.Characters` has no key for it.
+fn save_geometry(w: &gtk::Window) {
+    let (width, height) = w.default_size();
+    let state = winstate::WindowState { width, height, maximized: w.is_maximized() };
+    if let Err(e) = state.save(&winstate::default_path()) {
+        eprintln!("helix-characters: could not save window size: {e}");
+    }
+}
+
+fn load_css() {
+    let provider = gtk::CssProvider::new();
+    provider.load_from_string(
         ".char-cell { font-size: 22pt; min-width: 56px; min-height: 56px; }
          .char-grid > child { padding: 2px; border-radius: 8px; }
          .char-detail-glyph { font-size: 72pt; min-height: 120px; }
          .char-variant { font-size: 18pt; min-width: 44px; min-height: 44px; }",
     );
-    if let Some(family) = font_family {
-        let family = family.replace(['"', '\\'], "");
-        css.push_str(&format!(
-            "\n.char-cell, .char-detail-glyph, .char-variant {{ font-family: \"{family}\"; }}"
-        ));
-    }
-    let provider = gtk::CssProvider::new();
-    provider.load_from_string(&css);
     if let Some(display) = gtk::gdk::Display::default() {
         gtk::style_context_add_provider_for_display(&display, &provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
-}
-
-fn font_family(prefs: &Prefs) -> Option<String> {
-    let font: String = prefs.get("font", String::new());
-    if font.trim().is_empty() {
-        return None;
-    }
-    pango::FontDescription::from_string(&font).family().map(|f| f.to_string()).filter(|f| !f.is_empty())
 }
 
 impl App {
@@ -191,13 +192,15 @@ fn sidebar_row(cat: Category) -> gtk::ListBoxRow {
 
 fn build(gapp: &adw::Application) -> Rc<App> {
     let prefs = Prefs::new(SCHEMA);
-    load_css(font_family(&prefs));
+    load_css();
+    let geometry = winstate::WindowState::load(&winstate::default_path());
 
     let window = adw::ApplicationWindow::builder()
         .application(gapp)
         .title("Characters")
-        .default_width(860)
-        .default_height(620)
+        .default_width(geometry.width)
+        .default_height(geometry.height)
+        .maximized(geometry.maximized)
         .width_request(360)
         .height_request(294)
         .build();
@@ -319,6 +322,10 @@ fn build(gapp: &adw::Application) -> Rc<App> {
     let breakpoint = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 560sp").unwrap());
     breakpoint.add_setter(&split, "collapsed", Some(&true.to_value()));
     window.add_breakpoint(breakpoint);
+    window.connect_close_request(|w| {
+        save_geometry(w.upcast_ref());
+        glib::Propagation::Proceed
+    });
 
     let app = Rc::new(App {
         window: window.clone(),

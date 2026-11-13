@@ -116,10 +116,20 @@ Character map and emoji picker.
 |---|---|---|
 | `recent-characters` | `as` | Recent list (read/write) |
 | `max-recent-characters` | `u` | Recent list cap (read; default 100) |
-| `font` | `s` | Pango font description; its family is applied to the grid and detail glyph when non-empty (read) |
 
-`data/org.gnome.Characters.gschema.xml` contains just these keys, for systems
-without the GNOME schema.
+These are the only keys in the installed `org.gnome.Characters` schema;
+`data/org.gnome.Characters.gschema.xml` copies them exactly (names, types,
+defaults), for systems without the GNOME schema. No other key is invented
+under that schema (an earlier draft read a `font` key, which the real
+schema does not have; the glyphs use the theme font).
+
+### Window state (app-private)
+- The window opens at the last saved size (default 860×620) and
+  maximized state, stored in
+  `$XDG_CONFIG_HOME/helix-characters/window.json`
+  (`{"width":…, "height":…, "maximized":…}`), written atomically when a
+  window closes and on quit. Missing/corrupt files or sizes outside
+  200–16384 px fall back to the defaults.
 
 ### Shortcuts
 | Keys | Action |
@@ -137,7 +147,7 @@ without the GNOME schema.
   of TEXT and exit (no window; useful for scripting and tests).
 - `helix-characters --help`.
 
-## Open questions
-- Window size persistence: the published `org.gnome.Characters` key list
-  this was written from has no window-geometry keys, so the window size is
-  not persisted. Add Helix-specific state later if wanted.
+## Decisions
+- GSettings: use the real `org.gnome.Characters` keys only
+  (`recent-characters`, `max-recent-characters`); window size stays
+  app-private because the schema has no geometry keys.

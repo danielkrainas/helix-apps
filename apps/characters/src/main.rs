@@ -5,6 +5,7 @@ mod charinfo;
 mod recent;
 mod search;
 mod ui;
+mod winstate;
 
 use gtk::glib;
 

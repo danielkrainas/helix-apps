@@ -1126,6 +1126,8 @@ dependencies = [
  "gtk4",
  "helix-app-common",
  "libadwaita",
+ "serde",
+ "serde_json",
  "unicode-general-category",
  "unicode_names2",
 ]
