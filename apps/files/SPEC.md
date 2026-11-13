@@ -230,10 +230,37 @@ without Nautilus installed.
 - The application is unique (`org.helix.Files`); launching again opens a
   window in the running instance.
 - Implements `org.freedesktop.FileManager1` at
-  `/org/freedesktop/FileManager1` (name requested without replacement):
+  `/org/freedesktop/FileManager1` on the session bus, through the
+  GApplication's own connection (so "show this folder / open in Files"
+  from other apps and portals reaches the running instance):
   `ShowFolders(as uris, s startup_id)` opens each folder in a new window,
-  `ShowItems(as, s)` opens each item's parent with the item selected,
-  `ShowItemProperties(as, s)` opens the parent and the properties dialog.
+  `ShowItems(as, s)` opens each item's parent with the item selected
+  (items sharing a parent share a window, further parents open as tabs),
+  `ShowItemProperties(as, s)` does the same and opens the properties
+  dialog. `startup_id` is passed to the first new window as its startup
+  notification / XDG activation token. An empty URI list does nothing.
+- Name ownership: `RequestName(org.freedesktop.FileManager1,
+  ALLOW_REPLACEMENT)` — never `REPLACE_EXISTING`. If another file manager
+  (e.g. Nautilus) already owns the name, Helix Files does not take it; it
+  stays queued and gets the name only if the owner goes away. A file
+  manager that requests with REPLACE may take it from Helix Files.
+  Which file manager is the default is a **packaging decision**: the
+  distribution installs exactly one `FileManager1` D-Bus service file
+  (or the session starts the preferred one first); Helix Files does not
+  fight for the name at runtime.
+- D-Bus activation: `data/org.helix.Files.FileManager1.service`
+  (`Name=org.freedesktop.FileManager1`,
+  `Exec=/usr/bin/helix-files --gapplication-service`) installs to
+  `$datadir/dbus-1/services/` (normally `/usr/share/dbus-1/services/`).
+  It is named after the app, not the interface, so it does not collide on
+  disk with Nautilus' `org.freedesktop.FileManager1.service`; if both are
+  installed dbus-daemon picks one, so packaging must ship only the chosen
+  default's file (e.g. via alternatives / package conflicts). In
+  `--gapplication-service` mode no window is opened at start-up; windows
+  come from the method calls, and the process exits 10 s after the last
+  window closes.
+- Tested only on a private bus (`dbus-run-session`): activation,
+  all three methods, and not replacing an existing owner.
 
 ### Command line
 `helix-files [URI|PATH…]` opens each location in a window (a regular file
@@ -251,15 +278,14 @@ bookmark, `F2` rename, `Delete` trash, `Shift+Delete` delete,
 
 ## Deferred
 - Starred files (needs Tracker/LocalSearch).
-- Acting as the `org.freedesktop.impl.portal.FileChooser` backend.
 - Tree (expandable) list view, compressing/extracting archives,
   batch rename, scripts, "Open in Terminal", folder item counts in the
   size column (`show-directory-item-counts`).
 - Generating new thumbnails (only existing cached thumbnails are shown).
 
-## Open questions
-- Should Helix Files act as the FileChooser portal backend (as Nautilus
-  does in recent GNOME), or leave that to `helix-desktop`'s portal?
-- Should `org.freedesktop.FileManager1` be requested with
-  `ALLOW_REPLACEMENT | REPLACE` so Helix Files takes over from a running
-  Nautilus? Currently it only claims the name when free.
+## Decisions
+- FileChooser portal: Helix's own portal (helix-desktop) stays the
+  FileChooser backend; Helix Files does not implement
+  `org.freedesktop.impl.portal.FileChooser`.
+- `org.freedesktop.FileManager1`: implemented; the name is requested
+  without REPLACE, and packaging decides the default file manager.

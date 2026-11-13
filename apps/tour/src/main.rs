@@ -8,16 +8,18 @@ mod ui;
 
 use gtk::glib;
 
-const USAGE: &str = "Usage: helix-tour [--if-first-run]\n\n  \
-    --if-first-run   Exit at once if the tour was already completed or skipped\n  \
+const USAGE: &str = "Usage: helix-tour [--autostart]\n\n  \
+    --autostart      Exit at once unless the tour never ran or Helix had a\n                   \
+    major upgrade since it was last seen (used by the XDG autostart entry)\n  \
     --version        Print the version\n  \
     -h, --help       Show this help";
 
 fn main() -> glib::ExitCode {
-    let mut if_first_run = false;
+    let mut autostart = false;
     for arg in std::env::args().skip(1) {
         match arg.as_str() {
-            "--if-first-run" => if_first_run = true,
+            // `--if-first-run` is the earlier name of the flag, kept as an alias.
+            "--autostart" | "--if-first-run" => autostart = true,
             "--version" => {
                 println!("helix-tour {}", env!("CARGO_PKG_VERSION"));
                 return glib::ExitCode::SUCCESS;
@@ -33,7 +35,7 @@ fn main() -> glib::ExitCode {
         }
     }
     let path = state::default_path();
-    if !state::should_show(if_first_run, &state::State::load(&path)) {
+    if !state::should_show(autostart, &state::State::load(&path), env!("CARGO_PKG_VERSION")) {
         return glib::ExitCode::SUCCESS;
     }
     ui::run(path)

@@ -301,6 +301,6 @@ window, `F1` about.
 - Not listed yet: Region & Language, Online Accounts, Sharing, Printers,
   Search, Color, Wacom, power mode (`org.freedesktop.UPower.PowerProfiles`).
 
-## Open questions
-- GNOME Settings shows only *Default* and *Dark* style cards; Helix follows
-  that. Should Helix add a third *Light* card for `prefer-light`?
+## Decisions
+- Style cards: no third *Light* card; match GNOME with *Default* and *Dark*
+  only (`prefer-light` set elsewhere shows as *Default* and is kept).

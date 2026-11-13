@@ -159,9 +159,24 @@ impl Shared {
 /// Opens `files` the way the command line / D-Bus ask: folders open in a
 /// new window (further ones as tabs), other files open their parent folder
 /// with the file selected (`select` forces that for folders too).
-pub fn open_locations(shared: &Rc<Shared>, files: Vec<gio::File>, select: bool, properties: bool) {
+///
+/// `startup_id` (from D-Bus callers) is the startup-notification /
+/// XDG activation token handed to the first new window.
+pub fn open_locations(
+    shared: &Rc<Shared>,
+    files: Vec<gio::File>,
+    select: bool,
+    properties: bool,
+    startup_id: Option<String>,
+) {
+    let present = move |w: &gtk::Window| {
+        if let Some(id) = startup_id.as_deref().filter(|id| !id.is_empty()) {
+            w.set_startup_id(id);
+        }
+        w.present();
+    };
     if files.is_empty() {
-        Window::new(shared, None, vec![]).window.present();
+        present(Window::new(shared, None, vec![]).window.upcast_ref());
         return;
     }
     let shared = shared.clone();
@@ -194,7 +209,7 @@ pub fn open_locations(shared: &Rc<Shared>, files: Vec<gio::File>, select: bool, 
             match &win {
                 None => {
                     let w = Window::new(&shared, Some(folder), items.clone());
-                    w.window.present();
+                    present(w.window.upcast_ref());
                     if properties && !items.is_empty() {
                         properties::show(&w, items);
                     }
@@ -341,6 +356,12 @@ pub fn run() -> glib::ExitCode {
         }
         install_app_actions(&s);
         dbus::register(&s);
+        // Started by D-Bus activation (`--gapplication-service`, see
+        // data/org.helix.Files.FileManager1.service): no window is opened
+        // until a method call arrives; linger briefly once idle.
+        if app.flags().contains(gio::ApplicationFlags::IS_SERVICE) {
+            app.set_inactivity_timeout(10_000);
+        }
         let _ = cell.set(s);
     });
 
@@ -377,7 +398,7 @@ pub fn run() -> glib::ExitCode {
                 return 0;
             }
         }
-        open_locations(s, files, opts.select, false);
+        open_locations(s, files, opts.select, false, None);
         0
     });
     app.connect_activate(move |_| {
