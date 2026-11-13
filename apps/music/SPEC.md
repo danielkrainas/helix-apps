@@ -210,7 +210,7 @@ GNOME Music schema (all five keys are used).
 ### Helix-only state
 `$XDG_CONFIG_HOME/helix-music/state.json`: extra library folders, volume,
 repeat mode while shuffling, `replaygain_mode` (`track`/`album`),
-`notifications` (bool).
+`notifications` (bool), `gnome_music_imported` (bool).
 
 ### Playlists
 - Stored in `$XDG_DATA_HOME/helix-music/playlists/`. **M3U is the primary
@@ -232,6 +232,45 @@ repeat mode while shuffling, `replaygain_mode` (`track`/`album`),
   library as M3U, skipping ones already present (same name and songs).
 - **Export Playlist…** (button on a user playlist page): saves a copy as
   M3U or XSPF, chosen by the file extension (default `.m3u`).
+
+### Import from GNOME Music (one time)
+GNOME Music keeps favourites and user playlists in a private Tracker 3
+database (Nepomuk ontology), not in the LocalSearch miner.
+- **Location** (general knowledge; not verifiable here because no such
+  database exists on this machine): `$XDG_CACHE_HOME/gnome-music/db`
+  (native) or `~/.var/app/org.gnome.Music/cache/gnome-music/db` (Flatpak);
+  the first directory containing `meta.db` is used.
+  `HELIX_MUSIC_GNOME_DB=DIR` overrides it (tests);
+  `HELIX_MUSIC_NO_GNOME_IMPORT=1` disables the import.
+- **When**: after the first library scan of a session, as long as
+  `gnome_music_imported` in `state.json` is false. It is set to true once a
+  database was found and read successfully, so the import happens once.
+  Without a database Helix simply uses its own store (`stats.json`,
+  `playlists/`) and checks again at the next start (existence check only).
+- **Read-only access**: tinysparql is not linked, so the `tracker3` CLI is
+  spawned (`tracker3 sparql --database DIR --query Q`, argv only, no shell,
+  `LC_ALL=C.UTF-8`) on a worker thread with a 20 s timeout per query (the
+  process is killed on timeout). To guarantee GNOME Music's files are never
+  modified, `meta.db`, `meta.db-wal`, `meta.db-shm` and `ontologies.gvdb`
+  are first copied into a private 0700 directory under
+  `$XDG_RUNTIME_DIR` and only that copy is opened; it is deleted afterwards.
+  Only `SELECT` queries are run.
+- **Queries**: favourites are resources with
+  `nao:hasTag nao:predefined-tag-favorite`, their file from
+  `nie:isStoredAs/nie:url` (or `nie:url`, or the `nie:isStoredAs` IRI);
+  playlists are `nmm:Playlist` with `nie:title` and
+  `nfo:hasMediaFileListEntry` → `nfo:entryUrl`, ordered by
+  `nfo:listPosition`. Each query returns one column built with
+  `CONCAT("@", ENCODE_FOR_URI(…), "|", …)` so the CLI's text output parses
+  unambiguously.
+- **Matching**: by file URI (converted to a path, so percent-encoding
+  differences do not matter). References that are not `file://` URIs (song
+  resource IRIs) are resolved through LocalSearch
+  (`?s nie:isStoredAs/nie:url`, read-only) when it runs. Only songs in the
+  Helix library are imported: favourites set the Helix favourite flag;
+  each playlist becomes an M3U playlist (skipped if one with the same name
+  and songs exists, dropped if none of its songs are in the library). A
+  toast reports what was imported.
 
 ### Preferences
 `AdwPreferencesDialog`: Library folders (the XDG Music folder, read-only,
@@ -265,6 +304,9 @@ closes the window the same way (saving window state).
   in-memory index and print `artist — album — disc.track — title` lines
   (debugging aid; no files written). Uses the Tracker index for covered
   folders like the app does, and reports how many tracks came from it.
+- `helix-music --gnome-music [DB-DIR]` — print the favourites and playlists
+  that would be imported from GNOME Music's database (read via a copy;
+  debugging aid, nothing written).
 
 ## Decisions
 - **Library source**: use LocalSearch/Tracker over D-Bus (zbus SPARQL
@@ -278,13 +320,8 @@ closes the window the same way (saving window state).
 - **ReplayGain**: `rgvolume` with Off/Track/Album.
 - **Notifications**: `gio::Notification` on track change when the window is
   not focused.
+- **GNOME Music's own playlists/favourites** (user decision, round 4): read
+  its private Tracker database read-only through the `tracker3` CLI on a
+  worker thread with a timeout and import once; fall back to Helix's own
+  store when it is absent (see *Import from GNOME Music*).
 
-## Open questions
-- **GNOME Music's own playlists/favourites**: GNOME Music keeps user
-  playlists in a private Tracker database of its own, not in the
-  LocalSearch miner the session bus exposes (that one only lists playlist
-  *files*, which can be imported). Reading the private database would need
-  tinysparql (not installed) or spawning `tracker3 endpoint --database …`
-  as a D-Bus endpoint; no such database exists on this machine to verify
-  against, so it is not implemented. Should Helix try the `tracker3
-  endpoint` route when the database is present?

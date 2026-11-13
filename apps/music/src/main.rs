@@ -1,5 +1,6 @@
 //! Helix Music.
 
+mod gnome_import;
 mod index;
 mod model;
 mod mpris;
@@ -13,7 +14,7 @@ mod ui;
 use gtk::glib;
 use std::path::PathBuf;
 
-const USAGE: &str = "Usage: helix-music [--scan DIR...]";
+const USAGE: &str = "Usage: helix-music [--scan DIR... | --gnome-music [DB-DIR]]";
 
 fn main() -> glib::ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -57,6 +58,32 @@ fn main() -> glib::ExitCode {
                 lib.artists.len()
             );
             glib::ExitCode::SUCCESS
+        }
+        Some("--gnome-music") if args.len() <= 2 => {
+            // Prints what would be imported from GNOME Music's database
+            // (read-only: a copy is queried).
+            let Some(db) = args.get(1).map(PathBuf::from).or_else(gnome_import::find_db) else {
+                eprintln!("helix-music: no GNOME Music database found");
+                return glib::ExitCode::FAILURE;
+            };
+            match gnome_import::load_from(&db) {
+                Ok(found) => {
+                    for f in &found.favorites {
+                        println!("favorite\t{}", f.display());
+                    }
+                    for (title, entries) in &found.playlists {
+                        println!("playlist\t{title}");
+                        for e in entries {
+                            println!("\t{}", e.display());
+                        }
+                    }
+                    glib::ExitCode::SUCCESS
+                }
+                Err(e) => {
+                    eprintln!("helix-music: {e}");
+                    glib::ExitCode::FAILURE
+                }
+            }
         }
         _ => {
             eprintln!("{USAGE}");
