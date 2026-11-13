@@ -4,6 +4,7 @@ use crate::mpris::{self, Command, Mpris, Prop};
 use crate::paintable::VideoPaintable;
 use crate::player::{self, Player};
 use crate::resume::{self, ResumeStore};
+use crate::settings::Settings;
 use crate::sink::Frame;
 use crate::{screenshot, subtitles, timefmt};
 use adw::prelude::*;
@@ -19,6 +20,8 @@ const HIDE_DELAY: Duration = Duration::from_secs(2);
 const SEEK_STEP: f64 = 10.0;
 const VOLUME_STEP: f64 = 0.05;
 const SAVE_INTERVAL: Duration = Duration::from_secs(10);
+/// Delay before volume/speed changes are written to disk.
+const SETTINGS_SAVE_DELAY: Duration = Duration::from_millis(500);
 const SPEEDS: &[(&str, &str)] =
     &[("0.5", "0.5×"), ("0.75", "0.75×"), ("1", "Normal"), ("1.25", "1.25×"), ("1.5", "1.5×"), ("2", "2×")];
 
@@ -27,7 +30,9 @@ pub fn run(target: Option<String>) -> glib::ExitCode {
         eprintln!("helix-video-player: cannot initialise GStreamer: {err}");
         return glib::ExitCode::FAILURE;
     }
-    let app = adw::Application::builder().application_id(APP_ID).flags(gio::ApplicationFlags::NON_UNIQUE).build();
+    // Single instance: a second launch forwards its file to the running
+    // process over D-Bus (`open`) and exits.
+    let app = adw::Application::builder().application_id(APP_ID).flags(gio::ApplicationFlags::HANDLES_OPEN).build();
     helix_app_common::install_standard_actions(&app, APP_NAME, "Play videos");
     app.connect_startup(|app| {
         load_css();
@@ -35,32 +40,51 @@ pub fn run(target: Option<String>) -> glib::ExitCode {
             app.set_accels_for_action(action, accels);
         }
     });
-    let initial = RefCell::new(Some(target));
+    let current: Rc<RefCell<std::rc::Weak<Ui>>> = Rc::default();
+    let cur = current.clone();
     app.connect_activate(move |app| {
-        if let Some(win) = app.active_window() {
-            win.present();
-            return;
+        if let Some(ui) = ensure_ui(app, &cur) {
+            ui.window.present();
         }
-        let ui = match Ui::new(app) {
-            Ok(ui) => ui,
-            Err(err) => {
-                eprintln!("helix-video-player: {err}");
-                app.quit();
-                return;
-            }
-        };
-        if let Some(Some(uri)) = initial.borrow_mut().take() {
-            ui.open_uri(&uri);
+    });
+    app.connect_open(move |app, files, _hint| {
+        let Some(ui) = ensure_ui(app, &current) else { return };
+        // One video at a time: the first file wins.
+        if let Some(file) = files.first() {
+            ui.open_uri(&file.uri());
         }
         ui.window.present();
-        // Keep the UI alive as long as the window (handlers are dropped
-        // when the window is destroyed, breaking the cycle).
-        let keep = RefCell::new(Some(ui.clone()));
-        ui.window.connect_destroy(move |_| {
-            keep.borrow_mut().take();
-        });
     });
-    app.run_with_args(&[std::env::args().next().unwrap_or_default()])
+    let mut args = vec![std::env::args().next().unwrap_or_default()];
+    if let Some(uri) = target {
+        // `--` so GApplication treats it as a file even if it starts with '-'.
+        args.push("--".into());
+        args.push(uri);
+    }
+    app.run_with_args(&args)
+}
+
+/// The window of this (primary) instance, created on first use.
+fn ensure_ui(app: &adw::Application, current: &RefCell<std::rc::Weak<Ui>>) -> Option<Rc<Ui>> {
+    if let Some(ui) = current.borrow().upgrade() {
+        return Some(ui);
+    }
+    let ui = match Ui::new(app) {
+        Ok(ui) => ui,
+        Err(err) => {
+            eprintln!("helix-video-player: {err}");
+            app.quit();
+            return None;
+        }
+    };
+    current.replace(Rc::downgrade(&ui));
+    // Keep the UI alive as long as the window (handlers are dropped when
+    // the window is destroyed, breaking the cycle).
+    let keep = RefCell::new(Some(ui.clone()));
+    ui.window.connect_destroy(move |_| {
+        keep.borrow_mut().take();
+    });
+    Some(ui)
 }
 
 const ACCELS: &[(&str, &[&str])] = &[
@@ -148,6 +172,9 @@ pub struct Ui {
     st: RefCell<St>,
     updating: Cell<bool>,
     me: RefCell<std::rc::Weak<Ui>>,
+    /// Volume and speed remembered across sessions.
+    settings: Cell<Settings>,
+    settings_save: RefCell<Option<glib::SourceId>>,
 }
 
 fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
@@ -201,8 +228,14 @@ impl Ui {
         let player = Player::new(move || {
             let _ = frame_tx.try_send(());
         })?;
+        let settings = Settings::load_from(&Settings::path());
+        player.set_volume(settings.volume);
         let (cmd_tx, cmd_rx) = async_channel::unbounded::<Command>();
         let mpris = Mpris::start(cmd_tx);
+        mpris.update(|s| {
+            s.volume = settings.volume;
+            s.rate = settings.rate;
+        });
 
         let window = adw::ApplicationWindow::builder()
             .application(app)
@@ -415,6 +448,8 @@ impl Ui {
             mpris,
             bus_watch: RefCell::new(None),
             st: RefCell::new(St { frame_duration: 1.0 / 25.0, ..Default::default() }),
+            settings: Cell::new(settings),
+            settings_save: RefCell::new(None),
             updating: Cell::new(false),
             me: RefCell::new(std::rc::Weak::new()),
         });
@@ -423,6 +458,7 @@ impl Ui {
         ui.connect_signals(&picture, &controls);
         ui.rebuild_tracks_menu();
         ui.sync_volume_ui();
+        ui.set_rate_ui(settings.rate);
 
         // Frames.
         glib::spawn_future_local(glib::clone!(
@@ -568,6 +604,7 @@ impl Ui {
             glib::Propagation::Proceed,
             move |_| {
                 ui.save_position();
+                ui.flush_settings();
                 ui.player.stop();
                 ui.set_inhibit(false);
                 ui.bus_watch.replace(None);
@@ -831,7 +868,8 @@ impl Ui {
         self.stack.set_visible_child_name("video");
         self.spinner.set_spinning(true);
         self.spinner.set_visible(true);
-        self.set_rate_ui(1.0);
+        let rate = self.settings.get().rate;
+        self.set_rate_ui(rate);
         self.update_time_labels(0.0);
         self.player.load(uri, suburi.as_deref(), true);
         self.show_controls();
@@ -845,7 +883,7 @@ impl Ui {
             s.url = uri.to_string();
             s.length_us = None;
             s.position_us = 0;
-            s.rate = 1.0;
+            s.rate = rate;
         });
         self.mpris.changed(&[Prop::Metadata, Prop::Rate]);
     }
@@ -970,6 +1008,12 @@ impl Ui {
         }
         self.refresh_duration();
         self.rebuild_tracks_menu();
+        // Loading resets the pipeline to normal speed; apply the remembered
+        // speed (the pending seek below then keeps it).
+        let rate = self.settings.get().rate;
+        if (self.player.rate() - rate).abs() > 1e-6 {
+            self.player.set_rate(rate);
+        }
         let seekable = self.player.is_seekable();
         self.mpris.update(|s| s.seekable = seekable);
         self.mpris.changed(&[Prop::CanSeek]);
@@ -1201,10 +1245,50 @@ impl Ui {
     }
 
     fn set_rate(&self, rate: f64) {
-        self.player.set_rate(rate);
-        self.set_rate_ui(self.player.rate());
+        let rate = Settings { rate, ..self.settings.get() }.sanitized().rate;
+        if self.st.borrow().prerolled {
+            self.player.set_rate(rate);
+        }
+        self.set_rate_ui(rate);
         self.mpris.update(|s| s.rate = rate);
         self.mpris.changed(&[Prop::Rate]);
+        self.update_settings(|s| s.rate = rate);
+    }
+
+    /// Changes the remembered settings and schedules a save.
+    fn update_settings(&self, f: impl FnOnce(&mut Settings)) {
+        let mut s = self.settings.get();
+        f(&mut s);
+        let s = s.sanitized();
+        if s == self.settings.get() {
+            return;
+        }
+        self.settings.set(s);
+        if self.settings_save.borrow().is_some() {
+            return;
+        }
+        let me = self.me.borrow().clone();
+        let id = glib::timeout_add_local_once(SETTINGS_SAVE_DELAY, move || {
+            if let Some(ui) = me.upgrade() {
+                ui.settings_save.replace(None);
+                ui.write_settings();
+            }
+        });
+        self.settings_save.replace(Some(id));
+    }
+
+    fn write_settings(&self) {
+        if let Err(e) = self.settings.get().save_to(&Settings::path()) {
+            eprintln!("helix-video-player: cannot save settings: {e}");
+        }
+    }
+
+    /// Writes a pending settings change now (window closing).
+    fn flush_settings(&self) {
+        if let Some(id) = self.settings_save.take() {
+            id.remove();
+            self.write_settings();
+        }
     }
 
     fn set_rate_ui(&self, rate: f64) {
@@ -1228,6 +1312,8 @@ impl Ui {
         self.sync_volume_ui();
         self.mpris.update(|s| s.volume = v.clamp(0.0, 1.0));
         self.mpris.changed(&[Prop::Volume]);
+        let v = self.player.volume();
+        self.update_settings(|s| s.volume = v);
     }
 
     fn set_muted(&self, muted: bool) {

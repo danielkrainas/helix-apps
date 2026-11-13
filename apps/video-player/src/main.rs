@@ -6,6 +6,7 @@ mod paintable;
 mod player;
 mod resume;
 mod screenshot;
+mod settings;
 mod sink;
 mod subtitles;
 mod timefmt;
