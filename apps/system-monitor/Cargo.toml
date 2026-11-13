@@ -11,6 +11,10 @@ repository.workspace = true
 name = "helix-system-monitor"
 path = "src/main.rs"
 
+[[bin]]
+name = "helix-system-monitor-helper"
+path = "src/bin/helper.rs"
+
 [dependencies]
 gtk.workspace = true
 adw.workspace = true

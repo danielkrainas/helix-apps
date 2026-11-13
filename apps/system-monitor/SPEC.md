@@ -81,9 +81,43 @@ View processes, resources, and file systems.
   - End and Kill ask for confirmation when `kill-dialog` is true (default).
 - An action bar at the bottom shows *End Process* and *Properties* buttons
   for the selection.
-- Signals and renice are only sent to processes owned by the current user.
-  For other processes the action reports "You do not own this process"
-  (privileged actions via polkit are deferred — see Open questions).
+- Signals and renice are applied directly to processes owned by the current
+  user. When the direct attempt fails because the process belongs to another
+  user, or the kernel refuses (e.g. lowering the nice value of an own
+  process), the action is retried as
+  `pkexec /usr/libexec/helix-system-monitor/helix-system-monitor-helper …`
+  on a worker thread (the polkit authentication dialog does not block the
+  UI). Errors (cancelled/denied authentication, helper not installed,
+  process gone) are shown as a toast.
+
+### Privileged helper and polkit
+- Polkit action **`org.helix.SystemMonitor.manage-processes`**
+  (`data/org.helix.SystemMonitor.policy`, installs to
+  `/usr/share/polkit-1/actions/`). Modelled on the installed GNOME policy
+  (`org.gnome.gnome-system-monitor.kill` / `.renice`, which use
+  `auth_admin_keep` for active sessions and `no` otherwise) but a single
+  action covers both kill and renice. Its
+  `org.freedesktop.policykit.exec.path` annotation names the helper, so
+  `pkexec` shows the action's message.
+- Helper binary **`helix-system-monitor-helper`** (same crate,
+  `src/bin/helper.rs`), installs to
+  `/usr/libexec/helix-system-monitor/helix-system-monitor-helper`. For
+  development the app honours `HELIX_SYSTEM_MONITOR_HELPER=<path>` (pkexec
+  still needs a policy whose exec.path matches). Grammar (strict, parsed in
+  `src/helper_args.rs`, unit-tested):
+  - `helix-system-monitor-helper [--dry-run] signal <STOP|CONT|TERM|KILL> <PID>`
+  - `helix-system-monitor-helper [--dry-run] renice <NICE> <PID>`
+  - PID: decimal digits only, no sign/leading zeros, 2…4194304 (PID 1 and
+    the helper's own PID are refused; ≤ 0 would address process groups).
+    NICE: optional `-`, no leading zeros, −20…19. Any other argument,
+    count or order is rejected.
+- Exit codes: 0 success, 2 invalid arguments, 3 no such process,
+  4 failure (including not running as root). pkexec's own 126/127
+  (dismissed / not authorised) are mapped to messages by the app.
+- `--dry-run` validates the arguments and that the process exists, prints
+  `dry run: would …` and changes nothing; it does not need root. Tests
+  (`tests/helper.rs`) cover only validation and the dry-run path; pkexec is
+  never invoked by tests.
 
 ### Resources page
 - **CPU History**: one line per logical CPU, from `/proc/stat` deltas, Y axis
@@ -139,13 +173,12 @@ window state. Missing schema → in-memory defaults.
 `helix-system-monitor [-p|--show-processes-tab | -r|--show-resources-tab |
 -f|--show-file-systems-tab]` opens on the given page.
 
+## Decisions
+- Privileged process actions: ship polkit action
+  `org.helix.SystemMonitor.manage-processes` plus a small helper binary
+  invoked via `pkexec` (see "Privileged helper and polkit").
+
 ## Open questions
-- **Privileged process actions**: GNOME escalates kill/renice of other
-  users' processes (and lowering nice below the current value) through a
-  polkit-authorised helper. Helix currently refuses those actions with an
-  error. Should Helix ship its own polkit action + helper binary
-  (e.g. `org.helix.SystemMonitor.ProcessControl`), and what should its
-  action ID be?
 - Per-column visibility/width persistence (`org.gnome.gnome-system-monitor.proctree`
   `col-N-*`) is not implemented; the GNOME column numbering is an internal
   detail and not mapped yet.

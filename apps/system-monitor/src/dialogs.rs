@@ -7,6 +7,7 @@ use std::rc::Rc;
 
 use crate::control::{self, Action};
 use crate::format;
+use crate::helper_args::Command;
 use crate::proc_view::ProcessObject;
 use crate::sampler::{self, ProcessInfo};
 
@@ -89,6 +90,30 @@ pub fn show_properties(parent: &impl IsA<gtk::Widget>, obj: &ProcessObject, iec:
     dialog.present(Some(parent));
 }
 
+/// Reports `direct` (the result of trying the action without privileges)
+/// to `on_done`, unless it failed for lack of privileges: then the action is
+/// retried through `pkexec` + the helper on a worker thread, and the
+/// helper's result is reported instead.
+fn escalate_if_needed(
+    direct: Result<(), control::Error>,
+    command: Command,
+    on_done: impl FnOnce(Result<(), control::Error>) + 'static,
+) {
+    match direct {
+        Err(e) if control::needs_privileges(&e) && command.pid() >= 2 => {
+            let (tx, rx) = async_channel::bounded(1);
+            std::thread::spawn(move || {
+                let _ = tx.send_blocking(control::run_privileged(command));
+            });
+            glib::MainContext::default().spawn_local(async move {
+                let res = rx.recv().await.unwrap_or_else(|_| Err(control::Error::Other("The privileged helper failed".into())));
+                on_done(res);
+            });
+        }
+        other => on_done(other),
+    }
+}
+
 /// Asks for a new nice value and applies it; errors go to `on_error`.
 pub fn change_priority(parent: &impl IsA<gtk::Widget>, obj: &ProcessObject, on_error: Rc<dyn Fn(String)>) {
     let (pid, name, nice) = {
@@ -156,9 +181,13 @@ pub fn change_priority(parent: &impl IsA<gtk::Widget>, obj: &ProcessObject, on_e
     dialog.set_extra_child(Some(&content));
     dialog.connect_response(Some("change"), move |_, _| {
         let v = scale.value().round() as i32;
-        if let Err(e) = control::renice(pid, v) {
-            on_error(format!("Cannot change priority of “{name}”: {e}"));
-        }
+        let name = name.clone();
+        let on_error = on_error.clone();
+        escalate_if_needed(control::renice(pid, v), Command::Renice { nice: v.clamp(-20, 19), pid }, move |res| {
+            if let Err(e) = res {
+                on_error(format!("Cannot change priority of “{name}”: {e}"));
+            }
+        });
     });
     dialog.present(Some(parent));
 }
@@ -176,7 +205,12 @@ pub fn signal_process(
         (i.pid, i.name.clone())
     };
     let run = move || {
-        on_done(control::send(pid, action).map_err(|e| format!("Cannot {} “{name}”: {e}", action.verb().to_lowercase())));
+        let name = name.clone();
+        let on_done = on_done.clone();
+        let command = Command::Signal { signal: action.helper_signal(), pid };
+        escalate_if_needed(control::send(pid, action), command, move |res| {
+            on_done(res.map_err(|e| format!("Cannot {} “{name}”: {e}", action.verb().to_lowercase())));
+        });
     };
     if !(confirm && action.needs_confirmation()) {
         run();
