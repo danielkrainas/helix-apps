@@ -24,6 +24,7 @@ members = [
     "apps/music",
     "apps/document-viewer",
     "apps/document-scanner",
+    "apps/maps",
 ]
 resolver = "2"
 
