@@ -28,9 +28,10 @@ Map viewer and place search.
 
 ### Backends and usage policies (read this first)
 
-All three network services are **configurable** (Preferences dialog or
-`settings.json`, see below). The defaults point at the public
-OpenStreetMap-community services so the app works out of the box:
+All three network services are **configurable**, system-wide by the
+administrator and per user (see *Settings → Service endpoints*). The
+built-in defaults point at the public OpenStreetMap-community services so
+the app works out of the box:
 
 | Service | Default endpoint | Policy |
 |---|---|---|
@@ -42,8 +43,9 @@ OpenStreetMap-community services so the app works out of the box:
 for production traffic.** They have usage policies (valid identifying
 User-Agent, caching, ≤1 geocoding request per second, no bulk downloading,
 no client-side autocomplete against Nominatim, car profile only on the OSRM
-demo). A Helix distribution that ships this app to real users **must**
-configure a commercial or self-hosted tile, geocoding and routing provider.
+demo). **Heavy use needs a commercial or self-hosted provider**: a Helix
+distribution or site that ships this app to many users should set its tile,
+geocoding and routing provider in `/etc/xdg/helix-maps/endpoints.toml`.
 
 To comply with the policies the app:
 - sends `User-Agent: helix-maps/<version>` on every request (no personal
@@ -65,10 +67,11 @@ To comply with the policies the app:
   (`ShumateSimpleMap`: tiles, zoom buttons, compass, scale, license) and
   whose sidebar (hidden by default, on the start side) shows either the
   **place details** page or the **directions** page.
-- Window size / maximized state, last viewed location and zoom level
-  persist across runs (first run: a world view, zoom 3 centred on 30°N
-  10°E). The viewed area is also saved 2 s after the map stops moving, so
-  it survives the process being killed.
+- Window size / maximized state, last viewed location, zoom level and
+  rotation persist across runs in the `org.gnome.Maps` keys (first run uses
+  the schema defaults: maximized, centred on 0°, 0°, zoom 0 clamped to the
+  minimum zoom 2). The viewed area is also saved 2 s after the map stops
+  moving, so it survives the process being killed.
 - A toast overlay reports errors (network failures, location unavailable).
 
 ### Map
@@ -113,7 +116,9 @@ To comply with the policies the app:
 
 ### Directions
 - From / To entries plus a transport selector (Car, Bike, Walk → OSRM
-  profiles `driving`, `cycling`, `foot`; persisted). Each entry holds
+  profiles `driving`, `cycling`, `foot`; persisted in `transportation-type`
+  as `car` / `bike` / `pedestrian`). GNOME's `transit` has no OSRM profile:
+  it is shown as Walk and left unchanged until the user picks a mode. Each entry holds
   either a resolved place (filled from a place page, the context menu or
   *My location*) or free text, which is geocoded (first result) when
   routing. A swap button exchanges them; a *My location* button fills From
@@ -128,42 +133,89 @@ To comply with the policies the app:
   the selector says so when the default router is configured.
 
 ### Current location
-- *Current location* button / `Ctrl+L`: asks **GeoClue** on the system bus
-  (`org.freedesktop.GeoClue2.Manager.GetClient`, `DesktopId=org.helix.Maps`,
-  `RequestedAccuracyLevel=8` (exact), `Start`, wait ≤ 30 s for the
-  `Location` property, read `Latitude/Longitude/Accuracy/Description`,
-  `Stop`). Runs on a worker thread. On success the blue dot is placed and
-  the map flies there (zoom chosen from the accuracy); failure shows a
-  toast ("Location unavailable").
-- The XDG Location portal is not used yet (GeoClue applies its own
-  agent-based authorisation; inside a sandbox the portal would be needed —
-  see open questions).
+- *Current location* button / `Ctrl+L`: asks the **XDG Location portal**
+  (`org.freedesktop.portal.Location` on the session bus) — like every Helix
+  app, Maps never talks to GeoClue directly; the portal applies the
+  desktop's permission store and works sandboxed or not. Sequence:
+  subscribe to `LocationUpdated`; `CreateSession` (`session_handle_token`,
+  `accuracy`=5 *exact*, thresholds 0); subscribe to `Response` on the
+  predicted request path; `Start(session, "", {handle_token})`; on
+  response 0 take the first `LocationUpdated` for that session
+  (`Latitude`, `Longitude`, `Accuracy`, `Description`); then
+  `org.freedesktop.portal.Session.Close`. Runs on a worker thread, gives up
+  after 30 s and closes the session in every case (fix, denial, timeout).
+- On success the blue dot is placed and the map flies there (zoom chosen
+  from the accuracy). Failure shows a toast: "Location access was denied"
+  (response 1), "The location portal is not available" (no portal on the
+  bus), "Timed out waiting for a location fix", …
+- Tested against a mock portal served on a private `dbus-daemon` that the
+  unit tests start themselves (no service activation; fix, denial, absent
+  portal and timeout cases).
 
 ### Settings
-`org.gnome.Maps` is **not installed** on this system and is not available
-to align with, so Helix keeps only private settings in
-`$XDG_CONFIG_HOME/helix-maps/settings.json` (written atomically; unknown
-or invalid fields fall back to defaults). Keys:
 
-| Key | Type | Default | Meaning |
+#### GNOME keys (`org.gnome.Maps`)
+Read/written through `helix_app_common::Prefs` (in memory when the schema
+is not installed). Names, types and defaults are the published ones;
+`data/org.gnome.Maps.gschema.xml` ships exactly these keys:
+
+| Key | Type | Default | Use |
 |---|---|---|---|
-| `tile_url_template` | string | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` | Raster tile URL; placeholders `{z}` `{x}` `{y}` (required) and `{s}` (subdomain a/b/c) |
-| `tile_attribution` | string | `© OpenStreetMap contributors` | License overlay text |
-| `tile_attribution_url` | string | `https://www.openstreetmap.org/copyright` | |
-| `tile_max_zoom` | int | 19 | |
-| `geocoder_url` | string | `https://nominatim.openstreetmap.org` | Nominatim-compatible base URL |
-| `router_url` | string | `https://router.project-osrm.org` | OSRM-compatible base URL |
-| `max_search_results` | int | 10 | 1–50 |
-| `units` | `"metric"`/`"imperial"` | `metric` | |
-| `transportation_type` | `"car"`/`"bike"`/`"walk"` | `car` | |
-| `last_viewed_location` | [lat, lon] | [30, 10] | |
-| `zoom_level` | float | 3 | |
-| `window_width` / `window_height` | int | 1000 / 700 | |
-| `window_maximized` | bool | false | |
+| `last-viewed-location` | `ad` | `[0.0,0.0]` | map centre on start; invalid → default |
+| `zoom-level` | `i` | `0` | start zoom, clamped to 2 – max tile zoom; saved rounded |
+| `rotation` | `d` | `0.0` | map rotation in radians |
+| `window-size` | `ai` | `[]` | `[width, height]`; empty/insane → 1000×700; saved only when not maximized |
+| `window-maximized` | `b` | `true` | |
+| `max-search-results` | `i` | `20` | geocoder `limit`, clamped 1–50 |
+| `transportation-type` | enum `car`/`bike`/`pedestrian`/`transit` | `'pedestrian'` | routing mode (see Directions) |
+| `show-scale` | `b` | `true` | scale overlay visibility (Preferences switch) |
 
-The Preferences dialog edits the endpoint/attribution/units/result-count
-keys, offers "Reset to defaults" and "Clear tile cache". A changed tile URL
-takes effect immediately (new map source, separate cache directory).
+Unused GNOME keys (`map-type`, `window-position`, `recent-*-limit`,
+`osm-username-oauth2`) are not shipped.
+
+#### Service endpoints (Helix-only, layered)
+Six endpoint keys, resolved key by key (each layer only sets what it
+contains; an invalid value is ignored and the lower layer's value stays):
+
+1. built-in defaults (table above);
+2. system-wide `helix-maps/endpoints.toml` in each `$XDG_CONFIG_DIRS`
+   directory (default `/etc/xdg`); the **first** directory listed wins, as
+   the Base Directory spec prescribes. A file that fails to parse is
+   ignored with a warning;
+3. the user's overrides in `$XDG_CONFIG_HOME/helix-maps/settings.json`.
+
+| Key | Type | Built-in default |
+|---|---|---|
+| `tile_url_template` | string | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` (placeholders `{z}` `{x}` `{y}` required, `{s}` = subdomain a/b/c) |
+| `tile_attribution` | string | `© OpenStreetMap contributors` |
+| `tile_attribution_url` | string | `https://www.openstreetmap.org/copyright` |
+| `tile_max_zoom` | int 2–22 | `19` |
+| `geocoder_url` | http(s) URL | `https://nominatim.openstreetmap.org` (Nominatim API) |
+| `router_url` | http(s) URL | `https://router.project-osrm.org` (OSRM HTTP API v1) |
+
+Example `/etc/xdg/helix-maps/endpoints.toml`:
+
+```toml
+tile_url_template = "https://tiles.example.org/{z}/{x}/{y}.png"
+tile_attribution = "© OpenStreetMap contributors, Example Tiles"
+geocoder_url = "https://nominatim.example.org"
+router_url = "https://osrm.example.org"
+```
+
+`settings.json` (written atomically, `"version": 2`) stores only the
+endpoint keys the user changed away from the system value, plus the
+Helix-only `units` (`"metric"`/`"imperial"`, default metric). Editing a
+field in Preferences to the inherited value removes the override, so later
+administrator changes still reach the user. A pre-layering file (no
+`version`) is migrated by dropping endpoint values equal to the built-in
+defaults; its old window/view keys are ignored (they now live in the GNOME
+keys).
+
+The Preferences dialog shows the effective endpoints, the scale switch,
+result count and units, "Clear tile cache", and "Reset service settings to
+defaults" (drops the user's overrides; its subtitle names the system file
+in use). A changed tile URL takes effect immediately (new map source,
+separate cache directory).
 
 ### Keyboard shortcuts
 | Keys | Action |
@@ -188,7 +240,11 @@ takes effect immediately (new map source, separate cache directory).
 ### Packaging
 - `data/org.helix.Maps.desktop` (handles `x-scheme-handler/geo` and
   `x-scheme-handler/maps`). Installs to `$prefix/share/applications`.
-- No GSettings schema is shipped (see Settings).
+- `data/org.gnome.Maps.gschema.xml`: the used `org.gnome.Maps` keys, for
+  `$prefix/share/glib-2.0/schemas` — install only when the system does not
+  already ship the GNOME schema.
+- `/etc/xdg/helix-maps/endpoints.toml` is site configuration, not shipped
+  by the app (see the example above).
 
 ## Decisions
 - Map widget: libshumate 1.2 via the `libshumate` 0.6 crate (glib 0.20 /
@@ -199,14 +255,15 @@ takes effect immediately (new map source, separate cache directory).
   configurable; production needs a commercial/self-hosted provider (above).
 - Geocoding: Nominatim-compatible API, configurable, ≥1 s between requests.
 - Routing: implemented against an OSRM-compatible endpoint, configurable.
-- Current location: GeoClue over D-Bus (zbus).
-
-## Open questions
-- Should the XDG Location portal be preferred over direct GeoClue (needed
-  once the app is sandboxed)? Currently GeoClue only.
-- Which production tile / geocoding / routing providers should Helix
-  distributions configure by default (and should the endpoints become a
-  system-wide setting rather than per-user)?
-- `org.gnome.Maps` key migration: the schema is not installed here; if it
-  should be read for carry-over (e.g. `last-viewed-location`, `zoom-level`,
-  `transportation-type`), the schema XML needs to be provided.
+- Current location: XDG Location portal only (zbus); no direct GeoClue
+  path, consistent with the rest of Helix; tested with a mock portal on a
+  private bus.
+- Endpoints: tile, Nominatim-style search and OSRM-style routing stay
+  configurable; production defaults are the public OSM-compatible services
+  (heavy use needs a commercial or self-hosted provider); they are a
+  system-wide setting (`$XDG_CONFIG_DIRS/helix-maps/endpoints.toml`) with
+  per-user overrides, precedence unit-tested.
+- Settings: the real `org.gnome.Maps` keys are used for everything they
+  cover (exact names/types/defaults, shipped schema has only those keys);
+  only Helix-specific settings (endpoint overrides, units) stay in
+  `settings.json`.

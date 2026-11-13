@@ -13,18 +13,21 @@ pub enum Mode {
 impl Mode {
     pub const ALL: [Mode; 3] = [Mode::Car, Mode::Bike, Mode::Walk];
 
-    pub fn from_name(s: &str) -> Mode {
+    /// From an `org.gnome.Maps` `transportation-type` nick. `transit` has
+    /// no OSRM profile and falls back to walking (the schema default).
+    pub fn from_nick(s: &str) -> Mode {
         match s {
+            "car" => Mode::Car,
             "bike" => Mode::Bike,
-            "walk" => Mode::Walk,
-            _ => Mode::Car,
+            _ => Mode::Walk,
         }
     }
-    pub fn name(self) -> &'static str {
+    /// The `org.gnome.maps.TransportationType` nick.
+    pub fn nick(self) -> &'static str {
         match self {
             Mode::Car => "car",
             Mode::Bike => "bike",
-            Mode::Walk => "walk",
+            Mode::Walk => "pedestrian",
         }
     }
     pub fn label(self) -> &'static str {
@@ -248,7 +251,11 @@ mod tests {
         assert_eq!(instruction("new name", "straight", "C", None), "Continue on C");
         assert_eq!(instruction("fork", "slight left", "", None), "Keep left at the fork");
         assert_eq!(instruction("depart", "", "", None), "Start");
-        assert_eq!(Mode::from_name("walk").profile(), "foot");
-        assert_eq!(Mode::from_name("x"), Mode::Car);
+        assert_eq!(Mode::from_nick("pedestrian").profile(), "foot");
+        assert_eq!(Mode::from_nick("transit"), Mode::Walk);
+        assert_eq!(Mode::from_nick("car").profile(), "driving");
+        for m in Mode::ALL {
+            assert_eq!(Mode::from_nick(m.nick()), m);
+        }
     }
 }

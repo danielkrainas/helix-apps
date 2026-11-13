@@ -5,7 +5,8 @@ use crate::geo::{self, LatLon, LaunchTarget, Units};
 use crate::nominatim::Place;
 use crate::osrm::{Mode, Route};
 use crate::service::{self, Endpoint, Endpoints, Job, Reply, Service};
-use crate::settings::{self, Settings};
+use crate::settings::{self, gnome, Services, SystemConfig, UserSettings};
+use helix_app_common::Prefs;
 use crate::tiles::{self, TileSource};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
@@ -17,6 +18,8 @@ use std::rc::{Rc, Weak};
 const APP_ID: &str = "org.helix.Maps";
 const APP_NAME: &str = "Maps";
 const COMMENTS: &str = "Find places around the world";
+const SCHEMA: &str = "org.gnome.Maps";
+const DEFAULT_MODE: &str = "pedestrian";
 
 pub fn run(target: Option<LaunchTarget>) -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
@@ -82,8 +85,15 @@ struct RoutePage {
 
 pub struct Inner {
     window: adw::ApplicationWindow,
-    settings: RefCell<Settings>,
+    /// `org.gnome.Maps` keys (in memory when the schema is not installed).
+    prefs: Prefs,
+    /// Helix-only settings and the user's endpoint overrides.
+    user: RefCell<UserSettings>,
     settings_path: PathBuf,
+    /// System-wide endpoint configuration (`$XDG_CONFIG_DIRS`).
+    system: SystemConfig,
+    /// Effective endpoints: defaults < system < user.
+    services: RefCell<Services>,
     favorites: RefCell<Favorites>,
     simple_map: shumate::SimpleMap,
     map: shumate::Map,
@@ -160,18 +170,22 @@ impl Ui {
 
     fn build(app: &adw::Application) -> Ui {
         let settings_path = helix_app_common::config_dir("helix-maps").join("settings.json");
-        let settings = Settings::load(&settings_path);
+        let user = UserSettings::load(&settings_path);
+        let system = SystemConfig::from_env();
+        let services = user.services(&system);
+        let prefs = Prefs::new(SCHEMA);
         let favorites = Favorites::load(&helix_app_common::data_dir("helix-maps").join("favorites.json"));
 
+        let (width, height) = gnome::window_size(&prefs.get::<Vec<i32>>("window-size", Vec::new()));
         let window = adw::ApplicationWindow::builder()
             .application(app)
             .title(APP_NAME)
-            .default_width(settings.window_width)
-            .default_height(settings.window_height)
+            .default_width(width)
+            .default_height(height)
             .width_request(360)
             .height_request(300)
             .build();
-        if settings.window_maximized {
+        if prefs.get("window-maximized", true) {
             window.maximize();
         }
 
@@ -273,7 +287,8 @@ impl Ui {
 
         // --- Sidebar ---------------------------------------------------------
         let (place_widget, place_page) = build_place_page();
-        let (route_widget, route_page) = build_route_page(&settings);
+        let (route_widget, route_page) =
+            build_route_page(Mode::from_nick(&prefs.get_enum_nick("transportation-type", DEFAULT_MODE)));
         let stack = gtk::Stack::builder().transition_type(gtk::StackTransitionType::Crossfade).build();
         stack.add_named(&place_widget, Some("place"));
         stack.add_named(&route_widget, Some("route"));
@@ -302,8 +317,11 @@ impl Ui {
 
         let ui = Ui(Rc::new(Inner {
             window,
-            settings: RefCell::new(settings),
+            prefs,
+            user: RefCell::new(user),
             settings_path,
+            system,
+            services: RefCell::new(services),
             favorites: RefCell::new(favorites),
             simple_map,
             map,
@@ -341,10 +359,13 @@ impl Ui {
 
         ui.apply_tile_source();
         {
-            let s = ui.0.settings.borrow();
-            let [lat, lon] = s.last_viewed_location;
-            ui.0.viewport.set_location(lat, lon);
-            ui.0.viewport.set_zoom_level(s.zoom_level);
+            let p = &ui.0.prefs;
+            let at = gnome::location(&p.get::<Vec<f64>>("last-viewed-location", vec![0.0, 0.0]));
+            ui.0.viewport.set_location(at.lat, at.lon);
+            let max_zoom = ui.0.services.borrow().tile_max_zoom;
+            ui.0.viewport.set_zoom_level(gnome::zoom(p.get("zoom-level", 0), max_zoom));
+            ui.0.viewport.set_rotation(gnome::rotation(p.get("rotation", 0.0)));
+            ui.apply_show_scale();
         }
         ui.update_route_note();
         ui.refresh_favorites();
@@ -379,13 +400,23 @@ impl Ui {
     // --- Settings ------------------------------------------------------------
 
     fn save_settings(&self) {
-        if let Err(e) = self.0.settings.borrow().save(&self.0.settings_path) {
+        if let Err(e) = self.0.user.borrow().save(&self.0.settings_path) {
             eprintln!("helix-maps: could not save settings: {e}");
         }
     }
 
+    fn apply_show_scale(&self) {
+        if let Some(scale) = self.0.simple_map.scale() {
+            scale.set_visible(self.0.prefs.get("show-scale", true));
+        }
+    }
+
+    fn max_search_results(&self) -> u32 {
+        gnome::max_results(self.0.prefs.get("max-search-results", 20))
+    }
+
     fn endpoints(&self) -> Endpoints {
-        let s = self.0.settings.borrow();
+        let s = self.0.services.borrow();
         Endpoints {
             geocoder: s.geocoder_url.clone(),
             router: s.router_url.clone(),
@@ -396,11 +427,11 @@ impl Ui {
     }
 
     fn units(&self) -> Units {
-        Units::from_name(&self.0.settings.borrow().units)
+        Units::from_name(&self.0.user.borrow().units)
     }
 
     fn apply_tile_source(&self) {
-        let s = self.0.settings.borrow();
+        let s = self.0.services.borrow();
         let source = TileSource::new(&s.tile_url_template);
         let renderer = shumate::RasterRenderer::new_full(
             &format!("helix-{:016x}", settings::fnv1a(&s.tile_url_template)),
@@ -538,7 +569,10 @@ impl Ui {
             button.connect_toggled(move |b| {
                 let Some(ui) = Ui::up(&w) else { return };
                 if b.is_active() {
-                    ui.0.settings.borrow_mut().transportation_type = mode.name().to_string();
+                    // `transit` is kept until the user picks another mode.
+                    if Mode::from_nick(&ui.0.prefs.get_enum_nick("transportation-type", DEFAULT_MODE)) != mode {
+                        ui.0.prefs.set_enum_nick("transportation-type", mode.nick());
+                    }
                     ui.update_route_note();
                     if ui.0.route.borrow().is_some() {
                         ui.find_route();
@@ -558,14 +592,11 @@ impl Ui {
         let w = self.weak();
         i.window.connect_close_request(move |win| {
             if let Some(ui) = Ui::up(&w) {
-                {
-                    let mut s = ui.0.settings.borrow_mut();
-                    let (width, height) = win.default_size();
-                    s.window_maximized = win.is_maximized();
-                    if !s.window_maximized && width > 0 && height > 0 {
-                        s.window_width = width;
-                        s.window_height = height;
-                    }
+                let (width, height) = win.default_size();
+                let maximized = win.is_maximized();
+                ui.0.prefs.set("window-maximized", maximized);
+                if !maximized && width > 0 && height > 0 {
+                    ui.0.prefs.set("window-size", vec![width, height]);
                 }
                 ui.save_view_state();
             }
@@ -574,7 +605,7 @@ impl Ui {
 
         // Persist the viewed area a couple of seconds after it stops moving,
         // so it survives the process being killed.
-        for prop in ["latitude", "longitude", "zoom-level"] {
+        for prop in ["latitude", "longitude", "zoom-level", "rotation"] {
             let w = self.weak();
             i.viewport.connect_notify_local(Some(prop), move |_, _| {
                 let Some(ui) = Ui::up(&w) else { return };
@@ -593,13 +624,13 @@ impl Ui {
     }
 
     fn save_view_state(&self) {
-        {
-            let mut s = self.0.settings.borrow_mut();
-            s.last_viewed_location = [self.0.viewport.latitude(), self.0.viewport.longitude()];
-            s.zoom_level = self.0.viewport.zoom_level();
-            s.sanitize();
-        }
-        self.save_settings();
+        let v = &self.0.viewport;
+        let p = &self.0.prefs;
+        let at = gnome::location(&[v.latitude(), v.longitude()]);
+        p.set("last-viewed-location", vec![at.lat, at.lon]);
+        // The GNOME key is an integer zoom level.
+        p.set("zoom-level", v.zoom_level().round() as i32);
+        p.set("rotation", gnome::rotation(v.rotation()));
     }
 
     fn install_actions(&self) {
@@ -712,7 +743,7 @@ impl Ui {
         let (w, h) = (map.width().max(400) as f64, map.height().max(300) as f64);
         // Leave a margin around the box.
         let z = geo::zoom_for_bounds(south, north, west, east, w * 0.8, h * 0.8)
-            .min(self.0.settings.borrow().tile_max_zoom as f64);
+            .min(self.0.services.borrow().tile_max_zoom as f64);
         map.go_to_full((south + north) / 2.0, (west + east) / 2.0, z);
     }
 
@@ -781,7 +812,7 @@ impl Ui {
         let id = self.next_id();
         self.0.search_id.set(id);
         self.show_results_message("Searching…");
-        let limit = self.0.settings.borrow().max_search_results;
+        let limit = self.max_search_results();
         self.0.service.submit(Job::Search { id, query, limit, viewbox: self.visible_bounds() }, self.endpoints());
     }
 
@@ -928,7 +959,7 @@ impl Ui {
         self.0.locate_button.set_sensitive(false);
         let (tx, rx) = async_channel::bounded(1);
         std::thread::spawn(move || {
-            let _ = tx.send_blocking(crate::location::locate(APP_ID));
+            let _ = tx.send_blocking(crate::location::locate());
         });
         let w = self.weak();
         glib::spawn_future_local(async move {
@@ -1017,11 +1048,11 @@ impl Ui {
     }
 
     fn current_mode(&self) -> Mode {
-        Mode::from_name(&self.0.settings.borrow().transportation_type)
+        Mode::from_nick(&self.0.prefs.get_enum_nick("transportation-type", DEFAULT_MODE))
     }
 
     fn update_route_note(&self) {
-        let demo = self.0.settings.borrow().uses_demo_router();
+        let demo = self.0.services.borrow().uses_demo_router();
         let note = &self.0.route_page.note;
         note.set_visible(demo && self.current_mode() != Mode::Car);
         note.set_label("The public demo routing server may only provide car routes. Configure a routing server in Preferences for other modes.");
@@ -1195,7 +1226,9 @@ impl Ui {
     }
 
     fn show_preferences(&self) {
-        let s = self.0.settings.borrow().clone();
+        let s = self.0.services.borrow().clone();
+        let max_results = self.max_search_results();
+        let imperial = self.0.user.borrow().units == "imperial";
         let dialog = adw::PreferencesDialog::builder().title("Preferences").build();
         let page = adw::PreferencesPage::new();
 
@@ -1233,7 +1266,7 @@ impl Ui {
         router.set_text(&s.router_url);
         let results = adw::SpinRow::with_range(1.0, 50.0, 1.0);
         results.set_title("Maximum search results");
-        results.set_value(s.max_search_results as f64);
+        results.set_value(max_results as f64);
         services.add(&geocoder);
         services.add(&router);
         services.add(&results);
@@ -1242,9 +1275,14 @@ impl Ui {
         let units = adw::ComboRow::builder()
             .title("Units")
             .model(&gtk::StringList::new(&["Metric", "Imperial"]))
-            .selected(if s.units == "imperial" { 1 } else { 0 })
+            .selected(if imperial { 1 } else { 0 })
             .build();
         general.add(&units);
+        let show_scale = adw::SwitchRow::builder()
+            .title("Show scale")
+            .active(self.0.prefs.get("show-scale", true))
+            .build();
+        general.add(&show_scale);
         let clear = gtk::Button::builder().label("Clear").valign(gtk::Align::Center).build();
         let clear_row = adw::ActionRow::builder()
             .title("Tile cache")
@@ -1253,7 +1291,18 @@ impl Ui {
         clear_row.add_suffix(&clear);
         general.add(&clear_row);
         let reset = gtk::Button::builder().label("Reset").valign(gtk::Align::Center).css_classes(["destructive-action"]).build();
-        let reset_row = adw::ActionRow::builder().title("Reset service settings to defaults").build();
+        let files = self.0.system.files();
+        let reset_row = adw::ActionRow::builder()
+            .title("Reset service settings to defaults")
+            .subtitle(if files.is_empty() {
+                "Built-in defaults; administrators can set them in /etc/xdg/helix-maps/endpoints.toml".to_string()
+            } else {
+                format!(
+                    "System defaults from {}",
+                    files.iter().map(|p| p.display().to_string()).collect::<Vec<_>>().join(", ")
+                )
+            })
+            .build();
         reset_row.add_suffix(&reset);
         general.add(&reset_row);
 
@@ -1262,17 +1311,24 @@ impl Ui {
         page.add(&general);
         dialog.add(&page);
 
-        // Applies an edit, validates, saves and refreshes dependents.
+        // Applies an endpoint edit to the effective configuration, stores
+        // the difference to the system configuration as the user's
+        // overrides, saves and refreshes dependents.
         let apply = {
             let w = self.weak();
             let dialog = dialog.clone();
-            move |f: &dyn Fn(&mut Settings) -> Result<bool, &'static str>| {
+            move |f: &dyn Fn(&mut Services) -> Result<bool, &'static str>| {
                 let Some(ui) = Ui::up(&w) else { return };
-                let mut s = ui.0.settings.borrow().clone();
-                match f(&mut s) {
+                let mut wanted = ui.0.services.borrow().clone();
+                match f(&mut wanted) {
                     Ok(tiles_changed) => {
-                        s.sanitize();
-                        *ui.0.settings.borrow_mut() = s;
+                        let inherited = ui.0.system.services();
+                        let effective = {
+                            let mut user = ui.0.user.borrow_mut();
+                            user.endpoints.set_from(&wanted, &inherited);
+                            user.services(&ui.0.system)
+                        };
+                        *ui.0.services.borrow_mut() = effective;
                         ui.save_settings();
                         if tiles_changed {
                             ui.apply_tile_source();
@@ -1288,7 +1344,7 @@ impl Ui {
         let a = apply.clone();
         tile_url.connect_apply(move |r| {
             let t = r.text().trim().to_string();
-            a(&move |s: &mut Settings| {
+            a(&move |s: &mut Services| {
                 settings::validate_tile_template(&t)?;
                 s.tile_url_template = t.clone();
                 Ok(true)
@@ -1297,7 +1353,7 @@ impl Ui {
         let a = apply.clone();
         attribution.connect_apply(move |r| {
             let t = r.text().trim().to_string();
-            a(&move |s: &mut Settings| {
+            a(&move |s: &mut Services| {
                 s.tile_attribution = t.clone();
                 Ok(true)
             });
@@ -1305,7 +1361,7 @@ impl Ui {
         let a = apply.clone();
         attribution_url.connect_apply(move |r| {
             let t = r.text().trim().to_string();
-            a(&move |s: &mut Settings| {
+            a(&move |s: &mut Services| {
                 s.tile_attribution_url = t.clone();
                 Ok(true)
             });
@@ -1313,7 +1369,7 @@ impl Ui {
         let a = apply.clone();
         max_zoom.connect_value_notify(move |r| {
             let v = r.value() as u32;
-            a(&move |s: &mut Settings| {
+            a(&move |s: &mut Services| {
                 s.tile_max_zoom = v;
                 Ok(true)
             });
@@ -1321,40 +1377,40 @@ impl Ui {
         let a = apply.clone();
         geocoder.connect_apply(move |r| {
             let t = r.text().trim().to_string();
-            a(&move |s: &mut Settings| {
-                if !settings::is_http_url(&t) {
-                    return Err("The search server must be an http(s) URL");
-                }
-                s.geocoder_url = t.clone();
+            a(&move |s: &mut Services| {
+                s.geocoder_url =
+                    settings::normalize_base_url(&t).ok_or("The search server must be an http(s) URL")?;
                 Ok(false)
             });
         });
         let a = apply.clone();
         router.connect_apply(move |r| {
             let t = r.text().trim().to_string();
-            a(&move |s: &mut Settings| {
-                if !settings::is_http_url(&t) {
-                    return Err("The routing server must be an http(s) URL");
-                }
-                s.router_url = t.clone();
+            a(&move |s: &mut Services| {
+                s.router_url =
+                    settings::normalize_base_url(&t).ok_or("The routing server must be an http(s) URL")?;
                 Ok(false)
             });
         });
-        let a = apply.clone();
+        let w = self.weak();
         results.connect_value_notify(move |r| {
-            let v = r.value() as u32;
-            a(&move |s: &mut Settings| {
-                s.max_search_results = v;
-                Ok(false)
-            });
+            if let Some(ui) = Ui::up(&w) {
+                ui.0.prefs.set("max-search-results", r.value() as i32);
+            }
         });
-        let a = apply.clone();
+        let w = self.weak();
         units.connect_selected_notify(move |r| {
+            let Some(ui) = Ui::up(&w) else { return };
             let u = if r.selected() == 1 { Units::Imperial } else { Units::Metric };
-            a(&move |s: &mut Settings| {
-                s.units = u.name().to_string();
-                Ok(false)
-            });
+            ui.0.user.borrow_mut().units = u.name().to_string();
+            ui.save_settings();
+        });
+        let w = self.weak();
+        show_scale.connect_active_notify(move |r| {
+            if let Some(ui) = Ui::up(&w) {
+                ui.0.prefs.set("show-scale", r.is_active());
+                ui.apply_show_scale();
+            }
         });
         let d = dialog.clone();
         clear.connect_clicked(move |b| {
@@ -1375,24 +1431,20 @@ impl Ui {
                 d.add_toast(adw::Toast::new(&msg));
             });
         });
+        // Reset drops the user's endpoint overrides, so the system-wide
+        // configuration (or the built-in defaults) applies again.
         let a = apply.clone();
+        let system = self.0.system.services();
         reset.connect_clicked(move |_| {
-            let d = Settings::default();
+            let d = system.clone();
             tile_url.set_text(&d.tile_url_template);
             attribution.set_text(&d.tile_attribution);
             attribution_url.set_text(&d.tile_attribution_url);
             geocoder.set_text(&d.geocoder_url);
             router.set_text(&d.router_url);
             max_zoom.set_value(d.tile_max_zoom as f64);
-            results.set_value(d.max_search_results as f64);
-            a(&move |s: &mut Settings| {
-                s.tile_url_template = d.tile_url_template.clone();
-                s.tile_attribution = d.tile_attribution.clone();
-                s.tile_attribution_url = d.tile_attribution_url.clone();
-                s.tile_max_zoom = d.tile_max_zoom;
-                s.geocoder_url = d.geocoder_url.clone();
-                s.router_url = d.router_url.clone();
-                s.max_search_results = d.max_search_results;
+            a(&move |s: &mut Services| {
+                *s = d.clone();
                 Ok(true)
             });
         });
@@ -1471,7 +1523,7 @@ fn build_place_page() -> (gtk::Widget, PlacePage) {
     (scroll.upcast(), PlacePage { title, category, address, coords, dms, extras, favorite, spinner })
 }
 
-fn build_route_page(settings: &Settings) -> (gtk::Widget, RoutePage) {
+fn build_route_page(current: Mode) -> (gtk::Widget, RoutePage) {
     let content = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
         .spacing(8)
@@ -1486,7 +1538,6 @@ fn build_route_page(settings: &Settings) -> (gtk::Widget, RoutePage) {
     content.append(&top);
 
     let mode_box = gtk::Box::builder().css_classes(["linked"]).homogeneous(true).build();
-    let current = Mode::from_name(&settings.transportation_type);
     let mut modes = Vec::new();
     let mut group: Option<gtk::ToggleButton> = None;
     for m in Mode::ALL {
