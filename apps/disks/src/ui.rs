@@ -16,6 +16,7 @@ use crate::layout::{self, Node};
 use crate::model::{self, Drive, DriveKind, Model, Volume, VolumeKind};
 use crate::ops::{self, Op, OpOutput};
 use crate::parttypes;
+use crate::settings::{self, Settings};
 use crate::smart::Attribute;
 use crate::udisks;
 
@@ -105,6 +106,9 @@ struct VolumeRows {
 struct Ui {
     window: adw::ApplicationWindow,
     prefs: Prefs,
+    settings: RefCell<Settings>,
+    /// Everything UDisks2 reported; `model` is the filtered view of it.
+    raw_model: RefCell<Model>,
     model: RefCell<Model>,
     drive_key: RefCell<Option<String>>,
     volume_key: RefCell<Option<String>>,
@@ -201,9 +205,16 @@ impl Ui {
             actions.insert(*name, a);
         }
 
+        let settings = Settings::load_from(&settings::path());
+        let hide_snap = gio::SimpleAction::new_stateful("hide-snap-loops", None, &settings.hide_snap_loops.to_variant());
+        window.add_action(&hide_snap);
+
         // ---- sidebar
         let menu = gio::Menu::new();
         menu.append(Some("Attach Disk Image…"), Some("win.attach-image"));
+        let view_section = gio::Menu::new();
+        view_section.append(Some("Hide Snap Loop Devices"), Some("win.hide-snap-loops"));
+        menu.append_section(None, &view_section);
         let section = gio::Menu::new();
         section.append(Some("About Disks"), Some("app.about"));
         menu.append_section(None, &section);
@@ -370,6 +381,8 @@ impl Ui {
         let ui = Rc::new(Ui {
             window,
             prefs: Prefs::new(SCHEMA),
+            settings: RefCell::new(settings),
+            raw_model: RefCell::new(Model::default()),
             model: RefCell::new(Model::default()),
             drive_key: RefCell::new(None),
             volume_key: RefCell::new(None),
@@ -415,6 +428,12 @@ impl Ui {
                     }
                 }
             }
+        });
+        // Every signal handler holds only a weak reference: keep the Ui
+        // alive for as long as its window exists.
+        let keep_alive = RefCell::new(Some(ui.clone()));
+        ui.window.connect_destroy(move |_| {
+            keep_alive.borrow_mut().take();
         });
         ui
     }
@@ -493,7 +512,34 @@ impl Ui {
         });
     }
 
+    fn set_hide_snap_loops(self: &Rc<Self>, hide: bool) {
+        let mut st = self.settings.borrow_mut();
+        if st.hide_snap_loops == hide {
+            return;
+        }
+        st.hide_snap_loops = hide;
+        if let Err(e) = st.save_to(&settings::path()) {
+            eprintln!("helix-disks: cannot save settings: {e}");
+        }
+        drop(st);
+        // Not connected to UDisks2 (status page shown): nothing to refilter.
+        if self.sidebar_stack.visible_child_name().as_deref() == Some("list") {
+            let raw = self.raw_model.borrow().clone();
+            self.set_model(raw);
+        }
+    }
+
     fn connect_actions(self: &Rc<Self>) {
+        if let Some(a) = self.window.lookup_action("hide-snap-loops").and_downcast::<gio::SimpleAction>() {
+            let weak = Rc::downgrade(self);
+            a.connect_change_state(move |a, v| {
+                let Some(hide) = v.and_then(|v| v.get::<bool>()) else { return };
+                a.set_state(&hide.to_variant());
+                if let Some(ui) = weak.upgrade() {
+                    ui.set_hide_snap_loops(hide);
+                }
+            });
+        }
         self.on("attach-image", |ui| ui.attach_image());
         self.on("format-disk", |ui| ui.format_disk());
         self.on("create-disk-image", |ui| ui.create_image(true));
@@ -532,12 +578,17 @@ impl Ui {
 
     fn set_model(self: &Rc<Self>, m: Model) {
         self.sidebar_stack.set_visible_child_name("list");
-        *self.model.borrow_mut() = m;
+        let hide_snap = self.settings.borrow().hide_snap_loops;
+        *self.model.borrow_mut() = m.visible(hide_snap);
+        *self.raw_model.borrow_mut() = m;
         if let Some(dev) = self.pending_device.borrow_mut().take() {
             match self.model.borrow().find_device(&dev) {
                 Some((d, v)) => {
                     *self.drive_key.borrow_mut() = Some(d);
                     *self.volume_key.borrow_mut() = v;
+                }
+                None if self.raw_model.borrow().find_device(&dev).is_some() => {
+                    eprintln!("helix-disks: {dev} is a snap loop device, which is hidden (see the main menu)")
                 }
                 None => eprintln!("helix-disks: no such block device: {dev}"),
             }

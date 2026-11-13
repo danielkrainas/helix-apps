@@ -6,6 +6,7 @@ mod model;
 mod ops;
 mod parttypes;
 mod props;
+mod settings;
 mod smart;
 mod udisks;
 mod ui;

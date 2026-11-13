@@ -53,6 +53,16 @@ Manage disks, partitions, and images.
   backing file).
 - Order: fixed drives, then removable drives (by `SortKey`), then loop
   devices by device name.
+- **Snap loop devices** — loop devices whose filesystem is mounted under
+  `/snap/<name>/…` (the squashfs images snapd mounts) — are hidden by
+  default. The primary menu has a check item *Hide Snap Loop Devices*
+  (default on); turning it off lists them like other loop devices. The
+  choice applies immediately (the list is refiltered from the last UDisks2
+  snapshot). Detection uses the `Filesystem.MountPoints` of the loop
+  device (or any volume on it); an unmounted image in
+  `/var/lib/snapd/snaps` is not hidden. `--block-device` naming a hidden
+  device prints a note and selects nothing. `--list` always lists all
+  devices.
 
 ### Window
 - `AdwApplicationWindow` with an `AdwNavigationSplitView` (collapses to a
@@ -175,6 +185,12 @@ response is *Cancel*.
   choice. The `org.gnome.Disks.benchmark` keys are not used (no benchmark
   yet).
 
+### App-private settings
+`org.gnome.Disks` has no key for this, so it is stored in
+`$XDG_CONFIG_HOME/helix-disks/settings.json`:
+- `hide-snap-loops` (bool, default `true`): hide snap loop devices.
+A missing or malformed file means defaults.
+
 ### Shortcuts
 - `Ctrl+I` Attach Disk Image…
 - `Ctrl+Shift+S` SMART Data (selected drive)
@@ -195,7 +211,9 @@ response is *Cancel*.
 - Free space inside filesystems (UDisks2 does not expose usage; would need
   `statvfs` on the mount point).
 
+## Decisions
+- Snap loop devices: add an option, on by default, to hide loop devices
+  backing `/snap/*` mounts (see "Drives listed").
+
 ## Open questions
-- None blocking. Loop devices from snap packages are listed like GNOME
-  does; if that is too noisy, a "hide system loop devices" toggle could be
-  added.
+- None.
