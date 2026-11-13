@@ -17,3 +17,4 @@ adw.workspace = true
 helix-app-common.workspace = true
 webkit6 = "0.4"
 roxmltree = "0.20"
+libc = "0.2"

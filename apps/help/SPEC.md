@@ -37,13 +37,32 @@ behaviour is derived from the public Mallard specification
   the **content**, a WebKitGTK 6 `WebView`.
 - Header bar: **Back** / **Forward** buttons (sensitive per the WebView's
   history), a **Home** button (the document list), a **sidebar** toggle, a
-  **search** toggle, and a primary menu (*Print…*, *Zoom In / Out / Reset*,
-  *Caret Browsing*, *Keyboard Shortcuts*, *About Help*). The window title
+  **search** toggle, and a primary menu (*Print…*, *Larger Text*,
+  *Smaller Text*, *Normal Size*, *Caret Browsing*, *Keyboard Shortcuts*,
+  *About Help*). The window title
   follows the page title.
 - A search bar below the header. Activating it searches the current
   document (title, description and body text of every page) and shows a
   ranked result page. On the home page it searches all installed documents.
 - The WebKit sandbox is always left enabled.
+
+### Sandbox check
+- WebKit aborts the whole process when bubblewrap cannot create a user
+  namespace, so on activation, before any WebView exists, the app
+  re-executes itself with the internal argument `--helix-probe-userns`;
+  that child (same binary, same AppArmor profile) does
+  `unshare(CLONE_NEWUSER)` and writes its uid/gid maps like bubblewrap.
+  Skipped inside Flatpak.
+- On failure the window shows only an `AdwStatusPage` "Help Content
+  Sandbox Unavailable" explaining the cause (AppArmor restriction via
+  `kernel.apparmor_restrict_unprivileged_userns`, user namespaces disabled
+  by sysctl, or unknown). For AppArmor it shows and offers to copy a
+  profile for the running binary plus the install commands
+  (`sudo tee /etc/apparmor.d/helix-help < helix-help.apparmor`,
+  `sudo apparmor_parser -r /etc/apparmor.d/helix-help`), and a Quit button.
+  Same behaviour as Helix Web.
+- If the web process terminates later (not by API), a "Page Crashed"
+  status page with a Reload button covers the view.
 
 ### URIs
 | URI | Meaning |
@@ -129,8 +148,13 @@ behaviour is derived from the public Mallard specification
   title, with a description/snippet.
 
 ### GSettings (`org.gnome.yelp`)
-- `font-adjustment` (i): zoom steps; WebView zoom = 1 + 0.1·n (clamped
-  −5…10).
+- `font-adjustment` (i): integer font-size offset in points (not a zoom
+  factor), clamped to −3…10 (the range noted in the published schema).
+  Body text is 11 pt + n and monospace 10 pt + n, applied as WebKit's
+  `default-font-size` / `default-monospace-font-size` (pixels, pt × 96/72);
+  Helix's stylesheet sizes body text as `medium` so it follows, and plain
+  HTML help using relative sizes follows too. Larger/Smaller Text change it
+  by ±1, Normal Size resets it to 0; the page zoom level stays 100 %.
 - `show-cursor` (b): caret browsing.
 
 ### Shortcuts
@@ -141,7 +165,7 @@ behaviour is derived from the public Mallard specification
 | Ctrl+F | Search |
 | F9 | Toggle sidebar |
 | Ctrl+P | Print |
-| Ctrl+plus / Ctrl+minus / Ctrl+0 | Zoom in / out / reset |
+| Ctrl+plus / Ctrl+minus / Ctrl+0 | Larger / smaller / normal text |
 | F7 | Caret browsing |
 | Ctrl+W, Ctrl+Q | Close / Quit |
 
@@ -149,11 +173,21 @@ behaviour is derived from the public Mallard specification
 `helix-help [URI]` — opens the URI (any form in the table above); with no
 argument shows `help:gnome-help` if installed, else the home page.
 
-## Open questions
-- Exact `org.gnome.yelp` semantics: `font-adjustment` is used as a zoom
-  step count (10 % per step) rather than a point-size offset.
-- WebKit's sandbox (bubblewrap) needs unprivileged user namespaces. On
-  hosts with `kernel.apparmor_restrict_unprivileged_userns = 1` (Ubuntu
-  24.04+) it cannot start unless the installed binary gets an AppArmor
-  profile allowing `userns` (as distributions ship for WebKit-based apps).
-  Helix never disables the sandbox; packaging must provide that profile.
+### Packaging files
+- `data/apparmor.d/helix-help` installs to `/etc/apparmor.d/helix-help`
+  (load with `apparmor_parser -r`). It attaches to `/usr/bin/helix-help`
+  and `/usr/local/bin/helix-help`, is `flags=(unconfined)` and only grants
+  `userns` (bubblewrap and WebKit's helper processes are children of
+  helix-help and inherit it), with `include if exists <local/helix-help>`.
+  A unit test keeps it identical to the profile the failure page generates.
+- `data/org.helix.Help.desktop` → `/usr/share/applications/`;
+  `data/org.gnome.yelp.gschema.xml` → `/usr/share/glib-2.0/schemas/` only
+  where Yelp's schema is not installed.
+
+## Decisions
+- `font-adjustment` is an integer font-size offset (points), as in the
+  installed `org.gnome.yelp` schema; implemented as WebKit default font
+  sizes, not zoom.
+- WebKit sandbox on hosts restricting user namespaces: ship an AppArmor
+  profile granting `userns` (`data/apparmor.d/helix-help`) and show a
+  friendly status page when the sandbox cannot start; never disable it.

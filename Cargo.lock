@@ -1211,6 +1211,7 @@ dependencies = [
  "gtk4",
  "helix-app-common",
  "libadwaita",
+ "libc",
  "roxmltree",
  "webkit6",
 ]

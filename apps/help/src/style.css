@@ -46,7 +46,8 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: system-ui, "Cantarell", "Inter", sans-serif;
-  font-size: 11pt;
+  /* WebKit's default font size, which follows org.gnome.yelp font-adjustment. */
+  font-size: medium;
   line-height: 1.55;
 }
 main { max-width: 52em; margin: 0 auto; padding: 1.5em 2em 4em; }

@@ -1,6 +1,7 @@
 //! GTK user interface: header bar, sidebar outline and WebKit view.
 
 use crate::library::Library;
+use crate::textsize;
 use crate::uri::{self, DocRef, Location};
 use adw::prelude::*;
 use gtk::{gio, glib};
@@ -40,7 +41,21 @@ pub fn run(initial: Option<String>) -> glib::ExitCode {
     let library = Arc::new(Library::from_env());
     let initial = RefCell::new(initial);
     let context_slot: Rc<RefCell<Option<webkit6::WebContext>>> = Rc::default();
+    // Checked once, before any WebView exists: WebKit aborts the whole
+    // process when its sandbox cannot start.
+    let sandbox: RefCell<Option<Option<crate::sandbox::Cause>>> = RefCell::default();
     app.connect_activate(move |app| {
+        let blocked = *sandbox.borrow_mut().get_or_insert_with(crate::sandbox::check);
+        if let Some(cause) = blocked {
+            match app.windows().first() {
+                Some(w) => w.present(),
+                None => {
+                    eprintln!("helix-help: WebKit sandbox unavailable ({cause:?}); not showing help pages");
+                    crate::sandbox::failure_window(app, "Help", "helix-help", cause).present();
+                }
+            }
+            return;
+        }
         let context = context_slot
             .borrow_mut()
             .get_or_insert_with(|| make_context(library.clone()))
@@ -148,8 +163,11 @@ fn current_doc(ui: &Ui) -> Option<DocRef> {
     }
 }
 
-fn zoom_for(steps: i32) -> f64 {
-    1.0 + 0.1 * steps.clamp(-5, 10) as f64
+/// Applies `font-adjustment` (a point offset) to the WebKit settings.
+fn apply_text_size(settings: &webkit6::Settings, adjust: i32) {
+    let (body, mono) = textsize::font_px(adjust);
+    settings.set_default_font_size(body);
+    settings.set_default_monospace_font_size(mono);
 }
 
 fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Library>) -> Rc<Ui> {
@@ -158,10 +176,42 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     settings.set_enable_developer_extras(false);
     settings.set_enable_caret_browsing(prefs.get("show-cursor", false));
     settings.set_javascript_can_open_windows_automatically(false);
+    apply_text_size(&settings, prefs.get("font-adjustment", 0i32));
     let view = webkit6::WebView::builder().web_context(context).settings(&settings).build();
     view.set_vexpand(true);
     view.set_hexpand(true);
-    view.set_zoom_level(zoom_for(prefs.get("font-adjustment", 0i32)));
+
+    // Shown over the view if its web process dies.
+    let crash_reload = gtk::Button::builder().label("_Reload").use_underline(true).halign(gtk::Align::Center).build();
+    crash_reload.add_css_class("pill");
+    crash_reload.add_css_class("suggested-action");
+    let crash_page = crate::sandbox::crashed_page(webkit6::WebProcessTerminationReason::Crashed);
+    crash_page.set_child(Some(&crash_reload));
+    crash_page.add_css_class("view");
+    crash_page.set_visible(false);
+    let view_overlay = gtk::Overlay::builder().child(&view).build();
+    view_overlay.add_overlay(&crash_page);
+    view.connect_web_process_terminated(glib::clone!(
+        #[weak]
+        crash_page,
+        move |_, reason| {
+            if reason != webkit6::WebProcessTerminationReason::TerminatedByApi {
+                let page = crate::sandbox::crashed_page(reason);
+                crash_page.set_description(page.description().as_deref());
+                crash_page.set_visible(true);
+            }
+        }
+    ));
+    crash_reload.connect_clicked(glib::clone!(
+        #[weak]
+        view,
+        #[weak]
+        crash_page,
+        move |_| {
+            crash_page.set_visible(false);
+            view.reload();
+        }
+    ));
 
     let back = gtk::Button::builder().icon_name("go-previous-symbolic").tooltip_text("Back").action_name("win.back").build();
     let forward =
@@ -179,9 +229,9 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     sec1.append(Some("_Print…"), Some("win.print"));
     menu.append_section(None, &sec1);
     let zoom = gio::Menu::new();
-    zoom.append(Some("Zoom _In"), Some("win.zoom-in"));
-    zoom.append(Some("Zoom _Out"), Some("win.zoom-out"));
-    zoom.append(Some("_Reset Zoom"), Some("win.zoom-reset"));
+    zoom.append(Some("_Larger Text"), Some("win.zoom-in"));
+    zoom.append(Some("_Smaller Text"), Some("win.zoom-out"));
+    zoom.append(Some("_Normal Size"), Some("win.zoom-reset"));
     menu.append_section(None, &zoom);
     let sec3 = gio::Menu::new();
     sec3.append(Some("_Caret Browsing"), Some("win.caret"));
@@ -222,7 +272,7 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     let content = adw::ToolbarView::new();
     content.add_top_bar(&header);
     content.add_top_bar(&search_bar);
-    content.set_content(Some(&view));
+    content.set_content(Some(&view_overlay));
 
     let split = adw::OverlaySplitView::builder()
         .sidebar(&sidebar_view)
@@ -452,10 +502,12 @@ fn select_sidebar_row(ui: &Ui) {
     }
 }
 
-fn set_zoom(ui: &Ui, steps: i32) {
-    let steps = steps.clamp(-5, 10);
-    ui.prefs.set("font-adjustment", steps);
-    ui.view.set_zoom_level(zoom_for(steps));
+fn set_text_size(ui: &Ui, adjust: i32) {
+    let adjust = textsize::clamp(adjust);
+    ui.prefs.set("font-adjustment", adjust);
+    if let Some(s) = WebViewExt::settings(&ui.view) {
+        apply_text_size(&s, adjust);
+    }
 }
 
 fn install_actions(ui: &Rc<Ui>) {
@@ -495,14 +547,14 @@ fn install_actions(ui: &Rc<Ui>) {
     add(
         "zoom-in",
         &["<Control>plus", "<Control>equal", "<Control>KP_Add"],
-        Box::new(|ui| set_zoom(ui, ui.prefs.get("font-adjustment", 0i32) + 1)),
+        Box::new(|ui| set_text_size(ui, ui.prefs.get("font-adjustment", 0i32) + 1)),
     );
     add(
         "zoom-out",
         &["<Control>minus", "<Control>KP_Subtract"],
-        Box::new(|ui| set_zoom(ui, ui.prefs.get("font-adjustment", 0i32) - 1)),
+        Box::new(|ui| set_text_size(ui, ui.prefs.get("font-adjustment", 0i32) - 1)),
     );
-    add("zoom-reset", &["<Control>0", "<Control>KP_0"], Box::new(|ui| set_zoom(ui, 0)));
+    add("zoom-reset", &["<Control>0", "<Control>KP_0"], Box::new(|ui| set_text_size(ui, 0)));
     add("close", &["<Control>w"], Box::new(|ui| ui.window.close()));
 
     let sidebar = gio::SimpleAction::new_stateful("sidebar", None, &false.to_variant());
@@ -550,9 +602,9 @@ fn install_shortcuts_window(ui: &Ui) {
         ("<Control>f", "Search"),
         ("F9", "Toggle sidebar"),
         ("<Control>p", "Print"),
-        ("<Control>plus", "Zoom in"),
-        ("<Control>minus", "Zoom out"),
-        ("<Control>0", "Reset zoom"),
+        ("<Control>plus", "Larger text"),
+        ("<Control>minus", "Smaller text"),
+        ("<Control>0", "Normal text size"),
         ("F7", "Caret browsing"),
         ("<Control>w", "Close window"),
         ("<Control>q", "Quit"),
