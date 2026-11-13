@@ -103,6 +103,8 @@ pub struct AppState {
     pub replaygain_mode: String,
     /// Track-change notifications while the window is not focused.
     pub notifications: bool,
+    /// GNOME Music's favourites and playlists were imported (done once).
+    pub gnome_music_imported: bool,
 }
 
 impl Default for AppState {
@@ -113,6 +115,7 @@ impl Default for AppState {
             repeat_with_shuffle: "all".into(),
             replaygain_mode: "album".into(),
             notifications: true,
+            gnome_music_imported: false,
         }
     }
 }
@@ -423,7 +426,7 @@ impl App {
         }
     }
 
-    fn save_stats(&self) {
+    pub fn save_stats(&self) {
         if let Err(e) = self.stats.borrow().save(&Self::data_dir().join("stats.json")) {
             eprintln!("helix-music: cannot save statistics: {e}");
         }
@@ -508,6 +511,9 @@ impl App {
                 app.refresh_library_views();
             }
             app.watch_dirs(&report.dirs);
+            if first {
+                app.import_gnome_music_once();
+            }
             if app.scan_again.replace(false) {
                 app.start_scan();
             }

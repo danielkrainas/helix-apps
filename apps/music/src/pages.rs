@@ -910,6 +910,74 @@ impl App {
         });
     }
 
+    /// Imports GNOME Music's favourites and user playlists from its private
+    /// Tracker database once (read-only, on a worker thread). Without that
+    /// database Helix just keeps using its own store.
+    pub fn import_gnome_music_once(self: &Rc<Self>) {
+        if self.state.borrow().gnome_music_imported || std::env::var_os("HELIX_MUSIC_NO_GNOME_IMPORT").is_some() {
+            return;
+        }
+        let (tx, rx) = async_channel::bounded::<Result<Option<crate::gnome_import::Found>, String>>(1);
+        let spawned = std::thread::Builder::new().name("gnome-music-import".into()).spawn(move || {
+            let _ = tx.send_blocking(crate::gnome_import::load());
+        });
+        if spawned.is_err() {
+            return;
+        }
+        let w = Rc::downgrade(self);
+        glib::spawn_future_local(async move {
+            let Ok(res) = rx.recv().await else { return };
+            let Some(app) = w.upgrade() else { return };
+            let found = match res {
+                Ok(Some(found)) => found,
+                Ok(None) => return, // no GNOME Music database: nothing to import
+                Err(e) => {
+                    eprintln!("helix-music: cannot read GNOME Music's database: {e}");
+                    return;
+                }
+            };
+            let lib = app.lib();
+            let mut favs = 0;
+            {
+                let mut stats = app.stats.borrow_mut();
+                for p in found.favorites.iter().filter(|p| lib.index_of(p).is_some()) {
+                    if !stats.is_favorite(p) {
+                        stats.set_favorite(p, true);
+                        favs += 1;
+                    }
+                }
+            }
+            if favs > 0 {
+                app.save_stats();
+            }
+            let dir = App::data_dir().join("playlists");
+            let mut lists = 0;
+            for (title, entries) in found.playlists {
+                let Some(pl) = playlist::import(Some(title), Path::new(""), entries, &dir, |p| lib.index_of(p).is_some()) else { continue };
+                let dup = app.playlists.borrow().iter().any(|p| crate::model::sort_key(&p.name) == crate::model::sort_key(&pl.name) && p.entries == pl.entries);
+                if dup {
+                    continue;
+                }
+                app.save_playlist(&pl);
+                app.playlists.borrow_mut().push(pl);
+                lists += 1;
+            }
+            app.state.borrow_mut().gnome_music_imported = true;
+            app.save_state();
+            if lists > 0 {
+                app.reload_playlists();
+            }
+            if favs > 0 {
+                app.refresh_rows();
+                let n = app.songs_model.n_items();
+                app.songs_model.items_changed(0, n, n);
+            }
+            if favs + lists > 0 {
+                app.toasts.add_toast(toast(&crate::gnome_import::summary(favs, lists)));
+            }
+        });
+    }
+
     /// Saves a copy of a playlist as M3U or XSPF (by the chosen extension).
     pub fn export_playlist_dialog(self: &Rc<Self>, file: &Path) {
         let Some(pl) = self.playlists.borrow().iter().find(|p| p.file == file).cloned() else { return };
