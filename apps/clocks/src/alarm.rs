@@ -24,18 +24,19 @@ impl Weekdays {
             self.0 &= !bit;
         }
     }
-    /// From GNOME's `days` list (1 = Monday … 7 = Sunday).
+    /// From GNOME's `days` list (0 = Monday … 6 = Sunday). `7` is also
+    /// accepted as Sunday (written by early Helix builds).
     pub fn from_numbers(days: &[i32]) -> Self {
         let mut w = Weekdays(0);
         for &d in days {
-            if (1..=7).contains(&d) {
-                w.0 |= 1 << (d - 1);
+            if (0..=7).contains(&d) {
+                w.0 |= 1 << if d == 7 { 6 } else { d };
             }
         }
         w
     }
     pub fn to_numbers(self) -> Vec<i32> {
-        (0..7).filter(|i| self.0 & (1 << i) != 0).map(|i| i + 1).collect()
+        (0..7).filter(|i| self.0 & (1 << i) != 0).collect()
     }
 
     /// "Every Day", "Weekdays", "Weekends", "Mon, Wed, Fri" or "" (one-shot).
@@ -258,18 +259,19 @@ mod tests {
 
     #[test]
     fn weekdays_roundtrip_and_summary() {
-        let w = Weekdays::from_numbers(&[1, 3, 5, 9, 0]);
-        assert_eq!(w.to_numbers(), vec![1, 3, 5]);
+        let w = Weekdays::from_numbers(&[0, 2, 4, 9, -1]);
+        assert_eq!(w.to_numbers(), vec![0, 2, 4]);
         assert!(w.contains(Weekday::Wed));
         assert!(!w.contains(Weekday::Sun));
         assert_eq!(w.summary(), "Mon, Wed, Fri");
-        assert_eq!(Weekdays::from_numbers(&[1, 2, 3, 4, 5]).summary(), "Weekdays");
-        assert_eq!(Weekdays::from_numbers(&[6, 7]).summary(), "Weekends");
-        assert_eq!(Weekdays::from_numbers(&[1, 2, 3, 4, 5, 6, 7]).summary(), "Every Day");
+        assert_eq!(Weekdays::from_numbers(&[0, 1, 2, 3, 4]).summary(), "Weekdays");
+        assert_eq!(Weekdays::from_numbers(&[5, 6]).summary(), "Weekends");
+        assert_eq!(Weekdays::from_numbers(&[5, 7]).summary(), "Weekends", "7 is a legacy Sunday");
+        assert_eq!(Weekdays::from_numbers(&[0, 1, 2, 3, 4, 5, 6]).summary(), "Every Day");
         assert_eq!(Weekdays::default().summary(), "");
         let mut w = Weekdays::default();
         w.set(Weekday::Sun, true);
-        assert_eq!(w.to_numbers(), vec![7]);
+        assert_eq!(w.to_numbers(), vec![6]);
         w.set(Weekday::Sun, false);
         assert!(w.is_empty());
     }
@@ -289,11 +291,11 @@ mod tests {
     #[test]
     fn repeating_skips_days() {
         // Weekdays alarm, asked on Friday evening → Monday.
-        let a = alarm(6, 45, &[1, 2, 3, 4, 5]);
+        let a = alarm(6, 45, &[0, 1, 2, 3, 4]);
         let fri = local(&New_York, 2024, 3, 8, 20, 0);
         assert_eq!(next_ring(&a, fri, &New_York), Some(local(&New_York, 2024, 3, 11, 6, 45)));
         // Sunday-only alarm asked on Sunday after it → next Sunday.
-        let a = alarm(9, 0, &[7]);
+        let a = alarm(9, 0, &[6]);
         let sun = local(&New_York, 2024, 3, 3, 10, 0);
         assert_eq!(next_ring(&a, sun, &New_York), Some(local(&New_York, 2024, 3, 10, 9, 0)));
     }
@@ -311,7 +313,7 @@ mod tests {
         let now = local(&New_York, 2024, 11, 3, 0, 0);
         assert_eq!(next_ring(&a, now, &New_York), Some(at(2024, 11, 3, 5, 30)));
         // A daily 08:00 alarm keeps 08:00 local across the DST change.
-        let a = alarm(8, 0, &[1, 2, 3, 4, 5, 6, 7]);
+        let a = alarm(8, 0, &[0, 1, 2, 3, 4, 5, 6]);
         let sat = local(&New_York, 2024, 3, 9, 9, 0);
         let sun = next_ring(&a, sat, &New_York).unwrap();
         assert_eq!(sun, at(2024, 3, 10, 12, 0));
@@ -343,7 +345,7 @@ mod tests {
     #[test]
     fn ring_timeout_reschedules_repeating() {
         let tz = Berlin;
-        let mut a = alarm(7, 0, &[1, 2, 3, 4, 5, 6, 7]);
+        let mut a = alarm(7, 0, &[0, 1, 2, 3, 4, 5, 6]);
         a.ring_minutes = 2;
         let mut e = AlarmEntry::new(a, local(&tz, 2024, 3, 5, 6, 0), &tz);
         let due = local(&tz, 2024, 3, 5, 7, 0);
@@ -357,7 +359,7 @@ mod tests {
     #[test]
     fn missed_after_suspend() {
         let tz = Berlin;
-        let mut e = AlarmEntry::new(alarm(7, 0, &[2]), local(&tz, 2024, 3, 5, 6, 0), &tz);
+        let mut e = AlarmEntry::new(alarm(7, 0, &[1]), local(&tz, 2024, 3, 5, 6, 0), &tz);
         // Woke up at 09:00, two hours after a 5-minute alarm.
         assert_eq!(e.tick(local(&tz, 2024, 3, 5, 9, 0), &tz), Some(Event::Missed));
         assert_eq!(e.next, Some(local(&tz, 2024, 3, 12, 7, 0)));
@@ -367,7 +369,7 @@ mod tests {
     #[test]
     fn stop_during_same_minute_does_not_rering() {
         let tz = Berlin;
-        let mut e = AlarmEntry::new(alarm(7, 0, &[1, 2, 3, 4, 5, 6, 7]), local(&tz, 2024, 3, 5, 6, 0), &tz);
+        let mut e = AlarmEntry::new(alarm(7, 0, &[0, 1, 2, 3, 4, 5, 6]), local(&tz, 2024, 3, 5, 6, 0), &tz);
         let due = local(&tz, 2024, 3, 5, 7, 0);
         assert_eq!(e.tick(due, &tz), Some(Event::Ring));
         e.stop(due + Duration::seconds(10), &tz);

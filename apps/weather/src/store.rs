@@ -19,9 +19,27 @@ pub struct Place {
     pub longitude: f64,
     #[serde(default)]
     pub timezone: Option<String>,
+    /// The automatically located place (at most one, kept first).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub automatic: bool,
 }
 
 impl Place {
+    /// A place with just a name and coordinates.
+    pub fn at(name: impl Into<String>, latitude: f64, longitude: f64) -> Place {
+        Place {
+            id: None,
+            name: name.into(),
+            admin1: None,
+            country: None,
+            country_code: None,
+            latitude,
+            longitude,
+            timezone: None,
+            automatic: false,
+        }
+    }
+
     /// "Region, Country" (whatever parts are known).
     pub fn subtitle(&self) -> String {
         let mut parts: Vec<&str> = Vec::new();
@@ -51,6 +69,9 @@ pub struct Locations {
     pub selected: usize,
     #[serde(default)]
     pub locations: Vec<Place>,
+    /// Mirrors GNOME Weather's `automatic-location`.
+    #[serde(default)]
+    pub automatic_location: bool,
 }
 
 impl Locations {
@@ -66,6 +87,36 @@ impl Locations {
                 self.locations.push(place);
                 self.selected = self.locations.len() - 1;
             }
+        }
+    }
+
+    /// Replaces the automatic place (kept at index 0) with `place`, or
+    /// removes it. The selection follows the place it pointed at; a new
+    /// automatic place is selected when nothing else was (empty list or the
+    /// previous automatic place was selected).
+    pub fn set_automatic(&mut self, place: Option<Place>) {
+        let was_auto_selected = self.locations.get(self.selected).is_some_and(|p| p.automatic);
+        let had_auto = self.locations.first().is_some_and(|p| p.automatic);
+        let was_empty = self.locations.iter().all(|p| p.automatic);
+        if had_auto {
+            self.locations.remove(0);
+            if self.selected > 0 {
+                self.selected -= 1;
+            }
+        }
+        if let Some(mut p) = place {
+            p.automatic = true;
+            self.locations.insert(0, p);
+            if was_auto_selected || was_empty {
+                self.selected = 0;
+            } else {
+                self.selected += 1;
+            }
+        } else if was_auto_selected {
+            self.selected = 0;
+        }
+        if self.selected >= self.locations.len() {
+            self.selected = 0;
         }
     }
 
@@ -138,16 +189,36 @@ mod tests {
     use super::*;
 
     fn place(name: &str, lat: f64, lon: f64) -> Place {
-        Place {
-            id: None,
-            name: name.into(),
-            admin1: Some("Region".into()),
-            country: Some("Country".into()),
-            country_code: None,
-            latitude: lat,
-            longitude: lon,
-            timezone: None,
-        }
+        Place { admin1: Some("Region".into()), country: Some("Country".into()), ..Place::at(name, lat, lon) }
+    }
+
+    #[test]
+    fn automatic_place() {
+        let mut l = Locations::default();
+        l.set_automatic(Some(place("Here", 5.0, 5.0)));
+        assert_eq!((l.selected, l.locations.len()), (0, 1));
+        assert!(l.locations[0].automatic);
+        l.add(place("A", 1.0, 1.0));
+        assert_eq!(l.selected, 1);
+        // Moving: the manual selection stays on A.
+        l.set_automatic(Some(place("There", 6.0, 6.0)));
+        assert_eq!(l.locations.len(), 2);
+        assert_eq!(l.locations[0].name, "There");
+        assert_eq!(l.selected_place().unwrap().name, "A");
+        // Selected automatic place follows the move.
+        l.selected = 0;
+        l.set_automatic(Some(place("Elsewhere", 7.0, 7.0)));
+        assert_eq!(l.selected_place().unwrap().name, "Elsewhere");
+        // Turning it off.
+        l.set_automatic(None);
+        assert_eq!(l.locations.len(), 1);
+        assert_eq!(l.selected_place().unwrap().name, "A");
+        assert!(!l.locations.iter().any(|p| p.automatic));
+        // Added while a manual place is selected and none was automatic.
+        l.set_automatic(Some(place("Here", 5.0, 5.0)));
+        assert_eq!(l.selected_place().unwrap().name, "A");
+        let json = serde_json::to_string(&l).unwrap();
+        assert_eq!(json.matches("\"automatic\":true").count(), 1, "manual places omit the flag");
     }
 
     fn temp_dir(tag: &str) -> PathBuf {

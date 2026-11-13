@@ -2,7 +2,7 @@
 <!-- GNOME-compatible schema for the keys Helix Clocks uses. Install only
      when the schema is not already provided by the system. -->
 <schemalist>
-  <enum id="org.gnome.clocks.PanelId">
+  <enum id="org.gnome.clocks.panelid">
     <value value="0" nick="world"/>
     <value value="1" nick="alarm"/>
     <value value="2" nick="stopwatch"/>
@@ -17,6 +17,6 @@
   <schema path="/org/gnome/clocks/state/window/" id="org.gnome.clocks.state.window">
     <key type="(ii)" name="size"><default>(870, 690)</default><summary>Window size</summary></key>
     <key type="b" name="maximized"><default>false</default><summary>Window maximized</summary></key>
-    <key name="panel-id" enum="org.gnome.clocks.PanelId"><default>'world'</default><summary>Panel state</summary></key>
+    <key name="panel-id" enum="org.gnome.clocks.panelid"><default>'world'</default><summary>Panel state</summary></key>
   </schema>
 </schemalist>

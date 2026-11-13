@@ -14,9 +14,13 @@ Current conditions and forecast.
 - Location search.
 
 ## Contracts used
-- GSettings: `org.gnome.Weather`.
-- Network access for weather data (libgweather or equivalent).
-- XDG portals: Location (optional).
+- GSettings: `org.gnome.Weather`, `org.gnome.GWeather4`,
+  `org.gnome.shell.weather` (read only, import).
+- Network access for weather data (Open-Meteo) and reverse geocoding
+  (OpenStreetMap Nominatim, fallback only).
+- XDG portals: Location; GeoClue2 (fallback).
+- GWeather location database `libgweather-4/Locations.xml` (read-only data
+  file, optional).
 
 ## Non-goals
 - Exact visual style of current GNOME Weather.
@@ -41,6 +45,17 @@ Current conditions and forecast.
   response's `utc_offset_seconds` tells the app what "now" is there.
 - The only client header is a generic `User-Agent: helix-weather/0.1`.
   Nothing is sent besides coordinates / search text.
+- **Terms of use.** Open-Meteo's free API is offered for **non-commercial
+  use only** (fewer than 10 000 calls per day, attribution required; data
+  licensed CC BY 4.0). Commercial use requires an Open-Meteo API
+  subscription (`customer-api.open-meteo.com` with an `apikey`) or a
+  self-hosted Open-Meteo instance. Helix Weather stays within the free
+  terms (one forecast request per location per 30 minutes, plus searches)
+  and credits "Weather data by Open-Meteo.com" (linked) under the forecast
+  and in the About dialog, which also credits OpenStreetMap contributors for
+  Nominatim place names (ODbL; Nominatim's usage policy allows such light
+  use: one request per lookup, identifying User-Agent). Distributors shipping Helix commercially must review
+  these terms; the endpoint URLs are constants in `src/api.rs`.
 - Requests run on a worker thread (`gio::spawn_blocking`); the UI never
   blocks. Timeout 15 s. API errors (`{"error":true,"reason":…}`) are shown
   to the user.
@@ -99,8 +114,12 @@ WMO codes map to a description and a standard symbolic icon
    range bar (cairo) scaled to the 10-day min/max.
 4. Footer: "Updated just now / N minutes ago / at HH:MM" (re-evaluated
    every minute).
+5. Credit line: "Weather data by Open-Meteo.com" (link).
 
 ### Locations
+- Popover top: an **Automatic Location** switch row ("Show the weather where
+  you are"). The empty page also offers *Use Current Location*, which turns
+  it on.
 - Search: typing in the search entry queries geocoding (debounced 300 ms,
   ≥ 2 characters). Results show "Name" + "Region, Country". Activating a
   result adds it to the saved list (no duplicates by coordinates) and
@@ -109,8 +128,55 @@ WMO codes map to a description and a standard symbolic icon
   Removing the selected location selects the first remaining one.
 - The selected location persists alongside the list.
 - Storage: `$XDG_CONFIG_HOME/helix-weather/locations.json`:
-  `{ "selected": 0, "locations": [{ "id", "name", "admin1", "country",
-  "country_code", "latitude", "longitude", "timezone" }] }`.
+  `{ "selected": 0, "automatic_location": false, "locations": [{ "id",
+  "name", "admin1", "country", "country_code", "latitude", "longitude",
+  "timezone", "automatic"? }] }` (`automatic: true` only on the located
+  place).
+
+### Automatic location
+- When on, Helix asks for the position on startup, whenever it is switched
+  on, and at every 30-minute auto-refresh: the XDG **Location portal**
+  (`CreateSession` with city accuracy, `Start`, first `LocationUpdated`,
+  `Session.Close`), falling back to **GeoClue2** on the system bus
+  (`DesktopId` = `org.helix.Weather`, city accuracy). Worker thread, 30 s
+  timeout.
+- **Reverse geocoding**: (1) offline, the nearest `<city>` within 50 km in
+  the GWeather database gives the name, region (state), country and time
+  zone; (2) otherwise OpenStreetMap **Nominatim**
+  (`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10`,
+  `lat`/`lon` rounded to 4 decimals, `accept-language` = UI language; name
+  = city/town/village/municipality/hamlet/suburb/county); (3) otherwise
+  "Current Location". The forecast uses the real coordinates, not the
+  city's.
+- The located place is kept as the first entry of the saved list (subtitle
+  "Current location • Region, Country", a location icon). A new fix
+  replaces it; the selection follows it if it was selected (or nothing else
+  is saved). Removing that row or switching the row off turns automatic
+  location off and drops the entry.
+- If the lookup fails and nothing else is saved, the error page shows
+  "Could Not Find Your Location" with the reason; *Retry* tries again.
+- The switch mirrors `org.gnome.Weather automatic-location` when that schema
+  is installed (it then wins at startup); otherwise it persists in
+  `locations.json`.
+
+### First-run import (read only)
+- When `locations.json` does not exist yet, Helix imports GNOME Weather's
+  saved locations once, from the first non-empty source: (1) the
+  `org.gnome.Weather locations` key if the schema is installed (it is not on
+  this machine; only `org.gnome.GWeather4` is), (2) `dconf read
+  /org/gnome/Weather/locations` (works without the schema), (3) the Flatpak
+  app's keyfile `~/.var/app/org.gnome.Weather/config/glib-2.0/settings/keyfile`
+  (`[org/gnome/Weather] locations`), (4) GNOME Shell's copy
+  `org.gnome.shell.weather locations` (installed, `av`). On this machine all
+  sources were empty when checked.
+- Format: `av`, each item a GWeather-serialized location `(uv)`; version 2
+  is `(name, station code, is-city, [(lat, lon)] city, [(lat, lon)]
+  station)` in radians, version 1 the same with maybes `m(dd)`. The city
+  coordinates (else the station's) become the place; the station code is
+  looked up in the GWeather database for region, country and time zone; a
+  nameless entry takes the station's name. Unparsable entries are skipped,
+  duplicates dropped. Nothing is ever written back to GNOME's settings.
+- Any failure (no source, bad data) simply starts with an empty list.
 
 ### Refresh, cache, offline
 - On selecting a location: show the cached forecast immediately (if any),
@@ -141,8 +207,9 @@ WMO codes map to a description and a standard symbolic icon
 
 ### GSettings
 - `org.gnome.Weather`: `window-width` (i), `window-height` (i),
-  `window-maximized` (b). (`locations` and `automatic-location` are
-  **not** used, see Open questions.)
+  `window-maximized` (b), `automatic-location` (b, default `false`),
+  `locations` (`av`, read only for the import).
+- `org.gnome.shell.weather`: `locations` (`av`, read only for the import).
 - `org.gnome.GWeather4`: `temperature-unit`, `speed-unit`,
   `pressure-unit` (enums above).
 - `org.gnome.desktop.interface`: `clock-format` (read only).
@@ -154,18 +221,11 @@ WMO codes map to a description and a standard symbolic icon
 ### Command line
 `helix-weather` (no options). `--help` prints usage.
 
-## Open questions
-- **Saved locations format.** GNOME Weather stores `org.gnome.Weather`
-  `locations` as GWeather-serialized variants (`av`), which cannot be
-  produced or fully interpreted without libgweather. Helix keeps its own
-  list in `$XDG_CONFIG_HOME/helix-weather/locations.json` instead, so
-  locations do not carry over between GNOME Weather and Helix Weather.
-  Should we attempt a best-effort import of the GWeather variant (name +
-  coordinates) on first run?
-- **Automatic location.** `automatic-location` (GeoClue / XDG Location
-  portal) is not implemented. Decide whether to use the Location portal
-  via zbus, and how to name the resulting place (Open-Meteo offers no
-  reverse geocoding).
-- **Data provider.** Open-Meteo is keyless and free for non-commercial
-  use; confirm it is acceptable as the default provider (or make it
-  configurable / self-hostable).
+## Decisions
+- **Data provider**: Open-Meteo stays the default; its non-commercial terms
+  are documented above (Data source → Terms of use).
+- **Automatic location**: Location portal, falling back to GeoClue2, with
+  reverse geocoding (offline GWeather database, then Nominatim).
+- **Saved locations**: Helix keeps its own `locations.json`; on first run it
+  imports GNOME Weather's GWeather-serialized locations best-effort and read
+  only; on failure it starts empty.

@@ -1186,9 +1186,12 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "chrono-tz",
+ "gstreamer",
  "gtk4",
  "helix-app-common",
  "libadwaita",
+ "roxmltree",
+ "zbus",
 ]
 
 [[package]]
@@ -1426,9 +1429,11 @@ dependencies = [
  "gtk4",
  "helix-app-common",
  "libadwaita",
+ "roxmltree",
  "serde",
  "serde_json",
  "ureq",
+ "zbus",
 ]
 
 [[package]]

@@ -15,7 +15,9 @@ World clocks, alarms, stopwatch, and timer.
 - Stopwatch and timer views.
 
 ## Contracts used
-- XDG portals: Notification, Background.
+- XDG portals: Notification, Background, Location; GeoClue2 (fallback).
+- GStreamer (alarm and timer tones, PipeWire output).
+- GWeather location database `libgweather-4/Locations.xml` (read-only data file, optional).
 - GSettings: `org.gnome.clocks`.
 - System time / timezone services.
 
@@ -83,8 +85,23 @@ World clocks, alarms, stopwatch, and timer.
   the country name or the country code; prefix matches on the city sort
   first. Zones already in the list are marked and cannot be added twice.
   Selecting a result adds it and closes the dialog.
-- If `geolocation` is on, a *Current Location* row derived from the system
-  time zone (no GeoClue lookup) is shown first; it is not stored.
+- If `geolocation` is on, a *Current Location* row is shown first; it is
+  not stored. It starts out derived from the system time zone; at startup
+  Helix asks for the position once (see *Current location* below) and, on
+  success, replaces it with the nearest place.
+
+### Current location
+- Position: the XDG **Location portal** (`org.freedesktop.portal.Location`:
+  `CreateSession` with `accuracy` = city, `Start`, first
+  `LocationUpdated`, then `Session.Close`); if the portal is missing or
+  refuses, **GeoClue2** on the system bus (`Manager.GetClient`, `DesktopId`
+  = `org.helix.Clocks`, `RequestedAccuracyLevel` = city (4), `Start`, first
+  `LocationUpdated` → `Location.Latitude/Longitude`, then `Stop` and
+  `DeleteClient`). Runs on a worker thread; gives up after 30 s.
+- Naming: the nearest `<city>` (≤ 100 km) of the GWeather location database
+  (`$XDG_DATA_DIRS/libgweather-4/Locations.xml`, read-only data file) gives
+  the name, country and time zone (`tz-hint` of the city/state/country);
+  otherwise the zone of the nearest `zone1970.tab` city is used.
 
 ### Alarms
 - A boxed list of alarms sorted by time. Each row shows the time (large),
@@ -107,16 +124,51 @@ World clocks, alarms, stopwatch, and timer.
   rings: an `AdwAlertDialog` with the alarm's name and time and **Snooze** /
   **Stop** buttons is presented, a `gio::Notification` (id `alarm-<id>`,
   urgent priority, buttons *Snooze*/*Stop* wired to `app.alarm-snooze` /
-  `app.alarm-stop`) is sent, and the display bell is sounded every 2
-  seconds. Ringing stops by itself after the ring duration. Snooze reschedules
+  `app.alarm-stop`) is sent, and a **tone** plays in a loop (see *Sound*).
+  Ringing stops by itself after the ring duration. Snooze reschedules
   the alarm `snooze_minutes` after now. Stop (or timeout) for a one-shot
   alarm disables it; a repeating alarm is rescheduled for its next day.
   An occurrence missed by more than the ring duration is skipped and a
   *Missed alarm* notification is sent.
-- **Alarms only ring while Helix Clocks is running** (see open questions).
-  While any alarm is enabled or any timer runs, the window has
-  `hide-on-close` set, so closing it hides it and the process keeps running;
-  launching Clocks again presents it. *Quit* (Ctrl+Q) really quits.
+- **Background running.** While any alarm is enabled or any timer runs,
+  the application holds itself (`g_application_hold`) and the window has
+  `hide-on-close` set, so closing it hides it and the process keeps
+  running; launching Clocks again presents it. *Quit* (Ctrl+Q) really quits.
+- **Background portal.** When alarms become enabled (at startup or later),
+  Helix calls `org.freedesktop.portal.Background.RequestBackground` with
+  `reason`, `autostart=true`, `commandline=['helix-clocks', '--hidden']`
+  and `dbus-activatable=false` (preceded by the best-effort host-app
+  `org.freedesktop.host.portal.Registry.Register('org.helix.Clocks')` for
+  newer portals). When the last alarm is disabled during the session it
+  calls it again with `autostart=false` to remove the login entry. If the
+  portal is unavailable or refuses background running, the Alarms page shows
+  "Alarms only ring while Clocks is running."
+- **Autostart fallback** (no portal): `data/org.helix.Clocks-autostart.desktop`
+  is installed by packagers as `/etc/xdg/autostart/org.helix.Clocks.desktop`
+  (`Exec=helix-clocks --hidden`, `NoDisplay=true`). It is not installed by
+  the build and costs nothing when unused: `--hidden` exits at once when no
+  alarm is enabled.
+- **`--hidden` start**: registers the application; if an instance already
+  runs it exits without showing anything. Otherwise it loads the alarms and,
+  if any is enabled, keeps running without a window (the window is presented
+  when an alarm rings or the user launches Clocks); else it exits.
+
+### Sound
+- GStreamer (`playbin`) plays the sound theme's event sound —
+  `alarm-clock-elapsed` for alarms (looped until the alarm stops), `complete`
+  for timers (once) — looked up as
+  `<data dir>/sounds/<theme>/stereo/<id>.{oga,ogg,wav}` in
+  `$XDG_DATA_HOME` then `$XDG_DATA_DIRS`, for the theme in
+  `org.gnome.desktop.sound theme-name` (read only) and then `freedesktop`.
+- If no file exists, a generated 880 Hz sine from `audiotestsrc` is gated
+  in a beep-beep-pause cadence (200 ms on, 100 off, 200 on, 500 off); timers
+  play it for 2 s.
+- Output: `pipewiresink` (stream property `media.role=Alarm`) when the
+  element exists, else `autoaudiosink`. `$HELIX_AUDIO_SINK` (a gst-launch
+  description, e.g. `fakesink`) overrides it (tests use this).
+- If GStreamer cannot play (init, pipeline or runtime error), Helix falls
+  back to the display bell (every 2 s while an alarm rings, three times for
+  a timer).
 
 ### Stopwatch
 - Large `MM:SS.d` display (hours added when ≥ 1 h; centiseconds `.cc` in the
@@ -137,19 +189,25 @@ World clocks, alarms, stopwatch, and timer.
   (`H:MM:SS` / `MM:SS`), and buttons **Start/Pause/Resume**, **Reset**,
   **Delete**. A running timer's row has a progress bar.
 - When a timer reaches zero it stops, resets to its full duration, sends a
-  `gio::Notification` ("Time is up!", the timer's name) and sounds the bell
-  three times.
+  `gio::Notification` ("Time is up!", the timer's name) and plays the timer
+  sound once (not while an alarm is ringing).
 - Timer definitions (name, duration) are persisted; running state is not.
 
 ### GSettings (`org.gnome.clocks`)
-All values are `aa{sv}` per the published schema (`geolocation` is `b`).
-The dictionary contents below are what Helix writes and expects;
-unknown keys are ignored on read.
+All values are `aa{sv}` per the published schema (`geolocation` is `b`),
+checked against the installed `/usr/share/glib-2.0/schemas/org.gnome.clocks.gschema.xml`
+(key names, types and defaults match). The user's own values
+(`gsettings get org.gnome.clocks world-clocks` / `alarms` / `timers`, and
+`org.gnome.shell.world-clocks locations`) were all empty (`@aa{sv} []`), so
+the dictionary layouts below could not be checked against real GNOME-written
+data; they follow GNOME's documented/observed format (see Open questions).
+Unknown keys are ignored on read, and Helix writes nothing GNOME would
+reject.
 
 | Key | Dict entries |
 |---|---|
-| `world-clocks` | `location`: `v` holding a GWeather-style serialized location `(uv)` = `(2, <(ssba(dd)a(dd))>)` (name, station code `''`, is-city `true`, `[(lat, lon)]` city coordinates in radians, `[]` station coordinates). Helix adds `helix-timezone`: `s` (IANA zone ID). On read, `helix-timezone` wins; otherwise the zone whose `zone1970.tab` principal city is nearest to the city (or station) coordinates is used (same rule as the shell's world clocks; e.g. Munich resolves to `Europe/Zurich`, which has identical rules today), and no country is shown for such entries; locations with neither are dropped. Duplicates (same name and zone) are dropped. |
-| `alarms` | `id` `s` (random hex), `name` `s`, `active` `b`, `hour` `i`, `minute` `i`, `days` `ai` (1 = Monday … 7 = Sunday; empty = one-shot), `ring_minutes` `i`, `snooze_minutes` `i`. |
+| `world-clocks` | `location`: `v` holding a GWeather serialized location `(uv)` = `(uint32 2, <(ssba(dd)a(dd))>)`: name, METAR station code, is-city `true`, `[(lat, lon)]` city coordinates and `[(lat, lon)]` station coordinates, both in radians — exactly what GNOME Clocks writes. Helix fills the station with the nearest weather station from the GWeather database (`libgweather-4/Locations.xml`); without the database the code is `''` and the station list empty. Entries read from GNOME keep their station unchanged on rewrite. Helix adds `helix-timezone`: `s` (IANA zone ID; ignored by GNOME). On read the zone is: `helix-timezone`, else the station's zone from the GWeather database (`tz-hint` of station/state/country, or the country's only zone), else the zone whose `zone1970.tab` principal city is nearest to the coordinates. The country comes from the zone's principal city (if the name matches) or the station's country. Entries with no resolvable zone are dropped; duplicates (same name and zone) are dropped. |
+| `alarms` | `id` `s` (random hex), `name` `s`, `active` `b`, `hour` `i`, `minute` `i`, `days` `ai` (0 = Monday … 6 = Sunday, GNOME's numbering; empty = one-shot; `7` is read as Sunday for entries written by early Helix builds), `ring_minutes` `i`, `snooze_minutes` `i`. |
 | `timers` | `duration` `i` (seconds), `name` `s`. |
 | `geolocation` | `b` – shows the *Current Location* row (see World). |
 
@@ -172,23 +230,35 @@ If a schema is not installed, values live in memory for the session.
 | `Ctrl+?` | Keyboard shortcuts |
 
 ### Command line
-`helix-clocks` takes no options besides GApplication's standard ones
+`helix-clocks [--hidden]`: `--hidden` starts in the background without a
+window (used by autostart; see Alarms). Plus GApplication's standard options
 (`--help`).
 
+### Packaging
+- `data/org.helix.Clocks.desktop` → `/usr/share/applications/`.
+- `data/org.helix.Clocks-autostart.desktop` →
+  `/etc/xdg/autostart/org.helix.Clocks.desktop` (non-portal autostart
+  fallback; optional).
+- `data/org.gnome.clocks.gschema.xml` → only when the GNOME schema is not
+  installed.
+
+## Decisions
+- **Background running**: request background + autostart via the XDG
+  Background portal (`--hidden` command line), hold the application while
+  alarms are enabled, ship an autostart `.desktop` as the non-portal
+  fallback.
+- **Sound**: ring with a real tone through GStreamer/PipeWire (sound-theme
+  file if present, else a generated `audiotestsrc` tone), not the display
+  bell (kept only as a last-resort fallback).
+- **Geolocation**: use the Location portal, falling back to GeoClue2 over
+  D-Bus.
+- **Saved-locations format**: read and write GNOME's exact GWeather
+  serialization, with real station codes from the GWeather location
+  database when it is installed (verified against the installed schema;
+  the user's own values are empty).
+
 ## Open questions
-- **Background running**: alarms only ring while the process runs. Should
-  Helix request autostart / background permission via the XDG Background
-  portal (`org.freedesktop.portal.Background.RequestBackground` with
-  `autostart=true` and a `--gapplication-service` command line) so alarms
-  survive logout/login? Not done yet; currently the app stays alive after
-  the window closes only while an alarm is enabled.
-- **Sound**: no GStreamer/libcanberra is available, so ringing uses the
-  display bell (`gdk::Display::beep`) every 2 s, and timers beep three
-  times. A PipeWire-based alarm tone could be added later.
-- **Geolocation**: no GeoClue lookup is done; the *Current Location* row
-  uses the system time zone. Should Helix query GeoClue2 (via zbus) for a
-  real place name?
-- **GWeather interoperability**: GNOME Clocks expects a weather station code
-  in serialized locations; Helix writes an empty code plus coordinates. It is
-  unverified whether GNOME Clocks resolves such entries; Helix itself reads
-  GNOME-written entries via coordinates.
+- **Alarm weekday numbering**: Helix now writes GNOME's 0 = Monday … 6 =
+  Sunday numbering. This could not be confirmed from real data (the user has
+  no saved alarms); if a GNOME-written alarm shows up shifted by a day,
+  the numbering needs revisiting.

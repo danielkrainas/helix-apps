@@ -1,7 +1,11 @@
 //! Helix Weather.
 
 mod api;
+mod autoloc;
 mod graph;
+mod gwdb;
+mod import;
+mod location;
 mod store;
 mod timefmt;
 mod ui;
