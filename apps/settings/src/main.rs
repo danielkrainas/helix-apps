@@ -1,6 +1,7 @@
 //! Helix Settings.
 
 mod dbus;
+mod extensions;
 mod panels;
 mod sysinfo;
 mod ui;

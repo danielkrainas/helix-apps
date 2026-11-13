@@ -4,6 +4,7 @@ mod about;
 mod access;
 mod appearance;
 mod datetime;
+mod extensions;
 mod input;
 mod multitasking;
 mod notifications;
@@ -38,6 +39,7 @@ fn panel_impl(id: PanelId) -> Option<&'static dyn Panel> {
         PanelId::Accessibility => &access::AccessibilityPanel,
         PanelId::Privacy => &privacy::PrivacyPanel,
         PanelId::Notifications => &notifications::NotificationsPanel,
+        PanelId::Extensions => &extensions::ExtensionsPanel,
         PanelId::Multitasking => &multitasking::MultitaskingPanel,
         PanelId::Power => &power::PowerPanel,
         PanelId::DateTime => &datetime::DateTimePanel,

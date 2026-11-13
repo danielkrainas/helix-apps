@@ -12,6 +12,7 @@ pub enum PanelId {
     Appearance,
     Apps,
     Notifications,
+    Extensions,
     Mouse,
     Keyboard,
     Accessibility,
@@ -133,6 +134,16 @@ pub const PANELS: &[PanelInfo] = &[
         title: "Notifications",
         icon: "preferences-system-notifications-symbolic",
         keywords: &["do not disturb", "dnd", "banner", "alerts", "lock screen", "messages"],
+        group: 2,
+        available: true,
+    },
+    PanelInfo {
+        id: PanelId::Extensions,
+        name: "extensions",
+        aliases: &["shell-extensions", "add-ons"],
+        title: "Extensions",
+        icon: "application-x-addon-symbolic",
+        keywords: &["add-on", "plugin", "panel item", "indicator", "quick settings", "dock", "sandbox", "permissions"],
         group: 2,
         available: true,
     },
@@ -272,7 +283,7 @@ mod tests {
         let ids = [
             PanelId::Wifi, PanelId::Network, PanelId::Bluetooth, PanelId::Display, PanelId::Sound,
             PanelId::Power, PanelId::Multitasking, PanelId::Appearance, PanelId::Apps,
-            PanelId::Notifications, PanelId::Mouse, PanelId::Keyboard, PanelId::Accessibility,
+            PanelId::Notifications, PanelId::Extensions, PanelId::Mouse, PanelId::Keyboard, PanelId::Accessibility,
             PanelId::Privacy, PanelId::DateTime, PanelId::Users, PanelId::About,
         ];
         assert_eq!(ids.len(), PANELS.len());
@@ -317,6 +328,7 @@ mod tests {
         assert_eq!(lookup("info-overview"), Some(PanelId::About));
         assert_eq!(lookup(" datetime "), Some(PanelId::DateTime));
         assert_eq!(lookup("display"), Some(PanelId::Display));
+        assert_eq!(lookup("add-ons"), Some(PanelId::Extensions));
         assert_eq!(lookup("nonsense"), None);
     }
 

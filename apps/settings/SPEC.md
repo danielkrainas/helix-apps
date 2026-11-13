@@ -87,6 +87,7 @@ Primary configuration UI for the desktop and system.
 | `appearance` | `background`, `wallpaper` | yes |
 | `apps` | `applications`, `default-apps` | no |
 | `notifications` | | yes |
+| `extensions` | `shell-extensions`, `add-ons` | yes |
 | `mouse` | `touchpad`, `mouse-touchpad` | yes |
 | `keyboard` | `input-sources` | yes |
 | `accessibility` | `universal-access`, `a11y` | yes |
@@ -198,6 +199,61 @@ Primary configuration UI for the desktop and system.
   `/org/gnome/desktop/notifications/application/<id>/`. Names and icons come
   from the matching desktop file when found. The group is hidden when the
   relocatable schema is not installed or the list is empty.
+
+#### Extensions
+Helix shell extensions (helix-desktop-spec `contracts/extensions/README.md`),
+through `org.helix.Extensions1` at `/org/helix/Extensions1` on the session
+bus (owned by the shell, `org.gnome.Shell`). The shell's own "Extensions…"
+menu entry opens this panel when Settings is installed.
+
+- Without the service (not a Helix session, or the shell not running) the
+  page is a status page: *Extensions Are Not Available* / "They need the
+  Helix shell." Its list follows the service: it is read when the panel is
+  built, again on every `Changed(id)` signal (at most every 0.3 s), and
+  when the service appears or goes away.
+- *Use Extensions*: a switch row, the inverse of `org.helix.extensions
+  disable-all` (marked *Not supported by this system* without the schema).
+- One expander row per extension, user and system ones by name, then
+  development ones (with "Development" in the subtitle). Title: its name;
+  subtitle: its version and state: *Running*, *Starting*, *Not running*,
+  *Off*, *Off for this session* (Shift held at login), *Needs approval*,
+  *Cannot run: <reason>*, *Stopped working* (with the last log line when
+  there is one). A suffix switch is on when it is enabled and approved
+  (development extensions have none: they run without enabling).
+  - Turning it on calls `Enable(id, true)` on a worker thread, with no
+    reply timeout: the shell may first ask the user (its approval prompt).
+    The switch is insensitive meanwhile. Refused
+    (`org.freedesktop.DBus.Error.AccessDenied`): the switch goes back off
+    and a toast says "<name> was not turned on". Turning it off calls
+    `Disable(id)`.
+  - Rows inside: the description; *Access*: "Sandboxed" (with "Can: …"
+    and the permission texts below), or "Full access: it can do anything
+    you can" for one that is not sandboxed, plus the permission texts;
+    *Problem* (invalid or crashed) with the reason and a *Show Log* button
+    (a dialog with `GetLog(id)`, newest last); *Restart* (running or
+    crashed) calls `Restart(id)`.
+  - Its settings (`GetSettings(id)`, in that order), each written with
+    `SetSetting(id, key, value)` when changed: `bool` a switch row;
+    `int` a spin row (step 1, `min`/`max` when declared, else
+    −2147483648…2147483647); `double` a spin row (two decimals; step a
+    twentieth of `max` − `min` when both are declared, else 0.1); `enum` a
+    combo row of its choices; `string` an entry row applied with its
+    apply button; `string-list` an entry row of comma-separated values
+    (spaces around them dropped, empty ones left out), applied the same
+    way. The setting's `help` is the row's subtitle (entry rows: its
+    tooltip). A refused value (`InvalidArgs`) gives a toast with the
+    error and the row shows the stored value again.
+  - Its commands (`commands` of `ListExtensions`): one row each, its
+    title, with the key as a shortcut label ("None" when unbound) and
+    *Change…*. *Change…* opens a dialog "Press the new keys for <title>";
+    the first combination with Ctrl, Alt or Super (or a function key
+    alone) is sent with `BindCommand(command, accelerator)` and closes it;
+    Escape cancels; Backspace clears the key (`""`). A combination the
+    shell refuses (in use, or does not parse) is shown in the dialog,
+    which stays open.
+- Changes made elsewhere (the shell, `helix-extensions`) show through
+  `Changed`; the rows are updated in place, and rebuilt when the set of
+  extensions or of their settings changes.
 
 #### Multitasking
 - General: *Hot Corner* (`interface enable-hot-corners`), *Active Screen
