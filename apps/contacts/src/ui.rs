@@ -1,0 +1,1401 @@
+//! GTK user interface.
+
+use adw::prelude::*;
+use gtk::{gio, glib};
+use helix_app_common::Prefs;
+use helix_eds::vcard::{self, phone_label, Contact};
+use helix_eds::Source;
+use std::cell::{Cell, RefCell};
+use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
+
+use crate::backend::{self, Backend, Cmd, Msg};
+use crate::editor::{set_avatar_bytes, Editor};
+use crate::individual::{self, Individual};
+use crate::links::{Key, Links};
+
+pub const APP_ID: &str = "org.helix.Contacts";
+const SCHEMA: &str = "org.gnome.Contacts";
+const DEFAULTS_SCHEMA: &str = "org.gnome.Evolution.DefaultSources";
+const EDS_BOOK_SCHEMA: &str = "org.gnome.evolution-data-server.addressbook";
+
+#[derive(Debug, Default, Clone)]
+pub struct Options {
+    pub individual: Option<String>,
+    pub email: Option<String>,
+    pub search: Option<String>,
+    pub files: Vec<std::path::PathBuf>,
+}
+
+pub fn run(opts: Options) -> glib::ExitCode {
+    let app = adw::Application::builder().application_id(APP_ID).build();
+    helix_app_common::install_standard_actions(&app, "Contacts", "Manage your contacts");
+    let ui: Rc<RefCell<Option<Rc<Ui>>>> = Rc::default();
+    let opts = RefCell::new(Some(opts));
+    app.connect_activate(move |app| {
+        let existing = ui.borrow().clone();
+        match existing {
+            Some(u) => u.window.present(),
+            None => {
+                let u = Ui::build(app, opts.borrow_mut().take().unwrap_or_default());
+                u.window.present();
+                *ui.borrow_mut() = Some(u);
+            }
+        }
+    });
+    app.run_with_args::<&str>(&[])
+}
+
+type ActionFn = Box<dyn Fn(&Rc<Ui>)>;
+
+#[derive(Default)]
+struct State {
+    books: HashMap<String, HashMap<String, Contact>>,
+    writable: HashMap<String, bool>,
+    loaded: HashSet<String>,
+    sources: Vec<Source>,
+    individuals: Vec<Individual>,
+    /// Rows currently shown, in list order.
+    shown: Vec<Individual>,
+    /// Primary key of the selected individual.
+    selected: Option<Key>,
+    pending_delete: HashSet<Key>,
+    selection_mode: bool,
+    checked: HashSet<String>,
+    unavailable: Option<String>,
+    next_tag: u64,
+    /// Tag of a pending create whose result should be selected.
+    select_created: Option<u64>,
+    startup: Option<Options>,
+    setup_checked: bool,
+}
+
+struct Ui {
+    window: adw::ApplicationWindow,
+    prefs: Prefs,
+    defaults: Prefs,
+    backend: Backend,
+    links: RefCell<Links>,
+    links_path: std::path::PathBuf,
+    self_uid: String,
+    state: RefCell<State>,
+    editor: RefCell<Option<(Rc<Editor>, Option<Key>)>>,
+    rebuild_pending: Cell<bool>,
+
+    toasts: adw::ToastOverlay,
+    split: adw::NavigationSplitView,
+    search: gtk::SearchEntry,
+    list: gtk::ListBox,
+    list_stack: gtk::Stack,
+    select_button: gtk::ToggleButton,
+    action_bar: gtk::ActionBar,
+    link_button: gtk::Button,
+    delete_button: gtk::Button,
+    export_button: gtk::Button,
+    content_page: adw::NavigationPage,
+    content_header: adw::HeaderBar,
+    content_body: adw::Bin,
+    edit_button: gtk::Button,
+    done_button: gtk::Button,
+    cancel_button: gtk::Button,
+    contact_menu: gtk::MenuButton,
+    main_stack: gtk::Stack,
+    unavailable_page: adw::StatusPage,
+    book_menu: gio::Menu,
+}
+
+fn label(text: &str, classes: &[&str]) -> gtk::Label {
+    let l = gtk::Label::new(Some(text));
+    for c in classes {
+        l.add_css_class(c);
+    }
+    l
+}
+
+impl Ui {
+    fn build(app: &adw::Application, opts: Options) -> Rc<Ui> {
+        let prefs = Prefs::new(SCHEMA);
+        let defaults = Prefs::new(DEFAULTS_SCHEMA);
+        let self_uid = Prefs::new(EDS_BOOK_SCHEMA).get("self-contact-uid", String::new());
+        let links_path = helix_app_common::data_dir("helix-contacts").join("links.json");
+        let links = Links::load(&links_path);
+
+        let window = adw::ApplicationWindow::builder()
+            .application(app)
+            .title("Contacts")
+            .default_width(prefs.get("window-width", 800))
+            .default_height(prefs.get("window-height", 600))
+            .width_request(360)
+            .height_request(294)
+            .build();
+        if prefs.get("window-maximized", false) {
+            window.maximize();
+        }
+
+        // Sidebar.
+        let new_button = gtk::Button::builder().icon_name("list-add-symbolic").tooltip_text("New Contact").build();
+        new_button.set_action_name(Some("win.new-contact"));
+        let select_button =
+            gtk::ToggleButton::builder().icon_name("selection-mode-symbolic").tooltip_text("Select Contacts").build();
+        let menu = gio::Menu::new();
+        let sort = gio::Menu::new();
+        sort.append(Some("Sort by _First Name"), Some("win.sort::first"));
+        sort.append(Some("Sort by _Surname"), Some("win.sort::surname"));
+        menu.append_section(None, &sort);
+        let book_menu = gio::Menu::new();
+        let io = gio::Menu::new();
+        io.append(Some("_Import…"), Some("win.import"));
+        io.append_submenu(Some("Default _Address Book"), &book_menu);
+        menu.append_section(None, &io);
+        let about = gio::Menu::new();
+        about.append(Some("_Keyboard Shortcuts"), Some("win.shortcuts"));
+        about.append(Some("_About Contacts"), Some("app.about"));
+        menu.append_section(None, &about);
+        let menu_button =
+            gtk::MenuButton::builder().icon_name("open-menu-symbolic").menu_model(&menu).tooltip_text("Main Menu").build();
+        menu_button.set_primary(true);
+        let side_header = adw::HeaderBar::new();
+        side_header.pack_start(&new_button);
+        side_header.pack_end(&menu_button);
+        side_header.pack_end(&select_button);
+
+        let search = gtk::SearchEntry::builder().placeholder_text("Search contacts").hexpand(true).build();
+        let search_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        search_box.set_margin_start(6);
+        search_box.set_margin_end(6);
+        search_box.set_margin_bottom(6);
+        search_box.append(&search);
+
+        let list = gtk::ListBox::builder().css_classes(["navigation-sidebar"]).build();
+        let list_scroll = gtk::ScrolledWindow::builder()
+            .child(&list)
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vexpand(true)
+            .build();
+        let list_stack = gtk::Stack::new();
+        list_stack.add_named(&list_scroll, Some("list"));
+        list_stack.add_named(
+            &adw::StatusPage::builder().icon_name("system-search-symbolic").title("No Results").build(),
+            Some("no-results"),
+        );
+        let empty = adw::StatusPage::builder()
+            .icon_name("avatar-default-symbolic")
+            .title("No Contacts")
+            .description("Create a contact or import a vCard file")
+            .build();
+        let empty_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        empty_box.set_halign(gtk::Align::Center);
+        let create = gtk::Button::builder().label("Create Contact").css_classes(["pill", "suggested-action"]).build();
+        create.set_action_name(Some("win.new-contact"));
+        let import = gtk::Button::builder().label("Import…").css_classes(["pill"]).build();
+        import.set_action_name(Some("win.import"));
+        empty_box.append(&create);
+        empty_box.append(&import);
+        empty.set_child(Some(&empty_box));
+        list_stack.add_named(&empty, Some("empty"));
+        let loading = gtk::Spinner::builder().spinning(true).width_request(32).height_request(32).halign(gtk::Align::Center).valign(gtk::Align::Center).build();
+        list_stack.add_named(&loading, Some("loading"));
+        list_stack.set_visible_child_name("loading");
+
+        let action_bar = gtk::ActionBar::new();
+        let link_button = gtk::Button::builder().label("Link").sensitive(false).build();
+        let export_button = gtk::Button::builder().label("Export…").sensitive(false).build();
+        let delete_button =
+            gtk::Button::builder().label("Delete").css_classes(["destructive-action"]).sensitive(false).build();
+        action_bar.pack_start(&link_button);
+        action_bar.pack_start(&export_button);
+        action_bar.pack_end(&delete_button);
+        action_bar.set_revealed(false);
+
+        let side_view = adw::ToolbarView::new();
+        side_view.add_top_bar(&side_header);
+        side_view.add_top_bar(&search_box);
+        side_view.set_content(Some(&list_stack));
+        side_view.add_bottom_bar(&action_bar);
+        let side_page = adw::NavigationPage::builder().title("Contacts").child(&side_view).tag("sidebar").build();
+
+        // Content.
+        let content_header = adw::HeaderBar::new();
+        let edit_button = gtk::Button::builder().icon_name("document-edit-symbolic").tooltip_text("Edit Contact").visible(false).build();
+        edit_button.set_action_name(Some("win.edit"));
+        let done_button = gtk::Button::builder().label("Done").css_classes(["suggested-action"]).visible(false).build();
+        let cancel_button = gtk::Button::builder().label("Cancel").visible(false).build();
+        let contact_menu = gtk::MenuButton::builder().icon_name("view-more-symbolic").tooltip_text("Contact Menu").visible(false).build();
+        content_header.pack_start(&cancel_button);
+        content_header.pack_end(&contact_menu);
+        content_header.pack_end(&edit_button);
+        content_header.pack_end(&done_button);
+        let content_body = adw::Bin::new();
+        let content_view = adw::ToolbarView::new();
+        content_view.add_top_bar(&content_header);
+        content_view.set_content(Some(&content_body));
+        let content_page = adw::NavigationPage::builder().title("Contact").child(&content_view).tag("content").build();
+
+        let split = adw::NavigationSplitView::builder().sidebar(&side_page).content(&content_page).build();
+        split.set_min_sidebar_width(260.0);
+        split.set_max_sidebar_width(360.0);
+
+        let unavailable_page = adw::StatusPage::builder()
+            .icon_name("dialog-warning-symbolic")
+            .title("Contacts Service Unavailable")
+            .build();
+        let retry = gtk::Button::builder().label("Retry").css_classes(["pill"]).halign(gtk::Align::Center).build();
+        unavailable_page.set_child(Some(&retry));
+        let unavailable_view = adw::ToolbarView::new();
+        unavailable_view.add_top_bar(&adw::HeaderBar::new());
+        unavailable_view.set_content(Some(&unavailable_page));
+
+        let main_stack = gtk::Stack::new();
+        main_stack.add_named(&split, Some("main"));
+        main_stack.add_named(&unavailable_view, Some("unavailable"));
+        let toasts = adw::ToastOverlay::new();
+        toasts.set_child(Some(&main_stack));
+        window.set_content(Some(&toasts));
+
+        let bp = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 500sp").unwrap());
+        bp.add_setter(&split, "collapsed", Some(&true.to_value()));
+        window.add_breakpoint(bp);
+
+        let (tx, rx) = async_channel::unbounded();
+        let backend = backend::start(tx);
+
+        let ui = Rc::new(Ui {
+            window,
+            prefs,
+            defaults,
+            backend,
+            links: RefCell::new(links),
+            links_path,
+            self_uid,
+            state: RefCell::new(State { startup: Some(opts.clone()), ..Default::default() }),
+            editor: RefCell::default(),
+            rebuild_pending: Cell::new(false),
+            toasts,
+            split,
+            search,
+            list,
+            list_stack,
+            select_button,
+            action_bar,
+            link_button,
+            delete_button,
+            export_button,
+            content_page,
+            content_header,
+            content_body,
+            edit_button,
+            done_button,
+            cancel_button,
+            contact_menu,
+            main_stack,
+            unavailable_page,
+            book_menu,
+        });
+        if let Some(q) = &opts.search {
+            ui.search.set_text(q);
+        }
+        ui.show_placeholder();
+        ui.connect(retry);
+        let weak = Rc::downgrade(&ui);
+        glib::spawn_future_local(async move {
+            while let Ok(msg) = rx.recv().await {
+                match weak.upgrade() {
+                    Some(ui) => ui.handle(msg),
+                    None => break,
+                }
+            }
+        });
+        for f in &opts.files {
+            ui.import_file(f.clone());
+        }
+        ui
+    }
+
+    fn connect(self: &Rc<Self>, retry: gtk::Button) {
+        let weak = Rc::downgrade(self);
+        retry.connect_clicked(move |_| {
+            if let Some(ui) = weak.upgrade() {
+                ui.backend.send(Cmd::Resync);
+            }
+        });
+
+        let weak = Rc::downgrade(self);
+        self.search.connect_search_changed(move |_| {
+            if let Some(ui) = weak.upgrade() {
+                ui.refresh_list();
+            }
+        });
+        let weak = Rc::downgrade(self);
+        self.search.connect_stop_search(move |s| {
+            s.set_text("");
+            if let Some(ui) = weak.upgrade() {
+                ui.list.grab_focus();
+            }
+        });
+
+        let weak = Rc::downgrade(self);
+        self.list.connect_row_activated(move |_, row| {
+            let Some(ui) = weak.upgrade() else { return };
+            let idx = row.index() as usize;
+            let ind = ui.state.borrow().shown.get(idx).cloned();
+            let Some(ind) = ind else { return };
+            if ui.state.borrow().selection_mode {
+                let id = ind.id();
+                {
+                    let mut st = ui.state.borrow_mut();
+                    if !st.checked.remove(&id) {
+                        st.checked.insert(id);
+                    }
+                }
+                ui.refresh_list();
+                return;
+            }
+            if ui.editor.borrow().is_some() {
+                ui.finish_edit(false);
+            }
+            ui.state.borrow_mut().selected = Some(ind.members[0].clone());
+            ui.show_individual(&ind);
+            ui.split.set_show_content(true);
+        });
+
+        let weak = Rc::downgrade(self);
+        self.select_button.connect_toggled(move |b| {
+            if let Some(ui) = weak.upgrade() {
+                {
+                    let mut st = ui.state.borrow_mut();
+                    st.selection_mode = b.is_active();
+                    st.checked.clear();
+                }
+                ui.action_bar.set_revealed(b.is_active());
+                ui.refresh_list();
+            }
+        });
+        let weak = Rc::downgrade(self);
+        self.link_button.connect_clicked(move |_| {
+            if let Some(ui) = weak.upgrade() {
+                ui.link_checked();
+            }
+        });
+        let weak = Rc::downgrade(self);
+        self.delete_button.connect_clicked(move |_| {
+            if let Some(ui) = weak.upgrade() {
+                let keys = ui.checked_keys();
+                ui.select_button.set_active(false);
+                ui.delete_keys(keys);
+            }
+        });
+        let weak = Rc::downgrade(self);
+        self.export_button.connect_clicked(move |_| {
+            if let Some(ui) = weak.upgrade() {
+                let contacts = ui.checked_individuals().into_iter().map(|i| i.contact).collect();
+                ui.export(contacts);
+            }
+        });
+        let weak = Rc::downgrade(self);
+        self.done_button.connect_clicked(move |_| {
+            if let Some(ui) = weak.upgrade() {
+                ui.finish_edit(true);
+            }
+        });
+        let weak = Rc::downgrade(self);
+        self.cancel_button.connect_clicked(move |_| {
+            if let Some(ui) = weak.upgrade() {
+                ui.finish_edit(false);
+            }
+        });
+
+        let weak = Rc::downgrade(self);
+        self.window.connect_close_request(move |w| {
+            if let Some(ui) = weak.upgrade() {
+                ui.flush_deletes();
+                let (width, height) = w.default_size();
+                if !w.is_maximized() {
+                    ui.prefs.set("window-width", width);
+                    ui.prefs.set("window-height", height);
+                }
+                ui.prefs.set("window-maximized", w.is_maximized());
+            }
+            glib::Propagation::Proceed
+        });
+
+        // Keys inside the window.
+        let keys = gtk::EventControllerKey::new();
+        let weak = Rc::downgrade(self);
+        keys.connect_key_pressed(move |_, key, _, mods| {
+            let Some(ui) = weak.upgrade() else { return glib::Propagation::Proceed };
+            if key == gtk::gdk::Key::Escape {
+                if ui.editor.borrow().is_some() {
+                    ui.finish_edit(false);
+                    return glib::Propagation::Stop;
+                }
+                if ui.select_button.is_active() {
+                    ui.select_button.set_active(false);
+                    return glib::Propagation::Stop;
+                }
+            }
+            if key == gtk::gdk::Key::Delete && mods.is_empty() && ui.editor.borrow().is_none() {
+                let focus_in_entry = gtk::prelude::GtkWindowExt::focus(&ui.window)
+                    .is_some_and(|w| w.is::<gtk::Text>() || w.is::<gtk::TextView>());
+                if !focus_in_entry {
+                    if let Some(ind) = ui.selected_individual() {
+                        ui.delete_keys(ind.members.clone());
+                        return glib::Propagation::Stop;
+                    }
+                }
+            }
+            glib::Propagation::Proceed
+        });
+        self.window.add_controller(keys);
+
+        self.install_actions();
+    }
+
+    fn install_actions(self: &Rc<Self>) {
+        let w = &self.window;
+        let app = w.application().expect("app");
+        let add = |name: &str, accels: &[&str], f: ActionFn| {
+            let a = gio::SimpleAction::new(name, None);
+            let weak = Rc::downgrade(self);
+            a.connect_activate(move |_, _| {
+                if let Some(ui) = weak.upgrade() {
+                    f(&ui);
+                }
+            });
+            w.add_action(&a);
+            if !accels.is_empty() {
+                app.set_accels_for_action(&format!("win.{name}"), accels);
+            }
+        };
+        add("new-contact", &["<Control>n"], Box::new(|ui| ui.new_contact(None)));
+        add("edit", &["<Control>e"], Box::new(|ui| ui.start_edit()));
+        add("search", &["<Control>f"], Box::new(|ui| {
+            ui.split.set_show_content(false);
+            ui.search.grab_focus();
+        }));
+        add("import", &["<Control>i"], Box::new(|ui| ui.choose_import()));
+        add("shortcuts", &["<Control>question"], Box::new(|ui| show_shortcuts(&ui.window)));
+        add("delete-contact", &[], Box::new(|ui| {
+            if let Some(ind) = ui.selected_individual() {
+                ui.delete_keys(ind.members.clone());
+            }
+        }));
+        add("unlink", &[], Box::new(|ui| {
+            if let Some(ind) = ui.selected_individual() {
+                ui.links.borrow_mut().unlink(&ind.members[0]);
+                ui.save_links();
+                ui.refresh_list();
+                ui.toast("Contacts unlinked");
+            }
+        }));
+        add("export-contact", &[], Box::new(|ui| {
+            if let Some(ind) = ui.selected_individual() {
+                ui.export(vec![ind.contact.clone()]);
+            }
+        }));
+
+        let surname = self.prefs.get("sort-on-surname", false);
+        let sort = gio::SimpleAction::new_stateful(
+            "sort",
+            Some(glib::VariantTy::STRING),
+            &(if surname { "surname" } else { "first" }).to_variant(),
+        );
+        let weak = Rc::downgrade(self);
+        sort.connect_activate(move |a, v| {
+            let (Some(ui), Some(v)) = (weak.upgrade(), v) else { return };
+            a.set_state(v);
+            ui.prefs.set("sort-on-surname", v.str() == Some("surname"));
+            ui.refresh_list();
+        });
+        w.add_action(&sort);
+
+        let default_book = self.default_book();
+        let book = gio::SimpleAction::new_stateful("default-book", Some(glib::VariantTy::STRING), &default_book.to_variant());
+        let weak = Rc::downgrade(self);
+        book.connect_activate(move |a, v| {
+            let (Some(ui), Some(v)) = (weak.upgrade(), v) else { return };
+            a.set_state(v);
+            if let Some(s) = v.str() {
+                ui.defaults.set("default-address-book", s.to_string());
+            }
+        });
+        w.add_action(&book);
+    }
+
+    fn default_book(&self) -> String {
+        let configured = self.defaults.get("default-address-book", "system-address-book".to_string());
+        let st = self.state.borrow();
+        if st.writable.get(&configured).copied().unwrap_or(false) || st.writable.is_empty() {
+            return configured;
+        }
+        if st.writable.get("system-address-book").copied().unwrap_or(false) {
+            return "system-address-book".into();
+        }
+        let mut w: Vec<&String> = st.writable.iter().filter(|(_, w)| **w).map(|(k, _)| k).collect();
+        w.sort();
+        w.first().map(|s| s.to_string()).unwrap_or(configured)
+    }
+
+    fn book_name(&self, uid: &str) -> String {
+        self.state.borrow().sources.iter().find(|s| s.uid == uid).map(|s| s.display_name()).unwrap_or_else(|| uid.to_string())
+    }
+
+    /// Writable books as (uid, "Name (Account)") pairs.
+    fn writable_books(&self) -> Vec<(String, String)> {
+        let st = self.state.borrow();
+        let mut out: Vec<(String, String)> = st
+            .writable
+            .iter()
+            .filter(|(_, w)| **w)
+            .map(|(uid, _)| {
+                let name = st
+                    .sources
+                    .iter()
+                    .find(|s| &s.uid == uid)
+                    .map(|s| {
+                        let account = helix_eds::source::account_label(s, &st.sources);
+                        if account == s.display_name() {
+                            account
+                        } else {
+                            format!("{} ({account})", s.display_name())
+                        }
+                    })
+                    .unwrap_or_else(|| uid.clone());
+                (uid.clone(), name)
+            })
+            .collect();
+        out.sort_by_key(|a| a.1.to_lowercase());
+        out
+    }
+
+    fn toast(&self, text: &str) {
+        self.toasts.add_toast(adw::Toast::new(text));
+    }
+
+    fn handle(self: &Rc<Self>, msg: Msg) {
+        match msg {
+            Msg::Unavailable(e) => {
+                self.unavailable_page.set_description(Some(&format!(
+                    "Could not reach Evolution Data Server.\n{}",
+                    glib::markup_escape_text(&e)
+                )));
+                self.main_stack.set_visible_child_name("unavailable");
+                self.state.borrow_mut().unavailable = Some(e);
+            }
+            Msg::Sources(sources) => {
+                self.main_stack.set_visible_child_name("main");
+                self.state.borrow_mut().unavailable = None;
+                self.state.borrow_mut().sources = sources;
+                self.update_book_menu();
+                self.schedule_rebuild();
+            }
+            Msg::BookOpened { uid, writable } => {
+                let mut st = self.state.borrow_mut();
+                st.writable.insert(uid.clone(), writable);
+                st.books.entry(uid).or_default();
+                drop(st);
+                self.update_book_menu();
+            }
+            Msg::BookClosed(uid) => {
+                let mut st = self.state.borrow_mut();
+                st.writable.remove(&uid);
+                st.books.remove(&uid);
+                st.loaded.remove(&uid);
+                drop(st);
+                self.update_book_menu();
+                self.schedule_rebuild();
+            }
+            Msg::Added { book, contacts } | Msg::Modified { book, contacts } => {
+                let mut st = self.state.borrow_mut();
+                let map = st.books.entry(book).or_default();
+                for c in contacts {
+                    map.insert(c.uid.clone(), c);
+                }
+                drop(st);
+                self.schedule_rebuild();
+            }
+            Msg::Removed { book, uids } => {
+                {
+                    let mut st = self.state.borrow_mut();
+                    if let Some(map) = st.books.get_mut(&book) {
+                        for u in &uids {
+                            map.remove(u);
+                        }
+                    }
+                    for u in &uids {
+                        st.pending_delete.remove(&(book.clone(), u.clone()));
+                    }
+                }
+                let mut links = self.links.borrow_mut();
+                for u in uids {
+                    links.forget(&(book.clone(), u));
+                }
+                drop(links);
+                self.save_links();
+                self.schedule_rebuild();
+            }
+            Msg::Loaded(book) => {
+                let n = self.state.borrow().books.get(&book).map_or(0, |m| m.len());
+                glib::g_debug!("helix-contacts", "address book {book} loaded with {n} contacts");
+                self.state.borrow_mut().loaded.insert(book);
+                self.schedule_rebuild();
+                self.maybe_initial_setup();
+                self.apply_startup();
+            }
+            Msg::Created { book, uids, tag } => {
+                let select = self.state.borrow().select_created == Some(tag);
+                if select {
+                    if let Some(uid) = uids.first() {
+                        self.state.borrow_mut().selected = Some((book, uid.clone()));
+                        self.schedule_rebuild();
+                    }
+                }
+            }
+            Msg::Imported(n) => self.toast(&format!("Imported {n} contact{}", if n == 1 { "" } else { "s" })),
+            Msg::Error(e) => self.toast(&e),
+        }
+    }
+
+    fn update_book_menu(&self) {
+        self.book_menu.remove_all();
+        for (uid, name) in self.writable_books() {
+            let item = gio::MenuItem::new(Some(&name), None);
+            item.set_action_and_target_value(Some("win.default-book"), Some(&uid.to_variant()));
+            self.book_menu.append_item(&item);
+        }
+        if let Some(a) = self.window.lookup_action("default-book").and_downcast::<gio::SimpleAction>() {
+            a.set_state(&self.default_book().to_variant());
+        }
+    }
+
+    fn schedule_rebuild(self: &Rc<Self>) {
+        if self.rebuild_pending.replace(true) {
+            return;
+        }
+        let weak = Rc::downgrade(self);
+        glib::timeout_add_local_once(std::time::Duration::from_millis(40), move || {
+            if let Some(ui) = weak.upgrade() {
+                ui.rebuild_pending.set(false);
+                ui.rebuild();
+            }
+        });
+    }
+
+    fn rebuild(self: &Rc<Self>) {
+        let surname = self.prefs.get("sort-on-surname", false);
+        {
+            let st = self.state.borrow();
+            let mut books = st.books.clone();
+            for (b, u) in &st.pending_delete {
+                if let Some(m) = books.get_mut(b) {
+                    m.remove(u);
+                }
+            }
+            drop(st);
+            let all_loaded = {
+                let st = self.state.borrow();
+                st.books.keys().all(|b| st.loaded.contains(b))
+            };
+            if all_loaded {
+                let exists = |k: &Key| books.get(&k.0).is_some_and(|m| m.contains_key(&k.1));
+                let changed = self.links.borrow_mut().prune(exists);
+                if changed {
+                    self.save_links();
+                }
+            }
+            let mut list = individual::build(&books, &self.links.borrow());
+            individual::sort(&mut list, surname);
+            // The user's own contact goes first.
+            if !self.self_uid.is_empty() {
+                if let Some(pos) = list.iter().position(|i| i.contains_uid(&self.self_uid)) {
+                    let me = list.remove(pos);
+                    list.insert(0, me);
+                }
+            }
+            glib::g_debug!("helix-contacts", "showing {} individuals", list.len());
+            self.state.borrow_mut().individuals = list;
+        }
+        self.refresh_list();
+    }
+
+    fn refresh_list(self: &Rc<Self>) {
+        let surname = self.prefs.get("sort-on-surname", false);
+        let query = self.search.text().to_string();
+        let (shown, selection_mode, checked, selected, any, loaded) = {
+            let st = self.state.borrow();
+            let shown: Vec<Individual> = individual::filter(&st.individuals, &query).into_iter().cloned().collect();
+            let loaded = !st.books.is_empty() && st.books.keys().all(|b| st.loaded.contains(b));
+            (shown, st.selection_mode, st.checked.clone(), st.selected.clone(), !st.individuals.is_empty(), loaded)
+        };
+        while let Some(row) = self.list.row_at_index(0) {
+            self.list.remove(&row);
+        }
+        let mut select_row = None;
+        for ind in &shown {
+            let row = gtk::ListBoxRow::new();
+            let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+            hbox.set_margin_top(4);
+            hbox.set_margin_bottom(4);
+            if selection_mode {
+                let check = gtk::CheckButton::builder().active(checked.contains(&ind.id())).can_focus(false).build();
+                check.set_sensitive(false);
+                hbox.append(&check);
+            }
+            let name = ind.contact.display_name();
+            let avatar = adw::Avatar::new(32, Some(&name), true);
+            if let Some(bytes) = ind.contact.photo_bytes() {
+                set_avatar_bytes(&avatar, &bytes);
+            }
+            hbox.append(&avatar);
+            let l = label(&name, &[]);
+            l.set_xalign(0.0);
+            l.set_hexpand(true);
+            l.set_ellipsize(gtk::pango::EllipsizeMode::End);
+            hbox.append(&l);
+            if !self.self_uid.is_empty() && ind.contains_uid(&self.self_uid) {
+                hbox.append(&label("Me", &["dim-label", "caption"]));
+            }
+            if ind.is_linked() {
+                let icon = gtk::Image::from_icon_name("chain-link-symbolic");
+                icon.set_tooltip_text(Some("Linked contact"));
+                icon.add_css_class("dim-label");
+                hbox.append(&icon);
+            }
+            row.set_child(Some(&hbox));
+            self.list.append(&row);
+            if selected.as_ref().is_some_and(|k| ind.members.contains(k)) {
+                select_row = Some((row, ind.clone()));
+            }
+        }
+        // Letter headers.
+        let keys: Vec<String> = shown
+            .iter()
+            .enumerate()
+            .map(|(i, ind)| {
+                if i == 0 && !self.self_uid.is_empty() && ind.contains_uid(&self.self_uid) {
+                    String::new()
+                } else {
+                    individual::group_letter(&ind.contact.sort_key(surname))
+                }
+            })
+            .collect();
+        let keys = Rc::new(keys);
+        self.list.set_header_func(move |row, before| {
+            let i = row.index() as usize;
+            let cur = keys.get(i).cloned().unwrap_or_default();
+            let prev = before.map(|b| keys.get(b.index() as usize).cloned().unwrap_or_default());
+            if !cur.is_empty() && prev.as_deref() != Some(cur.as_str()) {
+                let l = gtk::Label::builder().label(&cur).xalign(0.0).css_classes(["heading", "dim-label"]).build();
+                l.set_margin_start(12);
+                l.set_margin_top(8);
+                l.set_margin_bottom(4);
+                row.set_header(Some(&l));
+            } else {
+                row.set_header(None::<&gtk::Widget>);
+            }
+        });
+        let n_checked = checked.len();
+        self.link_button.set_sensitive(n_checked >= 2);
+        self.delete_button.set_sensitive(n_checked >= 1);
+        self.export_button.set_sensitive(n_checked >= 1);
+        let page = if !shown.is_empty() {
+            "list"
+        } else if any {
+            "no-results"
+        } else if loaded || self.state.borrow().books.is_empty() && !self.state.borrow().sources.is_empty() {
+            "empty"
+        } else {
+            "loading"
+        };
+        self.list_stack.set_visible_child_name(page);
+        self.state.borrow_mut().shown = shown;
+        if self.editor.borrow().is_some() {
+            if let Some((row, _)) = &select_row {
+                self.list.select_row(Some(row));
+            }
+            return;
+        }
+        match select_row {
+            Some((row, ind)) => {
+                if !selection_mode {
+                    self.list.select_row(Some(&row));
+                }
+                self.show_individual(&ind);
+            }
+            None => {
+                self.list.unselect_all();
+                self.show_placeholder();
+            }
+        }
+    }
+
+    fn selected_individual(&self) -> Option<Individual> {
+        let st = self.state.borrow();
+        let key = st.selected.as_ref()?;
+        st.individuals.iter().find(|i| i.members.contains(key)).cloned()
+    }
+
+    fn checked_individuals(&self) -> Vec<Individual> {
+        let st = self.state.borrow();
+        st.individuals.iter().filter(|i| st.checked.contains(&i.id())).cloned().collect()
+    }
+
+    fn checked_keys(&self) -> Vec<Key> {
+        self.checked_individuals().into_iter().flat_map(|i| i.members).collect()
+    }
+
+    fn set_header_mode(&self, editing: bool, ind: Option<&Individual>) {
+        self.done_button.set_visible(editing);
+        self.cancel_button.set_visible(editing);
+        let writable = ind.is_some_and(|i| self.primary_writable(i).is_some());
+        self.edit_button.set_visible(!editing && writable);
+        self.contact_menu.set_visible(!editing && ind.is_some());
+        self.content_header.set_show_back_button(!editing);
+    }
+
+    fn primary_writable(&self, ind: &Individual) -> Option<Key> {
+        let st = self.state.borrow();
+        ind.members.iter().find(|(b, _)| st.writable.get(b).copied().unwrap_or(false)).cloned()
+    }
+
+    fn show_placeholder(&self) {
+        let page = adw::StatusPage::builder()
+            .icon_name("avatar-default-symbolic")
+            .title("Select a Contact")
+            .build();
+        self.content_body.set_child(Some(&page));
+        self.content_page.set_title("Contact");
+        self.set_header_mode(false, None);
+    }
+
+    fn show_individual(self: &Rc<Self>, ind: &Individual) {
+        let c = &ind.contact;
+        let name = c.display_name();
+        self.content_page.set_title(&name);
+        let menu = gio::Menu::new();
+        if ind.is_linked() {
+            menu.append(Some("_Unlink"), Some("win.unlink"));
+        }
+        menu.append(Some("_Export…"), Some("win.export-contact"));
+        let writable_all = {
+            let st = self.state.borrow();
+            ind.members.iter().all(|(b, _)| st.writable.get(b).copied().unwrap_or(false))
+        };
+        if writable_all {
+            menu.append(Some("_Delete Contact"), Some("win.delete-contact"));
+        }
+        self.contact_menu.set_menu_model(Some(&menu));
+        self.set_header_mode(false, Some(ind));
+
+        let page = gtk::Box::new(gtk::Orientation::Vertical, 18);
+        page.set_margin_top(24);
+        page.set_margin_bottom(24);
+        page.set_margin_start(12);
+        page.set_margin_end(12);
+        let avatar = adw::Avatar::new(96, Some(&name), true);
+        if let Some(bytes) = c.photo_bytes() {
+            set_avatar_bytes(&avatar, &bytes);
+        }
+        page.append(&avatar);
+        let title = label(&name, &["title-1"]);
+        title.set_wrap(true);
+        title.set_justify(gtk::Justification::Center);
+        title.set_selectable(true);
+        page.append(&title);
+        let mut sub = Vec::new();
+        if !c.nickname.is_empty() && c.nickname != name {
+            sub.push(format!("“{}”", c.nickname));
+        }
+        let job: Vec<&str> = [c.title.as_str(), c.org.as_str()].into_iter().filter(|s| !s.is_empty()).collect();
+        if !job.is_empty() {
+            sub.push(job.join(", "));
+        }
+        if !sub.is_empty() {
+            let s = label(&sub.join(" · "), &["dim-label"]);
+            s.set_wrap(true);
+            s.set_justify(gtk::Justification::Center);
+            page.append(&s);
+        }
+
+        let group = |title: &str| adw::PreferencesGroup::builder().title(title).build();
+        if !c.emails.is_empty() {
+            let g = group("Email");
+            for e in &c.emails {
+                g.add(&self.value_row(&e.value, vcard::generic_label(&e.types), Some(format!("mailto:{}", e.value))));
+            }
+            page.append(&g);
+        }
+        if !c.phones.is_empty() {
+            let g = group("Phone");
+            for p in &c.phones {
+                let tel: String = p.value.chars().filter(|ch| ch.is_ascii_digit() || *ch == '+').collect();
+                g.add(&self.value_row(&p.value, phone_label(p), Some(format!("tel:{tel}"))));
+            }
+            page.append(&g);
+        }
+        if !c.addresses.is_empty() {
+            let g = group("Address");
+            for a in &c.addresses {
+                let q = glib::Uri::escape_string(&a.one_line(), None, false);
+                g.add(&self.value_row(&a.formatted(), vcard::generic_label(&a.types), Some(format!("geo:0,0?q={q}"))));
+            }
+            page.append(&g);
+        }
+        if !c.urls.is_empty() {
+            let g = group("Website");
+            for u in &c.urls {
+                let uri = if u.value.contains("://") { u.value.clone() } else { format!("https://{}", u.value) };
+                g.add(&self.value_row(&u.value, vcard::generic_label(&u.types), Some(uri)));
+            }
+            page.append(&g);
+        }
+        let mut personal = Vec::new();
+        if let Some(d) = format_vcard_date(&c.birthday) {
+            personal.push(("Birthday", d));
+        }
+        if let Some(d) = format_vcard_date(&c.anniversary) {
+            personal.push(("Anniversary", d));
+        }
+        if !c.org_unit.is_empty() {
+            personal.push(("Department", c.org_unit.clone()));
+        }
+        if !c.categories.is_empty() {
+            personal.push(("Groups", c.categories.join(", ")));
+        }
+        if !personal.is_empty() {
+            let g = group("Personal");
+            for (k, v) in personal {
+                g.add(&self.value_row(&v, k, None));
+            }
+            page.append(&g);
+        }
+        if !c.note.is_empty() {
+            let g = group("Notes");
+            let l = label(&c.note, &[]);
+            l.set_wrap(true);
+            l.set_xalign(0.0);
+            l.set_selectable(true);
+            l.set_margin_top(12);
+            l.set_margin_bottom(12);
+            l.set_margin_start(12);
+            l.set_margin_end(12);
+            let frame = gtk::Frame::builder().child(&l).css_classes(["view"]).build();
+            g.add(&frame);
+            page.append(&g);
+        }
+        let g = group("Address Books");
+        for (b, _) in &ind.members {
+            let row = adw::ActionRow::builder().title(glib::markup_escape_text(&self.book_name(b)).as_str()).build();
+            let st = self.state.borrow();
+            if let Some(src) = st.sources.iter().find(|s| &s.uid == b) {
+                let account = helix_eds::source::account_label(src, &st.sources);
+                row.set_subtitle(&glib::markup_escape_text(&account));
+            }
+            if !st.writable.get(b).copied().unwrap_or(false) {
+                row.add_suffix(&label("Read-only", &["dim-label", "caption"]));
+            }
+            g.add(&row);
+        }
+        page.append(&g);
+
+        let clamp = adw::Clamp::builder().maximum_size(600).child(&page).build();
+        let scroll = gtk::ScrolledWindow::builder().child(&clamp).hscrollbar_policy(gtk::PolicyType::Never).build();
+        self.content_body.set_child(Some(&scroll));
+    }
+
+    fn value_row(&self, value: &str, kind: &str, uri: Option<String>) -> adw::ActionRow {
+        let row = adw::ActionRow::builder()
+            .title(glib::markup_escape_text(value).as_str())
+            .subtitle(kind)
+            .css_classes(["property"])
+            .build();
+        row.set_title_selectable(true);
+        let copy = gtk::Button::builder()
+            .icon_name("edit-copy-symbolic")
+            .tooltip_text("Copy")
+            .css_classes(["flat"])
+            .valign(gtk::Align::Center)
+            .build();
+        let v = value.to_string();
+        let w = self.window.clone();
+        let toasts = self.toasts.clone();
+        copy.connect_clicked(move |_| {
+            w.clipboard().set_text(&v);
+            toasts.add_toast(adw::Toast::new("Copied to clipboard"));
+        });
+        row.add_suffix(&copy);
+        if let Some(uri) = uri {
+            row.set_activatable(true);
+            let w = self.window.clone();
+            row.connect_activated(move |_| {
+                gtk::UriLauncher::new(&uri).launch(Some(&w), None::<&gio::Cancellable>, |_| {});
+            });
+        }
+        row
+    }
+
+    fn new_contact(self: &Rc<Self>, prefill_email: Option<&str>) {
+        if self.state.borrow().unavailable.is_some() {
+            return;
+        }
+        let books = self.writable_books();
+        if books.is_empty() {
+            self.toast("No writable address book is available");
+            return;
+        }
+        let mut c = Contact::default();
+        if let Some(e) = prefill_email {
+            c.emails.push(vcard::Typed::new(&["HOME"], e));
+        }
+        let ed = Editor::new(&c, &books, &self.default_book());
+        self.open_editor(ed, None, "New Contact");
+    }
+
+    fn start_edit(self: &Rc<Self>) {
+        if self.editor.borrow().is_some() {
+            return;
+        }
+        let Some(ind) = self.selected_individual() else { return };
+        let Some(key) = self.primary_writable(&ind) else { return };
+        let base = self.state.borrow().books.get(&key.0).and_then(|m| m.get(&key.1)).cloned();
+        let Some(base) = base else { return };
+        let ed = Editor::new(&base, &[], "");
+        self.open_editor(ed, Some(key), &base.display_name());
+    }
+
+    fn open_editor(self: &Rc<Self>, ed: Rc<Editor>, key: Option<Key>, title: &str) {
+        self.content_body.set_child(Some(&ed.widget));
+        self.content_page.set_title(title);
+        self.set_header_mode(true, None);
+        self.split.set_show_content(true);
+        ed.focus_first();
+        *self.editor.borrow_mut() = Some((ed, key));
+    }
+
+    fn finish_edit(self: &Rc<Self>, save: bool) {
+        let Some((ed, key)) = self.editor.borrow().clone() else { return };
+        if save {
+            let contact = match ed.collect() {
+                Ok(c) => c,
+                Err(e) => {
+                    self.toast(&e);
+                    return;
+                }
+            };
+            match key {
+                Some((book, _)) => self.backend.send(Cmd::Modify { book, contact: Box::new(contact) }),
+                None => {
+                    let book = ed.chosen_book().unwrap_or_else(|| self.default_book());
+                    let tag = {
+                        let mut st = self.state.borrow_mut();
+                        st.next_tag += 1;
+                        st.select_created = Some(st.next_tag);
+                        st.next_tag
+                    };
+                    self.backend.send(Cmd::Create { book, contact: Box::new(contact), tag });
+                }
+            }
+        }
+        *self.editor.borrow_mut() = None;
+        match self.selected_individual() {
+            Some(ind) => self.show_individual(&ind),
+            None => {
+                self.show_placeholder();
+                if !save {
+                    self.split.set_show_content(false);
+                }
+            }
+        }
+    }
+
+    fn save_links(&self) {
+        if let Err(e) = self.links.borrow().save(&self.links_path) {
+            self.toast(&format!("Could not save links: {e}"));
+        }
+    }
+
+    fn link_checked(self: &Rc<Self>) {
+        let keys = self.checked_keys();
+        if keys.len() < 2 {
+            return;
+        }
+        self.links.borrow_mut().link(&keys);
+        self.save_links();
+        self.state.borrow_mut().selected = keys.first().cloned();
+        self.select_button.set_active(false);
+        self.rebuild();
+        let weak = Rc::downgrade(self);
+        let toast = adw::Toast::builder().title("Contacts linked").button_label("Undo").build();
+        toast.connect_button_clicked(move |_| {
+            if let Some(ui) = weak.upgrade() {
+                ui.links.borrow_mut().unlink(&keys[0]);
+                ui.save_links();
+                ui.rebuild();
+            }
+        });
+        self.toasts.add_toast(toast);
+    }
+
+    fn delete_keys(self: &Rc<Self>, keys: Vec<Key>) {
+        let writable: Vec<Key> = {
+            let st = self.state.borrow();
+            keys.into_iter().filter(|(b, _)| st.writable.get(b).copied().unwrap_or(false)).collect()
+        };
+        if writable.is_empty() {
+            self.toast("These contacts are read-only");
+            return;
+        }
+        // Count individuals, not raw members.
+        let n = {
+            let st = self.state.borrow();
+            st.individuals.iter().filter(|i| i.members.iter().any(|m| writable.contains(m))).count()
+        };
+        self.state.borrow_mut().pending_delete.extend(writable.iter().cloned());
+        self.rebuild();
+        let toast = adw::Toast::builder()
+            .title(if n == 1 { "Contact deleted".to_string() } else { format!("{n} contacts deleted") })
+            .button_label("Undo")
+            .timeout(5)
+            .build();
+        let undone = Rc::new(Cell::new(false));
+        let weak = Rc::downgrade(self);
+        let (k, u) = (writable.clone(), undone.clone());
+        toast.connect_button_clicked(move |_| {
+            u.set(true);
+            if let Some(ui) = weak.upgrade() {
+                let mut st = ui.state.borrow_mut();
+                for key in &k {
+                    st.pending_delete.remove(key);
+                }
+                drop(st);
+                ui.rebuild();
+            }
+        });
+        let weak = Rc::downgrade(self);
+        toast.connect_dismissed(move |_| {
+            if undone.get() {
+                return;
+            }
+            if let Some(ui) = weak.upgrade() {
+                ui.commit_deletes(&writable);
+            }
+        });
+        self.toasts.add_toast(toast);
+    }
+
+    fn commit_deletes(&self, keys: &[Key]) {
+        let mut by_book: HashMap<String, Vec<String>> = HashMap::new();
+        {
+            let st = self.state.borrow();
+            for k in keys.iter().filter(|k| st.pending_delete.contains(*k)) {
+                by_book.entry(k.0.clone()).or_default().push(k.1.clone());
+            }
+        }
+        for (book, uids) in by_book {
+            self.backend.send(Cmd::Remove { book, uids });
+        }
+    }
+
+    fn flush_deletes(&self) {
+        let keys: Vec<Key> = self.state.borrow().pending_delete.iter().cloned().collect();
+        if keys.is_empty() {
+            return;
+        }
+        self.commit_deletes(&keys);
+        self.state.borrow_mut().pending_delete.clear();
+        // Give the worker a moment to deliver the removals before exit.
+        std::thread::sleep(std::time::Duration::from_millis(300));
+    }
+
+    fn choose_import(self: &Rc<Self>) {
+        let filter = gtk::FileFilter::new();
+        filter.set_name(Some("vCard files"));
+        filter.add_mime_type("text/vcard");
+        filter.add_mime_type("text/x-vcard");
+        filter.add_suffix("vcf");
+        let filters = gio::ListStore::new::<gtk::FileFilter>();
+        filters.append(&filter);
+        let dialog = gtk::FileDialog::builder().title("Import Contacts").filters(&filters).build();
+        let weak = Rc::downgrade(self);
+        dialog.open(Some(&self.window), None::<&gio::Cancellable>, move |res| {
+            if let (Some(ui), Ok(file)) = (weak.upgrade(), res) {
+                if let Some(p) = file.path() {
+                    ui.import_file(p);
+                }
+            }
+        });
+    }
+
+    fn import_file(&self, path: std::path::PathBuf) {
+        let text = match std::fs::read(&path) {
+            Ok(b) => String::from_utf8_lossy(&b).into_owned(),
+            Err(e) => {
+                self.toast(&format!("Could not read {}: {e}", path.display()));
+                return;
+            }
+        };
+        let contacts: Vec<Contact> = vcard::parse_many(&text).iter().map(Contact::from_vcard).collect();
+        if contacts.is_empty() {
+            self.toast("No contacts found in the file");
+            return;
+        }
+        self.backend.send(Cmd::Import { book: self.default_book(), contacts });
+    }
+
+    fn export(&self, contacts: Vec<Contact>) {
+        if contacts.is_empty() {
+            return;
+        }
+        let name = if contacts.len() == 1 {
+            format!("{}.vcf", contacts[0].display_name().replace('/', "-"))
+        } else {
+            "contacts.vcf".to_string()
+        };
+        let dialog = gtk::FileDialog::builder().title("Export Contacts").initial_name(name).build();
+        let toasts = self.toasts.clone();
+        dialog.save(Some(&self.window), None::<&gio::Cancellable>, move |res| {
+            let Ok(file) = res else { return };
+            let Some(path) = file.path() else { return };
+            let text: String = contacts
+                .iter()
+                .map(|c| {
+                    let mut c = c.clone();
+                    if let Some(bytes) = c.photo_bytes() {
+                        // Embed linked photos so the file stands alone.
+                        c.photo = Some(vcard::Photo::Inline { mime: None, data: bytes });
+                    }
+                    c.to_vcard_string()
+                })
+                .collect();
+            let msg = match std::fs::write(&path, text) {
+                Ok(()) => format!("Exported {} contact{}", contacts.len(), if contacts.len() == 1 { "" } else { "s" }),
+                Err(e) => format!("Export failed: {e}"),
+            };
+            toasts.add_toast(adw::Toast::new(&msg));
+        });
+    }
+
+    fn maybe_initial_setup(self: &Rc<Self>) {
+        if self.state.borrow().setup_checked || self.prefs.get("did-initial-setup", false) {
+            return;
+        }
+        let books = self.writable_books();
+        if books.is_empty() {
+            return;
+        }
+        self.state.borrow_mut().setup_checked = true;
+        if books.len() == 1 {
+            self.prefs.set("did-initial-setup", true);
+            return;
+        }
+        let dialog = adw::AlertDialog::new(
+            Some("Choose an Address Book"),
+            Some("New contacts will be saved in this address book. You can change it later from the main menu."),
+        );
+        let names: Vec<&str> = books.iter().map(|(_, n)| n.as_str()).collect();
+        let dd = gtk::DropDown::from_strings(&names);
+        let current = self.default_book();
+        dd.set_selected(books.iter().position(|(u, _)| *u == current).unwrap_or(0) as u32);
+        dialog.set_extra_child(Some(&dd));
+        dialog.add_response("done", "_Done");
+        dialog.set_default_response(Some("done"));
+        dialog.set_response_appearance("done", adw::ResponseAppearance::Suggested);
+        let weak = Rc::downgrade(self);
+        dialog.connect_response(None, move |_, _| {
+            let Some(ui) = weak.upgrade() else { return };
+            if let Some((uid, _)) = books.get(dd.selected() as usize) {
+                ui.defaults.set("default-address-book", uid.clone());
+                ui.update_book_menu();
+            }
+            ui.prefs.set("did-initial-setup", true);
+        });
+        dialog.present(Some(&self.window));
+    }
+
+    /// Applies `--individual` / `--email` once the books are loaded.
+    fn apply_startup(self: &Rc<Self>) {
+        let all_loaded = {
+            let st = self.state.borrow();
+            !st.books.is_empty() && st.books.keys().all(|b| st.loaded.contains(b))
+        };
+        if !all_loaded {
+            return;
+        }
+        let Some(opts) = self.state.borrow_mut().startup.take() else { return };
+        self.rebuild();
+        if let Some(uid) = &opts.individual {
+            let found = self.state.borrow().individuals.iter().find(|i| i.contains_uid(uid)).cloned();
+            match found {
+                Some(ind) => {
+                    self.state.borrow_mut().selected = Some(ind.members[0].clone());
+                    self.refresh_list();
+                    self.split.set_show_content(true);
+                }
+                None => self.toast("Contact not found"),
+            }
+        }
+        if let Some(email) = &opts.email {
+            let found = self
+                .state
+                .borrow()
+                .individuals
+                .iter()
+                .find(|i| i.contact.emails.iter().any(|e| e.value.eq_ignore_ascii_case(email)))
+                .cloned();
+            match found {
+                Some(ind) => {
+                    self.state.borrow_mut().selected = Some(ind.members[0].clone());
+                    self.refresh_list();
+                    self.split.set_show_content(true);
+                }
+                None => self.new_contact(Some(email)),
+            }
+        }
+    }
+}
+
+/// Formats a vCard date for display ("17 May 1990" or "17 May").
+fn format_vcard_date(v: &str) -> Option<String> {
+    let (y, m, d) = vcard::parse_date(v)?;
+    const MONTHS: [&str; 12] =
+        ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    let month = MONTHS.get(m as usize - 1)?;
+    Some(match y {
+        Some(y) => format!("{d} {month} {y}"),
+        None => format!("{d} {month}"),
+    })
+}
+
+fn show_shortcuts(win: &adw::ApplicationWindow) {
+    let rows = [
+        ("New contact", "Ctrl+N"),
+        ("Edit contact", "Ctrl+E"),
+        ("Delete contact", "Delete"),
+        ("Search", "Ctrl+F"),
+        ("Import", "Ctrl+I"),
+        ("Cancel / leave selection", "Escape"),
+        ("Keyboard shortcuts", "Ctrl+?"),
+        ("Close window", "Ctrl+W"),
+        ("Quit", "Ctrl+Q"),
+    ];
+    let group = adw::PreferencesGroup::new();
+    for (title, keys) in rows {
+        let row = adw::ActionRow::builder().title(title).build();
+        row.add_suffix(&gtk::Label::builder().label(keys).css_classes(["dim-label"]).build());
+        group.add(&row);
+    }
+    let page = adw::PreferencesPage::new();
+    page.add(&group);
+    let dialog = adw::PreferencesDialog::builder().title("Keyboard Shortcuts").build();
+    dialog.add(&page);
+    dialog.present(Some(win));
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn date_formatting() {
+        assert_eq!(super::format_vcard_date("1990-05-17").as_deref(), Some("17 May 1990"));
+        assert_eq!(super::format_vcard_date("--1224").as_deref(), Some("24 December"));
+        assert_eq!(super::format_vcard_date("garbage"), None);
+    }
+}
