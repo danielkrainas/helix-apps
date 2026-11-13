@@ -3,7 +3,8 @@
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::sync::{Arc, Mutex};
 use std::path::{Path, PathBuf};
 use std::rc::{Rc, Weak};
 use std::time::Duration;
@@ -12,6 +13,8 @@ use crate::canvas::ImageCanvas;
 use crate::decode::{self, Decoded, PixelFormat};
 use crate::folder::{self, Extensions, Playlist, Source};
 use crate::metadata::{self, ExifInfo};
+use crate::save;
+use crate::thumbs::{self, RawThumb};
 use crate::trash;
 use crate::view;
 use crate::wallpaper;
@@ -21,6 +24,19 @@ const APP_NAME: &str = "Image Viewer";
 const CONTROLS_TIMEOUT: Duration = Duration::from_secs(2);
 const SLIDESHOW_INTERVAL: Duration = Duration::from_secs(5);
 const LOADING_DELAY: Duration = Duration::from_millis(200);
+/// GNOME Loupe's schema; only `show-properties` is used.
+const LOUPE_SCHEMA: &str = "org.gnome.Loupe";
+/// Thumbnails kept per window before the cache is cleared.
+const THUMB_CACHE_MAX: usize = 2000;
+const THUMB_WORKERS: usize = 2;
+
+thread_local! {
+    static PREFS: helix_app_common::Prefs = helix_app_common::Prefs::new(LOUPE_SCHEMA);
+}
+
+fn prefs() -> helix_app_common::Prefs {
+    PREFS.with(|p| p.clone())
+}
 
 pub fn run(paths: Vec<PathBuf>) -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).flags(gio::ApplicationFlags::NON_UNIQUE).build();
@@ -44,6 +60,9 @@ pub fn run(paths: Vec<PathBuf>) -> glib::ExitCode {
             }
         }
         viewer.window.present();
+        if std::env::var_os("HELIX_IMAGE_VIEWER_SMOKE").is_some() {
+            smoke_script(&viewer);
+        }
     });
     app.run_with_args(&[std::env::args().next().unwrap_or_default()])
 }
@@ -65,6 +84,7 @@ const ACCELS: &[(&str, &[&str])] = &[
     ("win.zoom-200", &["<Control>2", "<Control>KP_2"]),
     ("win.rotate-right", &["<Control>r"]),
     ("win.rotate-left", &["<Control><Shift>r"]),
+    ("win.save", &["<Control>s"]),
     ("win.properties", &["F9", "<Alt>Return"]),
     ("win.fullscreen", &["F11"]),
     ("win.leave-fullscreen", &["Escape"]),
@@ -77,7 +97,10 @@ fn load_css() {
         ".iv-controls { padding: 6px; border-radius: 999px; }
          .iv-controls button, .iv-controls menubutton > button { min-width: 34px; min-height: 34px; }
          .iv-nav { min-width: 48px; min-height: 48px; }
-         .iv-canvas { background: transparent; }",
+         .iv-canvas { background: transparent; }
+         .iv-strip { background: transparent; padding: 4px; }
+         .iv-strip > row { padding: 3px; border-radius: 8px; }
+         .iv-thumb { border-radius: 6px; }",
     );
     if let Some(display) = gdk::Display::default() {
         gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
@@ -158,6 +181,32 @@ struct State {
     refresh_pending: bool,
     /// A decode for the current generation is in flight.
     loading: bool,
+    /// The current image can be re-encoded (format supported, not animated).
+    savable: bool,
+    saving: bool,
+}
+
+/// The bottom thumbnail strip.
+struct Strip {
+    bar: gtk::ScrolledWindow,
+    view: gtk::ListView,
+    model: gtk::StringList,
+    selection: gtk::SingleSelection,
+    /// The paths the model currently mirrors (model strings are lossy).
+    files: RefCell<Vec<PathBuf>>,
+    /// Selection changes made by code, not the user.
+    syncing: Cell<bool>,
+    cache: RefCell<HashMap<PathBuf, gdk::Texture>>,
+    bound: RefCell<HashMap<PathBuf, glib::WeakRef<gtk::Picture>>>,
+    /// Paths whose thumbnail is wanted (bound and not cached); workers skip
+    /// requests that are no longer wanted.
+    wanted: Arc<Mutex<HashSet<PathBuf>>>,
+    requests: async_channel::Sender<PathBuf>,
+}
+
+fn thumb_texture(t: &RawThumb) -> gdk::Texture {
+    let fmt = if t.has_alpha { gdk::MemoryFormat::R8g8b8a8 } else { gdk::MemoryFormat::R8g8b8 };
+    gdk::MemoryTexture::new(t.width, t.height, fmt, &t.bytes, t.stride).upcast()
 }
 
 pub struct Viewer {
@@ -173,6 +222,8 @@ pub struct Viewer {
     prev_btn: gtk::Button,
     next_btn: gtk::Button,
     zoom_btn: gtk::MenuButton,
+    save_btn: gtk::Button,
+    strip: Strip,
     props: Props,
     actions: RefCell<HashMap<&'static str, gio::SimpleAction>>,
     state: RefCell<State>,
@@ -211,6 +262,7 @@ impl Viewer {
         let s3 = gio::Menu::new();
         s3.append(Some("Rotate _Left"), Some("win.rotate-left"));
         s3.append(Some("Rotate _Right"), Some("win.rotate-right"));
+        s3.append(Some("_Save Rotation"), Some("win.save"));
         s3.append(Some("_Fullscreen"), Some("win.fullscreen"));
         s3.append(Some("_Slideshow"), Some("win.slideshow"));
         menu.append_section(None, &s3);
@@ -267,6 +319,9 @@ impl Viewer {
         };
         controls.append(&tool("object-rotate-left-symbolic", "win.rotate-left", "Rotate Left (Ctrl+Shift+R)"));
         controls.append(&tool("object-rotate-right-symbolic", "win.rotate-right", "Rotate Right (Ctrl+R)"));
+        let save_btn = tool("document-save-symbolic", "win.save", "Save Rotation (Ctrl+S)");
+        save_btn.set_visible(false);
+        controls.append(&save_btn);
         controls.append(&gtk::Separator::new(gtk::Orientation::Vertical));
         controls.append(&tool("zoom-out-symbolic", "win.zoom-out", "Zoom Out (Ctrl+−)"));
         let zoom_menu = gio::Menu::new();
@@ -312,9 +367,59 @@ impl Viewer {
         stack.add_named(&overlay, Some("image"));
         stack.set_visible_child_name("empty");
 
+        // Thumbnail strip.
+        let model = gtk::StringList::new(&[]);
+        let selection = gtk::SingleSelection::builder().model(&model).autoselect(false).can_unselect(true).build();
+        let factory = gtk::SignalListItemFactory::new();
+        let view = gtk::ListView::builder()
+            .model(&selection)
+            .factory(&factory)
+            .orientation(gtk::Orientation::Horizontal)
+            .single_click_activate(false)
+            .css_classes(["iv-strip"])
+            .build();
+        let bar = gtk::ScrolledWindow::builder()
+            .child(&view)
+            .vscrollbar_policy(gtk::PolicyType::Never)
+            .hscrollbar_policy(gtk::PolicyType::Automatic)
+            .height_request(84)
+            .visible(false)
+            .build();
+        let (req_tx, req_rx) = async_channel::unbounded::<PathBuf>();
+        let (res_tx, res_rx) = async_channel::unbounded::<(PathBuf, Option<RawThumb>)>();
+        let wanted: Arc<Mutex<HashSet<PathBuf>>> = Arc::default();
+        let cache_root = glib::user_cache_dir();
+        for _ in 0..THUMB_WORKERS {
+            let (rx, tx, wanted, root) = (req_rx.clone(), res_tx.clone(), wanted.clone(), cache_root.clone());
+            std::thread::spawn(move || {
+                while let Ok(path) = rx.recv_blocking() {
+                    if !wanted.lock().map(|w| w.contains(&path)).unwrap_or(false) {
+                        continue;
+                    }
+                    let thumb = thumbs::load(&path, &root, thumbs::SIZE);
+                    if tx.send_blocking((path, thumb)).is_err() {
+                        break;
+                    }
+                }
+            });
+        }
+        let strip = Strip {
+            bar,
+            view,
+            model,
+            selection,
+            files: RefCell::default(),
+            syncing: Cell::new(false),
+            cache: RefCell::default(),
+            bound: RefCell::default(),
+            wanted,
+            requests: req_tx,
+        };
+
         let toolbar = adw::ToolbarView::new();
         toolbar.add_top_bar(&header);
         toolbar.set_content(Some(&stack));
+        toolbar.add_bottom_bar(&strip.bar);
         toolbar.set_extend_content_to_top_edge(false);
 
         // Properties sidebar.
@@ -360,6 +465,14 @@ impl Viewer {
             .max_sidebar_width(340.0)
             .build();
         props_btn.bind_property("active", &split, "show-sidebar").bidirectional().sync_create().build();
+        // `show-properties` from org.gnome.Loupe (in memory if not installed).
+        split.set_show_sidebar(prefs().get("show-properties", false));
+        split.connect_show_sidebar_notify(|split| {
+            let p = prefs();
+            if p.get("show-properties", false) != split.shows_sidebar() {
+                p.set("show-properties", split.shows_sidebar());
+            }
+        });
         let toasts = adw::ToastOverlay::new();
         toasts.set_child(Some(&split));
         window.set_content(Some(&toasts));
@@ -385,6 +498,8 @@ impl Viewer {
             prev_btn,
             next_btn,
             zoom_btn,
+            save_btn,
+            strip,
             props,
             actions: RefCell::default(),
             state: RefCell::new(State {
@@ -399,6 +514,8 @@ impl Viewer {
                 monitor: None,
                 refresh_pending: false,
                 loading: false,
+                savable: false,
+                saving: false,
             }),
             self_ref: RefCell::default(),
             fullscreen: Cell::new(false),
@@ -406,6 +523,7 @@ impl Viewer {
         viewer.self_ref.replace(Rc::downgrade(&viewer));
         viewer.setup_actions();
         viewer.setup_signals(&overlay, &controls, &folder_btn, &gps_btn);
+        viewer.setup_strip(&factory, res_rx);
         viewer.update_ui();
         // The window owns the viewer until it is closed.
         let keep = RefCell::new(Some(viewer.clone()));
@@ -447,8 +565,15 @@ impl Viewer {
         self.add_action("zoom-fit", |v| v.canvas.update_view(|s| s.best_fit()));
         self.add_action("zoom-100", |v| v.canvas.update_view(|s| s.zoom_to(1.0, None)));
         self.add_action("zoom-200", |v| v.canvas.update_view(|s| s.zoom_to(2.0, None)));
-        self.add_action("rotate-right", |v| v.canvas.update_view(|s| s.rotate(90)));
-        self.add_action("rotate-left", |v| v.canvas.update_view(|s| s.rotate(-90)));
+        self.add_action("rotate-right", |v| {
+            v.canvas.update_view(|s| s.rotate(90));
+            v.update_ui();
+        });
+        self.add_action("rotate-left", |v| {
+            v.canvas.update_view(|s| s.rotate(-90));
+            v.update_ui();
+        });
+        self.add_action("save", |v| v.save_rotation());
         self.add_action("properties", |v| v.split.set_show_sidebar(!v.split.shows_sidebar()));
         self.add_action("fullscreen", |v| v.window.set_fullscreened(!v.window.is_fullscreen()));
         self.add_action("leave-fullscreen", |v| {
@@ -507,6 +632,7 @@ impl Viewer {
                     v.toolbar.set_reveal_top_bars(true);
                     v.canvas.set_cursor(None);
                 }
+                v.update_ui();
                 v.show_controls();
             }
         });
@@ -622,6 +748,7 @@ impl Viewer {
             st.textures.clear();
             st.delays.clear();
             st.loading = st.playlist.current().is_some();
+            st.savable = false;
             (st.generation, st.playlist.current().map(Path::to_path_buf))
         };
         self.update_ui();
@@ -679,6 +806,7 @@ impl Viewer {
             let mut st = self.state.borrow_mut();
             st.textures = textures;
             st.delays = delays;
+            st.savable = save::can_save(&decoded.format) && !decoded.is_animated();
         }
         self.stack.set_visible_child_name("image");
         self.canvas.grab_focus();
@@ -804,6 +932,7 @@ impl Viewer {
         }
         let has_prev = st.playlist.has_prev();
         let has_next = st.playlist.has_next();
+        let can_save = has_image && st.savable && !st.saving && self.canvas.view().rotation != 0;
         drop(st);
         let actions = self.actions.borrow();
         let enable = |name: &str, on: bool| {
@@ -822,8 +951,12 @@ impl Viewer {
         enable("first", has_prev);
         enable("last", has_next);
         enable("slideshow", has_file);
+        enable("save", can_save);
+        self.save_btn.set_visible(can_save);
         self.prev_btn.set_visible(has_prev);
         self.next_btn.set_visible(has_next);
+        drop(actions);
+        self.sync_strip();
     }
 
     fn show_controls(&self) {
@@ -987,6 +1120,167 @@ impl Viewer {
         });
     }
 
+    // ---- Saving rotation ----------------------------------------------------
+
+    fn save_rotation(&self) {
+        let Some(path) = self.current() else { return };
+        let degrees = self.canvas.view().rotation;
+        if degrees == 0 || !self.state.borrow().savable {
+            return;
+        }
+        self.state.borrow_mut().saving = true;
+        self.update_ui();
+        let weak = self.weak();
+        glib::MainContext::default().spawn_local(async move {
+            let p = path.clone();
+            let result = gio::spawn_blocking(move || save::save_rotated(&p, degrees)).await;
+            let Some(v) = weak.upgrade() else { return };
+            v.state.borrow_mut().saving = false;
+            match result {
+                Ok(Ok(())) => {
+                    v.invalidate_thumbnail(&path);
+                    v.toasts.add_toast(toast("Image saved"));
+                    if v.current().as_deref() == Some(path.as_path()) {
+                        v.load_current();
+                    } else {
+                        v.update_ui();
+                    }
+                }
+                Ok(Err(e)) => {
+                    v.toasts.add_toast(toast(&format!("Could not save image: {e}")));
+                    v.update_ui();
+                }
+                Err(_) => {
+                    v.toasts.add_toast(toast("Could not save image"));
+                    v.update_ui();
+                }
+            }
+        });
+    }
+
+    // ---- Thumbnail strip ----------------------------------------------------
+
+    fn setup_strip(
+        &self,
+        factory: &gtk::SignalListItemFactory,
+        results: async_channel::Receiver<(PathBuf, Option<RawThumb>)>,
+    ) {
+        factory.connect_setup(|_, item| {
+            let Some(item) = item.downcast_ref::<gtk::ListItem>() else { return };
+            let pic = gtk::Picture::builder()
+                .content_fit(gtk::ContentFit::Cover)
+                .width_request(64)
+                .height_request(64)
+                .css_classes(["iv-thumb"])
+                .build();
+            pic.set_overflow(gtk::Overflow::Hidden);
+            item.set_child(Some(&pic));
+        });
+        let weak = self.weak();
+        factory.connect_bind(move |_, item| {
+            let (Some(v), Some(item)) = (weak.upgrade(), item.downcast_ref::<gtk::ListItem>()) else { return };
+            let Some(pic) = item.child().and_downcast::<gtk::Picture>() else { return };
+            let Some(path) = v.strip.files.borrow().get(item.position() as usize).cloned() else { return };
+            pic.set_tooltip_text(path.file_name().map(|n| n.to_string_lossy().into_owned()).as_deref());
+            v.strip.bound.borrow_mut().insert(path.clone(), pic.downgrade());
+            let cached = v.strip.cache.borrow().get(&path).cloned();
+            match cached {
+                Some(t) => pic.set_paintable(Some(&t)),
+                None => {
+                    pic.set_paintable(None::<&gdk::Paintable>);
+                    v.request_thumbnail(path);
+                }
+            }
+        });
+        let weak = self.weak();
+        factory.connect_unbind(move |_, item| {
+            let (Some(v), Some(item)) = (weak.upgrade(), item.downcast_ref::<gtk::ListItem>()) else { return };
+            let Some(pic) = item.child().and_downcast::<gtk::Picture>() else { return };
+            let mut bound = v.strip.bound.borrow_mut();
+            let path = bound.iter().find(|(_, w)| w.upgrade().as_ref() == Some(&pic)).map(|(p, _)| p.clone());
+            if let Some(p) = path {
+                bound.remove(&p);
+                if let Ok(mut w) = v.strip.wanted.lock() {
+                    w.remove(&p);
+                }
+            }
+        });
+
+        let weak = self.weak();
+        self.strip.selection.connect_selected_notify(move |sel| {
+            let Some(v) = weak.upgrade() else { return };
+            if v.strip.syncing.get() || sel.selected() == gtk::INVALID_LIST_POSITION {
+                return;
+            }
+            let i = sel.selected() as usize;
+            v.navigate(|p| p.go_to(i));
+        });
+
+        let weak = self.weak();
+        glib::MainContext::default().spawn_local(async move {
+            while let Ok((path, thumb)) = results.recv().await {
+                let Some(v) = weak.upgrade() else { break };
+                if let Ok(mut w) = v.strip.wanted.lock() {
+                    w.remove(&path);
+                }
+                let Some(thumb) = thumb else { continue };
+                let tex = thumb_texture(&thumb);
+                {
+                    let mut cache = v.strip.cache.borrow_mut();
+                    if cache.len() >= THUMB_CACHE_MAX {
+                        cache.clear();
+                    }
+                    cache.insert(path.clone(), tex.clone());
+                }
+                let pic = v.strip.bound.borrow().get(&path).and_then(|w| w.upgrade());
+                if let Some(pic) = pic {
+                    pic.set_paintable(Some(&tex));
+                }
+            }
+        });
+    }
+
+    fn request_thumbnail(&self, path: PathBuf) {
+        let fresh = self.strip.wanted.lock().map(|mut w| w.insert(path.clone())).unwrap_or(false);
+        if fresh {
+            let _ = self.strip.requests.try_send(path);
+        }
+    }
+
+    fn invalidate_thumbnail(&self, path: &Path) {
+        self.strip.cache.borrow_mut().remove(path);
+        let bound = self.strip.bound.borrow().contains_key(path);
+        if bound {
+            self.request_thumbnail(path.to_path_buf());
+        }
+    }
+
+    /// Mirrors the playlist into the strip and selects the current image.
+    fn sync_strip(&self) {
+        let (files, index) = {
+            let st = self.state.borrow();
+            (st.playlist.files().to_vec(), st.playlist.index())
+        };
+        let strip = &self.strip;
+        strip.syncing.set(true);
+        if *strip.files.borrow() != files {
+            let names: Vec<String> = files.iter().map(|p| p.to_string_lossy().into_owned()).collect();
+            let names: Vec<&str> = names.iter().map(String::as_str).collect();
+            strip.files.replace(files.clone());
+            strip.model.splice(0, strip.model.n_items(), &names);
+        }
+        let pos = index.map(|i| i as u32).unwrap_or(gtk::INVALID_LIST_POSITION);
+        if strip.selection.selected() != pos {
+            strip.selection.set_selected(pos);
+        }
+        strip.syncing.set(false);
+        let show = files.len() > 1 && !self.fullscreen.get();
+        strip.bar.set_visible(show);
+        if let (true, Some(i)) = (show, index) {
+            strip.view.scroll_to(i as u32, gtk::ListScrollFlags::NONE, None);
+        }
+    }
+
     // ---- Slideshow --------------------------------------------------------
 
     fn toggle_slideshow(&self) {
@@ -1025,6 +1319,28 @@ impl Viewer {
             }
         });
         self.state.borrow_mut().slideshow = Some(id);
+    }
+}
+
+/// Scripted walk-through for headless smoke tests
+/// (`HELIX_IMAGE_VIEWER_SMOKE=1`): rotate, save, navigate, properties, quit.
+fn smoke_script(viewer: &Rc<Viewer>) {
+    let steps: &[(u64, &str)] = &[
+        (1000, "win.rotate-right"),
+        (1300, "win.save"),
+        (2300, "win.next"),
+        (2800, "win.properties"),
+        (3300, "win.last"),
+        (3800, "win.first"),
+        (4500, "app.quit"),
+    ];
+    for (ms, action) in steps.iter().copied() {
+        let weak = Rc::downgrade(viewer);
+        glib::timeout_add_local_once(Duration::from_millis(ms), move || {
+            let Some(v) = weak.upgrade() else { return };
+            eprintln!("smoke: {action}");
+            let _ = WidgetExt::activate_action(&v.window, action, None);
+        });
     }
 }
 

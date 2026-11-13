@@ -185,7 +185,7 @@ pub mod tests {
     use exif::{experimental::Writer, Field, Rational};
     use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
 
-    fn field(tag: Tag, value: Value) -> Field {
+    pub fn field(tag: Tag, value: Value) -> Field {
         Field { tag, ifd_num: In::PRIMARY, value }
     }
 
