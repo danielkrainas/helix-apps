@@ -55,6 +55,9 @@ pub struct Window {
     forward: gtk::Button,
     reload: gtk::Button,
     home: gtk::Button,
+    reader: gtk::Button,
+    /// Title shown instead of the address entry in web-app mode.
+    app_title: Option<adw::WindowTitle>,
     suggest_pop: gtk::Popover,
     suggest_list: gtk::ListBox,
     suggestions: RefCell<Vec<String>>,
@@ -86,6 +89,26 @@ fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .build()
 }
 
+fn web_app_menu() -> gio::Menu {
+    let menu = gio::Menu::new();
+    let zoom = gio::Menu::new();
+    let item = gio::MenuItem::new(None, None);
+    item.set_attribute_value("custom", Some(&"zoom".to_variant()));
+    zoom.append_item(&item);
+    menu.append_section(None, &zoom);
+    let s1 = gio::Menu::new();
+    s1.append(Some("_Find…"), Some("win.find"));
+    s1.append(Some("_Print…"), Some("win.print"));
+    s1.append(Some("_Fullscreen"), Some("win.fullscreen"));
+    s1.append(Some("Open in _Browser"), Some("win.open-in-browser"));
+    menu.append_section(None, &s1);
+    let s2 = gio::Menu::new();
+    s2.append(Some("_Uninstall Web Application…"), Some("app.uninstall-web-app"));
+    s2.append(Some("_About Web"), Some("app.about"));
+    menu.append_section(None, &s2);
+    menu
+}
+
 fn main_menu() -> gio::Menu {
     let menu = gio::Menu::new();
     let s1 = gio::Menu::new();
@@ -103,9 +126,11 @@ fn main_menu() -> gio::Menu {
     s2.append(Some("_Find…"), Some("win.find"));
     s2.append(Some("_Print…"), Some("win.print"));
     s2.append(Some("_Fullscreen"), Some("win.fullscreen"));
+    s2.append(Some("Install Site as _Web Application…"), Some("win.install-web-app"));
     menu.append_section(None, &s2);
     let s3 = gio::Menu::new();
     s3.append(Some("_History"), Some("app.history"));
+    s3.append(Some("_Passwords"), Some("app.passwords"));
     s3.append(Some("_Import Bookmarks…"), Some("app.import-bookmarks"));
     s3.append(Some("_Export Bookmarks…"), Some("app.export-bookmarks"));
     menu.append_section(None, &s3);
@@ -167,6 +192,9 @@ impl Window {
         let forward = icon_button("go-next-symbolic", "Forward", "win.forward");
         let reload = icon_button("view-refresh-symbolic", "Reload", "win.reload");
         let home = icon_button("go-home-symbolic", "Home", "win.home");
+        let reader = icon_button("format-justify-left-symbolic", "Reader View", "win.reader");
+        reader.set_visible(false);
+        let web_app = app.web_app.is_some();
         let header = adw::HeaderBar::new();
         header.pack_start(&back);
         header.pack_start(&forward);
@@ -191,7 +219,11 @@ impl Window {
             .child(&entry)
             .build();
         clamp.set_hexpand(true);
-        header.set_title_widget(Some(&clamp));
+        let app_title = web_app.then(|| adw::WindowTitle::new("", ""));
+        match &app_title {
+            Some(t) => header.set_title_widget(Some(t)),
+            None => header.set_title_widget(Some(&clamp)),
+        }
 
         // Header: end.
         let zoom_label = gtk::Label::new(Some("100%"));
@@ -213,7 +245,11 @@ impl Window {
         zoom_box.append(&zout);
         zoom_box.append(&zreset);
         zoom_box.append(&zin);
-        let menu_pop = gtk::PopoverMenu::from_model(Some(&main_menu()));
+        let menu_pop = gtk::PopoverMenu::from_model(Some(&if web_app {
+            web_app_menu()
+        } else {
+            main_menu()
+        }));
         menu_pop.add_child(&zoom_box, "zoom");
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
@@ -225,6 +261,7 @@ impl Window {
         let tab_button = adw::TabButton::builder()
             .view(&tab_view)
             .action_name("win.overview")
+            .visible(!web_app)
             .build();
         header.pack_end(&tab_button);
 
@@ -274,8 +311,10 @@ impl Window {
             .icon_name("user-bookmarks-symbolic")
             .tooltip_text("Bookmarks")
             .popover(&bm_list_pop)
+            .visible(!web_app)
             .build();
         header.pack_end(&bm_button);
+        header.pack_end(&reader);
 
         if private {
             let pill = gtk::Label::new(Some("Private"));
@@ -379,6 +418,8 @@ impl Window {
             forward,
             reload,
             home,
+            reader,
+            app_title,
             suggest_pop,
             suggest_list,
             suggestions: RefCell::default(),
@@ -484,6 +525,17 @@ impl Window {
         add("zoom-in", |w| w.zoom(1));
         add("zoom-out", |w| w.zoom(-1));
         add("zoom-reset", |w| w.zoom(0));
+        add("reader", |w| {
+            if let Some(t) = w.current() {
+                t.toggle_reader();
+            }
+        });
+        add("install-web-app", crate::dialogs::install_web_app);
+        add("open-in-browser", |w| {
+            if let Some(t) = w.current() {
+                crate::tab::open_externally(&w.win, &t.uri());
+            }
+        });
         add("fullscreen", |w| {
             w.win.set_fullscreened(!w.win.is_fullscreen())
         });
@@ -926,6 +978,7 @@ impl Window {
             Change::Progress => self.sync_progress(),
             Change::Zoom => self.sync_zoom(),
             Change::Title => self.sync_title(),
+            Change::Reader => self.sync_reader(),
             _ => self.sync(),
         }
     }
@@ -946,8 +999,16 @@ impl Window {
             .set_tooltip_text(Some(if loading { "Stop" } else { "Reload" }));
         let has_home = self
             .app()
-            .is_some_and(|a| a.settings.borrow().home_url().is_some());
+            .is_some_and(|a| a.settings.borrow().home_url().is_some() && a.web_app.is_none());
         self.home.set_visible(has_home);
+        self.sync_reader();
+        let web_page = tab.as_ref().is_some_and(|t| {
+            let u = t.uri();
+            u.starts_with("https://") || u.starts_with("http://")
+        });
+        if let Some(a) = self.win.lookup_action("install-web-app").and_downcast::<gio::SimpleAction>() {
+            a.set_enabled(web_page && !self.private);
+        }
         self.sync_entry();
         self.sync_progress();
         self.sync_zoom();
@@ -955,8 +1016,37 @@ impl Window {
         self.sync_bookmark_state();
     }
 
+    fn sync_reader(&self) {
+        let (available, active) = self
+            .current()
+            .map(|t| (t.reader_available(), t.reader_active.get()))
+            .unwrap_or((false, false));
+        self.reader.set_visible(available);
+        self.reader.set_tooltip_text(Some(if active {
+            "Leave Reader View"
+        } else {
+            "Reader View"
+        }));
+        if active {
+            self.reader.add_css_class("suggested-action");
+        } else {
+            self.reader.remove_css_class("suggested-action");
+        }
+    }
+
     fn sync_title(&self) {
         let title = self.current().map(|t| t.title()).unwrap_or_default();
+        if let (Some(t), Some(app)) = (&self.app_title, self.app()) {
+            t.set_title(&title);
+            t.set_subtitle(
+                &app.web_app
+                    .as_ref()
+                    .and_then(|w| urlinput::host_of(&w.url))
+                    .unwrap_or_default(),
+            );
+            self.win.set_title(Some(&title));
+            return;
+        }
         let suffix = if self.private {
             "Private Browsing"
         } else {
@@ -1162,7 +1252,7 @@ impl Window {
                 format!("Search {} for “{}”", engine.name, q),
                 String::new(),
                 "system-search-symbolic",
-                engine.search_url(&q),
+                app.resolve_input(query).unwrap_or_else(|| engine.search_url(&q)),
             )),
             Some(urlinput::Input::Url(u)) => {
                 rows.push((u.clone(), String::new(), "web-browser-symbolic", u))

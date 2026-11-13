@@ -162,6 +162,10 @@ pub struct SearchEngine {
     pub name: String,
     /// URL template; `%s` is replaced by the encoded query.
     pub url: String,
+    /// Shortcut word such as `!ddg` (`bang` in Epiphany's
+    /// `search-engine-providers`); empty when none.
+    #[serde(default)]
+    pub bang: String,
 }
 
 impl SearchEngine {
@@ -169,7 +173,13 @@ impl SearchEngine {
         SearchEngine {
             name: name.into(),
             url: url.into(),
+            bang: String::new(),
         }
+    }
+
+    pub fn with_bang(mut self, bang: &str) -> Self {
+        self.bang = bang.into();
+        self
     }
 
     pub fn search_url(&self, query: &str) -> String {
@@ -179,15 +189,18 @@ impl SearchEngine {
 
 pub fn default_engines() -> Vec<SearchEngine> {
     vec![
-        SearchEngine::new("DuckDuckGo", "https://duckduckgo.com/?q=%s"),
-        SearchEngine::new("Google", "https://www.google.com/search?q=%s"),
-        SearchEngine::new("Bing", "https://www.bing.com/search?q=%s"),
+        SearchEngine::new("DuckDuckGo", "https://duckduckgo.com/?q=%s").with_bang("!ddg"),
+        SearchEngine::new("Google", "https://www.google.com/search?q=%s").with_bang("!g"),
+        SearchEngine::new("Bing", "https://www.bing.com/search?q=%s").with_bang("!b"),
         SearchEngine::new(
             "Wikipedia",
             "https://en.wikipedia.org/w/index.php?search=%s",
-        ),
-        SearchEngine::new("Startpage", "https://www.startpage.com/do/search?query=%s"),
-        SearchEngine::new("Brave Search", "https://search.brave.com/search?q=%s"),
+        )
+        .with_bang("!w"),
+        SearchEngine::new("Startpage", "https://www.startpage.com/do/search?query=%s")
+            .with_bang("!sp"),
+        SearchEngine::new("Brave Search", "https://search.brave.com/search?q=%s")
+            .with_bang("!brave"),
     ]
 }
 
@@ -203,6 +216,28 @@ pub fn resolve(text: &str, home: &str, engine: &SearchEngine) -> Option<String> 
         Input::Url(u) => Some(u),
         Input::Search(q) => Some(engine.search_url(&q)),
     }
+}
+
+/// Like [`resolve`], but a leading bang (`!w rust`) searches with the
+/// engine that has that bang.
+pub fn resolve_with_bangs(
+    text: &str,
+    home: &str,
+    engines: &[SearchEngine],
+    default: &SearchEngine,
+) -> Option<String> {
+    let trimmed = text.trim();
+    if let Some((first, rest)) = trimmed.split_once(char::is_whitespace) {
+        if first.starts_with('!') {
+            if let Some(e) = engines.iter().find(|e| !e.bang.is_empty() && e.bang == first) {
+                let q = rest.trim();
+                if !q.is_empty() {
+                    return Some(e.search_url(q));
+                }
+            }
+        }
+    }
+    resolve(text, home, default)
 }
 
 /// Returns `scheme://host[:port]` for http(s)/file URIs, used as the key for
@@ -320,6 +355,24 @@ mod tests {
         assert!(valid_template("https://x.org/?q=%s"));
         assert!(!valid_template("https://x.org/"));
         assert!(!valid_template("ftp://x.org/%s"));
+    }
+
+    #[test]
+    fn bangs() {
+        let engines = default_engines();
+        let d = &engines[0];
+        assert_eq!(
+            resolve_with_bangs("!w rust lang", "/h", &engines, d).unwrap(),
+            "https://en.wikipedia.org/w/index.php?search=rust+lang"
+        );
+        assert_eq!(
+            resolve_with_bangs("!nope rust", "/h", &engines, d).unwrap(),
+            "https://duckduckgo.com/?q=%21nope+rust"
+        );
+        assert_eq!(
+            resolve_with_bangs("example.com", "/h", &engines, d).unwrap(),
+            "https://example.com"
+        );
     }
 
     #[test]

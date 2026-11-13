@@ -1,10 +1,14 @@
 //! Preferences, History and bookmark import/export dialogs.
 
 use adw::prelude::*;
-use gtk::{gio, glib};
+use gtk::{gdk, gio, glib};
+use webkit6::prelude::*;
 use std::rc::Rc;
 
 use crate::app::App;
+use crate::secrets;
+use crate::webapp;
+use crate::window::Window;
 use crate::session::RestorePolicy;
 use crate::settings::{CookiePolicy, OVERVIEW};
 use crate::store;
@@ -87,6 +91,37 @@ pub fn show_preferences(app: &Rc<App>) {
     });
     group.add(&zoom);
     general.add(&group);
+
+    // Reader mode (org.gnome.Epiphany.reader).
+    let reader_group = adw::PreferencesGroup::builder().title("Reader Mode").build();
+    let font = adw::ComboRow::builder()
+        .title("Font Style")
+        .model(&gtk::StringList::new(&["Sans", "Serif"]))
+        .build();
+    font.set_selected(u32::from(s.reader_font == "serif"));
+    let weak = Rc::downgrade(app);
+    font.connect_selected_notify(move |row| {
+        if let Some(app) = weak.upgrade() {
+            let nick = if row.selected() == 1 { "serif" } else { "sans" };
+            app.update_settings(|s| s.reader_font = nick.into());
+        }
+    });
+    reader_group.add(&font);
+    let colors = adw::ComboRow::builder()
+        .title("Color Scheme")
+        .subtitle("The dark scheme is always used when the system style is dark")
+        .model(&gtk::StringList::new(&["Light", "Dark"]))
+        .build();
+    colors.set_selected(u32::from(s.reader_colors == "dark"));
+    let weak = Rc::downgrade(app);
+    colors.connect_selected_notify(move |row| {
+        if let Some(app) = weak.upgrade() {
+            let nick = if row.selected() == 1 { "dark" } else { "light" };
+            app.update_settings(|s| s.reader_colors = nick.into());
+        }
+    });
+    reader_group.add(&colors);
+    general.add(&reader_group);
 
     // Search.
     let search_group = adw::PreferencesGroup::builder().title("Search").build();
@@ -256,6 +291,37 @@ pub fn show_preferences(app: &Rc<App>) {
     });
     content.add(&cookies);
     privacy.add(&content);
+
+    let pw_group = adw::PreferencesGroup::builder()
+        .title("Passwords")
+        .description("Passwords are kept in your keyring (Secret Service).")
+        .build();
+    let remember = adw::SwitchRow::builder()
+        .title("Remember Passwords")
+        .subtitle("Offer to save site logins and fill them in")
+        .active(s.remember_passwords)
+        .build();
+    let weak = Rc::downgrade(app);
+    remember.connect_active_notify(move |r| {
+        if let Some(app) = weak.upgrade() {
+            let v = r.is_active();
+            app.update_settings(|s| s.remember_passwords = v);
+        }
+    });
+    pw_group.add(&remember);
+    let saved = adw::ActionRow::builder()
+        .title("Saved Passwords…")
+        .activatable(true)
+        .build();
+    saved.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+    let weak = Rc::downgrade(app);
+    saved.connect_activated(move |_| {
+        if let Some(app) = weak.upgrade() {
+            show_passwords(&app);
+        }
+    });
+    pw_group.add(&saved);
+    privacy.add(&pw_group);
 
     let data = adw::PreferencesGroup::builder()
         .title("Browsing Data")
@@ -571,4 +637,177 @@ pub fn export_bookmarks(app: &Rc<App>) {
             );
         },
     );
+}
+
+// ---- saved passwords --------------------------------------------------------
+
+/// Lists the Helix logins in the keyring, with per-entry removal. Passwords
+/// themselves are never shown.
+pub fn show_passwords(app: &Rc<App>) {
+    let dialog = adw::Dialog::builder()
+        .title("Passwords")
+        .content_width(460)
+        .content_height(520)
+        .build();
+    let group = adw::PreferencesGroup::new();
+    let page = adw::PreferencesPage::new();
+    page.add(&group);
+    let status = adw::StatusPage::builder()
+        .icon_name("dialog-password-symbolic")
+        .title("Loading…")
+        .build();
+    let stack = gtk::Stack::new();
+    stack.add_named(&status, Some("status"));
+    stack.add_named(&page, Some("list"));
+    let view = adw::ToolbarView::new();
+    view.add_top_bar(&adw::HeaderBar::new());
+    view.set_content(Some(&stack));
+    dialog.set_child(Some(&view));
+    if let Some(w) = parent(app) {
+        dialog.present(Some(&w));
+    }
+    load_passwords(group, stack, status);
+}
+
+fn load_passwords(group: adw::PreferencesGroup, stack: gtk::Stack, status: adw::StatusPage) {
+    glib::spawn_future_local(async move {
+        let r = gio::spawn_blocking(|| secrets::Client::session_bus().and_then(|c| c.all_logins())).await;
+        let logins = match r {
+            Ok(Ok(l)) => l,
+            Ok(Err(e)) => {
+                status.set_title("Keyring Unavailable");
+                status.set_description(Some(&glib::markup_escape_text(&e.to_string())));
+                stack.set_visible_child_name("status");
+                return;
+            }
+            Err(_) => return,
+        };
+        if logins.is_empty() {
+            status.set_title("No Saved Passwords");
+            status.set_description(Some("Logins you save while browsing appear here."));
+            stack.set_visible_child_name("status");
+            return;
+        }
+        for l in logins {
+            let host = l.origin.split_once("://").map(|(_, h)| h).unwrap_or(&l.origin).to_string();
+            let row = adw::ActionRow::builder()
+                .title(glib::markup_escape_text(&host))
+                .subtitle(glib::markup_escape_text(if l.username.is_empty() { "(no user name)" } else { &l.username }))
+                .build();
+            let del = gtk::Button::builder()
+                .icon_name("user-trash-symbolic")
+                .tooltip_text("Remove")
+                .valign(gtk::Align::Center)
+                .build();
+            del.add_css_class("flat");
+            let (g, r2) = (group.clone(), row.clone());
+            del.connect_clicked(move |b| {
+                b.set_sensitive(false);
+                let (origin, user) = (l.origin.clone(), l.username.clone());
+                let (g, r2, b) = (g.clone(), r2.clone(), b.clone());
+                glib::spawn_future_local(async move {
+                    let r = gio::spawn_blocking(move || {
+                        secrets::Client::session_bus().and_then(|c| c.delete(&origin, &user))
+                    })
+                    .await;
+                    match r {
+                        Ok(Ok(())) => g.remove(&r2),
+                        _ => b.set_sensitive(true),
+                    }
+                });
+            });
+            row.add_suffix(&del);
+            group.add(&row);
+        }
+        stack.set_visible_child_name("list");
+    });
+}
+
+// ---- web applications -------------------------------------------------------
+
+fn message(over: &impl IsA<gtk::Widget>, heading: &str, body: &str) {
+    let d = adw::AlertDialog::new(Some(heading), Some(body));
+    d.add_response("ok", "_OK");
+    d.present(Some(over));
+}
+
+/// PNG data for the launcher icon: the site's favicon, else the app icon.
+fn launcher_icon(favicon: Option<gdk::Texture>) -> Option<Vec<u8>> {
+    if let Some(t) = favicon {
+        return Some(t.save_to_png_bytes().to_vec());
+    }
+    let display = gdk::Display::default()?;
+    let icon = gtk::IconTheme::for_display(&display).lookup_icon(
+        crate::app::APP_ID,
+        &["web-browser"],
+        128,
+        1,
+        gtk::TextDirection::Ltr,
+        gtk::IconLookupFlags::empty(),
+    );
+    let file = icon.file()?;
+    let (bytes, _) = file.load_contents(gio::Cancellable::NONE).ok()?;
+    Some(bytes.to_vec())
+}
+
+/// "Install Site as Web Application…" via the DynamicLauncher portal.
+pub fn install_web_app(w: &Rc<Window>) {
+    let Some(tab) = w.current() else { return };
+    let uri = tab.uri();
+    if !(uri.starts_with("https://") || uri.starts_with("http://")) {
+        return;
+    }
+    let host = crate::urlinput::host_of(&uri).unwrap_or_default();
+    let title = Some(tab.title())
+        .filter(|t| !t.is_empty() && *t != uri)
+        .unwrap_or(host);
+    let win = w.win.clone();
+    let Some(icon) = launcher_icon(tab.view.favicon()) else {
+        message(&win, "Could Not Install Web Application", "No icon is available for this site.");
+        return;
+    };
+    let exe = std::env::current_exe()
+        .map(|p| p.to_string_lossy().into_owned())
+        .unwrap_or_else(|_| "helix-web".into());
+    glib::spawn_future_local(async move {
+        let r = gio::spawn_blocking(move || webapp::install(&title, &uri, &icon, &exe)).await;
+        match r {
+            Ok(Ok((_, name))) => message(
+                &win,
+                "Web Application Installed",
+                &format!("“{name}” can now be started from your applications."),
+            ),
+            Ok(Err(webapp::Error::Cancelled)) => {}
+            Ok(Err(e)) => message(&win, "Could Not Install Web Application", &e.to_string()),
+            Err(_) => {}
+        }
+    });
+}
+
+/// Removes this web app's launcher (web-app mode only) and quits.
+pub fn uninstall_web_app(app: &Rc<App>) {
+    let Some(wa) = app.web_app.clone() else { return };
+    let Some(w) = parent(app) else { return };
+    let d = adw::AlertDialog::new(
+        Some("Uninstall Web Application?"),
+        Some("The launcher is removed. Its saved site data stays on disk."),
+    );
+    d.add_responses(&[("cancel", "_Cancel"), ("uninstall", "_Uninstall")]);
+    d.set_response_appearance("uninstall", adw::ResponseAppearance::Destructive);
+    d.set_close_response("cancel");
+    let gtk_app = app.gtk.clone();
+    let w2 = w.clone();
+    d.connect_response(Some("uninstall"), move |_, _| {
+        let wa = wa.clone();
+        let gtk_app = gtk_app.clone();
+        let w2 = w2.clone();
+        glib::spawn_future_local(async move {
+            match gio::spawn_blocking(move || webapp::uninstall(&wa)).await {
+                Ok(Ok(())) => gtk_app.quit(),
+                Ok(Err(e)) => message(&w2, "Could Not Uninstall", &e.to_string()),
+                Err(_) => {}
+            }
+        });
+    });
+    d.present(Some(&w));
 }

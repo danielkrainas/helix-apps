@@ -16,6 +16,7 @@ use crate::settings::{self, Settings};
 use crate::store;
 use crate::tab::{Change, Tab};
 use crate::urlinput;
+use crate::webapp::WebApp;
 use crate::window::Window;
 
 pub const APP_ID: &str = "org.helix.Web";
@@ -40,6 +41,8 @@ pub struct App {
     pub permissions: RefCell<Permissions>,
     pub session: webkit6::NetworkSession,
     pub web_settings: webkit6::Settings,
+    /// Set when running as an installed web application.
+    pub web_app: Option<WebApp>,
     pub windows: RefCell<Vec<Rc<Window>>>,
     pub tabs: RefCell<Vec<Rc<Tab>>>,
     data_dir: PathBuf,
@@ -59,42 +62,75 @@ struct Args {
     uris: Vec<String>,
 }
 
-pub fn run() -> glib::ExitCode {
+/// What the primary instance is doing.
+enum State {
+    Running(Rc<App>),
+    /// WebKit's sandbox cannot start; only the explanation is shown.
+    Blocked(crate::sandbox::Cause),
+}
+
+fn show_blocked(gtk_app: &adw::Application, cause: crate::sandbox::Cause) {
+    match gtk_app.windows().first() {
+        Some(w) => w.present(),
+        None => {
+            crate::sandbox::failure_window(gtk_app, "Web", APP_DIR, cause).present();
+        }
+    }
+}
+
+pub fn run(web_app: Option<WebApp>) -> glib::ExitCode {
+    let app_id = web_app
+        .as_ref()
+        .map(|w| w.app_id())
+        .unwrap_or_else(|| APP_ID.to_string());
     let gtk_app = adw::Application::builder()
-        .application_id(APP_ID)
+        .application_id(app_id.as_str())
         .flags(gio::ApplicationFlags::HANDLES_COMMAND_LINE)
         .build();
-    let holder: Rc<RefCell<Option<Rc<App>>>> = Rc::default();
+    let holder: Rc<RefCell<Option<State>>> = Rc::default();
 
     gtk_app.connect_startup({
         let holder = holder.clone();
         move |gtk_app| {
-            let app = App::new(gtk_app);
-            *holder.borrow_mut() = Some(app);
+            // Checked before any WebView exists: WebKit aborts the whole
+            // process when its sandbox cannot start.
+            let state = match crate::sandbox::check() {
+                Some(cause) => {
+                    eprintln!("helix-web: WebKit sandbox unavailable ({cause:?}); not showing web content");
+                    helix_app_common::install_standard_actions(gtk_app, "Web", "Browse the web");
+                    State::Blocked(cause)
+                }
+                None => State::Running(App::new(gtk_app, web_app.clone())),
+            };
+            *holder.borrow_mut() = Some(state);
         }
     });
     gtk_app.connect_command_line({
         let holder = holder.clone();
-        move |_, cmdline| {
-            if let Some(app) = holder.borrow().clone() {
-                let args = app.parse_args(cmdline);
-                app.handle_args(args);
+        move |gtk_app, cmdline| {
+            match holder.borrow().as_ref() {
+                Some(State::Running(app)) => {
+                    let args = app.parse_args(cmdline);
+                    app.handle_args(args);
+                }
+                Some(State::Blocked(cause)) => show_blocked(gtk_app, *cause),
+                None => {}
             }
             0
         }
     });
     gtk_app.connect_activate({
         let holder = holder.clone();
-        move |_| {
-            if let Some(app) = holder.borrow().clone() {
-                app.handle_args(Args::default());
-            }
+        move |gtk_app| match holder.borrow().as_ref() {
+            Some(State::Running(app)) => app.handle_args(Args::default()),
+            Some(State::Blocked(cause)) => show_blocked(gtk_app, *cause),
+            None => {}
         }
     });
     gtk_app.connect_shutdown({
         let holder = holder.clone();
         move |_| {
-            if let Some(app) = holder.borrow_mut().take() {
+            if let Some(State::Running(app)) = holder.borrow_mut().take() {
                 app.shutdown();
             }
         }
@@ -102,9 +138,13 @@ pub fn run() -> glib::ExitCode {
     gtk_app.run()
 }
 
-fn webkit_dirs(data_dir: &Path) -> (String, String) {
+fn webkit_dirs(data_dir: &Path, web_app: Option<&WebApp>) -> (String, String) {
     let data = data_dir.join("webkit");
-    let cache = glib::user_cache_dir().join(APP_DIR).join("webkit");
+    let mut cache = glib::user_cache_dir().join(APP_DIR);
+    if let Some(w) = web_app {
+        cache = cache.join("web-apps").join(&w.id);
+    }
+    let cache = cache.join("webkit");
     let _ = std::fs::create_dir_all(&data);
     let _ = std::fs::create_dir_all(&cache);
     (
@@ -114,12 +154,17 @@ fn webkit_dirs(data_dir: &Path) -> (String, String) {
 }
 
 impl App {
-    fn new(gtk_app: &adw::Application) -> Rc<App> {
-        let data_dir = helix_app_common::data_dir(APP_DIR);
+    fn new(gtk_app: &adw::Application, web_app: Option<WebApp>) -> Rc<App> {
+        let mut data_dir = helix_app_common::data_dir(APP_DIR);
+        if let Some(w) = &web_app {
+            // Each web app keeps its own cookies, history and permissions.
+            data_dir = data_dir.join("web-apps").join(&w.id);
+            let _ = std::fs::create_dir_all(&data_dir);
+        }
         let store = settings::Store::new(&helix_app_common::config_dir(APP_DIR));
         let settings = store.load();
 
-        let (wk_data, wk_cache) = webkit_dirs(&data_dir);
+        let (wk_data, wk_cache) = webkit_dirs(&data_dir, web_app.as_ref());
         let session = webkit6::NetworkSession::new(Some(&wk_data), Some(&wk_cache));
         if let Some(cm) = session.cookie_manager() {
             let cookies = data_dir.join("webkit").join("cookies.sqlite");
@@ -151,6 +196,7 @@ impl App {
             permissions: RefCell::new(Permissions::load(&data_dir.join("permissions.json"))),
             session,
             web_settings,
+            web_app,
             windows: RefCell::default(),
             tabs: RefCell::default(),
             data_dir,
@@ -216,6 +262,17 @@ impl App {
     }
 
     fn handle_args(&self, args: Args) {
+        if let Some(wa) = &self.web_app {
+            match self.windows.borrow().last() {
+                Some(w) => w.win.present(),
+                None => {
+                    let w = self.new_window(false);
+                    w.open_uri(&wa.url, true);
+                    w.win.present();
+                }
+            }
+            return;
+        }
         let first = !self.started.replace(true);
         let mut restored = false;
         if first {
@@ -320,10 +377,33 @@ impl App {
     }
 
     /// Creates a tab (not yet placed in a window).
+    /// A content manager for one view. Normal views get the password
+    /// form script (in an isolated world); private views get nothing.
+    fn content_manager(&self, private: bool) -> webkit6::UserContentManager {
+        let ucm = webkit6::UserContentManager::new();
+        if !private {
+            let script = webkit6::UserScript::for_world(
+                crate::passwords::FORM_SCRIPT,
+                webkit6::UserContentInjectedFrames::TopFrame,
+                webkit6::UserScriptInjectionTime::End,
+                crate::passwords::WORLD,
+                &[],
+                &[],
+            );
+            ucm.add_script(&script);
+            ucm.register_script_message_handler(
+                crate::passwords::HANDLER,
+                Some(crate::passwords::WORLD),
+            );
+        }
+        ucm
+    }
+
     pub fn create_tab(&self, private: bool, session: &webkit6::NetworkSession) -> Rc<Tab> {
         let view = webkit6::WebView::builder()
             .network_session(session)
             .settings(&self.web_settings)
+            .user_content_manager(&self.content_manager(private))
             .build();
         view.set_zoom_level(self.settings.borrow().default_zoom);
         let tab = Tab::new(&self.rc(), view, private);
@@ -368,6 +448,7 @@ impl App {
         let view = webkit6::WebView::builder()
             .related_view(&from.view)
             .settings(&self.web_settings)
+            .user_content_manager(&self.content_manager(from.private))
             .build();
         view.set_zoom_level(self.settings.borrow().default_zoom);
         let tab = Tab::new(&self.rc(), view.clone(), from.private);
@@ -416,8 +497,8 @@ impl App {
 
     pub fn resolve_input(&self, text: &str) -> Option<String> {
         let home = glib::home_dir().to_string_lossy().into_owned();
-        let engine = self.settings.borrow().engine();
-        urlinput::resolve(text, &home, &engine)
+        let s = self.settings.borrow();
+        urlinput::resolve_with_bangs(text, &home, &s.search_engines, &s.engine())
     }
 
     pub fn home_uri(&self) -> String {
@@ -738,6 +819,8 @@ impl App {
         action("history", crate::dialogs::show_history);
         action("import-bookmarks", crate::dialogs::import_bookmarks);
         action("export-bookmarks", crate::dialogs::export_bookmarks);
+        action("passwords", crate::dialogs::show_passwords);
+        action("uninstall-web-app", crate::dialogs::uninstall_web_app);
 
         let accels: &[(&str, &[&str])] = &[
             ("app.new-window", &["<Control>n"]),
@@ -774,6 +857,7 @@ impl App {
             ),
             ("win.zoom-reset", &["<Control>0", "<Control>KP_0"]),
             ("win.fullscreen", &["F11"]),
+            ("win.reader", &["<Control><Alt>r"]),
         ];
         // Ctrl+W closes the tab here; closing the window moves to Ctrl+Shift+W.
         self.gtk

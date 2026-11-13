@@ -2,11 +2,16 @@
 
 use crate::session::RestorePolicy;
 use crate::urlinput::{default_engines, SearchEngine};
+use gtk::{gio, glib, prelude::*};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 pub const SCHEMA: &str = "org.gnome.Epiphany";
+/// Relocatable in Epiphany; the browser's own settings live at `WEB_PATH`.
 pub const WEB_SCHEMA: &str = "org.gnome.Epiphany.web";
+pub const WEB_PATH: &str = "/org/gnome/epiphany/web/";
+pub const READER_SCHEMA: &str = "org.gnome.Epiphany.reader";
 /// Epiphany's value for "show the start page".
 pub const OVERVIEW: &str = "about:overview";
 
@@ -54,6 +59,11 @@ pub struct Settings {
     pub javascript: bool,
     pub search_engines: Vec<SearchEngine>,
     pub default_search_engine: String,
+    pub remember_passwords: bool,
+    /// `sans` | `serif` (`org.gnome.Epiphany.reader font-style`).
+    pub reader_font: String,
+    /// `light` | `dark` (`org.gnome.Epiphany.reader color-scheme`).
+    pub reader_colors: String,
 }
 
 impl Default for Settings {
@@ -67,6 +77,9 @@ impl Default for Settings {
             javascript: true,
             search_engines: default_engines(),
             default_search_engine: "DuckDuckGo".into(),
+            remember_passwords: true,
+            reader_font: "sans".into(),
+            reader_colors: "light".into(),
         }
     }
 }
@@ -88,6 +101,20 @@ impl Settings {
         self.default_zoom = self.default_zoom.clamp(ZOOM_MIN, ZOOM_MAX);
         self.restore_session = self.restore_policy().nick().into();
         self.cookies_policy = self.cookie_policy().nick().into();
+        if self.reader_font != "serif" {
+            self.reader_font = "sans".into();
+        }
+        if self.reader_colors != "dark" {
+            self.reader_colors = "light".into();
+        }
+    }
+
+    pub fn reader_font(&self) -> crate::reader::FontStyle {
+        if self.reader_font == "serif" {
+            crate::reader::FontStyle::Serif
+        } else {
+            crate::reader::FontStyle::Sans
+        }
     }
 
     pub fn restore_policy(&self) -> RestorePolicy {
@@ -163,51 +190,165 @@ pub fn zoom_step(current: f64, dir: i32) -> f64 {
     }
 }
 
+/// A GSettings object for `schema_id` if installed. Relocatable schemas
+/// (such as `org.gnome.Epiphany.web`) are opened at `path`;
+/// `helix_app_common::Prefs` cannot do that, hence this local helper.
+fn open_settings(schema_id: &str, path: &str) -> Option<(gio::Settings, Vec<String>)> {
+    let source = gio::SettingsSchemaSource::default()?;
+    let schema = source.lookup(schema_id, true)?;
+    let path = schema.path().is_none().then_some(path);
+    let keys = schema.list_keys().iter().map(|k| k.to_string()).collect();
+    let settings = gio::Settings::new_full(&schema, None::<&gio::SettingsBackend>, path);
+    Some((settings, keys))
+}
+
+/// Typed access to the keys of one schema that actually exist.
+struct Gs(Option<(gio::Settings, Vec<String>)>);
+
+impl Gs {
+    fn new(schema_id: &str, path: &str) -> Self {
+        Gs(open_settings(schema_id, path))
+    }
+
+    fn key(&self, key: &str) -> Option<&gio::Settings> {
+        self.0
+            .as_ref()
+            .filter(|(_, keys)| keys.iter().any(|k| k == key))
+            .map(|(s, _)| s)
+    }
+
+    fn get<T: glib::variant::FromVariant>(&self, key: &str, fallback: T) -> T {
+        self.key(key)
+            .and_then(|s| s.value(key).get::<T>())
+            .unwrap_or(fallback)
+    }
+
+    fn set<T: glib::variant::ToVariant>(&self, key: &str, value: T) {
+        if let Some(s) = self.key(key) {
+            let v = value.to_variant();
+            if s.value(key) != v {
+                let _ = s.set_value(key, &v);
+            }
+        }
+    }
+
+    fn enum_nick(&self, key: &str, fallback: &str) -> String {
+        self.key(key)
+            .map(|s| s.string(key).to_string())
+            .unwrap_or_else(|| fallback.to_string())
+    }
+
+    fn set_enum_nick(&self, key: &str, nick: &str) {
+        if let Some(s) = self.key(key) {
+            if s.string(key) != nick {
+                let _ = s.set_string(key, nick);
+            }
+        }
+    }
+}
+
+/// `search-engine-providers` (`aa{sv}`: name, url, bang) to engines.
+pub fn engines_from_variant(v: &glib::Variant) -> Vec<SearchEngine> {
+    let Some(list) = v.get::<Vec<HashMap<String, glib::Variant>>>() else {
+        return Vec::new();
+    };
+    list.iter()
+        .filter_map(|d| {
+            let get = |k: &str| d.get(k).and_then(|v| v.get::<String>());
+            let name = get("name")?;
+            let url = get("url")?;
+            (!name.trim().is_empty() && crate::urlinput::valid_template(&url)).then(|| {
+                SearchEngine::new(&name, &url).with_bang(&get("bang").unwrap_or_default())
+            })
+        })
+        .collect()
+}
+
+pub fn engines_to_variant(engines: &[SearchEngine]) -> glib::Variant {
+    let list: Vec<HashMap<String, glib::Variant>> = engines
+        .iter()
+        .map(|e| {
+            HashMap::from([
+                ("name".to_string(), e.name.to_variant()),
+                ("url".to_string(), e.url.to_variant()),
+                ("bang".to_string(), e.bang.to_variant()),
+            ])
+        })
+        .collect();
+    list.to_variant()
+}
+
 /// Settings persisted to JSON and mirrored to GSettings when available.
 pub struct Store {
     path: PathBuf,
-    prefs: helix_app_common::Prefs,
-    web: helix_app_common::Prefs,
+    main: Gs,
+    web: Gs,
+    reader: Gs,
 }
 
 impl Store {
     pub fn new(config_dir: &Path) -> Self {
         Store {
             path: config_dir.join("settings.json"),
-            prefs: helix_app_common::Prefs::new(SCHEMA),
-            web: helix_app_common::Prefs::new(WEB_SCHEMA),
+            main: Gs::new(SCHEMA, "/org/gnome/epiphany/"),
+            web: Gs::new(WEB_SCHEMA, WEB_PATH),
+            reader: Gs::new(READER_SCHEMA, "/org/gnome/epiphany/reader/"),
         }
     }
 
     pub fn load(&self) -> Settings {
         let mut s = Settings::load_file(&self.path);
-        if self.prefs.is_persistent() {
-            s.homepage = self.prefs.get("homepage-url", s.homepage.clone());
+        s.homepage = self.main.get("homepage-url", s.homepage.clone());
+        // `never` is a Helix extension stored only in settings.json.
+        if s.restore_session != "never" {
             s.restore_session = self
-                .prefs
-                .get_enum_nick("restore-session-policy", &s.restore_session);
+                .main
+                .enum_nick("restore-session-policy", &s.restore_session);
         }
-        if self.web.is_persistent() {
-            s.enable_popups = self.web.get("enable-popups", s.enable_popups);
-            s.cookies_policy = self.web.get("cookies-policy", s.cookies_policy.clone());
-            s.default_zoom = self.web.get("default-zoom-level", s.default_zoom);
+        s.default_search_engine = self
+            .main
+            .get("default-search-engine", s.default_search_engine.clone());
+        if let Some(v) = self
+            .main
+            .key("search-engine-providers")
+            .map(|g| g.value("search-engine-providers"))
+        {
+            let engines = engines_from_variant(&v);
+            if !engines.is_empty() {
+                s.search_engines = engines;
+            }
         }
+        s.enable_popups = self.web.get("enable-popups", s.enable_popups);
+        s.default_zoom = self.web.get("default-zoom-level", s.default_zoom);
+        s.remember_passwords = self.web.get("remember-passwords", s.remember_passwords);
+        s.reader_font = self.reader.enum_nick("font-style", &s.reader_font);
+        s.reader_colors = self.reader.enum_nick("color-scheme", &s.reader_colors);
         s.sanitize();
         s
     }
 
     pub fn save(&self, s: &Settings) {
         crate::store::write_in_background(self.path.clone(), crate::store::to_json(s));
-        if self.prefs.is_persistent() {
-            self.prefs.set("homepage-url", s.homepage.clone());
-            self.prefs
+        // Epiphany's default (empty) means the start page.
+        let home = if s.home_url().is_none() { "" } else { s.homepage.as_str() };
+        self.main.set("homepage-url", home.to_string());
+        if s.restore_session != "never" {
+            self.main
                 .set_enum_nick("restore-session-policy", &s.restore_session);
         }
-        if self.web.is_persistent() {
-            self.web.set("enable-popups", s.enable_popups);
-            self.web.set("cookies-policy", s.cookies_policy.clone());
-            self.web.set("default-zoom-level", s.default_zoom);
+        self.main
+            .set("default-search-engine", s.default_search_engine.clone());
+        if let Some(g) = self.main.key("search-engine-providers") {
+            let v = engines_to_variant(&s.search_engines);
+            if g.value("search-engine-providers") != v {
+                let _ = g.set_value("search-engine-providers", &v);
+            }
         }
+        self.web.set("enable-popups", s.enable_popups);
+        self.web.set("default-zoom-level", s.default_zoom);
+        self.web.set("remember-passwords", s.remember_passwords);
+        self.reader.set_enum_nick("font-style", &s.reader_font);
+        self.reader.set_enum_nick("color-scheme", &s.reader_colors);
     }
 }
 
@@ -246,6 +387,38 @@ mod tests {
         assert_eq!(s.engine().name, "DuckDuckGo");
         s.default_search_engine = "Gone".into();
         assert_eq!(s.engine().name, "DuckDuckGo");
+    }
+
+    #[test]
+    fn engine_variants_roundtrip() {
+        let engines = default_engines();
+        let v = engines_to_variant(&engines);
+        assert_eq!(v.type_().as_str(), "aa{sv}");
+        assert_eq!(engines_from_variant(&v), engines);
+        // Epiphany's own default value parses, bangs included.
+        let epiphany = glib::Variant::parse(
+            Some(glib::VariantTy::new("aa{sv}").unwrap()),
+            "[{'name': <'DuckDuckGo'>, 'url': <'https://duckduckgo.com/?q=%s&t=epiphany&kd=-1'>, 'bang': <'!ddg'>}, \
+              {'name': <'NoBang'>, 'url': <'https://x.example/?q=%s'>}, {'name': <'Bad'>, 'url': <'nope'>}]",
+        )
+        .unwrap();
+        let parsed = engines_from_variant(&epiphany);
+        assert_eq!(parsed.len(), 2);
+        assert_eq!(parsed[0].bang, "!ddg");
+        assert_eq!(parsed[1].bang, "");
+        assert!(engines_from_variant(&1u32.to_variant()).is_empty());
+    }
+
+    #[test]
+    fn reader_prefs_sanitize() {
+        let mut s = Settings {
+            reader_font: "comic".into(),
+            reader_colors: "x".into(),
+            ..Default::default()
+        };
+        s.sanitize();
+        assert_eq!((s.reader_font.as_str(), s.reader_colors.as_str()), ("sans", "light"));
+        assert!(s.remember_passwords);
     }
 
     #[test]

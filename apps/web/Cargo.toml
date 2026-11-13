@@ -19,3 +19,10 @@ serde.workspace = true
 serde_json.workspace = true
 gio = { workspace = true, features = ["v2_70"] }
 webkit6 = { version = "0.4", features = ["v2_46"] }
+zbus = { version = "5", default-features = false, features = ["async-io", "blocking-api"] }
+libc = "0.2"
+url = "2"
+
+[dev-dependencies]
+# p2p lets the Secret Service tests talk to an in-process mock without any bus.
+zbus = { version = "5", default-features = false, features = ["async-io", "blocking-api", "p2p"] }

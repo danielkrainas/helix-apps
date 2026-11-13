@@ -1,36 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- GNOME-compatible schema for the keys Helix Web uses. Install only when
-     the schema is not already provided by the system. -->
+<!-- GNOME-compatible subset of org.gnome.Epiphany: only the keys Helix Web
+     uses, with Epiphany's key names, types, enums and defaults. Install only
+     when the schema is not already provided by the system. As in Epiphany,
+     org.gnome.Epiphany.web is relocatable; Helix Web opens it at
+     /org/gnome/epiphany/web/. -->
 <schemalist>
-  <enum id="org.gnome.Epiphany.RestoreSessionPolicy">
-    <value value="0" nick="always"/>
-    <value value="1" nick="crashed"/>
-    <value value="2" nick="never"/>
+  <enum id="org.gnome.Epiphany.EphyPrefsRestoreSessionPolicy">
+    <value nick="always" value="0"/>
+    <value nick="crashed" value="1"/>
+  </enum>
+  <enum id="org.gnome.Epiphany.EphyPrefsReaderFontStyle">
+    <value nick="sans" value="0"/>
+    <value nick="serif" value="1"/>
+  </enum>
+  <enum id="org.gnome.Epiphany.EphyPrefsReaderColorScheme">
+    <value nick="light" value="0"/>
+    <value nick="dark" value="1"/>
   </enum>
   <schema path="/org/gnome/epiphany/" id="org.gnome.Epiphany">
+    <child schema="org.gnome.Epiphany.web" name="web"/>
+    <child schema="org.gnome.Epiphany.reader" name="reader"/>
     <key type="s" name="homepage-url">
-      <default>'about:overview'</default>
+      <default>''</default>
       <summary>Home page</summary>
     </key>
-    <key name="restore-session-policy" enum="org.gnome.Epiphany.RestoreSessionPolicy">
-      <default>'always'</default>
-      <summary>Whether to restore tabs on startup</summary>
+    <key type="s" name="default-search-engine">
+      <default>'DuckDuckGo'</default>
+      <summary>Default search engine.</summary>
     </key>
-    <child schema="org.gnome.Epiphany.web" name="web"/>
+    <key type="aa{sv}" name="search-engine-providers">
+      <default>
+        <![CDATA[
+        [
+          {'name': <'DuckDuckGo'>, 'url': <'https://duckduckgo.com/?q=%s&t=epiphany&kd=-1'>, 'bang': <'!ddg'>},
+          {'name': <'Google'>, 'url': <'https://www.google.com/search?q=%s'>, 'bang': <'!g'>},
+          {'name': <'Bing'>, 'url': <'https://www.bing.com/search?q=%s'>, 'bang': <'!b'>}
+        ]
+      ]]></default>
+      <summary>List of the search engines.</summary>
+    </key>
+    <key name="restore-session-policy" enum="org.gnome.Epiphany.EphyPrefsRestoreSessionPolicy">
+      <default>'always'</default>
+      <summary>Whether to automatically restore the last session</summary>
+    </key>
   </schema>
-  <schema path="/org/gnome/epiphany/web/" id="org.gnome.Epiphany.web">
+  <schema path="/org/gnome/epiphany/reader/" id="org.gnome.Epiphany.reader">
+    <key name="font-style" enum="org.gnome.Epiphany.EphyPrefsReaderFontStyle">
+      <default>'sans'</default>
+      <summary>Reader mode article font style.</summary>
+    </key>
+    <key name="color-scheme" enum="org.gnome.Epiphany.EphyPrefsReaderColorScheme">
+      <default>'light'</default>
+      <summary>Reader mode color scheme.</summary>
+    </key>
+  </schema>
+  <schema id="org.gnome.Epiphany.web">
     <key type="b" name="enable-popups">
       <default>false</default>
       <summary>Allow popups</summary>
     </key>
-    <key type="s" name="cookies-policy">
-      <choices>
-        <choice value="always"/>
-        <choice value="no-third-party"/>
-        <choice value="never"/>
-      </choices>
-      <default>'no-third-party'</default>
-      <summary>Cookie accept policy</summary>
+    <key type="b" name="remember-passwords">
+      <default>true</default>
+      <summary>Remember passwords</summary>
     </key>
     <key type="d" name="default-zoom-level">
       <default>1.0</default>
