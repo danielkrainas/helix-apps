@@ -116,15 +116,29 @@ the selected / clicked item:
   below).
 
 ### GSettings (`org.gnome.baobab`)
-Keys read and written (others ignored):
-- `excluded-uris` (`as`) — `file://` URIs of locations never scanned.
-- `active-chart` (`s`) — `'rings'` or `'treemap'`.
+The real schema layout (as installed by GNOME) is used: the
+`org.gnome.baobab` schema only has the children `preferences` and `ui`.
+Keys read and written (exact upstream names, types and defaults):
+- `org.gnome.baobab.preferences excluded-uris` (`as`, `[]`) — `file://`
+  URIs of locations never scanned.
+- `org.gnome.baobab.ui active-chart` (`s`, choices `rings` | `treemap`,
+  default `'rings'`).
+- `org.gnome.baobab.ui window-size` (`(ii)`, default `(960, 600)`) —
+  initial window size (minimum 360×300); written on close when not
+  maximized.
+- `org.gnome.baobab.ui is-maximized` (`b`, default `false`) — written on
+  close.
 
-If the schema is not installed, defaults are used in memory (via
-`helix_app_common::Prefs`). Window size / maximized state and the
-"cross file systems" toggle are stored in
-`$XDG_CONFIG_HOME/helix-disk-usage/state.json` because we are not confident
-of upstream key names for them.
+`data/org.gnome.baobab.gschema.xml` mirrors those schemas (install only
+where the GNOME schema is absent); a unit test checks it against the
+installed schema when present. If a schema is not installed, defaults are
+used in memory (via `helix_app_common::Prefs`).
+
+### App-private settings
+Only the "Cross file system boundaries" toggle has no upstream key; it is
+stored as `cross_filesystems` in
+`$XDG_CONFIG_HOME/helix-disk-usage/state.json` (older window-state fields in
+that file are ignored).
 
 ### Shortcuts
 | Key | Action |
@@ -140,7 +154,11 @@ of upstream key names for them.
 `helix-disk-usage [DIRECTORY]` — with a directory (path or `file://` URI),
 the scan starts immediately.
 
+## Decisions
+- Use the real `org.gnome.baobab` keys (installed schema:
+  `org.gnome.baobab.preferences` / `org.gnome.baobab.ui`, including
+  `window-size` and `is-maximized`) wherever they exist; app-private JSON
+  only for the rest.
+
 ## Open questions
-- Upstream window-state key names in `org.gnome.baobab` were not used
-  (not confident of them); window state is kept in a local JSON file.
-  Confirm whether to adopt the upstream `org.gnome.baobab.ui` keys.
+- None.

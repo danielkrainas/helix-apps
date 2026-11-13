@@ -3,6 +3,7 @@
 mod control;
 mod dialogs;
 mod format;
+mod helper_args;
 mod fs_view;
 mod history;
 mod model;

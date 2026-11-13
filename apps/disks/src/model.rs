@@ -318,7 +318,24 @@ impl Drive {
     }
 }
 
+/// Whether `mount_point` is a snap package mount (`/snap/<name>/<rev>`).
+pub fn is_snap_mount(mount_point: &str) -> bool {
+    mount_point.strip_prefix("/snap/").is_some_and(|rest| !rest.is_empty())
+}
+
+impl Drive {
+    /// A loop device backing a `/snap/*` mount (snapd's squashfs images).
+    pub fn is_snap_loop(&self) -> bool {
+        self.kind == DriveKind::Loop && self.all_volumes().iter().any(|v| v.mount_points().iter().any(|m| is_snap_mount(m)))
+    }
+}
+
 impl Model {
+    /// The model as shown: snap loop devices removed when `hide_snap_loops`.
+    pub fn visible(&self, hide_snap_loops: bool) -> Model {
+        Model { drives: self.drives.iter().filter(|d| !(hide_snap_loops && d.is_snap_loop())).cloned().collect() }
+    }
+
     pub fn find_drive(&self, key: &str) -> Option<&Drive> {
         self.drives.iter().find(|d| d.key == key)
     }
@@ -667,6 +684,7 @@ pub mod fixtures {
     pub const LOOP0: &str = "/org/freedesktop/UDisks2/block_devices/loop0";
     pub const LOOP1: &str = "/org/freedesktop/UDisks2/block_devices/loop1";
     pub const LOOP10: &str = "/org/freedesktop/UDisks2/block_devices/loop10";
+    pub const LOOP2: &str = "/org/freedesktop/UDisks2/block_devices/loop2";
 
     const MIB: u64 = 1024 * 1024;
     const GB: u64 = 1_000_000_000;
@@ -833,6 +851,10 @@ pub mod fixtures {
         s.insert(LOOP10.into(), lp("/dev/loop10", 50 * MIB, "/var/lib/snapd/snaps/b.snap"));
         s.insert(LOOP1.into(), lp("/dev/loop1", 100 * MIB, "/home/u/image.iso"));
         s.insert(LOOP0.into(), lp("/dev/loop0", 0, ""));
+        // A mounted snap: the loop device backs /snap/core22/1234.
+        let mut snapl = lp("/dev/loop2", 70 * MIB, "/var/lib/snapd/snaps/core22_1234.snap");
+        snapl.insert(iface::FILESYSTEM.into(), props([("MountPoints", Prop::ByteStrings(vec![b"/snap/core22/1234\0".to_vec()]))]));
+        s.insert(LOOP2.into(), snapl);
         s
     }
 }
@@ -848,7 +870,7 @@ mod tests {
     fn drives_listed_in_order() {
         let m = build(&snapshot());
         let keys: Vec<&str> = m.drives.iter().map(|d| d.key.as_str()).collect();
-        assert_eq!(keys, vec![DRIVE, USB, LOOP1, LOOP10]);
+        assert_eq!(keys, vec![DRIVE, USB, LOOP1, LOOP2, LOOP10]);
     }
 
     #[test]
@@ -930,6 +952,30 @@ mod tests {
         assert_eq!(l.volumes.len(), 1);
         assert_eq!(l.volumes[0].contents(), "SquashFS — Not Mounted");
         assert!(m.find_drive(LOOP0).is_none());
+    }
+
+    #[test]
+    fn snap_loop_devices() {
+        assert!(is_snap_mount("/snap/core22/1234"));
+        assert!(is_snap_mount("/snap/bare/5"));
+        assert!(!is_snap_mount("/snap"));
+        assert!(!is_snap_mount("/snap/"));
+        assert!(!is_snap_mount("/snapshots/x"));
+        assert!(!is_snap_mount("/mnt/snap/x"));
+
+        let m = build(&snapshot());
+        let snap = m.find_drive(LOOP2).unwrap();
+        assert!(snap.is_snap_loop());
+        // Unmounted squashfs from the snapd directory is not a snap mount.
+        assert!(!m.find_drive(LOOP10).unwrap().is_snap_loop());
+        assert!(!m.find_drive(LOOP1).unwrap().is_snap_loop());
+        assert!(m.drives.iter().filter(|d| d.kind != DriveKind::Loop).all(|d| !d.is_snap_loop()));
+
+        let hidden = m.visible(true);
+        assert!(hidden.find_drive(LOOP2).is_none());
+        assert!(hidden.find_drive(LOOP1).is_some());
+        assert_eq!(hidden.drives.len(), m.drives.len() - 1);
+        assert_eq!(m.visible(false), m);
     }
 
     #[test]

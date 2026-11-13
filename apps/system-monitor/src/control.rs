@@ -1,5 +1,7 @@
-//! Process control: signals and priority changes, limited to processes the
-//! current user owns. Privileged actions (polkit) are not implemented.
+//! Process control: signals and priority changes. Processes the current user
+//! owns are handled directly; other users' processes (and raising priority,
+//! which needs CAP_SYS_NICE) go through the privileged helper run with
+//! `pkexec` under the polkit action `org.helix.SystemMonitor.manage-processes`.
 
 use std::fmt;
 
@@ -23,6 +25,16 @@ impl Action {
 
     pub fn needs_confirmation(self) -> bool {
         matches!(self, Action::End | Action::Kill)
+    }
+
+    pub fn helper_signal(self) -> crate::helper_args::Signal {
+        use crate::helper_args::Signal;
+        match self {
+            Action::Stop => Signal::Stop,
+            Action::Continue => Signal::Cont,
+            Action::End => Signal::Term,
+            Action::Kill => Signal::Kill,
+        }
     }
 
     pub fn verb(self) -> &'static str {
@@ -104,6 +116,66 @@ pub fn renice(pid: i32, nice: i32) -> Result<(), Error> {
     }
 }
 
+/// Installed location of the helper; must match the
+/// `org.freedesktop.policykit.exec.path` annotation of the polkit action
+/// `org.helix.SystemMonitor.manage-processes`
+/// (`data/org.helix.SystemMonitor.policy`).
+pub const HELPER_PATH: &str = "/usr/libexec/helix-system-monitor/helix-system-monitor-helper";
+
+/// Helper path, overridable with `HELIX_SYSTEM_MONITOR_HELPER` for
+/// development installs (pkexec still requires a matching polkit policy).
+pub fn helper_path() -> std::path::PathBuf {
+    std::env::var_os("HELIX_SYSTEM_MONITOR_HELPER").map(Into::into).unwrap_or_else(|| HELPER_PATH.into())
+}
+
+/// Whether a failed direct attempt should be retried through the helper.
+pub fn needs_privileges(e: &Error) -> bool {
+    matches!(e, Error::NotOwner | Error::PermissionDenied)
+}
+
+/// `pkexec` argv for running `command` through the helper.
+pub fn pkexec_argv(helper: &std::path::Path, command: crate::helper_args::Command) -> Vec<std::ffi::OsString> {
+    let mut v: Vec<std::ffi::OsString> = vec!["pkexec".into(), helper.into()];
+    v.extend(command.to_args().into_iter().map(Into::into));
+    v
+}
+
+/// Maps the exit status of `pkexec helper …` to a result.
+/// pkexec itself exits 126 when the user dismissed the dialog or was not
+/// authorised and 127 when it could not run the helper; the helper's own
+/// codes are documented in `src/bin/helper.rs`.
+pub fn interpret_exit(code: Option<i32>, stderr: &str) -> Result<(), Error> {
+    match code {
+        Some(0) => Ok(()),
+        Some(126) => Err(Error::Other("Authorization was denied or cancelled".into())),
+        Some(127) => Err(Error::Other("Not authorized to control this process".into())),
+        Some(3) => Err(Error::NoSuchProcess),
+        _ => {
+            let msg = stderr.lines().rev().find(|l| !l.trim().is_empty()).unwrap_or("The privileged helper failed");
+            Err(Error::Other(msg.trim().trim_start_matches("helix-system-monitor-helper: ").to_string()))
+        }
+    }
+}
+
+/// Runs `command` through `pkexec` and the helper. Blocks until the user
+/// has answered the authentication dialog, so call it off the main thread.
+pub fn run_privileged(command: crate::helper_args::Command) -> Result<(), Error> {
+    let helper = helper_path();
+    if !helper.exists() {
+        return Err(Error::Other(format!(
+            "Administrator privileges are required, but the helper {} is not installed",
+            helper.display()
+        )));
+    }
+    let argv = pkexec_argv(&helper, command);
+    let out = std::process::Command::new(&argv[0])
+        .args(&argv[1..])
+        .stdin(std::process::Stdio::null())
+        .output()
+        .map_err(|e| Error::Other(format!("Cannot run pkexec: {e}")))?;
+    interpret_exit(out.status.code(), &String::from_utf8_lossy(&out.stderr))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -182,6 +254,26 @@ mod tests {
         if crate::sampler::current_uid() != 0 && owner(1) == Some(0) {
             assert_eq!(check_owner(1), Err(Error::NotOwner));
         }
+    }
+
+    #[test]
+    fn privileged_plumbing() {
+        use crate::helper_args::{Command, Signal};
+        assert!(needs_privileges(&Error::NotOwner));
+        assert!(needs_privileges(&Error::PermissionDenied));
+        assert!(!needs_privileges(&Error::NoSuchProcess));
+        assert_eq!(Action::End.helper_signal(), Signal::Term);
+        assert_eq!(Action::Continue.helper_signal().number(), Action::Continue.signal());
+        let argv = pkexec_argv(std::path::Path::new(HELPER_PATH), Command::Renice { nice: -5, pid: 42 });
+        let argv: Vec<_> = argv.iter().map(|s| s.to_str().unwrap()).collect();
+        assert_eq!(argv, ["pkexec", HELPER_PATH, "renice", "-5", "42"]);
+        assert_eq!(interpret_exit(Some(0), ""), Ok(()));
+        assert_eq!(interpret_exit(Some(3), ""), Err(Error::NoSuchProcess));
+        assert!(matches!(interpret_exit(Some(126), ""), Err(Error::Other(_))));
+        assert_eq!(
+            interpret_exit(Some(4), "helix-system-monitor-helper: cannot do it: EPERM\n"),
+            Err(Error::Other("cannot do it: EPERM".into()))
+        );
     }
 
     #[test]

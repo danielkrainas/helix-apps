@@ -97,6 +97,28 @@ applied client-side too.
   derived time first and the rest alphabetical. A *Copy* button copies the
   entry as `FIELD=value` lines.
 
+### Live updates
+- When the selected boot is the current boot, new journal entries are
+  followed while the view is open. Before the paged query starts, the
+  worker reads the cursor of the boot's newest entry
+  (`journalctl -o json --boot=… --reverse --lines=1`, unfiltered), then runs
+  `journalctl -o json --boot=… --follow --after-cursor=<cursor>
+  [--priority=…] [matches…]` (`--lines=0` instead of the cursor when the
+  journal is empty). Nothing written between the two is missed.
+- Followed entries go through the same category rule and search as the
+  paged query; entries are de-duplicated by `__CURSOR` against what is
+  already shown (the lazy paged query can reach new entries itself).
+- Newest-first view: new entries are inserted at the top. Oldest-first
+  view: they are appended at the end, but only once the paged query has
+  loaded everything (until then they are held back).
+- Scrolling: if the view is at the edge where new entries appear (the top
+  for newest-first, the bottom for oldest-first) it scrolls to show them;
+  otherwise its position is kept (the list stays on the rows in view).
+- An empty view switches from "No Events/No Results" to the list when a
+  matching entry arrives. Changing category, boot, search or sort restarts
+  both the query and the follow process; closing the window kills it.
+  Old boots are not followed.
+
 ### Search
 - Search bar with an entry and a field selector: *All Fields*, *Message*,
   *Process*, *Unit*.
@@ -130,9 +152,12 @@ export, `F5`/`Ctrl+R` refresh, `Ctrl+Q` quit, `Ctrl+W` close window.
 ### CLI
 `helix-logs` (no options other than `--help`).
 
+## Decisions
+- Live updates: follow the journal and append new entries to the current
+  view, respecting filters and keeping the scroll position unless at the
+  live edge (see "Live updates"). Category rules unchanged.
+
 ## Open questions
 - GNOME Logs' exact rule for the *Applications* and *System* categories is
   not published; the rules above are an approximation (user-owned
   identifiers vs. everything else that isn't kernel).
-- Live follow (`journalctl -f`) of new entries is not implemented; use
-  Refresh.

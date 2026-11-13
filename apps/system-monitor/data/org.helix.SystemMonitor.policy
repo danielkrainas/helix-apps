@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<!--
+  Installs to /usr/share/polkit-1/actions/org.helix.SystemMonitor.policy.
+  The helper binary must be installed at the exec.path below; the app runs
+  it as `pkexec <exec.path> [signal|renice] …` to stop, continue, end, kill
+  or change the priority of processes the user does not own.
+-->
+<policyconfig>
+  <vendor>Helix</vendor>
+  <icon_name>org.helix.SystemMonitor</icon_name>
+
+  <action id="org.helix.SystemMonitor.manage-processes">
+    <description>Manage other users’ processes</description>
+    <message>Privileges are required to control other users’ processes or to raise a process’s priority</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/libexec/helix-system-monitor/helix-system-monitor-helper</annotate>
+  </action>
+</policyconfig>

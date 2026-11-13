@@ -1214,6 +1214,7 @@ dependencies = [
  "libadwaita",
  "pangocairo",
  "serde",
+ "serde_json",
  "zbus",
 ]
 

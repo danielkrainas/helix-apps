@@ -3,6 +3,7 @@
 mod category;
 mod format;
 mod journal;
+mod live;
 mod search;
 mod ui;
 mod worker;

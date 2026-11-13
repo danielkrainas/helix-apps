@@ -16,24 +16,27 @@ use crate::mounts::{self, Location};
 use crate::scanner::{self, Kind, NodeId, Progress, ScanError, ScanOptions, ScanTree, ROOT};
 
 pub const APP_ID: &str = "org.helix.DiskUsage";
-const SCHEMA: &str = "org.gnome.baobab";
+/// `excluded-uris` lives here.
+const SCHEMA_PREFERENCES: &str = "org.gnome.baobab.preferences";
+/// `active-chart`, `window-size`, `is-maximized` live here.
+const SCHEMA_UI: &str = "org.gnome.baobab.ui";
+/// Upstream default of `org.gnome.baobab.ui window-size`.
+const DEFAULT_WINDOW_SIZE: (i32, i32) = (960, 600);
 const APP_NAME: &str = "Disk Usage Analyzer";
 const COMMENTS: &str = "Check folder sizes and available disk space";
 
-/// Window state and options kept outside GSettings (see SPEC.md).
-#[derive(Serialize, Deserialize, Clone)]
+/// Options that have no `org.gnome.baobab` key (see SPEC.md). Older
+/// versions also stored the window state here; those fields are ignored.
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 #[serde(default)]
 struct LocalState {
-    width: i32,
-    height: i32,
-    maximized: bool,
     cross_filesystems: bool,
 }
 
-impl Default for LocalState {
-    fn default() -> Self {
-        LocalState { width: 960, height: 640, maximized: false, cross_filesystems: false }
-    }
+/// Initial window size from `window-size`, with a sane minimum.
+fn initial_size((w, h): (i32, i32)) -> (i32, i32) {
+    let (dw, dh) = DEFAULT_WINDOW_SIZE;
+    (if w > 0 { w.max(360) } else { dw }, if h > 0 { h.max(300) } else { dh })
 }
 
 fn state_path() -> PathBuf {
@@ -76,7 +79,10 @@ enum Col {
 
 struct App {
     window: adw::ApplicationWindow,
+    /// `org.gnome.baobab.preferences`.
     prefs: Prefs,
+    /// `org.gnome.baobab.ui`.
+    ui_prefs: Prefs,
     local: RefCell<LocalState>,
     nav: adw::NavigationView,
     toasts: adw::ToastOverlay,
@@ -170,15 +176,17 @@ fn primary_menu() -> gtk::MenuButton {
 
 impl App {
     fn build(gapp: &adw::Application) -> Rc<App> {
-        let prefs = Prefs::new(SCHEMA);
+        let prefs = Prefs::new(SCHEMA_PREFERENCES);
+        let ui_prefs = Prefs::new(SCHEMA_UI);
         let local = LocalState::load();
+        let (width, height) = initial_size(ui_prefs.get("window-size", DEFAULT_WINDOW_SIZE));
         let window = adw::ApplicationWindow::builder()
             .application(gapp)
             .title(APP_NAME)
-            .default_width(local.width.max(360))
-            .default_height(local.height.max(300))
+            .default_width(width)
+            .default_height(height)
             .build();
-        if local.maximized {
+        if ui_prefs.get("is-maximized", false) {
             window.maximize();
         }
         let nav = adw::NavigationView::new();
@@ -286,10 +294,11 @@ impl App {
         results_tv.set_content(Some(&results_stack));
         let results_page = adw::NavigationPage::builder().title("Results").tag("results").child(&results_tv).build();
 
-        let chart_kind = ChartKind::from_nick(&prefs.get::<String>("active-chart", "rings".into()));
+        let chart_kind = ChartKind::from_nick(&ui_prefs.get_enum_nick("active-chart", "rings"));
         let app = Rc::new(App {
             window,
             prefs,
+            ui_prefs,
             local: RefCell::new(local),
             nav,
             toasts,
@@ -330,7 +339,7 @@ impl App {
             btn.connect_toggled(move |b| {
                 if b.is_active() {
                     a.chart_kind.set(kind);
-                    a.prefs.set("active-chart", kind.nick().to_string());
+                    a.ui_prefs.set_enum_nick("active-chart", kind.nick());
                     a.chart.queue_draw();
                 }
             });
@@ -371,15 +380,10 @@ impl App {
         });
         let a = app.clone();
         app.window.connect_close_request(move |w| {
-            let mut st = a.local.borrow_mut();
             if !w.is_maximized() {
-                let (width, height) = w.default_size();
-                st.width = width;
-                st.height = height;
+                a.ui_prefs.set("window-size", w.default_size());
             }
-            st.maximized = w.is_maximized();
-            st.save();
-            drop(st);
+            a.ui_prefs.set("is-maximized", w.is_maximized());
             a.cancel_scan();
             glib::Propagation::Proceed
         });
@@ -1181,4 +1185,65 @@ fn location_row(loc: &Location) -> gtk::ListBoxRow {
     let row = gtk::ListBoxRow::builder().child(&hbox).activatable(true).build();
     row.set_tooltip_text(Some(&format!("Scan {}", loc.path.display())));
     row
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn initial_window_size() {
+        assert_eq!(initial_size((960, 600)), (960, 600));
+        assert_eq!(initial_size((100, 100)), (360, 300));
+        assert_eq!(initial_size((0, -1)), DEFAULT_WINDOW_SIZE);
+        assert_eq!(initial_size((1920, 1080)), (1920, 1080));
+    }
+
+    #[test]
+    fn local_state_ignores_old_window_fields() {
+        let old = r#"{"width": 800, "height": 500, "maximized": true, "cross_filesystems": true}"#;
+        let st: LocalState = serde_json::from_str(old).unwrap();
+        assert_eq!(st, LocalState { cross_filesystems: true });
+        assert_eq!(serde_json::from_str::<LocalState>("{}").unwrap(), LocalState::default());
+    }
+
+    /// `(schema id, key name, type)` triples declared in a schema file.
+    fn keys(xml: &str) -> Vec<(String, String, String)> {
+        let attr = |tag: &str, name: &str| {
+            let pat = format!("{name}=\"");
+            tag.find(&pat).map(|i| tag[i + pat.len()..].split('"').next().unwrap_or("").to_string())
+        };
+        let mut out = Vec::new();
+        let mut schema = String::new();
+        for tag in xml.split('<').skip(1) {
+            if tag.starts_with("schema ") {
+                schema = attr(tag, "id").unwrap_or_default();
+            } else if tag.starts_with("key ") {
+                out.push((schema.clone(), attr(tag, "name").unwrap_or_default(), attr(tag, "type").unwrap_or_default()));
+            }
+        }
+        out
+    }
+
+    #[test]
+    fn shipped_schema_matches_keys_used() {
+        let ours = keys(include_str!("../data/org.gnome.baobab.gschema.xml"));
+        let used = [
+            (SCHEMA_PREFERENCES, "excluded-uris", "as"),
+            (SCHEMA_UI, "active-chart", "s"),
+            (SCHEMA_UI, "window-size", "(ii)"),
+            (SCHEMA_UI, "is-maximized", "b"),
+        ];
+        for (schema, key, ty) in used {
+            assert!(ours.contains(&(schema.into(), key.into(), ty.into())), "{schema} {key}");
+        }
+        // When the real schema is installed, every key we ship must exist
+        // there with the same type.
+        if let Ok(installed) = std::fs::read_to_string("/usr/share/glib-2.0/schemas/org.gnome.baobab.gschema.xml") {
+            let installed = keys(&installed);
+            for k in &ours {
+                assert!(installed.contains(k), "{k:?} not in installed org.gnome.baobab schema");
+            }
+        }
+    }
 }
