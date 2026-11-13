@@ -256,9 +256,6 @@ window (used by autostart; see Alarms). Plus GApplication's standard options
   serialization, with real station codes from the GWeather location
   database when it is installed (verified against the installed schema;
   the user's own values are empty).
-
-## Open questions
-- **Alarm weekday numbering**: Helix now writes GNOME's 0 = Monday … 6 =
-  Sunday numbering. This could not be confirmed from real data (the user has
-  no saved alarms); if a GNOME-written alarm shows up shifted by a day,
-  the numbering needs revisiting.
+- **Alarm weekday numbering**: 0 = Monday … 6 = Sunday is the working
+  assumption (the user's saved alarms are empty, so nothing to migrate).
+  Verify against real GNOME Clocks alarm data when available.

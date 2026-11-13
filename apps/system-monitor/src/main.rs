@@ -1,5 +1,6 @@
 //! Helix System Monitor.
 
+mod columns;
 mod control;
 mod dialogs;
 mod format;

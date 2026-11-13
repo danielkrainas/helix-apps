@@ -1,31 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- GNOME-compatible schema for the keys Helix System Monitor uses. Install
-     only when the schema is not already provided by the system. -->
-<schemalist>
+<!-- GNOME-compatible schema for the keys Helix System Monitor uses: key
+     names, types, ranges and defaults copied from the published
+     org.gnome.gnome-system-monitor schema. Install only when the schema is
+     not already provided by the system. -->
+<schemalist gettext-domain="gnome-system-monitor">
   <schema id="org.gnome.gnome-system-monitor" path="/org/gnome/gnome-system-monitor/">
     <key name="window-width" type="i"><default>700</default><summary>Main window width</summary></key>
     <key name="window-height" type="i"><default>500</default><summary>Main window height</summary></key>
-    <key name="maximized" type="b"><default>false</default><summary>Main window is maximized</summary></key>
-    <key name="solaris-mode" type="b"><default>true</default><summary>Divide CPU usage by CPU count</summary></key>
-    <key name="process-memory-in-iec" type="b"><default>false</default><summary>Show process memory in IEC units</summary></key>
-    <key name="kill-dialog" type="b"><default>true</default><summary>Show warning dialog when ending or killing processes</summary></key>
-    <key name="update-interval" type="i"><default>3000</default><summary>Time in milliseconds between updates of the process view</summary></key>
-    <key name="show-all-fs" type="b"><default>false</default><summary>Show all file systems</summary></key>
-    <key name="disks-interval" type="i"><default>5000</default><summary>Time in milliseconds between updates of the devices list</summary></key>
-    <key name="graph-data-points" type="i"><default>60</default><summary>Number of data points in resource graphs</summary></key>
+    <key name="maximized" type="b"><default>false</default><summary>Main Window should open maximized</summary></key>
+    <key name="solaris-mode" type="b">
+      <default>true</default><summary>Solaris mode for CPU percentage</summary>
+      <description>If TRUE, system-monitor operates in “Solaris mode” where a task’s CPU usage is divided by the total number of CPUs. Otherwise, it operates in “Irix mode”.</description>
+    </key>
+    <key name="process-memory-in-iec" type="b"><default>false</default><summary>Show memory in IEC</summary></key>
+    <key name="kill-dialog" type="b"><default>true</default><summary>Show warning dialog when killing processes</summary></key>
+    <key name="update-interval" type="i">
+      <range min="1000" max="100000"/>
+      <default>3000</default><summary>Time in milliseconds between updates of the process view</summary>
+    </key>
+    <key name="show-all-fs" type="b"><default>false</default><summary>Whether information about all file systems should be displayed</summary></key>
+    <key name="disks-interval" type="i">
+      <range min="1000" max="100000"/>
+      <default>5000</default><summary>Time in milliseconds between updates of the devices list</summary>
+    </key>
+    <key name="graph-data-points" type="i">
+      <range min="30" max="600"/>
+      <default>60</default><summary>Time amount of data points in the resource graphs</summary>
+    </key>
     <key name="show-whose-processes" type="s">
+      <default>'user'</default>
       <choices><choice value="all"/><choice value="user"/><choice value="active"/></choices>
-      <default>'user'</default><summary>Which processes to show</summary>
+      <summary>Determines which processes to show.</summary>
     </key>
     <key name="current-tab" type="s">
       <choices><choice value="processes"/><choice value="resources"/><choice value="disks"/></choices>
-      <default>'processes'</default><summary>Last shown tab</summary>
+      <default>'processes'</default><summary>Saves the currently viewed tab</summary>
     </key>
-    <key name="mem-color" type="s"><default>'#e01b24'</default><summary>Memory graph color</summary></key>
-    <key name="swap-color" type="s"><default>'#33d17a'</default><summary>Swap graph color</summary></key>
-    <key name="net-in-color" type="s"><default>'#3584e4'</default><summary>Network receive graph color</summary></key>
-    <key name="net-out-color" type="s"><default>'#e66100'</default><summary>Network send graph color</summary></key>
-    <key name="network-in-bits" type="b"><default>false</default><summary>Show network speed in bits</summary></key>
-    <key name="resources-memory-in-iec" type="b"><default>false</default><summary>Show memory in the resources view in IEC units</summary></key>
+    <key name="mem-color" type="s"><default>'#e01b24'</default><summary>Default graph memory color</summary></key>
+    <key name="swap-color" type="s"><default>'#33d17a'</default><summary>Default graph swap color</summary></key>
+    <key name="net-in-color" type="s"><default>'#3584e4'</default><summary>Default graph incoming network traffic color</summary></key>
+    <key name="net-out-color" type="s"><default>'#e66100'</default><summary>Default graph outgoing network traffic color</summary></key>
+    <key name="network-in-bits" type="b"><default>false</default><summary>Show network traffic in bits</summary></key>
+    <key name="resources-memory-in-iec" type="b"><default>false</default><summary>Show memory and swap in IEC</summary></key>
+    <child name="proctree" schema="org.gnome.gnome-system-monitor.proctree"/>
+  </schema>
+
+  <!-- Only the process columns Helix shows (GNOME column numbers). -->
+  <schema id="org.gnome.gnome-system-monitor.proctree" path="/org/gnome/gnome-system-monitor/proctree/">
+    <key name="sort-col" type="i"><default>0</default><summary>Process view sort column</summary></key>
+    <key name="columns-order" type="ai"><default>[ 0 ]</default><summary>Process view columns order</summary></key>
+    <key name="sort-order" type="i"><default>0</default><summary>Process view sort order</summary></key>
+    <key name="col-0-width" type="i"><default>225</default><summary>Width of process “Name” column</summary></key>
+    <key name="col-0-visible" type="b"><default>true</default><summary>Show process “Name” column on startup</summary></key>
+    <key name="col-1-width" type="i"><default>98</default><summary>Width of process “User” column</summary></key>
+    <key name="col-1-visible" type="b"><default>true</default><summary>Show process “User” column on startup</summary></key>
+    <key name="col-2-width" type="i"><default>37</default><summary>Width of process “Status” column</summary></key>
+    <key name="col-2-visible" type="b"><default>false</default><summary>Show process “Status” column on startup</summary></key>
+    <key name="col-8-width" type="i"><default>71</default><summary>Width of process “CPU %” column</summary></key>
+    <key name="col-8-visible" type="b"><default>true</default><summary>Show process “CPU %” column on startup</summary></key>
+    <key name="col-12-width" type="i"><default>60</default><summary>Width of process “ID” column</summary></key>
+    <key name="col-12-visible" type="b"><default>true</default><summary>Show process “ID” column on startup</summary></key>
+    <key name="col-14-width" type="i"><default>120</default><summary>Width of process “Command Line” column</summary></key>
+    <key name="col-14-visible" type="b"><default>false</default><summary>Show process “Command Line” column on startup</summary></key>
+    <key name="col-15-width" type="i"><default>80</default><summary>Width of process “Memory” column</summary></key>
+    <key name="col-15-visible" type="b"><default>true</default><summary>Show process “Memory” column on startup</summary></key>
+    <key name="col-26-width" type="i"><default>100</default><summary>Width of process “Priority” column</summary></key>
+    <key name="col-26-visible" type="b"><default>true</default><summary>Show process “Priority” column on startup</summary></key>
   </schema>
 </schemalist>

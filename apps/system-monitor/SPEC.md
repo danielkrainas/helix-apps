@@ -40,14 +40,32 @@ View processes, resources, and file systems.
 - A worker thread samples `/proc` and sends snapshots to the UI thread over a
   channel; the GTK main thread never reads `/proc` in bulk.
 - Processes and resource graphs refresh every `update-interval` ms
-  (clamped to 250–100000). File systems refresh every `disks-interval` ms.
+  (clamped to 1000–100000 ms, the schema's `<range>`). File systems refresh every `disks-interval` ms.
 - Changing the interval in Preferences takes effect immediately.
 
 ### Processes page
 - `GtkColumnView` with sortable columns: **Process Name**, **User**,
   **% CPU**, **Memory**, **ID**, **Priority**, **State**, **Command Line**.
-  Clicking a header sorts (toggle ascending/descending). Default sort: % CPU
-  descending.
+  Clicking a header sorts (toggle ascending/descending). Default sort:
+  Process Name ascending (schema default).
+- Column state persists in the child schema
+  `org.gnome.gnome-system-monitor.proctree` using GNOME's column numbers
+  (`src/columns.rs`, unit-tested): Name 0, User 1, State 2 ("Status"),
+  % CPU 8, ID 12, Command Line 14, Memory 15, Priority 26.
+  - Visibility: right-click any column header for a check list of columns
+    (the last visible column cannot be hidden) → `col-N-visible`. Defaults
+    from the schema: State and Command Line hidden.
+  - Width: a resized column's width is written to `col-N-width` 0.5 s after
+    resizing stops; stored widths are applied as the column's fixed width
+    (values ≤ 0 ignored, minimum 30 px).
+  - Sort: `sort-col` (column number) and `sort-order` (0 ascending,
+    1 descending). A stored column Helix does not show falls back to Name
+    ascending without overwriting the key.
+  - Order: headers can be dragged; `columns-order` is read as column numbers
+    in display order (unknown numbers ignored, missing columns appended).
+    When saving, slots of Helix columns are refilled in the new order and
+    numbers of GNOME-only columns keep their place.
+  - Keys are written only when the value actually changes.
 - Process data per row (from `/proc/<pid>/stat`, `status`, `cmdline`):
   - *Name*: `Name:` from status (the kernel comm, 15 chars) unless the first
     argv element's basename starts with it, in which case the longer basename
@@ -158,10 +176,20 @@ Keys read: `update-interval` (i), `disks-interval` (i),
 `process-memory-in-iec` (b), `resources-memory-in-iec` (b),
 `network-in-bits` (b), `mem-color`, `swap-color`, `net-in-color`,
 `net-out-color` (s), `window-width`, `window-height` (i), `maximized` (b).
+Ranges follow the real schema: `update-interval` and `disks-interval`
+1000–100000, `graph-data-points` 30–600; values are clamped before use and
+before writing.
 Keys written: `update-interval`, `disks-interval`, `solaris-mode`,
 `show-all-fs`, `show-whose-processes`, `current-tab`, `kill-dialog`,
 `process-memory-in-iec`, `resources-memory-in-iec`, `network-in-bits`,
 window state. Missing schema → in-memory defaults.
+
+Child schema `org.gnome.gnome-system-monitor.proctree`
+(path `/org/gnome/gnome-system-monitor/proctree/`), read and written:
+`sort-col` (i), `sort-order` (i), `columns-order` (ai), and
+`col-N-width` (i) / `col-N-visible` (b) for N in 0, 1, 2, 8, 12, 14, 15, 26.
+`data/org.gnome.gnome-system-monitor.gschema.xml` contains exactly these
+keys with the published names, types, ranges and defaults.
 
 ### Keyboard shortcuts
 `Ctrl+1/2/3` switch page, `Ctrl+F` search, `Ctrl+R` refresh,
@@ -177,8 +205,6 @@ window state. Missing schema → in-memory defaults.
 - Privileged process actions: ship polkit action
   `org.helix.SystemMonitor.manage-processes` plus a small helper binary
   invoked via `pkexec` (see "Privileged helper and polkit").
-
-## Open questions
-- Per-column visibility/width persistence (`org.gnome.gnome-system-monitor.proctree`
-  `col-N-*`) is not implemented; the GNOME column numbering is an internal
-  detail and not mapped yet.
+- Process-list column visibility, widths, order and sort state use the real
+  `org.gnome.gnome-system-monitor.proctree` keys (GNOME column numbers),
+  so settings carry over in both directions.
