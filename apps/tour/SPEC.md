@@ -83,6 +83,8 @@ Welcome and feature tour for new users.
 ### First-run state
 - Stored as JSON at `$XDG_CONFIG_HOME/helix-tour/state.json`:
   `{"completed": true, "outcome": "completed"|"skipped", "version": "0.1.0"}`.
+  `version` is the **last-seen version**: the helix-tour/Helix version that
+  was running when the tour last ended (any outcome).
 - Finishing the tour (Close on the last page) records `completed`;
   No Thanks, Escape, or closing the window at any point records `skipped`.
   Both set `completed: true`. Already-recorded state is never downgraded:
@@ -101,10 +103,37 @@ Welcome and feature tour for new users.
 
 ### Command line
 - `helix-tour` — always shows the tour.
-- `helix-tour --if-first-run` — exits immediately with status 0 if the
-  tour was already completed or skipped; otherwise shows it. Intended for
-  session autostart.
+- `helix-tour --autostart` — exits immediately with status 0 unless the
+  tour is due: it has **never run** (no `completed` state), or the
+  last-seen version's **major** number is lower than the current version's
+  major number (numeric comparison of the leading integer, optional `v`
+  prefix; `0.9` → `1.0` re-shows, `1.0` → `1.4` does not, a downgrade does
+  not). A missing/unparsable last-seen version counts as older; an
+  unparsable current version never re-shows a seen tour. When shown, the
+  outcome rewrites the last-seen version, so it shows once per major.
+  `--if-first-run` is accepted as an alias (earlier name).
 - `--help`, `--version`.
+
+### Autostart (first login)
+- The **session**, not the shell, launches the tour. The app ships an XDG
+  autostart entry `data/org.helix.Tour-autostart.desktop`
+  (`Exec=helix-tour --autostart`, `TryExec=helix-tour`, `NoDisplay=true`,
+  `OnlyShowIn=Helix;`), installed as
+  `$sysconfdir/xdg/autostart/org.helix.Tour.desktop` (normally
+  `/etc/xdg/autostart/`). The app decides itself whether to show anything,
+  so the entry runs on every login and costs one short-lived process.
+- What helix-desktop's session must do: just honour the XDG Autostart spec
+  (scan `$XDG_CONFIG_DIRS/autostart` and `$XDG_CONFIG_HOME/autostart`, user
+  entries override system ones by file name, respect `Hidden`,
+  `OnlyShowIn`/`NotShowIn` against `XDG_CURRENT_DESKTOP` (which contains
+  `Helix`), `TryExec`, `X-GNOME-Autostart-enabled`). No Tour-specific
+  logic, D-Bus call or GSettings key is needed in the shell or session.
+  Users can disable it by putting a `Hidden=true` copy in
+  `~/.config/autostart/org.helix.Tour.desktop`.
+- Note: helix-desktop's `helix-session` has an XDG autostart implementation
+  (`crates/helix-session/src/autostart.rs`), but it runs only when the
+  session config sets `[session] autostart = true` (default `false`);
+  packaging/session config must enable it for the tour to appear.
 
 ### GSettings
 None. GNOME Tour itself has no published schema; GNOME Shell's welcome
@@ -112,9 +141,8 @@ dialog uses `org.gnome.shell welcome-dialog-last-shown-version`, which is
 owned by the shell and is deliberately not written here. Completion lives
 in the state file above.
 
-## Open questions
-- Should Helix's shell/session autostart `helix-tour --if-first-run`
-  (an autostart `.desktop` file), or should the shell launch it like GNOME
-  Shell's welcome dialog does? Not shipped yet; the flag is ready either way.
-- Should the tour reappear after a major Helix upgrade? The state file
-  records the version so this can be added later; for now it shows once.
+## Decisions
+- Launch: the session (not the shell) starts the tour on first login via
+  an XDG autostart `.desktop` running `helix-tour --autostart`.
+- Re-show: the tour reappears at autostart when the stored last-seen
+  version's major number is lower than the current major.
