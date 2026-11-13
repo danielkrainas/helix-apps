@@ -98,8 +98,13 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
     }
 
     let whose = Whose::from_nick(&prefs.get("show-whose-processes", "user".to_string()));
-    let procs = ProcView::new(whose, sampler::current_uid(), DisplayOpts { iec: prefs.get("process-memory-in-iec", false) });
-    let points = prefs.get::<i32>("graph-data-points", 60).clamp(10, 600) as usize;
+    let procs = ProcView::new(
+        whose,
+        sampler::current_uid(),
+        DisplayOpts { iec: prefs.get("process-memory-in-iec", false) },
+        Prefs::new(crate::columns::PROCTREE_SCHEMA),
+    );
+    let points = prefs.get::<i32>("graph-data-points", 60).clamp(30, 600) as usize;
     let colors = Colors {
         mem: parse_color(&prefs.get("mem-color", "#e01b24".to_string()), "#e01b24"),
         swap: parse_color(&prefs.get("swap-color", "#33d17a".to_string()), "#33d17a"),
@@ -325,7 +330,7 @@ fn show_preferences(w: &Rc<Win>) {
     };
     let spin = |title: &str, key: &'static str, default: i32, on_change: U32Fn| {
         let ms = clamp_interval(w.prefs.get::<i32>(key, default).max(0) as u32);
-        let row = adw::SpinRow::with_range(0.25, 100.0, 0.25);
+        let row = adw::SpinRow::with_range(1.0, 100.0, 0.25);
         row.set_title(title);
         row.set_subtitle("Seconds");
         row.set_digits(2);

@@ -7,8 +7,10 @@ use std::cell::{Cell, Ref, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
+use crate::columns;
 use crate::format;
 use crate::model::{self, ProcColumn, Whose};
+use helix_app_common::Prefs;
 use crate::sampler::ProcessInfo;
 
 mod imp {
@@ -113,6 +115,7 @@ pub struct ProcView {
     pub opts: Cell<DisplayOpts>,
 }
 
+/// Title, row property, column, expand, xalign.
 const COLUMNS: [(&str, &str, ProcColumn, bool, f32); 8] = [
     ("Process Name", "name", ProcColumn::Name, true, 0.0),
     ("User", "user", ProcColumn::User, false, 0.0),
@@ -142,7 +145,9 @@ pub fn context_menu_model() -> gio::Menu {
 }
 
 impl ProcView {
-    pub fn new(whose: Whose, uid: u32, opts: DisplayOpts) -> Rc<Self> {
+    /// `tree` is the `org.gnome.gnome-system-monitor.proctree` settings
+    /// holding column visibility, widths, order and sort state.
+    pub fn new(whose: Whose, uid: u32, opts: DisplayOpts, tree: Prefs) -> Rc<Self> {
         let store = gio::ListStore::new::<ProcessObject>();
         let filter_state = Rc::new(RefCell::new(FilterState { whose, search: String::new(), uid }));
         let fs = filter_state.clone();
@@ -173,8 +178,11 @@ impl ProcView {
         }
 
         let mut sorters = Vec::new();
-        let mut cpu_column = None;
-        for (title, prop, col, expand, xalign) in COLUMNS {
+        let mut columns: Vec<(ProcColumn, gtk::ColumnViewColumn)> = Vec::new();
+        let header_menu = gio::Menu::new();
+        let order = columns::order_from_setting(&tree.get::<Vec<i32>>(columns::COLUMNS_ORDER_KEY, vec![0]));
+        for col in order {
+            let (title, prop, _, expand, xalign) = COLUMNS.into_iter().find(|c| c.2 == col).expect("column spec");
             let factory = gtk::SignalListItemFactory::new();
             let view_weak = view.downgrade();
             let menu_c = menu.clone();
@@ -225,19 +233,110 @@ impl ProcView {
                 model::compare(&a.info(), &b.info(), col).into()
             });
             let column = gtk::ColumnViewColumn::builder()
+                .id(col.id())
                 .title(title)
                 .factory(&factory)
                 .sorter(&sorter)
                 .resizable(true)
                 .expand(expand)
+                .visible(tree.get(&col.visible_key(), col.default_visible()))
+                .header_menu(&header_menu)
                 .build();
-            if col == ProcColumn::Cpu {
-                cpu_column = Some(column.clone());
+            if let Some(w) = columns::width_from_setting(tree.get(&col.width_key(), col.default_width())) {
+                column.set_fixed_width(w);
             }
             view.append_column(&column);
             sorters.push(sorter);
+            columns.push((col, column));
         }
-        view.sort_by_column(cpu_column.as_ref(), gtk::SortType::Descending);
+        // Header context menu: one check item per column, in default order.
+        let col_actions = gio::SimpleActionGroup::new();
+        for col in columns::ALL {
+            let (title, ..) = COLUMNS.into_iter().find(|c| c.2 == col).expect("column spec");
+            header_menu.append(Some(title), Some(&format!("proccol.{}", col.id())));
+        }
+        for (col, column) in &columns {
+            let action = gio::SimpleAction::new_stateful(col.id(), None, &column.is_visible().to_variant());
+            let column = column.clone();
+            let all: Vec<gtk::ColumnViewColumn> = columns.iter().map(|(_, c)| c.clone()).collect();
+            let tree = tree.clone();
+            let key = col.visible_key();
+            action.connect_change_state(move |a, v| {
+                let Some(visible) = v.and_then(|v| v.get::<bool>()) else { return };
+                // Never hide the last visible column.
+                if !visible && all.iter().filter(|c| c.is_visible()).count() <= 1 {
+                    return;
+                }
+                a.set_state(&visible.to_variant());
+                column.set_visible(visible);
+                tree.set(&key, visible);
+            });
+            col_actions.add_action(&action);
+        }
+        view.insert_action_group("proccol", Some(&col_actions));
+
+        // Widths: saved shortly after the user stops resizing.
+        for (col, column) in &columns {
+            let pending = Rc::new(Cell::new(false));
+            let tree = tree.clone();
+            let key = col.width_key();
+            let default = col.default_width();
+            column.connect_fixed_width_notify(move |c| {
+                if pending.replace(true) {
+                    return;
+                }
+                let (pending, tree, key, c) = (pending.clone(), tree.clone(), key.clone(), c.downgrade());
+                glib::timeout_add_local_once(std::time::Duration::from_millis(500), move || {
+                    pending.set(false);
+                    let Some(c) = c.upgrade() else { return };
+                    let w = c.fixed_width();
+                    if w > 0 && tree.get(&key, default) != w {
+                        tree.set(&key, w);
+                    }
+                });
+            });
+        }
+
+        let (sort_col, descending) = columns::sort_from_settings(
+            tree.get(columns::SORT_COL_KEY, columns::DEFAULT_SORT_COL),
+            tree.get(columns::SORT_ORDER_KEY, columns::DEFAULT_SORT_ORDER),
+        );
+        let sort_column = columns.iter().find(|(c, _)| *c == sort_col).map(|(_, c)| c.clone());
+        let sort_type = if descending { gtk::SortType::Descending } else { gtk::SortType::Ascending };
+        view.sort_by_column(sort_column.as_ref(), sort_type);
+        if let Some(sorter) = view.sorter().and_downcast::<gtk::ColumnViewSorter>() {
+            let tree = tree.clone();
+            sorter.connect_changed(move |s, _| {
+                let Some(col) = s.primary_sort_column().and_then(|c| c.id()).and_then(|id| column_by_id(&id)) else { return };
+                let (c, o) = columns::sort_to_settings(col, s.primary_sort_order() == gtk::SortType::Descending);
+                if tree.get(columns::SORT_COL_KEY, columns::DEFAULT_SORT_COL) != c {
+                    tree.set(columns::SORT_COL_KEY, c);
+                }
+                if tree.get(columns::SORT_ORDER_KEY, columns::DEFAULT_SORT_ORDER) != o {
+                    tree.set(columns::SORT_ORDER_KEY, o);
+                }
+            });
+        }
+
+        // Column order (the view is reorderable by dragging headers).
+        {
+            let tree = tree.clone();
+            view.columns().connect_items_changed(move |list, _, _, _| {
+                // A drag is a remove + insert; only save complete states.
+                if list.n_items() as usize != columns::ALL.len() {
+                    return;
+                }
+                let current: Vec<ProcColumn> = (0..list.n_items())
+                    .filter_map(|i| list.item(i).and_downcast::<gtk::ColumnViewColumn>())
+                    .filter_map(|c| c.id().and_then(|id| column_by_id(&id)))
+                    .collect();
+                let stored = tree.get::<Vec<i32>>(columns::COLUMNS_ORDER_KEY, vec![0]);
+                let merged = columns::merge_order(&stored, &current);
+                if merged != stored {
+                    tree.set(columns::COLUMNS_ORDER_KEY, merged);
+                }
+            });
+        }
 
         let scroller = gtk::ScrolledWindow::builder().child(&view).vexpand(true).build();
 
@@ -359,6 +458,10 @@ impl ProcView {
             }
         }
     }
+}
+
+fn column_by_id(id: &str) -> Option<ProcColumn> {
+    columns::ALL.into_iter().find(|c| c.id() == id)
 }
 
 fn gdk_button_secondary() -> u32 {

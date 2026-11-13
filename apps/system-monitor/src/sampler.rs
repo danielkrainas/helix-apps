@@ -144,8 +144,11 @@ impl Config {
     }
 }
 
+/// Clamps an update interval to the `<range min="1000" max="100000"/>` of the
+/// GNOME schema's `update-interval` and `disks-interval` keys, so values
+/// written back are always accepted by GSettings.
 pub fn clamp_interval(ms: u32) -> u32 {
-    ms.clamp(250, 100_000)
+    ms.clamp(1000, 100_000)
 }
 
 /// Stateful sampler: CPU percentages and rates are deltas between calls.
@@ -337,7 +340,8 @@ mod tests {
 
     #[test]
     fn interval_clamped() {
-        assert_eq!(clamp_interval(0), 250);
+        assert_eq!(clamp_interval(0), 1000);
+        assert_eq!(clamp_interval(250), 1000);
         assert_eq!(clamp_interval(3000), 3000);
         assert_eq!(clamp_interval(u32::MAX), 100_000);
     }
