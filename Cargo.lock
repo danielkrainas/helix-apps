@@ -1255,6 +1255,7 @@ dependencies = [
  "helix-app-common",
  "libadwaita",
  "lofty",
+ "roxmltree",
  "serde",
  "serde_json",
  "tempfile",

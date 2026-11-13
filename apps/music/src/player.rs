@@ -1,6 +1,7 @@
 //! GStreamer `playbin` wrapper with gapless track changes.
 
 use gst::prelude::*;
+use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -20,6 +21,49 @@ pub enum Event {
     DurationChanged,
 }
 
+/// Which ReplayGain value `rgvolume` applies.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ReplayGain {
+    #[default]
+    Off,
+    Track,
+    Album,
+}
+
+impl ReplayGain {
+    pub const ALL: [ReplayGain; 3] = [ReplayGain::Off, ReplayGain::Track, ReplayGain::Album];
+
+    pub fn nick(self) -> &'static str {
+        match self {
+            ReplayGain::Off => "off",
+            ReplayGain::Track => "track",
+            ReplayGain::Album => "album",
+        }
+    }
+
+    pub fn from_nick(s: &str) -> Option<ReplayGain> {
+        ReplayGain::ALL.into_iter().find(|m| m.nick() == s)
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            ReplayGain::Off => "Off",
+            ReplayGain::Track => "Track",
+            ReplayGain::Album => "Album",
+        }
+    }
+
+    /// From GNOME Music's boolean `replaygain` key plus Helix's remembered
+    /// track/album choice (GNOME's "on" means album gain).
+    pub fn from_settings(enabled: bool, mode: &str) -> ReplayGain {
+        match (enabled, ReplayGain::from_nick(mode)) {
+            (false, _) => ReplayGain::Off,
+            (true, Some(ReplayGain::Track)) => ReplayGain::Track,
+            (true, _) => ReplayGain::Album,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum State {
     Stopped,
@@ -32,6 +76,11 @@ pub struct Player {
     next_uri: Arc<Mutex<Option<String>>>,
     gapless: Arc<AtomicBool>,
     watch: Option<gst::bus::BusWatchGuard>,
+    /// `rgvolume` (when the plugin is available) and the mode it should use.
+    rgvolume: Option<gst::Element>,
+    replaygain: Cell<ReplayGain>,
+    /// Whether `rgvolume` is currently plugged in as playbin's audio filter.
+    filter_on: Cell<bool>,
 }
 
 impl Player {
@@ -59,7 +108,43 @@ impl Player {
                 None
             });
         }
-        Ok(Player { playbin, next_uri, gapless, watch: None })
+        let rgvolume = gst::ElementFactory::make("rgvolume").build().ok();
+        if rgvolume.is_none() {
+            eprintln!("helix-music: rgvolume not available; ReplayGain disabled");
+        }
+        Ok(Player {
+            playbin,
+            next_uri,
+            gapless,
+            watch: None,
+            rgvolume,
+            replaygain: Cell::new(ReplayGain::Off),
+            filter_on: Cell::new(false),
+        })
+    }
+
+    /// Selects the ReplayGain mode. Switching between track and album gain
+    /// takes effect immediately; turning it on or off (which changes the
+    /// pipeline) applies from the next track that is loaded.
+    pub fn set_replaygain(&self, mode: ReplayGain) {
+        self.replaygain.set(mode);
+        if let Some(rg) = &self.rgvolume {
+            rg.set_property("album-mode", mode == ReplayGain::Album);
+        }
+        let (_, cur, _) = self.playbin.state(gst::ClockTime::ZERO);
+        if cur <= gst::State::Ready {
+            self.apply_filter();
+        }
+    }
+
+    /// Plugs `rgvolume` in or out; only valid in the NULL/READY state.
+    fn apply_filter(&self) {
+        let Some(rg) = &self.rgvolume else { return };
+        let want = self.replaygain.get() != ReplayGain::Off;
+        if want != self.filter_on.get() {
+            self.playbin.set_property("audio-filter", if want { Some(rg) } else { None::<&gst::Element> });
+            self.filter_on.set(want);
+        }
     }
 
     /// Delivers events on the main context.
@@ -81,6 +166,7 @@ impl Player {
     pub fn load(&self, uri: &str, play: bool) {
         self.gapless.store(false, Ordering::SeqCst);
         let _ = self.playbin.set_state(gst::State::Ready);
+        self.apply_filter();
         self.playbin.set_property("uri", uri);
         let _ = self.playbin.set_state(if play { gst::State::Playing } else { gst::State::Paused });
     }
@@ -220,5 +306,56 @@ mod tests {
         }
         assert_eq!(starts, [false, true]);
         player.stop();
+    }
+
+    #[test]
+    fn replaygain_settings() {
+        assert_eq!(ReplayGain::from_settings(false, "track"), ReplayGain::Off);
+        assert_eq!(ReplayGain::from_settings(true, "track"), ReplayGain::Track);
+        assert_eq!(ReplayGain::from_settings(true, ""), ReplayGain::Album);
+        for m in ReplayGain::ALL {
+            assert_eq!(ReplayGain::from_nick(m.nick()), Some(m));
+        }
+    }
+
+    /// Plays a file through `rgvolume` into a fake sink.
+    #[test]
+    fn replaygain_filter_plays() {
+        let dir = tempfile::tempdir().unwrap();
+        let a = dir.path().join("a.wav");
+        write_wav(&a, 200);
+        let player = match Player::new(Some("fakesink sync=false")) {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("skipping: {e}");
+                return;
+            }
+        };
+        if player.rgvolume.is_none() {
+            eprintln!("skipping: no rgvolume");
+            return;
+        }
+        player.set_replaygain(ReplayGain::Track);
+        player.load(&crate::model::path_to_uri(&a), true);
+        assert!(player.filter_on.get());
+        let rg = player.rgvolume.as_ref().unwrap();
+        assert!(!rg.property::<bool>("album-mode"));
+        let bus = player.bus();
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            assert!(std::time::Instant::now() < deadline, "timed out");
+            let Some(msg) = bus.timed_pop(gst::ClockTime::from_mseconds(100)) else { continue };
+            match player.translate(&msg) {
+                Some(Event::Eos) => break,
+                Some(Event::Error(e)) => panic!("{e}"),
+                _ => {}
+            }
+        }
+        // Switching to album mode is live; turning it off waits for a reload.
+        player.set_replaygain(ReplayGain::Album);
+        assert!(rg.property::<bool>("album-mode"));
+        player.stop();
+        player.set_replaygain(ReplayGain::Off);
+        assert!(!player.filter_on.get());
     }
 }

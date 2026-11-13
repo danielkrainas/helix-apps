@@ -54,8 +54,10 @@ pub struct ScanReport {
     pub updated: usize,
     pub removed: usize,
     pub unchanged: usize,
-    /// Every directory visited (for file monitors).
+    /// Every directory visited by the built-in scanner (for file monitors).
     pub dirs: Vec<PathBuf>,
+    /// Tracks that came from the LocalSearch/Tracker index.
+    pub from_tracker: usize,
 }
 
 impl ScanReport {
@@ -106,15 +108,31 @@ fn walk(dir: &Path, files: &mut Vec<FileInfo>, dirs: &mut Vec<PathBuf>, depth: u
 
 /// Scans `roots`, reusing entries of `previous` whose mtime and size are
 /// unchanged. Covers are written to `covers` (if given).
+#[cfg(test)]
 pub fn scan(roots: &[PathBuf], previous: Vec<Track>, covers: Option<&Path>, now: i64) -> (Vec<Track>, ScanReport) {
+    scan_hybrid(roots, None, previous, covers, now)
+}
+
+/// Like [`scan`], but takes metadata from the Tracker index for the roots it
+/// covers; only the remaining roots are walked and read with `lofty`. Cover
+/// art is still extracted (and cached) by Helix, as Tracker does not store
+/// it; it is re-extracted only when a file's mtime or size changes.
+pub fn scan_hybrid(
+    roots: &[PathBuf],
+    tracker: Option<crate::tracker::TrackerLibrary>,
+    previous: Vec<Track>,
+    covers: Option<&Path>,
+    now: i64,
+) -> (Vec<Track>, ScanReport) {
     let mut files = Vec::new();
     let mut report = ScanReport::default();
     let mut roots: Vec<&PathBuf> = roots.iter().collect();
     roots.sort();
     roots.dedup();
+    let covered: &[PathBuf] = tracker.as_ref().map_or(&[], |t| &t.covered);
     for (i, root) in roots.iter().enumerate() {
-        // Skip roots nested in another root.
-        if roots[..i].iter().any(|r| root.starts_with(r)) {
+        // Skip roots nested in another root or indexed by Tracker.
+        if roots[..i].iter().any(|r| root.starts_with(r)) || covered.iter().any(|c| root.starts_with(c)) {
             continue;
         }
         walk(root, &mut files, &mut report.dirs, 0);
@@ -122,6 +140,41 @@ pub fn scan(roots: &[PathBuf], previous: Vec<Track>, covers: Option<&Path>, now:
     let mut old: HashMap<PathBuf, Track> = previous.into_iter().map(|t| (t.path.clone(), t)).collect();
     let mut folder_covers: HashMap<PathBuf, Option<String>> = HashMap::new();
     let mut out = Vec::with_capacity(files.len());
+    for mut t in tracker.map(|t| t.tracks).unwrap_or_default() {
+        // Symlinked or vanished files are skipped like in the walker.
+        let Ok(md) = std::fs::metadata(&t.path) else { continue };
+        if !md.is_file() {
+            continue;
+        }
+        t.mtime = mtime_of(&md);
+        t.size = md.len();
+        let prev = old.remove(&t.path);
+        let reusable = prev.as_ref().filter(|p| {
+            p.mtime == t.mtime
+                && p.size == t.size
+                && match (&p.cover, covers) {
+                    (Some(key), Some(dir)) => cover_path(dir, key).exists(),
+                    _ => true,
+                }
+        });
+        t.cover = match reusable {
+            Some(p) => p.cover.clone(),
+            None => covers.and_then(|dir| read_cover(&t.path, dir, &mut folder_covers)),
+        };
+        t.added = match &prev {
+            Some(p) => p.added,
+            None if t.added > 0 => t.added,
+            None => now,
+        };
+        match &prev {
+            Some(p) if *p == Track { from_tracker: true, ..t.clone() } => report.unchanged += 1,
+            Some(_) => report.updated += 1,
+            None => report.added += 1,
+        }
+        report.from_tracker += 1;
+        t.from_tracker = true;
+        out.push(t);
+    }
     for f in files {
         let prev = old.remove(&f.path);
         if let Some(p) = &prev {
@@ -129,7 +182,7 @@ pub fn scan(roots: &[PathBuf], previous: Vec<Track>, covers: Option<&Path>, now:
                 (Some(key), Some(dir)) => cover_path(dir, key).exists(),
                 _ => true,
             };
-            if p.mtime == f.mtime && p.size == f.size && cover_ok {
+            if p.mtime == f.mtime && p.size == f.size && cover_ok && !p.from_tracker {
                 report.unchanged += 1;
                 out.push(prev.unwrap());
                 continue;
@@ -200,15 +253,32 @@ pub fn read_track(path: &Path, covers: Option<&Path>, folder_covers: &mut HashMa
         t.title = v;
     }
     if let Some(dir) = covers {
-        t.cover = match embedded_cover {
-            Some(data) => store_cover(dir, &data),
-            None => {
-                let folder = path.parent().map(Path::to_path_buf).unwrap_or_default();
-                folder_covers.entry(folder.clone()).or_insert_with(|| folder_cover(&folder, dir)).clone()
-            }
-        };
+        t.cover = cover_key(path, embedded_cover, dir, folder_covers);
     }
     t
+}
+
+fn cover_key(
+    path: &Path,
+    embedded: Option<Vec<u8>>,
+    dir: &Path,
+    folder_covers: &mut HashMap<PathBuf, Option<String>>,
+) -> Option<String> {
+    match embedded {
+        Some(data) => store_cover(dir, &data),
+        None => {
+            let folder = path.parent().map(Path::to_path_buf).unwrap_or_default();
+            folder_covers.entry(folder.clone()).or_insert_with(|| folder_cover(&folder, dir)).clone()
+        }
+    }
+}
+
+/// Extracts only the cover of `path` (embedded picture, else folder image).
+pub fn read_cover(path: &Path, dir: &Path, folder_covers: &mut HashMap<PathBuf, Option<String>>) -> Option<String> {
+    let embedded = lofty::read_from_path(path).ok().and_then(|file| {
+        file.tags().iter().find_map(|tag| pick_picture(tag.pictures()).map(|p| p.data().to_vec()))
+    });
+    cover_key(path, embedded, dir, folder_covers)
 }
 
 fn pick_picture(pics: &[Picture]) -> Option<&Picture> {
@@ -425,6 +495,46 @@ mod tests {
         let idx = root.path().join("idx/library.json");
         save(&idx, &third).unwrap();
         assert_eq!(load(&idx), third);
+    }
+
+    #[test]
+    fn tracker_roots_are_not_walked() {
+        let indexed = tempfile::tempdir().unwrap();
+        let other = tempfile::tempdir().unwrap();
+        let covers = tempfile::tempdir().unwrap();
+        let a = indexed.path().join("a.wav");
+        write_tagged_wav(&a, &Tags { picture: Some(png(99)), ..tags("Local Title", 1) });
+        write_wav(&indexed.path().join("not-in-tracker.wav"), 100);
+        write_wav(&other.path().join("b.wav"), 100);
+        let from_tracker = || crate::tracker::TrackerLibrary {
+            covered: vec![indexed.path().to_path_buf()],
+            tracks: vec![
+                Track { path: a.clone(), title: "Tracker Title".into(), added: 42, ..Default::default() },
+                Track { path: indexed.path().join("gone.wav"), title: "gone".into(), ..Default::default() },
+            ],
+        };
+        let roots = [indexed.path().to_path_buf(), other.path().to_path_buf()];
+        let (tracks, r) = scan_hybrid(&roots, Some(from_tracker()), Vec::new(), Some(covers.path()), 7);
+        assert_eq!((r.added, r.from_tracker), (2, 1));
+        assert_eq!(r.dirs, [other.path().to_path_buf()]);
+        let t = tracks.iter().find(|t| t.path == a).unwrap();
+        assert_eq!(t.title, "Tracker Title", "Tracker metadata wins");
+        assert_eq!(t.added, 42);
+        assert!(t.cover.is_some() && t.mtime != 0 && t.size != 0);
+        assert!(tracks.iter().any(|t| t.path.ends_with("b.wav")));
+        assert!(!tracks.iter().any(|t| t.path.ends_with("not-in-tracker.wav")));
+
+        // Second pass: nothing changed.
+        let (again, r2) = scan_hybrid(&roots, Some(from_tracker()), tracks.clone(), Some(covers.path()), 8);
+        assert_eq!((r2.added, r2.updated, r2.removed, r2.unchanged), (0, 0, 0, 2));
+        assert_eq!(again, tracks);
+
+        // Tracker gone: everything is scanned locally, `added` survives.
+        let (local, r3) = scan_hybrid(&roots, None, again, Some(covers.path()), 9);
+        assert_eq!(local.len(), 3);
+        assert_eq!((r3.added, r3.updated, r3.unchanged), (1, 1, 1), "Tracker entries are re-read");
+        let la = local.iter().find(|t| t.path == a).unwrap();
+        assert_eq!((la.added, la.title.as_str(), la.from_tracker), (42, "Local Title", false));
     }
 
     #[test]

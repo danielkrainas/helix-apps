@@ -27,12 +27,37 @@ Music library and player.
 ## Behaviour (derived spec)
 
 ### Library indexing
-- Helix runs its **own indexer** instead of Tracker/LocalSearch (see Open
-  questions). Folders indexed: the XDG Music directory
-  (`G_USER_DIRECTORY_MUSIC`, i.e. `XDG_MUSIC_DIR` from `user-dirs.dirs`)
-  plus any extra folders the user adds in Preferences. If the XDG Music
-  directory is unset, `~/Music` is used.
-- The scan runs on a worker thread. Files are recognised by extension
+- Library folders: the XDG Music directory (`G_USER_DIRECTORY_MUSIC`, i.e.
+  `XDG_MUSIC_DIR` from `user-dirs.dirs`) plus any extra folders the user
+  adds in Preferences. If the XDG Music directory is unset, `~/Music` is
+  used. Only music below these folders is shown (like GNOME Music).
+- **LocalSearch/Tracker first**: when `org.freedesktop.Tracker3.Miner.Files`
+  owns a name on the session bus, the scan worker queries its SPARQL
+  endpoint (`org.freedesktop.Tracker3.Endpoint.Query` at
+  `/org/freedesktop/Tracker3/Endpoint`, via zbus; tinysparql is not linked).
+  Queries are read-only. The result rows arrive on a passed socket fd as
+  `i32 n_columns, i32 types[n], i32 end_offsets[n]`, then NUL-terminated
+  values (host byte order, type 0 = unbound); `tracker.rs` parses this.
+  - A library folder counts as *covered* when the index holds any
+    `nfo:FileDataObject` below it (`ASK`); for covered folders every
+    `nmm:MusicPiece` whose `nie:isStoredAs/nie:url` starts with the folder
+    URI is taken with `nie:title`, `nmm:artist/nmm:artistName`,
+    `nmm:musicAlbum` (`nie:title`, `nmm:albumArtist/nmm:artistName`),
+    `nfo:genre`, `nie:contentCreated` (year), `nmm:trackNumber`,
+    `nmm:musicAlbumDisc/nmm:setNumber`, `nfo:duration` (s) and the file's
+    `nrl:added` (initial "date added").
+  - Folders Tracker does not cover (e.g. extra folders outside its
+    configured locations) are scanned by the built-in scanner below.
+  - Tracker stores no cover art, so Helix still extracts covers (embedded
+    picture via `lofty`, else folder image) for indexed files, only when a
+    file's mtime/size changed.
+  - Changes: the worker subscribes to the endpoint's `GraphUpdated` signal
+    (classes containing MusicPiece/Playlist/Audio) and triggers the same
+    debounced (2 s) rescan as file monitors; file monitors are only set on
+    folders the built-in scanner walked.
+  - `HELIX_MUSIC_NO_TRACKER=1` disables Tracker. If the miner is absent or a
+    query fails, everything falls back to the built-in scanner.
+- **Built-in scanner** (fallback): runs on a worker thread. Files are recognised by extension
   (`mp3 flac ogg oga opus m4a mp4 aac wav wv ape aif aiff mpc spx`), hidden
   files and directories are skipped, symlinked directories are not followed.
 - Tags are read with the pure-Rust `lofty` crate: title, artist, album
@@ -53,6 +78,9 @@ Music library and player.
   for grouping, sorting and search anyway, ten thousand tracks serialise to
   a few MB that load in well under a second, writes are atomic
   (write temp + rename), and no C library has to be compiled in.
+- Index entries record whether their metadata came from Tracker; when a
+  folder falls back to the built-in scanner such entries are re-read with
+  `lofty` (date added is kept).
 - A rescan happens on start-up and from the menu (*Rescan Library*, F5).
   The library folders are also watched with `gio::FileMonitor` (top-level
   and sub-directories); changes trigger a debounced (2 s) incremental rescan.
@@ -134,6 +162,19 @@ Music library and player.
   moment. With nothing queued, Play (button, Space or MPRIS) plays the whole
   library in album order.
 - Volume uses a cubic curve (slider position → playbin linear volume).
+- **ReplayGain**: setting *Off / Track / Album*. When on, GStreamer's
+  `rgvolume` is plugged in as playbin's `audio-filter` and applies the
+  stream's ReplayGain tags (`album-mode` false for Track, true for Album;
+  `pre-amp` and `fallback-gain` 0 dB). Track ↔ Album switches apply
+  immediately; turning it on or off changes the pipeline and applies from
+  the next track loaded. Without the `rgvolume` plugin the setting is
+  ignored (logged).
+- **Notifications**: on every track change while playing (user start or
+  gapless advance), if the window is not focused, a `gio::Notification`
+  (id `now-playing`, low priority) shows the title, "Artist — Album", the
+  cached cover (or `audio-x-generic`) and a *Next* button (`app.next-track`);
+  clicking it activates the app (presents the window). Focusing the window
+  withdraws it. Can be turned off in Preferences.
 - While playing, the app **inhibits suspend** via
   `gtk::Application::inhibit(SUSPEND)` when the `inhibit-suspend` key is
   true.
@@ -152,24 +193,53 @@ Music library and player.
   ignored. `HELIX_MUSIC_NO_MPRIS=1` disables it.
 
 ### GSettings (`org.gnome.Music`)
-- `window-size` (`ai`), `window-maximized` (`b`): window geometry.
+The bundled `data/org.gnome.Music.gschema.xml` is identical to the published
+GNOME Music schema (all five keys are used).
+- `window-size` (`ai`, default `[768, 600]`), `window-maximized` (`b`,
+  default `true`): window geometry.
 - `repeat` (enum `none`/`song`/`all`/`shuffle`): GNOME Music folds shuffle
   into the repeat mode. Helix keeps repeat and shuffle independent; it writes
   `shuffle` when shuffle is on, otherwise the repeat mode, and keeps the
   repeat mode used together with shuffle in its own state file.
-- `inhibit-suspend` (`b`): inhibit suspend while playing (Preferences switch).
+- `inhibit-suspend` (`b`, default false): inhibit suspend while playing
+  (Preferences switch).
+- `replaygain` (`b`, default false): ReplayGain on/off. GNOME's key only
+  says "for albums"; Helix stores the Track/Album choice in its state file
+  and uses Album when the key is turned on elsewhere.
 
 ### Helix-only state
 `$XDG_CONFIG_HOME/helix-music/state.json`: extra library folders, volume,
-repeat mode while shuffling. Playlists: `$XDG_DATA_HOME/helix-music/playlists/
-*.m3u` (extended M3U, UTF-8, absolute paths, `#EXTINF:<secs>,<artist> -
-<title>` lines, `#PLAYLIST:<name>` for the display name).
+repeat mode while shuffling, `replaygain_mode` (`track`/`album`),
+`notifications` (bool).
+
+### Playlists
+- Stored in `$XDG_DATA_HOME/helix-music/playlists/`. **M3U is the primary
+  format**: new playlists are `*.m3u` (extended M3U, UTF-8, absolute paths,
+  `#EXTINF:<secs>,<artist> - <title>` lines, `#PLAYLIST:<name>` for the
+  display name). Reading accepts plain and extended M3U/M3U8, BOM, CRLF,
+  relative paths and `file://` URIs; other URIs are skipped.
+- **XSPF** (`*.xspf`) files in the folder are read and saved in XSPF
+  (`<title>`, `<trackList>/<track>` with `<location>` `file://` URIs,
+  `<title>`, `<creator>`, `<duration>` in ms); the first usable of several
+  `<location>`s is used; relative locations resolve against the file.
+- **Import Playlist…** (main menu): opens an M3U/M3U8/XSPF/PLS file via the
+  FileChooser portal and copies it into a new M3U playlist; entries not in
+  the library are dropped (a toast says so if none remain).
+- **Import Playlists from Search Index** (main menu): reads the playlist
+  files LocalSearch has indexed (`nmm:Playlist` with
+  `nfo:hasMediaFileListEntry` → `nfo:entryUrl`, ordered by
+  `nfo:listPosition`; read-only) and imports those with songs in the
+  library as M3U, skipping ones already present (same name and songs).
+- **Export Playlist…** (button on a user playlist page): saves a copy as
+  M3U or XSPF, chosen by the file extension (default `.m3u`).
 
 ### Preferences
 `AdwPreferencesDialog`: Library folders (the XDG Music folder, read-only,
 plus extra folders with remove buttons and "Add Folder…" via
-`gtk::FileDialog`, i.e. the FileChooser portal when available), and the
-*Inhibit Suspend* switch.
+`gtk::FileDialog`, i.e. the FileChooser portal when available; the
+description mentions when LocalSearch's index is used), and Playback:
+*Inhibit Suspend* switch, *ReplayGain* combo (Off/Track/Album),
+*Notifications* switch.
 
 ### Keyboard shortcuts
 | Keys | Action |
@@ -193,20 +263,28 @@ closes the window the same way (saving window state).
 - `helix-music` — open the app.
 - `helix-music --scan DIR…` — index the given folders into a temporary
   in-memory index and print `artist — album — disc.track — title` lines
-  (debugging aid; no files written).
+  (debugging aid; no files written). Uses the Tracker index for covered
+  folders like the app does, and reports how many tracks came from it.
+
+## Decisions
+- **Library source**: use LocalSearch/Tracker over D-Bus (zbus SPARQL
+  queries, read-only) when the miner runs; fall back to the built-in
+  scanner for folders it does not cover or when it is absent.
+- **GSettings**: aligned with the real `org.gnome.Music` schema — defaults
+  `window-size [768, 600]`, `window-maximized true`; `replaygain` (b) added;
+  there is no `notifications` key (the toggle is Helix state).
+- **Playlists**: M3U primary (read/write, unit-tested); XSPF read/write;
+  PLS import; LocalSearch-indexed playlist files can be imported.
+- **ReplayGain**: `rgvolume` with Off/Track/Album.
+- **Notifications**: `gio::Notification` on track change when the window is
+  not focused.
 
 ## Open questions
-- **LocalSearch/Tracker**: should Helix query LocalSearch/Tracker over D-Bus
-  (SPARQL via `org.freedesktop.Tracker3.Endpoint`) instead of running its own
-  indexer? The own indexer works without the daemon and is what is
-  implemented now; using Tracker would share the index with other apps.
-- **GSettings key list**: the `org.gnome.Music` schema is not installed on
-  this system, so the keys above (`window-size`, `window-maximized`,
-  `repeat`, `inhibit-suspend`) were written from memory of the published
-  schema. Please confirm types/nicks; `replaygain` and `notifications` are
-  not used.
-- **Playlist format**: M3U was chosen (simple, widely supported). GNOME Music
-  stores playlists in Tracker; is there a need to import those or to use
-  XSPF instead?
-- **ReplayGain** (`rgvolume`) and desktop notifications for track changes
-  are not implemented.
+- **GNOME Music's own playlists/favourites**: GNOME Music keeps user
+  playlists in a private Tracker database of its own, not in the
+  LocalSearch miner the session bus exposes (that one only lists playlist
+  *files*, which can be imported). Reading the private database would need
+  tinysparql (not installed) or spawning `tracker3 endpoint --database …`
+  as a D-Bus endpoint; no such database exists on this machine to verify
+  against, so it is not implemented. Should Helix try the `tracker3
+  endpoint` route when the database is present?
