@@ -2,6 +2,10 @@
 
 Drop-in replacement for Simple Scan.
 
+- **App ID**: `org.helix.DocumentScanner`
+- **Binary**: `helix-document-scanner`
+- **Crate**: `apps/document-scanner`
+
 ## Purpose
 Scan documents and photos.
 
@@ -16,3 +20,171 @@ Scan documents and photos.
 
 ## Non-goals
 - Advanced image correction on day one.
+
+---
+
+## Behaviour (derived spec)
+
+### Scanner access (SANE)
+- SANE (`libsane.so.1`, API 1.0) is used through small local FFI bindings
+  (`sane_init`, `get_devices`, `open`, `get_option_descriptor`,
+  `control_option`, `start`, `get_parameters`, `read`, `cancel`, `close`,
+  `exit`). No Rust SANE crate is used.
+- All SANE calls run on one **worker thread** that owns `sane_init` for the
+  process lifetime. The UI sends commands (refresh devices, open device,
+  scan, shut down) over a channel; the worker sends events back (device
+  list, device capabilities, scan progress, finished page, errors, scan
+  finished). Cancelling sets a shared flag that the worker checks between
+  `sane_read` calls and then calls `sane_cancel`.
+- Device enumeration happens on start-up and on *Refresh* (network devices
+  included). Enumeration only reads; it never changes device settings.
+- When a device is selected the worker opens it and reports its
+  capabilities: available sources (`source` option), colour modes (`mode`),
+  and resolutions (`resolution` word list, or a ladder of common values
+  75/100/150/200/300/400/600/1200 inside a range constraint).
+- Option mapping when scanning (only options that exist, are active and
+  settable are touched):
+  - `source`: the user's chosen source; *Automatic* picks a flatbed-like
+    source for single/flatbed scans and a feeder source for feeder scans
+    (duplex feeder when `page-side` is `both`, a back-side feeder for
+    `back`, otherwise the plain/front feeder).
+  - `mode`: colour → `Color`/`Colour`/`RGB`…, grayscale → `Gray`/
+    `Grayscale`…, black & white → `Lineart`/`Binary`/`Black & White`…
+    (case-insensitive; falls back lineart → gray → colour).
+  - `resolution` (INT or FIXED): nearest supported value to the requested
+    DPI.
+  - Scan area `tl-x/tl-y/br-x/br-y` (mm): automatic paper size scans the
+    whole area; a fixed paper size scans from the top-left corner, clamped.
+  - `brightness` / `contrast`: only when the setting is non-zero, mapped
+    linearly from −100…100 onto the option's range around its midpoint.
+- Frames: grey and RGB, plus three-pass R/G/B frames; depths 1 (lineart,
+  1 = black), 8 and 16 (reduced to 8 bits). Unknown line counts (`lines`
+  = −1) are handled by reading to EOF.
+- Scan types:
+  - **Single Page** (`Ctrl+1`): one page.
+  - **All Pages From Feeder** (`Ctrl+F`): pages until the backend reports
+    *no documents*.
+  - **Multiple Pages From Flatbed** (`Ctrl+M`): repeats, waiting
+    `page-delay` ms between pages, until stopped.
+  - **Stop** (`Escape`) cancels.
+- Each page records its resolution and whether it was scanned as text or
+  photo.
+
+### Window
+- `AdwApplicationWindow` with header bar:
+  - start: **Scan** button with a menu (scan types, *Text*/*Image* document
+    type radio, Preferences) and a **Stop** button while scanning;
+  - title: "Document Scanner", subtitle = selected scanner;
+  - end: primary menu (New Document, Reorder Pages, Copy Page, Print,
+    Preferences, Keyboard Shortcuts, About) and a **Save** button.
+- Content states:
+  - *Searching for scanners…* (spinner) while enumerating;
+  - *No Scanners Detected* with a Refresh button;
+  - *Ready to Scan* with a scanner drop-down (when the document is empty);
+  - the **document**: a page list (thumbnails with page numbers) on the
+    left and the selected page large on the right.
+- A progress bar is shown at the top of the content while scanning; errors
+  appear as toasts (and a dialog for device errors).
+- Bottom action bar for the selected page: Rotate Left (`[`), Rotate Right
+  (`]`), Crop menu, Move Left (`Ctrl+Page Up`), Move Right
+  (`Ctrl+Page Down`), Delete (`Delete`). The page view has the same
+  actions in its right-click menu.
+
+### Document and pages
+- Pages are kept in memory as 8-bit grey or RGB pixels.
+- **Rotate** left/right rotates the pixels 90° (the crop rectangle rotates
+  with the page).
+- **Crop** is non-destructive: the crop menu offers *None*, *Custom*,
+  *A4*, *A5*, *A6*, *US Letter*, *US Legal*, *4×6* and *Rotate Crop*
+  (swap orientation). Preset sizes are computed from the page resolution
+  and centred, clamped to the page. The crop rectangle is drawn on the page
+  view (darkened outside) and can be moved by dragging inside it and resized
+  by dragging its edges/corners. The crop is applied when saving, printing
+  and copying.
+- **Reorder** dialog: *Combine sides* (interleave first half with second
+  half), *Combine sides (reverse)* (interleave with the second half
+  reversed), *Reverse*, *Flip odd pages upside down*.
+- **Delete** removes the selected page; **New Document** (`Ctrl+N`) clears
+  all pages (asking first if unsaved).
+- Closing the window with unsaved pages asks *Save / Discard / Cancel*.
+
+### Saving
+- **Save** (`Ctrl+S`) opens the file chooser (portal-backed `GtkFileDialog`)
+  in `save-directory` (default: XDG Documents) with the name
+  "Scanned Document.<ext>" where the extension follows `save-format`.
+  The chosen extension decides the format (`.pdf`, `.png`, `.jpg`/`.jpeg`);
+  no/unknown extension → `save-format`, and the extension is appended.
+- **PDF**: a pure-Rust writer (no PDF crate). One page per scanned page,
+  media box from pixel size and DPI; photo pages are embedded as JPEG
+  (`DCTDecode`, quality `jpeg-quality`), text pages lossless (`FlateDecode`).
+- **PNG / JPEG**: a single page is saved as the chosen name; several pages
+  are saved as `name-1.ext`, `name-2.ext`, … JPEG records the DPI.
+- Encoding runs off the main thread. After saving, `save-directory` and
+  `save-format` are updated and the document is marked clean.
+- **Copy Page** (`Ctrl+C`) copies the selected (cropped) page to the
+  clipboard as an image; **Print** (`Ctrl+P`) prints all pages, each scaled
+  to fit the printable area.
+
+### Preferences (AdwPreferencesDialog, `Ctrl+,`)
+- Scanning: Scanner, Source (Automatic + device sources), Color Mode
+  (Automatic, Color, Grayscale, Black & White), Scan Sides (front/back/
+  both), Page Size (Automatic, A6, A5, A4, Letter, Legal, 4×6), Text
+  Resolution, Image Resolution, Brightness, Contrast, Delay between pages.
+- Saving: JPEG quality.
+- *Automatic* colour mode means grayscale for Text and colour for Image
+  documents.
+
+### GSettings (`org.gnome.SimpleScan`)
+Keys read and written (others ignored; the bundled schema contains only
+these, copied with the original names, types and defaults):
+`selected-device` (s), `document-type` (s: `text|photo`), `paper-width`
+(i, tenths of mm, 0 = automatic), `paper-height` (i), `brightness` (i),
+`contrast` (i), `text-dpi` (i, 150), `photo-dpi` (i, 300), `page-side`
+(enum `front|back|both`), `save-directory` (s), `save-format` (s, MIME),
+`jpeg-quality` (i 0–100, 75), `page-delay` (i ms 0–15000, 1000).
+The post-processing keys are not used. `save-directory` is written as a
+`file://` URI; a plain path is accepted when read. The bundled
+`data/org.gnome.SimpleScan.gschema.xml` installs to
+`/usr/share/glib-2.0/schemas/` only where Simple Scan's own schema is not
+installed. `data/org.helix.DocumentScanner.desktop` installs to
+`/usr/share/applications/`.
+
+## Open questions
+- Simple Scan's post-processing script keys (`postproc-*`) and the
+  "Email" action are not implemented; say if they are wanted.
+- `save-directory` is written as a URI; if GNOME Simple Scan turns out to
+  store a plain path, switch to writing paths (reading handles both).
+
+### Helix-private settings
+`$XDG_CONFIG_HOME/helix-document-scanner/settings.json`:
+`source` (string, empty = automatic) and `color-mode`
+(`auto|color|gray|lineart`).
+
+### Shortcuts
+| Keys | Action |
+|---|---|
+| `Ctrl+1` | Scan single page |
+| `Ctrl+F` | Scan all pages from feeder |
+| `Ctrl+M` | Scan multiple pages from flatbed |
+| `Escape` | Stop scan |
+| `Ctrl+N` | New document |
+| `Ctrl+S` | Save |
+| `Ctrl+C` | Copy page |
+| `Ctrl+P` | Print |
+| `[` / `]` | Rotate page left / right |
+| `Ctrl+Page Up` / `Ctrl+Page Down` | Move page left / right |
+| `Delete` | Delete page |
+| `Ctrl+,` | Preferences |
+| `Ctrl+?` | Keyboard shortcuts |
+| `Ctrl+Q` / `Ctrl+W` | Quit / close window |
+
+### Command line
+`helix-document-scanner [OPTIONS] [DEVICE]`
+- `DEVICE`: SANE device name to select on start-up.
+- `--list-devices`: print `name<TAB>vendor model (type)` per device and
+  exit (no window).
+- `-d, --debug`: log SANE activity to stderr.
+- `-v, --version`, `-h, --help`.
+
+The SANE configuration follows the usual environment (`SANE_CONFIG_DIR`),
+which is how tests restrict SANE to the virtual `test` backend.
