@@ -11,8 +11,14 @@
 //! | `origin` | `scheme://host[:port]` of the page with the login form |
 //! | `target-origin` | origin the form submits to |
 //! | `username` | the user name (may be empty) |
+//!
+//! Secrets travel encrypted (`dh-ietf1024-sha256-aes128-cbc-pkcs7`, see
+//! `sscrypto`) unless the service rejects that algorithm, in which case the
+//! client falls back to `plain`.
 
+use crate::sscrypto;
 use std::collections::HashMap;
+use zeroize::{Zeroize, Zeroizing};
 use zbus::blocking::{Connection, Proxy};
 use zbus::zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Value};
 
@@ -81,6 +87,9 @@ pub enum Error {
     /// The user dismissed an unlock/confirmation prompt.
     Dismissed,
     Unavailable,
+    /// The service sent a secret that does not decrypt, or a bad session
+    /// key.
+    Crypto,
 }
 
 impl From<zbus::Error> for Error {
@@ -101,6 +110,7 @@ impl std::fmt::Display for Error {
             Error::Bus(e) => write!(f, "Secret Service error: {e}"),
             Error::Dismissed => write!(f, "the keyring prompt was dismissed"),
             Error::Unavailable => write!(f, "no Secret Service collection is available"),
+            Error::Crypto => write!(f, "could not set up or use the encrypted Secret Service session"),
         }
     }
 }
@@ -112,6 +122,14 @@ type Secret = (OwnedObjectPath, Vec<u8>, Vec<u8>, String);
 pub struct Client {
     conn: Connection,
     session: OwnedObjectPath,
+    /// AES key of an encrypted session; `None` for `plain`.
+    key: Option<sscrypto::Key>,
+}
+
+/// Whether an `OpenSession` failure means "algorithm not supported" (as
+/// opposed to the service or bus being unavailable).
+fn is_rejection(e: &zbus::Error) -> bool {
+    matches!(e, zbus::Error::MethodError(..) | zbus::Error::FDO(_))
 }
 
 fn is_none_path(p: &ObjectPath<'_>) -> bool {
@@ -124,13 +142,64 @@ impl Client {
         Client::new(Connection::session()?)
     }
 
-    /// Opens a "plain" transfer session on `conn` (the session bus, or a
-    /// private connection in tests).
+    /// Opens a transfer session on `conn` (the session bus, or a private
+    /// connection in tests): encrypted, or `plain` if the service rejects
+    /// the encrypted algorithm.
     pub fn new(conn: Connection) -> Result<Client> {
         let svc = Proxy::new(&conn, BUS, SERVICE_PATH, SERVICE)?;
-        let (_out, session): (OwnedValue, OwnedObjectPath) =
-            svc.call("OpenSession", &("plain", Value::from("")))?;
-        Ok(Client { conn, session })
+        let pair = sscrypto::KeyPair::generate();
+        let reply: zbus::Result<(OwnedValue, OwnedObjectPath)> = svc.call(
+            "OpenSession",
+            &(sscrypto::ALGORITHM, Value::from(pair.public().to_vec())),
+        );
+        match reply {
+            Ok((output, session)) => {
+                let key = Vec::<u8>::try_from(output)
+                    .ok()
+                    .and_then(|peer| pair.derive(&peer));
+                let client = Client { conn, session, key };
+                if client.key.is_none() {
+                    // Dropping closes the half-open session.
+                    return Err(Error::Crypto);
+                }
+                Ok(client)
+            }
+            Err(e) if is_rejection(&e) => {
+                eprintln!(
+                    "helix-web: Secret Service rejected {} ({e}); using plain transfer",
+                    sscrypto::ALGORITHM
+                );
+                let (_out, session): (OwnedValue, OwnedObjectPath) =
+                    svc.call("OpenSession", &("plain", Value::from("")))?;
+                Ok(Client { conn, session, key: None })
+            }
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    /// Whether secrets travel encrypted in this session.
+    #[cfg(test)]
+    pub fn encrypted(&self) -> bool {
+        self.key.is_some()
+    }
+
+    /// (parameters, value) for a secret sent to the service.
+    fn encode(&self, plain: &[u8]) -> (Vec<u8>, Zeroizing<Vec<u8>>) {
+        match &self.key {
+            Some(key) => {
+                let (iv, ct) = sscrypto::encrypt(key, plain);
+                (iv, Zeroizing::new(ct))
+            }
+            None => (Vec::new(), Zeroizing::new(plain.to_vec())),
+        }
+    }
+
+    /// The plaintext of a secret received from the service.
+    fn decode(&self, params: &[u8], value: &[u8]) -> Result<Zeroizing<Vec<u8>>> {
+        match &self.key {
+            Some(key) => sscrypto::decrypt(key, params, value).ok_or(Error::Crypto),
+            None => Ok(Zeroizing::new(value.to_vec())),
+        }
     }
 
     fn proxy<'a>(&'a self, path: &'a str, iface: &'a str) -> Result<Proxy<'a>> {
@@ -188,11 +257,26 @@ impl Client {
             return Ok(Vec::new());
         }
         let svc = self.proxy(SERVICE_PATH, SERVICE)?;
-        let secrets: HashMap<OwnedObjectPath, Secret> =
+        let mut secrets: HashMap<OwnedObjectPath, Secret> =
             svc.call("GetSecrets", &(&paths, &self.session))?;
+        let result = self.collect(&paths, &secrets);
+        // In a plain session the values are the passwords themselves.
+        for (_, _, value, _) in secrets.values_mut() {
+            value.zeroize();
+        }
+        let mut out = result?;
+        out.sort_by(|a, b| a.origin.cmp(&b.origin).then(a.username.cmp(&b.username)));
+        Ok(out)
+    }
+
+    fn collect(
+        &self,
+        paths: &[OwnedObjectPath],
+        secrets: &HashMap<OwnedObjectPath, Secret>,
+    ) -> Result<Vec<Login>> {
         let mut out = Vec::new();
-        for path in &paths {
-            let Some((_, _, value, _)) = secrets.get(path) else {
+        for path in paths {
+            let Some((_, params, value, _)) = secrets.get(path) else {
                 continue;
             };
             let item = self.proxy(path.as_str(), ITEM)?;
@@ -200,14 +284,14 @@ impl Client {
             if a.get(ATTR_SCHEMA).map(String::as_str) != Some(SCHEMA) {
                 continue;
             }
+            let plain = self.decode(params, value)?;
             out.push(Login {
                 origin: a.get(ATTR_ORIGIN).cloned().unwrap_or_default(),
                 target_origin: a.get(ATTR_TARGET).cloned().unwrap_or_default(),
                 username: a.get(ATTR_USERNAME).cloned().unwrap_or_default(),
-                password: String::from_utf8_lossy(value).into_owned(),
+                password: String::from_utf8_lossy(&plain).into_owned(),
             });
         }
-        out.sort_by(|a, b| a.origin.cmp(&b.origin).then(a.username.cmp(&b.username)));
         Ok(out)
     }
 
@@ -253,12 +337,8 @@ impl Client {
                 Value::from(login.attributes()),
             ),
         ]);
-        let secret = (
-            &self.session,
-            Vec::<u8>::new(),
-            login.password.as_bytes().to_vec(),
-            CONTENT_TYPE,
-        );
+        let (params, value) = self.encode(login.password.as_bytes());
+        let secret = (&self.session, params, &value[..], CONTENT_TYPE);
         let (_item, prompt): (OwnedObjectPath, OwnedObjectPath) =
             col.call("CreateItem", &(props, secret, true))?;
         self.prompt(&prompt)
@@ -302,6 +382,35 @@ pub mod mock {
         pub locked: bool,
         pub prompts_shown: u32,
         pub dismiss_prompts: bool,
+        /// Answer `OpenSession` for the encrypted algorithm with
+        /// `NotSupported`, like a service that only speaks `plain`.
+        pub reject_dh: bool,
+        /// Algorithm of the most recently opened session.
+        pub algorithm: String,
+        /// Session key of the encrypted session (the mock has one session
+        /// at a time).
+        pub key: Option<[u8; 16]>,
+        /// Every secret value as it crossed the connection, both ways.
+        pub wire: Vec<Vec<u8>>,
+    }
+
+    impl Store {
+        fn send(&mut self, plain: &[u8]) -> (Vec<u8>, Vec<u8>) {
+            let (iv, value) = match self.key {
+                Some(k) => sscrypto::encrypt(&Zeroizing::new(k), plain),
+                None => (Vec::new(), plain.to_vec()),
+            };
+            self.wire.push(value.clone());
+            (iv, value)
+        }
+
+        fn receive(&mut self, params: &[u8], value: &[u8]) -> Option<Vec<u8>> {
+            self.wire.push(value.to_vec());
+            match self.key {
+                Some(k) => sscrypto::decrypt(&Zeroizing::new(k), params, value).map(|p| p.to_vec()),
+                None => Some(value.to_vec()),
+            }
+        }
     }
 
     pub type Shared = Arc<Mutex<Store>>;
@@ -323,12 +432,28 @@ pub mod mock {
 
     #[interface(name = "org.freedesktop.Secret.Service")]
     impl Service {
-        fn open_session(&self, algorithm: &str, _input: Value<'_>) -> zbus::fdo::Result<(OwnedValue, OwnedObjectPath)> {
-            if algorithm != "plain" {
-                return Err(zbus::fdo::Error::NotSupported("algorithm".into()));
-            }
+        fn open_session(&self, algorithm: &str, input: Value<'_>) -> zbus::fdo::Result<(OwnedValue, OwnedObjectPath)> {
+            let mut s = self.0.lock().unwrap();
+            let output = match algorithm {
+                "plain" => {
+                    s.key = None;
+                    Value::from("")
+                }
+                sscrypto::ALGORITHM if !s.reject_dh => {
+                    let peer = Vec::<u8>::try_from(input)
+                        .map_err(|_| zbus::fdo::Error::InvalidArgs("input".into()))?;
+                    let pair = sscrypto::KeyPair::generate();
+                    let key = pair
+                        .derive(&peer)
+                        .ok_or_else(|| zbus::fdo::Error::InvalidArgs("public key".into()))?;
+                    s.key = Some(*key);
+                    Value::from(pair.public().to_vec())
+                }
+                _ => return Err(zbus::fdo::Error::NotSupported("algorithm".into())),
+            };
+            s.algorithm = algorithm.to_string();
             Ok((
-                OwnedValue::try_from(Value::from("")).unwrap(),
+                OwnedValue::try_from(output).unwrap(),
                 OwnedObjectPath::try_from("/org/freedesktop/secrets/session/1").unwrap(),
             ))
         }
@@ -363,14 +488,20 @@ pub mod mock {
             items: Vec<OwnedObjectPath>,
             session: OwnedObjectPath,
         ) -> HashMap<OwnedObjectPath, (OwnedObjectPath, Vec<u8>, Vec<u8>, String)> {
-            let s = self.0.lock().unwrap();
-            s.items
+            let mut s = self.0.lock().unwrap();
+            let wanted: Vec<(u32, Vec<u8>, String)> = s
+                .items
                 .iter()
                 .filter(|(id, ..)| items.iter().any(|p| p.as_str() == item_path(*id)))
-                .map(|(id, _, v, ct)| {
+                .map(|(id, _, v, ct)| (*id, v.clone(), ct.clone()))
+                .collect();
+            wanted
+                .into_iter()
+                .map(|(id, v, ct)| {
+                    let (params, value) = s.send(&v);
                     (
-                        OwnedObjectPath::try_from(item_path(*id)).unwrap(),
-                        (session.clone(), Vec::new(), v.clone(), ct.clone()),
+                        OwnedObjectPath::try_from(item_path(id)).unwrap(),
+                        (session.clone(), params, value, ct),
                     )
                 })
                 .collect()
@@ -405,9 +536,12 @@ pub mod mock {
                 if s.locked {
                     return Err(zbus::fdo::Error::AccessDenied("locked".into()));
                 }
+                let plain = s
+                    .receive(&secret.1, &secret.2)
+                    .ok_or_else(|| zbus::fdo::Error::InvalidArgs("secret".into()))?;
                 if replace {
                     if let Some(item) = s.items.iter_mut().find(|(_, a, _, _)| *a == attrs) {
-                        item.2 = secret.2.clone();
+                        item.2 = plain;
                         return Ok((
                             OwnedObjectPath::try_from(item_path(item.0)).unwrap(),
                             OwnedObjectPath::try_from("/").unwrap(),
@@ -416,7 +550,7 @@ pub mod mock {
                 }
                 s.next += 1;
                 let id = s.next;
-                s.items.push((id, attrs, secret.2, secret.3));
+                s.items.push((id, attrs, plain, secret.3));
                 id
             };
             server.at(item_path(id), Item(self.0.clone(), id)).await.map_err(zbus::fdo::Error::from)?;
@@ -554,6 +688,69 @@ mod tests {
         store.lock().unwrap().dismiss_prompts = true;
         assert!(matches!(c.delete("https://example.com", "ada"), Err(Error::Dismissed)));
         assert_eq!(c.logins("https://example.com").unwrap().len(), 1);
+    }
+
+    #[test]
+    fn secrets_travel_encrypted_by_default() {
+        let (conn, store, _server) = mock::start();
+        let c = Client::new(conn).unwrap();
+        assert!(c.encrypted());
+        assert_eq!(store.lock().unwrap().algorithm, sscrypto::ALGORITHM);
+
+        c.store(&login("https://example.com", "ada", "hunter2")).unwrap();
+        // The mock decrypted it with the negotiated key...
+        assert_eq!(store.lock().unwrap().items[0].2, b"hunter2");
+        let got = c.logins("https://example.com").unwrap();
+        assert_eq!(got[0].password, "hunter2");
+        // ...and nothing crossed the connection in the clear.
+        let wire = store.lock().unwrap().wire.clone();
+        assert_eq!(wire.len(), 2);
+        for value in &wire {
+            assert_eq!(value.len(), 16);
+            assert!(!value.windows(7).any(|w| w == b"hunter2"));
+        }
+        // Fresh IVs: the same password encrypts differently each time.
+        assert_ne!(wire[0], wire[1]);
+    }
+
+    #[test]
+    fn a_corrupted_secret_is_an_error() {
+        let (conn, store, _server) = mock::start();
+        let c = Client::new(conn).unwrap();
+        c.store(&login("https://example.com", "ada", "pw")).unwrap();
+        // The service now answers in the clear (no IV): never accepted as
+        // a password in an encrypted session.
+        store.lock().unwrap().key = None;
+        assert!(matches!(c.logins("https://example.com"), Err(Error::Crypto)));
+    }
+
+    #[test]
+    fn falls_back_to_plain_when_the_algorithm_is_rejected() {
+        let (conn, store, _server) = mock::start();
+        store.lock().unwrap().reject_dh = true;
+        let c = Client::new(conn).unwrap();
+        assert!(!c.encrypted());
+        assert_eq!(store.lock().unwrap().algorithm, "plain");
+        c.store(&login("https://example.com", "ada", "pw")).unwrap();
+        assert_eq!(c.logins("https://example.com").unwrap()[0].password, "pw");
+        assert_eq!(store.lock().unwrap().wire[0], b"pw");
+    }
+
+    /// Interoperability check against a real Secret Service. Only runs
+    /// when `HELIX_WEB_SECRET_INTEROP=1`, inside a private
+    /// `dbus-run-session` with a throwaway keyring daemon (never the
+    /// user's own keyring).
+    #[test]
+    #[ignore]
+    fn interop_with_a_private_secret_service() {
+        if std::env::var("HELIX_WEB_SECRET_INTEROP").as_deref() != Ok("1") {
+            return;
+        }
+        let c = Client::session_bus().unwrap();
+        assert!(c.encrypted());
+        let l = login("https://interop.example", "ada", "pässwörd-0123456789abcdef");
+        c.store(&l).unwrap();
+        assert_eq!(c.logins("https://interop.example").unwrap(), vec![l]);
     }
 
     #[test]

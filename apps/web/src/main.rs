@@ -13,6 +13,7 @@ mod reader;
 mod sandbox;
 mod secrets;
 mod session;
+mod sscrypto;
 mod settings;
 mod store;
 mod tab;

@@ -103,6 +103,7 @@ fn web_app_menu() -> gio::Menu {
     s1.append(Some("Open in _Browser"), Some("win.open-in-browser"));
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
+    s2.append(Some("Web Application _Settings…"), Some("app.web-app-preferences"));
     s2.append(Some("_Uninstall Web Application…"), Some("app.uninstall-web-app"));
     s2.append(Some("_About Web"), Some("app.about"));
     menu.append_section(None, &s2);

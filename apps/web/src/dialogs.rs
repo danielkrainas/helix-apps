@@ -811,3 +811,91 @@ pub fn uninstall_web_app(app: &Rc<App>) {
     });
     d.present(Some(&w));
 }
+
+// ---- web-app preferences ---------------------------------------------------
+
+/// Refills the extra-allowed-sites list from the app's web-app prefs.
+fn fill_allowed_sites(list: &gtk::ListBox, app: &Rc<App>) {
+    list.remove_all();
+    let sites = app.web_app_prefs.borrow().additional_urls.clone();
+    if sites.is_empty() {
+        let row = adw::ActionRow::builder()
+            .title("No additional sites")
+            .activatable(false)
+            .build();
+        row.add_css_class("dim-label");
+        list.append(&row);
+    }
+    for site in sites {
+        let row = adw::ActionRow::builder()
+            .title(glib::markup_escape_text(&site))
+            .activatable(false)
+            .build();
+        let del = gtk::Button::builder()
+            .icon_name("user-trash-symbolic")
+            .tooltip_text("Remove")
+            .valign(gtk::Align::Center)
+            .build();
+        del.add_css_class("flat");
+        let weak = Rc::downgrade(app);
+        let list2 = list.clone();
+        del.connect_clicked(move |_| {
+            let Some(app) = weak.upgrade() else { return };
+            app.web_app_prefs.borrow_mut().remove(&site);
+            app.save_web_app_prefs();
+            let list2 = list2.clone();
+            // Not while the clicked button's row is being destroyed.
+            glib::idle_add_local_once(move || fill_allowed_sites(&list2, &app));
+        });
+        row.add_suffix(&del);
+        list.append(&row);
+    }
+}
+
+/// Web Application Settings (web-app mode only): the extra allowed sites
+/// whose links stay inside the web app.
+pub fn show_web_app_preferences(app: &Rc<App>) {
+    let Some(wa) = app.web_app.clone() else { return };
+    let dialog = adw::PreferencesDialog::new();
+    dialog.set_title("Web Application Settings");
+    let page = adw::PreferencesPage::new();
+    let group = adw::PreferencesGroup::builder()
+        .title("Additional Allowed Sites")
+        .description(glib::markup_escape_text(&format!(
+            "Links to these sites open in this web application instead of the browser, \
+             like links within {}. Write *.example.com to include all subdomains.",
+            crate::urlinput::host_of(&wa.url).unwrap_or_else(|| wa.url.clone())
+        )))
+        .build();
+    let list = gtk::ListBox::builder()
+        .selection_mode(gtk::SelectionMode::None)
+        .build();
+    list.add_css_class("boxed-list");
+    group.add(&list);
+    let add_group = adw::PreferencesGroup::new();
+    let add = adw::EntryRow::builder()
+        .title("Add site, e.g. accounts.example.com")
+        .show_apply_button(true)
+        .build();
+    add_group.add(&add);
+    page.add(&group);
+    page.add(&add_group);
+    dialog.add(&page);
+    fill_allowed_sites(&list, app);
+
+    add.connect_changed(|row| row.remove_css_class("error"));
+    let weak = Rc::downgrade(app);
+    add.connect_apply(move |row| {
+        let Some(app) = weak.upgrade() else { return };
+        let added = app.web_app_prefs.borrow_mut().add(&row.text());
+        match added {
+            Some(_) => {
+                app.save_web_app_prefs();
+                row.set_text("");
+                fill_allowed_sites(&list, &app);
+            }
+            None => row.add_css_class("error"),
+        }
+    });
+    dialog.present(parent(app).as_ref());
+}
