@@ -1,6 +1,8 @@
 [workspace]
 members = [
     "crates/helix-app-common",
+    "crates/helix-eds",
+    "apps/contacts",
     "apps/calculator",
     "apps/characters",
     "apps/tour",

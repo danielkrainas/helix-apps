@@ -1142,6 +1142,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-contacts"
+version = "0.1.0"
+dependencies = [
+ "async-channel",
+ "gtk4",
+ "helix-app-common",
+ "helix-eds",
+ "libadwaita",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "helix-disk-usage"
 version = "0.1.0"
 dependencies = [
@@ -1180,6 +1193,19 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
+]
+
+[[package]]
+name = "helix-eds"
+version = "0.1.0"
+dependencies = [
+ "async-channel",
+ "base64",
+ "chrono",
+ "chrono-tz",
+ "futures-lite",
+ "iana-time-zone",
+ "zbus",
 ]
 
 [[package]]
