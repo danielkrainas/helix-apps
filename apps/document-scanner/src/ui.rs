@@ -4,6 +4,7 @@ use crate::crop::{self, Handle, PAPERS};
 use crate::document::{Document, Reorder};
 use crate::export::{self, Format};
 use crate::page::{Page, Rect};
+use crate::postproc::PostProc;
 use crate::sane::Device;
 use crate::scanner::{Capabilities, Cmd, Event, PageSide, ScanKind, ScanRequest, Scanner};
 use crate::settings::{ColorChoice, Private};
@@ -28,6 +29,7 @@ const ACCELS: &[(&str, &[&str])] = &[
     ("win.save", &["<Control>s"]),
     ("win.copy", &["<Control>c"]),
     ("win.print", &["<Control>p"]),
+    ("win.email", &["<Control>e"]),
     ("win.rotate-left", &["bracketleft"]),
     ("win.rotate-right", &["bracketright"]),
     ("win.move-left", &["<Control>Page_Up"]),
@@ -152,6 +154,7 @@ fn main_menu() -> gio::Menu {
     doc.append(Some("_Reorder Pages…"), Some("win.reorder"));
     doc.append(Some("_Copy Page"), Some("win.copy"));
     doc.append(Some("_Print…"), Some("win.print"));
+    doc.append(Some("_Email…"), Some("win.email"));
     menu.append_section(None, &doc);
     let other = gio::Menu::new();
     other.append(Some("_Refresh Scanners"), Some("win.refresh"));
@@ -422,6 +425,7 @@ impl Win {
         add("save", |w| w.save(false));
         add("copy", |w| w.copy_page());
         add("print", |w| w.print());
+        add("email", |w| w.email());
         add("reorder", |w| w.reorder_dialog());
         add("preferences", |w| w.preferences());
         add("shortcuts", |w| w.shortcuts());
@@ -928,7 +932,7 @@ impl Win {
         }
         self.set_enabled("stop", scanning);
         self.set_enabled("refresh", idle);
-        for a in ["save", "print", "new", "reorder"] {
+        for a in ["save", "print", "email", "new", "reorder"] {
             self.set_enabled(a, has_pages && idle);
         }
         for a in ["copy", "rotate-left", "rotate-right", "delete", "crop"] {
@@ -1123,6 +1127,7 @@ impl Win {
                     (1, Some(n)) => format!("Saved “{n}”"),
                     (n, _) => format!("Saved {n} files"),
                 });
+                self.post_process(format, files);
                 self.update();
                 if close_after {
                     self.window.close();
@@ -1134,6 +1139,57 @@ impl Win {
                 d.present(Some(&self.window));
             }
         }
+    }
+
+    fn postproc(&self) -> PostProc {
+        PostProc {
+            enabled: self.prefs.get("postproc-enabled", false),
+            script: self.prefs.get("postproc-script", String::new()),
+            arguments: self.prefs.get("postproc-arguments", String::new()),
+            keep_original: self.prefs.get("postproc-keep-original", false),
+        }
+    }
+
+    /// Runs the post-processing script on saved files (worker thread).
+    fn post_process(self: &Rc<Self>, format: Format, files: Vec<PathBuf>) {
+        let pp = self.postproc();
+        if !pp.active() {
+            return;
+        }
+        let w = self.weak();
+        glib::spawn_future_local(async move {
+            let res = gio::spawn_blocking(move || crate::postproc::run(&pp, format.mime(), &files, &glib::home_dir()))
+                .await
+                .unwrap_or_else(|_| Err("The post-processing script crashed".into()));
+            if let (Some(w), Err(e)) = (w.upgrade(), res) {
+                w.toast(&e);
+            }
+        });
+    }
+
+    /// Saves the document to a temporary file and opens the mail client
+    /// with it attached (Email portal, else `xdg-email`).
+    fn email(self: &Rc<Self>) {
+        let pages = self.state.borrow().doc.pages().to_vec();
+        if pages.is_empty() {
+            return;
+        }
+        let format = Format::from_mime(&self.prefs.get("save-format", "application/pdf".to_string())).unwrap_or(Format::Pdf);
+        let quality = self.prefs.get("jpeg-quality", 75).clamp(0, 100) as u8;
+        let w = self.weak();
+        glib::spawn_future_local(async move {
+            let res = gio::spawn_blocking(move || {
+                let base = crate::email::base_dir();
+                crate::email::prune(&base, std::time::SystemTime::now());
+                let files = crate::email::write_attachments(&base, &pages, format, quality)?;
+                crate::email::compose(&files, "")
+            })
+            .await
+            .unwrap_or_else(|_| Err("Sending failed".into()));
+            if let (Some(w), Err(e)) = (w.upgrade(), res) {
+                w.toast(&format!("Could not open the mail client: {e}"));
+            }
+        });
     }
 
     // ---- preferences -----------------------------------------------------
@@ -1313,9 +1369,99 @@ impl Win {
         let saving = adw::PreferencesGroup::builder().title("Saving").build();
         saving.add(&self.slider_row("JPEG Quality", "jpeg-quality", 0.0, 100.0));
         page.add(&saving);
+        page.add(&self.postproc_group());
 
         dialog.add(&page);
         dialog.present(Some(&self.window));
+    }
+
+    /// Simple Scan's post-processing settings.
+    fn postproc_group(self: &Rc<Self>) -> adw::PreferencesGroup {
+        let group = adw::PreferencesGroup::builder()
+            .title("Post-processing")
+            .description(
+                "After saving, run SCRIPT MIME-TYPE KEEP-ORIGINAL FILE [ARGUMENTS…] \
+                 (no shell; arguments are split like shell words but not expanded)",
+            )
+            .build();
+        let pp = self.postproc();
+        let enabled = adw::SwitchRow::builder().title("Enable Post-processing").active(pp.enabled).build();
+        let w = self.weak();
+        enabled.connect_active_notify(move |r| {
+            if let Some(w) = w.upgrade() {
+                w.prefs.set("postproc-enabled", r.is_active());
+            }
+        });
+        group.add(&enabled);
+
+        let script = adw::EntryRow::builder().title("Script").text(&pp.script).show_apply_button(true).build();
+        let pick = gtk::Button::builder()
+            .icon_name("document-open-symbolic")
+            .tooltip_text("Choose Script…")
+            .valign(gtk::Align::Center)
+            .css_classes(["flat"])
+            .build();
+        script.add_suffix(&pick);
+        let w = self.weak();
+        script.connect_apply(move |e| {
+            if let Some(w) = w.upgrade() {
+                w.prefs.set("postproc-script", e.text().trim().to_string());
+            }
+        });
+        let w = self.weak();
+        let entry = script.clone();
+        pick.connect_clicked(move |b| {
+            let Some(w) = w.upgrade() else { return };
+            let dialog = gtk::FileDialog::builder().title("Choose Script").modal(true).build();
+            let parent = b.root().and_downcast::<gtk::Window>();
+            let entry = entry.clone();
+            let w = Rc::downgrade(&w);
+            dialog.open(parent.as_ref(), gio::Cancellable::NONE, move |res| {
+                let (Some(w), Ok(file)) = (w.upgrade(), res) else { return };
+                if let Some(path) = file.path() {
+                    let s = path.to_string_lossy().into_owned();
+                    entry.set_text(&s);
+                    w.prefs.set("postproc-script", s);
+                }
+            });
+        });
+        group.add(&script);
+
+        let args = adw::EntryRow::builder()
+            .title("Script Arguments")
+            .text(&pp.arguments)
+            .show_apply_button(true)
+            .build();
+        let w = self.weak();
+        args.connect_apply(move |e| {
+            let Some(w) = w.upgrade() else { return };
+            let text = e.text().to_string();
+            match crate::postproc::split_arguments(&text) {
+                Ok(_) => {
+                    e.remove_css_class("error");
+                    w.prefs.set("postproc-arguments", text);
+                }
+                Err(_) => e.add_css_class("error"),
+            }
+        });
+        group.add(&args);
+
+        let keep = adw::SwitchRow::builder()
+            .title("Keep Original File")
+            .subtitle("Saves an unprocessed copy with “_orig” before the extension")
+            .active(pp.keep_original)
+            .build();
+        let w = self.weak();
+        keep.connect_active_notify(move |r| {
+            if let Some(w) = w.upgrade() {
+                w.prefs.set("postproc-keep-original", r.is_active());
+            }
+        });
+        group.add(&keep);
+        for r in [script.upcast_ref::<gtk::Widget>(), args.upcast_ref(), keep.upcast_ref()] {
+            enabled.bind_property("active", r, "sensitive").sync_create().build();
+        }
+        group
     }
 
     fn shortcuts(&self) {
@@ -1328,6 +1474,7 @@ impl Win {
             ("<Control>s", "Save"),
             ("<Control>c", "Copy page"),
             ("<Control>p", "Print"),
+            ("<Control>e", "Email"),
             ("bracketleft", "Rotate page left"),
             ("bracketright", "Rotate page right"),
             ("<Control>Page_Up", "Move page left"),

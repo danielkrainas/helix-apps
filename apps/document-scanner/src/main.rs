@@ -2,10 +2,12 @@
 
 mod crop;
 mod document;
+mod email;
 mod export;
 mod options;
 mod page;
 mod pdf;
+mod postproc;
 mod sane;
 mod scanner;
 mod settings;
