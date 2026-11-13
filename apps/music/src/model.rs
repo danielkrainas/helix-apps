@@ -41,6 +41,9 @@ pub struct Track {
     /// When the file first appeared in the index (seconds since the epoch).
     #[serde(default)]
     pub added: i64,
+    /// Metadata came from the LocalSearch/Tracker index rather than `lofty`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub from_tracker: bool,
 }
 
 impl Track {

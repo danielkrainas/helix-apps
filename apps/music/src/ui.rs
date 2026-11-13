@@ -16,6 +16,7 @@ use crate::mpris::{self, Command, Mpris};
 use crate::player::{self, Event, Player};
 use crate::playlist::{self, Playlist, Stats};
 use crate::queue::{Queue, Repeat, Rng};
+use crate::tracker;
 
 pub const APP_ID: &str = "org.helix.Music";
 pub const APP_NAME: &str = "Music";
@@ -97,12 +98,30 @@ pub struct AppState {
     pub folders: Vec<PathBuf>,
     pub volume: f64,
     pub repeat_with_shuffle: String,
+    /// `track` or `album`: which gain applies while GNOME's boolean
+    /// `replaygain` key is on.
+    pub replaygain_mode: String,
+    /// Track-change notifications while the window is not focused.
+    pub notifications: bool,
 }
 
 impl Default for AppState {
     fn default() -> Self {
-        AppState { folders: Vec::new(), volume: 1.0, repeat_with_shuffle: "all".into() }
+        AppState {
+            folders: Vec::new(),
+            volume: 1.0,
+            repeat_with_shuffle: "all".into(),
+            replaygain_mode: "album".into(),
+            notifications: true,
+        }
     }
+}
+
+const NOTIFICATION_ID: &str = "now-playing";
+
+/// "Artist — Album" for notifications.
+pub fn notification_body(t: &Track) -> String {
+    format!("{} — {}", t.artist_name(), t.album_name())
 }
 
 pub fn music_dir() -> PathBuf {
@@ -172,6 +191,10 @@ pub struct App {
     pub monitors: RefCell<Vec<gio::FileMonitor>>,
     pub rescan_timer: RefCell<Option<glib::SourceId>>,
     pub inhibit_cookie: Cell<u32>,
+    /// Listening to Tracker's GraphUpdated signal.
+    pub tracker_watching: Cell<bool>,
+    /// Whether the last scan used the Tracker index.
+    pub using_tracker: Cell<bool>,
     pub played_ms: Cell<u64>,
     pub counted: Cell<bool>,
     pub last_tick: Cell<Option<Instant>>,
@@ -202,13 +225,13 @@ impl App {
             std::fs::read(Self::state_file()).ok().and_then(|d| serde_json::from_slice(&d).ok()).unwrap_or_default();
 
         let window = adw::ApplicationWindow::builder().application(application).title(APP_NAME).build();
-        let size: Vec<i32> = prefs.get("window-size", vec![1000, 700]);
+        let size: Vec<i32> = prefs.get("window-size", vec![768, 600]);
         if size.len() == 2 && size[0] > 200 && size[1] > 200 {
             window.set_default_size(size[0], size[1]);
         } else {
             window.set_default_size(1000, 700);
         }
-        if prefs.get("window-maximized", false) {
+        if prefs.get("window-maximized", true) {
             window.maximize();
         }
         window.set_width_request(360);
@@ -224,6 +247,8 @@ impl App {
         let menu = gio::Menu::new();
         let s1 = gio::Menu::new();
         s1.append(Some("_Rescan Library"), Some("win.rescan"));
+        s1.append(Some("_Import Playlist…"), Some("win.import-playlist"));
+        s1.append(Some("Import Playlists from _Search Index"), Some("win.import-index-playlists"));
         menu.append_section(None, &s1);
         let s2 = gio::Menu::new();
         s2.append(Some("_Preferences"), Some("win.preferences"));
@@ -293,6 +318,7 @@ impl App {
         let app = Rc::new_cyclic(|weak: &Weak<App>| {
             let player = match Player::new(sink.as_deref()) {
                 Ok(mut p) => {
+                    p.set_replaygain(player::ReplayGain::from_settings(prefs.get("replaygain", false), &state.replaygain_mode));
                     let w = weak.clone();
                     p.attach(move |ev| {
                         if let Some(app) = w.upgrade() {
@@ -342,6 +368,8 @@ impl App {
                 monitors: RefCell::default(),
                 rescan_timer: RefCell::default(),
                 inhibit_cookie: Cell::new(0),
+                tracker_watching: Cell::new(false),
+                using_tracker: Cell::new(false),
                 played_ms: Cell::new(0),
                 counted: Cell::new(false),
                 last_tick: Cell::new(None),
@@ -359,6 +387,7 @@ impl App {
         app.install_keys();
         app.connect_search();
         app.connect_close();
+        app.connect_notifications();
         let volume = app.state.borrow().volume;
         app.bar.volume.set_value(volume);
         app.apply_volume(volume);
@@ -433,25 +462,43 @@ impl App {
         }
         let roots = self.library_roots();
         let previous = self.lib().tracks.clone();
-        let (tx, rx) = async_channel::bounded::<(Vec<Track>, ScanReport)>(1);
+        let watching = self.tracker_watching.get();
+        type ScanResult = (Vec<Track>, ScanReport, Option<tracker::Endpoint>);
+        let (tx, rx) = async_channel::bounded::<ScanResult>(1);
         std::thread::Builder::new()
             .name("music-scan".into())
             .spawn(move || {
                 let covers = App::covers_dir();
-                let (tracks, report) = index::scan(&roots, previous, Some(&covers), now_secs());
+                // LocalSearch/Tracker when it runs (read-only queries); the
+                // built-in scanner covers everything else.
+                let ep = tracker::Endpoint::connect();
+                let indexed = ep.as_ref().and_then(|ep| match tracker::library(ep, &roots) {
+                    Ok(l) => Some(l),
+                    Err(e) => {
+                        eprintln!("helix-music: Tracker query failed, scanning folders instead: {e}");
+                        None
+                    }
+                });
+                let used = indexed.is_some();
+                let (tracks, report) = index::scan_hybrid(&roots, indexed, previous, Some(&covers), now_secs());
                 if report.changed() || !App::data_dir().join("library.json").exists() {
                     if let Err(e) = index::save(&App::data_dir().join("library.json"), &tracks) {
                         eprintln!("helix-music: cannot save index: {e}");
                     }
                 }
-                let _ = tx.send_blocking((tracks, report));
+                let ep = ep.filter(|_| used && !watching);
+                let _ = tx.send_blocking((tracks, report, ep));
             })
             .expect("spawn scanner");
         let w = Rc::downgrade(self);
         glib::spawn_future_local(async move {
-            let Ok((tracks, report)) = rx.recv().await else { return };
+            let Ok((tracks, report, ep)) = rx.recv().await else { return };
             let Some(app) = w.upgrade() else { return };
             app.scanning.set(false);
+            app.using_tracker.set(report.from_tracker > 0 || ep.is_some());
+            if let Some(ep) = ep {
+                app.watch_tracker(ep);
+            }
             let first = !app.scanned_once.replace(true);
             if report.changed() || first {
                 if report.changed() {
@@ -490,6 +537,24 @@ impl App {
             monitors.push(m);
         }
         *self.monitors.borrow_mut() = monitors;
+    }
+
+    /// Rescans (debounced) when the Tracker index changes.
+    fn watch_tracker(self: &Rc<Self>, ep: tracker::Endpoint) {
+        if self.tracker_watching.replace(true) {
+            return;
+        }
+        let (tx, rx) = async_channel::unbounded::<()>();
+        tracker::watch(ep, move || {
+            let _ = tx.try_send(());
+        });
+        let w = Rc::downgrade(self);
+        glib::spawn_future_local(async move {
+            while rx.recv().await.is_ok() {
+                let Some(app) = w.upgrade() else { break };
+                app.schedule_rescan();
+            }
+        });
     }
 
     fn schedule_rescan(self: &Rc<Self>) {
@@ -549,6 +614,26 @@ impl App {
         }
         self.update_next_uri();
         self.update_now_playing();
+        if play {
+            self.notify_track();
+        }
+    }
+
+    /// Shows a "now playing" notification when the window is not focused.
+    pub fn notify_track(&self) {
+        if !self.state.borrow().notifications || self.window.is_active() {
+            return;
+        }
+        let Some(t) = self.current_track() else { return };
+        let n = gio::Notification::new(&t.title);
+        n.set_body(Some(&notification_body(&t)));
+        match &t.cover {
+            Some(k) => n.set_icon(&gio::FileIcon::new(&gio::File::for_path(index::cover_path(&Self::covers_dir(), k)))),
+            None => n.set_icon(&gio::ThemedIcon::new("audio-x-generic")),
+        }
+        n.set_priority(gio::NotificationPriority::Low);
+        n.add_button("Next", "app.next-track");
+        self.app.send_notification(Some(NOTIFICATION_ID), &n);
     }
 
     pub fn update_next_uri(&self) {
@@ -643,6 +728,7 @@ impl App {
                 self.counted.set(false);
                 self.update_next_uri();
                 self.update_now_playing();
+                self.notify_track();
             }
             Event::StreamStart { gapless: false } | Event::DurationChanged => self.update_position(None),
             Event::Eos => {
@@ -946,6 +1032,38 @@ impl App {
         });
     }
 
+    fn connect_notifications(self: &Rc<Self>) {
+        let next = gio::SimpleAction::new("next-track", None);
+        let w = Rc::downgrade(self);
+        next.connect_activate(move |_, _| {
+            if let Some(app) = w.upgrade() {
+                app.next();
+            }
+        });
+        self.app.add_action(&next);
+        let w = Rc::downgrade(self);
+        self.window.connect_is_active_notify(move |win| {
+            if let (true, Some(app)) = (win.is_active(), w.upgrade()) {
+                app.app.withdraw_notification(NOTIFICATION_ID);
+            }
+        });
+    }
+
+    pub fn set_replaygain(&self, mode: player::ReplayGain) {
+        self.prefs.set("replaygain", mode != player::ReplayGain::Off);
+        if mode != player::ReplayGain::Off {
+            self.state.borrow_mut().replaygain_mode = mode.nick().into();
+            self.save_state();
+        }
+        if let Some(p) = &self.player {
+            p.set_replaygain(mode);
+        }
+    }
+
+    pub fn replaygain(&self) -> player::ReplayGain {
+        player::ReplayGain::from_settings(self.prefs.get("replaygain", false), &self.state.borrow().replaygain_mode)
+    }
+
     fn install_actions(self: &Rc<Self>) {
         let win = &self.window;
         let add = |name: &str, f: fn(&Rc<App>)| {
@@ -978,6 +1096,8 @@ impl App {
         add("now-playing", |a| a.show_now_playing());
         add("new-playlist", |a| a.new_playlist_dialog(None));
         add("add-folder", |a| a.add_folder_dialog());
+        add("import-playlist", |a| a.import_playlist_dialog());
+        add("import-index-playlists", |a| a.import_index_playlists());
 
         let view = gio::SimpleAction::new("view", Some(glib::VariantTy::STRING));
         let w = Rc::downgrade(self);

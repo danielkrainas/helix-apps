@@ -1,4 +1,5 @@
-//! User playlists (extended M3U files), play statistics and smart playlists.
+//! User playlists (extended M3U files; XSPF read/write, PLS read), play
+//! statistics and smart playlists.
 
 use crate::model::Library;
 use serde::{Deserialize, Serialize};
@@ -70,6 +71,171 @@ pub fn parse_m3u(text: &str, base: &Path) -> (Option<String>, Vec<PathBuf>) {
     (name, entries)
 }
 
+/// Playlist file formats.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Format {
+    M3u,
+    Xspf,
+    /// Read-only (import).
+    Pls,
+}
+
+impl Format {
+    pub fn of(path: &Path) -> Option<Format> {
+        let ext = path.extension()?.to_str()?.to_ascii_lowercase();
+        match ext.as_str() {
+            "m3u" | "m3u8" => Some(Format::M3u),
+            "xspf" => Some(Format::Xspf),
+            "pls" => Some(Format::Pls),
+            _ => None,
+        }
+    }
+}
+
+fn xml_escape(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\'' => out.push_str("&apos;"),
+            // Characters XML 1.0 cannot carry.
+            c if (c as u32) < 0x20 && !matches!(c, '\t' | '\n' | '\r') => out.push(' '),
+            c => out.push(c),
+        }
+    }
+    out
+}
+
+/// Writes an XSPF playlist (`file://` locations, title/creator/duration).
+pub fn to_xspf(name: &str, entries: &[PathBuf], info: impl Fn(&Path) -> Option<EntryInfo>) -> String {
+    let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">\n");
+    out.push_str(&format!("  <title>{}</title>\n  <trackList>\n", xml_escape(name)));
+    for p in entries {
+        out.push_str("    <track>\n");
+        out.push_str(&format!("      <location>{}</location>\n", xml_escape(&crate::model::path_to_uri(p))));
+        if let Some(i) = info(p) {
+            out.push_str(&format!("      <title>{}</title>\n", xml_escape(&i.title)));
+            out.push_str(&format!("      <creator>{}</creator>\n", xml_escape(&i.artist)));
+            out.push_str(&format!("      <duration>{}</duration>\n", i.seconds * 1000));
+        }
+        out.push_str("    </track>\n");
+    }
+    out.push_str("  </trackList>\n</playlist>\n");
+    out
+}
+
+fn xml_child<'a, 'i>(n: roxmltree::Node<'a, 'i>, name: &str) -> Option<roxmltree::Node<'a, 'i>> {
+    n.children().find(|c| c.is_element() && c.tag_name().name() == name)
+}
+
+/// Parses XSPF. Relative locations resolve against `base`; non-file
+/// locations are skipped.
+pub fn parse_xspf(text: &str, base: &Path) -> Result<(Option<String>, Vec<PathBuf>), String> {
+    let doc = roxmltree::Document::parse(text).map_err(|e| e.to_string())?;
+    let root = doc.root_element();
+    if root.tag_name().name() != "playlist" {
+        return Err("not an XSPF playlist".into());
+    }
+    let name = xml_child(root, "title").and_then(|t| t.text()).map(|t| t.trim().to_string()).filter(|t| !t.is_empty());
+    let mut entries = Vec::new();
+    if let Some(list) = xml_child(root, "trackList") {
+        for track in list.children().filter(|c| c.is_element() && c.tag_name().name() == "track") {
+            // A track may list several alternative locations; use the first usable one.
+            for loc in track.children().filter(|c| c.is_element() && c.tag_name().name() == "location") {
+                if let Some(p) = location_to_path(loc.text().unwrap_or("").trim(), base) {
+                    entries.push(p);
+                    break;
+                }
+            }
+        }
+    }
+    Ok((name, entries))
+}
+
+/// Resolves a playlist entry (path, relative path or `file://` URI).
+fn location_to_path(loc: &str, base: &Path) -> Option<PathBuf> {
+    if loc.is_empty() {
+        return None;
+    }
+    if loc.starts_with("file:") {
+        return glib::filename_from_uri(loc).ok().map(|(p, _)| p);
+    }
+    if loc.contains("://") {
+        return None;
+    }
+    // Relative URI references are percent-encoded.
+    let decoded = glib::Uri::unescape_string(loc, None::<&str>).map(|s| s.to_string()).unwrap_or_else(|| loc.to_string());
+    let p = PathBuf::from(decoded);
+    Some(if p.is_absolute() { p } else { base.join(p) })
+}
+
+/// Parses a PLS playlist (`FileN=` entries, in N order).
+pub fn parse_pls(text: &str, base: &Path) -> Vec<PathBuf> {
+    let mut entries: Vec<(u32, PathBuf)> = Vec::new();
+    for line in text.lines() {
+        let line = line.trim_start_matches('\u{feff}').trim();
+        let Some((key, value)) = line.split_once('=') else { continue };
+        let Some(n) = key.trim().strip_prefix("File").and_then(|n| n.parse::<u32>().ok()) else { continue };
+        let value = value.trim();
+        let path = if value.starts_with("file:") || value.contains("://") {
+            location_to_path(value, base)
+        } else {
+            let p = PathBuf::from(value);
+            Some(if p.is_absolute() { p } else { base.join(p) })
+        };
+        if let Some(p) = path {
+            entries.push((n, p));
+        }
+    }
+    entries.sort_by_key(|e| e.0);
+    entries.into_iter().map(|e| e.1).collect()
+}
+
+/// Reads a playlist file of any supported format: (name, entries).
+pub fn read_any(file: &Path) -> std::io::Result<(Option<String>, Vec<PathBuf>)> {
+    let text = std::fs::read_to_string(file)?;
+    let base = file.parent().unwrap_or(Path::new("/"));
+    match Format::of(file) {
+        Some(Format::Xspf) => parse_xspf(&text, base).map_err(std::io::Error::other),
+        Some(Format::Pls) => Ok((None, parse_pls(&text, base))),
+        _ => Ok(parse_m3u(&text, base)),
+    }
+}
+
+fn stem_name(file: &Path) -> String {
+    file.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default()
+}
+
+/// Copies a foreign playlist into `dir` as a new M3U playlist, keeping only
+/// entries `keep` accepts. Returns `None` when nothing is left.
+pub fn import(
+    name: Option<String>,
+    source: &Path,
+    entries: Vec<PathBuf>,
+    dir: &Path,
+    keep: impl Fn(&Path) -> bool,
+) -> Option<Playlist> {
+    let entries: Vec<PathBuf> = entries.into_iter().filter(|p| keep(p)).collect();
+    if entries.is_empty() {
+        return None;
+    }
+    let name = name.unwrap_or_else(|| stem_name(source));
+    Some(Playlist { file: new_file_for(dir, &name), name, entries })
+}
+
+/// Writes `pl`'s entries to `dest` in the format its extension names
+/// (XSPF for `.xspf`, M3U otherwise).
+pub fn export(pl: &Playlist, dest: &Path, info: impl Fn(&Path) -> Option<EntryInfo>) -> std::io::Result<()> {
+    let data = match Format::of(dest) {
+        Some(Format::Xspf) => to_xspf(&pl.name, &pl.entries, info),
+        _ => to_m3u(&pl.name, &pl.entries, info),
+    };
+    write_atomic(dest, data.as_bytes())
+}
+
 fn sanitize(name: &str) -> String {
     let s: String = name
         .chars()
@@ -100,10 +266,8 @@ pub fn new_file_for(dir: &Path, name: &str) -> PathBuf {
 }
 
 pub fn load(file: &Path) -> std::io::Result<Playlist> {
-    let text = std::fs::read_to_string(file)?;
-    let base = file.parent().unwrap_or(Path::new("/"));
-    let (name, entries) = parse_m3u(&text, base);
-    let name = name.unwrap_or_else(|| file.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default());
+    let (name, entries) = read_any(file)?;
+    let name = name.unwrap_or_else(|| stem_name(file));
     Ok(Playlist { name, entries, file: file.to_path_buf() })
 }
 
@@ -113,15 +277,16 @@ pub fn load_all(dir: &Path) -> Vec<Playlist> {
         .flatten()
         .flatten()
         .map(|e| e.path())
-        .filter(|p| p.extension().is_some_and(|e| e.eq_ignore_ascii_case("m3u") || e.eq_ignore_ascii_case("m3u8")))
+        .filter(|p| matches!(Format::of(p), Some(Format::M3u | Format::Xspf)))
         .filter_map(|p| load(&p).ok())
         .collect();
     out.sort_by_key(|p| crate::model::sort_key(&p.name));
     out
 }
 
+/// Saves `pl` to its file, keeping the file's format (M3U or XSPF).
 pub fn save(pl: &Playlist, info: impl Fn(&Path) -> Option<EntryInfo>) -> std::io::Result<()> {
-    write_atomic(&pl.file, to_m3u(&pl.name, &pl.entries, info).as_bytes())
+    export(pl, &pl.file, info)
 }
 
 pub fn write_atomic(path: &Path, data: &[u8]) -> std::io::Result<()> {
@@ -278,6 +443,76 @@ mod tests {
         let (name, entries) = parse_m3u(text, Path::new("/lists"));
         assert_eq!(name, None);
         assert_eq!(entries, [PathBuf::from("/lists/sub/song.ogg"), PathBuf::from("/abs/s p.mp3"), PathBuf::from("/abs/b.flac")]);
+    }
+
+    #[test]
+    fn m3u_edge_cases() {
+        // Names survive, CR/LF in titles are flattened, EXTINF is optional.
+        let entries = vec![PathBuf::from("/m/a.ogg")];
+        let text = to_m3u("Mix", &entries, |_| None);
+        assert_eq!(text, "#EXTM3U\n#PLAYLIST:Mix\n/m/a.ogg\n");
+        let text = to_m3u("Mix", &entries, |_| Some(EntryInfo { seconds: 5, artist: "A\r\nB".into(), title: "T".into() }));
+        assert!(text.contains("#EXTINF:5,A  B - T\n"));
+        // A plain (non-extended) M3U with relative paths.
+        let (name, e) = parse_m3u("a.mp3\n../b.mp3\n", Path::new("/x/y"));
+        assert_eq!(name, None);
+        assert_eq!(e, [PathBuf::from("/x/y/a.mp3"), PathBuf::from("/x/y/../b.mp3")]);
+        assert_eq!(Format::of(Path::new("a.M3U8")), Some(Format::M3u));
+        assert_eq!(Format::of(Path::new("a.txt")), None);
+    }
+
+    #[test]
+    fn xspf_round_trip() {
+        let dir = tempfile::tempdir().unwrap();
+        let entries = vec![PathBuf::from("/music/R&B <live>/01 \"x\".flac"), PathBuf::from("/music/ü.mp3")];
+        let pl = Playlist { name: "Rock & Roll".into(), entries: entries.clone(), file: dir.path().join("rr.xspf") };
+        save(&pl, |_| Some(EntryInfo { seconds: 2, artist: "A<B".into(), title: "T".into() })).unwrap();
+        let text = std::fs::read_to_string(&pl.file).unwrap();
+        assert!(text.contains("<title>Rock &amp; Roll</title>"));
+        assert!(text.contains("<duration>2000</duration>"));
+        let back = load(&pl.file).unwrap();
+        assert_eq!((back.name.as_str(), back.entries.clone()), ("Rock & Roll", entries));
+        assert_eq!(load_all(dir.path()).len(), 1);
+    }
+
+    #[test]
+    fn parses_foreign_xspf_and_pls() {
+        let xspf = r#"<?xml version="1.0"?>
+<playlist version="1" xmlns="http://xspf.org/ns/0/">
+  <trackList>
+    <track><location>http://radio/x</location><location>file:///abs/a%20b.ogg</location></track>
+    <track><location>sub/c%20d.mp3</location></track>
+    <track><title>no location</title></track>
+  </trackList>
+</playlist>"#;
+        let (name, e) = parse_xspf(xspf, Path::new("/lists")).unwrap();
+        assert_eq!(name, None);
+        assert_eq!(e, [PathBuf::from("/abs/a b.ogg"), PathBuf::from("/lists/sub/c d.mp3")]);
+        assert!(parse_xspf("<html/>", Path::new("/")).is_err());
+
+        let pls = "[playlist]\nFile2=/m/two.mp3\nTitle2=Two\nFile1=one.mp3\nFile3=http://radio\nNumberOfEntries=3\nVersion=2\n";
+        assert_eq!(parse_pls(pls, Path::new("/m")), [PathBuf::from("/m/one.mp3"), PathBuf::from("/m/two.mp3")]);
+    }
+
+    #[test]
+    fn import_and_export() {
+        let src = tempfile::tempdir().unwrap();
+        let lib = tempfile::tempdir().unwrap();
+        let f = src.path().join("Party.pls");
+        std::fs::write(&f, "[playlist]\nFile1=/m/a.mp3\nFile2=/elsewhere/z.mp4\n").unwrap();
+        let (name, entries) = read_any(&f).unwrap();
+        let pl = import(name, &f, entries, lib.path(), |p| p.starts_with("/m")).unwrap();
+        assert_eq!((pl.name.as_str(), pl.entries.clone()), ("Party", vec![PathBuf::from("/m/a.mp3")]));
+        assert_eq!(pl.file, lib.path().join("Party.m3u"));
+        save(&pl, |_| None).unwrap();
+        assert!(import(None, &f, vec![PathBuf::from("/x")], lib.path(), |_| false).is_none());
+
+        let out = src.path().join("out.xspf");
+        export(&pl, &out, |_| None).unwrap();
+        assert_eq!(read_any(&out).unwrap(), (Some("Party".into()), vec![PathBuf::from("/m/a.mp3")]));
+        let out = src.path().join("out.m3u8");
+        export(&pl, &out, |_| None).unwrap();
+        assert_eq!(read_any(&out).unwrap(), (Some("Party".into()), vec![PathBuf::from("/m/a.mp3")]));
     }
 
     #[test]

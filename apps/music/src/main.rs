@@ -7,6 +7,7 @@ mod pages;
 mod player;
 mod playlist;
 mod queue;
+mod tracker;
 mod ui;
 
 use gtk::glib;
@@ -24,7 +25,16 @@ fn main() -> glib::ExitCode {
         }
         Some("--scan") if args.len() > 1 => {
             let roots: Vec<PathBuf> = args[1..].iter().map(PathBuf::from).collect();
-            let (tracks, report) = index::scan(&roots, Vec::new(), None, 0);
+            // Uses the LocalSearch/Tracker index for folders it covers
+            // (read-only), unless HELIX_MUSIC_NO_TRACKER is set.
+            let indexed = tracker::Endpoint::connect().and_then(|ep| match tracker::library(&ep, &roots) {
+                Ok(l) => Some(l),
+                Err(e) => {
+                    eprintln!("helix-music: Tracker query failed: {e}");
+                    None
+                }
+            });
+            let (tracks, report) = index::scan_hybrid(&roots, indexed, Vec::new(), None, 0);
             let lib = model::Library::new(tracks);
             for album in &lib.albums {
                 for &t in &album.tracks {
@@ -39,7 +49,13 @@ fn main() -> glib::ExitCode {
                     );
                 }
             }
-            eprintln!("{} tracks, {} albums, {} artists", report.added, lib.albums.len(), lib.artists.len());
+            eprintln!(
+                "{} tracks ({} from Tracker), {} albums, {} artists",
+                report.added,
+                report.from_tracker,
+                lib.albums.len(),
+                lib.artists.len()
+            );
             glib::ExitCode::SUCCESS
         }
         _ => {

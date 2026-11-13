@@ -618,7 +618,15 @@ impl App {
                     app.delete_playlist_dialog(&f);
                 }
             });
+            let export = gtk::Button::builder().icon_name("document-save-as-symbolic").tooltip_text("Export Playlist…").css_classes(["circular"]).build();
+            let (w, f) = (Rc::downgrade(self), file.clone());
+            export.connect_clicked(move |_| {
+                if let Some(app) = w.upgrade() {
+                    app.export_playlist_dialog(&f);
+                }
+            });
             buttons.append(&rename);
+            buttons.append(&export);
             buttons.append(&delete);
         }
         content.append(&header);
@@ -798,6 +806,133 @@ impl App {
         self.refresh_playlist_view();
     }
 
+    fn playlist_filters(save: bool) -> gio::ListStore {
+        let filters = gio::ListStore::new::<gtk::FileFilter>();
+        let all = gtk::FileFilter::new();
+        all.set_name(Some("Playlists"));
+        let kinds: &[(&str, &[&str], &str)] = &[
+            ("M3U Playlist", &["m3u", "m3u8"], "audio/x-mpegurl"),
+            ("XSPF Playlist", &["xspf"], "application/xspf+xml"),
+            ("PLS Playlist", &["pls"], "audio/x-scpls"),
+        ];
+        let mut singles = Vec::new();
+        for (name, exts, mime) in kinds {
+            if save && *mime == "audio/x-scpls" {
+                continue;
+            }
+            let f = gtk::FileFilter::new();
+            f.set_name(Some(name));
+            for e in *exts {
+                f.add_suffix(e);
+                all.add_suffix(e);
+            }
+            f.add_mime_type(mime);
+            all.add_mime_type(mime);
+            singles.push(f);
+        }
+        if !save {
+            filters.append(&all);
+        }
+        for f in singles {
+            filters.append(&f);
+        }
+        filters
+    }
+
+    /// Imports an M3U/XSPF/PLS file as a new playlist (entries outside the
+    /// library are dropped).
+    pub fn import_playlist_dialog(self: &Rc<Self>) {
+        let dialog = gtk::FileDialog::builder().title("Import Playlist").modal(true).filters(&Self::playlist_filters(false)).build();
+        let w = Rc::downgrade(self);
+        dialog.open(Some(&self.window), gio::Cancellable::NONE, move |res| {
+            let (Some(app), Ok(file)) = (w.upgrade(), res) else { return };
+            let Some(path) = file.path() else { return };
+            let read = playlist::read_any(&path);
+            let lib = app.lib();
+            let imported = read.as_ref().ok().and_then(|(name, entries)| {
+                playlist::import(name.clone(), &path, entries.clone(), &App::data_dir().join("playlists"), |p| lib.index_of(p).is_some())
+            });
+            match (read, imported) {
+                (Err(e), _) => app.toasts.add_toast(toast(&format!("Cannot read playlist: {e}"))),
+                (Ok(_), None) => app.toasts.add_toast(toast("No songs from this playlist are in your library")),
+                (Ok(_), Some(pl)) => {
+                    app.save_playlist(&pl);
+                    app.toasts.add_toast(toast(&format!("Imported “{}”", pl.name)));
+                    app.reload_playlists();
+                }
+            }
+        });
+    }
+
+    /// Imports the playlist files LocalSearch has indexed (read-only query).
+    /// Playlists already imported (same name and songs) are skipped.
+    pub fn import_index_playlists(self: &Rc<Self>) {
+        let (tx, rx) = async_channel::bounded::<Result<Vec<crate::tracker::IndexedPlaylist>, String>>(1);
+        std::thread::spawn(move || {
+            let res = match crate::tracker::Endpoint::connect() {
+                Some(ep) => crate::tracker::playlists(&ep),
+                None => Err("the LocalSearch index is not available".into()),
+            };
+            let _ = tx.send_blocking(res);
+        });
+        let w = Rc::downgrade(self);
+        glib::spawn_future_local(async move {
+            let Ok(res) = rx.recv().await else { return };
+            let Some(app) = w.upgrade() else { return };
+            let found = match res {
+                Ok(f) => f,
+                Err(e) => {
+                    app.toasts.add_toast(toast(&format!("Cannot import: {e}")));
+                    return;
+                }
+            };
+            let lib = app.lib();
+            let dir = App::data_dir().join("playlists");
+            let mut count = 0;
+            for ip in found {
+                let Some(pl) = playlist::import(ip.title, &ip.file, ip.entries, &dir, |p| lib.index_of(p).is_some()) else { continue };
+                let dup = app.playlists.borrow().iter().any(|p| crate::model::sort_key(&p.name) == crate::model::sort_key(&pl.name) && p.entries == pl.entries);
+                if dup {
+                    continue;
+                }
+                app.save_playlist(&pl);
+                app.playlists.borrow_mut().push(pl);
+                count += 1;
+            }
+            app.toasts.add_toast(toast(&match count {
+                0 => "No new playlists with songs from your library were found".to_string(),
+                1 => "Imported 1 playlist".to_string(),
+                n => format!("Imported {n} playlists"),
+            }));
+            if count > 0 {
+                app.reload_playlists();
+            }
+        });
+    }
+
+    /// Saves a copy of a playlist as M3U or XSPF (by the chosen extension).
+    pub fn export_playlist_dialog(self: &Rc<Self>, file: &Path) {
+        let Some(pl) = self.playlists.borrow().iter().find(|p| p.file == file).cloned() else { return };
+        let dialog = gtk::FileDialog::builder()
+            .title("Export Playlist")
+            .modal(true)
+            .initial_name(format!("{}.m3u", pl.name.replace('/', "_")))
+            .filters(&Self::playlist_filters(true))
+            .build();
+        let w = Rc::downgrade(self);
+        dialog.save(Some(&self.window), gio::Cancellable::NONE, move |res| {
+            let (Some(app), Ok(dest)) = (w.upgrade(), res) else { return };
+            let Some(mut path) = dest.path() else { return };
+            if playlist::Format::of(&path).is_none() {
+                path.set_extension("m3u");
+            }
+            match playlist::export(&pl, &path, app.entry_info()) {
+                Ok(()) => app.toasts.add_toast(toast("Playlist exported")),
+                Err(e) => app.toasts.add_toast(toast(&format!("Cannot export playlist: {e}"))),
+            }
+        });
+    }
+
     /// Creates a playlist (`rename == None`) or renames one.
     pub fn new_playlist_dialog(self: &Rc<Self>, rename: Option<PathBuf>) {
         self.playlist_name_dialog(rename, Vec::new());
@@ -935,7 +1070,12 @@ impl App {
     pub fn show_preferences(self: &Rc<Self>) {
         let dialog = adw::PreferencesDialog::new();
         let page = adw::PreferencesPage::new();
-        let folders = adw::PreferencesGroup::builder().title("Library Folders").description("Music in these folders appears in your library").build();
+        let description = if self.using_tracker.get() {
+            "Music in these folders appears in your library. Folders indexed by LocalSearch are read from its index."
+        } else {
+            "Music in these folders appears in your library"
+        };
+        let folders = adw::PreferencesGroup::builder().title("Library Folders").description(description).build();
         let add = gtk::Button::builder().icon_name("list-add-symbolic").tooltip_text("Add Folder…").css_classes(["flat"]).valign(gtk::Align::Center).build();
         folders.set_header_suffix(Some(&add));
         let main = adw::ActionRow::builder().title(glib::markup_escape_text(&music_dir().display().to_string())).subtitle("Music folder").build();
@@ -978,6 +1118,36 @@ impl App {
             }
         });
         playback.add(&inhibit);
+
+        let modes = crate::player::ReplayGain::ALL;
+        let labels: Vec<&str> = modes.iter().map(|m| m.label()).collect();
+        let rg = adw::ComboRow::builder()
+            .title("ReplayGain")
+            .subtitle("Even out loudness using the volume tags of songs or albums")
+            .model(&gtk::StringList::new(&labels))
+            .selected(modes.iter().position(|m| *m == self.replaygain()).unwrap_or(0) as u32)
+            .build();
+        let w = Rc::downgrade(self);
+        rg.connect_selected_notify(move |r| {
+            if let (Some(app), Some(m)) = (w.upgrade(), modes.get(r.selected() as usize)) {
+                app.set_replaygain(*m);
+            }
+        });
+        playback.add(&rg);
+
+        let notify = adw::SwitchRow::builder()
+            .title("Notifications")
+            .subtitle("Announce new songs while the window is in the background")
+            .active(self.state.borrow().notifications)
+            .build();
+        let w = Rc::downgrade(self);
+        notify.connect_active_notify(move |r| {
+            if let Some(app) = w.upgrade() {
+                app.state.borrow_mut().notifications = r.is_active();
+                app.save_state();
+            }
+        });
+        playback.add(&notify);
         page.add(&playback);
         dialog.add(&page);
         dialog.present(Some(&self.window));
