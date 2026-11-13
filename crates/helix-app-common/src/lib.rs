@@ -11,10 +11,40 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-/// Returns `Some(settings)` if `schema_id` is installed.
+/// Where packages install Helix's own copies of the GNOME-compatible
+/// schemas the apps read, compiled. They live outside the global schema
+/// directory so they never conflict with the GNOME packages that own the
+/// same schema files; `HELIX_APPS_SCHEMA_DIR` overrides the location.
+pub const BUNDLED_SCHEMA_DIR: &str = "/usr/share/helix-apps/schemas";
+
+fn bundled_source() -> Option<gio::SettingsSchemaSource> {
+    thread_local! {
+        static SOURCE: Option<gio::SettingsSchemaSource> = {
+            let dir = std::env::var_os("HELIX_APPS_SCHEMA_DIR")
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|| BUNDLED_SCHEMA_DIR.into());
+            if dir.join("gschemas.compiled").is_file() {
+                gio::SettingsSchemaSource::from_directory(&dir, None, false).ok()
+            } else {
+                None
+            }
+        };
+    }
+    SOURCE.with(|s| s.clone())
+}
+
+/// Looks up `schema_id`: the system's schemas first (so a full GNOME
+/// install wins), then Helix's bundled copies.
+pub fn lookup_schema(schema_id: &str) -> Option<gio::SettingsSchema> {
+    gio::SettingsSchemaSource::default()
+        .and_then(|s| s.lookup(schema_id, true))
+        .or_else(|| bundled_source()?.lookup(schema_id, false))
+}
+
+/// Returns `Some(settings)` if `schema_id` is installed (system-wide or
+/// bundled with Helix).
 pub fn settings(schema_id: &str) -> Option<gio::Settings> {
-    let source = gio::SettingsSchemaSource::default()?;
-    let schema = source.lookup(schema_id, true)?;
+    let schema = lookup_schema(schema_id)?;
     Some(gio::Settings::new_full(&schema, None::<&gio::SettingsBackend>, None))
 }
 
@@ -158,4 +188,36 @@ pub fn install_standard_actions(
     app.add_action_entries([quit, about]);
     app.set_accels_for_action("app.quit", &["<Control>q"]);
     app.set_accels_for_action("window.close", &["<Control>w"]);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A schema found only in the bundled directory is used, and the
+    /// system's schemas still win for ids they define.
+    #[test]
+    fn bundled_schema_fallback() {
+        let dir = std::env::temp_dir().join(format!("helix-app-common-schemas-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("org.helix.Test.gschema.xml"),
+            r#"<schemalist><schema id="org.helix.Test" path="/org/helix/test/">
+                 <key name="answer" type="i"><default>42</default></key>
+               </schema></schemalist>"#,
+        )
+        .unwrap();
+        let compiled = std::process::Command::new("glib-compile-schemas").arg(&dir).status();
+        if !matches!(compiled, Ok(s) if s.success()) {
+            eprintln!("glib-compile-schemas unavailable; skipping");
+            return;
+        }
+        // Read once per thread, so set it before the first lookup here.
+        std::env::set_var("HELIX_APPS_SCHEMA_DIR", &dir);
+        std::env::set_var("GSETTINGS_BACKEND", "memory");
+        let prefs = Prefs::new("org.helix.Test");
+        assert_eq!(prefs.get::<i32>("answer", 0), 42);
+        assert!(lookup_schema("org.helix.NoSuchSchema").is_none());
+        std::fs::remove_dir_all(&dir).ok();
+    }
 }

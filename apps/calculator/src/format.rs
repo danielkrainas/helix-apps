@@ -87,7 +87,7 @@ fn group(digits: &str, enable: bool, sep: char, size: usize) -> String {
     let mut out = String::new();
     let first = digits.len() % size;
     for (i, c) in digits.chars().enumerate() {
-        if i > 0 && (i + size - first) % size == 0 {
+        if i > 0 && (i + size - first).is_multiple_of(size) {
             out.push(sep);
         }
         out.push(c);

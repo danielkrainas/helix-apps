@@ -194,8 +194,7 @@ pub fn zoom_step(current: f64, dir: i32) -> f64 {
 /// (such as `org.gnome.Epiphany.web`) are opened at `path`;
 /// `helix_app_common::Prefs` cannot do that, hence this local helper.
 fn open_settings(schema_id: &str, path: &str) -> Option<(gio::Settings, Vec<String>)> {
-    let source = gio::SettingsSchemaSource::default()?;
-    let schema = source.lookup(schema_id, true)?;
+    let schema = helix_app_common::lookup_schema(schema_id)?;
     let path = schema.path().is_none().then_some(path);
     let keys = schema.list_keys().iter().map(|k| k.to_string()).collect();
     let settings = gio::Settings::new_full(&schema, None::<&gio::SettingsBackend>, path);

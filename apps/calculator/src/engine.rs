@@ -37,7 +37,7 @@ impl AngleUnit {
             AngleUnit::Gradians => x * std::f64::consts::PI / 200.0,
         }
     }
-    fn from_radians(self, x: f64) -> f64 {
+    fn radians_to_unit(self, x: f64) -> f64 {
         match self {
             AngleUnit::Degrees => x.to_degrees(),
             AngleUnit::Radians => x,
@@ -344,7 +344,7 @@ impl<'a> Lexer<'a> {
                 let group: Vec<char> = self.chars[self.i + 1..].iter().take(4).copied().collect();
                 if group.len() >= 3
                     && group[..3].iter().all(|c| c.is_ascii_digit())
-                    && group.get(3).map_or(true, |c| !c.is_ascii_digit())
+                    && group.get(3).is_none_or(|c| !c.is_ascii_digit())
                 {
                     self.i += 1;
                 } else {
@@ -977,13 +977,13 @@ impl Context {
             }
             "asin" => {
                 domain((-1.0..=1.0).contains(&x), "Inverse sine is undefined for values outside [-1, 1]")?;
-                a.from_radians(x.asin())
+                a.radians_to_unit(x.asin())
             }
             "acos" => {
                 domain((-1.0..=1.0).contains(&x), "Inverse cosine is undefined for values outside [-1, 1]")?;
-                a.from_radians(x.acos())
+                a.radians_to_unit(x.acos())
             }
-            "atan" => a.from_radians(x.atan()),
+            "atan" => a.radians_to_unit(x.atan()),
             "sinh" => x.sinh(),
             "cosh" => x.cosh(),
             "tanh" => x.tanh(),
@@ -1319,7 +1319,7 @@ mod tests {
         assert_eq!(ctx.evaluate("1/0"), Err(CalcError::DivisionByZero));
         assert!(matches!(ctx.evaluate("ln 0"), Err(CalcError::Domain(_))));
         assert!(matches!(ctx.evaluate("1+"), Err(CalcError::Syntax { .. })));
-        assert!(matches!(ctx.evaluate("(1+2"), Ok(_)), "trailing paren auto-closes");
+        assert!(ctx.evaluate("(1+2").is_ok(), "trailing paren auto-closes");
         assert!(matches!(ctx.evaluate("1+2)"), Err(CalcError::Syntax { .. })));
         assert!(matches!(ctx.evaluate("1 $ 2"), Err(CalcError::Syntax { pos: 2, .. })));
         assert!(matches!(ctx.evaluate("tan 90"), Err(CalcError::Domain(_))));
@@ -1329,7 +1329,7 @@ mod tests {
     #[test]
     fn thousands_and_args() {
         assert_eq!(eval("1,234+1"), 1235.0);
-        assert!(close(eval("fv(100, 0.05, 10)"), 1257.789_253_554_883));
+        assert!(close(eval("fv(100, 0.05, 10)"), 1_257.789_253_554_883));
         assert!(close(eval("pmt(1000;5%;12)"), 112.825_410_021_13));
     }
 

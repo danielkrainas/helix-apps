@@ -1,0 +1,169 @@
+name: Release
+
+# Pushing a tag vX.Y.Z (matching the workspace version in Cargo.toml) builds
+# the helix-apps package as .deb, .rpm and tarball for x86_64 and aarch64
+# and as an Arch Linux package for x86_64, and publishes them as a GitHub
+# release. Running it by hand builds the same packages as workflow
+# artifacts without publishing anything.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_PROFILE_RELEASE_STRIP: "true"
+  NFPM_VERSION: "2.48.0"
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        name: Check the tag against Cargo.toml
+        run: |
+          version=$(sed -n '/^\[workspace.package\]/,/^\[/s/^version = "\(.*\)"/\1/p' Cargo.toml)
+          if [ -z "$version" ]; then
+            echo "no workspace version in Cargo.toml" >&2; exit 1
+          fi
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "tag $GITHUB_REF_NAME does not match Cargo.toml version $version" >&2; exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+        family: [debian, redhat, arch]
+        exclude:
+          # The official Arch Linux image is x86_64 only.
+          - runner: ubuntu-24.04-arm
+            family: arch
+    runs-on: ${{ matrix.runner }}
+    # Each family builds in its own distribution so the binaries link
+    # against that family's libraries: Ubuntu 24.04 (also fine for Debian
+    # 13), Fedora 44, and Arch Linux as of the build (it is rolling).
+    container: ${{ matrix.family == 'redhat' && 'fedora:44' || matrix.family == 'arch' && 'archlinux:latest' || 'ubuntu:24.04' }}
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - name: Install build packages (Ubuntu)
+        if: matrix.family == 'debian'
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential git curl ca-certificates jq \
+            pkg-config libglib2.0-dev libglib2.0-bin libgtk-4-dev libadwaita-1-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            libvte-2.91-gtk4-dev libwebkitgtk-6.0-dev libpoppler-glib-dev \
+            libshumate-dev libsane-dev
+
+      - name: Install build packages (Fedora)
+        if: matrix.family == 'redhat'
+        run: |
+          dnf install -y --setopt=install_weak_deps=False \
+            gcc pkgconf-pkg-config git curl tar gzip jq \
+            glib2-devel gtk4-devel libadwaita-devel \
+            gstreamer1-devel gstreamer1-plugins-base-devel \
+            vte291-gtk4-devel webkitgtk6.0-devel poppler-glib-devel \
+            libshumate-devel sane-backends-devel
+
+      - name: Install build packages (Arch Linux)
+        if: matrix.family == 'arch'
+        run: |
+          pacman -Syu --noconfirm --needed \
+            base-devel git curl jq \
+            glib2 gtk4 libadwaita gstreamer gst-plugins-base-libs \
+            vte4 webkitgtk-6.0 poppler-glib libshumate sane
+
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.family }}
+
+      - name: Build
+        run: cargo build --release --locked --workspace --bins
+
+      - name: Stage files
+        run: packaging/stage.sh stage
+
+      - name: Install nfpm
+        run: |
+          case $(uname -m) in
+            x86_64) asset=Linux_x86_64; sum=6d7f9a28b2f397934403950fcbba83f598b08d02edbe79a0815b3b4897341750 ;;
+            aarch64) asset=Linux_arm64; sum=a9a75213763783b7669719e505474c748c5ad7dc66591a195619deb50f85c2f4 ;;
+            *) echo "unsupported machine $(uname -m)" >&2; exit 1 ;;
+          esac
+          file=nfpm_${NFPM_VERSION}_${asset}.tar.gz
+          curl -fsSLO "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/${file}"
+          echo "${sum}  ${file}" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/nfpm"
+          tar -xzf "$file" -C "$RUNNER_TEMP/nfpm" nfpm
+          rm "$file"
+          echo "$RUNNER_TEMP/nfpm" >> "$GITHUB_PATH"
+
+      - name: Package
+        run: |
+          case $(uname -m) in
+            x86_64) arch=amd64 ;;
+            aarch64) arch=arm64 ;;
+          esac
+          mkdir -p dist
+          sed -e "s/@VERSION@/${VERSION}/" -e "s/@ARCH@/${arch}/" packaging/nfpm.yaml > nfpm.yaml
+          case "${{ matrix.family }}" in
+            debian)
+              nfpm package --config nfpm.yaml --packager deb --target dist/
+              # The tarball: the staged tree, to unpack at /. It does not
+              # load the AppArmor profiles; see packaging/postinstall.sh.
+              tar -czf "dist/helix-apps-${VERSION}-$(uname -m).tar.gz" \
+                --owner=0 --group=0 -C stage .
+              ;;
+            redhat) nfpm package --config nfpm.yaml --packager rpm --target dist/ ;;
+            arch) nfpm package --config nfpm.yaml --packager archlinux --target dist/ ;;
+          esac
+          ls -l dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-${{ matrix.family }}-${{ matrix.runner }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: [version, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum * > SHA256SUMS
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          prerelease=
+          case $VERSION in *-*) prerelease=--prerelease ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" --title "Helix Apps $VERSION" \
+            --generate-notes $prerelease

@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build libraries, plus what the tests use at runtime: a private D-Bus
+      # (dbus-daemon), GStreamer elements (fakesink, audiotestsrc, rgvolume),
+      # SANE's test backend, tracker3, Evolution Data Server's daemons,
+      # fonts and glib-compile-schemas.
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config libglib2.0-dev libgtk-4-dev libadwaita-1-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            libvte-2.91-gtk4-dev libwebkitgtk-6.0-dev libpoppler-glib-dev \
+            libshumate-dev libsane-dev \
+            dbus dbus-daemon libglib2.0-bin desktop-file-utils \
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+            libsane1 tracker evolution-data-server \
+            fontconfig fonts-dejavu-core
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      # Headless, on a private session bus, with in-memory GSettings, so no
+      # test can reach a display, a user bus or real settings.
+      - name: Test
+        run: |
+          env -u DISPLAY -u WAYLAND_DISPLAY GSETTINGS_BACKEND=memory \
+            dbus-run-session -- cargo test --workspace --locked
+
+      # The helix-eds tests against real Evolution Data Server daemons on a
+      # private bus with scratch data.
+      - name: Test against Evolution Data Server
+        run: crates/helix-eds/tests/run-private-eds.sh cargo test -p helix-eds --test private_bus --locked
+
+      - name: Check schemas
+        run: |
+          dir=$(mktemp -d)
+          cp apps/*/data/*.gschema.xml "$dir"/
+          glib-compile-schemas --strict "$dir"
+
+      # OnlyShowIn=Helix is intended (XDG_CURRENT_DESKTOP is "Helix:GNOME")
+      # even though Helix is not a registered desktop name.
+      - name: Check desktop files
+        run: |
+          out=$(for f in apps/*/data/*.desktop; do desktop-file-validate "$f"; done 2>&1 \
+            | grep ': error: ' | grep -v 'unregistered value "Helix"' || true)
+          if [ -n "$out" ]; then echo "$out"; exit 1; fi
+
+      - name: Check packaging layout
+        run: |
+          sudo apt-get install -y --no-install-recommends jq
+          cargo build --workspace --bins --locked
+          BIN_DIR=target/debug packaging/stage.sh "$RUNNER_TEMP/stage"
+          find "$RUNNER_TEMP/stage" -type f | sort

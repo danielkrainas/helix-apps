@@ -1,0 +1,129 @@
+# nfpm (https://nfpm.goreleaser.com) package description for .deb, .rpm
+# and Arch Linux packages. The release workflow
+# (.github/workflows/release.yml) stages the files with packaging/stage.sh
+# into ./stage and fills in @VERSION@ and @ARCH@ (amd64 or arm64; nfpm
+# names them as each format expects).
+name: helix-apps
+version: "@VERSION@"
+arch: "@ARCH@"
+platform: linux
+release: "1"
+section: gnome
+priority: optional
+maintainer: Daniel Krainas
+vendor: Helix
+homepage: https://github.com/danielkrainas/helix-apps
+license: CC0-1.0
+description: |-
+  Core apps for the Helix desktop
+  Rust replacements for the GNOME core apps (Files, Terminal, Text Editor,
+  Settings, Web, Calendar, Contacts, Maps, Music and more) that read the
+  GNOME apps' settings so existing preferences carry over.
+
+# Globs expand to individual files, so the packages own only their files,
+# not shared directories such as /usr/bin (on Fedora the filesystem package
+# owns those, with other modes, and the RPM would conflict with it).
+contents:
+  - src: ./stage/usr/bin/*
+    dst: /usr/bin/
+  - src: ./stage/usr/libexec/helix-system-monitor/helix-system-monitor-helper
+    dst: /usr/libexec/helix-system-monitor/helix-system-monitor-helper
+  - src: ./stage/usr/share/applications/*
+    dst: /usr/share/applications/
+  - src: ./stage/usr/share/dbus-1/services/*
+    dst: /usr/share/dbus-1/services/
+  - src: ./stage/usr/share/polkit-1/actions/*
+    dst: /usr/share/polkit-1/actions/
+  - src: ./stage/usr/share/helix-apps/schemas/*
+    dst: /usr/share/helix-apps/schemas/
+  - src: ./stage/usr/share/doc/helix-apps/README.md
+    dst: /usr/share/doc/helix-apps/README.md
+  - src: ./stage/usr/share/licenses/helix-apps/LICENSE
+    dst: /usr/share/licenses/helix-apps/LICENSE
+  - src: ./stage/etc/xdg/autostart/*
+    dst: /etc/xdg/autostart/
+    type: config|noreplace
+  - src: ./stage/etc/apparmor.d/*
+    dst: /etc/apparmor.d/
+    type: config|noreplace
+
+scripts:
+  postinstall: ./packaging/postinstall.sh
+  preremove: ./packaging/preremove.sh
+
+overrides:
+  deb:
+    # Ubuntu 24.04 / Debian 13 names; the t64 ones fall back to the older
+    # names.
+    depends:
+      - libc6
+      - libgcc-s1
+      - libglib2.0-0t64 | libglib2.0-0
+      - libgtk-4-1
+      - libadwaita-1-0
+      - libgstreamer1.0-0
+      - libgstreamer-plugins-base1.0-0
+      - libvte-2.91-gtk4-0
+      - libwebkitgtk-6.0-4
+      - libpoppler-glib8t64 | libpoppler-glib8
+      - libshumate-1.0-1
+      - libsane1
+    recommends:
+      - gstreamer1.0-plugins-base
+      - gstreamer1.0-plugins-good
+      - evolution-data-server
+      - xdg-desktop-portal
+      - pkexec
+      - dconf-service
+      - sound-theme-freedesktop
+    suggests:
+      - tracker
+      - gstreamer1.0-plugins-bad
+      - gstreamer1.0-libav
+  rpm:
+    depends:
+      - glibc
+      - libgcc
+      - glib2
+      - gtk4
+      - libadwaita
+      - gstreamer1
+      - gstreamer1-plugins-base
+      - vte291-gtk4
+      - webkitgtk6.0
+      - poppler-glib
+      - libshumate
+      - sane-backends-libs
+    recommends:
+      - gstreamer1-plugins-good
+      - evolution-data-server
+      - xdg-desktop-portal
+      - polkit
+      - dconf
+      - sound-theme-freedesktop
+    suggests:
+      - localsearch
+  archlinux:
+    depends:
+      - glibc
+      - gcc-libs
+      - glib2
+      - gtk4
+      - libadwaita
+      - gstreamer
+      - gst-plugins-base-libs
+      - vte4
+      - webkitgtk-6.0
+      - poppler-glib
+      - libshumate
+      - sane
+    recommends:
+      - gst-plugins-base
+      - gst-plugins-good
+      - evolution-data-server
+      - xdg-desktop-portal
+      - polkit
+      - dconf
+      - sound-theme-freedesktop
+archlinux:
+  packager: Helix release workflow

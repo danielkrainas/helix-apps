@@ -44,7 +44,7 @@ pub const UNITS: &[Unit] = &[
     u!(Area, 1e4, ["ha", "hectare", "hectares"]),
     u!(Area, 1.0, ["m²", "m2", "sqm"]),
     u!(Area, 1e-4, ["cm²", "cm2"]),
-    u!(Area, 4046.856_422_4, ["acre", "acres"]),
+    u!(Area, 4_046.856_422_4, ["acre", "acres"]),
     u!(Area, 0.092_903_04, ["ft²", "ft2", "sqft"]),
     u!(Area, 0.000_645_16, ["in²", "in2", "sqin"]),
     u!(Area, 2_589_988.110_336, ["mi²", "mi2", "sqmi"]),

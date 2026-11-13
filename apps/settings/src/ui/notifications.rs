@@ -26,7 +26,7 @@ impl Panel for NotificationsPanel {
         general.add(&switch(&prefs, "show-in-lock-screen", true, false, "Lock Screen Notifications", "Show notifications on the lock screen"));
         page.add(&general);
 
-        let schema = gio::SettingsSchemaSource::default().and_then(|s| s.lookup(APP_SCHEMA, true));
+        let schema = helix_app_common::lookup_schema(APP_SCHEMA);
         let children: Vec<String> = prefs.get::<Vec<String>>("application-children", Vec::new());
         if let Some(schema) = schema.filter(|_| !children.is_empty()) {
             let apps = widgets::group("Apps");

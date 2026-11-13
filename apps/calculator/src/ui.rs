@@ -220,8 +220,7 @@ fn build(app: &adw::Application) -> Ui {
     let prefs = Prefs::new(SCHEMA);
     let options = State::load_options(&prefs);
     let mode = ButtonMode::from_nick(&prefs.get_enum_nick("button-mode", "basic"));
-    let mut ctx = Context::default();
-    ctx.angle = AngleUnit::from_nick(&prefs.get_enum_nick("angle-units", "degrees"));
+    let ctx = Context { angle: AngleUnit::from_nick(&prefs.get_enum_nick("angle-units", "degrees")), ..Context::default() };
     let mut state = State { ctx, prefs: prefs.clone(), mode, options, history: load_history(), just_evaluated: false };
     state.sync_ctx_mode();
     let state = Rc::new(RefCell::new(state));

@@ -48,6 +48,33 @@ The list below matches the current GNOME core apps (as published on apps.gnome.o
 - Apps that are primarily front-ends to existing system services (Disks, Logs, System Monitor, Software) can largely reuse those services.
 - The suite is not required for Helix to host existing GTK / libadwaita applications. It is the set that makes a Helix session feel complete on its own.
 
+## Building and packages
+
+The apps form one Cargo workspace (gtk4-rs + libadwaita; GTK 4.14 and
+libadwaita 1.5 or newer). The build needs the GTK 4, libadwaita,
+GStreamer, VTE (GTK 4), WebKitGTK 6.0, poppler-glib, libshumate and SANE
+development packages. `.github/workflows/ci.yml` lists the Ubuntu names.
+
+- **CI** (`.github/workflows/ci.yml`): clippy with warnings as errors; the
+  tests, run headless on a private D-Bus session; the Evolution Data Server
+  tests; and schema, desktop-file and packaging-layout checks.
+- **Release** (`.github/workflows/release.yml`): a `vX.Y.Z` tag that matches
+  the workspace version builds the `helix-apps` package as .deb, .rpm and
+  tarball (x86_64, aarch64) and as an Arch Linux package (x86_64), and
+  publishes them as a GitHub release.
+- **Installed layout** (`packaging/stage.sh`):
+  - binaries in `/usr/bin`, plus System Monitor's privileged helper in
+    `/usr/libexec/helix-system-monitor/`;
+  - desktop files, the D-Bus service file and the polkit policy in their
+    standard places;
+  - Tour's and Clocks' autostart entries in `/etc/xdg/autostart`;
+  - the Web and Help AppArmor profiles in `/etc/apparmor.d`.
+
+  Helix's copies of the GNOME app schemas go in
+  `/usr/share/helix-apps/schemas`, not the global schema directory, so
+  they never conflict with installed GNOME apps. The apps use the system's
+  schema when it exists and fall back to these copies.
+
 ## License
 
 CC0-1.0 (same as the rest of Helix).
