@@ -218,7 +218,23 @@ Web browser.
   directly with zbus (no libsecret), from worker threads. Default collection
   (`ReadAlias("default")`, created via `CreateCollection` if missing);
   locked items/collections are unlocked through the service's prompt
-  (`Prompt` + `Completed`). Transfer session algorithm: `plain`.
+  (`Prompt` + `Completed`).
+- Transfer session: `dh-ietf1024-sha256-aes128-cbc-pkcs7` by default
+  (`sscrypto.rs`, pure Rust): Diffie-Hellman over the RFC 2409 Second
+  Oakley Group (1024-bit MODP, generator 2, constant-time `crypto-bigint`
+  exponentiation, random 1024-bit private exponent); public keys are
+  unsigned big-endian `ay` in the `OpenSession` input/output variant; peer
+  keys outside 2..p-2 are refused. AES key = first 16 bytes of
+  HKDF-SHA256(IKM = shared secret as 128-byte big-endian, no salt, empty
+  info). Each secret is AES-128-CBC/PKCS#7 with a fresh random IV in
+  `parameters`. A secret that does not decrypt is an error, never shown.
+  Only if the service answers `OpenSession` with a D-Bus error (algorithm
+  not supported) does the client log it on stderr and fall back to
+  `plain`. Private keys, shared secrets, session keys and plaintext
+  buffers are zeroized after use. An ignored, opt-in test
+  (`HELIX_WEB_SECRET_INTEROP=1 cargo test -- --ignored interop`, run in a
+  private `dbus-run-session` with a throwaway `gnome-keyring-daemon`)
+  checks interoperability with a real service.
 - Item schema (Helix-specific; documented contract):
 
   | attribute | value |
@@ -293,9 +309,20 @@ Web browser.
   has no address entry (title + host instead), no bookmarks or tab-overview
   buttons; menu: zoom, Find, Print, Fullscreen, Open in Browser,
   Uninstall Web Application… (portal `Uninstall`, then quit; site data is
-  kept), About. User-initiated navigations and pop-ups to other sites
-  (anything not on the app's host or its subdomains) open in the default
-  browser.
+  kept), Web Application Settings…, About. User-initiated navigations and
+  pop-ups to other sites (anything not on the app's host or its
+  subdomains, nor on an extra allowed site) open in the default browser.
+- Extra allowed sites (like Epiphany's `additional-urls`): edited in Web
+  Application Settings… (an `AdwPreferencesDialog` with an "Additional
+  Allowed Sites" list, per-entry remove buttons and an "Add site" entry
+  row that turns red on invalid input), stored in
+  `$XDG_DATA_HOME/helix-web/web-apps/ID/web-app.json` as
+  `{"additional-urls": [...]}`. Entries are canonicalised to
+  `[scheme://][*.]host[:port]` (lower case, IDNA, path dropped, default
+  port dropped; http/https only, no user info). Matching: no scheme →
+  http and https; a scheme pins it; `*.host` → the host and all its
+  subdomains, else the exact host; no port → the link's default port
+  only, else exactly that port.
 
 ### JavaScript dialogs
 - alert / confirm / prompt / beforeunload are shown as `AdwAlertDialog`s
@@ -396,6 +423,11 @@ Web browser.
   connection.
 - Web apps: "Install Site as Web Application" via the XDG DynamicLauncher
   portal, with a web-app mode (`--web-app=ID URL`).
+- Secret Service transfer: encrypted `dh-ietf1024-sha256-aes128-cbc-pkcs7`
+  by default (pure-Rust crypto), `plain` only when the service rejects it.
+- Web apps get a per-app extra-allowed-sites list (Epiphany's
+  `additional-urls`), edited in a Web Application Settings dialog and
+  stored with the web app's data.
 - Reader mode: pure-Rust readability-style extractor (unit-tested) shown
   with a clean, script-free stylesheet.
 - WebKit sandbox on restricted hosts: ship an AppArmor profile granting
@@ -404,14 +436,3 @@ Web browser.
 - Search engine / JavaScript / other keys aligned with the real
   `org.gnome.epiphany` schema; keys Epiphany does not have (JavaScript,
   cookie policy, restore `never`) stay in `settings.json`.
-
-## Open questions
-- The Secret Service transfer session uses the `plain` algorithm (secrets
-  travel unencrypted over the user's own session bus, as with many simple
-  clients). Implementing `dh-ietf1024-sha256-aes128-cbc-pkcs7` would need
-  pure-Rust big-integer/AES/HKDF crates; worth adding?
-- Web apps: user-initiated navigations and pop-ups to other hosts open in
-  the default browser, so a login button that links to a third-party
-  identity provider leaves the app (server redirects stay inside). Should
-  web apps get an "additional URLs" list (Epiphany's
-  `org.gnome.Epiphany.webapp additional-urls`)?

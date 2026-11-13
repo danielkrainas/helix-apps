@@ -563,14 +563,15 @@ impl Tab {
                 let Some(mut action) = nav.navigation_action() else {
                     return false;
                 };
-                // Web apps open other sites in the regular browser.
+                // Web apps open other sites (not their own or an extra
+                // allowed site) in the regular browser.
                 if let Some(app) = self.app.upgrade() {
-                    if let Some(wa) = &app.web_app {
+                    if app.web_app.is_some() {
                         let target = action.request().and_then(|r| r.uri()).map(|u| u.to_string());
                         let user = action.is_user_gesture()
                             || action.navigation_type() == webkit6::NavigationType::LinkClicked;
                         if let Some(uri) = target.filter(|u| {
-                            (u.starts_with("http://") || u.starts_with("https://")) && !wa.owns(u)
+                            (u.starts_with("http://") || u.starts_with("https://")) && !app.keeps_link(u)
                         }) {
                             if user || kind == webkit6::PolicyDecisionType::NewWindowAction {
                                 decision.ignore();

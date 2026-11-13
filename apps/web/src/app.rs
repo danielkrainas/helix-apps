@@ -43,6 +43,8 @@ pub struct App {
     pub web_settings: webkit6::Settings,
     /// Set when running as an installed web application.
     pub web_app: Option<WebApp>,
+    /// The web app's own preferences (web-app mode only).
+    pub web_app_prefs: RefCell<crate::webapp::Prefs>,
     pub windows: RefCell<Vec<Rc<Window>>>,
     pub tabs: RefCell<Vec<Rc<Tab>>>,
     data_dir: PathBuf,
@@ -196,6 +198,11 @@ impl App {
             permissions: RefCell::new(Permissions::load(&data_dir.join("permissions.json"))),
             session,
             web_settings,
+            web_app_prefs: RefCell::new(if web_app.is_some() {
+                store::load(&data_dir.join(crate::webapp::PREFS_FILE))
+            } else {
+                Default::default()
+            }),
             web_app,
             windows: RefCell::default(),
             tabs: RefCell::default(),
@@ -526,6 +533,23 @@ impl App {
         }
     }
 
+    /// Writes the web app's preferences (web-app mode only).
+    pub fn save_web_app_prefs(&self) {
+        if self.web_app.is_some() {
+            let json = store::to_json(&*self.web_app_prefs.borrow());
+            store::write_in_background(self.data_dir.join(crate::webapp::PREFS_FILE), json);
+        }
+    }
+
+    /// Whether a link to `uri` stays in this instance: always in the
+    /// browser; in a web app, only for its own or extra allowed sites.
+    pub fn keeps_link(&self, uri: &str) -> bool {
+        match &self.web_app {
+            Some(wa) => wa.keeps(uri, &self.web_app_prefs.borrow()),
+            None => true,
+        }
+    }
+
     pub fn save_permissions(&self) {
         self.schedule_save(Saved::Permissions);
     }
@@ -821,6 +845,7 @@ impl App {
         action("export-bookmarks", crate::dialogs::export_bookmarks);
         action("passwords", crate::dialogs::show_passwords);
         action("uninstall-web-app", crate::dialogs::uninstall_web_app);
+        action("web-app-preferences", crate::dialogs::show_web_app_preferences);
 
         let accels: &[(&str, &[&str])] = &[
             ("app.new-window", &["<Control>n"]),

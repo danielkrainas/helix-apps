@@ -46,6 +46,144 @@ impl WebApp {
         let home = home.trim_start_matches("www.");
         other == home || other.ends_with(&format!(".{home}"))
     }
+
+    /// Whether a link to `uri` stays inside the web app: the app's own site
+    /// or one of the extra allowed sites in `prefs`.
+    pub fn keeps(&self, uri: &str, prefs: &Prefs) -> bool {
+        self.owns(uri) || prefs.allows(uri)
+    }
+}
+
+/// Per-web-app preferences, stored as `web-app.json` in the web app's data
+/// directory.
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct Prefs {
+    /// Extra sites whose links stay inside the web app (canonical entries
+    /// from [`normalize_site`]), like Epiphany's `additional-urls`.
+    #[serde(rename = "additional-urls", default)]
+    pub additional_urls: Vec<String>,
+}
+
+pub const PREFS_FILE: &str = "web-app.json";
+
+impl Prefs {
+    /// Adds a site; returns the canonical entry, or `None` if `input` is
+    /// not a valid site. Adding an existing site changes nothing.
+    pub fn add(&mut self, input: &str) -> Option<String> {
+        let site = normalize_site(input)?;
+        if !self.additional_urls.contains(&site) {
+            self.additional_urls.push(site.clone());
+        }
+        Some(site)
+    }
+
+    pub fn remove(&mut self, site: &str) {
+        self.additional_urls.retain(|s| s != site);
+    }
+
+    /// Whether `uri` is on one of the extra allowed sites.
+    pub fn allows(&self, uri: &str) -> bool {
+        let Ok(u) = url::Url::parse(uri) else { return false };
+        self.additional_urls
+            .iter()
+            .filter_map(|s| SiteRule::parse(s))
+            .any(|r| r.matches(&u))
+    }
+}
+
+/// One extra allowed site: `[scheme://][*.]host[:port]`.
+///
+/// - Without a scheme both http and https match; with one, only that scheme.
+/// - `*.host` matches the host and all its subdomains; otherwise the host
+///   must match exactly.
+/// - Without a port only the default port of the link's scheme matches;
+///   with one, only that port (a scheme-less entry is parsed as https, so
+///   `host:443` is the same as `host`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct SiteRule {
+    scheme: Option<String>,
+    host: String,
+    subdomains: bool,
+    port: Option<u16>,
+}
+
+impl SiteRule {
+    fn parse(input: &str) -> Option<SiteRule> {
+        let input = input.trim();
+        let (scheme, rest) = match input.split_once("://") {
+            Some((s, r)) => (Some(s.to_ascii_lowercase()), r),
+            None => (None, input),
+        };
+        if scheme.as_deref().is_some_and(|s| s != "http" && s != "https") {
+            return None;
+        }
+        let (subdomains, rest) = match rest.strip_prefix("*.") {
+            Some(r) => (true, r),
+            None => (false, rest),
+        };
+        // Let the URL parser validate and normalise (IDNA, case, default
+        // port) the authority; any path, query or fragment is dropped.
+        let u = url::Url::parse(&format!("{}://{rest}", scheme.as_deref().unwrap_or("https"))).ok()?;
+        if !u.username().is_empty() || u.password().is_some() {
+            return None;
+        }
+        let host = match u.host()? {
+            url::Host::Domain(d) => {
+                if d.split('.').any(str::is_empty) {
+                    return None;
+                }
+                d.to_string()
+            }
+            // `*.` only makes sense for names.
+            _ if subdomains => return None,
+            h => h.to_string(),
+        };
+        let port = u.port();
+        Some(SiteRule { scheme, host, subdomains, port })
+    }
+
+    fn matches(&self, u: &url::Url) -> bool {
+        let scheme = u.scheme();
+        if !matches!(scheme, "http" | "https") {
+            return false;
+        }
+        if self.scheme.as_deref().is_some_and(|s| s != scheme) {
+            return false;
+        }
+        let port_ok = match self.port {
+            Some(p) => u.port_or_known_default() == Some(p),
+            None => u.port().is_none(),
+        };
+        let Some(host) = u.host_str() else { return false };
+        let host = host.to_ascii_lowercase();
+        let host_ok = host == self.host
+            || (self.subdomains && host.ends_with(&format!(".{}", self.host)));
+        port_ok && host_ok
+    }
+}
+
+impl std::fmt::Display for SiteRule {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(s) = &self.scheme {
+            write!(f, "{s}://")?;
+        }
+        if self.subdomains {
+            write!(f, "*.")?;
+        }
+        write!(f, "{}", self.host)?;
+        if let Some(p) = self.port {
+            write!(f, ":{p}")?;
+        }
+        Ok(())
+    }
+}
+
+/// The canonical form of a site typed by the user (`Example.com/login` →
+/// `example.com`, `https://SSO.example.com:443/x` → `https://sso.example.com`,
+/// `*.Example.org` → `*.example.org`), or `None` if it is not a valid
+/// http(s) site.
+pub fn normalize_site(input: &str) -> Option<String> {
+    SiteRule::parse(input).map(|r| r.to_string())
 }
 
 fn host(uri: &str) -> Option<String> {
@@ -300,5 +438,81 @@ mod tests {
             request_path(":1.42", "tok"),
             "/org/freedesktop/portal/desktop/request/1_42/tok"
         );
+    }
+
+    #[test]
+    fn site_normalisation() {
+        assert_eq!(normalize_site("Example.com").as_deref(), Some("example.com"));
+        assert_eq!(normalize_site("  example.com/login?x=1 ").as_deref(), Some("example.com"));
+        assert_eq!(
+            normalize_site("HTTPS://SSO.Example.com:443/path").as_deref(),
+            Some("https://sso.example.com")
+        );
+        assert_eq!(normalize_site("http://e.com:8080").as_deref(), Some("http://e.com:8080"));
+        assert_eq!(normalize_site("e.com:8443").as_deref(), Some("e.com:8443"));
+        assert_eq!(normalize_site("*.Example.org").as_deref(), Some("*.example.org"));
+        assert_eq!(normalize_site("bücher.de").as_deref(), Some("xn--bcher-kva.de"));
+        assert_eq!(normalize_site("127.0.0.1:3000").as_deref(), Some("127.0.0.1:3000"));
+        let bad = [
+            "", "   ", "ftp://e.com", "mailto:a@b.c", "*.", "*.1.2.3.4", "a..b", "https://",
+            "user:pw@e.com", "e com",
+        ];
+        for b in bad {
+            assert_eq!(normalize_site(b), None, "{b}");
+        }
+    }
+
+    #[test]
+    fn additional_site_matching() {
+        let mut p = Prefs::default();
+        assert_eq!(p.add("accounts.example.net/signin").as_deref(), Some("accounts.example.net"));
+        assert_eq!(p.add("ACCOUNTS.example.net").as_deref(), Some("accounts.example.net"));
+        assert_eq!(p.additional_urls.len(), 1, "duplicates are not added");
+        p.add("https://pay.example.org").unwrap();
+        p.add("*.cdn.example.com").unwrap();
+        p.add("localhost:8080").unwrap();
+        assert!(p.add("not a site").is_none());
+
+        // Exact host, either scheme, default port only.
+        assert!(p.allows("https://accounts.example.net/o/auth?x=1"));
+        assert!(p.allows("http://accounts.example.net/"));
+        assert!(p.allows("https://Accounts.Example.NET/"));
+        assert!(!p.allows("https://accounts.example.net:8443/"));
+        assert!(!p.allows("https://login.accounts.example.net/"));
+        assert!(!p.allows("https://example.net/"));
+        assert!(!p.allows("https://evilaccounts.example.net/"));
+        assert!(!p.allows("https://accounts.example.net.evil.com/"));
+        // Scheme pinned.
+        assert!(p.allows("https://pay.example.org/checkout"));
+        assert!(!p.allows("http://pay.example.org/checkout"));
+        // Wildcard: the host and its subdomains.
+        assert!(p.allows("https://cdn.example.com/"));
+        assert!(p.allows("https://a.b.cdn.example.com/x"));
+        assert!(!p.allows("https://xcdn.example.com/"));
+        // Port pinned.
+        assert!(p.allows("http://localhost:8080/"));
+        assert!(!p.allows("http://localhost/"));
+        // Never other schemes.
+        assert!(!p.allows("ftp://accounts.example.net/"));
+        assert!(!p.allows("javascript:alert(1)"));
+        assert!(!p.allows("garbage"));
+
+        let app = WebApp { id: "x".into(), url: "https://mail.example.com/".into() };
+        assert!(app.keeps("https://mail.example.com/inbox", &p));
+        assert!(app.keeps("https://accounts.example.net/", &p));
+        assert!(!app.keeps("https://news.example.net/", &p));
+
+        p.remove("accounts.example.net");
+        assert!(!p.allows("https://accounts.example.net/"));
+    }
+
+    #[test]
+    fn prefs_json() {
+        let mut p = Prefs::default();
+        p.add("sso.example.com").unwrap();
+        let json = serde_json::to_string(&p).unwrap();
+        assert_eq!(json, r#"{"additional-urls":["sso.example.com"]}"#);
+        assert_eq!(serde_json::from_str::<Prefs>(&json).unwrap(), p);
+        assert_eq!(serde_json::from_str::<Prefs>("{}").unwrap(), Prefs::default());
     }
 }
