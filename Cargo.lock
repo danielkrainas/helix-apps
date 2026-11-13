@@ -1242,6 +1242,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-maps"
+version = "0.1.0"
+dependencies = [
+ "async-channel",
+ "gtk4",
+ "helix-app-common",
+ "libadwaita",
+ "libshumate",
+ "serde",
+ "serde_json",
+ "ureq",
+ "zbus",
+]
+
+[[package]]
 name = "helix-music"
 version = "0.1.0"
 dependencies = [
@@ -1643,6 +1658,37 @@ name = "libm"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
+
+[[package]]
+name = "libshumate"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc9921cc829fb2d546bd6a3a158a4134002098887e0bb01ceb4535521af610ec"
+dependencies = [
+ "gdk-pixbuf",
+ "gdk4",
+ "gio",
+ "glib",
+ "gtk4",
+ "libc",
+ "libshumate-sys",
+]
+
+[[package]]
+name = "libshumate-sys"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b238767323bdd28dc72471fa8a512ad0ae99a18d9668deb626c55f373f7aff81"
+dependencies = [
+ "gdk-pixbuf-sys",
+ "gdk4-sys",
+ "gio-sys",
+ "glib-sys",
+ "gobject-sys",
+ "gtk4-sys",
+ "libc",
+ "system-deps",
+]
 
 [[package]]
 name = "linux-raw-sys"
