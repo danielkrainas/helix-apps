@@ -69,26 +69,33 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
 
     // Behaviour.
     let behaviour = adw::PreferencesGroup::builder().title("Behaviour").build();
+    // org.gnome.Console has no separate "unlimited" key: a negative
+    // `scrollback-lines` means unlimited.
+    let stored: i64 = prefs.get("scrollback-lines", 10000i64);
     let unlimited = adw::SwitchRow::builder()
         .title("Unlimited Scrollback")
         .subtitle("Keep all terminal output in memory")
-        .active(prefs.get("ignore-scrollback-limit", false))
+        .active(stored < 0)
         .build();
     let lines = adw::SpinRow::with_range(0.0, 1_000_000.0, 1000.0);
     lines.set_title("Scrollback Lines");
-    lines.set_value(prefs.get("scrollback-lines", 10000i64) as f64);
+    lines.set_value(if stored < 0 { 10000.0 } else { stored as f64 });
     lines.set_sensitive(!unlimited.is_active());
     let a = app.clone();
     let lr = lines.clone();
     unlimited.connect_active_notify(move |row| {
-        a.prefs.set("ignore-scrollback-limit", row.is_active());
+        let v = if row.is_active() { -1 } else { lr.value() as i64 };
+        a.prefs.set("scrollback-lines", v);
         lr.set_sensitive(!row.is_active());
         a.refresh_all();
     });
     let a = app.clone();
+    let ur = unlimited.clone();
     lines.connect_value_notify(move |row| {
-        a.prefs.set("scrollback-lines", row.value() as i64);
-        a.refresh_all();
+        if !ur.is_active() {
+            a.prefs.set("scrollback-lines", row.value() as i64);
+            a.refresh_all();
+        }
     });
     behaviour.add(&unlimited);
     behaviour.add(&lines);

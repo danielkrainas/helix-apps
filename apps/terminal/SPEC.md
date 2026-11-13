@@ -51,7 +51,8 @@ VTE for GTK 4 (`vte-2.91-gtk4` 0.76, Rust `vte4` 0.8).
   briefly. A bell in a non-selected tab sets its *needs attention* indicator.
 
 ### Tabs and processes
-- New tab / window spawn the user's shell: `$SHELL`, else the passwd entry
+- New tab / window spawn the `shell` setting (an argv list) when it is
+  non-empty, else the user's shell: `$SHELL`, else the passwd entry
   (`getpwuid`), else `/bin/sh`, with `COLORTERM=truecolor` and
   `TERM_PROGRAM=helix-terminal` added to the environment.
 - New tabs and windows start in the working directory of the current tab:
@@ -90,23 +91,28 @@ VTE for GTK 4 (`vte-2.91-gtk4` 0.76, Rust `vte4` 0.8).
 
 ### GSettings
 Schema `org.gnome.Console` (not installed on the development machine; the
-bundled `data/org.gnome.Console.gschema.xml` lists only the keys used, from
-the published key list). Read and written through `Prefs` with in-memory
-fallback.
+bundled `data/org.gnome.Console.gschema.xml` matches the real GNOME Console
+schema exactly: names, types, enum values, range and defaults). Read and
+written through `Prefs` with in-memory fallback.
 
-| Key | Type | Use |
+| Key | Type (default) | Use |
 |---|---|---|
-| `theme` | enum `night`/`day`/`hacker`/`auto` | style + palette |
-| `font-scale` | d | zoom level |
-| `scrollback-lines` | x | scrollback limit |
-| `ignore-scrollback-limit` | b | unlimited scrollback |
-| `use-system-font` | b | system monospace font |
-| `custom-font` | s | Pango font description |
-| `audible-bell` | b | beep |
-| `visual-bell` | b | flash |
-| `restore-window-size` | b | remember size |
-| `last-window-size` | (ii) | saved size |
-| `last-window-maximised` | b | saved maximised state |
+| `theme` | enum `auto`=0/`night`=1/`day`=2/`hacker`=3 (`'night'`) | style + palette |
+| `font-scale` | d, range 0.5–4.0 (1.0) | zoom level |
+| `custom-font` | s (`""`) | Pango font description |
+| `use-system-font` | b (true) | system monospace font |
+| `shell` | as (`[]`) | argv for new shells; empty = login shell |
+| `scrollback-lines` | x (10000) | scrollback limit; negative = unlimited |
+| `last-window-size` | (ii) (`(-1, -1)`) | saved size |
+| `last-window-maximised` | b (false) | saved maximised state |
+| `restore-window-size` | b (true) | remember size |
+| `audible-bell` | b (true) | beep |
+| `visual-bell` | b (true) | flash |
+
+There is no separate "unlimited scrollback" key: the *Unlimited Scrollback*
+switch stores `scrollback-lines = -1` (VTE's convention for unlimited) and
+turning it off restores the spin row's value. The `shell` key has no UI
+(as in Console); it is honoured when set externally.
 
 Read-only: `org.gnome.desktop.interface monospace-font-name`.
 
@@ -148,9 +154,12 @@ Ctrl+W and Ctrl+Q are deliberately *not* bound (they belong to the shell).
 - Single instance via `G_APPLICATION_HANDLES_COMMAND_LINE`; `--help`,
   `--version` and invalid options are handled by the invoking process.
 
+## Decisions
+- `org.gnome.Console` keys aligned with the real schema: enum renumbered
+  (`auto`=0 … `hacker`=3), `font-scale` range added, the non-existent
+  `ignore-scrollback-limit` dropped (unlimited = negative
+  `scrollback-lines`), `shell` added.
+
 ## Open questions
-- `org.gnome.Console` is not installed here, so key names/types in the
-  bundled schema could not be verified against a system copy;
-  `ignore-scrollback-limit` in particular is from memory of Console 43+.
 - Console's exact handling of finished `-- COMMAND` tabs is unknown; we keep
   the tab with an exit banner rather than closing instantly.

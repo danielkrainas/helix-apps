@@ -293,7 +293,12 @@ impl Window {
 
     fn spawn(&self, tab: &Rc<Tab>, launch: Launch) {
         let argv: Vec<String> =
-            if launch.command.is_empty() { vec![process::user_shell()] } else { launch.command };
+            if launch.command.is_empty() {
+                let setting = self.app.upgrade().map(|a| a.prefs.get("shell", Vec::<String>::new()));
+                process::shell_argv(setting.unwrap_or_default())
+            } else {
+                launch.command
+            };
         let cwd = launch
             .cwd
             .filter(|p| p.is_dir())

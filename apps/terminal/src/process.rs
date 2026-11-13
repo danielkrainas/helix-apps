@@ -9,6 +9,16 @@ pub fn user_shell() -> String {
     pick_shell(std::env::var("SHELL").ok(), passwd_shell())
 }
 
+/// The argv for a new shell: the `shell` setting (an argv list) when it is
+/// non-empty, else the user's login shell.
+pub fn shell_argv(setting: Vec<String>) -> Vec<String> {
+    if setting.first().is_some_and(|s| !s.trim().is_empty()) {
+        setting
+    } else {
+        vec![user_shell()]
+    }
+}
+
 fn pick_shell(env: Option<String>, passwd: Option<String>) -> String {
     [env, passwd]
         .into_iter()
@@ -105,6 +115,13 @@ mod tests {
         assert_eq!(pick_shell(Some(" ".into()), Some("/bin/bash".into())), "/bin/bash");
         assert_eq!(pick_shell(None, None), "/bin/sh");
         assert!(!user_shell().is_empty());
+    }
+
+    #[test]
+    fn shell_setting() {
+        assert_eq!(shell_argv(vec!["/bin/fish".into(), "-l".into()]), ["/bin/fish", "-l"]);
+        assert_eq!(shell_argv(vec![]), [user_shell()]);
+        assert_eq!(shell_argv(vec!["".into()]), [user_shell()]);
     }
 
     #[test]

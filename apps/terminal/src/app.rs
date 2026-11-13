@@ -298,11 +298,8 @@ impl App {
     pub fn apply_to(&self, term: &vte4::Terminal) {
         term.set_font(Some(&self.font()));
         term.set_font_scale(self.font_scale());
-        let lines: i64 = if self.prefs.get("ignore-scrollback-limit", false) {
-            -1
-        } else {
-            self.prefs.get("scrollback-lines", 10000i64).max(0)
-        };
+        // `scrollback-lines` < 0 means unlimited (VTE's convention).
+        let lines: i64 = self.prefs.get("scrollback-lines", 10000i64).max(-1);
         term.set_scrollback_lines(lines as _);
         term.set_audible_bell(self.prefs.get("audible-bell", true));
 
