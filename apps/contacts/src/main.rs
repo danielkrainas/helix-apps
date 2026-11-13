@@ -2,6 +2,7 @@
 
 mod backend;
 mod editor;
+mod folks;
 mod individual;
 mod links;
 mod ui;

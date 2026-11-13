@@ -10,6 +10,10 @@ pub type Key = (String, String);
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Links {
     pub groups: Vec<Vec<Key>>,
+    /// Contacts the user unlinked in Helix although GNOME Contacts (folks)
+    /// links them; folks-derived links involving these are ignored.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ignore_external: Vec<Key>,
 }
 
 impl Links {
@@ -54,9 +58,29 @@ impl Links {
         self.normalize();
     }
 
-    /// Dissolves the group containing `key`.
-    pub fn unlink(&mut self, key: &Key) {
-        self.groups.retain(|g| !g.contains(key));
+    /// Unlinks an individual (all its `members`): dissolves Helix groups
+    /// containing them and, for members that an external (GNOME/folks)
+    /// group links, records them so that link is ignored from now on.
+    pub fn unlink_members(&mut self, members: &[Key], external: &[Vec<Key>]) {
+        self.groups.retain(|g| !g.iter().any(|k| members.contains(k)));
+        for m in members {
+            if external.iter().any(|g| g.contains(m)) && !self.ignore_external.contains(m) {
+                self.ignore_external.push(m.clone());
+            }
+        }
+    }
+
+    /// Helix links merged with external (read-only) link groups, minus the
+    /// members the user unlinked.
+    pub fn effective(&self, external: &[Vec<Key>]) -> Links {
+        let mut out = Links { groups: self.groups.clone(), ignore_external: Vec::new() };
+        for g in external {
+            let g: Vec<Key> = g.iter().filter(|k| !self.ignore_external.contains(k)).cloned().collect();
+            if g.len() > 1 {
+                out.link(&g);
+            }
+        }
+        out
     }
 
     /// Removes a contact from its group (e.g. after deletion).
@@ -64,6 +88,7 @@ impl Links {
         for g in &mut self.groups {
             g.retain(|k| k != key);
         }
+        self.ignore_external.retain(|k| k != key);
         self.normalize();
     }
 
@@ -73,6 +98,7 @@ impl Links {
         for g in &mut self.groups {
             g.retain(&exists);
         }
+        self.ignore_external.retain(&exists);
         self.normalize();
         *self != before
     }
@@ -110,8 +136,27 @@ mod tests {
         l.forget(&k("a", "2"));
         assert!(l.groups.is_empty(), "single-member groups dissolve");
         l.link(&[k("a", "1"), k("a", "2")]);
-        l.unlink(&k("a", "1"));
+        l.unlink_members(&[k("a", "1")], &[]);
         assert!(l.groups.is_empty());
+    }
+
+    #[test]
+    fn external_groups_merge_and_unlink() {
+        let mut l = Links::default();
+        l.link(&[k("a", "1"), k("a", "2")]);
+        let ext = vec![vec![k("a", "2"), k("g", "7")], vec![k("x", "1"), k("y", "1")]];
+        let eff = l.effective(&ext);
+        assert_eq!(eff.groups.len(), 2);
+        assert_eq!(eff.group_of(&k("g", "7")).unwrap().len(), 3);
+        // Unlinking the merged individual dissolves both sources.
+        let members = eff.group_of(&k("a", "1")).unwrap().clone();
+        l.unlink_members(&members, &ext);
+        assert!(l.groups.is_empty());
+        assert_eq!(l.ignore_external, vec![k("a", "2"), k("g", "7")]);
+        assert_eq!(l.effective(&ext).groups, vec![vec![k("x", "1"), k("y", "1")]]);
+        // Old links.json files (no ignore list) still load.
+        let old: Links = serde_json::from_str(r#"{"groups":[[["a","1"],["b","2"]]]}"#).unwrap();
+        assert!(old.ignore_external.is_empty());
     }
 
     #[test]

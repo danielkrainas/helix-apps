@@ -111,6 +111,32 @@ Manage contacts.
 - Members whose contact disappears are dropped from groups on the next
   save.
 
+#### Links made in GNOME Contacts (read-only import)
+GNOME Contacts links through libfolks. Helix reads folks' link data and
+merges it with `links.json` every time the list is rebuilt; it never
+writes folks' data.
+- **EDS contact attributes** (the normal case — folks' primary store is
+  EDS `system-address-book`): a contact carrying `X-FOLKS-CONTACTS-IDS`
+  is linked with every contact named there. Values are folks local IDs,
+  for EDS personas the IID `<source-uid>:<contact-uid>`; a full persona UID
+  `eds:<source-uid>:<contact-uid>` (`\:` escapes) is accepted too. Values
+  may be repeated attributes or `,`/`;` lists. `X-FOLKS-ANTI-LINKS`
+  (persona UIDs) on the same contact excludes those contacts.
+- **Key-file store** `$XDG_DATA_HOME/folks/relationships.ini` (only used
+  when the folks key-file backend was made primary): a GKeyFile whose
+  groups are personas and whose keys are IM protocols / web services with
+  `;`-separated addresses (`__`-prefixed keys are metadata and skipped).
+  EDS contacts sharing one of a persona's addresses (IM address from
+  `IMPP`/`X-JABBER`/`X-AIM`/…, or their IID) are linked, as folks does.
+  Read once at startup.
+- *Unlink* on an individual that includes folks-derived links records its
+  members in `links.json` (`ignore_external`), so the folks link is
+  ignored by Helix from then on (GNOME Contacts still sees it).
+- Not verified against real folks data (none exists on the dev machine):
+  the exact IID format and list separators follow the public folks
+  documentation / general knowledge; links to non-EDS personas
+  (Telepathy, etc.) are ignored.
+
 ### Selection mode
 - Toggled with the *Select* button. Rows get check buttons; an action bar
   offers *Link*, *Export…* and *Delete*. `Escape` leaves selection mode.
@@ -135,10 +161,12 @@ Manage contacts.
 
 ### GSettings
 - `org.gnome.Contacts` (GNOME Contacts' schema; shipped in
-  `data/org.gnome.Contacts.gschema.xml` with only these keys):
+  `data/org.gnome.Contacts.gschema.xml` with only these keys, copied
+  verbatim from the real schema):
   `did-initial-setup` (b, false), `sort-on-surname` (b, false),
   `window-width` (i, 800), `window-height` (i, 600),
-  `window-maximized` (b, false).
+  `window-maximized` (b, false). The real schema's `window-fullscreen`
+  is not used (no fullscreen mode).
 - `org.gnome.Evolution.DefaultSources` (installed by EDS):
   `default-address-book` (s) — read and written.
 - `org.gnome.evolution-data-server.addressbook` (installed by EDS):
@@ -165,17 +193,15 @@ quit, `Ctrl+W` close window, `Ctrl+?` shortcuts.
 - `crates/helix-eds/tests/private_bus.rs` exercises create / modify /
   remove / views against real EDS daemons on a **private** D-Bus
   (`tests/run-private-eds.sh`), never the user's session bus.
-- App unit tests cover linking, merging, grouping and sorting.
+- App unit tests cover linking, merging, grouping and sorting, and the
+  folks link parsers (`src/folks.rs`).
 
 ## Decisions
 - Backend: talk to Evolution Data Server over D-Bus (zbus), sharing the
   client in `crates/helix-eds` with Calendar; a local vCard store with
   CardDAV sync is a later phase.
-
-## Open questions
-- `org.gnome.Contacts` is not installed on this machine; the key names
-  above follow GNOME Contacts' published schema and should be verified
-  against a real installation.
-- Linking is stored in a Helix file, not libfolks' relationship store, so
-  links made in GNOME Contacts do not carry over (and vice versa). Should
-  Helix read folks' `relationships.ini` key file as well?
+- GSettings: aligned with the real `org.gnome.Contacts` schema — all five
+  keys used already matched in name/type/default; no invented keys.
+- GNOME links: read folks' link data (EDS `X-FOLKS-*` attributes and
+  `relationships.ini`) read-only and merge it with Helix's `links.json`;
+  Helix-made links stay in `links.json` only.
