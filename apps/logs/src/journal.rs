@@ -252,6 +252,32 @@ pub struct QueryArgs {
 }
 
 impl QueryArgs {
+    /// The same query in follow mode (`--follow`): only entries after
+    /// `after_cursor` (or, without a cursor, only entries written from now
+    /// on), oldest first. `limit`, `since` and `reverse` do not apply.
+    pub fn follow_args(&self, after_cursor: Option<&str>) -> Vec<String> {
+        let base = QueryArgs { reverse: false, limit: None, since: None, ..self.clone() };
+        let mut a = base.to_args();
+        let mut extra = vec!["--follow".to_string()];
+        match after_cursor {
+            Some(c) => extra.push(format!("--after-cursor={c}")),
+            None => extra.push("--lines=0".into()),
+        }
+        // Options must precede the field matches.
+        let at = a.iter().position(|x| x.starts_with("--boot=")).map_or(a.len(), |i| i + 1);
+        a.splice(at..at, extra);
+        a
+    }
+
+    /// Arguments that print only the newest entry of the boot, unfiltered,
+    /// to learn the cursor that live following starts after.
+    pub fn tail_args(&self) -> Vec<String> {
+        let base = QueryArgs { boot: self.boot.clone(), reverse: true, limit: Some(1), ..Default::default() };
+        base.to_args()
+    }
+}
+
+impl QueryArgs {
     /// Arguments for `journalctl` (excluding the program name).
     pub fn to_args(&self) -> Vec<String> {
         let mut a = vec!["--no-pager".to_string(), "-o".into(), "json".into()];
@@ -422,6 +448,30 @@ mod tests {
             ]
         );
         assert_eq!(QueryArgs::default().to_args(), ["--no-pager", "-o", "json", "--boot=0"]);
+    }
+
+    #[test]
+    fn follow_and_tail_args() {
+        let q = QueryArgs {
+            boot: Some("abc".into()),
+            limit: Some(10),
+            reverse: true,
+            max_priority: Some(3),
+            any_of: vec![("_UID".into(), "1000".into()), ("_SYSTEMD_OWNER_UID".into(), "1000".into())],
+            ..Default::default()
+        };
+        assert_eq!(
+            q.follow_args(Some("s=1;i=2")),
+            [
+                "--no-pager", "-o", "json", "--boot=abc", "--follow", "--after-cursor=s=1;i=2", "--priority=3",
+                "_UID=1000", "+", "_SYSTEMD_OWNER_UID=1000"
+            ]
+        );
+        assert_eq!(
+            QueryArgs::default().follow_args(None),
+            ["--no-pager", "-o", "json", "--boot=0", "--follow", "--lines=0"]
+        );
+        assert_eq!(q.tail_args(), ["--no-pager", "-o", "json", "--boot=abc", "--reverse", "--lines=1"]);
     }
 
     #[test]

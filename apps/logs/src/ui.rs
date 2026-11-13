@@ -10,6 +10,7 @@ use std::rc::Rc;
 use crate::category::Category;
 use crate::format;
 use crate::journal::{self, Boot, Entry, QueryArgs};
+use crate::live::{self, Live, Placement};
 use crate::search::{Search, SearchField};
 use crate::worker;
 
@@ -28,6 +29,9 @@ struct State {
     search_field: SearchField,
     descending: bool,
     handle: Option<worker::Handle>,
+    /// Live `journalctl --follow` of the current boot.
+    follow: Option<worker::Follow>,
+    live: Live,
     generation: u64,
     loading: bool,
     done: bool,
@@ -36,6 +40,7 @@ struct State {
 struct Ui {
     window: adw::ApplicationWindow,
     store: gio::ListStore,
+    list: gtk::ListView,
     scrolled: gtk::ScrolledWindow,
     stack: gtk::Stack,
     empty: adw::StatusPage,
@@ -272,6 +277,7 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
         ui: Ui {
             window: window.clone(),
             store,
+            list: list.clone(),
             scrolled: scrolled.clone(),
             stack,
             empty,
@@ -292,6 +298,8 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
             search_field: SearchField::All,
             descending,
             handle: None,
+            follow: None,
+            live: Live::default(),
             generation: 0,
             loading: false,
             done: false,
@@ -442,7 +450,9 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     {
         let a = app_state.clone();
         window.connect_destroy(move |_| {
-            a.state.borrow_mut().handle = None;
+            let mut st = a.state.borrow_mut();
+            st.handle = None;
+            st.follow = None;
         });
     }
 
@@ -472,19 +482,49 @@ fn load_boots(a: &Rc<App>) {
     });
 }
 
-fn selected_boot(a: &App) -> Option<String> {
+/// Id of the selected boot (`None` = current boot by `--boot=0`) and
+/// whether it is the current boot, the only one that gets new entries.
+fn selected_boot(a: &App) -> (Option<String>, bool) {
     let st = a.state.borrow();
-    let b = st.boots.get(a.ui.boot_dropdown.selected() as usize)?;
-    (!b.id.is_empty()).then(|| b.id.clone())
+    match st.boots.get(a.ui.boot_dropdown.selected() as usize) {
+        Some(b) => ((!b.id.is_empty()).then(|| b.id.clone()), b.index == 0),
+        None => (None, true),
+    }
+}
+
+/// Inserts live entries at the top (newest-first view) or the end
+/// (oldest-first view). The view scrolls to them only if it was showing
+/// that edge; otherwise the list view keeps its position (it is anchored
+/// to the items in view, not to an offset).
+fn insert_live(a: &Rc<App>, entries: Vec<Entry>, at_top: bool) {
+    if entries.is_empty() {
+        return;
+    }
+    let adj = a.ui.scrolled.vadjustment();
+    let descending = a.state.borrow().descending;
+    let follow_edge = a.ui.store.n_items() == 0 || live::at_live_edge(descending, adj.value(), adj.page_size(), adj.upper());
+    let objs: Vec<glib::BoxedAnyObject> = entries.into_iter().map(glib::BoxedAnyObject::new).collect();
+    if at_top {
+        a.ui.store.splice(0, 0, &objs);
+    } else {
+        a.ui.store.extend_from_slice(&objs);
+    }
+    a.ui.stack.set_visible_child_name("list");
+    if follow_edge {
+        let pos = if at_top { 0 } else { a.ui.store.n_items().saturating_sub(1) };
+        a.ui.list.scroll_to(pos, gtk::ListScrollFlags::NONE, None);
+    }
 }
 
 /// Restarts the query for the current view.
 fn reload(a: &Rc<App>) {
-    let boot = selected_boot(a);
+    let (boot, is_current_boot) = selected_boot(a);
     let (rx, generation) = {
         let mut st = a.state.borrow_mut();
         st.generation += 1;
         st.handle = None; // stops the previous worker
+        st.follow = None; // and its journalctl --follow
+        st.live.clear();
         st.loading = true;
         st.done = false;
         let mut args = QueryArgs { boot, reverse: st.descending, ..Default::default() };
@@ -495,9 +535,10 @@ fn reload(a: &Rc<App>) {
             search: Search::new(&st.search_text, st.search_field),
             uid: st.uid,
         };
-        let (handle, rx) = worker::start(query);
+        let (handle, follow, rx) = worker::start(query, is_current_boot);
         handle.request(BATCH);
         st.handle = Some(handle);
+        st.follow = follow;
         (rx, st.generation)
     };
     a.ui.store.remove_all();
@@ -513,6 +554,7 @@ fn reload(a: &Rc<App>) {
             }
             match msg {
                 worker::Msg::Batch(entries) => {
+                    let entries = a.state.borrow_mut().live.loaded(entries);
                     let objs: Vec<glib::BoxedAnyObject> = entries.into_iter().map(glib::BoxedAnyObject::new).collect();
                     a.ui.store.extend_from_slice(&objs);
                     a.state.borrow_mut().loading = false;
@@ -530,6 +572,8 @@ fn reload(a: &Rc<App>) {
                         st.handle = None;
                     }
                     a.ui.spinner.set_spinning(false);
+                    let deferred = a.state.borrow_mut().live.finish();
+                    insert_live(&a, deferred, false);
                     if a.ui.store.n_items() == 0 {
                         let searching = {
                             let st = a.state.borrow();
@@ -542,7 +586,19 @@ fn reload(a: &Rc<App>) {
                         }
                         a.ui.stack.set_visible_child_name("empty");
                     }
-                    break;
+                    // Keep listening: live entries may still arrive.
+                }
+                worker::Msg::Live(entries) => {
+                    let (descending, done) = {
+                        let st = a.state.borrow();
+                        (st.descending, st.done)
+                    };
+                    let placement = a.state.borrow_mut().live.followed(entries, descending, done);
+                    match placement {
+                        Placement::Prepend(v) => insert_live(&a, v, true),
+                        Placement::Append(v) => insert_live(&a, v, false),
+                        Placement::Deferred => {}
+                    }
                 }
                 worker::Msg::LimitedAccess => {
                     if !a.state.borrow().prefs.get("ignore-warning", false) {
