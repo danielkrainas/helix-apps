@@ -1346,9 +1346,11 @@ dependencies = [
  "gtk4",
  "helix-app-common",
  "libadwaita",
+ "roxmltree",
  "serde",
  "serde_json",
  "ureq",
+ "zbus",
 ]
 
 [[package]]

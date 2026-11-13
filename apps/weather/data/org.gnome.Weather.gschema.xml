@@ -3,6 +3,8 @@
      when the schema is not already provided by the system. -->
 <schemalist>
   <schema path="/org/gnome/Weather/" id="org.gnome.Weather">
+    <key type="av" name="locations"><default>[]</default><summary>Configured cities to show weather for</summary><description>The locations shown in the world view of gnome-weather. Each value is a GVariant returned by gweather_location_serialize(). Read (never written) by Helix for the first-run import.</description></key>
+    <key type="b" name="automatic-location"><default>false</default><summary>Automatic location</summary><description>Whether to fetch the current location.</description></key>
     <key type="i" name="window-width"><default>0</default><summary>Window width</summary></key>
     <key type="i" name="window-height"><default>0</default><summary>Window height</summary></key>
     <key type="b" name="window-maximized"><default>false</default><summary>Window maximized</summary></key>

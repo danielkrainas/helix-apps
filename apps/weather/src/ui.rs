@@ -8,6 +8,9 @@ use std::path::PathBuf;
 use std::rc::{Rc, Weak};
 
 use crate::api::{self, Forecast};
+use crate::autoloc;
+use crate::gwdb;
+use crate::import;
 use crate::graph::{self, Rgba};
 use crate::store::{self, CachedForecast, Locations, Place};
 use crate::timefmt::{self, DateTime};
@@ -72,8 +75,10 @@ struct Inner {
     generation: Cell<u64>,
     search_generation: Cell<u64>,
     search_results: RefCell<Vec<Place>>,
+    locating: Cell<bool>,
 
     title: adw::WindowTitle,
+    auto_row: adw::SwitchRow,
     places_button: gtk::MenuButton,
     search_entry: gtk::SearchEntry,
     results_list: gtk::ListBox,
@@ -96,7 +101,12 @@ struct Ui(Rc<Inner>);
 
 pub fn run() -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
-    helix_app_common::install_standard_actions(&app, "Weather", "Show weather conditions and forecast");
+    helix_app_common::install_standard_actions(
+        &app,
+        "Weather",
+        "Show weather conditions and forecast\n\nWeather data by Open-Meteo.com (CC BY 4.0, non-commercial use). \
+         Place names may come from © OpenStreetMap contributors (Nominatim).",
+    );
     app.connect_startup(|_| load_css());
     app.connect_activate(|app| {
         if let Some(win) = app.active_window() {
@@ -171,6 +181,10 @@ fn build(app: &adw::Application) -> Ui {
         .child(&saved_list)
         .build();
     let pop_box = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(6).width_request(340).build();
+    let auto_row = adw::SwitchRow::builder().title("Automatic Location").subtitle("Show the weather where you are").build();
+    let auto_list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).margin_bottom(6).build();
+    auto_list.append(&auto_row);
+    pop_box.append(&auto_list);
     pop_box.append(&search_entry);
     pop_box.append(&search_status);
     pop_box.append(&results_scroller);
@@ -206,11 +220,15 @@ fn build(app: &adw::Application) -> Ui {
     let stack = gtk::Stack::builder().transition_type(gtk::StackTransitionType::Crossfade).vexpand(true).build();
 
     let empty_button = gtk::Button::builder().label("Search Locations").css_classes(["pill", "suggested-action"]).halign(gtk::Align::Center).build();
+    let here_button = gtk::Button::builder().label("Use Current Location").css_classes(["pill"]).halign(gtk::Align::Center).build();
+    let empty_buttons = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(12).halign(gtk::Align::Center).build();
+    empty_buttons.append(&empty_button);
+    empty_buttons.append(&here_button);
     let empty_page = adw::StatusPage::builder()
         .icon_name("weather-few-clouds-symbolic")
         .title("Add a Location")
         .description("Search for a city to see its weather.")
-        .child(&empty_button)
+        .child(&empty_buttons)
         .build();
     stack.add_named(&empty_page, Some("empty"));
 
@@ -233,6 +251,13 @@ fn build(app: &adw::Application) -> Ui {
         .build();
     page_box.append(&content);
     page_box.append(&updated_label);
+    let credit = gtk::Label::builder()
+        .label("Weather data by <a href=\"https://open-meteo.com/\">Open-Meteo.com</a>")
+        .use_markup(true)
+        .css_classes(["dim-label", "caption"])
+        .halign(gtk::Align::Center)
+        .build();
+    page_box.append(&credit);
     let clamp = adw::Clamp::builder().maximum_size(960).child(&page_box).build();
     let scroller = gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).child(&clamp).build();
     stack.add_named(&scroller, Some("weather"));
@@ -255,20 +280,25 @@ fn build(app: &adw::Application) -> Ui {
         &units_now.temperature.nick().to_variant(),
     );
 
+    let locations = load_locations(&prefs);
+    auto_row.set_active(locations.automatic_location);
+
     let ui = Ui(Rc::new(Inner {
         window,
         prefs,
         gweather,
         use_12h,
         units: RefCell::new(units_now),
-        locations: RefCell::new(Locations::load(&locations_path())),
+        locations: RefCell::new(locations),
         forecast: RefCell::new(None),
         offline: Cell::new(false),
         fetching: Cell::new(false),
         generation: Cell::new(0),
         search_generation: Cell::new(0),
         search_results: RefCell::new(Vec::new()),
+        locating: Cell::new(false),
         title,
+        auto_row: auto_row.clone(),
         places_button,
         search_entry,
         results_list,
@@ -287,8 +317,53 @@ fn build(app: &adw::Application) -> Ui {
     }));
 
     ui.connect(app, &empty_button, &popover);
+    {
+        let auto_row = auto_row.clone();
+        here_button.connect_clicked(move |_| auto_row.set_active(true));
+    }
+    let weak = ui.weak();
+    auto_row.connect_active_notify(move |row| {
+        if let Some(ui) = Ui::upgrade(&weak) {
+            ui.set_automatic(row.is_active());
+        }
+    });
     ui.rebuild_saved();
+    if ui.0.locations.borrow().automatic_location {
+        ui.locate();
+    }
     ui
+}
+
+/// Whether the installed `org.gnome.Weather` schema has `key`.
+fn schema_has(prefs: &Prefs, key: &str) -> bool {
+    prefs.gsettings().and_then(|g| g.settings_schema()).is_some_and(|s| s.has_key(key))
+}
+
+/// Loads the saved locations. On first run (no file yet) GNOME Weather's
+/// locations are imported, best effort and read-only.
+fn load_locations(prefs: &Prefs) -> Locations {
+    let path = locations_path();
+    let mut locations = Locations::load(&path);
+    if !path.exists() {
+        let gw = gwdb::Db::load();
+        let imported = import::import(gw.as_ref());
+        if !imported.is_empty() {
+            eprintln!("helix-weather: imported {} location(s) from GNOME Weather", imported.len());
+            locations.locations = imported;
+            locations.selected = 0;
+            if let Err(e) = locations.save(&path) {
+                eprintln!("helix-weather: could not save locations: {e}");
+            }
+        }
+    }
+    // GNOME's setting wins when its schema is installed.
+    if schema_has(prefs, "automatic-location") {
+        locations.automatic_location = prefs.get("automatic-location", false);
+    }
+    if !locations.automatic_location {
+        locations.set_automatic(None);
+    }
+    locations
 }
 
 impl Ui {
@@ -428,9 +503,87 @@ impl Ui {
             ui.update_status_texts();
             let stale = ui.0.forecast.borrow().as_ref().is_none_or(|(_, fetched)| now_unix() - fetched >= AUTO_REFRESH_SECS);
             if stale && !ui.0.fetching.get() && ui.0.locations.borrow().selected_place().is_some() {
+                if ui.0.locations.borrow().automatic_location {
+                    // The user may have moved; this also refreshes if the
+                    // place changed.
+                    ui.locate();
+                }
                 ui.refresh();
             }
             glib::ControlFlow::Continue
+        });
+    }
+
+    /// Turns automatic location on (and looks it up) or off.
+    fn set_automatic(&self, on: bool) {
+        let s = &self.0;
+        if s.auto_row.is_active() != on {
+            // Re-enters through the notify handler.
+            s.auto_row.set_active(on);
+            return;
+        }
+        if s.locations.borrow().automatic_location == on {
+            return;
+        }
+        s.locations.borrow_mut().automatic_location = on;
+        if schema_has(&s.prefs, "automatic-location") {
+            s.prefs.set("automatic-location", on);
+        }
+        if on {
+            self.save_locations();
+            self.locate();
+        } else {
+            let before = s.locations.borrow().selected_place().cloned();
+            s.locations.borrow_mut().set_automatic(None);
+            self.save_locations();
+            self.rebuild_saved();
+            if before.as_ref() != s.locations.borrow().selected_place() {
+                self.select_current();
+            }
+        }
+    }
+
+    /// Looks up the current place (portal / GeoClue + reverse geocoding).
+    fn locate(&self) {
+        let s = &self.0;
+        if s.locating.replace(true) {
+            return;
+        }
+        if s.locations.borrow().selected_place().is_none() {
+            s.stack.set_visible_child_name("loading");
+        }
+        self.set_fetching(true);
+        let lang = api::ui_language(&messages_locale());
+        let weak = self.weak();
+        glib::spawn_future_local(async move {
+            let res = gio::spawn_blocking(move || autoloc::current_place(APP_ID, &lang)).await;
+            let Some(ui) = Ui::upgrade(&weak) else { return };
+            ui.0.locating.set(false);
+            ui.set_fetching(false);
+            if !ui.0.locations.borrow().automatic_location {
+                ui.select_current();
+                return;
+            }
+            match res.unwrap_or_else(|_| Err("Location lookup failed".into())) {
+                Ok(place) => {
+                    let before = ui.0.locations.borrow().selected_place().cloned();
+                    ui.0.locations.borrow_mut().set_automatic(Some(place));
+                    ui.save_locations();
+                    ui.rebuild_saved();
+                    let after = ui.0.locations.borrow().selected_place().cloned();
+                    if before != after {
+                        ui.select_current();
+                    }
+                }
+                Err(e) => {
+                    eprintln!("helix-weather: current location unavailable: {e}");
+                    if ui.0.locations.borrow().selected_place().is_none() {
+                        ui.0.error_page.set_title("Could Not Find Your Location");
+                        ui.0.error_page.set_description(Some(&glib::markup_escape_text(&e)));
+                        ui.0.stack.set_visible_child_name("error");
+                    }
+                }
+            }
         });
     }
 
@@ -450,6 +603,10 @@ impl Ui {
     }
 
     fn remove_place(&self, index: usize) {
+        if self.0.locations.borrow().locations.get(index).is_some_and(|p| p.automatic) {
+            self.set_automatic(false);
+            return;
+        }
         let (was_selected, removed) = {
             let mut locs = self.0.locations.borrow_mut();
             let was = locs.selected == index;
@@ -476,7 +633,15 @@ impl Ui {
         s.saved_header.set_visible(!locs.locations.is_empty());
         s.saved_list.set_visible(!locs.locations.is_empty());
         for (i, p) in locs.locations.iter().enumerate() {
-            let row = adw::ActionRow::builder().title(glib::markup_escape_text(&p.name)).subtitle(glib::markup_escape_text(&p.subtitle())).activatable(true).build();
+            let subtitle = match (p.automatic, p.subtitle()) {
+                (true, sub) if sub.is_empty() => "Current location".to_string(),
+                (true, sub) => format!("Current location • {sub}"),
+                (false, sub) => sub,
+            };
+            let row = adw::ActionRow::builder().title(glib::markup_escape_text(&p.name)).subtitle(glib::markup_escape_text(&subtitle)).activatable(true).build();
+            if p.automatic {
+                row.add_suffix(&gtk::Image::from_icon_name("find-location-symbolic"));
+            }
             if i == locs.selected {
                 row.add_prefix(&gtk::Image::from_icon_name("object-select-symbolic"));
             } else {
@@ -595,7 +760,12 @@ impl Ui {
     fn refresh(&self) {
         let s = &self.0;
         let place = s.locations.borrow().selected_place().cloned();
-        let Some(place) = place else { return };
+        let Some(place) = place else {
+            if s.locations.borrow().automatic_location {
+                self.locate();
+            }
+            return;
+        };
         let gen = s.generation.get();
         if s.forecast.borrow().is_none() {
             s.stack.set_visible_child_name("loading");
@@ -628,6 +798,7 @@ impl Ui {
                         ui.0.offline.set(true);
                         ui.update_status_texts();
                     } else {
+                        ui.0.error_page.set_title("Could Not Load the Forecast");
                         ui.0.error_page.set_description(Some(&glib::markup_escape_text(&e)));
                         ui.0.stack.set_visible_child_name("error");
                     }
