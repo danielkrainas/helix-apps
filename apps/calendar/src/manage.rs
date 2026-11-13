@@ -75,9 +75,147 @@ pub fn open(ui: &Rc<Ui>) {
     name.connect_entry_activated(move |_| create());
     new_group.add(&name);
     page.add(&new_group);
+    page.add(&url_group(ui, &dialog, &used));
 
     dialog.add(&page);
     dialog.present(Some(&ui.window));
+}
+
+/// "New Calendar from URL": subscribes to an iCalendar feed through EDS'
+/// `webcal` backend (read-only, refreshed by EDS).
+fn url_group(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, used: &[String]) -> adw::PreferencesGroup {
+    let group = adw::PreferencesGroup::builder()
+        .title("New Calendar from URL")
+        .description("Subscribe to a published calendar (.ics). It is read-only and refreshed automatically.")
+        .build();
+    let url = adw::EntryRow::builder().title("Calendar Address (https:// or webcal://)").input_purpose(gtk::InputPurpose::Url).build();
+    let name = adw::EntryRow::builder().title("Calendar Name").build();
+    let color = gtk::ColorDialogButton::new(Some(gtk::ColorDialog::builder().with_alpha(false).build()));
+    color.set_rgba(&rgba(colors::next_free(used)));
+    color.set_valign(gtk::Align::Center);
+    color.set_tooltip_text(Some("Calendar Colour"));
+    name.add_suffix(&color);
+    let error = gtk::Label::builder()
+        .css_classes(["error", "caption"])
+        .xalign(0.0)
+        .wrap(true)
+        .margin_top(6)
+        .visible(false)
+        .build();
+    let add = gtk::Button::builder()
+        .label("Subscribe")
+        .css_classes(["suggested-action", "pill"])
+        .halign(gtk::Align::End)
+        .margin_top(12)
+        .sensitive(false)
+        .build();
+    let bx = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    let list = gtk::ListBox::builder().css_classes(["boxed-list"]).selection_mode(gtk::SelectionMode::None).build();
+    list.append(&url);
+    list.append(&name);
+    bx.append(&list);
+    bx.append(&error);
+    bx.append(&add);
+    group.add(&bx);
+
+    let clear_error = {
+        let (error, url) = (error.clone(), url.clone());
+        move || {
+            error.set_visible(false);
+            url.remove_css_class("error");
+        }
+    };
+    {
+        let (add, clear) = (add.clone(), clear_error.clone());
+        url.connect_changed(move |e| {
+            add.set_sensitive(!e.text().trim().is_empty());
+            clear();
+        });
+    }
+    let submit = {
+        let (ui, dialog) = (ui.clone(), dialog.clone());
+        let (url, name, color, error) = (url.clone(), name.clone(), color.clone(), error.clone());
+        move || {
+            let parsed = match source::parse_webcal_url(&url.text()) {
+                Ok(u) => u,
+                Err(e) => {
+                    error.set_label(&e.to_string());
+                    error.set_visible(true);
+                    url.add_css_class("error");
+                    url.grab_focus();
+                    return;
+                }
+            };
+            let typed = name.text().trim().to_string();
+            let n = if typed.is_empty() { manage_names::name_from_url(&parsed) } else { typed };
+            let data = source::new_webcal_calendar(&n, &hex(&color.rgba()), &parsed);
+            ui.backend.send(Cmd::CreateSource { uid: source::new_uid(), data });
+            dialog.add_toast(adw::Toast::new(&format!("Subscribed to “{n}”")));
+            url.set_text("");
+            name.set_text("");
+            clear_error();
+        }
+    };
+    let s = submit.clone();
+    add.connect_clicked(move |_| s());
+    let s = submit.clone();
+    url.connect_entry_activated(move |_| s());
+    name.connect_entry_activated(move |_| submit());
+    group
+}
+
+/// Pure helpers for the manage dialog.
+pub mod manage_names {
+    use helix_eds::source::WebcalUrl;
+
+    /// A default calendar name for a feed: the file name without `.ics`
+    /// (`_`/`-` become spaces), else the host.
+    pub fn name_from_url(url: &WebcalUrl) -> String {
+        let file = url.path.rsplit('/').find(|s| !s.is_empty()).unwrap_or("");
+        let file = file.strip_suffix(".ics").or_else(|| file.strip_suffix(".ICS")).unwrap_or(file);
+        let decoded = percent_decode(file).replace(['_', '-'], " ");
+        let decoded = decoded.trim();
+        if decoded.is_empty() {
+            url.host.clone()
+        } else {
+            decoded.to_string()
+        }
+    }
+
+    fn percent_decode(s: &str) -> String {
+        let b = s.as_bytes();
+        let mut out = Vec::with_capacity(b.len());
+        let mut i = 0;
+        while i < b.len() {
+            if b[i] == b'%' && i + 2 < b.len() {
+                let hex = |c: u8| (c as char).to_digit(16);
+                if let (Some(h), Some(l)) = (hex(b[i + 1]), hex(b[i + 2])) {
+                    out.push((h * 16 + l) as u8);
+                    i += 3;
+                    continue;
+                }
+            }
+            out.push(b[i]);
+            i += 1;
+        }
+        String::from_utf8_lossy(&out).into_owned()
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use helix_eds::source::parse_webcal_url;
+
+        #[test]
+        fn names() {
+            let n = |u: &str| name_from_url(&parse_webcal_url(u).unwrap());
+            assert_eq!(n("webcal://example.org/feeds/public_holidays.ics"), "public holidays");
+            assert_eq!(n("https://example.org/My%20Team-Calendar.ics?x=1"), "My Team Calendar");
+            assert_eq!(n("https://cal.example.org/"), "cal.example.org");
+            assert_eq!(n("https://example.org/a/%zz"), "%zz");
+            assert_eq!(n("https://example.org/x%4"), "x%4");
+        }
+    }
 }
 
 fn calendar_row(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gtk::Widget {
@@ -109,7 +247,11 @@ fn calendar_row(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gtk
     } else {
         let r = adw::ActionRow::builder()
             .title(glib::markup_escape_text(&s.display_name()).as_str())
-            .subtitle(if backend.is_empty() { String::new() } else { backend.clone() })
+            .subtitle(glib::markup_escape_text(&match source::webcal_url(s) {
+                Some(url) if backend == "webcal" => url,
+                _ => backend.clone(),
+            }))
+            .subtitle_selectable(backend == "webcal")
             .build();
         r.add_prefix(&color);
         r.add_suffix(&shown);

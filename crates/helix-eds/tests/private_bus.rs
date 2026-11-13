@@ -199,3 +199,70 @@ fn calendar_round_trip() {
     eds.remove_source(&src).unwrap();
     wait_source(&eds, &uid, false);
 }
+
+/// Serves `body` as `text/calendar` on 127.0.0.1 (any path) until the
+/// process exits; returns the port and a request counter.
+fn serve_ics(body: &'static str) -> (u16, std::sync::Arc<std::sync::atomic::AtomicUsize>) {
+    use std::io::{Read, Write};
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let hits = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let h = hits.clone();
+    std::thread::spawn(move || {
+        for stream in listener.incoming() {
+            let Ok(mut s) = stream else { continue };
+            let mut buf = [0u8; 4096];
+            let _ = s.read(&mut buf);
+            h.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            let resp = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: text/calendar; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                body.len()
+            );
+            let _ = s.write_all(resp.as_bytes());
+        }
+    });
+    (port, hits)
+}
+
+#[test]
+fn webcal_subscription() {
+    let Some(eds) = private_eds() else { return };
+    const ICS: &str = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Helix//Test//EN\r\n\
+BEGIN:VEVENT\r\nUID:webcal-test-1@helix\r\nDTSTAMP:20261101T000000Z\r\n\
+DTSTART;VALUE=DATE:20261225\r\nDTEND;VALUE=DATE:20261226\r\nSUMMARY:Christmas Day\r\nEND:VEVENT\r\n\
+END:VCALENDAR\r\n";
+    let (port, hits) = serve_ics(ICS);
+    let url = source::parse_webcal_url(&format!("http://127.0.0.1:{port}/holidays.ics")).unwrap();
+
+    let uid = source::new_uid();
+    eds.create_source(&uid, &source::new_webcal_calendar("Holidays", "#e66100", &url)).unwrap();
+    let src = wait_source(&eds, &uid, true).unwrap();
+    assert_eq!(src.backend_name(SourceKind::Calendar), Some("webcal"));
+    assert_eq!(src.parent(), Some("webcal-stub"));
+    assert_eq!(source::webcal_url(&src).unwrap(), format!("http://127.0.0.1:{port}/holidays.ics"));
+    assert!(src.removable);
+
+    let cal = eds.open_calendar(&uid).unwrap();
+    assert!(!cal.writable, "webcal calendars are read-only");
+    let (tx, rx) = mpsc::channel();
+    let _view = cal
+        .view(&sexp::all_events(), move |e| {
+            let _ = tx.send(e);
+        })
+        .unwrap();
+    // EDS downloads the feed on open; the event arrives through the view.
+    let added = wait_for(&rx, |e| match e {
+        ViewEvent::Added(v) => Some(v.clone()),
+        _ => None,
+    });
+    assert!(added.iter().any(|o| o.contains("Christmas Day")), "{added:?}");
+    assert!(hits.load(std::sync::atomic::Ordering::SeqCst) >= 1);
+    let events = cal.events(&sexp::all_events()).unwrap();
+    assert_eq!(events.len(), 1);
+    assert_eq!(events[0].summary, "Christmas Day");
+
+    drop(_view);
+    drop(cal);
+    eds.remove_source(&src).unwrap();
+    wait_source(&eds, &uid, false);
+}

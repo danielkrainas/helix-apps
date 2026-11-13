@@ -357,7 +357,13 @@ impl Worker {
                 ViewEvent::Removed(ids) => {
                     Msg::Removed { cal: cal.clone(), gen, ids: ids.iter().map(|i| split_calendar_id(i)).collect() }
                 }
-                ViewEvent::Complete(_) => Msg::Loaded { cal: cal.clone(), gen },
+                ViewEvent::Complete(err) => {
+                    // E.g. a subscribed (webcal) feed that could not be fetched.
+                    if let Some(e) = err.filter(|e| !e.is_empty()) {
+                        let _ = tx.send_blocking(Msg::Error(format!("Could not load calendar: {e}")));
+                    }
+                    Msg::Loaded { cal: cal.clone(), gen }
+                }
                 ViewEvent::Progress(..) => return,
             };
             let _ = tx.send_blocking(m);
