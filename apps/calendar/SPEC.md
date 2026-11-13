@@ -114,7 +114,30 @@ View and edit events from local and online calendars.
 - *New Calendar*: name + colour → a local calendar (`Parent=local-stub`,
   `BackendName=local`) via `SourceManager.CreateSources`.
 - Online calendars are added through GNOME Online Accounts (Settings); the
-  dialog says so. Subscribing to webcal URLs is a later addition.
+  dialog says so.
+- *New Calendar from URL* (same dialog): address (`http://`, `https://`,
+  `webcal://`, `webcals://`), optional name (default: the feed's file name
+  without `.ics`, else the host) and colour → *Subscribe*.
+  - Validation before anything is created: no spaces, supported scheme,
+    a valid host name / IPv4 / bracketed IPv6, port 1–65535, no
+    `user:password@` (credentials are not stored). Errors appear in red
+    under the fields and the address row is marked; editing clears them.
+  - `webcal`/`webcals` mean HTTPS. The source is created via
+    `SourceManager.CreateSources` with the layout Evolution / GNOME
+    Calendar use: `[Data Source] Parent=webcal-stub`,
+    `[Calendar] BackendName=webcal` + `Color`/`Selected`,
+    `[Authentication] Host/Port/Method=none`, `[Security] Method=tls|none`,
+    `[WebDAV Backend] ResourcePath/ResourceQuery`,
+    `[Refresh] Enabled=true IntervalMinutes=30`,
+    `[Offline] StaySynchronized=true`. EDS downloads and refreshes it.
+  - Subscribed calendars are read-only (no editing of their events); the
+    dialog shows their URL (selectable) instead of a rename field; they
+    can be recoloured, hidden and removed.
+  - Errors from creating the source, or a view that completes with an
+    error, are shown as toasts. Limitation: EDS does not report a failed
+    download over D-Bus (the view completes normally; only the source's
+    `ConnectionStatus` goes `connecting` → `disconnected` without passing
+    `connected`), so an unreachable feed simply shows no events.
 
 ### Search
 - `Ctrl+F` opens a search entry. Results (summary, description or
@@ -161,9 +184,12 @@ text fields.)
   expansion (RFC 5545 examples), time-zone resolution, durations.
 - `crates/helix-eds/tests/private_bus.rs` (via `tests/run-private-eds.sh`)
   creates a calendar source, events, detached instances, removals and
-  visibility changes on EDS daemons on a **private** bus.
+  visibility changes on EDS daemons on a **private** bus; it also
+  subscribes a `webcal` calendar to a feed served by an in-test HTTP
+  server on 127.0.0.1 and checks EDS downloads its event.
+- `helix-eds` unit tests cover URL validation and the webcal source layout.
 - App unit tests: date grids, week layout, time input parsing, repeat
-  presets, locale first weekday.
+  presets, locale first weekday, default names for URL calendars.
 
 ## Decisions
 - Backend: Evolution Data Server over D-Bus (zbus), sharing
@@ -173,7 +199,5 @@ text fields.)
   (`GcalWindowView`), so Helix offers those two plus the day agenda in the
   sidebar instead of a separate day view.
 
-## Open questions
-- Webcal (`.ics` URL) subscriptions need EDS's `webcal` backend source
-  layout; should Helix add a "New Calendar from URL" flow, or rely on
-  Settings → Online Accounts / Evolution for remote calendars?
+- Webcal: Helix has its own "New Calendar from URL" flow creating an EDS
+  `webcal` source through the sources registry (EDS fetches/refreshes it).

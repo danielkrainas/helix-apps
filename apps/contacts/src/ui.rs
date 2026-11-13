@@ -12,6 +12,7 @@ use std::rc::Rc;
 use crate::backend::{self, Backend, Cmd, Msg};
 use crate::editor::{set_avatar_bytes, Editor};
 use crate::individual::{self, Individual};
+use crate::folks;
 use crate::links::{Key, Links};
 
 pub const APP_ID: &str = "org.helix.Contacts";
@@ -77,6 +78,9 @@ struct Ui {
     backend: Backend,
     links: RefCell<Links>,
     links_path: std::path::PathBuf,
+    /// Links made by GNOME Contacts (folks), recomputed on every rebuild.
+    external_links: RefCell<Vec<Vec<Key>>>,
+    folks_personas: Vec<folks::KeyFilePersona>,
     self_uid: String,
     state: RefCell<State>,
     editor: RefCell<Option<(Rc<Editor>, Option<Key>)>>,
@@ -266,6 +270,8 @@ impl Ui {
             backend,
             links: RefCell::new(links),
             links_path,
+            external_links: RefCell::new(Vec::new()),
+            folks_personas: folks::load_relationships(&folks::relationships_path()),
             self_uid,
             state: RefCell::new(State { startup: Some(opts.clone()), ..Default::default() }),
             editor: RefCell::default(),
@@ -481,9 +487,10 @@ impl Ui {
         }));
         add("unlink", &[], Box::new(|ui| {
             if let Some(ind) = ui.selected_individual() {
-                ui.links.borrow_mut().unlink(&ind.members[0]);
+                let external = ui.external_links.borrow().clone();
+                ui.links.borrow_mut().unlink_members(&ind.members, &external);
                 ui.save_links();
-                ui.refresh_list();
+                ui.rebuild();
                 ui.toast("Contacts unlinked");
             }
         }));
@@ -702,7 +709,11 @@ impl Ui {
                     self.save_links();
                 }
             }
-            let mut list = individual::build(&books, &self.links.borrow());
+            let mut external = folks::groups_from_contacts(&books);
+            external.extend(folks::groups_from_keyfile(&self.folks_personas, &books));
+            let effective = self.links.borrow().effective(&external);
+            *self.external_links.borrow_mut() = external;
+            let mut list = individual::build(&books, &effective);
             individual::sort(&mut list, surname);
             // The user's own contact goes first.
             if !self.self_uid.is_empty() {
@@ -1118,6 +1129,7 @@ impl Ui {
         if keys.len() < 2 {
             return;
         }
+        let before = self.links.borrow().clone();
         self.links.borrow_mut().link(&keys);
         self.save_links();
         self.state.borrow_mut().selected = keys.first().cloned();
@@ -1127,7 +1139,7 @@ impl Ui {
         let toast = adw::Toast::builder().title("Contacts linked").button_label("Undo").build();
         toast.connect_button_clicked(move |_| {
             if let Some(ui) = weak.upgrade() {
-                ui.links.borrow_mut().unlink(&keys[0]);
+                *ui.links.borrow_mut() = before.clone();
                 ui.save_links();
                 ui.rebuild();
             }
