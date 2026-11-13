@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Subset of GNOME Calendar's schema: only the keys Helix Calendar uses. -->
+<schemalist gettext-domain="gnome-calendar">
+  <enum id="org.gnome.calendar.GcalWindowView">
+    <value nick="week" value="0"/>
+    <value nick="month" value="1"/>
+  </enum>
+  <schema id="org.gnome.calendar" path="/org/gnome/calendar/">
+    <key name="window-maximized" type="b">
+      <default>true</default>
+      <summary>Window maximized</summary>
+      <description>Window maximized state</description>
+    </key>
+    <key name="window-size" type="(ii)">
+      <default>(768, 600)</default>
+      <summary>Window size</summary>
+      <description>Window size (width and height).</description>
+    </key>
+    <key name="active-view" enum="org.gnome.calendar.GcalWindowView">
+      <default>'month'</default>
+      <summary>Type of the active view</summary>
+      <description>Type of the active window view, default value is: monthly view</description>
+    </key>
+    <key name="week-view-zoom-level" type="d">
+      <default>1.0</default>
+      <summary>Zoom level of the week grid</summary>
+      <description>The current zoom level of the week grid</description>
+    </key>
+  </schema>
+</schemalist>

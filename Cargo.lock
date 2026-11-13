@@ -1101,6 +1101,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-calendar"
+version = "0.1.0"
+dependencies = [
+ "async-channel",
+ "chrono",
+ "chrono-tz",
+ "gtk4",
+ "helix-app-common",
+ "helix-eds",
+ "libadwaita",
+]
+
+[[package]]
 name = "helix-camera"
 version = "0.1.0"
 dependencies = [

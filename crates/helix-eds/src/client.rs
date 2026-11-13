@@ -458,6 +458,12 @@ impl Calendar {
         Ok(self.proxy.call("GetTimezone", &(tzid,))?)
     }
 
+    /// Registers a VTIMEZONE so events can refer to its TZID.
+    pub fn add_timezone(&self, vtimezone: &str) -> Result<()> {
+        self.proxy.call::<_, _, ()>("AddTimezone", &(vtimezone,))?;
+        Ok(())
+    }
+
     pub fn view(&self, query: &str, f: impl FnMut(ViewEvent) + Send + 'static) -> Result<View> {
         let path: OwnedObjectPath = self.proxy.call("GetView", &(query,))?;
         start_view(&self.conn, &self.bus, path.as_str(), CAL_VIEW_IFACE, f)
