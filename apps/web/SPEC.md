@@ -31,6 +31,10 @@ Web browser.
 - WebKitGTK 6.0 (`webkit6` crate, API level 2.46; 2.52 installed). WebKit's
   web-process sandbox is always left enabled; the app never sets any
   environment variable or API option that weakens it.
+- Every view gets its own `WebKitUserContentManager`. Normal (non-private)
+  views carry the password form script, injected at document end into top
+  frames in the isolated script world `helix` together with the script
+  message handler `helixPasswords`; page scripts can see neither.
 - One persistent `WebKitNetworkSession` per process with data in
   `$XDG_DATA_HOME/helix-web/webkit` and cache in
   `$XDG_CACHE_HOME/helix-web/webkit`; favicons enabled; cookies stored in
@@ -52,6 +56,31 @@ Web browser.
   then opens command-line URLs; with no URLs and nothing restored it opens
   one window with the start page.
 - The app quits when its last window closes.
+- `helix-web --web-app=ID URL` runs an installed web application (see Web
+  applications). `--helix-probe-userns` is internal (sandbox probe).
+
+### Sandbox check
+- WebKit aborts the whole UI process ("Failed to fully launch dbus-proxy")
+  when bubblewrap cannot create a user namespace, so the primary instance
+  checks first, in `startup`, before any WebView exists: it re-executes
+  itself with `--helix-probe-userns`; that child (same binary, same
+  AppArmor profile) does `unshare(CLONE_NEWUSER)` and writes
+  `/proc/self/uid_map` / `gid_map` the way bubblewrap does. Skipped inside
+  Flatpak (`/.flatpak-info`).
+- On failure the cause is read from
+  `/proc/sys/kernel/apparmor_restrict_unprivileged_userns` (AppArmor),
+  `kernel.unprivileged_userns_clone` / `user.max_user_namespaces` (disabled)
+  or unknown, and instead of browser windows the app shows one window with
+  an `AdwStatusPage` "Web Content Sandbox Unavailable" explaining the cause.
+  For AppArmor it shows (and offers to copy) a profile for this binary's
+  real path plus the standard paths, and the commands
+  `sudo tee /etc/apparmor.d/helix-web < helix-web.apparmor` and
+  `sudo apparmor_parser -r /etc/apparmor.d/helix-web` (only the latter when
+  `/etc/apparmor.d/helix-web` already exists but does not apply). Quit
+  button; no web content is ever loaded without the sandbox.
+- If a web process later terminates (crash or memory limit, not
+  `TerminatedByApi`), the tab shows a "Page Crashed" status page over the
+  view with a Reload button instead of a blank page.
 
 ### Window
 - `AdwApplicationWindow` → `AdwTabOverview` → `AdwToolbarView` with a header
@@ -75,10 +104,14 @@ Web browser.
     closes the popover and restores the current URI.
 - Header bar, end: main menu, Tab overview button (`AdwTabButton`),
   Downloads button (visible once a download exists in this window),
-  Bookmarks button (popover with a filter entry and the bookmark list).
+  Bookmarks button (popover with a filter entry and the bookmark list),
+  Reader View button (only when the page has a readable article; highlighted
+  while reader view is shown).
 - Main menu: New Tab, New Window, New Private Window, zoom row
   (−, current %, +), Reopen Closed Tab, Find…, Print…, Fullscreen,
-  History, Import Bookmarks…, Export Bookmarks…, Preferences, About Web.
+  Install Site as Web Application… (http/https pages, normal windows),
+  History, Passwords, Import Bookmarks…, Export Bookmarks…, Preferences,
+  About Web.
   (No shortcuts window; shortcuts are listed below.)
 - Ctrl+Shift+W closes the window (Ctrl+W closes the tab).
 - Private windows: title "Private Browsing", header bar carries a
@@ -120,9 +153,13 @@ Web browser.
 - Anything else is a search with the default engine; the query is
   form-encoded (`+` for space, `%XX` for reserved bytes) into the engine's
   template at `%s`.
-- Built-in engines: DuckDuckGo (default), Google, Bing, Wikipedia,
-  Startpage, Brave Search; users can add/remove custom engines
-  (name + template containing `%s`).
+- A leading bang word (`!w rust`) searches with the engine whose `bang`
+  matches; unknown bangs are searched with the default engine as typed.
+- Built-in engines: DuckDuckGo `!ddg` (default), Google `!g`, Bing `!b`,
+  Wikipedia `!w`, Startpage `!sp`, Brave Search `!brave`; users can
+  add/remove custom engines (name + template containing `%s`). When
+  `org.gnome.Epiphany` is installed its `search-engine-providers` list is
+  used instead (so Epiphany's engines carry over).
 
 ### History
 - Stored as JSON (`$XDG_DATA_HOME/helix-web/history.json`). Rationale:
@@ -172,6 +209,93 @@ Web browser.
 - Pointer lock is allowed; DRM (media key system) and other request types
   are denied. `query-permission-state` answers from the store.
 - Private windows honour stored decisions but do not save new ones.
+- "Never save passwords for this site" is stored here too (kind
+  `save-password`, always deny) and can be reset from the security popover.
+
+### Password manager
+- Logins are stored only in the Secret Service
+  (`org.freedesktop.secrets`, freedesktop Secret Service API 0.2), spoken to
+  directly with zbus (no libsecret), from worker threads. Default collection
+  (`ReadAlias("default")`, created via `CreateCollection` if missing);
+  locked items/collections are unlocked through the service's prompt
+  (`Prompt` + `Completed`). Transfer session algorithm: `plain`.
+- Item schema (Helix-specific; documented contract):
+
+  | attribute | value |
+  |---|---|
+  | `xdg:schema` | `org.helix.Web.Password` |
+  | `origin` | `scheme://host[:port]` of the page with the login form |
+  | `target-origin` | origin of the form's `action` (page origin if none) |
+  | `username` | user name, may be empty |
+
+  Label "Password for USER on HOST"; secret = UTF-8 password,
+  content type `text/plain; charset=utf8`. Saving replaces the item with the
+  same attributes (`CreateItem(…, replace = true)`).
+- Saving: the injected script listens for `submit` (capture phase); it
+  takes the first password field and the nearest visible text/email/tel
+  field before it; forms with more than one filled password field
+  (sign-up / change password) are ignored. The message carries action,
+  user name and password; the origin is taken from the tab's URI, never
+  from the page. If `remember-passwords` is on, the window is not private
+  and the site is not on the never list, a bar offers "Save password for
+  “USER” on HOST?" (or "Update the saved password…" when the user exists
+  with another password) with Never for This Site / Not Now / Save. Nothing
+  is offered when the same login is already saved.
+- Filling: after a page finishes loading (normal windows, not on pages
+  with certificate errors), if the page has a password field the logins for
+  its origin are looked up; the first by user name is filled into each form
+  with a single, empty password field (input/change events are dispatched).
+- Preferences → Privacy → Passwords: Remember Passwords switch and Saved
+  Passwords… (lists host + user name, never the password; per-entry
+  removal through `Item.Delete`).
+- Private windows neither save nor fill.
+
+### Reader mode
+- After each http(s) page load the page HTML (`outerHTML`, read in the
+  isolated world, ≤ 4 MiB) is analysed on a worker thread by a pure-Rust
+  readability-style extractor (`htmlparse.rs` tolerant HTML parser,
+  `reader.rs`): non-content elements (script, style, nav, footer, aside,
+  forms, iframes, hidden elements, page-level header) and blocks whose
+  class/id/role look like page furniture are dropped; paragraph-like blocks
+  score 1 + commas + min(len/100, 3), propagated to parent (full),
+  grandparent (½) and great-grandparent (⅙); candidate scores start from a
+  tag/class weight and are scaled by (1 − link density); the best candidate
+  plus siblings scoring ≥ max(10, 20 % of it) or text-rich paragraphs form
+  the article. Output goes through a tag/attribute allow-list (links and
+  images absolutised, only http/https/mailto/`data:image` URLs kept;
+  link-heavy lists/containers dropped). Title from `og:title`, `<title>`
+  (site suffix stripped) or `h1`; byline from `author` meta or byline
+  elements; site from `og:site_name` or the host.
+- The Reader View button appears when the article has ≥ 400 characters of
+  non-link text. Ctrl+Alt+R toggles. The reader page is a self-contained
+  document with a strict CSP (`default-src 'none'`, no scripts) loaded with
+  `load_alternate_html` under the original URI; it uses a clean stylesheet
+  (max 42em column, comfortable line height, sans or serif per
+  `font-style`, light or dark per `color-scheme`; dark whenever the system
+  style is dark). Leaving reloads the original page. Reader page loads are
+  not recorded as visits and keep the original page's security indicator.
+
+### Web applications
+- "Install Site as Web Application…" uses the XDG DynamicLauncher portal:
+  `PrepareInstall("", title, icon, {launcher_type: 2 (web app), target:
+  URL, editable_name, editable_icon, modal, handle_token})`, waits for the
+  Request `Response`, then `Install(token, "org.helix.Web.WebApp_ID.desktop",
+  entry, {})`. Icon: the site's favicon as PNG, else the app icon from the
+  theme. ID = sanitised chosen name + 6 hex digits of a hash of the URL.
+  The desktop entry (Name/Icon are added by the portal):
+  `Exec=<helix-web path> --web-app=ID "URL"` (Exec quoting per the Desktop
+  Entry spec, `%` doubled, line breaks removed), `StartupWMClass` = app ID,
+  `Categories=Network;GTK;`, `X-Helix-Web-App-Url=URL`.
+- Web-app mode: application ID `org.helix.Web.WebApp_ID` (own instance),
+  data (cookies, history, permissions) in
+  `$XDG_DATA_HOME/helix-web/web-apps/ID/`, cache in
+  `$XDG_CACHE_HOME/helix-web/web-apps/ID/`; no session restore. The window
+  has no address entry (title + host instead), no bookmarks or tab-overview
+  buttons; menu: zoom, Find, Print, Fullscreen, Open in Browser,
+  Uninstall Web Application… (portal `Uninstall`, then quit; site data is
+  kept), About. User-initiated navigations and pop-ups to other sites
+  (anything not on the app's host or its subdomains) open in the default
+  browser.
 
 ### JavaScript dialogs
 - alert / confirm / prompt / beforeunload are shown as `AdwAlertDialog`s
@@ -196,22 +320,51 @@ Web browser.
 
 ### Preferences (Ctrl+,)
 - General: Homepage (empty = start page), Restore session (Always /
-  After crash / Never), Default zoom.
+  After crash / Never), Default zoom; Reader Mode: Font Style (Sans /
+  Serif), Color Scheme (Light / Dark).
 - Search: default engine (combo), engine list with remove, add engine
   (name + URL template with `%s`).
 - Privacy: Enable JavaScript, Block pop-up windows, Cookies (Always
-  accept / Block third-party (default) / Block all), Clear Browsing
-  Data… (cookies & site data, cache, history — all time).
+  accept / Block third-party (default) / Block all); Passwords (Remember
+  Passwords, Saved Passwords…); Clear Browsing Data… (cookies & site data,
+  cache, history — all time).
 
 ### Settings storage
 - All preferences are written to `$XDG_CONFIG_HOME/helix-web/settings.json`.
-  When the GNOME schemas are installed, these keys are also read from /
-  written to GSettings so settings carry over:
-  - `org.gnome.Epiphany`: `homepage-url` (s; `about:overview` = start page),
-    `restore-session-policy` (enum `always` | `crashed` | `never`).
-  - `org.gnome.Epiphany.web`: `enable-popups` (b), `cookies-policy`
-    (s: `always` | `no-third-party` | `never`), `default-zoom-level` (d).
-  Search engines and the JavaScript toggle live only in `settings.json`.
+  When the GNOME schemas are installed, these keys (names, types, enums
+  and defaults as in the real `org.gnome.epiphany` schema) are also read
+  from / written to GSettings so settings carry over:
+  - `org.gnome.Epiphany` (`/org/gnome/epiphany/`): `homepage-url` (s;
+    empty = start page), `default-search-engine` (s, engine name),
+    `search-engine-providers` (aa{sv}: `name`, `url` with `%s`, `bang`),
+    `restore-session-policy` (enum `EphyPrefsRestoreSessionPolicy`:
+    `always` | `crashed`).
+  - `org.gnome.Epiphany.web` — relocatable, opened at
+    `/org/gnome/epiphany/web/` as Epiphany does for the browser itself:
+    `enable-popups` (b), `remember-passwords` (b), `default-zoom-level` (d).
+  - `org.gnome.Epiphany.reader` (`/org/gnome/epiphany/reader/`):
+    `font-style` (enum `sans` | `serif`), `color-scheme` (enum `light` |
+    `dark`).
+- Not in Epiphany's schema, so only in `settings.json`: the JavaScript
+  toggle (Epiphany has no such key), the cookie policy (Epiphany has no
+  cookie-policy key), and the restore policy `never` (Epiphany's enum only
+  has `always` / `crashed`; while `never` is selected the GSettings key is
+  left untouched).
+- `data/org.gnome.Epiphany.gschema.xml` is a GNOME-compatible subset of
+  exactly these keys for systems without Epiphany.
+
+### Packaging files
+- `data/apparmor.d/helix-web` installs to `/etc/apparmor.d/helix-web`
+  (load with `apparmor_parser -r`). It attaches to
+  `/usr/bin/helix-web` and `/usr/local/bin/helix-web`, is
+  `flags=(unconfined)` and only grants `userns` (bubblewrap and WebKit's
+  helper processes are children of helix-web and inherit it), with
+  `include if exists <local/helix-web>` for site additions. The
+  in-app failure page generates the same profile with the running binary's
+  path added; a unit test keeps the shipped file identical to the generator.
+- `data/org.helix.Web.desktop` → `/usr/share/applications/`.
+- `data/org.gnome.Epiphany.gschema.xml` → `/usr/share/glib-2.0/schemas/`
+  only where Epiphany's schema is not installed.
 
 ### Shortcuts
 | Keys | Action |
@@ -231,28 +384,34 @@ Web browser.
 | Ctrl+P | Print |
 | Ctrl+plus / Ctrl+minus / Ctrl+0 | Zoom in / out / reset |
 | F11 | Fullscreen |
+| Ctrl+Alt+R | Reader view |
 | Ctrl+, | Preferences |
 | Ctrl+Q | Quit |
 | Ctrl+Tab, Ctrl+PgUp/PgDn, Alt+1…9 | Tab switching (AdwTabView built-ins) |
 
+## Decisions
+- Password manager: implemented with a pure-Rust Secret Service client
+  over zbus (no libsecret), Helix schema `org.helix.Web.Password`; tests run
+  only against an in-process mock service on a private peer-to-peer
+  connection.
+- Web apps: "Install Site as Web Application" via the XDG DynamicLauncher
+  portal, with a web-app mode (`--web-app=ID URL`).
+- Reader mode: pure-Rust readability-style extractor (unit-tested) shown
+  with a clean, script-free stylesheet.
+- WebKit sandbox on restricted hosts: ship an AppArmor profile granting
+  `userns` (`data/apparmor.d/helix-web`) and detect the failure up front,
+  showing an explanatory status page; the sandbox is never disabled.
+- Search engine / JavaScript / other keys aligned with the real
+  `org.gnome.epiphany` schema; keys Epiphany does not have (JavaScript,
+  cookie policy, restore `never`) stay in `settings.json`.
+
 ## Open questions
-- **Password manager**: requires libsecret / Secret Service; libsecret is
-  not available, so saving/filling passwords is not implemented. Should a
-  pure-Rust Secret Service client (zbus `org.freedesktop.secrets`) be used?
-- **Web apps** ("Install site as web application") need the
-  `org.freedesktop.portal.DynamicLauncher` portal and a separate web-app
-  profile mode; deferred.
-- **Reader mode** needs a readability-style article extractor (a JS port
-  injected into the page or a Rust crate); deferred until a clean-room
-  implementation choice is made.
-- **WebKit sandbox on this host**: WebKit's bubblewrap sandbox needs
-  unprivileged user namespaces, which this machine restricts
-  (`kernel.apparmor_restrict_unprivileged_userns = 1`; `bwrap` fails with
-  "setting up uid map: Permission denied"), so the web process aborts
-  ("Failed to fully launch dbus-proxy"). The app never disables the
-  sandbox; on such systems an AppArmor profile allowing `userns` for
-  `/usr/bin/bwrap` (or for helix-web) is needed. Should the app detect this
-  and show a friendly error instead of WebKit's abort?
-- Search-engine and JavaScript preferences are not stored in
-  `org.gnome.Epiphany` because the exact published key types could not be
-  verified here (no schema installed); they live in `settings.json`.
+- The Secret Service transfer session uses the `plain` algorithm (secrets
+  travel unencrypted over the user's own session bus, as with many simple
+  clients). Implementing `dh-ietf1024-sha256-aes128-cbc-pkcs7` would need
+  pure-Rust big-integer/AES/HKDF crates; worth adding?
+- Web apps: user-initiated navigations and pop-ups to other hosts open in
+  the default browser, so a login button that links to a third-party
+  identity provider leaves the app (server redirects stay inside). Should
+  web apps get an "additional URLs" list (Epiphany's
+  `org.gnome.Epiphany.webapp additional-urls`)?

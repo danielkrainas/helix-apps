@@ -12,6 +12,8 @@ pub enum Kind {
     Microphone,
     Camera,
     Clipboard,
+    /// "Never save passwords for this site" (only ever stored as deny).
+    SavePassword,
 }
 
 impl Kind {
@@ -22,6 +24,7 @@ impl Kind {
             Kind::Microphone => "Microphone",
             Kind::Camera => "Camera",
             Kind::Clipboard => "Clipboard",
+            Kind::SavePassword => "Save Passwords",
         }
     }
 

@@ -1,0 +1,19 @@
+# AppArmor profile for helix-web.
+#
+# WebKitGTK sandboxes web content with bubblewrap, which needs
+# unprivileged user namespaces. Systems that restrict them
+# (kernel.apparmor_restrict_unprivileged_userns = 1) must grant
+# `userns` to the application. WebKit's helper processes
+# (WebKitWebProcess, WebKitNetworkProcess) and bwrap are started by
+# helix-web and inherit this profile. The profile confines nothing
+# else; it only names the application and allows user namespaces.
+
+abi <abi/4.0>,
+include <tunables/global>
+
+profile helix-web /{usr/bin/helix-web,usr/local/bin/helix-web} flags=(unconfined) {
+  userns,
+
+  # Site-specific additions and overrides. See local/README for details.
+  include if exists <local/helix-web>
+}
