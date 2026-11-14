@@ -41,6 +41,12 @@ The list below matches the current GNOME core apps (as published on apps.gnome.o
 | Web | Epiphany | Web browser |
 | Tour | GNOME Tour | Welcome / tour |
 
+Beyond the core list:
+
+| App | GNOME name | Purpose |
+|-----|------------|---------|
+| Screenshot | GNOME Screenshot (gnome-screenshot) | Screenshots of the screen, a window or an area |
+
 ## Notes
 
 - **Settings** is the largest and most tightly integrated app. It can be developed in parallel but will exercise more of the portal and session surface than the others.

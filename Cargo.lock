@@ -1488,6 +1488,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-screenshot"
+version = "0.1.0"
+dependencies = [
+ "gtk4",
+ "helix-app-common",
+ "libadwaita",
+ "serde",
+ "serde_json",
+ "zbus",
+]
+
+[[package]]
 name = "helix-settings-app"
 version = "0.1.0"
 dependencies = [

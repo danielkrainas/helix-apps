@@ -28,6 +28,7 @@ members = [
     "apps/document-viewer",
     "apps/document-scanner",
     "apps/maps",
+    "apps/screenshot",
 ]
 resolver = "2"
 
