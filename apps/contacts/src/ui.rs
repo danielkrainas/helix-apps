@@ -93,6 +93,9 @@ struct Ui {
     list: gtk::ListBox,
     list_stack: gtk::Stack,
     select_button: gtk::ToggleButton,
+    /// Selection-mode check box of each shown row, by individual id.
+    checks: RefCell<HashMap<String, (gtk::ListBoxRow, gtk::CheckButton)>>,
+    side_page: adw::NavigationPage,
     action_bar: gtk::ActionBar,
     link_button: gtk::Button,
     delete_button: gtk::Button,
@@ -107,6 +110,24 @@ struct Ui {
     main_stack: gtk::Stack,
     unavailable_page: adw::StatusPage,
     book_menu: gio::Menu,
+}
+
+fn tristate(on: bool) -> gtk::AccessibleTristate {
+    if on {
+        gtk::AccessibleTristate::True
+    } else {
+        gtk::AccessibleTristate::False
+    }
+}
+
+/// Sidebar title: "Contacts", or in selection mode "Select Contacts" /
+/// "1 Selected" / "N Selected".
+fn selection_title(selection_mode: bool, n: usize) -> String {
+    match (selection_mode, n) {
+        (false, _) => "Contacts".into(),
+        (true, 0) => "Select Contacts".into(),
+        (true, n) => format!("{n} Selected"),
+    }
 }
 
 fn label(text: &str, classes: &[&str]) -> gtk::Label {
@@ -358,6 +379,8 @@ impl Ui {
             list,
             list_stack,
             select_button,
+            checks: RefCell::default(),
+            side_page: side_page.clone(),
             action_bar,
             link_button,
             delete_button,
@@ -422,14 +445,12 @@ impl Ui {
             let ind = ui.state.borrow().shown.get(idx).cloned();
             let Some(ind) = ind else { return };
             if ui.state.borrow().selection_mode {
-                let id = ind.id();
-                {
-                    let mut st = ui.state.borrow_mut();
-                    if !st.checked.remove(&id) {
-                        st.checked.insert(id);
-                    }
+                // Toggle in place: the row keeps focus and the list its
+                // scroll position.
+                let check = ui.checks.borrow().get(&ind.id()).map(|(_, c)| c.clone());
+                if let Some(check) = check {
+                    check.set_active(!check.is_active());
                 }
-                ui.refresh_list();
                 return;
             }
             ui.leave_edit(move |ui| {
@@ -449,6 +470,7 @@ impl Ui {
                 }
                 ui.action_bar.set_revealed(b.is_active());
                 ui.refresh_list();
+                ui.update_selection_ui();
             }
         });
         let weak = Rc::downgrade(self);
@@ -901,6 +923,7 @@ impl Ui {
         while let Some(row) = self.list.row_at_index(0) {
             self.list.remove(&row);
         }
+        self.checks.borrow_mut().clear();
         let mut select_row = None;
         for ind in &shown {
             let row = gtk::ListBoxRow::new();
@@ -908,15 +931,39 @@ impl Ui {
             let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 12);
             hbox.set_margin_top(4);
             hbox.set_margin_bottom(4);
-            if selection_mode {
-                let check = gtk::CheckButton::builder()
-                    .active(checked.contains(&ind.id()))
-                    .can_focus(false)
-                    .build();
-                check.set_sensitive(false);
-                hbox.append(&check);
-            }
             let name = ind.contact.display_name();
+            if selection_mode {
+                // The row is what has focus and is activated (Space,
+                // Enter, click); the check box shows and names its state.
+                let on = checked.contains(&ind.id());
+                let check = gtk::CheckButton::builder()
+                    .active(on)
+                    .can_focus(false)
+                    .can_target(false)
+                    .build()
+                    .labelled(&format!("Select {name}"));
+                row.update_state(&[gtk::accessible::State::Checked(tristate(on))]);
+                let weak = Rc::downgrade(self);
+                let (id, r) = (ind.id(), row.clone());
+                check.connect_toggled(move |c| {
+                    let Some(ui) = weak.upgrade() else { return };
+                    let on = c.is_active();
+                    {
+                        let mut st = ui.state.borrow_mut();
+                        if on {
+                            st.checked.insert(id.clone());
+                        } else {
+                            st.checked.remove(&id);
+                        }
+                    }
+                    r.update_state(&[gtk::accessible::State::Checked(tristate(on))]);
+                    ui.update_selection_ui();
+                });
+                hbox.append(&check);
+                self.checks
+                    .borrow_mut()
+                    .insert(ind.id(), (row.clone(), check));
+            }
             let avatar = adw::Avatar::new(32, Some(&name), true);
             if let Some(bytes) = ind.contact.photo_bytes() {
                 set_avatar_bytes(&avatar, &bytes);
@@ -973,10 +1020,7 @@ impl Ui {
                 row.set_header(None::<&gtk::Widget>);
             }
         });
-        let n_checked = checked.len();
-        self.link_button.set_sensitive(n_checked >= 2);
-        self.delete_button.set_sensitive(n_checked >= 1);
-        self.export_button.set_sensitive(n_checked >= 1);
+        self.update_selection_ui();
         let page = if !shown.is_empty() {
             "list"
         } else if any {
@@ -1016,6 +1060,19 @@ impl Ui {
                 self.show_placeholder();
             }
         }
+    }
+
+    /// Action bar buttons and the sidebar title ("3 Selected") for the
+    /// current selection.
+    fn update_selection_ui(&self) {
+        let (mode, n) = {
+            let st = self.state.borrow();
+            (st.selection_mode, st.checked.len())
+        };
+        self.link_button.set_sensitive(n >= 2);
+        self.delete_button.set_sensitive(n >= 1);
+        self.export_button.set_sensitive(n >= 1);
+        self.side_page.set_title(&selection_title(mode, n));
     }
 
     fn selected_individual(&self) -> Option<Individual> {
@@ -1761,5 +1818,18 @@ mod tests {
             Some("24 December")
         );
         assert_eq!(super::format_vcard_date("garbage"), None);
+    }
+}
+
+#[cfg(test)]
+mod selection_tests {
+    use super::selection_title;
+
+    #[test]
+    fn selection_titles() {
+        assert_eq!(selection_title(false, 3), "Contacts");
+        assert_eq!(selection_title(true, 0), "Select Contacts");
+        assert_eq!(selection_title(true, 1), "1 Selected");
+        assert_eq!(selection_title(true, 12), "12 Selected");
     }
 }

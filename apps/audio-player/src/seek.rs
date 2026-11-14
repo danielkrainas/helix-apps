@@ -62,6 +62,21 @@ pub fn linear_to_cubic(v: f64) -> f64 {
     v.clamp(0.0, 1.0).cbrt()
 }
 
+/// Accessible name of the speed button: "Playback Speed: 1.25×".
+pub fn rate_name(rate: f64) -> String {
+    format!("Playback Speed: {}", rate_label(rate))
+}
+
+/// Accessible value of the volume slider (its position, 0 – 100 %).
+pub fn volume_text(slider: f64, muted: bool) -> String {
+    let pct = (slider.clamp(0.0, 1.0) * 100.0).round() as u32;
+    if muted {
+        format!("{pct}%, muted")
+    } else {
+        format!("{pct}%")
+    }
+}
+
 pub fn volume_icon(slider: f64, muted: bool) -> &'static str {
     if muted || slider <= 0.0 {
         "audio-volume-muted-symbolic"
@@ -77,6 +92,14 @@ pub fn volume_icon(slider: f64, muted: bool) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn readable_rate_and_volume() {
+        assert_eq!(rate_name(1.25), "Playback Speed: 1.25\u{d7}");
+        assert_eq!(rate_name(1.0), "Playback Speed: 1.0\u{d7}");
+        assert_eq!(volume_text(0.5, false), "50%");
+        assert_eq!(volume_text(1.0, true), "100%, muted");
+    }
 
     #[test]
     fn skip_clamps() {

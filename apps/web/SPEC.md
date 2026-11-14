@@ -197,7 +197,8 @@ Web browser.
 - Downloads popover per window: file name, progress bar, status
   (`1.2 MB of 3.4 MB`, Finished, Failed, Cancelled), Cancel while running,
   Open and Open Folder (`GtkFileLauncher`, portal) when finished, "Clear
-  finished".
+  finished". If opening the file or its folder fails, the window shows a
+  toast with the reason (closing the app chooser is not a failure).
 
 ### Permissions
 - Geolocation, notifications, microphone, camera and clipboard requests
@@ -263,7 +264,13 @@ Web browser.
   with a single, empty password field (input/change events are dispatched).
 - Preferences → Privacy → Passwords: Remember Passwords switch and Saved
   Passwords… (lists host + user name, never the password; per-entry
-  removal through `Item.Delete`).
+  removal through `Item.Delete`). Removal is confirmed first ("Remove
+  Password?", destructive *Remove*; the keyring cannot restore it), then
+  reported in a toast in the dialog ("Password for HOST removed", or the
+  error with the Remove button usable again). Removing the last entry
+  shows the "No Saved Passwords" page.
+- Saving a password from the offer bar reports "Password saved", or the
+  failure, as a toast in the window.
 - Private windows neither save nor fill.
 
 ### Reader mode
@@ -350,11 +357,22 @@ Web browser.
   After crash / Never), Default zoom; Reader Mode: Font Style (Sans /
   Serif), Color Scheme (Light / Dark).
 - Search: default engine (combo), engine list with remove, add engine
-  (name + URL template with `%s`).
+  (name + URL template with `%s`). A rejected engine marks the faulty row
+  (name or address) with the error style and explains why in a toast
+  (empty name, a name already in use, or an address that does not start
+  with https:// / http:// or lacks `%s`); editing either row clears the
+  mark.
 - Privacy: Enable JavaScript, Block pop-up windows, Cookies (Always
   accept / Block third-party (default) / Block all); Passwords (Remember
   Passwords, Saved Passwords…); Clear Browsing Data… (cookies & site data,
-  cache, history — all time).
+  cache, history — all time), confirmed by its dialog and reported when
+  done ("Browsing data cleared", or the error) as a toast; Reset All Site
+  Permissions, confirmed first ("Reset All Site Permissions?",
+  destructive *Reset*) and reported ("Site permissions reset", or "No
+  site permissions to reset" when there are none).
+- Windows have a toast overlay for feedback; messages from dialogs that
+  have closed go to the active window. libadwaita speaks toasts to screen
+  readers.
 
 ### Settings storage
 - All preferences are written to `$XDG_CONFIG_HOME/helix-web/settings.json`.

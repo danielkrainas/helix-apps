@@ -6,6 +6,7 @@ use crate::layout::{
     visible_page_area, Layout, LayoutParams, Rect, ZoomMode, MARGIN,
 };
 use crate::links::{Link, Target};
+use crate::pagetext::{PageText, Unit};
 use crate::render::{scale_key, Client, DocInfo, JobKey, Renderer, Style, TextPurpose};
 use crate::search::Results;
 use gtk::prelude::*;
@@ -29,6 +30,9 @@ pub struct Model {
     pub thumbs: RefCell<Lru<u32, gdk::Texture>>,
     pub links: RefCell<HashMap<usize, Vec<Link>>>,
     links_requested: RefCell<HashSet<usize>>,
+    /// Page → its text and character boxes (caret, accessibility).
+    pub texts: RefCell<HashMap<usize, Rc<PageText>>>,
+    texts_requested: RefCell<HashSet<usize>>,
     pub search: RefCell<Results>,
     /// Highlighted selection region per page (page points).
     pub selection: RefCell<Vec<(usize, Vec<Rect>)>>,
@@ -45,6 +49,8 @@ impl Model {
             thumbs: RefCell::new(Lru::new(THUMB_BUDGET)),
             links: RefCell::default(),
             links_requested: RefCell::default(),
+            texts: RefCell::default(),
+            texts_requested: RefCell::default(),
             search: RefCell::default(),
             selection: RefCell::default(),
             night: Cell::new(false),
@@ -58,6 +64,8 @@ impl Model {
         self.thumbs.borrow_mut().clear();
         self.links.borrow_mut().clear();
         self.links_requested.borrow_mut().clear();
+        self.texts.borrow_mut().clear();
+        self.texts_requested.borrow_mut().clear();
         self.search.borrow_mut().clear();
         self.selection.borrow_mut().clear();
     }
@@ -116,6 +124,16 @@ impl Model {
         if self.links_requested.borrow_mut().insert(page) {
             self.renderer.links(page);
         }
+    }
+
+    pub fn request_text(&self, page: usize) {
+        if page < self.n_pages() && self.texts_requested.borrow_mut().insert(page) {
+            self.renderer.page_text(page);
+        }
+    }
+
+    pub fn text(&self, page: usize) -> Option<Rc<PageText>> {
+        self.texts.borrow().get(&page).cloned()
     }
 
     pub fn link_at(&self, page: usize, x: f64, y: f64) -> Option<Target> {
@@ -247,12 +265,100 @@ pub struct Callbacks {
     pub zoom_changed: Option<Box<dyn Fn(f64, ZoomMode)>>,
     pub link_activated: Option<Box<dyn Fn(Target)>>,
     pub selection_changed: Option<Box<dyn Fn(bool)>>,
+    pub caret_mode_changed: Option<Box<dyn Fn(bool)>>,
 }
+
+/// A caret position: page and character offset in its text.
+pub type Caret = (usize, usize);
 
 #[derive(Clone, Copy, Debug)]
 pub struct SelPoint {
     page: usize,
     pt: (f64, f64),
+}
+
+mod spot_imp {
+    use super::*;
+
+    #[derive(Default)]
+    pub struct LinkSpot {
+        pub page: Cell<usize>,
+        pub index: Cell<usize>,
+        pub link: RefCell<Option<Link>>,
+    }
+
+    #[glib::object_subclass]
+    impl ObjectSubclass for LinkSpot {
+        const NAME: &'static str = "HelixDocViewLink";
+        type Type = super::LinkSpot;
+        type ParentType = gtk::Widget;
+
+        fn class_init(klass: &mut Self::Class) {
+            klass.set_css_name("doclink");
+            klass.set_accessible_role(gtk::AccessibleRole::Link);
+        }
+    }
+
+    impl ObjectImpl for LinkSpot {
+        fn constructed(&self) {
+            self.parent_constructed();
+            let obj = self.obj();
+            obj.set_focusable(true);
+            // Pointer input stays with the view (selection, link clicks).
+            obj.set_can_target(false);
+        }
+    }
+
+    impl WidgetImpl for LinkSpot {}
+}
+
+glib::wrapper! {
+    /// An invisible, focusable stand-in for one link of a visible page: it
+    /// gives the link a keyboard focus ring and an accessible object
+    /// (role link, named by its text, described by its target).
+    pub struct LinkSpot(ObjectSubclass<spot_imp::LinkSpot>)
+        @extends gtk::Widget,
+        @implements gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget;
+}
+
+impl LinkSpot {
+    fn new() -> Self {
+        glib::Object::new()
+    }
+
+    fn key(&self) -> (usize, usize) {
+        (self.imp().page.get(), self.imp().index.get())
+    }
+
+    fn set_link(&self, page: usize, index: usize, link: &Link, labels: &[String]) {
+        let imp = self.imp();
+        imp.page.set(page);
+        imp.index.set(index);
+        if imp.link.borrow().as_ref() == Some(link) {
+            return;
+        }
+        let target = link.target.describe(labels);
+        let name = if link.text.is_empty() {
+            target.clone()
+        } else {
+            link.text.clone()
+        };
+        self.update_property(&[
+            gtk::accessible::Property::Label(&name),
+            gtk::accessible::Property::Description(&target),
+        ]);
+        *imp.link.borrow_mut() = Some(link.clone());
+    }
+
+    /// The link's page and area (page points).
+    pub fn page_rect(&self) -> Option<(usize, Rect)> {
+        let link = self.imp().link.borrow();
+        link.as_ref().map(|l| (self.imp().page.get(), l.rect))
+    }
+
+    pub fn target(&self) -> Option<Target> {
+        self.imp().link.borrow().as_ref().map(|l| l.target.clone())
+    }
 }
 
 mod imp {
@@ -285,6 +391,19 @@ mod imp {
         pub pinch_start: Cell<f64>,
         pub pointer: Cell<Option<(f64, f64)>>,
         pub callbacks: RefCell<Callbacks>,
+        /// Focusable stand-ins for the links on visible pages.
+        pub spots: RefCell<Vec<LinkSpot>>,
+        pub spots_queued: Cell<bool>,
+        pub caret_mode: Cell<bool>,
+        pub caret: Cell<Option<Caret>>,
+        /// Remembered horizontal position for Up / Down (page points).
+        pub caret_x: Cell<Option<f64>>,
+        /// Where a Shift+arrow selection started.
+        pub caret_anchor: Cell<Option<Caret>>,
+        /// Keyboard selection, ordered start..end.
+        pub kbd_sel: Cell<Option<(Caret, Caret)>>,
+        /// The page whose text is exposed to assistive technology.
+        pub a11y_page: Cell<usize>,
     }
 
     impl Default for DocView {
@@ -315,6 +434,14 @@ mod imp {
                 pinch_start: Cell::new(1.0),
                 pointer: Cell::new(None),
                 callbacks: RefCell::default(),
+                spots: RefCell::default(),
+                spots_queued: Cell::new(false),
+                caret_mode: Cell::new(false),
+                caret: Cell::new(None),
+                caret_x: Cell::new(None),
+                caret_anchor: Cell::new(None),
+                kbd_sel: Cell::new(None),
+                a11y_page: Cell::new(usize::MAX),
             }
         }
     }
@@ -324,10 +451,11 @@ mod imp {
         const NAME: &'static str = "HelixDocView";
         type Type = super::DocView;
         type ParentType = gtk::Widget;
-        type Interfaces = (gtk::Scrollable,);
+        type Interfaces = (gtk::Scrollable, gtk::AccessibleText);
 
         fn class_init(klass: &mut Self::Class) {
             klass.set_css_name("docview");
+            klass.set_accessible_role(gtk::AccessibleRole::Document);
         }
     }
 
@@ -380,6 +508,10 @@ mod imp {
             for (adj, id) in self.adj_handlers.take() {
                 adj.disconnect(id);
             }
+            self.spots.take();
+            while let Some(child) = self.obj().first_child() {
+                child.unparent();
+            }
         }
     }
 
@@ -391,14 +523,128 @@ mod imp {
             if let Some((p, top, left)) = self.pending_goto.take() {
                 self.obj().go_to(p, top, left);
             }
+            self.obj().allocate_spots();
         }
 
         fn snapshot(&self, snapshot: &gtk::Snapshot) {
-            self.obj().draw(snapshot);
+            let obj = self.obj();
+            obj.draw(snapshot);
+            for spot in self.spots.borrow().iter() {
+                obj.snapshot_child(spot, snapshot);
+            }
+        }
+
+        /// Tab moves from the document through the links on the visible
+        /// pages, then out; Shift+Tab goes back the same way.
+        fn focus(&self, direction: gtk::DirectionType) -> bool {
+            let obj = self.obj();
+            let spots = self.spots.borrow().clone();
+            let on_self = obj.has_focus();
+            let cur = spots.iter().position(|s| s.has_focus());
+            let next = match direction {
+                gtk::DirectionType::TabForward => match (on_self, cur) {
+                    (true, _) if spots.is_empty() => return false,
+                    (true, _) => Some(0),
+                    (false, Some(i)) if i + 1 < spots.len() => Some(i + 1),
+                    (false, Some(_)) => return false,
+                    (false, None) => None,
+                },
+                gtk::DirectionType::TabBackward => match (on_self, cur) {
+                    (true, _) => return false,
+                    (false, Some(0)) => None,
+                    (false, Some(i)) => Some(i - 1),
+                    (false, None) if spots.is_empty() => None,
+                    (false, None) => Some(spots.len() - 1),
+                },
+                _ if on_self || cur.is_some() => return false,
+                _ => None,
+            };
+            match next {
+                Some(i) => {
+                    let spot = &spots[i];
+                    spot.grab_focus();
+                    if let Some((page, rect)) = spot.page_rect() {
+                        obj.show_rect(page, &rect);
+                    }
+                }
+                None => {
+                    obj.grab_focus();
+                }
+            }
+            true
         }
     }
 
     impl ScrollableImpl for DocView {}
+
+    impl AccessibleTextImpl for DocView {
+        fn contents(&self, start: u32, end: u32) -> Option<glib::Bytes> {
+            let text = self.obj().a11y_text();
+            let s = text
+                .map(|t| t.slice(start as usize, end as usize))
+                .unwrap_or_default();
+            Some(nul_terminated(s))
+        }
+
+        fn contents_at(
+            &self,
+            offset: u32,
+            granularity: gtk::AccessibleTextGranularity,
+        ) -> Option<(u32, u32, glib::Bytes)> {
+            let text = self.obj().a11y_text()?;
+            let unit = match granularity {
+                gtk::AccessibleTextGranularity::Word => Unit::Word,
+                gtk::AccessibleTextGranularity::Sentence => Unit::Sentence,
+                gtk::AccessibleTextGranularity::Line => Unit::Line,
+                gtk::AccessibleTextGranularity::Paragraph => Unit::Paragraph,
+                _ => Unit::Char,
+            };
+            let (s, e) = text.range_at(offset as usize, unit);
+            Some((s as u32, e as u32, nul_terminated(text.slice(s, e))))
+        }
+
+        fn caret_position(&self) -> u32 {
+            match self.caret.get() {
+                Some((p, o)) if p == self.a11y_page.get() => o as u32,
+                _ => 0,
+            }
+        }
+
+        fn selection(&self) -> Vec<gtk::AccessibleTextRange> {
+            let page = self.a11y_page.get();
+            let Some(((ap, ao), (bp, bo))) = self.kbd_sel.get() else {
+                return Vec::new();
+            };
+            if page < ap || page > bp {
+                return Vec::new();
+            }
+            let len = self.obj().a11y_text().map_or(0, |t| t.len());
+            let s = if page == ap { ao } else { 0 };
+            let e = if page == bp { bo } else { len };
+            if e <= s {
+                return Vec::new();
+            }
+            vec![gtk::AccessibleTextRange::new(s, e - s)]
+        }
+
+        fn attributes(
+            &self,
+            _offset: u32,
+        ) -> Vec<(gtk::AccessibleTextRange, glib::GString, glib::GString)> {
+            Vec::new()
+        }
+
+        fn default_attributes(&self) -> Vec<(glib::GString, glib::GString)> {
+            Vec::new()
+        }
+    }
+
+    /// GTK reads accessible text contents as a C string.
+    fn nul_terminated(s: String) -> glib::Bytes {
+        let mut v = s.into_bytes();
+        v.push(0);
+        glib::Bytes::from_owned(v)
+    }
 
     impl DocView {
         fn set_adjustment(&self, horizontal: bool, adj: Option<gtk::Adjustment>) {
@@ -428,7 +674,7 @@ mod imp {
 glib::wrapper! {
     pub struct DocView(ObjectSubclass<imp::DocView>)
         @extends gtk::Widget,
-        @implements gtk::Scrollable, gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget;
+        @implements gtk::Scrollable, gtk::AccessibleText, gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget;
 }
 
 impl Default for DocView {
@@ -492,6 +738,11 @@ impl DocView {
         imp.current.set(usize::MAX);
         imp.sel_anchor.set(None);
         imp.sel_end.set(None);
+        imp.kbd_sel.set(None);
+        imp.caret_anchor.set(None);
+        imp.caret.set(None);
+        imp.caret_x.set(None);
+        imp.a11y_page.set(usize::MAX);
         *imp.layout.borrow_mut() = Layout::default();
         if let Some(a) = imp.vadj.borrow().as_ref() {
             a.set_value(0.0);
@@ -499,6 +750,11 @@ impl DocView {
         self.relayout((0.0, 0.0));
         self.update_current();
         self.emit_zoom();
+        self.queue_sync_links();
+        self.refresh_a11y_page();
+        if imp.caret_mode.get() {
+            self.place_caret();
+        }
     }
 
     fn emit_zoom(&self) {
@@ -583,6 +839,9 @@ impl DocView {
 
     fn on_scrolled(&self) {
         self.queue_draw();
+        // Link stand-ins follow the pages.
+        self.queue_allocate();
+        self.queue_sync_links();
         if !self.imp().in_goto.get() {
             self.update_current();
         }
@@ -606,6 +865,7 @@ impl DocView {
             if let Some(cb) = imp.callbacks.borrow().page_changed.as_ref() {
                 cb(p);
             }
+            self.refresh_a11y_page();
         }
     }
 
@@ -794,7 +1054,9 @@ impl DocView {
     }
 
     pub fn has_selection(&self) -> bool {
-        self.imp().sel_anchor.get().is_some() && self.imp().sel_end.get().is_some()
+        let imp = self.imp();
+        (imp.sel_anchor.get().is_some() && imp.sel_end.get().is_some())
+            || imp.kbd_sel.get().is_some()
     }
 
     pub fn selection_style(&self) -> Style {
@@ -804,6 +1066,9 @@ impl DocView {
     fn update_selection(&self) {
         let imp = self.imp();
         let Some(model) = self.model() else { return };
+        // A pointer selection replaces a keyboard one.
+        imp.kbd_sel.set(None);
+        imp.caret_anchor.set(None);
         imp.sel_gen.set(imp.sel_gen.get() + 1);
         let rects = self.selection_rects();
         if rects.is_empty() {
@@ -825,7 +1090,11 @@ impl DocView {
 
     pub fn clear_selection(&self) {
         let imp = self.imp();
+        imp.caret_anchor.set(None);
         if imp.sel_anchor.get().is_none() {
+            if imp.kbd_sel.get().is_some() {
+                self.update_selection();
+            }
             return;
         }
         imp.sel_anchor.set(None);
@@ -854,6 +1123,15 @@ impl DocView {
 
     /// Asks the render thread for the selected text.
     pub fn request_selected_text(&self, purpose: TextPurpose) {
+        if let Some(text) = self.keyboard_selection_text() {
+            if !text.is_empty() {
+                match purpose {
+                    TextPurpose::Clipboard => self.clipboard().set_text(&text),
+                    TextPurpose::Primary => self.primary_clipboard().set_text(&text),
+                }
+            }
+            return;
+        }
         let rects = self.selection_rects();
         if let (false, Some(model)) = (rects.is_empty(), self.model()) {
             model
@@ -1056,6 +1334,17 @@ impl DocView {
             return glib::Propagation::Proceed;
         }
         let n = self.model().map(|m| m.n_pages()).unwrap_or(0);
+        if matches!(key, Key::Return | Key::KP_Enter | Key::ISO_Enter) && !ctrl {
+            if let Some(target) = self.focused_link() {
+                if let Some(cb) = self.imp().callbacks.borrow().link_activated.as_ref() {
+                    cb(target);
+                }
+                return glib::Propagation::Stop;
+            }
+        }
+        if self.imp().caret_mode.get() && self.caret_key(key, ctrl, shift) {
+            return glib::Propagation::Stop;
+        }
         match key {
             Key::Page_Down | Key::KP_Page_Down if ctrl => self.next_page(),
             Key::Page_Up | Key::KP_Page_Up if ctrl => self.prev_page(),
@@ -1202,6 +1491,24 @@ impl DocView {
         }
         drop(sel);
 
+        // The caret, in the text colour of the page.
+        if let (true, Some((p, o))) = (imp.caret_mode.get(), imp.caret.get()) {
+            if let (true, Some(text)) = (visible.contains(&p), model.text(p)) {
+                if let Some(cr) = text.caret_rect(o) {
+                    let (pw, ph) = info.sizes[p];
+                    let mut r = page_rect_to_content(&cr, &l.pages[p], pw, ph, rot, l.scale);
+                    r.x -= view.x;
+                    r.y -= view.y;
+                    // The caret box is empty along the text direction;
+                    // make it two pixels thick whichever way it runs.
+                    r.w = r.w.max(2.0);
+                    r.h = r.h.max(2.0);
+                    let c = if night { 1.0 } else { 0.0 };
+                    snap.append_color(&rgba(c, c, c, 1.0), &grect(&r));
+                }
+            }
+        }
+
         // Prefetch one viewport above and below.
         let ext = Rect::new(view.x, view.y - view.h, view.w, view.h * 3.0);
         for i in l.visible(&ext) {
@@ -1212,5 +1519,480 @@ impl DocView {
         }
         wants.extend(thumbs);
         model.renderer.set_wants(Client::View, wants);
+    }
+}
+
+// ----- links, caret and accessible text -----
+
+impl DocView {
+    /// Called when the links of a page have arrived.
+    pub fn links_changed(&self) {
+        self.queue_sync_links();
+    }
+
+    /// Called when the text of `page` has arrived.
+    pub fn text_arrived(&self, page: usize) {
+        let imp = self.imp();
+        if page == imp.a11y_page.get() && self.has_atspi() {
+            if let Some(t) = self.a11y_text().filter(|t| !t.is_empty()) {
+                self.update_contents(gtk::AccessibleTextContentChange::Insert, 0, t.len() as u32);
+            }
+        }
+        if imp.caret_mode.get() && imp.caret.get().map(|c| c.0) == Some(page) {
+            self.queue_draw();
+        }
+    }
+
+    /// Whether accessibility notifications can be sent (GTK's fallback
+    /// accessibility context crashes on some of them).
+    fn has_atspi(&self) -> bool {
+        self.at_context().type_().name() == "GtkAtSpiContext"
+    }
+
+    /// The page exposed as accessible text: the caret's page in caret
+    /// mode, otherwise the current page.
+    fn a11y_target_page(&self) -> usize {
+        let imp = self.imp();
+        match (imp.caret_mode.get(), imp.caret.get()) {
+            (true, Some((p, _))) => p,
+            _ => imp.current.get(),
+        }
+    }
+
+    fn a11y_text(&self) -> Option<Rc<PageText>> {
+        self.model()?.text(self.imp().a11y_page.get())
+    }
+
+    /// Switches the accessible text to the target page, telling assistive
+    /// technology that the text changed, and describes the position.
+    fn refresh_a11y_page(&self) {
+        let imp = self.imp();
+        let Some(model) = self.model() else { return };
+        let n = model.n_pages();
+        let p = self.a11y_target_page();
+        if p >= n {
+            return;
+        }
+        model.request_text(p);
+        if imp.a11y_page.get() != p {
+            let atspi = self.has_atspi();
+            // Removal is reported while the old text is still exposed.
+            if let (true, Some(old)) = (atspi, self.a11y_text()) {
+                if !old.is_empty() {
+                    self.update_contents(
+                        gtk::AccessibleTextContentChange::Remove,
+                        0,
+                        old.len() as u32,
+                    );
+                }
+            }
+            imp.a11y_page.set(p);
+            if let (true, Some(new)) = (atspi, self.a11y_text()) {
+                if !new.is_empty() {
+                    self.update_contents(
+                        gtk::AccessibleTextContentChange::Insert,
+                        0,
+                        new.len() as u32,
+                    );
+                }
+            }
+        }
+        self.update_property(&[gtk::accessible::Property::Description(&page_description(
+            &model.label(p),
+            p,
+            n,
+        ))]);
+    }
+
+    // ----- link stand-ins -----
+
+    fn queue_sync_links(&self) {
+        let imp = self.imp();
+        if imp.spots_queued.replace(true) {
+            return;
+        }
+        let weak = self.downgrade();
+        glib::idle_add_local_once(move || {
+            if let Some(view) = weak.upgrade() {
+                view.imp().spots_queued.set(false);
+                view.sync_links();
+            }
+        });
+    }
+
+    /// Makes the link stand-ins match the links of the visible pages, in
+    /// reading order, keeping existing ones (and their focus).
+    fn sync_links(&self) {
+        let imp = self.imp();
+        let Some(model) = self.model() else { return };
+        let visible = self.visible_pages();
+        let want: Vec<(usize, usize, Link)> = {
+            let links = model.links.borrow();
+            visible
+                .iter()
+                .filter_map(|p| links.get(p).map(|v| (*p, v)))
+                .flat_map(|(p, v)| v.iter().enumerate().map(move |(i, l)| (p, i, l.clone())))
+                .collect()
+        };
+        let same = {
+            let spots = imp.spots.borrow();
+            spots.len() == want.len()
+                && spots.iter().zip(&want).all(|(s, (p, i, l))| {
+                    s.key() == (*p, *i) && s.imp().link.borrow().as_ref() == Some(l)
+                })
+        };
+        if same {
+            return;
+        }
+        let labels = model.info().map(|i| i.labels.clone()).unwrap_or_default();
+        let old = imp.spots.take();
+        let mut new = Vec::with_capacity(want.len());
+        for (p, i, link) in &want {
+            let spot = old
+                .iter()
+                .find(|s| s.key() == (*p, *i))
+                .cloned()
+                .unwrap_or_else(|| {
+                    let s = LinkSpot::new();
+                    s.set_parent(self);
+                    s
+                });
+            spot.set_link(*p, *i, link, &labels);
+            new.push(spot);
+        }
+        for s in old.iter().filter(|s| !new.contains(s)) {
+            if s.has_focus() {
+                self.grab_focus();
+            }
+            s.unparent();
+        }
+        for s in &new {
+            s.insert_before(self, None::<&gtk::Widget>);
+        }
+        *imp.spots.borrow_mut() = new;
+        self.queue_allocate();
+    }
+
+    fn visible_pages(&self) -> Vec<usize> {
+        let l = self.imp().layout.borrow();
+        if l.pages.is_empty() {
+            Vec::new()
+        } else {
+            l.visible(&self.viewport())
+        }
+    }
+
+    /// Places the link stand-ins over their links.
+    fn allocate_spots(&self) {
+        let imp = self.imp();
+        let Some(model) = self.model() else { return };
+        let l = imp.layout.borrow();
+        let (sx, sy) = self.scroll();
+        for spot in imp.spots.borrow().iter() {
+            let Some((p, rect)) = spot.page_rect() else {
+                continue;
+            };
+            let Some(page) = l.pages.get(p) else { continue };
+            let (pw, ph) = model.size(p);
+            let r = page_rect_to_content(&rect, page, pw, ph, l.rotation, l.scale);
+            spot.measure(gtk::Orientation::Horizontal, -1);
+            spot.size_allocate(
+                &gtk::Allocation::new(
+                    (r.x - sx).round() as i32,
+                    (r.y - sy).round() as i32,
+                    r.w.round().max(1.0) as i32,
+                    r.h.round().max(1.0) as i32,
+                ),
+                -1,
+            );
+        }
+    }
+
+    /// The target of the link that has keyboard focus.
+    pub fn focused_link(&self) -> Option<Target> {
+        self.imp()
+            .spots
+            .borrow()
+            .iter()
+            .find(|s| s.has_focus())
+            .and_then(|s| s.target())
+    }
+
+    /// Where a keyboard-opened context menu points: the focused link, the
+    /// caret, or the middle of the view (view coordinates).
+    pub fn context_point(&self) -> (f64, f64) {
+        let imp = self.imp();
+        if let Some(spot) = imp.spots.borrow().iter().find(|s| s.has_focus()) {
+            if let Some(b) = spot.compute_bounds(self) {
+                return (
+                    (b.x() + b.width() / 2.0) as f64,
+                    (b.y() + b.height()) as f64,
+                );
+            }
+        }
+        if let (true, Some((p, o)), Some(model)) =
+            (imp.caret_mode.get(), imp.caret.get(), self.model())
+        {
+            if let Some(cr) = model.text(p).and_then(|t| t.caret_rect(o)) {
+                let l = imp.layout.borrow();
+                if let Some(page) = l.pages.get(p) {
+                    let (pw, ph) = model.size(p);
+                    let r = page_rect_to_content(&cr, page, pw, ph, l.rotation, l.scale);
+                    let (sx, sy) = self.scroll();
+                    return (r.x - sx, r.bottom() - sy);
+                }
+            }
+        }
+        (self.width() as f64 / 2.0, self.height() as f64 / 2.0)
+    }
+
+    // ----- caret navigation -----
+
+    pub fn caret_mode(&self) -> bool {
+        self.imp().caret_mode.get()
+    }
+
+    /// Turns caret navigation on or off. With it on, the arrow keys move
+    /// a text caret instead of scrolling, and Shift extends a selection.
+    pub fn set_caret_mode(&self, on: bool) {
+        let imp = self.imp();
+        if imp.caret_mode.replace(on) == on {
+            return;
+        }
+        if on {
+            self.place_caret();
+            self.grab_focus();
+        }
+        self.refresh_a11y_page();
+        if let Some(cb) = imp.callbacks.borrow().caret_mode_changed.as_ref() {
+            cb(on);
+        }
+        self.queue_draw();
+    }
+
+    /// Puts the caret at the start of the current page unless it is
+    /// already on a visible page.
+    fn place_caret(&self) {
+        let imp = self.imp();
+        let Some(model) = self.model() else { return };
+        if model.n_pages() == 0 {
+            imp.caret.set(None);
+            return;
+        }
+        let visible = self.visible_pages();
+        if imp.caret.get().is_some_and(|(p, _)| visible.contains(&p)) {
+            return;
+        }
+        let p = imp.current.get().min(model.n_pages() - 1);
+        imp.caret.set(Some((p, 0)));
+        imp.caret_x.set(None);
+        self.prefetch_text_around(p);
+        self.refresh_a11y_page();
+    }
+
+    fn prefetch_text_around(&self, p: usize) {
+        if let Some(model) = self.model() {
+            model.request_text(p);
+            model.request_text(p + 1);
+            if p > 0 {
+                model.request_text(p - 1);
+            }
+        }
+    }
+
+    /// Handles a key in caret mode; returns whether it was used.
+    fn caret_key(&self, key: gdk::Key, ctrl: bool, shift: bool) -> bool {
+        use gdk::Key;
+        let imp = self.imp();
+        let Some(model) = self.model() else {
+            return false;
+        };
+        let Some((p, o)) = imp.caret.get() else {
+            return false;
+        };
+        let Some(text) = model.text(p) else {
+            // Text not here yet; swallow movement keys until it is.
+            model.request_text(p);
+            return matches!(
+                key,
+                Key::Left | Key::Right | Key::Up | Key::Down | Key::Home | Key::End
+            );
+        };
+        let n = model.n_pages();
+        let prev_end = |p: usize| -> Option<Caret> {
+            let p = p.checked_sub(1)?;
+            model.text(p).map(|t| (p, t.len()))
+        };
+        let next_start = |p: usize| -> Option<Caret> {
+            (p + 1 < n && model.text(p + 1).is_some()).then_some((p + 1, 0))
+        };
+        let x = imp.caret_x.get().or_else(|| text.caret_x(o)).unwrap_or(0.0);
+        let (to, keep_x) = match key {
+            Key::Left | Key::KP_Left if ctrl => {
+                let w = text.prev_word(o);
+                (if w == o { prev_end(p) } else { Some((p, w)) }, false)
+            }
+            Key::Right | Key::KP_Right if ctrl => {
+                let w = text.next_word(o);
+                (if w == o { next_start(p) } else { Some((p, w)) }, false)
+            }
+            Key::Left | Key::KP_Left => (
+                if o == 0 {
+                    prev_end(p)
+                } else {
+                    Some((p, o - 1))
+                },
+                false,
+            ),
+            Key::Right | Key::KP_Right => (
+                if o >= text.len() {
+                    next_start(p)
+                } else {
+                    Some((p, o + 1))
+                },
+                false,
+            ),
+            Key::Up | Key::KP_Up if !ctrl => {
+                let to = text.vertical(o, x, true).map(|o| (p, o)).or_else(|| {
+                    let q = p.checked_sub(1)?;
+                    let t = model.text(q)?;
+                    let (s, e) = t.line_bounds(t.len());
+                    Some((q, t.closest_on_line(s, e, x)))
+                });
+                (to, true)
+            }
+            Key::Down | Key::KP_Down if !ctrl => {
+                let to = text.vertical(o, x, false).map(|o| (p, o)).or_else(|| {
+                    let t = model.text(p + 1).filter(|_| p + 1 < n)?;
+                    let (s, e) = t.line_bounds(0);
+                    Some((p + 1, t.closest_on_line(s, e, x)))
+                });
+                (to, true)
+            }
+            Key::Home | Key::KP_Home if !ctrl => (Some((p, text.line_bounds(o).0)), false),
+            Key::End | Key::KP_End if !ctrl => (Some((p, text.line_bounds(o).1)), false),
+            _ => return false,
+        };
+        match to {
+            Some(c) => self.move_caret(c, shift, keep_x.then_some(x)),
+            None => {
+                // At a page edge whose neighbour is not loaded yet.
+                self.prefetch_text_around(p);
+                self.error_bell();
+            }
+        }
+        true
+    }
+
+    /// Moves the caret, extending the keyboard selection when `extend`.
+    pub fn move_caret(&self, to: Caret, extend: bool, keep_x: Option<f64>) {
+        let imp = self.imp();
+        let Some(model) = self.model() else { return };
+        let from = imp.caret.get();
+        if extend {
+            if imp.caret_anchor.get().is_none() {
+                // Continue an existing keyboard selection from its far end.
+                let anchor = match (imp.kbd_sel.get(), from) {
+                    (Some((a, b)), Some(f)) if b == f => Some(a),
+                    (Some((a, b)), Some(f)) if a == f => Some(b),
+                    _ => from,
+                };
+                imp.caret_anchor.set(anchor);
+            }
+        } else if self.has_selection() {
+            self.clear_selection();
+        }
+        imp.caret.set(Some(to));
+        imp.caret_x.set(keep_x);
+        self.prefetch_text_around(to.0);
+        if let Some(r) = model.text(to.0).and_then(|t| t.caret_rect(to.1)) {
+            let pad = Rect::new(r.x - 20.0, r.y - 10.0, r.w + 40.0, r.h + 20.0);
+            self.show_rect(to.0, &pad);
+        }
+        if extend {
+            let anchor = imp.caret_anchor.get().unwrap_or(to);
+            self.set_keyboard_selection(anchor, to);
+        }
+        self.refresh_a11y_page();
+        if self.has_atspi() {
+            self.update_caret_position();
+            if extend {
+                self.update_selection_bound();
+            }
+        }
+        self.queue_draw();
+    }
+
+    fn set_keyboard_selection(&self, a: Caret, b: Caret) {
+        let imp = self.imp();
+        let Some(model) = self.model() else { return };
+        let (s, e) = if a <= b { (a, b) } else { (b, a) };
+        imp.sel_anchor.set(None);
+        imp.sel_end.set(None);
+        imp.sel_gen.set(imp.sel_gen.get() + 1);
+        imp.kbd_sel.set((s != e).then_some((s, e)));
+        let regions: Vec<(usize, Vec<Rect>)> = (s.0..=e.0)
+            .filter_map(|p| {
+                let t = model.text(p)?;
+                let from = if p == s.0 { s.1 } else { 0 };
+                let to = if p == e.0 { e.1 } else { t.len() };
+                Some((p, t.range_rects(from, to)))
+            })
+            .collect();
+        *model.selection.borrow_mut() = regions;
+        if let Some(cb) = imp.callbacks.borrow().selection_changed.as_ref() {
+            cb(self.has_selection());
+        }
+        self.request_selected_text(TextPurpose::Primary);
+    }
+
+    fn keyboard_selection_text(&self) -> Option<String> {
+        let (s, e) = self.imp().kbd_sel.get()?;
+        let model = self.model()?;
+        Some(
+            (s.0..=e.0)
+                .filter_map(|p| {
+                    let t = model.text(p)?;
+                    let from = if p == s.0 { s.1 } else { 0 };
+                    let to = if p == e.0 { e.1 } else { t.len() };
+                    Some(t.slice(from, to))
+                })
+                .collect::<Vec<_>>()
+                .join("\n"),
+        )
+    }
+
+    /// Moves the caret by a word. Ctrl+Left / Ctrl+Right are also the
+    /// rotate shortcuts; in caret mode the rotate actions call this
+    /// (Ctrl+Shift+arrows reach the view directly).
+    pub fn caret_word(&self, forward: bool) {
+        let state = gdk::ModifierType::CONTROL_MASK;
+        let key = if forward {
+            gdk::Key::Right
+        } else {
+            gdk::Key::Left
+        };
+        self.on_key(key, state);
+    }
+}
+
+/// "Page iv (4 of 120)" or "Page 4 of 120".
+pub fn page_description(label: &str, page: usize, n: usize) -> String {
+    let num = (page + 1).to_string();
+    if label == num {
+        format!("Page {num} of {n}")
+    } else {
+        format!("Page {label} ({num} of {n})")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::page_description;
+
+    #[test]
+    fn page_descriptions() {
+        assert_eq!(page_description("4", 3, 120), "Page 4 of 120");
+        assert_eq!(page_description("iv", 3, 120), "Page iv (4 of 120)");
     }
 }

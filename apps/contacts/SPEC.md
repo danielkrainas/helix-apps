@@ -147,6 +147,15 @@ writes folks' data.
 ### Selection mode
 - Toggled with the *Select* button. Rows get check buttons; an action bar
   offers *Link*, *Export…* and *Delete*. `Escape` leaves selection mode.
+- The row keeps keyboard focus: Space / Enter (or a click anywhere on the
+  row) toggles its check box in place, without rebuilding the list, so
+  focus and scroll position stay put. The check box is not separately
+  focusable or clickable but is never insensitive; it is named "Select
+  NAME", and the row exposes the checked / not checked state to
+  assistive technology.
+- The sidebar title shows the count: "Select Contacts" with nothing
+  chosen, then "1 Selected", "N Selected"; it returns to "Contacts" on
+  leaving selection mode.
 
 ### Import / export
 - *Import…* (primary menu) opens a `.vcf` file (one or many vCards, versions
@@ -216,4 +225,4 @@ quit, `Ctrl+W` close window, `Ctrl+?` shortcuts.
 ### Accessibility
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): the number of contacts matching a search once typing pauses.
-- Focus is kept across list rebuilds (`helix_app_common::focus`): Rebuilding the contact list (selection-mode toggles, search, address-book changes) keeps keyboard focus on the same contact and the scroll position.
+- Focus is kept across list rebuilds (`helix_app_common::focus`): Rebuilding the contact list (entering / leaving selection mode, search, address-book changes) keeps keyboard focus on the same contact and the scroll position.

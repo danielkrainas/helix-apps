@@ -55,6 +55,12 @@ Simple text editor.
 - Each tab page holds, top to bottom: a reload banner (external change),
   the find/replace bar, and the editor in a scrolled window.
 - Tabs can be reordered and dragged between windows (TabView default).
+- Dropping files (from Files or any source offering a file list) on the
+  editor area or the tab bar opens each as a tab, exactly like *Open*
+  (an already open file is brought forward; a blank current tab is
+  reused). The editor-area drop target sees drags in the capture phase so
+  a file drag is never inserted as its address; drags that carry only
+  text are still inserted at the drop point by the editor.
 
 ### Documents
 - New documents are titled *New Document* (numbered `New Document 2`, … when

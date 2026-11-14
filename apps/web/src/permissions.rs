@@ -149,6 +149,10 @@ impl Permissions {
     pub fn clear(&mut self) {
         self.origins.clear();
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.origins.values().all(|m| m.is_empty())
+    }
 }
 
 #[cfg(test)]

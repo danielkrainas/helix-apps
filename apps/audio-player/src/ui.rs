@@ -38,11 +38,17 @@ fn window_state_path() -> std::path::PathBuf {
 
 const ACCELS: &[(&str, &[&str])] = &[
     ("win.open", &["<Control>o"]),
-    ("win.play-pause", &["space", "AudioPlay"]),
-    ("win.seek-back", &["Left"]),
-    ("win.seek-forward", &["Right"]),
-    ("win.mute", &["m"]),
+    ("win.play-pause", &["AudioPlay"]),
     ("win.show-help-overlay", &["<Control>question"]),
+];
+
+/// Keys without modifiers, handled only when the focused widget does not
+/// use them (Space presses a focused button, arrows move a focused slider).
+const SINGLE_KEYS: &[(&str, &str)] = &[
+    ("space", "win.play-pause"),
+    ("Left", "win.seek-back"),
+    ("Right", "win.seek-forward"),
+    ("m", "win.mute"),
 ];
 
 pub fn run(target: Option<String>) -> glib::ExitCode {
@@ -87,8 +93,7 @@ pub fn run(target: Option<String>) -> glib::ExitCode {
 fn load_css() {
     let css = gtk::CssProvider::new();
     css.load_from_string(
-        ".ap-time { font-feature-settings: \"tnum\"; }
-         .ap-cover { border-radius: 12px; }
+        ".ap-cover { border-radius: 12px; }
          .ap-play { min-width: 56px; min-height: 56px; }
          .ap-waveform { min-height: 96px; }",
     );
@@ -220,6 +225,7 @@ impl Ui {
             window.maximize();
         }
         window.set_help_overlay(Some(&shortcuts_window()));
+        helix_app_common::add_bubble_shortcuts(&window, SINGLE_KEYS);
 
         // Header bar.
         let header = adw::HeaderBar::builder().show_title(false).build();
@@ -275,7 +281,9 @@ impl Ui {
             .build();
 
         // Player page.
+        // Decorative: the title below names the track.
         let cover = gtk::Image::builder()
+            .accessible_role(gtk::AccessibleRole::Presentation)
             .pixel_size(COVER_SIZE)
             .halign(gtk::Align::Center)
             .build();
@@ -312,7 +320,7 @@ impl Ui {
             .halign(gtk::Align::End)
             .build();
         for l in [&elapsed, &remaining] {
-            l.add_css_class("ap-time");
+            l.add_css_class("numeric");
             l.add_css_class("caption");
             l.add_css_class("dim-label");
         }
@@ -339,6 +347,7 @@ impl Ui {
             .valign(gtk::Align::Center)
             .build();
         rate_button.add_css_class("flat");
+        helix_app_common::set_accessible_label(&rate_button, &seek::rate_name(1.0));
 
         let play = gtk::Button::builder()
             .icon_name("media-playback-start-symbolic")
@@ -756,8 +765,16 @@ impl Ui {
             a.set_state(&"1.00".to_variant());
         }
         self.rate_button.set_label(&seek::rate_label(1.0));
+        helix_app_common::set_accessible_label(&self.rate_button, &seek::rate_name(1.0));
         self.stack.set_visible_child_name("player");
         self.update_info();
+        self.focus_into_stack(&self.play);
+        let title = self.title.label();
+        helix_app_common::announce(
+            &self.title,
+            &format!("Playing {title}"),
+            helix_app_common::Urgency::Polite,
+        );
         self.player.load(uri);
         self.apply_volume();
         self.player.play();
@@ -780,6 +797,9 @@ impl Ui {
         self.error_page
             .set_description(Some(&glib::markup_escape_text(message)));
         self.stack.set_visible_child_name("error");
+        if let Some(button) = self.error_page.child() {
+            self.focus_into_stack(&button);
+        }
         helix_app_common::announce(
             &self.error_page,
             &format!("Unable to play file. {message}"),
@@ -788,6 +808,15 @@ impl Ui {
         self.window.set_title(Some(APP_NAME));
         self.sync_controls();
         self.publish();
+    }
+
+    /// Moves keyboard focus to `target` when focus was on a page of the
+    /// stack (which may just have been hidden) or nowhere.
+    fn focus_into_stack(&self, target: &impl IsA<gtk::Widget>) {
+        let focus = gtk::prelude::GtkWindowExt::focus(&self.window);
+        if focus.is_none_or(|f| f.is_ancestor(&self.stack)) {
+            target.grab_focus();
+        }
     }
 
     fn update_info(&self) {
@@ -1050,6 +1079,7 @@ impl Ui {
     fn set_rate(&self, rate: f64) {
         self.state.borrow_mut().rate = rate;
         self.rate_button.set_label(&seek::rate_label(rate));
+        helix_app_common::set_accessible_label(&self.rate_button, &seek::rate_name(rate));
         if self.has_file() {
             let pos = self
                 .player
@@ -1070,6 +1100,10 @@ impl Ui {
         self.player.set_mute(muted);
         self.volume_button
             .set_icon_name(seek::volume_icon(v, muted));
+        self.volume_scale
+            .update_property(&[gtk::accessible::Property::ValueText(&seek::volume_text(
+                v, muted,
+            ))]);
         self.publish();
     }
 

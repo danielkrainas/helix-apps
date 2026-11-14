@@ -143,17 +143,30 @@ impl Settings {
 
     /// Adds a custom engine; rejects empty names, duplicates and templates
     /// without `%s`.
-    pub fn add_engine(&mut self, name: &str, url: &str) -> bool {
+    /// Why a new search engine `name` / `url` cannot be added, as a
+    /// sentence for the user; `None` when it can.
+    pub fn engine_problem(&self, name: &str, url: &str) -> Option<&'static str> {
         let name = name.trim();
-        if name.is_empty()
-            || !crate::urlinput::valid_template(url)
-            || self
-                .search_engines
-                .iter()
-                .any(|e| e.name.eq_ignore_ascii_case(name))
+        if name.is_empty() {
+            Some("Enter a name for the search engine")
+        } else if self
+            .search_engines
+            .iter()
+            .any(|e| e.name.eq_ignore_ascii_case(name))
         {
+            Some("A search engine with this name already exists")
+        } else if !crate::urlinput::valid_template(url) {
+            Some("The address must start with https:// or http:// and contain %s where the search goes")
+        } else {
+            None
+        }
+    }
+
+    pub fn add_engine(&mut self, name: &str, url: &str) -> bool {
+        if self.engine_problem(name, url).is_some() {
             return false;
         }
+        let name = name.trim();
         self.search_engines
             .push(SearchEngine::new(name, url.trim()));
         true
@@ -357,6 +370,25 @@ impl Store {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn engine_problems_are_explained() {
+        let s = Settings::default();
+        assert_eq!(
+            s.engine_problem(" ", "https://x/?q=%s"),
+            Some("Enter a name for the search engine")
+        );
+        let existing = s.search_engines[0].name.to_uppercase();
+        assert!(s
+            .engine_problem(&existing, "https://x/?q=%s")
+            .unwrap()
+            .contains("already exists"));
+        assert!(s
+            .engine_problem("Mine", "https://x/")
+            .unwrap()
+            .contains("%s"));
+        assert_eq!(s.engine_problem("Mine", "https://x/?q=%s"), None);
+    }
 
     #[test]
     fn defaults_and_sanitize() {

@@ -3,6 +3,7 @@
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use helix_app_common::Labelled;
+use std::cell::Cell;
 use std::rc::Rc;
 use webkit6::prelude::*;
 
@@ -22,11 +23,9 @@ fn parent(app: &App) -> Option<gtk::Window> {
 }
 
 fn toast(app: &App, text: &str) {
-    // Windows have no toast overlay; use a simple alert for feedback.
-    if let Some(w) = parent(app) {
-        let d = adw::AlertDialog::new(Some(text), None);
-        d.add_response("ok", "_OK");
-        d.present(Some(&w));
+    match parent(app) {
+        Some(w) => app.toast_for(&w, text),
+        None => app.toast_for(&gtk::Label::new(None), text),
     }
 }
 
@@ -236,9 +235,27 @@ pub fn show_preferences(app: &Rc<App>) {
             let r = r.clone();
             glib::idle_add_local_once(move || r());
         } else {
-            url_row.add_css_class("error");
+            let problem = app
+                .settings
+                .borrow()
+                .engine_problem(&name, &url)
+                .unwrap_or("This search engine cannot be added");
+            let bad_name = name.trim().is_empty() || problem.contains("name");
+            if bad_name {
+                name_row.add_css_class("error");
+            } else {
+                url_row.add_css_class("error");
+            }
+            if let Some(d) = url_row
+                .ancestor(adw::PreferencesDialog::static_type())
+                .and_downcast::<adw::PreferencesDialog>()
+            {
+                d.add_toast(adw::Toast::new(problem));
+            }
         }
     });
+    add_url.connect_changed(|row| row.remove_css_class("error"));
+    add_name.connect_changed(|row| row.remove_css_class("error"));
 
     // Privacy.
     let privacy = adw::PreferencesPage::builder()
@@ -351,10 +368,10 @@ pub fn show_preferences(app: &Rc<App>) {
         }
     });
     let weak = Rc::downgrade(app);
+    let dlg = dialog.clone();
     perms.connect_activated(move |_| {
         if let Some(app) = weak.upgrade() {
-            app.permissions.borrow_mut().clear();
-            app.save_permissions();
+            confirm_reset_permissions(&app, &dlg);
         }
     });
 
@@ -365,7 +382,34 @@ pub fn show_preferences(app: &Rc<App>) {
     }
 }
 
-fn show_clear_data(app: &Rc<App>, over: &impl IsA<gtk::Widget>) {
+/// Asks before forgetting every site permission decision; reports the
+/// outcome in the Preferences dialog.
+fn confirm_reset_permissions(app: &Rc<App>, prefs: &adw::PreferencesDialog) {
+    if app.permissions.borrow().is_empty() {
+        prefs.add_toast(adw::Toast::new("No site permissions to reset"));
+        return;
+    }
+    let d = adw::AlertDialog::new(
+        Some("Reset All Site Permissions?"),
+        Some("Every site will ask again before using your camera, location, notifications and other permissions."),
+    );
+    d.add_responses(&[("cancel", "_Cancel"), ("reset", "_Reset")]);
+    d.set_response_appearance("reset", adw::ResponseAppearance::Destructive);
+    d.set_default_response(Some("cancel"));
+    d.set_close_response("cancel");
+    let weak = Rc::downgrade(app);
+    let p = prefs.clone();
+    d.connect_response(Some("reset"), move |_, _| {
+        if let Some(app) = weak.upgrade() {
+            app.permissions.borrow_mut().clear();
+            app.save_permissions();
+            p.add_toast(adw::Toast::new("Site permissions reset"));
+        }
+    });
+    d.present(Some(prefs));
+}
+
+fn show_clear_data(app: &Rc<App>, over: &adw::PreferencesDialog) {
     let d = adw::AlertDialog::new(
         Some("Clear Browsing Data?"),
         Some("Data from all time will be removed."),
@@ -391,9 +435,29 @@ fn show_clear_data(app: &Rc<App>, over: &impl IsA<gtk::Widget>) {
     d.set_response_appearance("clear", adw::ResponseAppearance::Destructive);
     d.set_close_response("cancel");
     let weak = Rc::downgrade(app);
+    let prefs = over.downgrade();
     d.connect_response(Some("clear"), move |_, _| {
         if let Some(app) = weak.upgrade() {
-            app.clear_data(site.is_active(), cache.is_active(), history.is_active());
+            let (prefs, app_w) = (prefs.clone(), Rc::downgrade(&app));
+            app.clear_data(
+                site.is_active(),
+                cache.is_active(),
+                history.is_active(),
+                move |r| {
+                    let text = match r {
+                        Ok(()) => "Browsing data cleared".to_string(),
+                        Err(e) => format!("Could not clear browsing data: {e}"),
+                    };
+                    match prefs.upgrade() {
+                        Some(p) if p.parent().is_some() => p.add_toast(adw::Toast::new(&text)),
+                        _ => {
+                            if let Some(app) = app_w.upgrade() {
+                                toast(&app, &text);
+                            }
+                        }
+                    }
+                },
+            );
         }
     });
     d.present(Some(over));
@@ -564,7 +628,8 @@ pub fn show_history(app: &Rc<App>) {
         let f = f.clone();
         confirm.connect_response(Some("clear"), move |_, _| {
             if let Some(app) = weak.upgrade() {
-                app.clear_data(false, false, true);
+                // History only: clearing is immediate and cannot fail.
+                app.clear_data(false, false, true, |_| {});
             }
             f();
         });
@@ -672,17 +737,112 @@ pub fn show_passwords(app: &Rc<App>) {
     let stack = gtk::Stack::new();
     stack.add_named(&status, Some("status"));
     stack.add_named(&page, Some("list"));
+    let toasts = adw::ToastOverlay::new();
+    toasts.set_child(Some(&stack));
     let view = adw::ToolbarView::new();
     view.add_top_bar(&adw::HeaderBar::new());
-    view.set_content(Some(&stack));
+    view.set_content(Some(&toasts));
     dialog.set_child(Some(&view));
     if let Some(w) = parent(app) {
         dialog.present(Some(&w));
     }
-    load_passwords(group, stack, status);
+    load_passwords(group, stack, status, toasts);
 }
 
-fn load_passwords(group: adw::PreferencesGroup, stack: gtk::Stack, status: adw::StatusPage) {
+fn show_no_passwords(stack: &gtk::Stack, status: &adw::StatusPage) {
+    status.set_title("No Saved Passwords");
+    status.set_description(Some("Logins you save while browsing appear here."));
+    stack.set_visible_child_name("status");
+}
+
+/// Asks before removing a saved login (the keyring cannot give it back),
+/// then removes it, reporting the outcome in the Passwords dialog.
+struct PasswordList {
+    group: adw::PreferencesGroup,
+    stack: gtk::Stack,
+    status: adw::StatusPage,
+    toasts: adw::ToastOverlay,
+    rows: Cell<usize>,
+}
+
+impl PasswordList {
+    fn confirm_remove(
+        self: &Rc<Self>,
+        row: &adw::ActionRow,
+        button: &gtk::Button,
+        origin: String,
+        user: String,
+        host: String,
+    ) {
+        let who = if user.is_empty() {
+            format!("the saved password for {host}")
+        } else {
+            format!("the saved password for {user} on {host}")
+        };
+        let d = adw::AlertDialog::new(
+            Some("Remove Password?"),
+            Some(&format!(
+                "This removes {who} from your keyring. It cannot be undone."
+            )),
+        );
+        d.add_responses(&[("cancel", "_Cancel"), ("remove", "_Remove")]);
+        d.set_response_appearance("remove", adw::ResponseAppearance::Destructive);
+        d.set_default_response(Some("cancel"));
+        d.set_close_response("cancel");
+        let (me, row, b) = (self.clone(), row.clone(), button.clone());
+        d.connect_response(Some("remove"), move |_, _| {
+            me.remove(&row, &b, origin.clone(), user.clone(), host.clone());
+        });
+        d.present(Some(button));
+    }
+
+    fn remove(
+        self: &Rc<Self>,
+        row: &adw::ActionRow,
+        button: &gtk::Button,
+        origin: String,
+        user: String,
+        host: String,
+    ) {
+        button.set_sensitive(false);
+        let (me, row, b) = (self.clone(), row.clone(), button.clone());
+        glib::spawn_future_local(async move {
+            let r = gio::spawn_blocking(move || {
+                secrets::Client::session_bus().and_then(|c| c.delete(&origin, &user))
+            })
+            .await;
+            match r {
+                Ok(Ok(())) => {
+                    me.group.remove(&row);
+                    me.rows.set(me.rows.get().saturating_sub(1));
+                    me.toasts
+                        .add_toast(adw::Toast::new(&format!("Password for {host} removed")));
+                    if me.rows.get() == 0 {
+                        show_no_passwords(&me.stack, &me.status);
+                    }
+                }
+                Ok(Err(e)) => {
+                    b.set_sensitive(true);
+                    me.toasts.add_toast(adw::Toast::new(&format!(
+                        "Could not remove the password: {e}"
+                    )));
+                }
+                Err(_) => {
+                    b.set_sensitive(true);
+                    me.toasts
+                        .add_toast(adw::Toast::new("Could not remove the password"));
+                }
+            }
+        });
+    }
+}
+
+fn load_passwords(
+    group: adw::PreferencesGroup,
+    stack: gtk::Stack,
+    status: adw::StatusPage,
+    toasts: adw::ToastOverlay,
+) {
     glib::spawn_future_local(async move {
         let r = gio::spawn_blocking(|| secrets::Client::session_bus().and_then(|c| c.all_logins()))
             .await;
@@ -697,11 +857,16 @@ fn load_passwords(group: adw::PreferencesGroup, stack: gtk::Stack, status: adw::
             Err(_) => return,
         };
         if logins.is_empty() {
-            status.set_title("No Saved Passwords");
-            status.set_description(Some("Logins you save while browsing appear here."));
-            stack.set_visible_child_name("status");
+            show_no_passwords(&stack, &status);
             return;
         }
+        let list = Rc::new(PasswordList {
+            group: group.clone(),
+            stack: stack.clone(),
+            status: status.clone(),
+            toasts,
+            rows: Cell::new(logins.len()),
+        });
         for l in logins {
             let host = l
                 .origin
@@ -724,21 +889,9 @@ fn load_passwords(group: adw::PreferencesGroup, stack: gtk::Stack, status: adw::
                 .build()
                 .labelled("Remove");
             del.add_css_class("flat");
-            let (g, r2) = (group.clone(), row.clone());
+            let (list, r2) = (list.clone(), row.clone());
             del.connect_clicked(move |b| {
-                b.set_sensitive(false);
-                let (origin, user) = (l.origin.clone(), l.username.clone());
-                let (g, r2, b) = (g.clone(), r2.clone(), b.clone());
-                glib::spawn_future_local(async move {
-                    let r = gio::spawn_blocking(move || {
-                        secrets::Client::session_bus().and_then(|c| c.delete(&origin, &user))
-                    })
-                    .await;
-                    match r {
-                        Ok(Ok(())) => g.remove(&r2),
-                        _ => b.set_sensitive(true),
-                    }
-                });
+                list.confirm_remove(&r2, b, l.origin.clone(), l.username.clone(), host.clone());
             });
             row.add_suffix(&del);
             group.add(&row);

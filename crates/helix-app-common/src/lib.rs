@@ -8,11 +8,13 @@
 
 pub mod a11y;
 pub mod focus;
+pub mod keys;
 
 pub use a11y::{
     announce, announce_change, announce_settled, icon_button, icon_menu_button, icon_toggle_button,
     label_widget, set_accessible_label, set_icon_and_label, Labelled, Urgency,
 };
+pub use keys::add_bubble_shortcuts;
 
 use gio::prelude::*;
 use std::cell::RefCell;

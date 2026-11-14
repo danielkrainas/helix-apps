@@ -80,6 +80,7 @@ pub struct Window {
     bm_title: gtk::Entry,
     bm_tags: gtk::Entry,
     bm_editing: RefCell<Option<String>>,
+    toasts: adw::ToastOverlay,
 }
 
 fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
@@ -185,6 +186,12 @@ fn two_line_row(title: &str, subtitle: &str, icon: &str) -> (gtk::Box, gtk::Box)
 }
 
 impl Window {
+    /// Shows a short message at the bottom of the window (libadwaita
+    /// also speaks it to screen readers).
+    pub fn toast(&self, text: &str) {
+        self.toasts.add_toast(adw::Toast::new(text));
+    }
+
     pub fn new(app: &Rc<App>, private: bool, session: webkit6::NetworkSession) -> Rc<Window> {
         let win = adw::ApplicationWindow::builder()
             .application(&app.gtk)
@@ -362,10 +369,12 @@ impl Window {
         tab_view.set_vexpand(true);
         content.append(&tab_view);
 
+        let toasts = adw::ToastOverlay::new();
+        toasts.set_child(Some(&content));
         let toolbar = adw::ToolbarView::new();
         toolbar.add_top_bar(&header);
         toolbar.add_top_bar(&tab_bar);
-        toolbar.set_content(Some(&content));
+        toolbar.set_content(Some(&toasts));
 
         let overview = adw::TabOverview::builder()
             .view(&tab_view)
@@ -451,6 +460,7 @@ impl Window {
             bm_title,
             bm_tags,
             bm_editing: RefCell::default(),
+            toasts,
         });
         w.install_actions();
         w.connect_signals(&dl_clear, &bm_list_pop, &bm_remove);
@@ -1664,21 +1674,33 @@ impl Window {
         let file = gio::File::for_path(path);
         let win = self.win.clone();
         let f = file.clone();
+        let me = self.this.clone();
         open.connect_clicked(move |_| {
-            gtk::FileLauncher::new(Some(&f)).launch(Some(&win), None::<&gio::Cancellable>, |r| {
-                if let Err(e) = r {
-                    eprintln!("helix-web: could not open download: {e}");
-                }
-            });
+            let me = me.clone();
+            gtk::FileLauncher::new(Some(&f)).launch(
+                Some(&win),
+                None::<&gio::Cancellable>,
+                move |r| {
+                    if let (Err(e), Some(w)) = (r, me.upgrade()) {
+                        if !is_dismissed(&e) {
+                            w.toast(&format!("Could not open the download: {}", e.message()));
+                        }
+                    }
+                },
+            );
         });
         let win = self.win.clone();
+        let me = self.this.clone();
         folder.connect_clicked(move |_| {
+            let me = me.clone();
             gtk::FileLauncher::new(Some(&file)).open_containing_folder(
                 Some(&win),
                 None::<&gio::Cancellable>,
-                |r| {
-                    if let Err(e) = r {
-                        eprintln!("helix-web: could not open folder: {e}");
+                move |r| {
+                    if let (Err(e), Some(w)) = (r, me.upgrade()) {
+                        if !is_dismissed(&e) {
+                            w.toast(&format!("Could not open the folder: {}", e.message()));
+                        }
                     }
                 },
             );
@@ -1739,4 +1761,9 @@ impl Window {
             }
         });
     }
+}
+
+/// Whether a launcher error only means the user closed the app chooser.
+fn is_dismissed(e: &glib::Error) -> bool {
+    e.matches(gtk::DialogError::Dismissed) || e.matches(gtk::DialogError::Cancelled)
 }

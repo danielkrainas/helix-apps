@@ -99,23 +99,75 @@ fn ensure_ui(app: &adw::Application, current: &RefCell<std::rc::Weak<Ui>>) -> Op
     Some(ui)
 }
 
+/// Application accelerators: shortcuts with modifiers, function and media
+/// keys, which no focused widget needs.
 const ACCELS: &[(&str, &[&str])] = &[
     ("win.open", &["<Control>o"]),
-    (
-        "win.play-pause",
-        &["space", "KP_Space", "AudioPlay", "AudioPause"],
-    ),
-    ("win.seek-back", &["Left", "KP_Left"]),
-    ("win.seek-forward", &["Right", "KP_Right"]),
-    ("win.volume-up", &["Up", "KP_Up"]),
-    ("win.volume-down", &["Down", "KP_Down"]),
-    ("win.toggle-mute", &["m", "AudioMute"]),
-    ("win.fullscreen", &["F11", "f"]),
-    ("win.leave-fullscreen", &["Escape"]),
-    ("win.frame-prev", &["comma"]),
-    ("win.frame-next", &["period"]),
+    ("win.play-pause", &["AudioPlay", "AudioPause"]),
+    ("win.toggle-mute", &["AudioMute"]),
+    ("win.fullscreen", &["F11"]),
     ("win.screenshot", &["<Control><Alt>s"]),
+    ("win.show-help-overlay", &["<Control>question"]),
 ];
+
+/// Keys without modifiers, handled only when the focused widget does not
+/// use them: Space presses a focused button or opens a focused menu
+/// button, arrows move a focused slider, Escape closes an open popover
+/// before it leaves fullscreen.
+const SINGLE_KEYS: &[(&str, &str)] = &[
+    ("space", "win.play-pause"),
+    ("KP_Space", "win.play-pause"),
+    ("Left", "win.seek-back"),
+    ("KP_Left", "win.seek-back"),
+    ("Right", "win.seek-forward"),
+    ("KP_Right", "win.seek-forward"),
+    ("Up", "win.volume-up"),
+    ("KP_Up", "win.volume-up"),
+    ("Down", "win.volume-down"),
+    ("KP_Down", "win.volume-down"),
+    ("m", "win.toggle-mute"),
+    ("f", "win.fullscreen"),
+    ("Escape", "win.leave-fullscreen"),
+    ("comma", "win.frame-prev"),
+    ("period", "win.frame-next"),
+];
+
+/// The Keyboard Shortcuts window (Ctrl+? and the main menu).
+fn shortcuts_window() -> gtk::ShortcutsWindow {
+    let ui = r#"<interface>
+  <object class="GtkShortcutsWindow" id="w">
+    <property name="modal">1</property>
+    <child><object class="GtkShortcutsSection"><property name="section-name">main</property>
+      <child><object class="GtkShortcutsGroup"><property name="title">Playback</property>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Play / Pause</property><property name="accelerator">space</property></object></child>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Back 10 Seconds</property><property name="accelerator">Left</property></object></child>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Forward 10 Seconds</property><property name="accelerator">Right</property></object></child>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Previous Frame (paused)</property><property name="accelerator">comma</property></object></child>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Next Frame (paused)</property><property name="accelerator">period</property></object></child>
+      </object></child>
+      <child><object class="GtkShortcutsGroup"><property name="title">Volume</property>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Volume Up</property><property name="accelerator">Up</property></object></child>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Volume Down</property><property name="accelerator">Down</property></object></child>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Mute / Unmute</property><property name="accelerator">m</property></object></child>
+      </object></child>
+      <child><object class="GtkShortcutsGroup"><property name="title">View</property>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Toggle Fullscreen</property><property name="accelerator">f F11</property></object></child>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Leave Fullscreen</property><property name="accelerator">Escape</property></object></child>
+      </object></child>
+      <child><object class="GtkShortcutsGroup"><property name="title">General</property>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Open File</property><property name="accelerator">&lt;Control&gt;o</property></object></child>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Take Screenshot</property><property name="accelerator">&lt;Control&gt;&lt;Alt&gt;s</property></object></child>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Keyboard Shortcuts</property><property name="accelerator">&lt;Control&gt;question</property></object></child>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Close Window</property><property name="accelerator">&lt;Control&gt;w</property></object></child>
+        <child><object class="GtkShortcutsShortcut"><property name="title">Quit</property><property name="accelerator">&lt;Control&gt;q</property></object></child>
+      </object></child>
+    </object></child>
+  </object>
+</interface>"#;
+    gtk::Builder::from_string(ui)
+        .object("w")
+        .expect("shortcuts window")
+}
 
 fn load_css() {
     let css = gtk::CssProvider::new();
@@ -214,6 +266,7 @@ fn primary_menu() -> gio::Menu {
     s1.append(Some("Take _Screenshot"), Some("win.screenshot"));
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
+    s2.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
     s2.append(Some("_About Video Player"), Some("app.about"));
     menu.append_section(None, &s2);
     menu
@@ -268,6 +321,8 @@ impl Ui {
             .default_width(960)
             .default_height(600)
             .build();
+        window.set_help_overlay(Some(&shortcuts_window()));
+        helix_app_common::add_bubble_shortcuts(&window, SINGLE_KEYS);
         let menu = primary_menu();
         let mut menu_buttons = Vec::new();
 

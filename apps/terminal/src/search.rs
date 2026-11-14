@@ -56,6 +56,30 @@ pub fn normalize_url(m: &str) -> String {
     }
 }
 
+/// The URL that a selection consists of (surrounding spaces, brackets
+/// and trailing sentence punctuation ignored), normalised for a launcher;
+/// `None` when the selection is not a single URL.
+pub fn url_in_selection(sel: &str) -> Option<String> {
+    let t = sel
+        .trim()
+        .trim_end_matches(['.', ',', ';', ':', '!', '?'])
+        .trim_start_matches(['<', '(', '"', '\''])
+        .trim_end_matches(['>', '"', '\'']);
+    let t = match t.strip_suffix(')') {
+        Some(inner) if !inner.contains('(') => inner,
+        _ => t,
+    };
+    const SCHEMES: [&str; 7] = [
+        "http://", "https://", "ftp://", "sftp://", "file://", "mailto:", "www.",
+    ];
+    let lower = t.to_ascii_lowercase();
+    let ok = !t.chars().any(char::is_whitespace)
+        && SCHEMES
+            .iter()
+            .any(|s| lower.starts_with(s) && t.len() > s.len());
+    ok.then(|| normalize_url(t))
+}
+
 pub const MIN_SCALE: f64 = 0.5;
 pub const MAX_SCALE: f64 = 4.0;
 const STEP: f64 = 1.1;
@@ -89,6 +113,30 @@ fn snap(s: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn selected_urls() {
+        assert_eq!(
+            url_in_selection("  https://example.org/a?b=c \n").as_deref(),
+            Some("https://example.org/a?b=c")
+        );
+        assert_eq!(
+            url_in_selection("www.example.org.").as_deref(),
+            Some("http://www.example.org")
+        );
+        assert_eq!(
+            url_in_selection("(https://example.org/x)").as_deref(),
+            Some("https://example.org/x")
+        );
+        assert_eq!(
+            url_in_selection("https://en.wikipedia.org/wiki/Rust_(language)").as_deref(),
+            Some("https://en.wikipedia.org/wiki/Rust_(language)")
+        );
+        assert_eq!(url_in_selection("see https://example.org"), None);
+        assert_eq!(url_in_selection("https://"), None);
+        assert_eq!(url_in_selection("ls -la"), None);
+        assert_eq!(url_in_selection(""), None);
+    }
 
     #[test]
     fn escaping() {

@@ -171,10 +171,23 @@ View PDF and other documents.
   pages: the start page from the press point to its end, intermediate pages
   fully, the end page from its top to the release point). Double-click
   selects a word, triple-click a line. Ctrl+A selects all.
+- **Caret navigation** (F7, the main menu or the context menu toggle it):
+  a text caret is drawn in the page and the arrow keys move it by
+  character / line instead of scrolling (Ctrl+Left / Ctrl+Right by word,
+  Home / End to the line start / end), crossing to the neighbouring page at
+  the first / last line. Shift with any of these extends a selection from
+  where the caret was, which Ctrl+C copies exactly as shown. Poppler's
+  per-character boxes (`poppler_page_get_text_layout`, read through
+  `poppler::ffi` because `poppler-rs` does not wrap it) place the caret and
+  the selection. Turning it on puts the caret at the start of the current
+  page unless it is already on a visible page.
 - Selection is drawn as poppler's selected region in the accent colour.
 - Ctrl+C (and the context menu *Copy*) copies the selected text to the
   clipboard; the selection is also offered as the PRIMARY selection.
   The PDF "no copy" permission is not enforced (see open questions).
+- The context menu (Copy, Select All, Caret Navigation) opens with the
+  secondary button, or with Menu / Shift+F10 at the focused link, the
+  caret, or the middle of the view.
 - The pointer shows a text cursor over pages, a hand over links.
 
 ### Links
@@ -187,6 +200,12 @@ View PDF and other documents.
   `gtk::UriLauncher` (OpenURI portal); remote-file links (`GoToR`) open the
   referenced file relative to the current document in a new window.
   Launch / JavaScript / other actions are ignored.
+- **Keyboard**: every link on the visible pages has an invisible focusable
+  stand-in over it, in reading order (top to bottom, then left to right).
+  Tab from the document moves through them, then out of the view;
+  Shift+Tab goes back. The focused link shows a focus ring and is scrolled
+  into view; Enter follows it. Pointer input is unaffected (the stand-ins
+  are not pointer targets).
 
 ### Document properties
 - Alt+Return / menu: an `AdwDialog` with a preferences page listing Title,
@@ -248,6 +267,9 @@ View PDF and other documents.
 | Home / End, PgUp / PgDn, n / p | Navigation |
 | Alt+Left / Alt+Right | History back / forward |
 | Ctrl+A / Ctrl+C | Select all / copy |
+| F7 | Caret navigation (arrows move the caret, Shift+arrows select) |
+| Tab / Shift+Tab, Enter | Move between links on visible pages, follow |
+| Menu / Shift+F10 | Context menu |
 | F5 | Presentation |
 | F11 | Fullscreen |
 
@@ -264,4 +286,22 @@ View PDF and other documents.
 
 ### Accessibility
 - Status changes that happen without focus moving are announced to
-  screen readers (`helix_app_common::a11y`): the search result count when a search completes.
+  screen readers (`helix_app_common::a11y`): the search result count when
+  a search completes, and the page ("Page 3 of 12", or "Page iv (4 of
+  120)" with labels) once the current page settles after navigation or
+  scrolling.
+- The document view has the *document* role, is named after the document
+  (its title, else the file name) and described by the current page
+  ("Page 3 of 12").
+- It implements GTK's accessible text interface (`GtkAccessibleText`):
+  assistive technology reads the text of one page — the caret's page in
+  caret navigation, otherwise the current page — by character, word,
+  sentence, line or paragraph, with the caret offset and the keyboard
+  selection. Page text comes from the render thread on demand; switching
+  page reports the old text removed and the new text inserted. Caret
+  moves are reported, so a screen reader speaks the character, word or
+  line moved over.
+- Links on visible pages are exposed as *link* objects (the link stand-ins
+  above), named by the text under the link (poppler's text for the link
+  area, whitespace collapsed) or, if there is none, by the target, and
+  described by the target ("Go to page 4", or the address).

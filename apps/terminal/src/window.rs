@@ -38,6 +38,21 @@ impl Tab {
         self.window.borrow().upgrade()
     }
 
+    /// Makes the context menu's link the selected URL, or nothing.
+    fn link_from_selection(&self) {
+        let link = if self.term.has_selection() {
+            self.term
+                .text_selected(vte4::Format::Text)
+                .and_then(|s| search::url_in_selection(&s))
+        } else {
+            None
+        };
+        *self.link.borrow_mut() = link;
+        if let Some(w) = self.window() {
+            w.update_link_actions();
+        }
+    }
+
     /// Pty foreground process group, if a child is running.
     fn foreground(&self) -> Option<i32> {
         self.child_pid.get()?;
@@ -512,6 +527,31 @@ impl Window {
             }
         });
         term.add_controller(click);
+
+        // The link offered by the context menu always describes what the
+        // menu was opened on: the pointer target for the secondary
+        // button (above), otherwise the selection when it is a URL. A
+        // selection change replaces the remembered link, and so does
+        // opening the menu from the keyboard (Menu / Shift+F10).
+        let tk = Rc::downgrade(tab);
+        term.connect_selection_changed(move |_| {
+            if let Some(tab) = tk.upgrade() {
+                tab.link_from_selection();
+            }
+        });
+        let menu_keys = gtk::EventControllerKey::new();
+        menu_keys.set_propagation_phase(gtk::PropagationPhase::Capture);
+        let tk = Rc::downgrade(tab);
+        menu_keys.connect_key_pressed(move |_, key, _, state| {
+            let shift_f10 = key == gdk::Key::F10 && state.contains(gdk::ModifierType::SHIFT_MASK);
+            if key == gdk::Key::Menu || shift_f10 {
+                if let Some(tab) = tk.upgrade() {
+                    tab.link_from_selection();
+                }
+            }
+            glib::Propagation::Proceed
+        });
+        term.add_controller(menu_keys);
 
         let ctx = gio::Menu::new();
         let a = gio::Menu::new();

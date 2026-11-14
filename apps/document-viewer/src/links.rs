@@ -72,6 +72,8 @@ pub struct Link {
     /// Top-left-origin page points.
     pub rect: Rect,
     pub target: Target,
+    /// The text under the link, whitespace collapsed (may be empty).
+    pub text: String,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -187,6 +189,7 @@ impl DocCtx<'_> {
                 Some(Link {
                     rect: flip_rect(a.x1, a.y1, a.x2, a.y2, h),
                     target,
+                    text: String::new(),
                 })
             })
             .collect()

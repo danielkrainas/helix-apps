@@ -37,6 +37,14 @@ Basic, advanced, financial, and programming calculator.
 - Clicking a history row's expression inserts it into the entry; clicking its
   result inserts the result.
 - Window size and the current mode persist across runs.
+- Accessible names: a keypad button whose label is a symbol or short form
+  is named by the operation it performs — its tooltip without the
+  bracketed shortcut hint ("÷" → "Divide", "x²" → "Square", "⌫" →
+  "Backspace", "C" → "Clear", "|x|" → "Absolute value", "ans" → "Last
+  answer"); "(" / ")" are "Open parenthesis" / "Close parenthesis".
+  Digits and hex letters keep their label as the name. Tooltips still show
+  the shortcut. The mode, number base and word size drop-downs are named
+  "Calculator mode", "Number base" and "Word size".
 
 ### Input
 - The entry accepts free typing. Everything a button does can be typed.

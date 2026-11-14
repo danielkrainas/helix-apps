@@ -68,10 +68,9 @@ fn load_css() {
          .day-number { padding: 2px 6px; margin: 2px; border-radius: 999px; font-feature-settings: \"tnum\"; }
          .day-cell.today .day-number { background: @accent_bg_color; color: @accent_fg_color; font-weight: bold; }
          .event-chip { padding: 0 6px; min-height: 20px; margin: 1px 2px; border-radius: 5px; font-size: smaller; }
-         .event-chip label { font-size: smaller; }
          .more-chip { padding: 0 6px; min-height: 18px; margin: 1px 2px; font-size: smaller; }
          .week-event { padding: 2px 6px; border-radius: 6px; font-size: smaller; }
-         .week-event label { font-size: smaller; }
+         .event-chip:focus-visible, .week-event:focus-visible { outline: 2px solid @view_fg_color; outline-offset: 1px; }
          .week-day-header { padding: 6px 0; }
          .day-cell:focus-visible, .week-day-cell:focus-visible { outline: 2px solid alpha(@accent_color, 0.7); outline-offset: -2px; }
          .week-day-header.today { color: @accent_color; font-weight: bold; }
@@ -847,7 +846,7 @@ impl Ui {
     }
 
     fn update_color_css(&self) {
-        let mut css = String::from(".cal-default { background-color: #3584e4; color: #ffffff; }\n");
+        let mut css = colors::class_css("cal-default", colors::DEFAULT);
         let mut map = HashMap::new();
         for (i, s) in self
             .state
@@ -859,10 +858,7 @@ impl Ui {
         {
             let class = format!("cal-{i}");
             let bg = colors::normalize(s.color());
-            css.push_str(&format!(
-                ".{class} {{ background-color: {bg}; color: {}; }}\n.{class}-dot {{ background-color: {bg}; }}\n",
-                colors::contrast_fg(&bg)
-            ));
+            css.push_str(&colors::class_css(&class, &bg));
             map.insert(s.uid.clone(), class);
         }
         self.color_css.load_from_string(&css);
@@ -1150,15 +1146,19 @@ impl Ui {
         b
     }
 
+    /// The name of calendar `uid` (empty if unknown).
+    fn cal_name(&self, uid: &str) -> String {
+        self.sources()
+            .into_iter()
+            .find(|s| s.uid == uid)
+            .map(|s| s.display_name())
+            .unwrap_or_default()
+    }
+
     /// "Standup, Fri 13 Nov, 09:00 – 09:15, Work" for screen readers.
     fn item_label(&self, item: &Item) -> String {
         let when = self.describe_when(item);
-        let cal = self
-            .sources()
-            .into_iter()
-            .find(|s| s.uid == item.calendar)
-            .map(|s| s.display_name())
-            .unwrap_or_default();
+        let cal = self.cal_name(&item.calendar);
         let mut s = format!("{}, {when}", item.title());
         if !cal.is_empty() {
             s.push_str(&format!(", {cal}"));
@@ -1166,11 +1166,17 @@ impl Ui {
         s
     }
 
+    /// Tooltip: title, time, location and calendar, one per line.
     fn describe(&self, item: &Item) -> String {
         let mut s = format!("{}\n{}", item.title(), self.describe_when(item));
         if !item.location.is_empty() {
             s.push('\n');
             s.push_str(&item.location);
+        }
+        let cal = self.cal_name(&item.calendar);
+        if !cal.is_empty() {
+            s.push('\n');
+            s.push_str(&format!("Calendar: {cal}"));
         }
         s
     }
@@ -1961,7 +1967,16 @@ impl Ui {
         *self.agenda_items.borrow_mut() = items;
     }
 
+    /// An agenda row: colour dot, title, and "time · calendar" (the
+    /// calendar is named in text, not only by its colour).
     fn agenda_row(&self, cal: &str, title: &str, when: &str) -> gtk::ListBoxRow {
+        let cal_name = self.cal_name(cal);
+        let when = if cal_name.is_empty() {
+            when.to_string()
+        } else {
+            format!("{when} · {cal_name}")
+        };
+        let when = when.as_str();
         let b = gtk::Box::new(gtk::Orientation::Horizontal, 8);
         b.set_margin_top(4);
         b.set_margin_bottom(4);

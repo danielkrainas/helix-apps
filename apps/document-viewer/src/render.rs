@@ -2,6 +2,7 @@
 
 use crate::layout::{page_px, tile_rect, Rect};
 use crate::links::{DocCtx, Link, OutlineItem};
+use crate::pagetext::PageText;
 use crate::search::{flip_rect, snippet, Hit};
 use gtk::{gio, glib};
 use std::collections::VecDeque;
@@ -110,6 +111,12 @@ pub enum Reply {
         page: usize,
         links: Vec<Link>,
     },
+    /// The text of a page with its character boxes.
+    PageText {
+        id: u64,
+        page: usize,
+        text: PageText,
+    },
     Selection {
         id: u64,
         gen: u64,
@@ -144,6 +151,9 @@ enum Cmd {
         password: Option<String>,
     },
     Links {
+        page: usize,
+    },
+    PageText {
         page: usize,
     },
     Region {
@@ -244,6 +254,10 @@ impl Renderer {
 
     pub fn links(&self, page: usize) {
         self.with(|q| q.cmds.push_back(Cmd::Links { page }));
+    }
+
+    pub fn page_text(&self, page: usize) {
+        self.with(|q| q.cmds.push_back(Cmd::PageText { page }));
     }
 
     /// Requests the highlighted region of a selection (latest request wins).
@@ -396,17 +410,47 @@ impl Worker {
                 let links = doc
                     .page(page as i32)
                     .map(|p| {
-                        DocCtx {
+                        let mut links = DocCtx {
                             doc,
                             heights: &heights,
                         }
-                        .page_links(&p)
+                        .page_links(&p);
+                        for l in &mut links {
+                            l.text = p
+                                .text_for_area(&mut to_poppler_rect(&l.rect))
+                                .map(|t| t.split_whitespace().collect::<Vec<_>>().join(" "))
+                                .unwrap_or_default();
+                        }
+                        // Reading order, for keyboard focus.
+                        links.sort_by(|a, b| {
+                            (a.rect.y, a.rect.x)
+                                .partial_cmp(&(b.rect.y, b.rect.x))
+                                .unwrap_or(std::cmp::Ordering::Equal)
+                        });
+                        links
                     })
                     .unwrap_or_default();
                 self.send(Reply::Links {
                     id: *id,
                     page,
                     links,
+                })
+            }
+            Cmd::PageText { page } => {
+                let Some((id, doc, _)) = &self.doc else {
+                    return true;
+                };
+                let text = doc
+                    .page(page as i32)
+                    .map(|p| {
+                        let s = p.text().map(|t| t.to_string()).unwrap_or_default();
+                        PageText::new(&s, text_layout(&p))
+                    })
+                    .unwrap_or_default();
+                self.send(Reply::PageText {
+                    id: *id,
+                    page,
+                    text,
                 })
             }
             Cmd::Region { gen, rects, style } => {
@@ -575,6 +619,29 @@ impl Worker {
             }
         }
         ok
+    }
+}
+
+/// Poppler's box for every character of `page.text()` (top-left-origin
+/// page points). `poppler-rs` does not wrap `poppler_page_get_text_layout`.
+fn text_layout(page: &poppler::Page) -> Vec<Rect> {
+    use gtk::glib::translate::ToGlibPtr;
+    let mut rects: *mut poppler::ffi::PopplerRectangle = std::ptr::null_mut();
+    let mut n: std::os::raw::c_uint = 0;
+    // SAFETY: poppler fills `rects` with `n` rectangles allocated with
+    // g_malloc, which are copied out and freed here.
+    unsafe {
+        let ok =
+            poppler::ffi::poppler_page_get_text_layout(page.to_glib_none().0, &mut rects, &mut n);
+        if ok == 0 || rects.is_null() {
+            return Vec::new();
+        }
+        let out = std::slice::from_raw_parts(rects, n as usize)
+            .iter()
+            .map(|r| Rect::from_corners(r.x1, r.y1, r.x2, r.y2))
+            .collect();
+        glib::ffi::g_free(rects as *mut _);
+        out
     }
 }
 

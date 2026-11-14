@@ -65,7 +65,9 @@ View and edit events from local and online calendars.
   800sp): a month date picker (`gtk::Calendar`) to jump to any date, the
   list of calendars with colour dots and visibility check boxes, and the
   agenda (events) of the selected day. During a search, the agenda lists
-  search results instead.
+  search results instead. Each agenda row shows the calendar's colour dot,
+  the title, and "time · Calendar name", so the calendar is never shown
+  by colour alone.
 - **Month view**: 7 columns starting on the locale's first weekday, 5–6
   week rows covering the month; optional ISO week numbers
   (`org.gnome.desktop.calendar show-weekdate`). Each day cell shows its
@@ -108,8 +110,16 @@ View and edit events from local and online calendars.
   Clicking the grid moves the cursor there and focuses it. Timed events
   remain focusable buttons over the grid.
 - **Event chips and week events** are named "Title, Fri 13 Nov, 09:00 –
-  09:15, Calendar" (date always included; the tooltip also shows the
-  date).
+  09:15, Calendar" (date always included; the tooltip shows title, date
+  and time, location and "Calendar: NAME").
+- **Chip colours**: the background is the calendar colour; the text is
+  black or white, whichever has the higher WCAG contrast ratio on it (one
+  of them always reaches at least 4.58:1). Chip text is one step smaller
+  than body text (not shrunk again inside the chip). Hover and press keep
+  visible feedback on every colour by shading the background away from the
+  text colour (darker under white text, lighter under black text), so
+  contrast never drops; the keyboard focus ring is drawn outside the chip
+  in the view's text colour.
 - Rebuilding the month grid or the week headers keeps focus on the same
   day.
 

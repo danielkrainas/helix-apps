@@ -78,6 +78,14 @@ VTE for GTK 4 (`vte-2.91-gtk4` 0.76, Rust `vte4` 0.8).
 - Clickable URLs: `http(s)`, `ftp`, `file`, `mailto` and `www.` URLs are
   highlighted (VTE match regex); Ctrl+click opens them with
   `GtkUriLauncher` (OpenURI portal when sandboxed); OSC 8 hyperlinks too.
+- The context menu's *Open Link* / *Copy Link* act on one link, decided
+  when the menu opens and disabled when there is none: for the secondary
+  button, the hyperlink or URL under the pointer; from the keyboard (Menu
+  or Shift+F10), the selection when it is exactly one URL (surrounding
+  spaces, brackets and trailing sentence punctuation ignored; `www.` gets
+  `http://`). Any selection change replaces the remembered link, so a
+  link from an earlier click is never offered. Selecting a URL and
+  pressing Menu, then *Open Link*, opens it without a pointer.
 - Zoom: Ctrl++ / Ctrl+= / Ctrl+- / Ctrl+0 and Ctrl+scroll change the
   shared `font-scale` (0.5 – 4.0, ×1.1 steps) for all terminals.
 

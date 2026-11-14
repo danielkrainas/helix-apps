@@ -5,6 +5,7 @@ mod dialogs;
 mod docview;
 mod layout;
 mod links;
+mod pagetext;
 mod presentation;
 mod render;
 mod search;

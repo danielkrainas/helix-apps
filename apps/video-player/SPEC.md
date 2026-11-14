@@ -45,7 +45,7 @@ Play video files.
     codec for a secondary stream (e.g. audio only) just shows a toast
     “Missing codec: …”. An *Open…* button lets the user pick another file.
   - **video** – a black area showing the video, with overlaid header bar
-    (title = file name, Open button, primary menu, fullscreen button) at the
+    (title = file name, Open button, primary menu: Open…, Take Screenshot, Keyboard Shortcuts, About; fullscreen button) at the
     top and a controls bar at the bottom. A `GtkSpinner` is shown while the
     pipeline is prerolling/buffering.
 - The window title is the file name of the current video (or “Video
@@ -185,7 +185,17 @@ Play video files.
 | , / . | Previous / next frame (when paused) |
 | Ctrl+O | Open |
 | Ctrl+Alt+S | Take screenshot |
+| Ctrl+? | Keyboard shortcuts |
 | Ctrl+W / Ctrl+Q | Close / quit |
+
+The table is shown in a Keyboard Shortcuts window (Ctrl+?, or *Keyboard
+Shortcuts* in the main menu). Keys without modifiers (Space, arrows, M,
+F, Escape, comma, period) are window shortcuts in the bubble phase
+(`helix_app_common::keys`): they act only when the focused widget does
+not use the key, so Space presses a focused button or opens a focused
+Speed / Tracks menu, arrows move the focused volume slider, and Escape
+first closes an open popover and only then leaves fullscreen. Ctrl / Alt
+shortcuts, F11 and the media keys stay application accelerators.
 
 Frame step forward uses a GStreamer `Step` event (1 buffer); backward is
 an accurate seek to position − one frame duration (from the caps

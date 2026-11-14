@@ -137,6 +137,26 @@ struct Key {
     class: Option<&'static str>,
 }
 
+/// The accessible name of a keypad key: its tooltip without the bracketed
+/// shortcut hint ("Square root [Ctrl+R]" → "Square root"), a spelled-out
+/// name for bare symbols, or `None` when the visible label (a digit or
+/// letter) already is the name.
+fn key_name(label: &str, tooltip: Option<&str>) -> Option<String> {
+    if let Some(t) = tooltip {
+        let name = match t.rfind(" [") {
+            Some(i) if t.ends_with(']') => &t[..i],
+            _ => t,
+        };
+        return Some(name.trim().to_string());
+    }
+    let spelled = match label {
+        "(" => "Open parenthesis",
+        ")" => "Close parenthesis",
+        _ => return None,
+    };
+    Some(spelled.to_string())
+}
+
 fn k(label: &'static str, insert: &'static str) -> Key {
     Key {
         label,
@@ -390,6 +410,7 @@ fn build(app: &adw::Application) -> Ui {
     let modes = gtk::DropDown::from_strings(&ButtonMode::ALL.map(|m| m.label()));
     modes.set_selected(ButtonMode::ALL.iter().position(|m| *m == mode).unwrap_or(0) as u32);
     modes.set_tooltip_text(Some("Calculator mode"));
+    helix_app_common::set_accessible_label(&modes, "Calculator mode");
     header.set_title_widget(Some(&modes));
     let menu = gio::Menu::new();
     let section = gio::Menu::new();
@@ -446,6 +467,7 @@ fn build(app: &adw::Application) -> Ui {
             .unwrap_or(2) as u32,
     );
     base_dd.set_tooltip_text(Some("Number base"));
+    helix_app_common::set_accessible_label(&base_dd, "Number base");
     let word_dd = gtk::DropDown::from_strings(&["8-bit", "16-bit", "32-bit", "64-bit"]);
     let words = [8u32, 16, 32, 64];
     word_dd.set_selected(
@@ -455,6 +477,7 @@ fn build(app: &adw::Application) -> Ui {
             .unwrap_or(3) as u32,
     );
     word_dd.set_tooltip_text(Some("Word size"));
+    helix_app_common::set_accessible_label(&word_dd, "Word size");
     prog_row.append(&base_dd);
     prog_row.append(&word_dd);
     let bits = gtk::Grid::builder()
@@ -696,6 +719,11 @@ impl Ui {
             for (c, key) in row.into_iter().enumerate() {
                 let b = gtk::Button::with_label(key.label);
                 b.set_tooltip_text(key.tooltip);
+                // The label is often a symbol ("÷", "x²", "⌫"); name the
+                // operation instead.
+                if let Some(name) = key_name(key.label, key.tooltip) {
+                    helix_app_common::set_accessible_label(&b, &name);
+                }
                 if let Some(class) = key.class {
                     b.add_css_class(class);
                 }
@@ -1137,5 +1165,53 @@ impl Ui {
             });
         });
         dialog.present(Some(&self.window));
+    }
+}
+
+#[cfg(test)]
+mod key_name_tests {
+    use super::*;
+
+    #[test]
+    fn names_drop_shortcut_hints() {
+        assert_eq!(
+            key_name("√", Some("Square root [Ctrl+R]")).as_deref(),
+            Some("Square root")
+        );
+        assert_eq!(
+            key_name("C", Some("Clear [Escape]")).as_deref(),
+            Some("Clear")
+        );
+        assert_eq!(
+            key_name("⌫", Some("Backspace")).as_deref(),
+            Some("Backspace")
+        );
+        assert_eq!(key_name("(", None).as_deref(), Some("Open parenthesis"));
+        assert_eq!(key_name("7", None), None);
+        assert_eq!(key_name("A", None), None);
+    }
+
+    /// Every key whose label is not a plain digit / letter / word gets a
+    /// name, and no name contains a shortcut hint.
+    #[test]
+    fn every_symbol_key_is_named() {
+        let all = basic_keys(false)
+            .into_iter()
+            .chain(basic_keys(true))
+            .chain(advanced_keys())
+            .chain(programming_keys())
+            .chain(financial_keys())
+            .flatten();
+        for key in all {
+            let plain = key.label.chars().all(|c| c.is_ascii_alphanumeric());
+            let name = key_name(key.label, key.tooltip);
+            if !plain {
+                assert!(name.is_some(), "{} has no name", key.label);
+            }
+            if let Some(n) = name {
+                assert!(!n.contains('[') && !n.contains("Ctrl"), "{n}");
+                assert!(!n.is_empty());
+            }
+        }
     }
 }

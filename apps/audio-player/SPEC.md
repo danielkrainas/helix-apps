@@ -71,11 +71,13 @@ or queue (see *Decisions*).
 - **Play/Pause** toggles. At end of stream: with **Repeat** on, seek to 0
   and keep playing; otherwise rewind to 0 and pause (state *Stopped*).
 - **Seek ±10 s** buttons and keys clamp to `[0, duration]`.
-- **Rate** menu button (label like "1.25×"): 0.5, 0.75, 1.0, 1.25, 1.5,
-  1.75, 2.0. Applied with a flushing seek at the current position.
+- **Rate** menu button (label like "1.25×", accessible name "Playback
+  Speed: 1.25×", kept current): 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0.
+  Applied with a flushing seek at the current position.
 - **Volume** menu button: popover with a mute toggle and a 0–100 % slider.
   The slider is cubic (perceptual): playbin volume = slider³. The button
-  icon reflects muted / low / medium / high.
+  icon reflects muted / low / medium / high. The slider's accessible value
+  is its position as a percentage ("50%", "50%, muted").
 - **Repeat** toggle button (`media-playlist-repeat-symbolic`).
 - Position is polled every 50 ms while a file is loaded.
 
@@ -140,6 +142,12 @@ or queue (see *Decisions*).
 | Ctrl+Q | Quit |
 | Ctrl+? | Keyboard shortcuts |
 
+Space, Left / Right and M are window shortcuts handled in the bubble
+phase (`helix_app_common::keys`), i.e. only when the focused widget does
+not use the key: Space on a focused button presses that button, and the
+arrow keys on the focused volume slider move the slider. Ctrl+O, Ctrl+?
+and the AudioPlay media key stay application accelerators.
+
 ### Command line
 `helix-audio-player [FILE|URI]` — opens the file (relative paths resolved
 against the CWD) and starts playing. `--help`, `--version`.
@@ -157,4 +165,10 @@ against the CWD) and starts playing. `--help`, `--version`.
 
 ### Accessibility
 - Status changes that happen without focus moving are announced to
-  screen readers (`helix_app_common::a11y`): the "Unable to play file" error page appearing (assertive).
+  screen readers (`helix_app_common::a11y`): the "Unable to play file" error page appearing (assertive)
+  and "Playing TITLE" when a file is opened (polite).
+- When the page changes, focus follows if it was on the page being hidden
+  (or nowhere): to *Play/Pause* when a file opens, to *Open Another
+  File…* on the error page.
+- The cover art is presentational (the title below names the track); the
+  time labels use the `numeric` style class (tabular figures).

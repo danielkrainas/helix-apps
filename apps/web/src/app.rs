@@ -321,6 +321,27 @@ impl App {
 
     // ---- windows & tabs ---------------------------------------------------
 
+    /// Shows `text` as a toast in the browser window holding `widget`
+    /// (or the active window).
+    pub fn toast_for(&self, widget: &impl IsA<gtk::Widget>, text: &str) {
+        let root = widget.root().and_downcast::<gtk::Window>();
+        let window = {
+            let windows = self.windows.borrow();
+            root.and_then(|r| {
+                windows
+                    .iter()
+                    .find(|w| w.win.upcast_ref::<gtk::Window>() == &r)
+                    .cloned()
+            })
+        };
+        if let Some(w) = window
+            .or_else(|| self.active_window(false))
+            .or_else(|| self.active_window(true))
+        {
+            w.toast(text);
+        }
+    }
+
     pub fn active_window(&self, private: bool) -> Option<Rc<Window>> {
         let windows = self.windows.borrow();
         if let Some(active) = self.gtk.active_window() {
@@ -683,7 +704,15 @@ impl App {
     }
 
     /// Clears the selected kinds of browsing data (all time).
-    pub fn clear_data(&self, site_data: bool, cache: bool, history: bool) {
+    /// Clears the chosen data; `done` gets `Err(message)` if WebKit
+    /// could not clear website data.
+    pub fn clear_data(
+        &self,
+        site_data: bool,
+        cache: bool,
+        history: bool,
+        done: impl FnOnce(Result<(), String>) + 'static,
+    ) {
         let mut types = webkit6::WebsiteDataTypes::empty();
         if site_data {
             types |= webkit6::WebsiteDataTypes::COOKIES
@@ -701,23 +730,25 @@ impl App {
             types |=
                 webkit6::WebsiteDataTypes::MEMORY_CACHE | webkit6::WebsiteDataTypes::DISK_CACHE;
         }
-        if !types.is_empty() {
-            if let Some(dm) = self.session.website_data_manager() {
+        if history {
+            self.history.borrow_mut().clear();
+            self.schedule_save(Saved::History);
+        }
+        match self.session.website_data_manager() {
+            Some(dm) if !types.is_empty() => {
+                let done = glib::thread_guard::ThreadGuard::new(done);
                 dm.clear(
                     types,
                     glib::TimeSpan::from_seconds(0),
                     None::<&gio::Cancellable>,
-                    |r| {
-                        if let Err(e) = r {
-                            eprintln!("helix-web: clearing website data failed: {e}");
-                        }
+                    move |r| {
+                        // WebKit calls back on the main thread.
+                        (done.into_inner())(r.map_err(|e| e.message().to_string()))
                     },
                 );
             }
-        }
-        if history {
-            self.history.borrow_mut().clear();
-            self.schedule_save(Saved::History);
+            None if !types.is_empty() => done(Err("No website data store".into())),
+            _ => done(Ok(())),
         }
     }
 

@@ -805,13 +805,19 @@ impl Tab {
         match answer {
             Some(true) => {
                 let login = sub.to_login();
+                let (app, root) = (self.app.clone(), self.root.clone());
                 glib::spawn_future_local(async move {
                     let r = gio::spawn_blocking(move || {
                         secrets::Client::session_bus().and_then(|c| c.store(&login))
                     })
                     .await;
-                    if let Ok(Err(e)) = r {
-                        eprintln!("helix-web: saving the password failed: {e}");
+                    let text = match r {
+                        Ok(Ok(())) => "Password saved".to_string(),
+                        Ok(Err(e)) => format!("Could not save the password: {e}"),
+                        Err(_) => "Could not save the password".to_string(),
+                    };
+                    if let Some(app) = app.upgrade() {
+                        app.toast_for(&root, &text);
                     }
                 });
             }

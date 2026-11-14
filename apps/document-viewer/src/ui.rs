@@ -107,6 +107,7 @@ const ACCELS: &[(&str, &[&str])] = &[
     ("win.forward", &["<Alt>Right"]),
     ("win.presentation", &["F5"]),
     ("win.fullscreen", &["F11"]),
+    ("win.caret", &["F7"]),
 ];
 
 /// Actions that need a loaded document.
@@ -125,6 +126,7 @@ const DOC_ACTIONS: &[&str] = &[
     "rotate-left",
     "rotate-right",
     "dual",
+    "caret",
     "go-to-page",
     "back",
     "forward",
@@ -141,7 +143,10 @@ fn load_css() {
          .dv-thumb picture { background-color: white; box-shadow: 0 1px 3px alpha(black, 0.3); }
          .dv-thumb { padding: 6px; }
          .dv-result-page { font-size: smaller; }
-         .dv-page-entry { min-width: 0; }",
+         .dv-page-entry { min-width: 0; }
+         docview > doclink:focus-visible {
+             outline: 2px solid @accent_color; outline-offset: 1px;
+             border-radius: 2px; background-color: alpha(@accent_bg_color, 0.15); }",
     );
     if let Some(display) = gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
@@ -269,6 +274,7 @@ impl Win {
         let s2 = gio::Menu::new();
         s2.append(Some("_Dual Page"), Some("win.dual"));
         s2.append(Some("_Night Mode"), Some("win.night"));
+        s2.append(Some("_Caret Navigation"), Some("win.caret"));
         s2.append(Some("Rotate _Left"), Some("win.rotate-left"));
         s2.append(Some("Rotate _Right"), Some("win.rotate-right"));
         menu.append_section(None, &s2);
@@ -694,11 +700,24 @@ impl Win {
         );
         add(
             "rotate-left",
-            Box::new(|w, _| w.view.set_rotation(w.view.rotation() + 270)),
+            Box::new(|w, _| {
+                // Ctrl+Left moves the caret by a word in caret mode.
+                if w.view.caret_mode() && w.view.has_focus() {
+                    w.view.caret_word(false);
+                } else {
+                    w.view.set_rotation(w.view.rotation() + 270)
+                }
+            }),
         );
         add(
             "rotate-right",
-            Box::new(|w, _| w.view.set_rotation(w.view.rotation() + 90)),
+            Box::new(|w, _| {
+                if w.view.caret_mode() && w.view.has_focus() {
+                    w.view.caret_word(true);
+                } else {
+                    w.view.set_rotation(w.view.rotation() + 90)
+                }
+            }),
         );
         add(
             "go-to-page",
@@ -763,6 +782,17 @@ impl Win {
             Box::new(|w, v| {
                 w.view.set_dual(v);
                 w.schedule_save();
+            }),
+        );
+        toggle(
+            "caret",
+            Box::new(|w, v| {
+                w.view.set_caret_mode(v);
+                w.toast(if v {
+                    "Caret navigation on: arrow keys move the caret, Shift+arrows select"
+                } else {
+                    "Caret navigation off"
+                });
             }),
         );
         toggle(
@@ -833,6 +863,12 @@ impl Win {
                 win.follow(t);
             }
         }));
+        let w = self.weak();
+        cbs.caret_mode_changed = Some(Box::new(move |on| {
+            if let Some(win) = w.upgrade() {
+                win.set_toggle_state("caret", on);
+            }
+        }));
         drop(cbs);
 
         // Ctrl+C / Ctrl+A while the document has focus.
@@ -861,21 +897,39 @@ impl Win {
         });
         self.view.add_controller(keys);
 
-        // Context menu.
+        // Context menu, from the secondary button or Menu / Shift+F10.
         let cm = gio::Menu::new();
         cm.append(Some("_Copy"), Some("win.copy"));
         cm.append(Some("Select _All"), Some("win.select-all"));
+        cm.append(Some("_Caret Navigation"), Some("win.caret"));
         let pop = gtk::PopoverMenu::from_model(Some(&cm));
         pop.set_parent(&self.view);
         pop.set_has_arrow(false);
         pop.set_halign(gtk::Align::Start);
-        let rc = gtk::GestureClick::new();
-        rc.set_button(gdk::BUTTON_SECONDARY);
-        rc.connect_pressed(move |_, _, x, y| {
+        let popup = move |x: f64, y: f64| {
             pop.set_pointing_to(Some(&gdk::Rectangle::new(x as i32, y as i32, 1, 1)));
             pop.popup();
-        });
+        };
+        let popup = Rc::new(popup);
+        let rc = gtk::GestureClick::new();
+        rc.set_button(gdk::BUTTON_SECONDARY);
+        let p = popup.clone();
+        rc.connect_pressed(move |_, _, x, y| p(x, y));
         self.view.add_controller(rc);
+        let menu_keys = gtk::EventControllerKey::new();
+        let view = self.view.downgrade();
+        menu_keys.connect_key_pressed(move |_, key, _, state| {
+            let shift_f10 = key == gdk::Key::F10 && state.contains(gdk::ModifierType::SHIFT_MASK);
+            if key == gdk::Key::Menu || shift_f10 {
+                if let Some(view) = view.upgrade() {
+                    let (x, y) = view.context_point();
+                    popup(x, y);
+                    return glib::Propagation::Stop;
+                }
+            }
+            glib::Propagation::Proceed
+        });
+        self.view.add_controller(menu_keys);
     }
 
     fn on_page_changed(self: &Rc<Self>, p: usize) {
@@ -897,6 +951,10 @@ impl Win {
             format!("of {n}")
         };
         self.page_of.set_label(&of);
+        helix_app_common::announce_settled(
+            &self.view,
+            &crate::docview::page_description(&label, p, n),
+        );
         if self.thumbs_sel.selected() != p as u32 {
             self.syncing.set(true);
             self.thumbs_sel.set_selected(p as u32);
@@ -1499,6 +1557,11 @@ impl Win {
             }
             Reply::Links { id, page, links } if id == doc_id => {
                 self.model.links.borrow_mut().insert(page, links);
+                self.view.links_changed();
+            }
+            Reply::PageText { id, page, text } if id == doc_id => {
+                self.model.texts.borrow_mut().insert(page, Rc::new(text));
+                self.view.text_arrived(page);
             }
             Reply::Selection { id, gen, regions }
                 if id == doc_id && gen == self.view.selection_gen() =>
@@ -1606,6 +1669,11 @@ impl Win {
                 self.window.set_title(Some(&name));
             }
         }
+        // The document view is named after the document.
+        self.view
+            .update_property(&[gtk::accessible::Property::Label(
+                info.title.as_deref().unwrap_or(&name),
+            )]);
         let (show, side) = if info.wants_outline {
             (true, "outline")
         } else {

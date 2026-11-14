@@ -1,7 +1,7 @@
 //! Editor window: header bar, tabs, status bar and window actions.
 
 use adw::prelude::*;
-use gtk::{gio, glib};
+use gtk::{gdk, gio, glib};
 use helix_app_common::Labelled;
 use std::cell::Cell;
 use std::rc::{Rc, Weak};
@@ -266,8 +266,46 @@ impl Window {
         });
         w.setup_actions();
         w.setup_signals(&goto_popover);
+        w.setup_file_drops(&tab_bar);
         w.update_status();
         w
+    }
+
+    /// Files dropped on the editor area or the tab bar open as tabs. The
+    /// editor-area target runs in the capture phase so it sees file drags
+    /// before the text view, which would otherwise insert their addresses
+    /// as text; drags that carry only text are left to the text view.
+    fn setup_file_drops(self: &Rc<Self>, tab_bar: &adw::TabBar) {
+        let drop = gtk::DropTarget::new(gdk::FileList::static_type(), gdk::DragAction::COPY);
+        drop.set_propagation_phase(gtk::PropagationPhase::Capture);
+        let wk = self.this.clone();
+        drop.connect_drop(move |_, value, _, _| {
+            match (wk.upgrade(), value.get::<gdk::FileList>()) {
+                (Some(w), Ok(list)) => w.open_dropped(list.files()),
+                _ => false,
+            }
+        });
+        self.tab_view.add_controller(drop);
+
+        tab_bar.setup_extra_drop_target(gdk::DragAction::COPY, &[gdk::FileList::static_type()]);
+        let wk = self.this.clone();
+        tab_bar.connect_extra_drag_drop(move |_, _, value| {
+            match (wk.upgrade(), value.get::<gdk::FileList>()) {
+                (Some(w), Ok(list)) => w.open_dropped(list.files()),
+                _ => false,
+            }
+        });
+    }
+
+    fn open_dropped(&self, files: Vec<gio::File>) -> bool {
+        if files.is_empty() {
+            return false;
+        }
+        for f in files {
+            self.open_file(f);
+        }
+        self.win.present();
+        true
     }
 
     fn app(&self) -> Rc<App> {
