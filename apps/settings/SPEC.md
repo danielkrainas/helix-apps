@@ -119,6 +119,14 @@ Primary configuration UI for the desktop and system.
   user picks a card.
 - **Accent Color**: nine round swatches (blue, teal, green, yellow, orange,
   red, pink, purple, slate) → `accent-color`.
+- **Icons**: an *Icon Theme* row listing the installed icon themes by their
+  `index.theme` `Name`, writing the theme's directory name to
+  `icon-theme`. Themes are found in `$XDG_DATA_HOME/icons`, `~/.icons` and
+  `icons` under each `$XDG_DATA_DIRS` entry (an earlier directory's theme
+  hides a later one of the same name); `hicolor`, `default`, hidden themes
+  and cursor-only themes (no `Directories`) are not listed. A value set by
+  other tools that names no installed theme is listed as it is. Running apps
+  follow the change.
 - **Background**: a grid of thumbnails of the images in
   `/usr/share/backgrounds` (plus one level of subdirectories) and
   `$XDG_DATA_HOME/backgrounds`. Files named `<stem>-light.<ext>` /

@@ -2,6 +2,7 @@
 
 mod dbus;
 mod extensions;
+mod icon_themes;
 mod panels;
 mod sysinfo;
 mod ui;

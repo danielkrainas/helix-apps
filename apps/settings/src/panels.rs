@@ -154,6 +154,8 @@ pub const PANELS: &[PanelInfo] = &[
             "light",
             "style",
             "theme",
+            "icon",
+            "icons",
             "accent",
             "color",
             "colour",

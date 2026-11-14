@@ -1,4 +1,4 @@
-//! Appearance: style, accent colour and background.
+//! Appearance: style, accent colour, icon theme and background.
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
@@ -65,6 +65,7 @@ impl Panel for AppearancePanel {
         let page = widgets::page();
         page.add(&style_group(&iface));
         page.add(&accent_group(&iface));
+        page.add(&icons_group(&iface));
         page.add(&background_group(ctx));
         page.upcast()
     }
@@ -181,6 +182,52 @@ fn accent_group(prefs: &Prefs) -> adw::PreferencesGroup {
     }
     watch(prefs, "accent-color", sync);
     group.add(&bx);
+    group
+}
+
+/// *Icon Theme*: the installed themes, by name; one set by other tools
+/// that is not installed stays listed under its id.
+fn icons_group(prefs: &Prefs) -> adw::PreferencesGroup {
+    let group = widgets::group("Icons");
+    let row = adw::ComboRow::builder().title("Icon Theme").build();
+    group.add(&row);
+    if !has_key(prefs, "icon-theme") {
+        group.set_description(Some(widgets::UNSUPPORTED));
+        row.set_sensitive(false);
+        return group;
+    }
+    let mut themes = crate::icon_themes::installed(&crate::icon_themes::search_dirs());
+    let current: String = prefs.get("icon-theme", String::new());
+    if !current.is_empty() && !themes.iter().any(|t| t.id == current) {
+        themes.push(crate::icon_themes::IconTheme {
+            id: current.clone(),
+            name: current,
+        });
+    }
+    let labels: Vec<&str> = themes.iter().map(|t| t.name.as_str()).collect();
+    row.set_model(Some(&gtk::StringList::new(&labels)));
+    let themes = Rc::new(themes);
+    let sync = {
+        let (row, themes, p) = (row.downgrade(), themes.clone(), prefs.clone());
+        move || {
+            let id: String = p.get("icon-theme", String::new());
+            if let (Some(row), Some(i)) = (row.upgrade(), themes.iter().position(|t| t.id == id)) {
+                row.set_selected(i as u32);
+            }
+        }
+    };
+    sync();
+    row.connect_selected_notify({
+        let (themes, p) = (themes.clone(), prefs.clone());
+        move |r| {
+            if let Some(t) = themes.get(r.selected() as usize) {
+                if p.get("icon-theme", String::new()) != t.id {
+                    p.set("icon-theme", t.id.as_str());
+                }
+            }
+        }
+    });
+    watch(prefs, "icon-theme", sync);
     group
 }
 
