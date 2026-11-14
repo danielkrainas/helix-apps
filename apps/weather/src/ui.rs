@@ -91,6 +91,7 @@ struct Inner {
     banner: adw::Banner,
     stack: gtk::Stack,
     error_page: adw::StatusPage,
+    error_search: gtk::Button,
     content: gtk::Box,
     updated_label: gtk::Label,
     unit_action: gio::SimpleAction,
@@ -236,7 +237,12 @@ fn build(app: &adw::Application) -> Ui {
     stack.add_named(&loading, Some("loading"));
 
     let retry = gtk::Button::builder().label("Retry").css_classes(["pill", "suggested-action"]).halign(gtk::Align::Center).action_name("app.refresh").build();
-    let error_page = adw::StatusPage::builder().icon_name("network-offline-symbolic").title("Could Not Load the Forecast").child(&retry).build();
+    // When the current location cannot be found: pick a place by hand.
+    let error_search = gtk::Button::builder().label("Search Locations").css_classes(["pill"]).halign(gtk::Align::Center).action_name("app.search").visible(false).build();
+    let error_buttons = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(12).halign(gtk::Align::Center).build();
+    error_buttons.append(&retry);
+    error_buttons.append(&error_search);
+    let error_page = adw::StatusPage::builder().icon_name("network-offline-symbolic").title("Could Not Load the Forecast").child(&error_buttons).build();
     stack.add_named(&error_page, Some("error"));
 
     let content = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(24).build();
@@ -311,6 +317,7 @@ fn build(app: &adw::Application) -> Ui {
         banner,
         stack,
         error_page,
+        error_search,
         content,
         updated_label,
         unit_action,
@@ -579,6 +586,8 @@ impl Ui {
                     eprintln!("helix-weather: current location unavailable: {e}");
                     if ui.0.locations.borrow().selected_place().is_none() {
                         ui.0.error_page.set_title("Could Not Find Your Location");
+                        ui.0.error_page.set_icon_name(Some("find-location-symbolic"));
+                        ui.0.error_search.set_visible(true);
                         ui.0.error_page.set_description(Some(&glib::markup_escape_text(&e)));
                         ui.0.stack.set_visible_child_name("error");
                     }
@@ -799,6 +808,8 @@ impl Ui {
                         ui.update_status_texts();
                     } else {
                         ui.0.error_page.set_title("Could Not Load the Forecast");
+                        ui.0.error_page.set_icon_name(Some("network-offline-symbolic"));
+                        ui.0.error_search.set_visible(false);
                         ui.0.error_page.set_description(Some(&glib::markup_escape_text(&e)));
                         ui.0.stack.set_visible_child_name("error");
                     }

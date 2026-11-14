@@ -154,7 +154,9 @@ WMO codes map to a description and a standard symbolic icon
   is saved). Removing that row or switching the row off turns automatic
   location off and drops the entry.
 - If the lookup fails and nothing else is saved, the error page shows
-  "Could Not Find Your Location" with the reason; *Retry* tries again.
+  "Could Not Find Your Location" with the reason; *Retry* tries again
+  and *Search Locations* opens the places popover to pick a place by hand
+  (automatic location stays on; the chosen place is shown meanwhile).
 - The switch mirrors `org.gnome.Weather automatic-location` when that schema
   is installed (it then wins at startup); otherwise it persists in
   `locations.json`.
