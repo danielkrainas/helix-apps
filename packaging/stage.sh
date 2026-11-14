@@ -14,6 +14,7 @@
 #   *.policy                 /usr/share/polkit-1/actions/
 #   apparmor.d/*             /etc/apparmor.d/
 #   *.gschema.xml            /usr/share/helix-apps/schemas/ (compiled there)
+#   icons/*.svg              /usr/share/icons/hicolor/scalable/apps/
 # The schemas are Helix's copies of GNOME app schemas (org.gnome.clocks, …).
 # They stay out of /usr/share/glib-2.0/schemas so they never conflict with
 # the GNOME packages that own those files; helix-app-common looks there
@@ -58,6 +59,11 @@ for data in "$root"/apps/*/data; do
                 echo "stage.sh: don't know where $f goes" >&2; exit 1 ;;
         esac
     done
+    if [ -d "$data/icons" ]; then
+        for f in "$data"/icons/*.svg; do
+            install -Dm644 "$f" "$dest/usr/share/icons/hicolor/scalable/apps/$(basename "$f")"
+        done
+    fi
     if [ -d "$data/apparmor.d" ]; then
         for f in "$data"/apparmor.d/*; do
             install -Dm644 "$f" "$dest/etc/apparmor.d/$(basename "$f")"

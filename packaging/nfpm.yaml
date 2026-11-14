@@ -34,6 +34,8 @@ contents:
     dst: /usr/share/dbus-1/services/
   - src: ./stage/usr/share/polkit-1/actions/*
     dst: /usr/share/polkit-1/actions/
+  - src: ./stage/usr/share/icons/hicolor/scalable/apps/*
+    dst: /usr/share/icons/hicolor/scalable/apps/
   - src: ./stage/usr/share/helix-apps/schemas/*
     dst: /usr/share/helix-apps/schemas/
   - src: ./stage/usr/share/doc/helix-apps/README.md

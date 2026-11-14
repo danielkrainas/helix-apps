@@ -74,12 +74,24 @@ development packages. `.github/workflows/ci.yml` lists the Ubuntu names.
   - desktop files, the D-Bus service file and the polkit policy in their
     standard places;
   - Tour's and Clocks' autostart entries in `/etc/xdg/autostart`;
+  - each app's icon (`org.helix.<App>.svg`) in
+    `/usr/share/icons/hicolor/scalable/apps`;
   - the Web and Help AppArmor profiles in `/etc/apparmor.d`.
 
   Helix's copies of the GNOME app schemas go in
   `/usr/share/helix-apps/schemas`, not the global schema directory, so
   they never conflict with installed GNOME apps. The apps use the system's
   schema when it exists and fall back to these copies.
+
+## App icons
+
+Every app ships its own scalable icon, named after its application id
+(`apps/<app>/data/icons/org.helix.<App>.svg`), so launchers, the dock,
+About dialogs and window lists show it whatever icon theme is in use.
+They share one Helix style: a rounded tile with a diagonal gradient in
+the app's colour and a white symbol with a soft shadow, drawn from plain
+shapes so they stay legible at 24 pixels. They are generated: edit
+`tools/icons/make_icons.py` and run `python3 tools/icons/make_icons.py`.
 
 ## License
 
