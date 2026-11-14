@@ -82,6 +82,37 @@ View and edit events from local and online calendars.
   0.5–3.0).
 - Clicking an event anywhere opens the **event editor**.
 
+### Keyboard and screen readers in the grids
+- **Month view** is an accessible grid (role *grid*, named after the
+  month, with row/column counts); each day cell is a focusable *grid
+  cell* with a focus ring, row/column index, the *selected* state, and a
+  name such as "Friday, 13 November 2026, today, selected, 2 events:
+  Standup, Lunch". In a focused cell: arrows move by a day / a week,
+  `Home` / `End` to the first / last day of the week, `Page Up` / `Page
+  Down` to the same day of the previous / next month (clamped to its
+  last day). Moving selects the day (the agenda follows) and keeps focus
+  on the new cell, leaving the month when needed. `Enter` / `Space`
+  selects the focused day; `Ctrl+N` creates an event on the selected day.
+  Clicking a day also focuses it. `Tab` moves into the day's event chips.
+- **Week view**: the day headers are focusable grid cells with the same
+  names; `Left` / `Right`, `Home` / `End`, `Page Up` / `Page Down` (a
+  week) move between days, `Enter` selects. The hour grid (cairo-drawn)
+  is itself focusable and has a **slot cursor**: a half-hour outline on
+  the selected day, drawn while the grid has focus. Arrows move it by
+  half an hour / a day, `Home` / `End` to 00:00 / 23:30, `Page Up` /
+  `Page Down` by a week (changing the shown week as needed); the grid
+  scrolls to keep it visible; `Enter` / `Space` creates a one-hour event
+  at the cursor. The grid's accessible name describes the cursor slot
+  ("Wednesday, 11 November 2026, 07:30, Standup") and each move is
+  announced, because GTK has no accessible children for a drawing area.
+  Clicking the grid moves the cursor there and focuses it. Timed events
+  remain focusable buttons over the grid.
+- **Event chips and week events** are named "Title, Fri 13 Nov, 09:00 –
+  09:15, Calendar" (date always included; the tooltip also shows the
+  date).
+- Rebuilding the month grid or the week headers keeps focus on the same
+  day.
+
 ### Event editor (dialog)
 - Title, calendar (writable calendars only), location, all-day switch,
   start date + time, end date + time (end is moved along when start moves
@@ -172,7 +203,8 @@ next, `Ctrl+1` week view, `Ctrl+2`
 month view, `Ctrl+F` search, `F9` sidebar, `Ctrl+Plus` / `Ctrl+Minus` /
 `Ctrl+0` zoom week grid, `Ctrl+I` import, `Ctrl+?` shortcuts, `Ctrl+Q`
 quit. (Bare keys such as `Home` are not bound so they keep working in
-text fields.)
+text fields; the grid keys above only act in a focused day cell, day
+header or hour grid, and are listed in the shortcuts window.)
 
 ### Command line
 - `helix-calendar [--date YYYY-MM-DD] [--uuid UID] [FILE.ics…]`.
@@ -201,3 +233,6 @@ text fields.)
 
 - Webcal: Helix has its own "New Calendar from URL" flow creating an EDS
   `webcal` source through the sources registry (EDS fetches/refreshes it).
+
+### Accessibility
+- Focus is kept across list rebuilds (`helix_app_common::focus`): Rebuilding the calendar list keeps focus on the toggled check box; rebuilding the agenda keeps focus on the same event (or a neighbour) and the scroll position.

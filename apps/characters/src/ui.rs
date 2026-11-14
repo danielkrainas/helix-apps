@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
@@ -178,6 +179,12 @@ impl App {
                 .unwrap_or_default();
             if app.generation.get() == generation {
                 app.set_items(&results, "no-results");
+                let text = match results.len() {
+                    0 => "No results".to_string(),
+                    1 => "1 character found".to_string(),
+                    n => format!("{n} characters found"),
+                };
+                helix_app_common::announce_settled(&app.stack, &text);
             }
         });
     }
@@ -292,7 +299,8 @@ fn build(gapp: &adw::Application) -> Rc<App> {
     let search_button = gtk::ToggleButton::builder()
         .icon_name("system-search-symbolic")
         .tooltip_text("Search")
-        .build();
+        .build()
+        .labelled("Search");
     header.pack_start(&search_button);
     let menu = gio::Menu::new();
     menu.append(Some("_About Characters"), Some("app.about"));
@@ -302,7 +310,8 @@ fn build(gapp: &adw::Application) -> Rc<App> {
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
             .tooltip_text("Main Menu")
-            .build(),
+            .build()
+            .labelled("Main Menu"),
     );
 
     let search_entry = gtk::SearchEntry::builder()
@@ -350,7 +359,7 @@ fn build(gapp: &adw::Application) -> Rc<App> {
         .min_columns(3)
         .build();
     grid.add_css_class("char-grid");
-    grid.update_property(&[gtk::accessible::Property::Label("Characters")]);
+    helix_app_common::set_accessible_label(&grid, "Characters");
 
     let stack = gtk::Stack::new();
     stack.add_named(

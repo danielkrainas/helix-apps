@@ -259,3 +259,8 @@ window (used by autostart; see Alarms). Plus GApplication's standard options
 - **Alarm weekday numbering**: 0 = Monday … 6 = Sunday is the working
   assumption (the user's saved alarms are empty, so nothing to migrate).
   Verify against real GNOME Clocks alarm data when available.
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): a timer going off ("Time is up: …", assertive); a ringing alarm opens its alert dialog.
+- Focus is kept across list rebuilds (`helix_app_common::focus`): Rebuilding the world clock, alarm and timer lists (toggling an alarm, ringing / snooze / stop, removing a clock or timer) keeps keyboard focus on the same control of the same row; after a removal focus goes to the next row (or the previous one, or the Add button).

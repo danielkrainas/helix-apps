@@ -3,6 +3,7 @@
 use adw::prelude::*;
 use chrono::{Datelike, Duration, Local, NaiveDate, NaiveTime, Timelike, Utc, Weekday};
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use helix_eds::ical::{self, Zones};
 use helix_eds::{Source, SourceKind};
@@ -14,6 +15,7 @@ use crate::backend::{self, Backend, Cmd, Msg};
 use crate::colors;
 use crate::dates;
 use crate::editor::{self, Target};
+use crate::keynav;
 use crate::layout;
 use crate::model::{Item, Store};
 
@@ -71,6 +73,7 @@ fn load_css() {
          .week-event { padding: 2px 6px; border-radius: 6px; font-size: smaller; }
          .week-event label { font-size: smaller; }
          .week-day-header { padding: 6px 0; }
+         .day-cell:focus-visible, .week-day-cell:focus-visible { outline: 2px solid alpha(@accent_color, 0.7); outline-offset: -2px; }
          .week-day-header.today { color: @accent_color; font-weight: bold; }
          .hour-label { font-size: smaller; opacity: 0.6; font-feature-settings: \"tnum\"; }
          .cal-dot { min-width: 12px; min-height: 12px; border-radius: 999px; }
@@ -126,6 +129,8 @@ pub struct Ui {
     first_weekday: Weekday,
     date: Cell<NaiveDate>,
     selected: Cell<NaiveDate>,
+    /// Week grid slot cursor (minutes after midnight on `selected`).
+    week_cursor: Cell<i64>,
     view: Cell<ViewKind>,
     zoom: Cell<f64>,
     render_pending: Cell<bool>,
@@ -192,23 +197,27 @@ impl Ui {
         let new_button = gtk::Button::builder()
             .icon_name("list-add-symbolic")
             .tooltip_text("New Event")
-            .build();
+            .build()
+            .labelled("New Event");
         new_button.set_action_name(Some("win.new-event"));
         let sidebar_button = gtk::ToggleButton::builder()
             .icon_name("sidebar-show-symbolic")
             .tooltip_text("Toggle Sidebar")
-            .build();
+            .build()
+            .labelled("Toggle Sidebar");
         let today_button = gtk::Button::with_label("Today");
         today_button.set_action_name(Some("win.today"));
         let prev = gtk::Button::builder()
             .icon_name("go-previous-symbolic")
             .tooltip_text("Previous")
-            .build();
+            .build()
+            .labelled("Previous");
         prev.set_action_name(Some("win.previous"));
         let next = gtk::Button::builder()
             .icon_name("go-next-symbolic")
             .tooltip_text("Next")
-            .build();
+            .build()
+            .labelled("Next");
         next.set_action_name(Some("win.next"));
         let nav = gtk::Box::builder().css_classes(["linked"]).build();
         nav.append(&prev);
@@ -241,12 +250,14 @@ impl Ui {
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
             .tooltip_text("Main Menu")
-            .build();
+            .build()
+            .labelled("Main Menu");
         menu_button.set_primary(true);
         let search_button = gtk::ToggleButton::builder()
             .icon_name("system-search-symbolic")
             .tooltip_text("Search")
-            .build();
+            .build()
+            .labelled("Search");
         header.pack_end(&menu_button);
         header.pack_end(&search_button);
         header.pack_end(&switcher);
@@ -310,7 +321,7 @@ impl Ui {
 
         // Week view.
         let week_header = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        let week_area = gtk::DrawingArea::new();
+        let week_area = gtk::DrawingArea::builder().focusable(true).build();
         let week_fixed = gtk::Fixed::new();
         let overlay = gtk::Overlay::new();
         overlay.set_child(Some(&week_area));
@@ -405,6 +416,7 @@ impl Ui {
             first_weekday: dates::first_weekday(),
             date: Cell::new(start),
             selected: Cell::new(start),
+            week_cursor: Cell::new(9 * 60),
             view: Cell::new(view),
             zoom: Cell::new(zoom),
             render_pending: Cell::new(false),
@@ -551,6 +563,11 @@ impl Ui {
                 return;
             };
             ui.selected.set(day);
+            // The keyboard slot cursor follows the pointer.
+            ui.week_cursor.set(minutes / keynav::SLOT * keynav::SLOT);
+            ui.week_area.grab_focus();
+            ui.update_week_cursor_label();
+            ui.week_area.queue_draw();
             ui.render_agenda();
             if n == 2 {
                 let start = day.and_time(NaiveTime::MIN) + Duration::minutes(minutes / 30 * 30);
@@ -565,6 +582,36 @@ impl Ui {
             }
         });
         self.week_fixed.parent().unwrap().add_controller(click);
+
+        // Keyboard slot cursor on the week grid.
+        let keys = gtk::EventControllerKey::new();
+        let weak = Rc::downgrade(self);
+        keys.connect_key_pressed(move |_, key, _, mods| {
+            let Some(ui) = weak.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
+            if !mods.is_empty() {
+                return glib::Propagation::Proceed;
+            }
+            ui.week_grid_key(key)
+        });
+        self.week_area.add_controller(keys);
+        let focus = gtk::EventControllerFocus::new();
+        let weak = Rc::downgrade(self);
+        focus.connect_enter(move |_| {
+            if let Some(ui) = weak.upgrade() {
+                ui.update_week_cursor_label();
+                ui.scroll_to_week_cursor();
+                ui.week_area.queue_draw();
+            }
+        });
+        let weak = Rc::downgrade(self);
+        focus.connect_leave(move |_| {
+            if let Some(ui) = weak.upgrade() {
+                ui.week_area.queue_draw();
+            }
+        });
+        self.week_area.add_controller(focus);
         let scroll = gtk::EventControllerScroll::new(gtk::EventControllerScrollFlags::VERTICAL);
         scroll.set_propagation_phase(gtk::PropagationPhase::Capture);
         let weak = Rc::downgrade(self);
@@ -1092,6 +1139,7 @@ impl Ui {
             .css_classes(["event-chip", &self.cal_class(&item.calendar)])
             .build();
         b.set_tooltip_text(Some(&self.describe(item)));
+        helix_app_common::set_accessible_label(&b, &self.item_label(item));
         let weak = Rc::downgrade(self);
         let it = item.clone();
         b.connect_clicked(move |_| {
@@ -1102,12 +1150,38 @@ impl Ui {
         b
     }
 
+    /// "Standup, Fri 13 Nov, 09:00 – 09:15, Work" for screen readers.
+    fn item_label(&self, item: &Item) -> String {
+        let when = self.describe_when(item);
+        let cal = self
+            .sources()
+            .into_iter()
+            .find(|s| s.uid == item.calendar)
+            .map(|s| s.display_name())
+            .unwrap_or_default();
+        let mut s = format!("{}, {when}", item.title());
+        if !cal.is_empty() {
+            s.push_str(&format!(", {cal}"));
+        }
+        s
+    }
+
     fn describe(&self, item: &Item) -> String {
+        let mut s = format!("{}\n{}", item.title(), self.describe_when(item));
+        if !item.location.is_empty() {
+            s.push('\n');
+            s.push_str(&item.location);
+        }
+        s
+    }
+
+    /// When an item happens, always with its date.
+    fn describe_when(&self, item: &Item) -> String {
         let twelve = self.twelve();
-        let when = if item.all_day {
+        if item.all_day {
             let last = (item.end - Duration::days(1)).date().max(item.start.date());
             if last == item.start.date() {
-                "All day".to_string()
+                format!("{}, all day", dates::short_date(item.start.date()))
             } else {
                 format!(
                     "{} – {}",
@@ -1117,7 +1191,8 @@ impl Ui {
             }
         } else if item.start.date() == item.end.date() || item.end == item.start {
             format!(
-                "{} – {}",
+                "{}, {} – {}",
+                dates::short_date(item.start.date()),
                 dates::format_time(item.start.time(), twelve),
                 dates::format_time(item.end.time(), twelve)
             )
@@ -1129,13 +1204,7 @@ impl Ui {
                 dates::short_date(item.end.date()),
                 dates::format_time(item.end.time(), twelve)
             )
-        };
-        let mut s = format!("{}\n{when}", item.title());
-        if !item.location.is_empty() {
-            s.push('\n');
-            s.push_str(&item.location);
         }
-        s
     }
 
     fn open_item(self: &Rc<Self>, item: &Item) {
@@ -1179,7 +1248,55 @@ impl Ui {
         }
     }
 
+    /// Rebuilds the month grid, keeping focus on the same day cell.
     fn render_month(self: &Rc<Self>) {
+        let month = self.month_box.clone();
+        helix_app_common::focus::rebuild_keeping_focus(&month, None, || self.render_month_grid());
+    }
+
+    /// Moves the selection (and keyboard focus) to `day` from the month or
+    /// week grid.
+    fn move_to_day(self: &Rc<Self>, day: NaiveDate, focus_week_header: bool) {
+        self.navigate_to(day);
+        let key = day.to_string();
+        if focus_week_header {
+            helix_app_common::focus::focus_key(&self.week_header, &key);
+        } else {
+            helix_app_common::focus::focus_key(&self.month_box, &key);
+        }
+    }
+
+    /// Arrow / Home / End / Page keys and Enter on a day cell (month view)
+    /// or a day header (week view).
+    fn day_key(
+        self: &Rc<Self>,
+        day: NaiveDate,
+        key: gtk::gdk::Key,
+        week: bool,
+    ) -> glib::Propagation {
+        use gtk::gdk::Key;
+        if matches!(key, Key::Return | Key::KP_Enter | Key::space) {
+            if self.selected.get() != day {
+                self.move_to_day(day, week);
+            }
+            return glib::Propagation::Stop;
+        }
+        let Some(nav) = keynav::NavKey::from_gdk(key) else {
+            return glib::Propagation::Proceed;
+        };
+        let target = if week {
+            match nav {
+                keynav::NavKey::Up | keynav::NavKey::Down => return glib::Propagation::Proceed,
+                _ => keynav::week_target(day, 0, nav).0,
+            }
+        } else {
+            keynav::month_target(day, nav, self.first_weekday)
+        };
+        self.move_to_day(target, week);
+        glib::Propagation::Stop
+    }
+
+    fn render_month_grid(self: &Rc<Self>) {
         while let Some(c) = self.month_box.first_child() {
             self.month_box.remove(&c);
         }
@@ -1193,7 +1310,13 @@ impl Ui {
             .row_homogeneous(false)
             .vexpand(true)
             .hexpand(true)
+            .accessible_role(gtk::AccessibleRole::Grid)
             .build();
+        helix_app_common::set_accessible_label(&grid, &dates::month_title(d));
+        grid.update_relation(&[
+            gtk::accessible::Relation::RowCount(weeks as i32),
+            gtk::accessible::Relation::ColCount(7),
+        ]);
         let col0 = if show_weeks { 1 } else { 0 };
         for (i, day) in days.iter().take(7).enumerate() {
             let l = label(
@@ -1212,8 +1335,18 @@ impl Ui {
             }
             for i in 0..7 {
                 let day = days[w * 7 + i];
-                let cell = gtk::Box::new(gtk::Orientation::Vertical, 0);
+                let cell = gtk::Box::builder()
+                    .orientation(gtk::Orientation::Vertical)
+                    .focusable(true)
+                    .accessible_role(gtk::AccessibleRole::GridCell)
+                    .build();
                 cell.add_css_class("day-cell");
+                helix_app_common::focus::set_key(&cell, &day.to_string());
+                cell.update_relation(&[
+                    gtk::accessible::Relation::RowIndex(w as i32 + 1),
+                    gtk::accessible::Relation::ColIndex(i as i32 + 1),
+                ]);
+                cell.update_state(&[gtk::accessible::State::Selected(Some(day == sel))]);
                 cell.set_vexpand(true);
                 cell.set_hexpand(true);
                 cell.set_overflow(gtk::Overflow::Hidden);
@@ -1230,6 +1363,23 @@ impl Ui {
                 num.set_halign(gtk::Align::End);
                 cell.append(&num);
                 let on_day: Vec<&Item> = items.iter().filter(|it| it.on_day(day)).collect();
+                let titles: Vec<&str> = on_day.iter().map(|it| it.title()).collect();
+                helix_app_common::set_accessible_label(
+                    &cell,
+                    &keynav::day_label(day, today, day == sel, &titles),
+                );
+                let keys = gtk::EventControllerKey::new();
+                let weak = Rc::downgrade(self);
+                keys.connect_key_pressed(move |_, key, _, mods| {
+                    let Some(ui) = weak.upgrade() else {
+                        return glib::Propagation::Proceed;
+                    };
+                    if !mods.is_empty() {
+                        return glib::Propagation::Proceed;
+                    }
+                    ui.day_key(day, key, false)
+                });
+                cell.add_controller(keys);
                 let limit = if on_day.len() > MONTH_CHIPS + 1 {
                     MONTH_CHIPS
                 } else {
@@ -1270,6 +1420,10 @@ impl Ui {
                             ui.render_agenda();
                         }
                     }
+                    if n == 1 {
+                        // Keyboard navigation continues from the clicked day.
+                        helix_app_common::focus::focus_key(&ui.month_box, &day.to_string());
+                    }
                 });
                 cell.add_controller(click);
                 grid.attach(&cell, i as i32 + col0, w as i32 + 1, 1, 1);
@@ -1282,7 +1436,14 @@ impl Ui {
         HOUR_PX * self.zoom.get()
     }
 
+    /// Rebuilds the week view, keeping focus on the same day header.
     fn render_week(self: &Rc<Self>) {
+        let header = self.week_header.clone();
+        helix_app_common::focus::rebuild_keeping_focus(&header, None, || self.render_week_view());
+        self.update_week_cursor_label();
+    }
+
+    fn render_week_view(self: &Rc<Self>) {
         let ws = dates::week_start(self.date.get(), self.first_weekday);
         let days: Vec<NaiveDate> = (0..7).map(|i| ws + Duration::days(i)).collect();
         let items = self.items(ws, ws + Duration::days(7));
@@ -1306,7 +1467,10 @@ impl Ui {
         let grid = gtk::Grid::builder()
             .column_homogeneous(true)
             .hexpand(true)
+            .accessible_role(gtk::AccessibleRole::Grid)
             .build();
+        helix_app_common::set_accessible_label(&grid, &self.title.label());
+        let sel = self.selected.get();
         for (i, day) in days.iter().enumerate() {
             let l = label(
                 &format!("{} {}", dates::weekday_short(day.weekday()), day.day()),
@@ -1315,6 +1479,40 @@ impl Ui {
             if *day == today {
                 l.add_css_class("today");
             }
+            // A focusable cell around the header: keyboard day navigation
+            // and the day's accessible description.
+            let cell = gtk::Box::builder()
+                .focusable(true)
+                .accessible_role(gtk::AccessibleRole::GridCell)
+                .css_classes(["week-day-cell"])
+                .build();
+            l.set_hexpand(true);
+            cell.append(&l);
+            helix_app_common::focus::set_key(&cell, &day.to_string());
+            let titles: Vec<&str> = items
+                .iter()
+                .filter(|it| it.on_day(*day))
+                .map(|it| it.title())
+                .collect();
+            helix_app_common::set_accessible_label(
+                &cell,
+                &keynav::day_label(*day, today, *day == sel, &titles),
+            );
+            cell.update_state(&[gtk::accessible::State::Selected(Some(*day == sel))]);
+            cell.update_relation(&[gtk::accessible::Relation::ColIndex(i as i32 + 1)]);
+            let keys = gtk::EventControllerKey::new();
+            let weak = Rc::downgrade(self);
+            let kd = *day;
+            keys.connect_key_pressed(move |_, key, _, mods| {
+                let Some(ui) = weak.upgrade() else {
+                    return glib::Propagation::Proceed;
+                };
+                if !mods.is_empty() {
+                    return glib::Propagation::Proceed;
+                }
+                ui.day_key(kd, key, true)
+            });
+            cell.add_controller(keys);
             let click = gtk::GestureClick::new();
             let weak = Rc::downgrade(self);
             let d = *day;
@@ -1328,7 +1526,7 @@ impl Ui {
                 }
             });
             l.add_controller(click);
-            grid.attach(&l, i as i32, 0, 1, 1);
+            grid.attach(&cell, i as i32, 0, 1, 1);
         }
         // All-day / multi-day items packed into rows.
         let mut rows_end: Vec<usize> = Vec::new();
@@ -1399,6 +1597,7 @@ impl Ui {
                 let b = gtk::Button::builder()
                     .css_classes(["week-event", &self.cal_class(&it.calendar)])
                     .build();
+                helix_app_common::set_accessible_label(&b, &self.item_label(it));
                 let text = format!(
                     "{}\n{}",
                     it.title(),
@@ -1478,6 +1677,83 @@ impl Ui {
         Some((day, minutes))
     }
 
+    /// Arrow / Home / End / Page keys move the week grid's slot cursor;
+    /// Enter creates a one-hour event at it.
+    fn week_grid_key(self: &Rc<Self>, key: gtk::gdk::Key) -> glib::Propagation {
+        use gtk::gdk::Key;
+        let day = self.selected.get();
+        let minutes = self.week_cursor.get();
+        if matches!(key, Key::Return | Key::KP_Enter | Key::space) {
+            if !self.state.borrow().unavailable {
+                let start = day.and_time(NaiveTime::MIN) + Duration::minutes(minutes);
+                editor::open(
+                    self,
+                    Target::New {
+                        start,
+                        end: start + Duration::hours(1),
+                        all_day: false,
+                    },
+                );
+            }
+            return glib::Propagation::Stop;
+        }
+        let Some(nav) = keynav::NavKey::from_gdk(key) else {
+            return glib::Propagation::Proceed;
+        };
+        let (d, m) = keynav::week_target(day, minutes, nav);
+        self.week_cursor.set(m);
+        if d != day {
+            self.navigate_to(d);
+        }
+        self.update_week_cursor_label();
+        self.scroll_to_week_cursor();
+        self.week_area.queue_draw();
+        glib::Propagation::Stop
+    }
+
+    /// The grid's accessible name describes the slot under the cursor;
+    /// moving the cursor also announces it (a name change alone is not
+    /// spoken).
+    fn update_week_cursor_label(&self) {
+        let day = self.selected.get();
+        let m = self.week_cursor.get();
+        let start = day.and_time(NaiveTime::MIN) + Duration::minutes(m);
+        let end = start + Duration::minutes(keynav::SLOT);
+        let titles: Vec<String> = self
+            .items(day, day + Duration::days(1))
+            .into_iter()
+            .filter(|i| !i.spans_days() && i.start < end && i.end > start)
+            .map(|i| i.title().to_string())
+            .collect();
+        let mut text = format!(
+            "{}, {}",
+            dates::long_date(day),
+            dates::format_time(start.time(), self.twelve())
+        );
+        if !titles.is_empty() {
+            text.push_str(&format!(", {}", titles.join(", ")));
+        }
+        helix_app_common::set_accessible_label(&self.week_area, &text);
+        if self.week_area.has_focus() {
+            helix_app_common::announce_change(
+                &self.week_area,
+                &text,
+                helix_app_common::Urgency::Polite,
+            );
+        }
+    }
+
+    fn scroll_to_week_cursor(&self) {
+        let adj = self.week_scroll.vadjustment();
+        let hh = self.hour_height();
+        let y = self.week_cursor.get() as f64 / 60.0 * hh;
+        if y < adj.value() {
+            adj.set_value(y);
+        } else if y + hh / 2.0 > adj.value() + adj.page_size() {
+            adj.set_value(y + hh / 2.0 - adj.page_size());
+        }
+    }
+
     fn draw_week(&self, area: &gtk::DrawingArea, cr: &gtk::cairo::Context, w: i32, _h: i32) {
         let fg = area.color();
         let hh = self.hour_height();
@@ -1511,6 +1787,26 @@ impl Ui {
             cr.rectangle(GUTTER as f64 + si as f64 * col_w, 0.0, col_w, hh * 24.0);
             let _ = cr.fill();
         }
+        if area.has_focus() {
+            if let Some(si) = lay.days.iter().position(|d| *d == sel) {
+                let accent = area.color();
+                let y = self.week_cursor.get() as f64 / 60.0 * hh;
+                cr.set_source_rgba(
+                    accent.red() as f64,
+                    accent.green() as f64,
+                    accent.blue() as f64,
+                    0.7,
+                );
+                cr.set_line_width(2.0);
+                cr.rectangle(
+                    GUTTER as f64 + si as f64 * col_w + 2.0,
+                    y + 1.0,
+                    col_w - 4.0,
+                    hh / 2.0 - 2.0,
+                );
+                let _ = cr.stroke();
+            }
+        }
         if let Some(di) = lay.days.iter().position(|d| *d == now.date()) {
             let y = (now.time().num_seconds_from_midnight() as f64 / 3600.0) * hh;
             let x0 = GUTTER as f64 + di as f64 * col_w;
@@ -1526,7 +1822,15 @@ impl Ui {
 
     // ----- sidebar -----
 
+    /// Rebuilds the calendar list, keeping focus on the toggled check box.
     fn render_calendar_list(self: &Rc<Self>) {
+        let list = self.cal_list.clone();
+        helix_app_common::focus::rebuild_keeping_focus(&list, None, || {
+            self.render_calendar_list_rows()
+        });
+    }
+
+    fn render_calendar_list_rows(self: &Rc<Self>) {
         while let Some(c) = self.cal_list.first_child() {
             self.cal_list.remove(&c);
         }
@@ -1559,6 +1863,9 @@ impl Ui {
                 .ellipsize(gtk::pango::EllipsizeMode::End)
                 .build();
             name.set_tooltip_text(Some(&helix_eds::source::account_label(s, &sources)));
+            helix_app_common::label_widget(&check, &name);
+            helix_app_common::focus::set_key(&row, &s.uid);
+            helix_app_common::focus::set_part(&check, "check");
             row.append(&check);
             row.append(&dot);
             row.append(&name);
@@ -1575,7 +1882,14 @@ impl Ui {
         }
     }
 
+    /// Rebuilds the agenda, keeping focus on the same event (or a
+    /// neighbour) and the scroll position.
     fn render_agenda(self: &Rc<Self>) {
+        let list = self.agenda.clone();
+        helix_app_common::focus::rebuild_keeping_focus(&list, None, || self.render_agenda_rows());
+    }
+
+    fn render_agenda_rows(self: &Rc<Self>) {
         while let Some(c) = self.agenda.first_child() {
             self.agenda.remove(&c);
         }
@@ -1602,6 +1916,7 @@ impl Ui {
                     e.summary.as_str()
                 };
                 let row = self.agenda_row(cal, title, &when);
+                helix_app_common::focus::set_key(&row, &format!("{cal}|{title}|{when}"));
                 row.set_widget_name(&format!("search:{i}"));
                 self.agenda.append(&row);
             }
@@ -1636,6 +1951,10 @@ impl Ui {
                 )
             };
             let row = self.agenda_row(&it.calendar, it.title(), &when);
+            helix_app_common::focus::set_key(
+                &row,
+                &format!("{}|{}|{when}", it.calendar, it.title()),
+            );
             row.set_widget_name(&format!("item:{i}"));
             self.agenda.append(&row);
         }
@@ -1792,7 +2111,21 @@ impl Ui {
 
 fn show_shortcuts(win: &adw::ApplicationWindow) {
     let rows = [
-        ("New event", "Ctrl+N"),
+        ("New event on the selected day", "Ctrl+N"),
+        (
+            "Move between days (month view, week day headers)",
+            "Arrows, Home, End",
+        ),
+        (
+            "Previous / next month (month view), week (week view)",
+            "Page Up / Page Down",
+        ),
+        ("Select the focused day", "Enter"),
+        (
+            "Move the week grid's time cursor",
+            "Arrows, Home, End, Page Up / Page Down",
+        ),
+        ("New event at the week grid's time cursor", "Enter"),
         ("Go to today", "Ctrl+T"),
         ("Previous", "Alt+Left"),
         ("Next", "Alt+Right"),

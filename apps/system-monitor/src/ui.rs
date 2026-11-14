@@ -2,7 +2,9 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
+use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::atomic::Ordering;
 use std::sync::{mpsc, Arc};
@@ -23,6 +25,44 @@ const PAGES: [(&str, &str, &str); 3] = [
     ("resources", "Resources", "speedometer-symbolic"),
     ("disks", "File Systems", "drive-harddisk-symbolic"),
 ];
+
+/// Strong references that keep each window's context alive.
+///
+/// Every signal handler and the sample receiver hold only a `Weak<Win>` (so
+/// the window and its context do not form a reference cycle); the one strong
+/// reference lives here from `build()` until the window is destroyed.
+struct Registry<T> {
+    items: Vec<Rc<T>>,
+}
+
+impl<T> Registry<T> {
+    const fn new() -> Self {
+        Registry { items: Vec::new() }
+    }
+
+    fn hold(&mut self, item: Rc<T>) {
+        self.items.push(item);
+    }
+
+    fn release(&mut self, item: &T) {
+        self.items.retain(|i| !std::ptr::eq(Rc::as_ptr(i), item));
+    }
+}
+
+thread_local! {
+    static WINDOWS: RefCell<Registry<Win>> = const { RefCell::new(Registry::new()) };
+}
+
+/// Keeps `win` alive until its window is destroyed.
+fn keep_alive(win: &Rc<Win>) {
+    WINDOWS.with(|r| r.borrow_mut().hold(win.clone()));
+    let w = Rc::downgrade(win);
+    win.window.connect_destroy(move |_| {
+        if let Some(w) = w.upgrade() {
+            WINDOWS.with(|r| r.borrow_mut().release(&w));
+        }
+    });
+}
 
 type WinFn = Box<dyn Fn(&Rc<Win>)>;
 type BoolFn = Box<dyn Fn(&Rc<Win>, bool)>;
@@ -91,6 +131,7 @@ pub fn run(initial_page: Option<&'static str>) -> glib::ExitCode {
         "View current processes and monitor system state",
     );
     app.connect_activate(move |app| {
+        // `build` registers the window context, so it outlives this scope.
         let win = build(app, initial_page);
         win.window.present();
     });
@@ -168,7 +209,8 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
     let search_button = gtk::ToggleButton::builder()
         .icon_name("system-search-symbolic")
         .tooltip_text("Search")
-        .build();
+        .build()
+        .labelled("Search");
     procs
         .search_bar
         .bind_property("search-mode-enabled", &search_button, "active")
@@ -196,7 +238,8 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
         .menu_model(&menu)
         .primary(true)
         .tooltip_text("Main Menu")
-        .build();
+        .build()
+        .labelled("Main Menu");
     header.pack_end(&menu_button);
 
     let toolbar = adw::ToolbarView::new();
@@ -219,6 +262,7 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
         fs,
         search_button,
     });
+    keep_alive(&win);
     install_actions(&win, whose);
     win.update_action_state();
 
@@ -256,9 +300,19 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
 
     // Receive samples from the worker thread.
     let w = Rc::downgrade(&win);
+    let window_ref = win.window.downgrade();
     glib::spawn_future_local(async move {
         while let Ok(msg) = rx.recv().await {
-            let Some(w) = w.upgrade() else { break };
+            let Some(w) = w.upgrade() else {
+                // The context may only go away together with its window;
+                // anything else means the sampler would stop while the
+                // window still shows (stale) data.
+                debug_assert!(
+                    window_ref.upgrade().is_none_or(|w| !w.is_visible()),
+                    "window context dropped while the window is open"
+                );
+                break;
+            };
             match msg {
                 Msg::Processes(p, r) => {
                     w.procs.update(p);
@@ -588,4 +642,26 @@ fn show_shortcuts(w: &Rc<Win>) {
     }
     dialog.add(&page);
     dialog.present(Some(&w.window));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The registry is the only strong owner: the context survives the
+    /// builder's reference going out of scope and is freed on release.
+    #[test]
+    fn registry_keeps_context_alive_until_released() {
+        let mut reg = Registry::new();
+        let ctx = Rc::new(5u32);
+        let weak = Rc::downgrade(&ctx);
+        reg.hold(ctx);
+        assert_eq!(weak.upgrade().as_deref(), Some(&5));
+        let other = Rc::new(6u32);
+        reg.hold(other.clone());
+        reg.release(&*weak.upgrade().unwrap());
+        assert!(weak.upgrade().is_none());
+        assert_eq!(reg.items.len(), 1);
+        assert!(Rc::ptr_eq(&reg.items[0], &other));
+    }
 }

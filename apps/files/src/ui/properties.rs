@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use std::rc::Rc;
 
 use super::Window;
@@ -136,7 +137,8 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
                 .icon_name("folder-open-symbolic")
                 .tooltip_text("Open Parent Folder")
                 .valign(gtk::Align::Center)
-                .build();
+                .build()
+                .labelled("Open Parent Folder");
             btn.add_css_class("flat");
             let w = Rc::downgrade(win);
             let f = file.clone();

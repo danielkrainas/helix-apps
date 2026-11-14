@@ -176,7 +176,7 @@ pub async fn conflict(parent: &adw::ApplicationWindow, c: &Conflict) -> Resoluti
         .heading(heading)
         .body(body)
         .extra_child(&all)
-        .default_response("replace")
+        .default_response(conflict_default_response(merge))
         .close_response("cancel")
         .build();
     dialog.add_responses(&[
@@ -203,6 +203,17 @@ pub async fn conflict(parent: &adw::ApplicationWindow, c: &Conflict) -> Resoluti
     Resolution {
         choice,
         apply_to_all: all.is_active(),
+    }
+}
+
+/// The response Enter picks in the conflict dialog. Replacing a file is
+/// destructive, so files default to Keep Both; merging two folders asks
+/// again for each conflicting file inside, so it may stay the default.
+fn conflict_default_response(merge: bool) -> &'static str {
+    if merge {
+        "replace"
+    } else {
+        "rename"
     }
 }
 
@@ -464,4 +475,16 @@ pub fn preferences(win: &Rc<Window>) {
 
     dialog.add(&page);
     dialog.present(Some(&win.window));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::conflict_default_response;
+
+    #[test]
+    fn enter_never_replaces_a_file() {
+        assert_eq!(conflict_default_response(false), "rename");
+        // Folder merge stays the default; it asks again per file.
+        assert_eq!(conflict_default_response(true), "replace");
+    }
 }

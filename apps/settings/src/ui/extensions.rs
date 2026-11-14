@@ -257,7 +257,7 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
     let id = e.id.clone();
     let switch = (!e.development()).then(|| {
         let sw = gtk::Switch::builder().valign(gtk::Align::Center).build();
-        sw.update_property(&[gtk::accessible::Property::Label(&format!("Use {}", e.name))]);
+        helix_app_common::set_accessible_label(&sw, &format!("Use {}", e.name));
         let weak = Rc::downgrade(state);
         let id = id.clone();
         sw.connect_active_notify(move |sw| {

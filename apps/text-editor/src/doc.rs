@@ -57,6 +57,7 @@ pub struct Doc {
 fn icon_button(icon: &str, tooltip: &str) -> gtk::Button {
     let b = gtk::Button::from_icon_name(icon);
     b.set_tooltip_text(Some(tooltip));
+    helix_app_common::set_accessible_label(&b, helix_app_common::a11y::name_from_tooltip(tooltip));
     b.add_css_class("flat");
     b
 }
@@ -64,6 +65,7 @@ fn icon_button(icon: &str, tooltip: &str) -> gtk::Button {
 fn option_toggle(label: &str, tooltip: &str) -> gtk::ToggleButton {
     let b = gtk::ToggleButton::with_label(label);
     b.set_tooltip_text(Some(tooltip));
+    helix_app_common::set_accessible_label(&b, helix_app_common::a11y::name_from_tooltip(tooltip));
     b.add_css_class("flat");
     b.add_css_class("find-option");
     b
@@ -123,6 +125,7 @@ impl Doc {
         let replace_toggle = gtk::ToggleButton::new();
         replace_toggle.set_icon_name("edit-find-replace-symbolic");
         replace_toggle.set_tooltip_text(Some("Replace (Ctrl+H)"));
+        helix_app_common::set_accessible_label(&replace_toggle, "Replace");
         replace_toggle.add_css_class("flat");
         let close = icon_button("window-close-symbolic", "Close (Escape)");
         let find_row = gtk::Box::new(gtk::Orientation::Horizontal, 4);
@@ -751,6 +754,9 @@ impl Doc {
             (n, Some(i)) => format!("{} of {}", i + 1, n),
             (n, None) => format!("{n} results"),
         };
+        if !text.is_empty() && text != self.find.count.text() {
+            helix_app_common::announce_settled(&self.find.count, &text);
+        }
         self.find.count.set_text(&text);
     }
 

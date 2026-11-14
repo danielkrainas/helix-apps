@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
@@ -242,7 +243,8 @@ fn build(app: &adw::Application) -> Ui {
         .icon_name("find-location-symbolic")
         .tooltip_text("Places (Ctrl+L)")
         .popover(&popover)
-        .build();
+        .build()
+        .labelled("Places");
     header.pack_start(&places_button);
 
     let menu = gio::Menu::new();
@@ -262,14 +264,16 @@ fn build(app: &adw::Application) -> Ui {
         .icon_name("open-menu-symbolic")
         .menu_model(&menu)
         .tooltip_text("Main Menu")
-        .build();
+        .build()
+        .labelled("Main Menu");
     menu_button.set_primary(true);
     header.pack_end(&menu_button);
     let refresh_button = gtk::Button::builder()
         .icon_name("view-refresh-symbolic")
         .tooltip_text("Refresh (F5)")
         .action_name("app.refresh")
-        .build();
+        .build()
+        .labelled("Refresh");
     header.pack_end(&refresh_button);
     let header_spinner = gtk::Spinner::builder().visible(false).build();
     header.pack_end(&header_spinner);
@@ -720,6 +724,11 @@ impl Ui {
                         ui.0.error_page
                             .set_description(Some(&glib::markup_escape_text(&e)));
                         ui.0.stack.set_visible_child_name("error");
+                        helix_app_common::announce(
+                            &ui.0.error_page,
+                            &format!("{}. {e}", ui.0.error_page.title()),
+                            helix_app_common::Urgency::Assertive,
+                        );
                     }
                 }
             }
@@ -807,7 +816,8 @@ impl Ui {
                 .tooltip_text("Remove")
                 .valign(gtk::Align::Center)
                 .css_classes(["flat"])
-                .build();
+                .build()
+                .labelled("Remove");
             let weak = self.weak();
             remove.connect_clicked(move |_| {
                 if let Some(ui) = Ui::upgrade(&weak) {
@@ -973,6 +983,11 @@ impl Ui {
                         ui.0.error_page
                             .set_description(Some(&glib::markup_escape_text(&e)));
                         ui.0.stack.set_visible_child_name("error");
+                        helix_app_common::announce(
+                            &ui.0.error_page,
+                            &format!("{}. {e}", ui.0.error_page.title()),
+                            helix_app_common::Urgency::Assertive,
+                        );
                     }
                 }
             }
@@ -995,7 +1010,13 @@ impl Ui {
                 text.to_lowercase()
             ));
             s.banner.set_revealed(true);
+            helix_app_common::announce_change(
+                &s.banner,
+                "Offline, showing the last forecast",
+                helix_app_common::Urgency::Polite,
+            );
         } else {
+            helix_app_common::announce_change(&s.banner, "", helix_app_common::Urgency::Polite);
             s.banner.set_revealed(false);
         }
     }
@@ -1006,6 +1027,17 @@ impl Ui {
         let Some((f, _)) = forecast.as_ref() else {
             return;
         };
+        // Refreshes (also the automatic ones) rebuild the page; keep the
+        // focused day and the scroll position.
+        let content = s.content.clone();
+        helix_app_common::focus::rebuild_keeping_focus(&content, None, || self.render_content(f));
+        drop(forecast);
+        self.update_status_texts();
+        s.stack.set_visible_child_name("weather");
+    }
+
+    fn render_content(&self, f: &Forecast) {
+        let s = &self.0;
         while let Some(child) = s.content.first_child() {
             s.content.remove(&child);
         }
@@ -1029,10 +1061,6 @@ impl Ui {
             s.content
                 .append(&daily_section(days, &local_now, &units, fg));
         }
-        drop(units);
-        drop(forecast);
-        self.update_status_texts();
-        s.stack.set_visible_child_name("weather");
     }
 }
 
@@ -1364,6 +1392,7 @@ fn daily_section(days: &[api::Day], local_now: &DateTime, units: &Units, fg: Rgb
             .child(&row)
             .activatable(false)
             .build();
+        helix_app_common::focus::set_key(&lrow, &format!("{:?}", d.date));
         list.append(&lrow);
     }
     list

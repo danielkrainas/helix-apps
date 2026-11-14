@@ -93,7 +93,7 @@ fn style_card(style: Style, label: &str) -> gtk::ToggleButton {
         .child(&bx)
         .css_classes(["flat", "style-card"])
         .build();
-    button.update_property(&[gtk::accessible::Property::Label(label)]);
+    helix_app_common::set_accessible_label(&button, label);
     button
 }
 
@@ -153,7 +153,7 @@ fn accent_group(prefs: &Prefs) -> adw::PreferencesGroup {
             .tooltip_text(*label)
             .valign(gtk::Align::Center)
             .build();
-        b.update_property(&[gtk::accessible::Property::Label(label)]);
+        helix_app_common::set_accessible_label(&b, label);
         if let Some((first, _)) = buttons.first() {
             b.set_group(Some(first));
         }
@@ -290,7 +290,7 @@ impl Background {
             .css_classes(["flat", "wallpaper-button"])
             .tooltip_text(&name)
             .build();
-        button.update_property(&[gtk::accessible::Property::Label(&name)]);
+        helix_app_common::set_accessible_label(&button, &name);
         let weak = Rc::downgrade(self);
         let wp2 = wp.clone();
         button.connect_clicked(move |_| {

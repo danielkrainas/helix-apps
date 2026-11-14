@@ -267,3 +267,7 @@ separate cache directory).
   cover (exact names/types/defaults, shipped schema has only those keys);
   only Helix-specific settings (endpoint overrides, units) stay in
   `settings.json`.
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): search results ("5 places found", "No results found"), search failures (assertive) and a found route with its distance and time.

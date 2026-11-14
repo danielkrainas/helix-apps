@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
@@ -404,7 +405,8 @@ fn build(app: &adw::Application) -> Ui {
         .menu_model(&menu)
         .primary(true)
         .tooltip_text("Main Menu")
-        .build();
+        .build()
+        .labelled("Main Menu");
     header.pack_end(&menu_button);
 
     // History.

@@ -3,6 +3,7 @@
 use adw::prelude::*;
 use adw::subclass::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use std::cell::{Cell, Ref, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
@@ -428,7 +429,8 @@ impl ProcView {
             .icon_name("document-properties-symbolic")
             .tooltip_text("Properties")
             .action_name("win.proc-properties")
-            .build();
+            .build()
+            .labelled("Properties");
         let action_bar = gtk::ActionBar::new();
         action_bar.pack_end(&end_button);
         action_bar.pack_end(&props_button);

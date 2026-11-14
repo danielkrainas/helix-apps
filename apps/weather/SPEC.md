@@ -231,3 +231,8 @@ WMO codes map to a description and a standard symbolic icon
 - **Saved locations**: Helix keeps its own `locations.json`; on first run it
   imports GNOME Weather's GWeather-serialized locations best-effort and read
   only; on failure it starts empty.
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): the forecast or location error page appearing (assertive) and the offline banner appearing.
+- Focus is kept across list rebuilds (`helix_app_common::focus`): Refreshes, including the automatic one, keep keyboard focus on the same day row and the scroll position.

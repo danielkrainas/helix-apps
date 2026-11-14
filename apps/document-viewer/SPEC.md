@@ -261,3 +261,7 @@ View PDF and other documents.
 - **Copy restrictions**: the app does not enforce the PDF "no copy"
   permission (only reports it in Properties). Enforce it?
 - **Annotation editing** (adding highlights / notes, saving): deferred.
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): the search result count when a search completes.

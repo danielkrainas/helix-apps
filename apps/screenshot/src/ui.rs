@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -253,7 +254,8 @@ impl Win {
                 .menu_model(&menu)
                 .primary(true)
                 .tooltip_text("Main Menu")
-                .build(),
+                .build()
+                .labelled("Main Menu"),
         );
 
         let modes = [
@@ -313,7 +315,8 @@ impl Win {
             .icon_name("go-previous-symbolic")
             .tooltip_text("New Screenshot")
             .action_name("win.new")
-            .build();
+            .build()
+            .labelled("New Screenshot");
         let preview_title = adw::WindowTitle::new("Screenshot", "");
         let preview_header = adw::HeaderBar::builder()
             .title_widget(&preview_title)

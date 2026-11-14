@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use helix_eds::vcard::{
     self, generic_type_index, phone_type_index, Address, Contact, Photo, StructuredName, Typed,
     GENERIC_TYPES, PHONE_TYPES,
@@ -47,7 +48,8 @@ impl TypedList {
             .tooltip_text(add_label)
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled(helix_app_common::a11y::name_from_tooltip(add_label));
         let weak = Rc::downgrade(&list);
         add.connect_clicked(move |_| {
             if let Some(l) = weak.upgrade() {
@@ -88,12 +90,14 @@ impl TypedList {
                 r.set_title(l);
             }
         });
+        let remove_label = format!("Remove {}", self.title.trim_end_matches('s'));
         let remove = gtk::Button::builder()
             .icon_name("user-trash-symbolic")
-            .tooltip_text(format!("Remove {}", self.title.trim_end_matches('s')))
+            .tooltip_text(&remove_label)
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled(&remove_label);
         row.add_suffix(&types);
         row.add_suffix(&remove);
         let weak = Rc::downgrade(self);
@@ -177,6 +181,9 @@ pub struct Editor {
     note: gtk::TextView,
     /// Address-book chooser for new contacts: (dropdown, book uids).
     pub book_choice: Option<(gtk::DropDown, Vec<String>)>,
+    /// What [`Editor::collect`] returned right after the editor was built;
+    /// the edit is unsaved while the current result differs.
+    initial: RefCell<Option<Result<Contact, String>>>,
 }
 
 fn entry(title: &str, text: &str) -> adw::EntryRow {
@@ -285,7 +292,8 @@ impl Editor {
             .tooltip_text("Add Address")
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled("Add Address");
         addr_header.set_header_suffix(Some(&add_addr));
         page.append(&addr_header);
         page.append(&address_box);
@@ -298,7 +306,8 @@ impl Editor {
             .tooltip_text("Pick Date")
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled("Pick Date");
         let calendar = gtk::Calendar::new();
         if let Some((y, m, d)) = vcard::parse_date(&contact.birthday) {
             if let Ok(dt) =
@@ -370,10 +379,12 @@ impl Editor {
             birthday,
             note,
             book_choice,
+            initial: RefCell::default(),
         });
         for a in &contact.addresses {
             ed.add_address(a);
         }
+        *ed.initial.borrow_mut() = Some(ed.collect());
         let weak = Rc::downgrade(&ed);
         add_addr.connect_clicked(move |_| {
             if let Some(e) = weak.upgrade() {
@@ -433,7 +444,8 @@ impl Editor {
             .tooltip_text("Remove Address")
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled("Remove Address");
         let suffix = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         suffix.append(&types);
         suffix.append(&remove);
@@ -544,6 +556,11 @@ impl Editor {
         Ok(c)
     }
 
+    /// Whether the fields differ from what the editor started with.
+    pub fn is_dirty(&self) -> bool {
+        has_changes(self.initial.borrow().as_ref(), &self.collect())
+    }
+
     pub fn chosen_book(&self) -> Option<String> {
         self.book_choice
             .as_ref()
@@ -553,6 +570,13 @@ impl Editor {
     pub fn focus_first(&self) {
         self.given.grab_focus();
     }
+}
+
+/// Whether `now` differs from the snapshot taken when editing started.
+/// Comparing the collected contacts (rather than tracking edits) means that
+/// typing and then undoing a change leaves the editor clean.
+fn has_changes(initial: Option<&Result<Contact, String>>, now: &Result<Contact, String>) -> bool {
+    initial != Some(now)
 }
 
 /// Loads image bytes into an avatar; returns false if they are not an image.
@@ -579,4 +603,29 @@ fn mime_for(path: &std::path::Path) -> Option<String> {
         }
         .to_string(),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unchanged_edit_is_clean() {
+        let c = Contact {
+            nickname: "Bo".into(),
+            ..Contact::default()
+        };
+        let start: Result<Contact, String> = Ok(c.clone());
+        assert!(!has_changes(Some(&start), &Ok(c.clone())));
+        let edited = Contact {
+            nickname: "Bob".into(),
+            ..c
+        };
+        assert!(has_changes(Some(&start), &Ok(edited)));
+        // An invalid field is a change too (the user typed something).
+        assert!(has_changes(Some(&start), &Err("bad birthday".into())));
+        // An empty new contact stays clean until something is entered.
+        let empty: Result<Contact, String> = Err("empty".into());
+        assert!(!has_changes(Some(&empty), &Err("empty".into())));
+    }
 }

@@ -93,6 +93,55 @@ the app's colour and a white symbol with a soft shadow, drawn from plain
 shapes so they stay legible at 24 pixels. They are generated: edit
 `tools/icons/make_icons.py` and run `python3 tools/icons/make_icons.py`.
 
+## Symbolic icons
+
+Apps only use symbolic icon names that exist on a stock system: the
+Adwaita icon theme (Helix's default), hicolor, or Helix's own set. Helix
+draws its own 16 px symbolics for what Adwaita lacks (globe, stopwatch,
+timer, speedometer, QR code, crop, synchronizing) in
+`crates/helix-app-common/icons/scalable/actions/`; they are compiled
+into a GResource at build time (needs `glib-compile-resources`) and added
+to the icon theme by `install_standard_actions` at startup, so a theme
+that has its own icon of the same name still wins. They are plain filled
+shapes in `#2e3436` so GTK can recolour them. The `icon_names` test of
+`helix-app-common` fails when any `"…-symbolic"` literal in an app
+resolves to none of these. Notification icons are drawn by the shell,
+which cannot see the bundled set, so they use Adwaita names only.
+
+## Accessibility
+
+Shared helpers live in `helix_app_common::a11y`.
+
+- **Every button has an accessible name.** A tooltip is only the
+  accessible *description*, so icon-only buttons are built with
+  `icon_button` / `icon_toggle_button` / `icon_menu_button`, or get
+  `.labelled("…")` / `set_accessible_label` after their builder. Names
+  are short and leave out keyboard shortcuts (`name_from_tooltip` strips
+  a trailing "(Ctrl+F)"); buttons whose meaning follows a state (Play /
+  Pause) change icon, tooltip and name together with
+  `set_icon_and_label`. Toggle buttons keep one name and expose their
+  state as "pressed". Controls outside an `Adw*Row` that sit next to a
+  visible label are tied to it with `label_widget`.
+- **Status changes are announced.** Changes shown without focus moving
+  (search result counts, long operations finishing, playback and
+  loading errors, timers going off, new tracks) are spoken with
+  `announce` (polite for results, assertive only for failures and
+  alarms), `announce_change` (only when the text differs from the last
+  one for that widget) or `announce_settled` (after typing pauses, for
+  search counts). Announce outcomes, not every progress tick; repeats
+  within two seconds are dropped. Toasts and dialogs need nothing extra.
+- **Rebuilt lists keep focus.** Lists rebuilt after a change tag rows
+  with a stable key and focusable controls with a part name
+  (`helix_app_common::focus::set_key` / `set_part`) and rebuild inside
+  `rebuild_keeping_focus`: focus returns to the same control of the same
+  row (or a neighbour after a removal) and the scroll position is kept;
+  background refreshes never move focus. `remove_row_keeping_focus`
+  does the same for a single removed `ListBox` row.
+- **Checking.** Run any app with `HELIX_A11Y_CHECK=1` to list, on
+  standard error, every visible button without an accessible name (the
+  window is re-checked every two seconds; each problem is printed once)
+  and every announcement made.
+
 ## License
 
 CC0-1.0 (same as the rest of Helix).

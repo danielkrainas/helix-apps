@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib, pango};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
@@ -154,6 +155,7 @@ fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .tooltip_text(tooltip)
         .action_name(action)
         .build()
+        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
 }
 
 fn node_tree(vols: &[Volume]) -> Vec<Node> {
@@ -250,7 +252,8 @@ impl Ui {
             .menu_model(&menu)
             .primary(true)
             .tooltip_text("Main Menu")
-            .build();
+            .build()
+            .labelled("Main Menu");
         let sidebar_header = adw::HeaderBar::new();
         sidebar_header.pack_start(&icon_button(
             "list-add-symbolic",
@@ -305,7 +308,8 @@ impl Ui {
             .icon_name("view-more-symbolic")
             .menu_model(&drive_menu)
             .tooltip_text("Drive Options")
-            .build();
+            .build()
+            .labelled("Drive Options");
         let eject_btn = icon_button("media-eject-symbolic", "Eject", "win.eject");
         let power_btn = icon_button("system-shutdown-symbolic", "Power Off", "win.power-off");
         let detach_btn = icon_button("window-close-symbolic", "Detach Loop Device", "win.detach");
@@ -353,7 +357,7 @@ impl Ui {
             .hexpand(true)
             .focusable(true)
             .build();
-        bar.update_property(&[gtk::accessible::Property::Label("Volumes")]);
+        helix_app_common::set_accessible_label(&bar, "Volumes");
         let mount_btn = icon_button("media-playback-start-symbolic", "Mount", "win.mount");
         let lock_btn = icon_button("changes-allow-symbolic", "Unlock", "win.lock");
         let add_btn = icon_button(
@@ -390,7 +394,8 @@ impl Ui {
             .icon_name("emblem-system-symbolic")
             .menu_model(&vol_menu)
             .tooltip_text("Additional Partition Options")
-            .build();
+            .build()
+            .labelled("Additional Partition Options");
         let toolbar = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         for b in [&mount_btn, &lock_btn, &add_btn, &remove_btn] {
             b.add_css_class("flat");
@@ -949,6 +954,10 @@ impl Ui {
                 (false, true) => "Unmount",
                 (false, false) => "Mount",
             }));
+        helix_app_common::set_accessible_label(
+            &self.mount_btn,
+            &self.mount_btn.tooltip_text().unwrap_or_default(),
+        );
         let encrypted = v.is_some_and(|v| v.encrypted.is_some());
         let unlocked = v.is_some_and(|v| v.is_unlocked());
         en("lock", encrypted);
@@ -960,6 +969,10 @@ impl Ui {
         });
         self.lock_btn
             .set_tooltip_text(Some(if unlocked { "Lock" } else { "Unlock…" }));
+        helix_app_common::set_accessible_label(
+            &self.lock_btn,
+            &self.lock_btn.tooltip_text().unwrap_or_default(),
+        );
         let free = v.is_some_and(|v| v.is_free());
         en("create-partition", free && writable);
         self.add_btn.set_visible(free);

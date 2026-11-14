@@ -9,6 +9,7 @@ use crate::settings::{self, gnome, Services, SystemConfig, UserSettings};
 use crate::tiles::{self, TileSource};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use shumate::prelude::*;
 use std::cell::{Cell, RefCell};
@@ -141,6 +142,7 @@ fn icon_button(icon: &str, tooltip: &str) -> gtk::Button {
         .icon_name(icon)
         .tooltip_text(tooltip)
         .build()
+        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
 }
 
 fn dim_label(text: &str) -> gtk::Label {
@@ -216,6 +218,8 @@ impl Ui {
             .vexpand(true)
             .hexpand(true)
             .build();
+        // libshumate's zoom buttons only carry tooltips.
+        helix_app_common::a11y::name_buttons_from_tooltips(&simple_map);
         let map = simple_map.map().expect("simple map has a map");
         let viewport = simple_map.viewport().expect("simple map has a viewport");
         let route_layer = shumate::PathLayer::builder()
@@ -292,7 +296,8 @@ impl Ui {
             .menu_model(&menu_model)
             .primary(true)
             .tooltip_text("Main Menu")
-            .build();
+            .build()
+            .labelled("Main Menu");
         header.pack_end(&menu_button);
 
         let favorites_list = gtk::ListBox::builder()
@@ -311,7 +316,8 @@ impl Ui {
             .icon_name("starred-symbolic")
             .popover(&fav_popover)
             .tooltip_text("Favorites")
-            .build();
+            .build()
+            .labelled("Favorites");
         header.pack_end(&fav_button);
         let directions_button = icon_button("go-jump-symbolic", "Directions (Ctrl+D)");
         directions_button.set_action_name(Some("win.directions"));
@@ -961,8 +967,18 @@ impl Ui {
     fn show_results(&self, places: Vec<Place>) {
         if places.is_empty() {
             self.show_results_message("No results found");
+            helix_app_common::announce(
+                &self.0.window,
+                "No results found",
+                helix_app_common::Urgency::Polite,
+            );
             return;
         }
+        let found = match places.len() {
+            1 => "1 place found".to_string(),
+            n => format!("{n} places found"),
+        };
+        helix_app_common::announce(&self.0.window, &found, helix_app_common::Urgency::Polite);
         self.0.results_list.remove_all();
         for p in &places {
             let row = adw::ActionRow::builder()
@@ -1059,6 +1075,10 @@ impl Ui {
         } else {
             "Add to Favorites"
         }));
+        helix_app_common::set_accessible_label(
+            &page.favorite,
+            &page.favorite.tooltip_text().unwrap_or_default(),
+        );
     }
 
     fn whats_here(&self, p: LatLon) {
@@ -1331,6 +1351,11 @@ impl Ui {
             geo::format_duration(route.duration)
         ));
         page.summary.set_visible(true);
+        helix_app_common::announce(
+            &page.summary,
+            &format!("Route found: {}", page.summary.label()),
+            helix_app_common::Urgency::Polite,
+        );
         for s in &route.steps {
             let row = adw::ActionRow::builder()
                 .title(glib::markup_escape_text(&s.instruction).as_str())
@@ -1357,7 +1382,14 @@ impl Ui {
                 }
                 match result {
                     Ok(places) => self.show_results(places),
-                    Err(e) => self.show_results_message(&e),
+                    Err(e) => {
+                        self.show_results_message(&e);
+                        helix_app_common::announce(
+                            &self.0.window,
+                            &format!("Search failed: {e}"),
+                            helix_app_common::Urgency::Assertive,
+                        );
+                    }
                 }
             }
             Reply::Reverse { id, at, result } => {
@@ -1745,11 +1777,7 @@ fn build_place_page() -> (gtk::Widget, PlacePage) {
     buttons.append(&favorite);
     for (icon, tip, action) in [
         ("edit-copy-symbolic", "Copy Location", "win.place-copy"),
-        (
-            "emblem-shared-symbolic",
-            "Share Location Link",
-            "win.place-share",
-        ),
+        ("send-to-symbolic", "Share Location Link", "win.place-share"),
         (
             "web-browser-symbolic",
             "Open in OpenStreetMap",

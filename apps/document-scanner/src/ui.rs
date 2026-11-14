@@ -10,6 +10,7 @@ use crate::scanner::{Capabilities, Cmd, Event, PageSide, ScanKind, ScanRequest, 
 use crate::settings::{ColorChoice, Private};
 use adw::prelude::*;
 use gtk::{cairo, gdk, gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
@@ -225,6 +226,7 @@ fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .tooltip_text(tooltip)
         .action_name(action)
         .build()
+        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
 }
 
 impl Win {
@@ -263,7 +265,8 @@ impl Win {
             .menu_model(&main_menu())
             .primary(true)
             .tooltip_text("Main Menu")
-            .build();
+            .build()
+            .labelled("Main Menu");
         header.pack_end(&menu_button);
         header.pack_end(&icon_button("document-save-symbolic", "Save", "win.save"));
 
@@ -302,7 +305,7 @@ impl Win {
             .model(&device_list)
             .halign(gtk::Align::Center)
             .build();
-        device_drop.update_property(&[gtk::accessible::Property::Label("Scanner")]);
+        helix_app_common::set_accessible_label(&device_drop, "Scanner");
         let big_scan = gtk::Button::builder()
             .label("_Scan")
             .use_underline(true)
@@ -388,7 +391,8 @@ impl Win {
             .tooltip_text("Crop")
             .menu_model(&crop_menu())
             .direction(gtk::ArrowType::Up)
-            .build();
+            .build()
+            .labelled("Crop");
         action_bar.pack_start(&crop_button);
         action_bar.pack_start(&icon_button(
             "go-previous-symbolic",
@@ -1449,7 +1453,7 @@ impl Win {
         scale.set_valign(gtk::Align::Center);
         scale.set_draw_value(true);
         scale.set_digits(0);
-        scale.update_property(&[gtk::accessible::Property::Label(title)]);
+        helix_app_common::set_accessible_label(&scale, title);
         let w = self.weak();
         scale.connect_value_changed(move |s| {
             if let Some(w) = w.upgrade() {
@@ -1644,7 +1648,8 @@ impl Win {
             .tooltip_text("Choose Script…")
             .valign(gtk::Align::Center)
             .css_classes(["flat"])
-            .build();
+            .build()
+            .labelled("Choose Script…");
         script.add_suffix(&pick);
         let w = self.weak();
         script.connect_apply(move |e| {

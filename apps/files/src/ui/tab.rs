@@ -1123,6 +1123,20 @@ impl Tab {
                     }
                     None => {
                         t.searching.set(false);
+                        let n = t.search_store.n_items();
+                        let found = if n == 0 {
+                            "No results".to_string()
+                        } else {
+                            format!(
+                                "Search finished: {} found",
+                                crate::fmt::item_count(n as u64)
+                            )
+                        };
+                        helix_app_common::announce(
+                            &t.root,
+                            &found,
+                            helix_app_common::Urgency::Polite,
+                        );
                         t.update_status();
                         t.notify_window();
                         return;

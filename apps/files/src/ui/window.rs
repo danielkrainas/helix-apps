@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
@@ -145,17 +146,20 @@ impl Window {
         let sidebar_btn = gtk::ToggleButton::builder()
             .icon_name("sidebar-show-symbolic")
             .tooltip_text("Show Sidebar")
-            .build();
+            .build()
+            .labelled("Show Sidebar");
         let back_btn = gtk::Button::builder()
             .icon_name("go-previous-symbolic")
             .tooltip_text("Back")
             .action_name("win.back")
-            .build();
+            .build()
+            .labelled("Back");
         let forward_btn = gtk::Button::builder()
             .icon_name("go-next-symbolic")
             .tooltip_text("Forward")
             .action_name("win.forward")
-            .build();
+            .build()
+            .labelled("Forward");
         header.pack_start(&sidebar_btn);
         header.pack_start(&back_btn);
         header.pack_start(&forward_btn);
@@ -200,7 +204,8 @@ impl Window {
             .menu_model(&main_menu)
             .tooltip_text("Main Menu")
             .primary(true)
-            .build();
+            .build()
+            .labelled("Main Menu");
         header.pack_end(&menu_btn);
 
         let view_menu = gio::Menu::new();
@@ -224,7 +229,8 @@ impl Window {
             .icon_name("view-sort-descending-symbolic")
             .menu_model(&view_menu)
             .tooltip_text("View Options")
-            .build();
+            .build()
+            .labelled("View Options");
         header.pack_end(&view_menu_btn);
         let view_btn = gtk::Button::builder()
             .action_name("win.toggle-view")
@@ -233,7 +239,8 @@ impl Window {
         let search_btn = gtk::ToggleButton::builder()
             .icon_name("system-search-symbolic")
             .tooltip_text("Search")
-            .build();
+            .build()
+            .labelled("Search");
         header.pack_end(&search_btn);
 
         let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
@@ -248,7 +255,8 @@ impl Window {
             .popover(&jobs_popover)
             .tooltip_text("File Operations")
             .visible(false)
-            .build();
+            .build()
+            .labelled("File Operations");
         header.pack_end(&jobs_button);
 
         // ----- search bar -----
@@ -698,9 +706,11 @@ impl Window {
         if s.list_view {
             self.view_btn.set_icon_name("view-grid-symbolic");
             self.view_btn.set_tooltip_text(Some("Grid View"));
+            helix_app_common::set_accessible_label(&self.view_btn, "Grid View");
         } else {
             self.view_btn.set_icon_name("view-list-symbolic");
             self.view_btn.set_tooltip_text(Some("List View"));
+            helix_app_common::set_accessible_label(&self.view_btn, "List View");
         }
         if s.location_entry {
             self.show_location_entry(false);

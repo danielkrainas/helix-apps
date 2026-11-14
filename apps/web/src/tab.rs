@@ -427,6 +427,11 @@ impl Tab {
             ));
             t.tls_pending.replace(Some((cert.clone(), host_only, uri.to_string())));
             t.tls_revealer.set_reveal_child(true);
+            helix_app_common::announce(
+                &t.tls_label,
+                &t.tls_label.text(),
+                helix_app_common::Urgency::Assertive,
+            );
             t.security.set(Security::Broken);
             t.changed(Change::Uri);
             false

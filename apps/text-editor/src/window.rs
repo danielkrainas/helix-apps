@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use std::cell::Cell;
 use std::rc::{Rc, Weak};
 
@@ -166,6 +167,7 @@ impl Window {
         let new_tab_btn = gtk::Button::from_icon_name("tab-new-symbolic");
         new_tab_btn.set_action_name(Some("win.new-tab"));
         new_tab_btn.set_tooltip_text(Some("New Tab (Ctrl+T)"));
+        helix_app_common::set_accessible_label(&new_tab_btn, "New Tab");
         let save_btn = gtk::Button::with_mnemonic("_Save");
         save_btn.set_action_name(Some("win.save"));
         save_btn.set_tooltip_text(Some("Save (Ctrl+S)"));
@@ -174,7 +176,8 @@ impl Window {
             .menu_model(&primary_menu())
             .primary(true)
             .tooltip_text("Main Menu")
-            .build();
+            .build()
+            .labelled("Main Menu");
         let title = adw::WindowTitle::new("Text Editor", "");
         let header = adw::HeaderBar::new();
         header.pack_start(&open_btn);

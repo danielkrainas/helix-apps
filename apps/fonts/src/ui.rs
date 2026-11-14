@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib, pango};
+use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -111,6 +112,7 @@ fn main_menu() -> gtk::MenuButton {
         .tooltip_text("Main Menu")
         .primary(true)
         .build()
+        .labelled("Main Menu")
 }
 
 fn new_window(app: &adw::Application, file: Option<PathBuf>) -> Rc<Win> {
@@ -268,12 +270,14 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
     let search_btn = gtk::ToggleButton::builder()
         .icon_name("system-search-symbolic")
         .tooltip_text("Search")
-        .build();
+        .build()
+        .labelled("Search");
     let open_btn = gtk::Button::builder()
         .icon_name("document-open-symbolic")
         .tooltip_text("Open Font File")
         .action_name("win.open")
-        .build();
+        .build()
+        .labelled("Open Font File");
     header.pack_start(&open_btn);
     header.pack_end(&main_menu());
     header.pack_end(&search_btn);
@@ -551,7 +555,8 @@ fn font_page(
             .icon_name("document-open-symbolic")
             .tooltip_text("Open Font File")
             .action_name("win.open")
-            .build();
+            .build()
+            .labelled("Open Font File");
         header.pack_start(&open_btn);
     }
     header.pack_end(&main_menu());

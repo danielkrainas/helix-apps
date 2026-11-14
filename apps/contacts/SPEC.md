@@ -82,6 +82,13 @@ Manage contacts.
   Work, Home Fax, Work Fax, Pager, Other; others: Personal, Work, Other) and
   a remove button, plus *Add* buttons; birthday (date entry `YYYY-MM-DD`
   or `--MM-DD` with a calendar popover); notes (multi-line).
+- Leaving the editor any other way than *Done* / *Cancel* — `Escape`
+  (also while typing in a field), selecting another contact, or *New
+  Contact* (`Ctrl+N`) — first checks for unsaved changes. Without changes
+  the editor simply closes; with changes a "Discard Changes?" alert asks
+  first (*Keep Editing* is the default and the Escape response, *Discard*
+  is destructive). Changes are detected by comparing the editor's current
+  contents with what it started with.
 - *Done* saves (`ModifyContacts`), *Cancel* discards. Unknown vCard
   properties (custom fields, other apps' extensions) are preserved.
 - `X-EVOLUTION-FILE-AS` is filled ("Last, First") because EDS requires it.
@@ -205,3 +212,8 @@ quit, `Ctrl+W` close window, `Ctrl+?` shortcuts.
 - GNOME links: read folks' link data (EDS `X-FOLKS-*` attributes and
   `relationships.ini`) read-only and merge it with Helix's `links.json`;
   Helix-made links stay in `links.json` only.
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): the number of contacts matching a search once typing pauses.
+- Focus is kept across list rebuilds (`helix_app_common::focus`): Rebuilding the contact list (selection-mode toggles, search, address-book changes) keeps keyboard focus on the same contact and the scroll position.

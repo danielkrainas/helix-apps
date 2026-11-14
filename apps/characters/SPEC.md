@@ -151,3 +151,7 @@ schema does not have; the glyphs use the theme font).
 - GSettings: use the real `org.gnome.Characters` keys only
   (`recent-characters`, `max-recent-characters`); window size stays
   app-private because the schema has no geometry keys.
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): the number of characters found by a search once typing pauses.

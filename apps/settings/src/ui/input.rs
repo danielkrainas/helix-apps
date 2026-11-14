@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::glib;
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::Cell;
 use std::rc::Rc;
@@ -291,7 +292,15 @@ impl SourcesUi {
         self.rebuild();
     }
 
+    /// Rebuilds the rows, keeping keyboard focus on the moved source's
+    /// button (so repeated Move Up/Down presses keep moving it), on a
+    /// neighbour after Remove, and the scroll position.
     fn rebuild(self: &Rc<Self>) {
+        let group = self.group.clone();
+        helix_app_common::focus::rebuild_keeping_focus(&group, None, || self.rebuild_rows());
+    }
+
+    fn rebuild_rows(self: &Rc<Self>) {
         for r in self.rows.borrow_mut().drain(..) {
             self.group.remove(&r);
         }
@@ -313,6 +322,7 @@ impl SourcesUi {
             if kind == "xkb" {
                 row.set_subtitle(id);
             }
+            helix_app_common::focus::set_key(&row, &format!("{kind}:{id}"));
             for (icon, tip, delta, enabled) in [
                 ("go-up-symbolic", "Move Up", -1isize, i > 0),
                 ("go-down-symbolic", "Move Down", 1, i + 1 < n),
@@ -323,7 +333,9 @@ impl SourcesUi {
                     .valign(gtk::Align::Center)
                     .css_classes(["flat"])
                     .sensitive(enabled)
-                    .build();
+                    .build()
+                    .labelled(helix_app_common::a11y::name_from_tooltip(tip));
+                helix_app_common::focus::set_part(&b, tip);
                 let weak = Rc::downgrade(self);
                 b.connect_clicked(move |_| {
                     if let Some(this) = weak.upgrade() {
@@ -340,7 +352,9 @@ impl SourcesUi {
                 .tooltip_text("Remove")
                 .valign(gtk::Align::Center)
                 .css_classes(["flat"])
-                .build();
+                .build()
+                .labelled("Remove");
+            helix_app_common::focus::set_part(&rm, "remove");
             let weak = Rc::downgrade(self);
             rm.connect_clicked(move |_| {
                 if let Some(this) = weak.upgrade() {

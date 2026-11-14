@@ -6,6 +6,14 @@
 //! [`Prefs`], which falls back to in-memory defaults when the schema is
 //! missing instead of aborting the way `gio::Settings::new` does.
 
+pub mod a11y;
+pub mod focus;
+
+pub use a11y::{
+    announce, announce_change, announce_settled, icon_button, icon_menu_button, icon_toggle_button,
+    label_widget, set_accessible_label, set_icon_and_label, Labelled, Urgency,
+};
+
 use gio::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -174,7 +182,47 @@ pub fn show_about(parent: &impl IsA<gtk::Widget>, app_name: &str, app_id: &str, 
     about.present(Some(parent));
 }
 
-/// Registers `app.quit` (Ctrl+Q) and `app.about` on `app`.
+/// Resource path of Helix's own symbolic icons (`icons/` in this crate),
+/// for icons the Adwaita theme does not ship.
+pub const ICON_RESOURCE_PATH: &str = "/org/helix/Apps/icons";
+
+/// Names of the icons bundled under [`ICON_RESOURCE_PATH`].
+pub fn bundled_icon_names() -> Vec<String> {
+    gio::resources_enumerate_children(
+        &format!("{ICON_RESOURCE_PATH}/scalable/actions"),
+        gio::ResourceLookupFlags::NONE,
+    )
+    .map(|v| {
+        v.iter()
+            .filter_map(|n| n.strip_suffix(".svg").map(str::to_string))
+            .collect()
+    })
+    .unwrap_or_default()
+}
+
+/// Registers the bundled icon resource with GIO (idempotent).
+pub fn register_icon_resource() {
+    use std::sync::Once;
+    static ONCE: Once = Once::new();
+    ONCE.call_once(|| {
+        let data =
+            glib::Bytes::from_static(include_bytes!(concat!(env!("OUT_DIR"), "/icons.gresource")));
+        let resource = gio::Resource::from_data(&data).expect("bundled icon resource");
+        gio::resources_register(&resource);
+    });
+}
+
+/// Makes Helix's bundled symbolic icons available to the default display's
+/// icon theme. Called at startup by [`install_standard_actions`].
+pub fn register_icons() {
+    register_icon_resource();
+    if let Some(display) = gtk::gdk::Display::default() {
+        gtk::IconTheme::for_display(&display).add_resource_path(ICON_RESOURCE_PATH);
+    }
+}
+
+/// Registers `app.quit` (Ctrl+Q) and `app.about` on `app`, and Helix's
+/// bundled icons at startup.
 pub fn install_standard_actions(
     app: &adw::Application,
     app_name: &'static str,
@@ -196,6 +244,8 @@ pub fn install_standard_actions(
         })
         .build();
     app.add_action_entries([quit, about]);
+    a11y::install_check(app);
+    app.connect_startup(|_| register_icons());
     app.set_accels_for_action("app.quit", &["<Control>q"]);
     app.set_accels_for_action("window.close", &["<Control>w"]);
 }

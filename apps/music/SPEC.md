@@ -325,3 +325,6 @@ closes the window the same way (saving window state).
   worker thread with a timeout and import once; fall back to Helix's own
   store when it is absent (see *Import from GNOME Music*).
 
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): the track that starts playing ("Now playing: Title by Artist"), once per track; playback errors show a toast.

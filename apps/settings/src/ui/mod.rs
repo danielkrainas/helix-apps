@@ -14,6 +14,7 @@ mod widgets;
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -131,7 +132,8 @@ impl Window {
         let search_button = gtk::ToggleButton::builder()
             .icon_name("system-search-symbolic")
             .tooltip_text("Search")
-            .build();
+            .build()
+            .labelled("Search");
         search_button
             .bind_property("active", &search_bar, "search-mode-enabled")
             .bidirectional()
@@ -144,7 +146,8 @@ impl Window {
             .menu_model(&menu)
             .primary(true)
             .tooltip_text("Main Menu")
-            .build();
+            .build()
+            .labelled("Main Menu");
         let header = adw::HeaderBar::new();
         header.pack_start(&search_button);
         header.pack_end(&menu_button);
@@ -276,7 +279,7 @@ impl Window {
         bx.append(&labels);
         let row = gtk::ListBoxRow::builder().child(&bx).build();
         row.set_widget_name(p.name);
-        row.update_property(&[gtk::accessible::Property::Label(p.title)]);
+        helix_app_common::set_accessible_label(&row, p.title);
         row
     }
 

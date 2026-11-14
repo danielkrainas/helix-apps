@@ -4,6 +4,7 @@ mod backend;
 mod colors;
 mod dates;
 mod editor;
+mod keynav;
 mod layout;
 mod manage;
 mod model;

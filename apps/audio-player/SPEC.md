@@ -154,3 +154,7 @@ against the CWD) and starts playing. `--help`, `--version`.
 ## Decisions
 - No queue or playlist: the app stays a single-file player (the stub's
   "playlist or queue" is intentionally not implemented).
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): the "Unable to play file" error page appearing (assertive).

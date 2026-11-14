@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use std::rc::Rc;
 use webkit6::prelude::*;
 
@@ -180,7 +181,8 @@ pub fn show_preferences(app: &Rc<App>) {
                         .icon_name("user-trash-symbolic")
                         .tooltip_text("Remove")
                         .valign(gtk::Align::Center)
-                        .build();
+                        .build()
+                        .labelled("Remove");
                     del.add_css_class("flat");
                     let name = e.name.clone();
                     let weak = Rc::downgrade(&app);
@@ -497,7 +499,9 @@ pub fn show_history(app: &Rc<App>) {
                     .icon_name("edit-delete-symbolic")
                     .tooltip_text("Remove")
                     .valign(gtk::Align::Center)
-                    .build();
+                    .build()
+                    .labelled(&format!("Remove {title}"));
+                helix_app_common::focus::set_part(&del, "remove");
                 del.add_css_class("flat");
                 row_box.append(&del);
                 let row = gtk::ListBoxRow::builder()
@@ -508,13 +512,20 @@ pub fn show_history(app: &Rc<App>) {
                 let url = e.url.clone();
                 let r = row.clone();
                 let l = list.clone();
+                let search = search.clone();
                 del.connect_clicked(move |_| {
                     if let Some(app) = weak.upgrade() {
                         if app.history.borrow_mut().remove(&url) {
                             app.schedule_save(crate::app::Saved::History);
                         }
                     }
-                    l.remove(&r);
+                    // Keep focus on the next entry's Remove button.
+                    helix_app_common::focus::remove_row_keeping_focus(
+                        &l,
+                        &r,
+                        Some("remove"),
+                        Some(search.upcast_ref()),
+                    );
                 });
                 list.append(&row);
             }
@@ -710,7 +721,8 @@ fn load_passwords(group: adw::PreferencesGroup, stack: gtk::Stack, status: adw::
                 .icon_name("user-trash-symbolic")
                 .tooltip_text("Remove")
                 .valign(gtk::Align::Center)
-                .build();
+                .build()
+                .labelled("Remove");
             del.add_css_class("flat");
             let (g, r2) = (group.clone(), row.clone());
             del.connect_clicked(move |b| {
@@ -853,7 +865,8 @@ fn fill_allowed_sites(list: &gtk::ListBox, app: &Rc<App>) {
             .icon_name("user-trash-symbolic")
             .tooltip_text("Remove")
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled("Remove");
         del.add_css_class("flat");
         let weak = Rc::downgrade(app);
         let list2 = list.clone();

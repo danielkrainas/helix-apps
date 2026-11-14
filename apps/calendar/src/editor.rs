@@ -3,6 +3,7 @@
 use adw::prelude::*;
 use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
 use gtk::glib;
+use helix_app_common::Labelled;
 use helix_eds::ical::{Alarm, Event, Time};
 use helix_eds::ModType;
 use std::cell::{Cell, RefCell};
@@ -222,7 +223,8 @@ impl Form {
             .tooltip_text("Remove Reminder")
             .css_classes(["flat", "circular"])
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled("Remove Reminder");
         row.add_suffix(&remove);
         self.alarm_group.add(&row);
         self.alarms.borrow_mut().push(alarm);
@@ -461,7 +463,8 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         .tooltip_text("Add Reminder")
         .css_classes(["flat"])
         .valign(gtk::Align::Center)
-        .build();
+        .build()
+        .labelled("Add Reminder");
     alarm_group.set_header_suffix(Some(&add_alarm));
     page.add(&alarm_group);
 

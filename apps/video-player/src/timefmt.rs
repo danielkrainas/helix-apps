@@ -34,6 +34,17 @@ pub fn remaining(pos: f64, duration: Option<f64>) -> String {
     }
 }
 
+/// Accessible value of the seek bar, e.g. `1:23 of 45:00`.
+pub fn position_text(pos: f64, duration: Option<f64>) -> String {
+    match duration {
+        Some(d) if d.is_finite() && d > 0.0 => {
+            let long = d >= 3600.0;
+            format!("{} of {}", format_secs(pos, long), format_secs(d, long))
+        }
+        _ => format_secs(pos, false),
+    }
+}
+
 /// File-name friendly timestamp, e.g. `0-01-05` for 65 s.
 pub fn file_stamp(secs: f64) -> String {
     format_secs(secs, true).replace(':', "-")
@@ -42,6 +53,13 @@ pub fn file_stamp(secs: f64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn seek_value_text() {
+        assert_eq!(position_text(83.0, Some(2700.0)), "1:23 of 45:00");
+        assert_eq!(position_text(5.0, Some(3700.0)), "0:00:05 of 1:01:40");
+        assert_eq!(position_text(5.0, None), "0:05");
+    }
 
     #[test]
     fn short_and_long() {

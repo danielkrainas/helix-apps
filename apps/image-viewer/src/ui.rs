@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -298,12 +299,14 @@ impl Viewer {
             .menu_model(&menu)
             .primary(true)
             .tooltip_text("Main Menu")
-            .build();
+            .build()
+            .labelled("Main Menu");
         header.pack_end(&menu_btn);
         let props_btn = gtk::ToggleButton::builder()
             .icon_name("dialog-information-symbolic")
             .tooltip_text("Image Properties (F9)")
-            .build();
+            .build()
+            .labelled("Image Properties");
         header.pack_end(&props_btn);
 
         // Image area.
@@ -317,7 +320,8 @@ impl Viewer {
                 .icon_name(icon)
                 .action_name(action)
                 .tooltip_text(tip)
-                .build();
+                .build()
+                .labelled(helix_app_common::a11y::name_from_tooltip(tip));
             b.add_css_class("osd");
             b.add_css_class("circular");
             b.add_css_class("iv-nav");
@@ -355,7 +359,8 @@ impl Viewer {
                 .icon_name(icon)
                 .action_name(action)
                 .tooltip_text(tip)
-                .build();
+                .build()
+                .labelled(helix_app_common::a11y::name_from_tooltip(tip));
             b.add_css_class("flat");
             b
         };
@@ -536,14 +541,16 @@ impl Viewer {
             .icon_name("folder-open-symbolic")
             .valign(gtk::Align::Center)
             .tooltip_text("Open Folder")
-            .build();
+            .build()
+            .labelled("Open Folder");
         folder_btn.add_css_class("flat");
         props.folder.add_suffix(&folder_btn);
         let gps_btn = gtk::Button::builder()
             .icon_name("mark-location-symbolic")
             .valign(gtk::Align::Center)
             .tooltip_text("Show on Map")
-            .build();
+            .build()
+            .labelled("Show on Map");
         gps_btn.add_css_class("flat");
         props.gps.add_suffix(&gps_btn);
         let sidebar_toolbar = adw::ToolbarView::new();

@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use helix_eds::vcard::{self, phone_label, Contact};
 use helix_eds::Source;
@@ -140,12 +141,14 @@ impl Ui {
         let new_button = gtk::Button::builder()
             .icon_name("list-add-symbolic")
             .tooltip_text("New Contact")
-            .build();
+            .build()
+            .labelled("New Contact");
         new_button.set_action_name(Some("win.new-contact"));
         let select_button = gtk::ToggleButton::builder()
             .icon_name("selection-mode-symbolic")
             .tooltip_text("Select Contacts")
-            .build();
+            .build()
+            .labelled("Select Contacts");
         let menu = gio::Menu::new();
         let sort = gio::Menu::new();
         sort.append(Some("Sort by _First Name"), Some("win.sort::first"));
@@ -164,7 +167,8 @@ impl Ui {
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
             .tooltip_text("Main Menu")
-            .build();
+            .build()
+            .labelled("Main Menu");
         menu_button.set_primary(true);
         let side_header = adw::HeaderBar::new();
         side_header.pack_start(&new_button);
@@ -265,7 +269,8 @@ impl Ui {
             .icon_name("document-edit-symbolic")
             .tooltip_text("Edit Contact")
             .visible(false)
-            .build();
+            .build()
+            .labelled("Edit Contact");
         edit_button.set_action_name(Some("win.edit"));
         let done_button = gtk::Button::builder()
             .label("Done")
@@ -280,7 +285,8 @@ impl Ui {
             .icon_name("view-more-symbolic")
             .tooltip_text("Contact Menu")
             .visible(false)
-            .build();
+            .build()
+            .labelled("Contact Menu");
         content_header.pack_start(&cancel_button);
         content_header.pack_end(&contact_menu);
         content_header.pack_end(&edit_button);
@@ -426,12 +432,11 @@ impl Ui {
                 ui.refresh_list();
                 return;
             }
-            if ui.editor.borrow().is_some() {
-                ui.finish_edit(false);
-            }
-            ui.state.borrow_mut().selected = Some(ind.members[0].clone());
-            ui.show_individual(&ind);
-            ui.split.set_show_content(true);
+            ui.leave_edit(move |ui| {
+                ui.state.borrow_mut().selected = Some(ind.members[0].clone());
+                ui.show_individual(&ind);
+                ui.split.set_show_content(true);
+            });
         });
 
         let weak = Rc::downgrade(self);
@@ -507,7 +512,7 @@ impl Ui {
             };
             if key == gtk::gdk::Key::Escape {
                 if ui.editor.borrow().is_some() {
-                    ui.finish_edit(false);
+                    ui.leave_edit(|_| {});
                     return glib::Propagation::Stop;
                 }
                 if ui.select_button.is_active() {
@@ -866,7 +871,15 @@ impl Ui {
         self.refresh_list();
     }
 
+    /// Rebuilds the contact list, keeping keyboard focus on the same
+    /// contact (e.g. while toggling rows in selection mode) and the scroll
+    /// position.
     fn refresh_list(self: &Rc<Self>) {
+        let list = self.list.clone();
+        helix_app_common::focus::rebuild_keeping_focus(&list, None, || self.refresh_list_rows());
+    }
+
+    fn refresh_list_rows(self: &Rc<Self>) {
         let surname = self.prefs.get("sort-on-surname", false);
         let query = self.search.text().to_string();
         let (shown, selection_mode, checked, selected, any, loaded) = {
@@ -891,6 +904,7 @@ impl Ui {
         let mut select_row = None;
         for ind in &shown {
             let row = gtk::ListBoxRow::new();
+            helix_app_common::focus::set_key(&row, &ind.id());
             let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 12);
             hbox.set_margin_top(4);
             hbox.set_margin_bottom(4);
@@ -917,7 +931,7 @@ impl Ui {
                 hbox.append(&label("Me", &["dim-label", "caption"]));
             }
             if ind.is_linked() {
-                let icon = gtk::Image::from_icon_name("chain-link-symbolic");
+                let icon = gtk::Image::from_icon_name("insert-link-symbolic");
                 icon.set_tooltip_text(Some("Linked contact"));
                 icon.add_css_class("dim-label");
                 hbox.append(&icon);
@@ -975,6 +989,14 @@ impl Ui {
             "loading"
         };
         self.list_stack.set_visible_child_name(page);
+        if !query.trim().is_empty() {
+            let text = match shown.len() {
+                0 => "No results".to_string(),
+                1 => "1 contact found".to_string(),
+                n => format!("{n} contacts found"),
+            };
+            helix_app_common::announce_settled(&self.search, &text);
+        }
         self.state.borrow_mut().shown = shown;
         if self.editor.borrow().is_some() {
             if let Some((row, _)) = &select_row {
@@ -1224,7 +1246,8 @@ impl Ui {
             .tooltip_text("Copy")
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled("Copy");
         let v = value.to_string();
         let w = self.window.clone();
         let toasts = self.toasts.clone();
@@ -1250,6 +1273,11 @@ impl Ui {
         let books = self.writable_books();
         if books.is_empty() {
             self.toast("No writable address book is available");
+            return;
+        }
+        if self.editor.borrow().is_some() {
+            let email = prefill_email.map(str::to_string);
+            self.leave_edit(move |ui| ui.new_contact(email.as_deref()));
             return;
         }
         let mut c = Contact::default();
@@ -1289,6 +1317,40 @@ impl Ui {
         self.split.set_show_content(true);
         ed.focus_first();
         *self.editor.borrow_mut() = Some((ed, key));
+    }
+
+    /// Leaves the editor without saving, then runs `then`. Unsaved changes
+    /// are only discarded after the user confirms; if they keep editing,
+    /// `then` does not run. Without an editor `then` runs at once.
+    fn leave_edit(self: &Rc<Self>, then: impl FnOnce(&Rc<Self>) + 'static) {
+        let dirty = self.editor.borrow().as_ref().map(|(ed, _)| ed.is_dirty());
+        match dirty {
+            None => then(self),
+            Some(false) => {
+                self.finish_edit(false);
+                then(self);
+            }
+            Some(true) => {
+                let dialog = adw::AlertDialog::builder()
+                    .heading("Discard Changes?")
+                    .body("Changes to this contact have not been saved.")
+                    .default_response("cancel")
+                    .close_response("cancel")
+                    .build();
+                dialog.add_responses(&[("cancel", "_Keep Editing"), ("discard", "_Discard")]);
+                dialog.set_response_appearance("discard", adw::ResponseAppearance::Destructive);
+                let weak = Rc::downgrade(self);
+                let then = RefCell::new(Some(then));
+                dialog.connect_response(Some("discard"), move |_, _| {
+                    let (Some(ui), Some(then)) = (weak.upgrade(), then.take()) else {
+                        return;
+                    };
+                    ui.finish_edit(false);
+                    then(&ui);
+                });
+                dialog.present(Some(&self.window));
+            }
+        }
     }
 
     fn finish_edit(self: &Rc<Self>, save: bool) {

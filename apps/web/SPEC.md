@@ -436,3 +436,8 @@ Web browser.
 - Search engine / JavaScript / other keys aligned with the real
   `org.gnome.epiphany` schema; keys Epiphany does not have (JavaScript,
   cookie policy, restore `never`) stay in `settings.json`.
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): the find-in-page match count once typing pauses, downloads finishing or failing (failures assertive) and the untrusted-certificate bar appearing (assertive).
+- Focus is kept across list rebuilds (`helix_app_common::focus`): Removing a history entry moves focus to the next entry's Remove button (or the previous one, or the search entry).

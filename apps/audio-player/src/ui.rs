@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use serde::{Deserialize, Serialize};
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
@@ -163,9 +164,9 @@ fn button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .tooltip_text(tooltip)
         .action_name(action)
         .valign(gtk::Align::Center)
-        .build();
+        .build()
+        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip));
     b.add_css_class("flat");
-    b.update_property(&[gtk::accessible::Property::Label(tooltip)]);
     b
 }
 
@@ -239,7 +240,8 @@ impl Ui {
             .menu_model(&menu)
             .primary(true)
             .tooltip_text("Main Menu")
-            .build();
+            .build()
+            .labelled("Main Menu");
         header.pack_end(&menu_button);
 
         // Empty page.
@@ -298,7 +300,7 @@ impl Ui {
             .build();
         waveform.add_css_class("ap-waveform");
         waveform.set_cursor_from_name(Some("pointer"));
-        waveform.update_property(&[gtk::accessible::Property::Label("Position")]);
+        helix_app_common::set_accessible_label(&waveform, "Position");
 
         let elapsed = gtk::Label::builder()
             .label("0:00")
@@ -343,7 +345,8 @@ impl Ui {
             .action_name("win.play-pause")
             .tooltip_text("Play")
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled("Play");
         play.add_css_class("circular");
         play.add_css_class("suggested-action");
         play.add_css_class("ap-play");
@@ -362,7 +365,8 @@ impl Ui {
             .action_name("win.repeat")
             .tooltip_text("Repeat")
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled("Repeat");
         repeat.add_css_class("flat");
 
         // Volume popover.
@@ -370,13 +374,14 @@ impl Ui {
             .icon_name("audio-volume-muted-symbolic")
             .action_name("win.mute")
             .tooltip_text("Mute")
-            .build();
+            .build()
+            .labelled("Mute");
         mute.add_css_class("flat");
         let volume_scale = gtk::Scale::with_range(gtk::Orientation::Horizontal, 0.0, 1.0, 0.05);
         volume_scale.set_width_request(180);
         volume_scale.set_hexpand(true);
         volume_scale.set_value(1.0);
-        volume_scale.update_property(&[gtk::accessible::Property::Label("Volume")]);
+        helix_app_common::set_accessible_label(&volume_scale, "Volume");
         let vbox = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         vbox.append(&mute);
         vbox.append(&volume_scale);
@@ -386,7 +391,8 @@ impl Ui {
             .popover(&popover)
             .tooltip_text("Volume")
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled("Volume");
         volume_button.add_css_class("flat");
 
         let controls = gtk::CenterBox::new();
@@ -774,6 +780,11 @@ impl Ui {
         self.error_page
             .set_description(Some(&glib::markup_escape_text(message)));
         self.stack.set_visible_child_name("error");
+        helix_app_common::announce(
+            &self.error_page,
+            &format!("Unable to play file. {message}"),
+            helix_app_common::Urgency::Assertive,
+        );
         self.window.set_title(Some(APP_NAME));
         self.sync_controls();
         self.publish();
@@ -1209,10 +1220,7 @@ impl Ui {
         } else {
             ("media-playback-start-symbolic", "Play")
         };
-        self.play.set_icon_name(icon);
-        self.play.set_tooltip_text(Some(tip));
-        self.play
-            .update_property(&[gtk::accessible::Property::Label(tip)]);
+        helix_app_common::set_icon_and_label(&self.play, icon, tip);
         if !has {
             self.refresh_position();
         }

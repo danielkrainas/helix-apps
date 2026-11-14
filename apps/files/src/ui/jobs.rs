@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use std::rc::Rc;
 
 use super::{dialogs, Window};
@@ -71,7 +72,8 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
         .icon_name("process-stop-symbolic")
         .tooltip_text("Cancel")
         .valign(gtk::Align::Center)
-        .build();
+        .build()
+        .labelled("Cancel");
     cancel_btn.add_css_class("flat");
     cancel_btn.add_css_class("circular");
     top.append(&label);
@@ -153,6 +155,12 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
                         report_errors(&w, &title, &out.errors);
                     } else if out.cancelled {
                         w.toast("Operation cancelled");
+                    } else {
+                        helix_app_common::announce(
+                            &w.window,
+                            &format!("Finished {}", lowercase_first(&title)),
+                            helix_app_common::Urgency::Polite,
+                        );
                     }
                     if let Some(d) = done.take() {
                         d(&out);
@@ -162,6 +170,15 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
             }
         }
     });
+}
+
+/// "Copying 3 items…" → "copying 3 items…", to follow "Finished".
+fn lowercase_first(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        Some(f) => f.to_lowercase().chain(c).collect(),
+        None => String::new(),
+    }
 }
 
 fn report_errors(w: &Window, title: &str, errors: &[String]) {
@@ -175,4 +192,16 @@ fn report_errors(w: &Window, title: &str, errors: &[String]) {
         .build();
     dialog.add_response("close", "_Close");
     dialog.present(Some(&w.window));
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn finished_message() {
+        assert_eq!(
+            super::lowercase_first("Copying 2 items to “Docs”"),
+            "copying 2 items to “Docs”"
+        );
+        assert_eq!(super::lowercase_first(""), "");
+    }
 }

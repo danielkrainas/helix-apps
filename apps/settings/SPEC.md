@@ -368,3 +368,4 @@ window, `F1` about.
 ## Decisions
 - Style cards: no third *Light* card; match GNOME with *Default* and *Dark*
   only (`prefer-light` set elsewhere shows as *Default* and is kept).
+- Focus is kept across list rebuilds (`helix_app_common::focus`): Input sources: Move Up / Move Down keep focus on the moved source's button (so repeated presses keep moving it; at the top or bottom focus stays in the row), Remove moves focus to the neighbouring source.

@@ -83,7 +83,7 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     scale.set_hexpand(true);
     scale.set_valign(gtk::Align::Center);
     scale.set_format_value_func(|_, v| format!("{v:.0} %"));
-    scale.update_property(&[gtk::accessible::Property::Label("Transparency")]);
+    helix_app_common::set_accessible_label(&scale, "Transparency");
     let amount_row = adw::ActionRow::builder().title("Transparency").build();
     amount_row.add_suffix(&scale);
     amount_row.set_sensitive(current.enabled);

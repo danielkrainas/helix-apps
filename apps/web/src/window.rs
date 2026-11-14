@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::path::Path;
 use std::rc::{Rc, Weak};
@@ -87,6 +88,7 @@ fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .tooltip_text(tooltip)
         .action_name(action)
         .build()
+        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
 }
 
 fn web_app_menu() -> gio::Menu {
@@ -263,7 +265,8 @@ impl Window {
             .tooltip_text("Main Menu")
             .popover(&menu_pop)
             .primary(true)
-            .build();
+            .build()
+            .labelled("Main Menu");
         header.pack_end(&menu_button);
         let tab_button = adw::TabButton::builder()
             .view(&tab_view)
@@ -293,7 +296,8 @@ impl Window {
             .tooltip_text("Downloads")
             .popover(&dl_pop)
             .visible(false)
-            .build();
+            .build()
+            .labelled("Downloads");
         header.pack_end(&dl_button);
 
         let bm_search = gtk::SearchEntry::builder()
@@ -319,7 +323,8 @@ impl Window {
             .tooltip_text("Bookmarks")
             .popover(&bm_list_pop)
             .visible(!web_app)
-            .build();
+            .build()
+            .labelled("Bookmarks");
         header.pack_end(&bm_button);
         header.pack_end(&reader);
 
@@ -1004,6 +1009,10 @@ impl Window {
         });
         self.reload
             .set_tooltip_text(Some(if loading { "Stop" } else { "Reload" }));
+        helix_app_common::set_accessible_label(
+            &self.reload,
+            &self.reload.tooltip_text().unwrap_or_default(),
+        );
         let has_home = self
             .app()
             .is_some_and(|a| a.settings.borrow().home_url().is_some() && a.web_app.is_none());
@@ -1509,7 +1518,8 @@ impl Window {
                 .icon_name("user-trash-symbolic")
                 .tooltip_text("Remove Bookmark")
                 .valign(gtk::Align::Center)
-                .build();
+                .build()
+                .labelled("Remove Bookmark");
             remove.add_css_class("flat");
             content.append(&remove);
             let row = gtk::ListBoxRow::builder()
@@ -1581,6 +1591,9 @@ impl Window {
             Some(n) => format!("{n} matches"),
             None => String::new(),
         };
+        if !text.is_empty() && text != self.find_label.text() {
+            helix_app_common::announce_settled(&self.find_label, &text);
+        }
         self.find_label.set_text(&text);
     }
 
@@ -1618,19 +1631,22 @@ impl Window {
             .icon_name("process-stop-symbolic")
             .tooltip_text("Cancel")
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled("Cancel");
         let open = gtk::Button::builder()
             .icon_name("document-open-symbolic")
             .tooltip_text("Open")
             .valign(gtk::Align::Center)
             .visible(false)
-            .build();
+            .build()
+            .labelled("Open");
         let folder = gtk::Button::builder()
             .icon_name("folder-open-symbolic")
             .tooltip_text("Open Folder")
             .valign(gtk::Align::Center)
             .visible(false)
-            .build();
+            .build()
+            .labelled("Open Folder");
         for b in [&cancel, &open, &folder] {
             b.add_css_class("flat");
             row_box.append(b);
@@ -1698,6 +1714,11 @@ impl Window {
             }
             p.set_fraction(1.0);
             s.set_text("Finished");
+            helix_app_common::announce(
+                &s,
+                &format!("Download finished: {name}"),
+                helix_app_common::Urgency::Polite,
+            );
             o.set_visible(true);
             fo.set_visible(true);
         });
@@ -1710,6 +1731,11 @@ impl Window {
                 s.set_text("Cancelled");
             } else {
                 s.set_text(&format!("Failed: {}", err.message()));
+                helix_app_common::announce(
+                    &s,
+                    &format!("Download failed: {}", err.message()),
+                    helix_app_common::Urgency::Assertive,
+                );
             }
         });
     }

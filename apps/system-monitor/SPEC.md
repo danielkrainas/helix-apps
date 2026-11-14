@@ -42,6 +42,12 @@ View processes, resources, and file systems.
 - Processes and resource graphs refresh every `update-interval` ms
   (clamped to 1000–100000 ms, the schema's `<range>`). File systems refresh every `disks-interval` ms.
 - Changing the interval in Preferences takes effect immediately.
+- The window's state (views, channel receiver, actions) lives as long as the
+  window: it is held in a per-thread registry from creation until the window
+  is destroyed, and handlers only hold weak references to it. Sampling
+  therefore runs for the whole time the window is open and stops when it is
+  closed. Debug builds assert if the state is dropped while the window is
+  still shown.
 
 ### Processes page
 - `GtkColumnView` with sortable columns: **Process Name**, **User**,

@@ -276,7 +276,7 @@ pub fn scale_row(
     scale.set_valign(gtk::Align::Center);
     scale.set_draw_value(false);
     scale.set_width_request(220);
-    scale.update_property(&[gtk::accessible::Property::Label(title)]);
+    helix_app_common::set_accessible_label(&scale, title);
     if let Some((lo, hi)) = marks {
         scale.add_mark(min, gtk::PositionType::Bottom, Some(lo));
         scale.add_mark(max, gtk::PositionType::Bottom, Some(hi));

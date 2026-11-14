@@ -98,10 +98,23 @@ Play video files.
 - Seek bar: dragging seeks (key-unit while dragging, accurate on release).
   Hovering shows a popover above the pointer with the time at that point.
   No thumbnail preview (deferred).
+- Keyboard: every control (play/pause, seek bar, volume, speed, tracks,
+  fullscreen, and the header's buttons) is reachable with Tab and shows a
+  focus ring; clicking them does not take focus (`focus-on-click` off), so
+  the window's shortcuts keep working for pointer users. A focused seek
+  bar moves with the arrow and Page Up/Down keys.
+- Accessible names follow state: "Play"/"Pause", "Enter Fullscreen"/"Leave
+  Fullscreen", "Playback Speed: 1.5×"; the seek bar is "Position" with the
+  value text "1:23 of 45:00"; the volume slider is "Volume" with "70%" (or
+  "Muted"); the loading spinner is "Loading" and the picture "Video".
 - Auto-hide: the header bar and controls fade out (revealers) and the cursor
   is hidden 2 s after the last pointer motion while playing and the pointer
-  is not over the controls and no popover/menu is open. Any motion,
-  click or key shows them again. Paused/ended videos keep controls visible.
+  is not over the controls, no popover/menu is open and keyboard focus
+  (with a visible focus ring) is not inside them. Focus entering them
+  (Tab) shows them; focus leaving restarts the 2 s timer. When they hide,
+  focus left inside them by pointer use is cleared, so focus is never on a
+  hidden widget. Any motion, click or key shows them again. Paused/ended
+  videos keep controls visible.
 - Double-click on the video toggles fullscreen. Single click does nothing
   but reveal the controls.
 - At end of stream the video pauses on the last frame, the play button shows
@@ -207,3 +220,7 @@ framerate, 1/25 s when unknown).
   running window (unique application with `HANDLES_OPEN`).
 - Volume and playback speed are remembered across sessions in an
   app-private JSON file (no suitable `org.gnome.totem` keys exist).
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): the "Cannot play file" error page appearing, with the missing codec if known (assertive).

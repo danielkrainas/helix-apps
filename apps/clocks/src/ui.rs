@@ -4,6 +4,7 @@ use adw::prelude::*;
 use chrono::{DateTime, NaiveTime, Utc};
 use chrono_tz::Tz;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
@@ -265,6 +266,7 @@ impl Ui {
         header.pack_start(&add_button);
         let back_button = gtk::Button::from_icon_name("go-previous-symbolic");
         back_button.set_tooltip_text(Some("Back"));
+        helix_app_common::set_accessible_label(&back_button, "Back");
         back_button.set_visible(false);
         header.pack_start(&back_button);
         let menu = gio::Menu::new();
@@ -275,7 +277,8 @@ impl Ui {
             .menu_model(&menu)
             .primary(true)
             .tooltip_text("Main Menu")
-            .build();
+            .build()
+            .labelled("Main Menu");
         header.pack_end(&menu_button);
 
         // World page
@@ -510,11 +513,13 @@ impl Ui {
         self.back_button.set_visible(in_details);
         self.add_button
             .set_visible(!in_details && page != "stopwatch");
-        self.add_button.set_tooltip_text(Some(match page.as_str() {
+        let add_label = match page.as_str() {
             "world" => "Add Location",
             "alarm" => "Add Alarm",
             _ => "Add Timer",
-        }));
+        };
+        self.add_button.set_tooltip_text(Some(add_label));
+        helix_app_common::set_accessible_label(&self.add_button, add_label);
     }
 
     fn new_item(self: &Rc<Self>) {
@@ -718,7 +723,17 @@ impl Ui {
 
     // ---------------------------------------------------------------- World
 
+    /// Rebuilds the list, keeping keyboard focus on the same row (or a
+    /// neighbour after a removal) and the scroll position.
     fn rebuild_world(self: &Rc<Self>) {
+        let list = self.world_list.clone();
+        let fallback = self.add_button.clone().upcast::<gtk::Widget>();
+        helix_app_common::focus::rebuild_keeping_focus(&list, Some(&fallback), || {
+            self.rebuild_world_rows()
+        });
+    }
+
+    fn rebuild_world_rows(self: &Rc<Self>) {
         while let Some(c) = self.world_list.first_child() {
             self.world_list.remove(&c);
         }
@@ -745,6 +760,10 @@ impl Ui {
                 .title(glib::markup_escape_text(&wc.name))
                 .activatable(true)
                 .build();
+            helix_app_common::focus::set_key(
+                &row,
+                &format!("{}|{}|{removable}", wc.zone.name(), wc.name),
+            );
             let icon = gtk::Image::new();
             icon.set_pixel_size(24);
             let time = label("", &["world-time", "clock-time"]);
@@ -755,6 +774,8 @@ impl Ui {
                 remove.set_valign(gtk::Align::Center);
                 remove.add_css_class("flat");
                 remove.set_tooltip_text(Some("Remove"));
+                helix_app_common::set_accessible_label(&remove, &format!("Remove {}", wc.name));
+                helix_app_common::focus::set_part(&remove, "remove");
                 let weak = Rc::downgrade(self);
                 let idx = i - (self.prefs.get("geolocation", true) as usize);
                 remove.connect_clicked(move |_| {
@@ -1058,7 +1079,17 @@ impl Ui {
         self.update_keep_alive();
     }
 
+    /// Rebuilds the list, keeping keyboard focus on the same row (or a
+    /// neighbour after a removal) and the scroll position.
     fn rebuild_alarms(self: &Rc<Self>) {
+        let list = self.alarm_list.clone();
+        let fallback = self.add_button.clone().upcast::<gtk::Widget>();
+        helix_app_common::focus::rebuild_keeping_focus(&list, Some(&fallback), || {
+            self.rebuild_alarms_rows()
+        });
+    }
+
+    fn rebuild_alarms_rows(self: &Rc<Self>) {
         while let Some(c) = self.alarm_list.first_child() {
             self.alarm_list.remove(&c);
         }
@@ -1070,6 +1101,7 @@ impl Ui {
             let a = &e.alarm;
             let row = gtk::ListBoxRow::new();
             row.set_activatable(true);
+            helix_app_common::focus::set_key(&row, &a.id);
             let hb = gtk::Box::new(gtk::Orientation::Horizontal, 12);
             hb.set_margin_top(12);
             hb.set_margin_bottom(12);
@@ -1103,10 +1135,8 @@ impl Ui {
                 .active(a.active)
                 .valign(gtk::Align::Center)
                 .build();
-            switch.update_property(&[gtk::accessible::Property::Label(&format!(
-                "Enable alarm {}",
-                a.name
-            ))]);
+            helix_app_common::set_accessible_label(&switch, &format!("Enable alarm {}", a.name));
+            helix_app_common::focus::set_part(&switch, "switch");
             hb.append(&switch);
             row.set_child(Some(&hb));
             if !a.active {
@@ -1194,9 +1224,9 @@ impl Ui {
             (0.0, 23.0, a.hour as f64)
         };
         let hour = time_spin(hmin, hmax, hval);
-        hour.update_property(&[gtk::accessible::Property::Label("Hour")]);
+        helix_app_common::set_accessible_label(&hour, "Hour");
         let minute = time_spin(0.0, 59.0, a.minute as f64);
-        minute.update_property(&[gtk::accessible::Property::Label("Minute")]);
+        helix_app_common::set_accessible_label(&minute, "Minute");
         time_box.append(&hour);
         time_box.append(&label(":", &["alarm-time"]));
         time_box.append(&minute);
@@ -1552,7 +1582,7 @@ impl Ui {
             .into_iter()
             .enumerate()
         {
-            spin.update_property(&[gtk::accessible::Property::Label(name)]);
+            helix_app_common::set_accessible_label(spin, name);
             if i > 0 {
                 spins.append(&label(":", &["timer-time"]));
             }
@@ -1598,7 +1628,17 @@ impl Ui {
         self.update_keep_alive();
     }
 
+    /// Rebuilds the list, keeping keyboard focus on the same row (or a
+    /// neighbour after a removal) and the scroll position.
     fn rebuild_timers(self: &Rc<Self>) {
+        let list = self.timer_list.clone();
+        let fallback = self.add_button.clone().upcast::<gtk::Widget>();
+        helix_app_common::focus::rebuild_keeping_focus(&list, Some(&fallback), || {
+            self.rebuild_timers_rows()
+        });
+    }
+
+    fn rebuild_timers_rows(self: &Rc<Self>) {
         while let Some(c) = self.timer_list.first_child() {
             self.timer_list.remove(&c);
         }
@@ -1608,6 +1648,9 @@ impl Ui {
             let name = self.timers.borrow()[i].name.clone();
             let row = gtk::ListBoxRow::new();
             row.set_activatable(false);
+            // Timers have no id; after a deletion the same index is the
+            // next timer, which is where focus should go.
+            helix_app_common::focus::set_key(&row, &i.to_string());
             let vb = gtk::Box::new(gtk::Orientation::Vertical, 6);
             vb.set_margin_top(12);
             vb.set_margin_bottom(12);
@@ -1628,13 +1671,18 @@ impl Ui {
             start.set_valign(gtk::Align::Center);
             let reset = gtk::Button::from_icon_name("view-refresh-symbolic");
             reset.set_tooltip_text(Some("Reset"));
+            helix_app_common::set_accessible_label(&reset, "Reset");
             reset.add_css_class("circular");
             reset.set_valign(gtk::Align::Center);
             let delete = gtk::Button::from_icon_name("user-trash-symbolic");
             delete.set_tooltip_text(Some("Delete"));
+            helix_app_common::set_accessible_label(&delete, "Delete");
             delete.add_css_class("circular");
             delete.add_css_class("flat");
             delete.set_valign(gtk::Align::Center);
+            helix_app_common::focus::set_part(&start, "start");
+            helix_app_common::focus::set_part(&reset, "reset");
+            helix_app_common::focus::set_part(&delete, "delete");
             hb.append(&start);
             hb.append(&reset);
             hb.append(&delete);
@@ -1708,6 +1756,10 @@ impl Ui {
             };
             r.start.set_icon_name(icon);
             r.start.set_tooltip_text(Some(tip));
+            helix_app_common::set_accessible_label(
+                &r.start,
+                helix_app_common::a11y::name_from_tooltip(tip),
+            );
             if t.is_running() {
                 r.start.remove_css_class("suggested-action");
             } else {
@@ -1738,9 +1790,14 @@ impl Ui {
             } else {
                 name
             };
+            helix_app_common::announce(
+                &self.window,
+                &format!("Time is up: {body}"),
+                helix_app_common::Urgency::Assertive,
+            );
             n.set_body(Some(&body));
             n.set_priority(gio::NotificationPriority::High);
-            n.set_icon(&gio::ThemedIcon::new("timer-symbolic"));
+            n.set_icon(&gio::ThemedIcon::new("alarm-symbolic"));
             n.set_default_action("app.activate");
             self.app.send_notification(Some("timer"), &n);
             let alarm_ringing = self.player.borrow().playing() == Some(Sound::Alarm);

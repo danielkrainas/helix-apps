@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::os::fd::AsRawFd;
 use std::path::PathBuf;
@@ -144,7 +145,8 @@ impl Window {
             .icon_name("tab-new-symbolic")
             .tooltip_text("New Tab")
             .action_name("win.new-tab")
-            .build();
+            .build()
+            .labelled("New Tab");
         header.pack_start(&new_tab);
 
         let menu = gio::Menu::new();
@@ -162,7 +164,8 @@ impl Window {
             .tooltip_text("Main Menu")
             .menu_model(&menu)
             .primary(true)
-            .build();
+            .build()
+            .labelled("Main Menu");
         header.pack_end(&menu_button);
         let tab_button = adw::TabButton::builder()
             .view(&tab_view)
@@ -173,7 +176,8 @@ impl Window {
             .icon_name("edit-find-symbolic")
             .tooltip_text("Find")
             .action_name("win.find")
-            .build();
+            .build()
+            .labelled("Find");
         header.pack_end(&find);
 
         let toolbar = adw::ToolbarView::new();
@@ -260,15 +264,18 @@ impl Window {
         let prev = gtk::Button::builder()
             .icon_name("go-up-symbolic")
             .tooltip_text("Previous Match (older output)")
-            .build();
+            .build()
+            .labelled("Previous Match (older output)");
         let next = gtk::Button::builder()
             .icon_name("go-down-symbolic")
             .tooltip_text("Next Match (newer output)")
-            .build();
+            .build()
+            .labelled("Next Match (newer output)");
         let match_case = gtk::ToggleButton::builder()
             .icon_name("format-text-plaintext-symbolic")
             .tooltip_text("Match Case")
-            .build();
+            .build()
+            .labelled("Match Case");
         match_case.set_label("Aa");
         let use_regex = gtk::ToggleButton::builder()
             .label(".*")

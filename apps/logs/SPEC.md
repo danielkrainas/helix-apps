@@ -161,3 +161,7 @@ export, `F5`/`Ctrl+R` refresh, `Ctrl+Q` quit, `Ctrl+W` close window.
 - GNOME Logs' exact rule for the *Applications* and *System* categories is
   not published; the rules above are an approximation (user-owned
   identifiers vs. everything else that isn't kernel).
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): "No results" for a search and the "Unable to read logs" error (assertive).

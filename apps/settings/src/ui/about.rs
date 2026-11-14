@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use std::rc::Rc;
 
 use super::widgets::{self, value_label};
@@ -131,7 +132,8 @@ impl Panel for AboutPanel {
             .icon_name("edit-copy-symbolic")
             .tooltip_text("Copy System Information")
             .css_classes(["flat"])
-            .build();
+            .build()
+            .labelled("Copy System Information");
         hw.set_header_suffix(Some(&copy));
         page.add(&hw);
         page.add(&sw);

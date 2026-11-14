@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use std::cell::Cell;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -219,7 +220,8 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
         .valign(gtk::Align::Center)
         .margin_start(18)
         .css_classes(["circular", "tour-nav"])
-        .build();
+        .build()
+        .labelled("Previous");
     let next = gtk::Button::builder()
         .icon_name("go-next-symbolic")
         .tooltip_text("Next")
@@ -227,7 +229,8 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
         .valign(gtk::Align::Center)
         .margin_end(18)
         .css_classes(["circular", "tour-nav", "suggested-action"])
-        .build();
+        .build()
+        .labelled("Next");
     let overlay = gtk::Overlay::builder().child(&carousel).build();
     overlay.add_overlay(&prev);
     overlay.add_overlay(&next);

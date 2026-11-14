@@ -9,6 +9,7 @@ use crate::render::{DocInfo, JobKey, Renderer, Reply, TextPurpose};
 use crate::state::{self, DocState, StateStore};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::{Rc, Weak};
@@ -211,6 +212,7 @@ fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .tooltip_text(tooltip)
         .action_name(action)
         .build()
+        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
 }
 
 impl Win {
@@ -235,13 +237,15 @@ impl Win {
             .icon_name("document-open-symbolic")
             .tooltip_text("Open…")
             .action_name("win.open")
-            .build();
+            .build()
+            .labelled("Open…");
         header.pack_start(&open_btn);
         let sidebar_btn = gtk::ToggleButton::builder()
             .icon_name("sidebar-show-symbolic")
             .tooltip_text("Sidebar (F9)")
             .action_name("win.sidebar")
-            .build();
+            .build()
+            .labelled("Sidebar");
         header.pack_start(&sidebar_btn);
 
         let page_entry = gtk::Entry::builder()
@@ -284,7 +288,8 @@ impl Win {
             .menu_model(&menu)
             .tooltip_text("Main Menu")
             .primary(true)
-            .build();
+            .build()
+            .labelled("Main Menu");
         header.pack_end(&menu_btn);
 
         // Zoom menu.
@@ -340,7 +345,8 @@ impl Win {
             .icon_name("system-search-symbolic")
             .tooltip_text("Search (Ctrl+F)")
             .action_name("win.search")
-            .build();
+            .build()
+            .labelled("Search");
         header.pack_end(&search_btn);
         let header_doc: Vec<gtk::Widget> = vec![
             sidebar_btn.upcast(),
@@ -1541,11 +1547,17 @@ impl Win {
             }
             Reply::SearchDone { id, gen } if id == doc_id && gen == self.search_gen.get() => {
                 let total = self.model.search.borrow().len();
-                self.search_status.set_label(&match total {
+                let text = match total {
                     0 => "No results found".to_string(),
                     1 => "1 result".to_string(),
                     n => format!("{n} results"),
-                });
+                };
+                helix_app_common::announce(
+                    &self.search_status,
+                    &text,
+                    helix_app_common::Urgency::Polite,
+                );
+                self.search_status.set_label(&text);
                 if self.model.search.borrow().current().is_none() {
                     self.find(true);
                 }

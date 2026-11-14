@@ -3,6 +3,7 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -169,7 +170,7 @@ impl App {
         // Songs.
         let songs = self.build_songs_view();
         self.stack
-            .add_titled_with_icon(&songs, Some("songs"), "Songs", "emblem-music-symbolic");
+            .add_titled_with_icon(&songs, Some("songs"), "Songs", "audio-x-generic-symbolic");
 
         // Playlists.
         let pl_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
@@ -336,7 +337,8 @@ impl App {
             let heart = gtk::ToggleButton::builder()
                 .icon_name("non-starred-symbolic")
                 .css_classes(["flat"])
-                .build();
+                .build()
+                .labelled("Add to Favorites");
             let ws = ws.clone();
             let it = item.downgrade();
             heart.connect_toggled(move |h| {
@@ -539,7 +541,8 @@ impl App {
             .valign(gtk::Align::Center)
             .css_classes(["flat"])
             .tooltip_text("More")
-            .build();
+            .build()
+            .labelled("More");
         more.set_create_popup_func(move |mb| {
             if mb.menu_model().is_none() {
                 mb.set_menu_model(Some(&menu));
@@ -867,12 +870,14 @@ impl App {
                 .icon_name("document-edit-symbolic")
                 .tooltip_text("Rename Playlist")
                 .css_classes(["circular"])
-                .build();
+                .build()
+                .labelled("Rename Playlist");
             let delete = gtk::Button::builder()
                 .icon_name("user-trash-symbolic")
                 .tooltip_text("Delete Playlist")
                 .css_classes(["circular", "destructive-action"])
-                .build();
+                .build()
+                .labelled("Delete Playlist");
             let (w, f) = (Rc::downgrade(self), file.clone());
             rename.connect_clicked(move |_| {
                 if let Some(app) = w.upgrade() {
@@ -889,7 +894,8 @@ impl App {
                 .icon_name("document-save-as-symbolic")
                 .tooltip_text("Export Playlist…")
                 .css_classes(["circular"])
-                .build();
+                .build()
+                .labelled("Export Playlist…");
             let (w, f) = (Rc::downgrade(self), file.clone());
             export.connect_clicked(move |_| {
                 if let Some(app) = w.upgrade() {
@@ -1636,7 +1642,8 @@ impl App {
             .tooltip_text("Add Folder…")
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
-            .build();
+            .build()
+            .labelled("Add Folder…");
         folders.set_header_suffix(Some(&add));
         let main = adw::ActionRow::builder()
             .title(glib::markup_escape_text(&music_dir().display().to_string()))
@@ -1654,7 +1661,8 @@ impl App {
                 .tooltip_text("Remove Folder")
                 .css_classes(["flat"])
                 .valign(gtk::Align::Center)
-                .build();
+                .build()
+                .labelled("Remove Folder");
             let (w, g, r) = (Rc::downgrade(self), folders.downgrade(), row.downgrade());
             rm.connect_clicked(move |_| {
                 if let (Some(app), Some(g), Some(r)) = (w.upgrade(), g.upgrade(), r.upgrade()) {

@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use serde::{Deserialize, Serialize};
 use std::cell::{Cell, RefCell};
@@ -258,7 +259,8 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     let search_button = gtk::ToggleButton::builder()
         .icon_name("system-search-symbolic")
         .tooltip_text("Search")
-        .build();
+        .build()
+        .labelled("Search");
     header.pack_start(&search_button);
     let menu = gio::Menu::new();
     let s1 = gio::Menu::new();
@@ -283,7 +285,8 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
         .menu_model(&menu)
         .primary(true)
         .tooltip_text("Main Menu")
-        .build();
+        .build()
+        .labelled("Main Menu");
     header.pack_end(&menu_button);
     let spinner = gtk::Spinner::new();
     header.pack_end(&spinner);
@@ -699,6 +702,9 @@ fn reload(a: &Rc<App>) {
                             a.ui.empty.set_description(None);
                         }
                         a.ui.stack.set_visible_child_name("empty");
+                        if searching {
+                            helix_app_common::announce_settled(&a.ui.empty, "No results");
+                        }
                     }
                     // Keep listening: live entries may still arrive.
                 }
@@ -729,6 +735,11 @@ fn reload(a: &Rc<App>) {
                     a.ui.empty
                         .set_description(Some(&glib::markup_escape_text(&e)));
                     a.ui.stack.set_visible_child_name("empty");
+                    helix_app_common::announce(
+                        &a.ui.empty,
+                        &format!("Unable to read logs. {e}"),
+                        helix_app_common::Urgency::Assertive,
+                    );
                 }
             }
         }
@@ -800,7 +811,8 @@ fn detail_page(entry: &Entry, toasts: &adw::ToastOverlay) -> adw::NavigationPage
     let copy = gtk::Button::builder()
         .icon_name("edit-copy-symbolic")
         .tooltip_text("Copy Event")
-        .build();
+        .build()
+        .labelled("Copy Event");
     {
         let text = entry.to_export_fields();
         let toasts = toasts.clone();

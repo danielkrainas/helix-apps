@@ -5,6 +5,7 @@ use crate::textsize;
 use crate::uri::{self, DocRef, Location};
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::RefCell;
 use std::path::PathBuf;
@@ -243,26 +244,31 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
         .icon_name("go-previous-symbolic")
         .tooltip_text("Back")
         .action_name("win.back")
-        .build();
+        .build()
+        .labelled("Back");
     let forward = gtk::Button::builder()
         .icon_name("go-next-symbolic")
         .tooltip_text("Forward")
         .action_name("win.forward")
-        .build();
+        .build()
+        .labelled("Forward");
     let home = gtk::Button::builder()
         .icon_name("go-home-symbolic")
         .tooltip_text("All Help")
         .action_name("win.home")
-        .build();
+        .build()
+        .labelled("All Help");
     let sidebar_btn = gtk::ToggleButton::builder()
         .icon_name("sidebar-show-symbolic")
         .tooltip_text("Show Sidebar")
         .action_name("win.sidebar")
-        .build();
+        .build()
+        .labelled("Show Sidebar");
     let search_btn = gtk::ToggleButton::builder()
         .icon_name("system-search-symbolic")
         .tooltip_text("Search")
-        .build();
+        .build()
+        .labelled("Search");
 
     let menu = gio::Menu::new();
     let sec1 = gio::Menu::new();
@@ -282,7 +288,8 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
         .icon_name("open-menu-symbolic")
         .menu_model(&menu)
         .tooltip_text("Main Menu")
-        .build();
+        .build()
+        .labelled("Main Menu");
 
     let header = adw::HeaderBar::new();
     header.pack_start(&back);

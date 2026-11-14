@@ -10,6 +10,7 @@ use crate::qr;
 use crate::settings::{self, Settings};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
@@ -249,7 +250,8 @@ fn build(app: &adw::Application) -> Rc<State> {
         .tooltip_text("Copy")
         .action_name("win.qr-copy")
         .css_classes(["flat", "circular"])
-        .build();
+        .build()
+        .labelled("Copy");
     let qr_open = gtk::Button::builder()
         .label("Open")
         .action_name("win.qr-open")
@@ -260,7 +262,8 @@ fn build(app: &adw::Application) -> Rc<State> {
         .tooltip_text("Dismiss")
         .action_name("win.qr-dismiss")
         .css_classes(["flat", "circular"])
-        .build();
+        .build()
+        .labelled("Dismiss");
     let qr_box = gtk::Box::builder()
         .spacing(8)
         .css_classes(["qr-banner"])
@@ -297,7 +300,8 @@ fn build(app: &adw::Application) -> Rc<State> {
         .action_name("win.shutter")
         .halign(gtk::Align::Center)
         .css_classes(["shutter"])
-        .build();
+        .build()
+        .labelled("Take Photo");
     let switcher = gtk::Button::builder()
         .icon_name("camera-switch-symbolic")
         .tooltip_text("Switch Camera")
@@ -305,7 +309,8 @@ fn build(app: &adw::Application) -> Rc<State> {
         .valign(gtk::Align::Center)
         .visible(false)
         .css_classes(["circular", "flat"])
-        .build();
+        .build()
+        .labelled("Switch Camera");
     let photo_toggle = gtk::ToggleButton::builder()
         .label("Photo")
         .action_name("win.mode")
@@ -336,7 +341,8 @@ fn build(app: &adw::Application) -> Rc<State> {
         .tooltip_text("Main Menu")
         .menu_model(&menu_model(&formats))
         .primary(true)
-        .build();
+        .build()
+        .labelled("Main Menu");
     header.pack_end(&menu_button);
 
     let toolbar = adw::ToolbarView::new();
@@ -953,6 +959,10 @@ fn update_controls(state: &State) {
     };
     ui.shutter.set_icon_name(icon);
     ui.shutter.set_tooltip_text(Some(tip));
+    helix_app_common::set_accessible_label(
+        &ui.shutter,
+        helix_app_common::a11y::name_from_tooltip(tip),
+    );
     ui.video_toggle
         .set_sensitive(!recording && state.formats.iter().any(|(_, ok)| *ok));
     ui.photo_toggle.set_sensitive(!recording);

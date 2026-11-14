@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use serde::{Deserialize, Serialize};
 use std::cell::{Cell, RefCell};
@@ -195,6 +196,7 @@ fn primary_menu() -> gtk::MenuButton {
         .tooltip_text("Main Menu")
         .primary(true)
         .build()
+        .labelled("Main Menu")
 }
 
 impl App {
@@ -230,7 +232,8 @@ impl App {
             .icon_name("view-refresh-symbolic")
             .action_name("win.rescan")
             .tooltip_text("Reload Locations")
-            .build();
+            .build()
+            .labelled("Reload Locations");
         start_header.pack_end(&reload_btn);
         let locations_list = gtk::ListBox::new();
         locations_list.add_css_class("boxed-list");
@@ -273,7 +276,8 @@ impl App {
             .icon_name("view-refresh-symbolic")
             .action_name("win.rescan")
             .tooltip_text("Rescan (Ctrl+R)")
-            .build();
+            .build()
+            .labelled("Rescan");
         results_header.pack_end(&rescan_btn);
 
         // Progress view.
@@ -348,7 +352,8 @@ impl App {
             .action_name("win.chart-up")
             .tooltip_text("Up (Alt+Up)")
             .css_classes(["flat"])
-            .build();
+            .build()
+            .labelled("Up");
         let rings_btn = gtk::ToggleButton::builder()
             .label("Rings")
             .tooltip_text("Rings Chart")
@@ -736,7 +741,7 @@ impl App {
                 icon.set_icon_name(Some(match n.kind {
                     Kind::Dir if n.error => "dialog-warning-symbolic",
                     Kind::Dir => "folder-symbolic",
-                    Kind::Symlink => "emblem-symbolic-link-symbolic",
+                    Kind::Symlink => "insert-link-symbolic",
                     _ => "text-x-generic-symbolic",
                 }));
                 label.set_text(&n.name);
@@ -1367,7 +1372,8 @@ impl App {
             .icon_name("list-add-symbolic")
             .tooltip_text("Add Location…")
             .css_classes(["flat"])
-            .build();
+            .build()
+            .labelled("Add Location…");
         excl_group.set_header_suffix(Some(&add_btn));
         let list = gtk::ListBox::new();
         list.add_css_class("boxed-list");
@@ -1431,7 +1437,8 @@ fn fill_excluded(a: &Rc<App>, list: &gtk::ListBox) {
             .tooltip_text("Remove")
             .valign(gtk::Align::Center)
             .css_classes(["flat"])
-            .build();
+            .build()
+            .labelled("Remove");
         let (a2, l2) = (a.clone(), list.clone());
         rm.connect_clicked(move |_| {
             let v: Vec<String> = a2

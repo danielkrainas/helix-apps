@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, glib};
+use helix_app_common::Labelled;
 use helix_eds::{source, Source, SourceKind};
 use std::collections::BTreeMap;
 use std::rc::Rc;
@@ -338,7 +339,8 @@ fn remove_button(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gt
         .tooltip_text("Remove Calendar")
         .css_classes(["flat"])
         .valign(gtk::Align::Center)
-        .build();
+        .build()
+        .labelled("Remove Calendar");
     let (ui, src, dialog) = (ui.clone(), s.clone(), dialog.clone());
     b.connect_clicked(move |b| {
         let alert = adw::AlertDialog::new(

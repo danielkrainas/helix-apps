@@ -184,3 +184,7 @@ Without the schema installed, defaults are kept in memory.
 - Window close with `restore-session` enabled stores unsaved documents as
   drafts without asking (matching GNOME Text Editor as understood from its
   user documentation). Confirm this is the desired behaviour.
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): the search-bar match count ("3 of 12", "No results") once typing pauses.

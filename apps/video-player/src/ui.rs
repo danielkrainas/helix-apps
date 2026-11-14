@@ -9,6 +9,7 @@ use crate::sink::Frame;
 use crate::{screenshot, subtitles, timefmt};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -201,9 +202,9 @@ fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .tooltip_text(tooltip)
         .action_name(action)
         .focus_on_click(false)
-        .focusable(false)
         .css_classes(["flat"])
         .build()
+        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
 }
 
 fn primary_menu() -> gio::Menu {
@@ -224,14 +225,16 @@ fn header(menu: &gio::Menu) -> (adw::HeaderBar, gtk::MenuButton) {
         .icon_name("document-open-symbolic")
         .tooltip_text("Open…")
         .action_name("win.open")
-        .build();
+        .build()
+        .labelled("Open…");
     header.pack_start(&open);
     let menu_button = gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
         .tooltip_text("Main Menu")
         .menu_model(menu)
         .primary(true)
-        .build();
+        .build()
+        .labelled("Main Menu");
     header.pack_end(&menu_button);
     (header, menu_button)
 }
@@ -310,6 +313,7 @@ impl Ui {
             .hexpand(true)
             .vexpand(true)
             .build();
+        helix_app_common::set_accessible_label(&picture, "Video");
         let video_page = gtk::Overlay::builder()
             .child(&picture)
             .css_classes(["vp-video"])
@@ -335,6 +339,7 @@ impl Ui {
             .valign(gtk::Align::Center)
             .can_target(false)
             .build();
+        helix_app_common::set_accessible_label(&spinner, "Loading");
         video_page.add_overlay(&spinner);
 
         let play_button = icon_button("media-playback-start-symbolic", "Play", "win.play-pause");
@@ -353,9 +358,10 @@ impl Ui {
             .adjustment(&gtk::Adjustment::new(0.0, 0.0, 1.0, 1.0, 10.0, 0.0))
             .hexpand(true)
             .draw_value(false)
-            .focusable(false)
+            .focus_on_click(false)
             .css_classes(["vp-seek"])
             .build();
+        helix_app_common::set_accessible_label(&seek, "Position");
         let seek_label = gtk::Label::builder().css_classes(["numeric"]).build();
         let seek_popover = gtk::Popover::builder()
             .autohide(false)
@@ -374,13 +380,15 @@ impl Ui {
         let mute_button = gtk::ToggleButton::builder()
             .icon_name("audio-volume-muted-symbolic")
             .tooltip_text("Mute")
-            .build();
+            .build()
+            .labelled("Mute");
         let volume_scale = gtk::Scale::builder()
             .orientation(gtk::Orientation::Horizontal)
             .adjustment(&gtk::Adjustment::new(1.0, 0.0, 1.0, 0.05, 0.1, 0.0))
             .width_request(160)
             .draw_value(false)
             .build();
+        helix_app_common::set_accessible_label(&volume_scale, "Volume");
         let vol_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         vol_box.append(&mute_button);
         vol_box.append(&volume_scale);
@@ -391,7 +399,8 @@ impl Ui {
             .focus_on_click(false)
             .css_classes(["flat"])
             .direction(gtk::ArrowType::Up)
-            .build();
+            .build()
+            .labelled("Volume");
 
         let speed_menu = gio::Menu::new();
         for (value, label) in SPEEDS {
@@ -406,16 +415,21 @@ impl Ui {
             .focus_on_click(false)
             .css_classes(["flat"])
             .direction(gtk::ArrowType::Up)
-            .build();
+            .build()
+            .labelled("Playback Speed: 1×");
         let tracks_button = gtk::MenuButton::builder()
             .icon_name("media-view-subtitles-symbolic")
             .tooltip_text("Audio and Subtitles")
             .focus_on_click(false)
             .css_classes(["flat"])
             .direction(gtk::ArrowType::Up)
-            .build();
-        let fullscreen_button =
-            icon_button("view-fullscreen-symbolic", "Fullscreen", "win.fullscreen");
+            .build()
+            .labelled("Audio and Subtitles");
+        let fullscreen_button = icon_button(
+            "view-fullscreen-symbolic",
+            "Enter Fullscreen",
+            "win.fullscreen",
+        );
 
         let controls = gtk::Box::builder()
             .orientation(gtk::Orientation::Horizontal)
@@ -698,8 +712,12 @@ impl Ui {
                 ui.fullscreen_button.set_tooltip_text(Some(if fs {
                     "Leave Fullscreen"
                 } else {
-                    "Fullscreen"
+                    "Enter Fullscreen"
                 }));
+                helix_app_common::set_accessible_label(
+                    &ui.fullscreen_button,
+                    &ui.fullscreen_button.tooltip_text().unwrap_or_default(),
+                );
                 ui.update_action_states();
                 ui.mpris.update(|s| s.fullscreen = fs);
                 ui.mpris.changed(&[Prop::Fullscreen]);
@@ -747,6 +765,25 @@ impl Ui {
                 }
             ));
             w.add_controller(m);
+        }
+        // Keyboard focus entering the header or the controls shows them;
+        // leaving restarts the hide timer.
+        for w in [
+            self.controls_revealer.upcast_ref::<gtk::Widget>(),
+            self.header_revealer.upcast_ref(),
+        ] {
+            let f = gtk::EventControllerFocus::new();
+            f.connect_enter(glib::clone!(
+                #[weak(rename_to = ui)]
+                self,
+                move |_| ui.show_controls()
+            ));
+            f.connect_leave(glib::clone!(
+                #[weak(rename_to = ui)]
+                self,
+                move |_| ui.schedule_hide()
+            ));
+            w.add_controller(f);
         }
         let keys = gtk::EventControllerKey::new();
         keys.set_propagation_phase(gtk::PropagationPhase::Capture);
@@ -1004,6 +1041,19 @@ impl Ui {
         self.paintable.clear();
         self.spinner.set_spinning(false);
         self.stack.set_visible_child_name("error");
+        let spoken = if missing.is_empty() {
+            format!("Cannot play file. {detail}")
+        } else {
+            format!(
+                "Cannot play file. The required codec is not installed: {}",
+                missing.join(", ")
+            )
+        };
+        helix_app_common::announce(
+            &self.error_page,
+            &spoken,
+            helix_app_common::Urgency::Assertive,
+        );
         self.set_inhibit(false);
         self.update_action_states();
         self.mpris.update(|s| {
@@ -1185,6 +1235,10 @@ impl Ui {
         });
         self.play_button
             .set_tooltip_text(Some(if playing { "Pause" } else { "Play" }));
+        helix_app_common::set_accessible_label(
+            &self.play_button,
+            &self.play_button.tooltip_text().unwrap_or_default(),
+        );
         self.set_inhibit(playing);
         let has_media = self.st.borrow().uri.is_some() && !self.st.borrow().error;
         let status = match (playing, has_media) {
@@ -1233,6 +1287,10 @@ impl Ui {
         let d = self.st.borrow().duration;
         self.elapsed.set_label(&timefmt::elapsed(pos, d));
         self.remaining.set_label(&timefmt::remaining(pos, d));
+        self.seek
+            .update_property(&[gtk::accessible::Property::ValueText(
+                &timefmt::position_text(pos, d),
+            )]);
     }
 
     fn save_position(&self) {
@@ -1434,6 +1492,10 @@ impl Ui {
             a.set_state(&key.to_variant());
         }
         self.speed_button.set_label(&format!("{key}×"));
+        helix_app_common::set_accessible_label(
+            &self.speed_button,
+            &format!("Playback Speed: {key}×"),
+        );
     }
 
     fn set_volume(&self, v: f64) {
@@ -1460,6 +1522,13 @@ impl Ui {
         self.volume_scale.set_value(v.cbrt());
         self.mute_button.set_active(muted);
         self.updating.set(false);
+        let percent = if muted {
+            "Muted".to_string()
+        } else {
+            format!("{}%", (v.cbrt() * 100.0).round() as i32)
+        };
+        self.volume_scale
+            .update_property(&[gtk::accessible::Property::ValueText(&percent)]);
         let icon = if muted || v <= 0.0 {
             "audio-volume-muted-symbolic"
         } else if v < 0.33 {
@@ -1542,16 +1611,28 @@ impl Ui {
         self.schedule_hide();
     }
 
+    /// Whether keyboard focus (shown with a focus ring) is in the header
+    /// or the controls.
+    fn keyboard_focus_in_controls(&self) -> bool {
+        self.window.gets_focus_visible()
+            && gtk::prelude::GtkWindowExt::focus(&self.window).is_some_and(|f| {
+                f.is_ancestor(&self.controls_revealer) || f.is_ancestor(&self.header_revealer)
+            })
+    }
+
     fn should_hide(&self) -> bool {
+        let focus = self.keyboard_focus_in_controls();
         let st = self.st.borrow();
-        st.showing_video
-            && !st.over_controls
-            && self.player.is_playing()
-            && !self
-                .menu_buttons
-                .iter()
-                .chain([&self.volume_button, &self.speed_button, &self.tracks_button])
-                .any(|b| b.is_active())
+        hide_allowed(
+            st.showing_video,
+            st.over_controls,
+            focus,
+            self.player.is_playing(),
+        ) && !self
+            .menu_buttons
+            .iter()
+            .chain([&self.volume_button, &self.speed_button, &self.tracks_button])
+            .any(|b| b.is_active())
     }
 
     fn schedule_hide(&self) {
@@ -1563,6 +1644,14 @@ impl Ui {
             let Some(ui) = me.upgrade() else { return };
             ui.st.borrow_mut().hide_source = None;
             if ui.should_hide() {
+                // Focus never stays on a hidden widget (pointer users may
+                // have left it there without a focus ring).
+                let focus = gtk::prelude::GtkWindowExt::focus(&ui.window);
+                if focus.is_some_and(|f| {
+                    f.is_ancestor(&ui.controls_revealer) || f.is_ancestor(&ui.header_revealer)
+                }) {
+                    gtk::prelude::GtkWindowExt::set_focus(&ui.window, None::<&gtk::Widget>);
+                }
                 ui.header_revealer.set_reveal_child(false);
                 ui.controls_revealer.set_reveal_child(false);
                 ui.seek_popover.popdown();
@@ -1636,5 +1725,29 @@ impl Ui {
             Command::SetRate(r) => self.set_rate(r.clamp(mpris::MIN_RATE, mpris::MAX_RATE)),
             Command::SetFullscreen(f) => self.window.set_fullscreened(f),
         }
+    }
+}
+
+/// Whether the controls may auto-hide: only over a playing video, with the
+/// pointer away from them and no keyboard focus inside them.
+fn hide_allowed(
+    showing_video: bool,
+    over_controls: bool,
+    focus_inside: bool,
+    playing: bool,
+) -> bool {
+    showing_video && !over_controls && !focus_inside && playing
+}
+
+#[cfg(test)]
+mod hide_tests {
+    use super::hide_allowed;
+
+    #[test]
+    fn controls_stay_while_focused() {
+        assert!(hide_allowed(true, false, false, true));
+        assert!(!hide_allowed(true, false, true, true));
+        assert!(!hide_allowed(true, true, false, true));
+        assert!(!hide_allowed(true, false, false, false));
     }
 }

@@ -358,11 +358,13 @@ impl Sidebar {
             b.append(&label);
             if let Kind::Mount(m) = &p.kind {
                 if m.can_eject() || m.can_unmount() {
+                    let verb = if m.can_eject() { "Eject" } else { "Unmount" };
                     let btn = gtk::Button::builder()
                         .icon_name("media-eject-symbolic")
-                        .tooltip_text(if m.can_eject() { "Eject" } else { "Unmount" })
+                        .tooltip_text(verb)
                         .valign(gtk::Align::Center)
                         .build();
+                    helix_app_common::set_accessible_label(&btn, &format!("{verb} {}", p.label));
                     btn.add_css_class("flat");
                     btn.add_css_class("sidebar-eject");
                     let weak = Rc::downgrade(self);

@@ -172,6 +172,10 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
 - **Conflicts** (destination exists, different source): dialog with
   *Skip*, *Keep Both* (copy naming), *Replace* (or *Merge* when both are
   folders) and *Cancel*, plus an "Apply to all" check box.
+  Enter never overwrites: for files the default response is *Keep Both*
+  (Replace is styled destructive and only chosen deliberately); for two
+  folders the default stays *Merge* (styled suggested), which still asks
+  again for every conflicting file inside. Escape always cancels.
 - Moving or copying a folder into itself or a descendant is refused.
 
 ### Search
@@ -289,3 +293,7 @@ bookmark, `F2` rename, `Delete` trash, `Shift+Delete` delete,
   `org.freedesktop.impl.portal.FileChooser`.
 - `org.freedesktop.FileManager1`: implemented; the name is requested
   without REPLACE, and packaging decides the default file manager.
+
+### Accessibility
+- Status changes that happen without focus moving are announced to
+  screen readers (`helix_app_common::a11y`): a recursive search finishing ("Search finished: 12 items found" / "No results") and a file operation finishing ("Finished copying 3 items to “Docs”"); failures open an alert, cancellation shows a toast.
