@@ -88,6 +88,19 @@ VTE for GTK 4 (`vte-2.91-gtk4` 0.76, Rust `vte4` 0.8).
   built-in palette (own palettes: "Helix Light", "Helix Dark", "Hacker").
 - Font: the system monospace font (`org.gnome.desktop.interface
   monospace-font-name`, watched for changes) or a custom font.
+- **Transparent background** (off by default): when on, the terminal's
+  default background colour is drawn with alpha `1 − transparency / 100`
+  (transparency 0–100 %, default 20 %), so the desktop shows through
+  where the compositor blends window alpha. Only the default background
+  becomes see-through: text, the cursor, selection highlight and cells
+  with an explicit (ANSI/true-colour) background stay opaque, as in GNOME
+  Terminal. While it is on, each terminal window gets the
+  `transparent-background` style class, which clears the window's own
+  background so nothing opaque is painted behind the terminal; the header
+  bar, tab bar, find bar and exit banner keep their normal opaque
+  backgrounds. Turning it off restores a fully opaque background (alpha
+  1.0) and removes the class. Changes apply live to every open terminal
+  and window.
 
 ### GSettings
 Schema `org.gnome.Console` (not installed on the development machine; the
@@ -116,9 +129,26 @@ turning it off restores the spin row's value. The `shell` key has no UI
 
 Read-only: `org.gnome.desktop.interface monospace-font-name`.
 
+`org.gnome.Console` has no transparency setting, and the bundled copy must
+stay identical to the real schema, so the transparency keys live in
+Helix's own schema `org.helix.Terminal` (path `/org/helix/Terminal/`,
+`data/org.helix.Terminal.gschema.xml`), read through a second `Prefs`
+(in-memory fallback when not installed). The key names and types are the
+ones GNOME Terminal uses in its profiles, so the meaning is the same:
+
+| Key | Type (default) | Use |
+|---|---|---|
+| `use-transparent-background` | b (false) | transparent background on/off |
+| `background-transparency-percent` | i, range 0–100 (20) | 0 = opaque, 100 = fully clear |
+
+Out-of-range stored values are clamped to 0–100. Changes made outside the
+app (e.g. `gsettings set`) also apply live.
+
 ### Preferences dialog (`AdwPreferencesDialog`)
 - Appearance: Style (combo), Use System Font (switch), Custom Font
-  (font button, enabled when not using the system font).
+  (font button, enabled when not using the system font), Transparent
+  Background (switch), Transparency (0–100 % slider, enabled only while
+  Transparent Background is on).
 - Behaviour: Unlimited Scrollback (switch), Scrollback Lines (spin),
   Audible Bell, Visual Bell, Restore Window Size.
 
@@ -159,6 +189,11 @@ Ctrl+W and Ctrl+Q are deliberately *not* bound (they belong to the shell).
   (`auto`=0 … `hacker`=3), `font-scale` range added, the non-existent
   `ignore-scrollback-limit` dropped (unlimited = negative
   `scrollback-lines`), `shell` added.
+- Background transparency is stored in Helix's own `org.helix.Terminal`
+  schema using GNOME Terminal's profile key names, rather than adding
+  non-standard keys to `org.gnome.Console`. Default transparency when
+  turned on is 20 % (GNOME Terminal uses 50 %; 20 % keeps text readable
+  over busy wallpapers).
 
 ## Open questions
 - Console's exact handling of finished `-- COMMAND` tabs is unknown; we keep

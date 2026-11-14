@@ -8,6 +8,7 @@ mod prefs_dialog;
 mod process;
 mod search;
 mod shortcuts;
+mod transparency;
 mod window;
 
 use gtk::glib;

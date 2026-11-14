@@ -11,6 +11,7 @@ use vte4::prelude::*;
 use crate::cli::{self, Parsed};
 use crate::palette::{self, Palette, Theme};
 use crate::search;
+use crate::transparency::{self, Transparency};
 use crate::window::Window;
 
 pub const APP_ID: &str = "org.helix.Terminal";
@@ -20,6 +21,21 @@ const DEFAULT_SIZE: (i32, i32) = (800, 520);
 
 const CSS: &str = "
 vte-terminal.bell-flash { opacity: 0.6; }
+/* Transparent terminal background: the window paints nothing behind the
+   terminal, so the bars (which otherwise rely on it) get their own opaque
+   background. Before the tints so those still win. */
+window.transparent-background,
+window.transparent-background taboverview,
+window.transparent-background toolbarview,
+window.transparent-background tabview,
+window.transparent-background tabview scrolledwindow,
+window.transparent-background tabview vte-terminal {
+  background: none;
+}
+window.transparent-background .top-bar,
+window.transparent-background searchbar > revealer > box {
+  background-color: @headerbar_bg_color;
+}
 window.root-tint .top-bar, window.root-tint headerbar {
   background-color: mix(@headerbar_bg_color, #e01b24, 0.22);
 }
@@ -39,6 +55,8 @@ pub struct App {
     pub this: Weak<App>,
     pub gtk: adw::Application,
     pub prefs: Prefs,
+    /// `org.helix.Terminal`: settings Console's schema has no key for.
+    pub helix_prefs: Prefs,
     iface: Option<gio::Settings>,
     pub windows: RefCell<Vec<Rc<Window>>>,
 }
@@ -105,6 +123,7 @@ impl App {
             this: this.clone(),
             gtk: gtk_app.clone(),
             prefs: Prefs::new(SCHEMA),
+            helix_prefs: Prefs::new(transparency::SCHEMA),
             iface: helix_app_common::settings(IFACE_SCHEMA),
             windows: RefCell::default(),
         })
@@ -140,6 +159,14 @@ impl App {
                     if !key.starts_with("last-window") {
                         app.refresh_all();
                     }
+                }
+            });
+        }
+        if let Some(s) = self.helix_prefs.gsettings() {
+            let wk = self.this.clone();
+            s.connect_changed(None, move |_, _| {
+                if let Some(app) = wk.upgrade() {
+                    app.refresh_all();
                 }
             });
         }
@@ -302,6 +329,10 @@ impl App {
         desc
     }
 
+    pub fn transparency(&self) -> Transparency {
+        Transparency::load(&self.helix_prefs)
+    }
+
     pub fn palette(&self) -> &'static Palette {
         palette::palette_for(self.theme(), adw::StyleManager::default().is_dark())
     }
@@ -322,7 +353,10 @@ impl App {
         };
         let colors: Vec<gdk::RGBA> = p.colors.iter().map(|c| rgba(c)).collect();
         let refs: Vec<&gdk::RGBA> = colors.iter().collect();
-        term.set_colors(Some(&rgba(p.foreground)), Some(&rgba(p.background)), &refs);
+        // Only the default background gets alpha; text stays opaque.
+        let mut background = rgba(p.background);
+        background.set_alpha(self.transparency().background_alpha());
+        term.set_colors(Some(&rgba(p.foreground)), Some(&background), &refs);
         term.set_color_cursor(Some(&rgba(p.cursor)));
         term.set_color_cursor_foreground(Some(&rgba(p.cursor_foreground)));
         term.set_color_highlight(Some(&rgba(p.highlight)));
@@ -333,9 +367,19 @@ impl App {
         self.prefs.get("visual-bell", true)
     }
 
+    /// Lets the window background show the terminal's alpha through.
+    pub fn apply_to_window(&self, win: &adw::ApplicationWindow) {
+        if self.transparency().is_see_through() {
+            win.add_css_class("transparent-background");
+        } else {
+            win.remove_css_class("transparent-background");
+        }
+    }
+
     pub fn refresh_all(&self) {
         let windows = self.windows.borrow().clone();
         for w in windows {
+            self.apply_to_window(&w.win);
             for t in w.tabs.borrow().iter() {
                 self.apply_to(&t.term);
             }

@@ -198,6 +198,7 @@ impl Window {
             tint: Cell::new(Tint::None),
             closing: Cell::new(false),
         });
+        app.apply_to_window(&w.win);
         w.install_actions();
         w.connect_signals();
         w.start_tint_poll();

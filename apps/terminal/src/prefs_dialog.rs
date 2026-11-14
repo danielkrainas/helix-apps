@@ -6,6 +6,7 @@ use std::rc::Rc;
 
 use crate::app::App;
 use crate::palette::Theme;
+use crate::transparency::Transparency;
 
 pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     let prefs = &app.prefs;
@@ -67,6 +68,42 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     });
     appearance.add(&use_system);
     appearance.add(&font_row);
+
+    // Transparency (org.helix.Terminal, GNOME Terminal key names).
+    let current = app.transparency();
+    let transparent = adw::SwitchRow::builder()
+        .title("Transparent Background")
+        .active(current.enabled)
+        .build();
+    let scale = gtk::Scale::with_range(gtk::Orientation::Horizontal, 0.0, 100.0, 1.0);
+    scale.set_value(current.percent as f64);
+    scale.set_draw_value(true);
+    scale.set_value_pos(gtk::PositionType::Right);
+    scale.set_digits(0);
+    scale.set_hexpand(true);
+    scale.set_valign(gtk::Align::Center);
+    scale.set_format_value_func(|_, v| format!("{v:.0} %"));
+    scale.update_property(&[gtk::accessible::Property::Label("Transparency")]);
+    let amount_row = adw::ActionRow::builder().title("Transparency").build();
+    amount_row.add_suffix(&scale);
+    amount_row.set_sensitive(current.enabled);
+    let a = app.clone();
+    let ar = amount_row.clone();
+    transparent.connect_active_notify(move |row| {
+        Transparency::set_enabled(&a.helix_prefs, row.is_active());
+        ar.set_sensitive(row.is_active());
+        a.refresh_all();
+    });
+    let a = app.clone();
+    scale.connect_value_changed(move |s| {
+        let percent = s.value().round() as i32;
+        if percent != a.transparency().percent {
+            Transparency::set_percent(&a.helix_prefs, percent);
+            a.refresh_all();
+        }
+    });
+    appearance.add(&transparent);
+    appearance.add(&amount_row);
     page.add(&appearance);
 
     // Behaviour.
