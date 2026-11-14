@@ -149,7 +149,11 @@ pub fn fill_script(login: &Login) -> String {
 
 /// Text of the save bar.
 pub fn prompt_text(s: &Submission, kind: Offer) -> String {
-    let host = s.origin.split_once("://").map(|(_, h)| h).unwrap_or(&s.origin);
+    let host = s
+        .origin
+        .split_once("://")
+        .map(|(_, h)| h)
+        .unwrap_or(&s.origin);
     let who = if s.username.is_empty() {
         String::new()
     } else {
@@ -202,8 +206,14 @@ mod tests {
         assert_eq!(offer(&[login("ada", "old")], &s), Offer::Update);
         assert_eq!(offer(&[login("ada", "pw")], &s), Offer::Nothing);
         assert_eq!(s.to_login(), login("ada", "pw"));
-        assert_eq!(prompt_text(&s, Offer::Save), "Save password for “ada” on e.com?");
-        assert_eq!(prompt_text(&s, Offer::Update), "Update the saved password for “ada” on e.com?");
+        assert_eq!(
+            prompt_text(&s, Offer::Save),
+            "Save password for “ada” on e.com?"
+        );
+        assert_eq!(
+            prompt_text(&s, Offer::Update),
+            "Update the saved password for “ada” on e.com?"
+        );
     }
 
     #[test]
@@ -214,7 +224,12 @@ mod tests {
             js,
             r#"window.__helixFill ? window.__helixFill("a\"b", "p'w\\\n</script>") : 0"#
         );
-        assert_eq!(pick_fill(&[login("zed", "1"), login("amy", "2")]).unwrap().username, "amy");
+        assert_eq!(
+            pick_fill(&[login("zed", "1"), login("amy", "2")])
+                .unwrap()
+                .username,
+            "amy"
+        );
         assert!(pick_fill(&[]).is_none());
     }
 }

@@ -11,8 +11,14 @@ use std::path::{Path, PathBuf};
 pub const IF_NS: &str = "http://projectmallard.org/if/1.0/";
 
 /// Tokens that are true for `if:test` conditionals.
-const TRUE_TOKENS: &[&str] =
-    &["target:html", "target:help", "platform:gnome", "platform:gnome-shell", "platform:linux", "platform:helix"];
+const TRUE_TOKENS: &[&str] = &[
+    "target:html",
+    "target:help",
+    "platform:gnome",
+    "platform:gnome-shell",
+    "platform:linux",
+    "platform:helix",
+];
 
 /// Evaluates an `if:test` expression: comma-separated alternatives (OR),
 /// each a whitespace-separated list of tokens (AND), `!` negates a token.
@@ -45,12 +51,13 @@ fn name(n: Node) -> &'static str {
     // Maps a Mallard element to a static name for matching; unknown
     // elements map to "" and are rendered as their children.
     const KNOWN: &[&str] = &[
-        "page", "section", "info", "title", "subtitle", "desc", "p", "list", "steps", "terms", "tree", "item",
-        "code", "screen", "synopsis", "example", "figure", "listing", "quote", "cite", "note", "media", "table",
-        "thead", "tbody", "tfoot", "tr", "td", "th", "col", "colgroup", "comment", "links", "link", "gui",
-        "guiseq", "key", "keyseq", "menu", "app", "cmd", "sys", "file", "input", "output", "var", "em", "span",
-        "hi", "date", "name", "email", "credit", "license", "revision", "include", "fallback", "if", "when",
-        "else", "choose", "br", "years", "div", "sym",
+        "page", "section", "info", "title", "subtitle", "desc", "p", "list", "steps", "terms",
+        "tree", "item", "code", "screen", "synopsis", "example", "figure", "listing", "quote",
+        "cite", "note", "media", "table", "thead", "tbody", "tfoot", "tr", "td", "th", "col",
+        "colgroup", "comment", "links", "link", "gui", "guiseq", "key", "keyseq", "menu", "app",
+        "cmd", "sys", "file", "input", "output", "var", "em", "span", "hi", "date", "name",
+        "email", "credit", "license", "revision", "include", "fallback", "if", "when", "else",
+        "choose", "br", "years", "div", "sym",
     ];
     let n = n.tag_name().name();
     KNOWN.iter().find(|k| **k == n).copied().unwrap_or("")
@@ -103,14 +110,26 @@ fn extract_target(n: Node, page_id: &str, xref: String) -> Target {
     let info_title = |ty: &str| {
         info.and_then(|i| {
             i.children()
-                .find(|c| c.is_element() && c.tag_name().name() == "title" && c.attribute("type") == Some(ty) && visible(*c))
+                .find(|c| {
+                    c.is_element()
+                        && c.tag_name().name() == "title"
+                        && c.attribute("type") == Some(ty)
+                        && visible(*c)
+                })
                 .map(xmlutil::text_of)
         })
     };
-    let main_title = xmlutil::child(n, "title").map(xmlutil::text_of).unwrap_or_default();
-    let title = info_title("link").filter(|t| !t.is_empty()).unwrap_or_else(|| main_title.clone());
+    let main_title = xmlutil::child(n, "title")
+        .map(xmlutil::text_of)
+        .unwrap_or_default();
+    let title = info_title("link")
+        .filter(|t| !t.is_empty())
+        .unwrap_or_else(|| main_title.clone());
     let sort_title = info_title("sort").unwrap_or_else(|| title.clone());
-    let desc = info.and_then(|i| xmlutil::child(i, "desc")).map(xmlutil::text_of).unwrap_or_default();
+    let desc = info
+        .and_then(|i| xmlutil::child(i, "desc"))
+        .map(xmlutil::text_of)
+        .unwrap_or_default();
     let links = info
         .map(|i| {
             xmlutil::children(i, "link")
@@ -125,13 +144,21 @@ fn extract_target(n: Node, page_id: &str, xref: String) -> Target {
                 .collect()
         })
         .unwrap_or_default();
-    Target { xref, title, sort_title, desc, links }
+    Target {
+        xref,
+        title,
+        sort_title,
+        desc,
+        links,
+    }
 }
 
 fn body_text(root: Node) -> String {
     let mut s = String::new();
     for d in root.descendants().filter(|d| d.is_text()) {
-        if d.ancestors().any(|a| a.is_element() && matches!(a.tag_name().name(), "info" | "comment")) {
+        if d.ancestors()
+            .any(|a| a.is_element() && matches!(a.tag_name().name(), "info" | "comment"))
+        {
             continue;
         }
         s.push_str(d.text().unwrap_or(""));
@@ -163,16 +190,29 @@ pub fn parse_page(source: String, path: PathBuf) -> Result<Page, String> {
         .collect();
     let body = body_text(root);
     drop(doc);
-    Ok(Page { id, path, meta, sections, body, source })
+    Ok(Page {
+        id,
+        path,
+        meta,
+        sections,
+        body,
+        source,
+    })
 }
 
 impl MallardDoc {
     /// Loads every `*.page` file in `dir`.
     pub fn load(dir: &Path) -> Result<MallardDoc, String> {
-        let mut doc = MallardDoc { dir: dir.to_path_buf(), pages: BTreeMap::new() };
+        let mut doc = MallardDoc {
+            dir: dir.to_path_buf(),
+            pages: BTreeMap::new(),
+        };
         let rd = std::fs::read_dir(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-        let mut files: Vec<PathBuf> =
-            rd.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e == "page")).collect();
+        let mut files: Vec<PathBuf> = rd
+            .flatten()
+            .map(|e| e.path())
+            .filter(|p| p.extension().is_some_and(|e| e == "page"))
+            .collect();
         files.sort();
         for f in files {
             match xmlutil::read_flat(&f).and_then(|src| parse_page(src, f.clone())) {
@@ -198,14 +238,21 @@ impl MallardDoc {
         // Prefer an explicit text title (used for window titles).
         let text_title = info.and_then(|i| {
             i.children()
-                .find(|c| c.is_element() && c.tag_name().name() == "title" && c.attribute("type") == Some("text"))
+                .find(|c| {
+                    c.is_element()
+                        && c.tag_name().name() == "title"
+                        && c.attribute("type") == Some("text")
+                })
                 .map(xmlutil::text_of)
         });
         Some(text_title.unwrap_or(t.title)).filter(|t| !t.is_empty())
     }
 
     pub fn title(&self) -> String {
-        self.pages.get("index").map(|p| p.meta.title.clone()).unwrap_or_default()
+        self.pages
+            .get("index")
+            .map(|p| p.meta.title.clone())
+            .unwrap_or_default()
     }
 
     pub fn target(&self, xref: &str) -> Option<&Target> {
@@ -216,7 +263,9 @@ impl MallardDoc {
     }
 
     fn all_targets(&self) -> impl Iterator<Item = &Target> {
-        self.pages.values().flat_map(|p| std::iter::once(&p.meta).chain(p.sections.iter()))
+        self.pages
+            .values()
+            .flat_map(|p| std::iter::once(&p.meta).chain(p.sections.iter()))
     }
 
     /// Topic links of a guide page or section (unsorted, de-duplicated),
@@ -236,7 +285,11 @@ impl MallardDoc {
             }
         }
         for t in self.all_targets() {
-            for l in t.links.iter().filter(|l| l.kind == "guide" && l.xref == xref) {
+            for l in t
+                .links
+                .iter()
+                .filter(|l| l.kind == "guide" && l.xref == xref)
+            {
                 push(l.group.clone(), t.xref.clone());
             }
         }
@@ -255,7 +308,10 @@ impl MallardDoc {
             }
         }
         for t in self.all_targets() {
-            if t.links.iter().any(|l| l.kind == "topic" && l.xref == xref) && !out.contains(&t.xref) && t.xref != xref {
+            if t.links.iter().any(|l| l.kind == "topic" && l.xref == xref)
+                && !out.contains(&t.xref)
+                && t.xref != xref
+            {
                 out.push(t.xref.clone());
             }
         }
@@ -273,7 +329,12 @@ impl MallardDoc {
             }
         }
         for t in self.all_targets() {
-            if t.links.iter().any(|l| l.kind == "seealso" && l.xref == xref) && !out.contains(&t.xref) && t.xref != xref {
+            if t.links
+                .iter()
+                .any(|l| l.kind == "seealso" && l.xref == xref)
+                && !out.contains(&t.xref)
+                && t.xref != xref
+            {
                 out.push(t.xref.clone());
             }
         }
@@ -281,13 +342,23 @@ impl MallardDoc {
     }
 
     fn sort_key(&self, xref: &str) -> String {
-        self.target(xref).map(|t| t.sort_title.to_lowercase()).unwrap_or_default()
+        self.target(xref)
+            .map(|t| t.sort_title.to_lowercase())
+            .unwrap_or_default()
     }
 
     /// Orders links into groups (`first`, the listed groups, `default`,
     /// `last`), sorting by sort title within each group.
-    pub fn group_sort(&self, links: Vec<(Option<String>, String)>, groups: Option<&str>) -> Vec<String> {
-        let mut order: Vec<String> = groups.unwrap_or("").split_whitespace().map(str::to_string).collect();
+    pub fn group_sort(
+        &self,
+        links: Vec<(Option<String>, String)>,
+        groups: Option<&str>,
+    ) -> Vec<String> {
+        let mut order: Vec<String> = groups
+            .unwrap_or("")
+            .split_whitespace()
+            .map(str::to_string)
+            .collect();
         if !order.iter().any(|g| g == "default") {
             order.push("default".into());
         }
@@ -300,7 +371,9 @@ impl MallardDoc {
         let mut buckets: Vec<Vec<String>> = vec![Vec::new(); order.len()];
         let default_idx = order.iter().position(|g| g == "default").unwrap_or(0);
         for (g, x) in links {
-            let idx = g.and_then(|g| order.iter().position(|o| *o == g)).unwrap_or(default_idx);
+            let idx = g
+                .and_then(|g| order.iter().position(|o| *o == g))
+                .unwrap_or(default_idx);
             buckets[idx].push(x);
         }
         let mut out = Vec::new();
@@ -352,11 +425,19 @@ impl MallardDoc {
         out
     }
 
-    fn toc_rec(&self, page: &str, depth: usize, seen: &mut HashSet<String>, out: &mut Vec<(usize, String, String)>) {
+    fn toc_rec(
+        &self,
+        page: &str,
+        depth: usize,
+        seen: &mut HashSet<String>,
+        out: &mut Vec<(usize, String, String)>,
+    ) {
         if depth > 8 {
             return;
         }
-        let Some(p) = self.pages.get(page) else { return };
+        let Some(p) = self.pages.get(page) else {
+            return;
+        };
         let mut links = self.group_sort(self.topic_links(page), None);
         for s in &p.sections {
             links.extend(self.group_sort(self.topic_links(&s.xref), None));
@@ -402,29 +483,47 @@ impl MallardDoc {
         let page = self.pages.get(page_id)?;
         let doc = xmlutil::parse(&page.source).ok()?;
         let root = doc.root_element();
-        let mut r = Renderer { doc: self, docref, page, placed: HashSet::new() };
+        let mut r = Renderer {
+            doc: self,
+            docref,
+            page,
+            placed: HashSet::new(),
+        };
         let mut body = String::new();
         let trail: Vec<(String, String)> = self
             .trail(page_id)
             .iter()
-            .filter_map(|p| Some((page_uri(docref, p, None), self.pages.get(p)?.meta.title.clone())))
+            .filter_map(|p| {
+                Some((
+                    page_uri(docref, p, None),
+                    self.pages.get(p)?.meta.title.clone(),
+                ))
+            })
             .collect();
         body.push_str(&html::trail(&trail));
         body.push_str(&r.container(root, 1, page_id));
         let seealso = self.sorted_by_title(self.seealso_links(page_id));
         if !r.placed.contains(&format!("seealso:{page_id}")) {
-            let items: Vec<LinkItem> = seealso.iter().filter_map(|x| self.link_item(docref, x)).collect();
+            let items: Vec<LinkItem> = seealso
+                .iter()
+                .filter_map(|x| self.link_item(docref, x))
+                .collect();
             body.push_str(&html::link_list("seealso", Some("See Also"), &items));
         }
         if !r.placed.contains(&format!("guide:{page_id}")) {
             let guides = self.sorted_by_title(self.guide_links(page_id));
             let items: Vec<LinkItem> = guides
                 .iter()
-                .filter_map(|x| self.link_item(docref, x).map(|i| LinkItem { desc: None, ..i }))
+                .filter_map(|x| {
+                    self.link_item(docref, x)
+                        .map(|i| LinkItem { desc: None, ..i })
+                })
                 .collect();
             body.push_str(&html::link_list("guides", Some("More Information"), &items));
         }
-        let title = xmlutil::child(root, "title").map(xmlutil::text_of).unwrap_or_else(|| page.meta.title.clone());
+        let title = xmlutil::child(root, "title")
+            .map(xmlutil::text_of)
+            .unwrap_or_else(|| page.meta.title.clone());
         Some((title.clone(), html::page(&title, &body)))
     }
 }
@@ -438,8 +537,33 @@ fn page_uri(docref: &DocRef, page: &str, frag: Option<&str>) -> String {
 }
 
 const INLINE_PARENTS: &[&str] = &[
-    "p", "title", "desc", "subtitle", "cite", "em", "span", "link", "gui", "guiseq", "key", "keyseq", "menu", "app",
-    "cmd", "sys", "file", "input", "output", "var", "code", "screen", "hi", "date", "name", "email", "synopsis_inline",
+    "p",
+    "title",
+    "desc",
+    "subtitle",
+    "cite",
+    "em",
+    "span",
+    "link",
+    "gui",
+    "guiseq",
+    "key",
+    "keyseq",
+    "menu",
+    "app",
+    "cmd",
+    "sys",
+    "file",
+    "input",
+    "output",
+    "var",
+    "code",
+    "screen",
+    "hi",
+    "date",
+    "name",
+    "email",
+    "synopsis_inline",
 ];
 
 fn in_inline_context(n: Node) -> bool {
@@ -452,7 +576,8 @@ fn in_inline_context(n: Node) -> bool {
             break;
         }
     }
-    p.map(|p| p.is_element() && INLINE_PARENTS.contains(&p.tag_name().name())).unwrap_or(false)
+    p.map(|p| p.is_element() && INLINE_PARENTS.contains(&p.tag_name().name()))
+        .unwrap_or(false)
 }
 
 struct Renderer<'d> {
@@ -469,7 +594,9 @@ impl Renderer<'_> {
         }
         // Paths are relative to the page file; express them relative to the doc dir.
         let page_dir = self.page.path.parent().unwrap_or(&self.doc.dir);
-        let rel = page_dir.strip_prefix(&self.doc.dir).unwrap_or(Path::new(""));
+        let rel = page_dir
+            .strip_prefix(&self.doc.dir)
+            .unwrap_or(Path::new(""));
         let joined = rel.join(src);
         self.docref.resource_uri(&joined.to_string_lossy())
     }
@@ -478,7 +605,9 @@ impl Renderer<'_> {
     fn container(&mut self, n: Node, level: usize, xref: &str) -> String {
         let mut s = String::new();
         let has = |ty: &str| {
-            n.children().any(|c| c.is_element() && c.tag_name().name() == "links" && c.attribute("type") == Some(ty))
+            n.children().any(|c| {
+                c.is_element() && c.tag_name().name() == "links" && c.attribute("type") == Some(ty)
+            })
         };
         let explicit_topic = has("topic");
         for c in n.children() {
@@ -490,7 +619,10 @@ impl Renderer<'_> {
                 continue;
             }
             if c.is_element() && c.tag_name().name() == "subtitle" {
-                s.push_str(&format!("<div class=\"subtitle\">{}</div>", self.inlines(c)));
+                s.push_str(&format!(
+                    "<div class=\"subtitle\">{}</div>",
+                    self.inlines(c)
+                ));
                 continue;
             }
             s.push_str(&self.node(c, level, xref));
@@ -506,7 +638,10 @@ impl Renderer<'_> {
 
     fn topic_list(&self, xref: &str, groups: Option<&str>, heading: Option<String>) -> String {
         let links = self.doc.group_sort(self.doc.topic_links(xref), groups);
-        let items: Vec<LinkItem> = links.iter().filter_map(|x| self.doc.link_item(self.docref, x)).collect();
+        let items: Vec<LinkItem> = links
+            .iter()
+            .filter_map(|x| self.doc.link_item(self.docref, x))
+            .collect();
         html::link_list("links-topic", heading.as_deref(), &items)
     }
 
@@ -528,7 +663,9 @@ impl Renderer<'_> {
 
     fn non_title_children(&mut self, n: Node, level: usize, xref: &str) -> String {
         n.children()
-            .filter(|c| !(c.is_element() && matches!(c.tag_name().name(), "title" | "desc" | "info")))
+            .filter(|c| {
+                !(c.is_element() && matches!(c.tag_name().name(), "title" | "desc" | "info"))
+            })
             .map(|c| self.node(c, level, xref))
             .collect()
     }
@@ -563,11 +700,19 @@ impl Renderer<'_> {
                 _ => String::new(),
             };
         }
-        let id_attr = n.attribute("id").map(|i| format!(" id=\"{}\"", escape_attr(i))).unwrap_or_default();
+        let id_attr = n
+            .attribute("id")
+            .map(|i| format!(" id=\"{}\"", escape_attr(i)))
+            .unwrap_or_default();
         match name(n) {
-            "info" | "comment" | "col" | "colgroup" | "credit" | "revision" | "license" => String::new(),
+            "info" | "comment" | "col" | "colgroup" | "credit" | "revision" | "license" => {
+                String::new()
+            }
             "section" => {
-                let sxref = n.attribute("id").map(|i| format!("{}#{i}", self.page.id)).unwrap_or_default();
+                let sxref = n
+                    .attribute("id")
+                    .map(|i| format!("{}#{i}", self.page.id))
+                    .unwrap_or_default();
                 let inner = if sxref.is_empty() {
                     let tmp = format!("{}#", self.page.id);
                     self.container(n, level + 1, &tmp)
@@ -581,7 +726,11 @@ impl Renderer<'_> {
             "subtitle" => format!("<div class=\"subtitle\">{}</div>", self.inlines(n)),
             "desc" => format!("<div class=\"desc\">{}</div>", self.inlines(n)),
             "list" => {
-                let tag = if n.attribute("type") == Some("numbered") { "ol" } else { "ul" };
+                let tag = if n.attribute("type") == Some("numbered") {
+                    "ol"
+                } else {
+                    "ul"
+                };
                 let title = self.block_title(n);
                 let items: String = xmlutil::children(n, "item")
                     .filter(|i| visible(*i))
@@ -611,11 +760,16 @@ impl Renderer<'_> {
                         .collect();
                     items.push_str(&format!("<dd>{body}</dd>"));
                 }
-                format!("<div class=\"terms\"{id_attr}>{title}<dl class=\"terms\">{items}</dl></div>")
+                format!(
+                    "<div class=\"terms\"{id_attr}>{title}<dl class=\"terms\">{items}</dl></div>"
+                )
             }
             "tree" => {
                 let title = self.block_title(n);
-                format!("<div class=\"tree\"{id_attr}>{title}<ul class=\"tree\">{}</ul></div>", self.tree_items(n))
+                format!(
+                    "<div class=\"tree\"{id_attr}>{title}<ul class=\"tree\">{}</ul></div>",
+                    self.tree_items(n)
+                )
             }
             "code" | "screen" if !in_inline_context(n) => {
                 let cls = name(n);
@@ -643,14 +797,25 @@ impl Renderer<'_> {
                     .unwrap_or_default();
                 let body: String = n
                     .children()
-                    .filter(|c| !(c.is_element() && matches!(c.tag_name().name(), "title" | "cite")))
+                    .filter(|c| {
+                        !(c.is_element() && matches!(c.tag_name().name(), "title" | "cite"))
+                    })
                     .map(|c| self.node(c, level, xref))
                     .collect();
                 format!("<blockquote{id_attr}>{title}{body}{cite}</blockquote>")
             }
             "note" => {
                 let style = n.attribute("style").unwrap_or("");
-                let known = ["tip", "important", "warning", "caution", "advanced", "bug", "danger", "sidebar"];
+                let known = [
+                    "tip",
+                    "important",
+                    "warning",
+                    "caution",
+                    "advanced",
+                    "bug",
+                    "danger",
+                    "sidebar",
+                ];
                 let cls = style
                     .split_whitespace()
                     .find(|s| known.contains(s))
@@ -668,7 +833,11 @@ impl Renderer<'_> {
             "menu" => format!("<span class=\"menu\">{}</span>", self.inlines(n)),
             "guiseq" => self.seq(n, "guiseq", "<span class=\"arrow\">\u{25B8}</span>"),
             "keyseq" => {
-                let sep = if n.attribute("type") == Some("sequence") { " " } else { "<span class=\"plus\">+</span>" };
+                let sep = if n.attribute("type") == Some("sequence") {
+                    " "
+                } else {
+                    "<span class=\"plus\">+</span>"
+                };
                 self.seq(n, "keyseq", sep)
             }
             "key" => format!("<kbd>{}</kbd>", self.inlines(n)),
@@ -683,13 +852,18 @@ impl Renderer<'_> {
                     format!("<em>{}</em>", self.inlines(n))
                 }
             }
-            "span" | "hi" | "date" | "name" | "sym" | "years" => format!("<span>{}</span>", self.inlines(n)),
+            "span" | "hi" | "date" | "name" | "sym" | "years" => {
+                format!("<span>{}</span>", self.inlines(n))
+            }
             "email" => {
                 let t = xmlutil::text_of(n);
                 format!("<a href=\"mailto:{}\">{}</a>", escape_attr(&t), escape(&t))
             }
             "br" => "<br>".into(),
-            "item" => format!("<div class=\"item\">{}</div>", self.children(n, level, xref)),
+            "item" => format!(
+                "<div class=\"item\">{}</div>",
+                self.children(n, level, xref)
+            ),
             "thead" | "tbody" | "tfoot" | "tr" | "td" | "th" => self.children(n, level, xref),
             "div" => format!("<div{id_attr}>{}</div>", self.children(n, level, xref)),
             _ => self.children(n, level, xref),
@@ -697,11 +871,17 @@ impl Renderer<'_> {
     }
 
     fn seq(&mut self, n: Node, cls: &str, sep: &str) -> String {
-        let elems: Vec<Node> = n.children().filter(|c| c.is_element() && visible(*c)).collect();
+        let elems: Vec<Node> = n
+            .children()
+            .filter(|c| c.is_element() && visible(*c))
+            .collect();
         if elems.is_empty() {
             return format!("<span class=\"{cls}\">{}</span>", self.inlines(n));
         }
-        let parts: Vec<String> = elems.iter().map(|c| self.node(*c, 6, &self.page.id.clone())).collect();
+        let parts: Vec<String> = elems
+            .iter()
+            .map(|c| self.node(*c, 6, &self.page.id.clone()))
+            .collect();
         format!("<span class=\"{cls}\">{}</span>", parts.join(sep))
     }
 
@@ -724,20 +904,29 @@ impl Renderer<'_> {
     }
 
     fn media(&mut self, n: Node) -> String {
-        let Some(src) = n.attribute("src") else { return String::new() };
+        let Some(src) = n.attribute("src") else {
+            return String::new();
+        };
         let uri = escape_attr(&self.resource(src));
         let ty = n.attribute("type").unwrap_or("image");
         let alt = escape_attr(&xmlutil::text_of(n));
         let size = ["width", "height"]
             .iter()
-            .filter_map(|a| n.attribute(*a).map(|v| format!(" {a}=\"{}\"", escape_attr(v))))
+            .filter_map(|a| {
+                n.attribute(*a)
+                    .map(|v| format!(" {a}=\"{}\"", escape_attr(v)))
+            })
             .collect::<String>();
         let inline = in_inline_context(n);
         let el = match ty {
             "video" => format!("<video controls preload=\"metadata\" src=\"{uri}\"{size}></video>"),
             "audio" => format!("<audio controls preload=\"metadata\" src=\"{uri}\"></audio>"),
             _ => {
-                let cls = if inline { " class=\"media-inline\"" } else { "" };
+                let cls = if inline {
+                    " class=\"media-inline\""
+                } else {
+                    ""
+                };
                 format!("<img src=\"{uri}\" alt=\"{alt}\"{size}{cls}>")
             }
         };
@@ -756,13 +945,26 @@ impl Renderer<'_> {
         let rows = |s: &mut String, parent: Node, me: &mut Self, head: bool| {
             for tr in xmlutil::children(parent, "tr").filter(|r| visible(*r)) {
                 s.push_str("<tr>");
-                for cell in tr.children().filter(|c| c.is_element() && matches!(c.tag_name().name(), "td" | "th")) {
-                    let tag = if head || cell.tag_name().name() == "th" { "th" } else { "td" };
+                for cell in tr
+                    .children()
+                    .filter(|c| c.is_element() && matches!(c.tag_name().name(), "td" | "th"))
+                {
+                    let tag = if head || cell.tag_name().name() == "th" {
+                        "th"
+                    } else {
+                        "td"
+                    };
                     let span = ["colspan", "rowspan"]
                         .iter()
-                        .filter_map(|a| cell.attribute(*a).map(|v| format!(" {a}=\"{}\"", escape_attr(v))))
+                        .filter_map(|a| {
+                            cell.attribute(*a)
+                                .map(|v| format!(" {a}=\"{}\"", escape_attr(v)))
+                        })
                         .collect::<String>();
-                    s.push_str(&format!("<{tag}{span}>{}</{tag}>", me.children(cell, level, xref)));
+                    s.push_str(&format!(
+                        "<{tag}{span}>{}</{tag}>",
+                        me.children(cell, level, xref)
+                    ));
                 }
                 s.push_str("</tr>");
             }
@@ -819,7 +1021,11 @@ impl Renderer<'_> {
                     .iter()
                     .filter_map(|x| self.doc.link_item(self.docref, x))
                     .collect();
-                html::link_list("seealso", Some(heading.as_deref().unwrap_or("See Also")), &items)
+                html::link_list(
+                    "seealso",
+                    Some(heading.as_deref().unwrap_or("See Also")),
+                    &items,
+                )
             }
             Some("guide") => {
                 if page_level {
@@ -831,7 +1037,11 @@ impl Renderer<'_> {
                     .iter()
                     .filter_map(|x| self.doc.link_item(self.docref, x))
                     .collect();
-                html::link_list("guides", Some(heading.as_deref().unwrap_or("More Information")), &items)
+                html::link_list(
+                    "guides",
+                    Some(heading.as_deref().unwrap_or("More Information")),
+                    &items,
+                )
             }
             _ => String::new(),
         }
@@ -848,7 +1058,11 @@ impl Renderer<'_> {
                     None => (x.as_str(), None),
                 };
                 let uri = page_uri(self.docref, page, frag);
-                let text = if has_content { content } else { escape(&t.title) };
+                let text = if has_content {
+                    content
+                } else {
+                    escape(&t.title)
+                };
                 return format!("<a href=\"{}\">{text}</a>", escape_attr(&uri));
             }
             // A section link without metadata (no id'd section found) or a
@@ -886,7 +1100,10 @@ mod tests {
     }
 
     fn fixture() -> MallardDoc {
-        let mut d = MallardDoc { dir: "/doc".into(), pages: BTreeMap::new() };
+        let mut d = MallardDoc {
+            dir: "/doc".into(),
+            pages: BTreeMap::new(),
+        };
         for p in [
             page("index", "guide", "<title type=\"text\">Fixture Help</title>", "<title>Fixture</title><section id=\"more\"><title>More</title></section>"),
             page("net", "guide", "<link type=\"guide\" xref=\"index\"/><desc>Networking</desc>", "<title>Network</title>"),
@@ -938,7 +1155,11 @@ mod tests {
         assert_eq!(d.guide_links("about"), ["index#more"]);
         // groups attribute ordering
         let custom = d.group_sort(
-            vec![(Some("b".into()), "eth".into()), (Some("a".into()), "vpn".into()), (None, "wifi".into())],
+            vec![
+                (Some("b".into()), "eth".into()),
+                (Some("a".into()), "vpn".into()),
+                (None, "wifi".into()),
+            ],
             Some("a b"),
         );
         assert_eq!(custom, ["vpn", "eth", "wifi"]);
@@ -959,10 +1180,18 @@ mod tests {
         assert_eq!(d.trail("about"), ["index"]);
         assert!(d.trail("index").is_empty());
         let toc: Vec<(usize, String)> = d.toc().into_iter().map(|(dep, x, _)| (dep, x)).collect();
-        let expect: Vec<(usize, String)> = [(0, "legal"), (0, "net"), (1, "wifi"), (1, "vpn"), (1, "eth"), (0, "credits"), (0, "about")]
-            .into_iter()
-            .map(|(a, b)| (a, b.to_string()))
-            .collect();
+        let expect: Vec<(usize, String)> = [
+            (0, "legal"),
+            (0, "net"),
+            (1, "wifi"),
+            (1, "vpn"),
+            (1, "eth"),
+            (0, "credits"),
+            (0, "about"),
+        ]
+        .into_iter()
+        .map(|(a, b)| (a, b.to_string()))
+        .collect();
         assert_eq!(toc, expect);
     }
 
@@ -973,7 +1202,12 @@ mod tests {
         let (title, html) = d.render(&docref, "net").unwrap();
         assert_eq!(title, "Network");
         assert!(html.contains("<h1>Network</h1>"));
-        assert!(html.contains("href=\"help:fx/wifi\">Wi-Fi</a><span class=\"link-desc\">Wireless</span>"), "{html}");
+        assert!(
+            html.contains(
+                "href=\"help:fx/wifi\">Wi-Fi</a><span class=\"link-desc\">Wireless</span>"
+            ),
+            "{html}"
+        );
         let wifi = html.find("help:fx/wifi").unwrap();
         let eth = html.find("help:fx/eth").unwrap();
         assert!(wifi < eth);
@@ -1007,7 +1241,10 @@ mod tests {
             <comment><p>SECRET</p></comment>
             <table><thead><tr><td><p>H</p></td></tr></thead><tbody><tr><td><p>C</p></td></tr></tbody></table>
             <section id="s1"><title>Sec One</title><p>x</p></section>"##;
-        let mut d = MallardDoc { dir: "/doc".into(), pages: BTreeMap::new() };
+        let mut d = MallardDoc {
+            dir: "/doc".into(),
+            pages: BTreeMap::new(),
+        };
         let p = page("blocks", "topic", "", body);
         d.pages.insert("blocks".into(), p);
         let o = page("other", "topic", "", "<title>Other Page</title>");
@@ -1042,7 +1279,12 @@ mod tests {
 
     #[test]
     fn search_text_excludes_info() {
-        let p = page("x", "topic", "<desc>DESC</desc><credit><name>Bob</name></credit>", "<title>T</title><p>Body words</p>");
+        let p = page(
+            "x",
+            "topic",
+            "<desc>DESC</desc><credit><name>Bob</name></credit>",
+            "<title>T</title><p>Body words</p>",
+        );
         assert_eq!(p.body, "T Body words");
         assert_eq!(p.meta.desc, "DESC");
     }

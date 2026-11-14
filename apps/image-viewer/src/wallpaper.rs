@@ -45,18 +45,33 @@ pub fn outcome(code: u32) -> Outcome {
 /// window identifier ("" if unknown).
 pub fn set_wallpaper(uri: &str, parent: &str) -> Result<Outcome, String> {
     let conn = zbus::blocking::Connection::session().map_err(|e| e.to_string())?;
-    let unique = conn.unique_name().map(|n| n.to_string()).unwrap_or_default();
+    let unique = conn
+        .unique_name()
+        .map(|n| n.to_string())
+        .unwrap_or_default();
     static COUNTER: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
     let n = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let token = format!("helix_image_viewer_{}_{n}", std::process::id());
     let path = request_path(&unique, &token);
     // Subscribe before calling so the Response cannot be missed.
-    let request = zbus::blocking::Proxy::new(&conn, PORTAL_BUS, path, REQUEST_IFACE).map_err(|e| e.to_string())?;
-    let mut responses = request.receive_signal("Response").map_err(|e| e.to_string())?;
-    conn.call_method(Some(PORTAL_BUS), PORTAL_PATH, Some(WALLPAPER_IFACE), "SetWallpaperURI", &(parent, uri, options(&token)))
+    let request = zbus::blocking::Proxy::new(&conn, PORTAL_BUS, path, REQUEST_IFACE)
         .map_err(|e| e.to_string())?;
-    let msg = responses.next().ok_or_else(|| "The portal closed the request".to_string())?;
-    let (code, _results): (u32, HashMap<String, OwnedValue>) = msg.body().deserialize().map_err(|e| e.to_string())?;
+    let mut responses = request
+        .receive_signal("Response")
+        .map_err(|e| e.to_string())?;
+    conn.call_method(
+        Some(PORTAL_BUS),
+        PORTAL_PATH,
+        Some(WALLPAPER_IFACE),
+        "SetWallpaperURI",
+        &(parent, uri, options(&token)),
+    )
+    .map_err(|e| e.to_string())?;
+    let msg = responses
+        .next()
+        .ok_or_else(|| "The portal closed the request".to_string())?;
+    let (code, _results): (u32, HashMap<String, OwnedValue>) =
+        msg.body().deserialize().map_err(|e| e.to_string())?;
     Ok(outcome(code))
 }
 
@@ -66,7 +81,10 @@ mod tests {
 
     #[test]
     fn request_path_escapes_sender() {
-        assert_eq!(request_path(":1.42", "tok"), "/org/freedesktop/portal/desktop/request/1_42/tok");
+        assert_eq!(
+            request_path(":1.42", "tok"),
+            "/org/freedesktop/portal/desktop/request/1_42/tok"
+        );
     }
 
     #[test]

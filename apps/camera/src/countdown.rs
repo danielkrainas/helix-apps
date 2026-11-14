@@ -59,7 +59,9 @@ impl Countdown {
                 Action::Capture
             }
             Countdown::Running { remaining } => {
-                *self = Countdown::Running { remaining: remaining - 1 };
+                *self = Countdown::Running {
+                    remaining: remaining - 1,
+                };
                 Action::Show(remaining - 1)
             }
         }

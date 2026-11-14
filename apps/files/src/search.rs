@@ -76,7 +76,11 @@ pub fn run(
         if cancel.is_cancelled() {
             return;
         }
-        let Ok(en) = dir.enumerate_children(ATTRS, gio::FileQueryInfoFlags::NOFOLLOW_SYMLINKS, Some(cancel)) else {
+        let Ok(en) = dir.enumerate_children(
+            ATTRS,
+            gio::FileQueryInfoFlags::NOFOLLOW_SYMLINKS,
+            Some(cancel),
+        ) else {
             continue;
         };
         while let Ok(Some(info)) = en.next_file(Some(cancel)) {
@@ -93,7 +97,10 @@ pub fn run(
                     display_name: display,
                     is_dir,
                     size: info.size().max(0) as u64,
-                    mtime: info.modification_date_time().map(|d| d.to_unix()).unwrap_or(0),
+                    mtime: info
+                        .modification_date_time()
+                        .map(|d| d.to_unix())
+                        .unwrap_or(0),
                     content_type: info
                         .attribute_string("standard::fast-content-type")
                         .map(|s| s.to_string())
@@ -164,7 +171,10 @@ mod tests {
             names(&root, "notes", Depth::Recursive, false),
             ["Notes-old.md", "deep notes", "notes.txt"]
         );
-        assert_eq!(names(&root, "notes", Depth::ChildrenOnly, false), ["notes.txt"]);
+        assert_eq!(
+            names(&root, "notes", Depth::ChildrenOnly, false),
+            ["notes.txt"]
+        );
         assert_eq!(names(&root, "notes", Depth::Recursive, true).len(), 5);
     }
 }

@@ -89,17 +89,31 @@ fn read(path: impl AsRef<Path>) -> Option<String> {
 }
 
 /// Reads one process. Returns `None` if it vanished meanwhile.
-pub fn read_process(pid: i32, users: &HashMap<u32, String>, btime: u64, hz: u64) -> Option<ProcessInfo> {
+pub fn read_process(
+    pid: i32,
+    users: &HashMap<u32, String>,
+    btime: u64,
+    hz: u64,
+) -> Option<ProcessInfo> {
     let dir = format!("/proc/{pid}");
     let stat = procfs::parse_pid_stat(&read(format!("{dir}/stat"))?)?;
     let status = procfs::parse_pid_status(&read(format!("{dir}/status"))?)?;
-    let args = std::fs::read(format!("{dir}/cmdline")).map(|b| procfs::parse_cmdline(&b)).unwrap_or_default();
-    let comm = if status.name.is_empty() { stat.comm.clone() } else { status.name.clone() };
+    let args = std::fs::read(format!("{dir}/cmdline"))
+        .map(|b| procfs::parse_cmdline(&b))
+        .unwrap_or_default();
+    let comm = if status.name.is_empty() {
+        stat.comm.clone()
+    } else {
+        status.name.clone()
+    };
     Some(ProcessInfo {
         pid,
         ppid: stat.ppid,
         name: procfs::display_name(&comm, &args),
-        user: users.get(&status.uid).cloned().unwrap_or_else(|| status.uid.to_string()),
+        user: users
+            .get(&status.uid)
+            .cloned()
+            .unwrap_or_else(|| status.uid.to_string()),
         uid: status.uid,
         cpu: 0.0,
         cpu_ticks: stat.cpu_ticks(),
@@ -116,12 +130,17 @@ pub fn read_process(pid: i32, users: &HashMap<u32, String>, btime: u64, hz: u64)
 }
 
 pub fn list_pids() -> Vec<i32> {
-    let Ok(rd) = std::fs::read_dir("/proc") else { return Vec::new() };
-    rd.filter_map(|e| e.ok()?.file_name().to_str()?.parse().ok()).collect()
+    let Ok(rd) = std::fs::read_dir("/proc") else {
+        return Vec::new();
+    };
+    rd.filter_map(|e| e.ok()?.file_name().to_str()?.parse().ok())
+        .collect()
 }
 
 pub fn load_users() -> HashMap<u32, String> {
-    read("/etc/passwd").map(|t| procfs::parse_passwd(&t)).unwrap_or_default()
+    read("/etc/passwd")
+        .map(|t| procfs::parse_passwd(&t))
+        .unwrap_or_default()
 }
 
 /// Settings the worker reads; written from the UI thread.
@@ -134,7 +153,12 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(interval_ms: u32, disks_interval_ms: u32, solaris: bool, show_all_fs: bool) -> Arc<Self> {
+    pub fn new(
+        interval_ms: u32,
+        disks_interval_ms: u32,
+        solaris: bool,
+        show_all_fs: bool,
+    ) -> Arc<Self> {
         Arc::new(Config {
             interval_ms: AtomicU32::new(clamp_interval(interval_ms)),
             disks_interval_ms: AtomicU32::new(clamp_interval(disks_interval_ms)),
@@ -169,18 +193,31 @@ impl Default for Sampler {
 
 impl Sampler {
     pub fn new() -> Self {
-        Sampler { users: load_users(), hz: clock_ticks(), prev_stat: None, prev_ticks: HashMap::new(), prev_net: None, missing_uids: Default::default() }
+        Sampler {
+            users: load_users(),
+            hz: clock_ticks(),
+            prev_stat: None,
+            prev_ticks: HashMap::new(),
+            prev_net: None,
+            missing_uids: Default::default(),
+        }
     }
 
     pub fn sample(&mut self, solaris: bool) -> (Vec<ProcessInfo>, ResourceSample) {
         let stat = procfs::parse_stat(&read("/proc/stat").unwrap_or_default());
         let ncpus = stat.cpus.len().max(1);
-        let elapsed = self.prev_stat.as_ref().map(|p| procfs::elapsed_ticks(p, &stat)).unwrap_or(0.0);
+        let elapsed = self
+            .prev_stat
+            .as_ref()
+            .map(|p| procfs::elapsed_ticks(p, &stat))
+            .unwrap_or(0.0);
 
         let mut procs = Vec::new();
         let mut ticks = HashMap::new();
         for pid in list_pids() {
-            let Some(mut p) = read_process(pid, &self.users, stat.btime, self.hz) else { continue };
+            let Some(mut p) = read_process(pid, &self.users, stat.btime, self.hz) else {
+                continue;
+            };
             if !self.users.contains_key(&p.uid) && self.missing_uids.insert(p.uid) {
                 // Possibly a user created after start-up: reload once per uid.
                 self.users = load_users();
@@ -198,21 +235,29 @@ impl Sampler {
         self.prev_ticks = ticks;
 
         let cpus = match &self.prev_stat {
-            Some(prev) if prev.cpus.len() == stat.cpus.len() => {
-                prev.cpus.iter().zip(&stat.cpus).map(|(a, b)| procfs::cpu_usage(a, b)).collect()
-            }
+            Some(prev) if prev.cpus.len() == stat.cpus.len() => prev
+                .cpus
+                .iter()
+                .zip(&stat.cpus)
+                .map(|(a, b)| procfs::cpu_usage(a, b))
+                .collect(),
             _ => vec![0.0; stat.cpus.len()],
         };
         self.prev_stat = Some(stat);
 
         let mem = procfs::parse_meminfo(&read("/proc/meminfo").unwrap_or_default());
-        let (rx, tx) = procfs::net_totals(&procfs::parse_net_dev(&read("/proc/net/dev").unwrap_or_default()));
+        let (rx, tx) = procfs::net_totals(&procfs::parse_net_dev(
+            &read("/proc/net/dev").unwrap_or_default(),
+        ));
         let now = Instant::now();
         let (rx_rate, tx_rate) = match self.prev_net {
             Some((t, prx, ptx)) => {
                 let dt = now.duration_since(t).as_secs_f64();
                 if dt > 0.0 {
-                    (rx.saturating_sub(prx) as f64 / dt, tx.saturating_sub(ptx) as f64 / dt)
+                    (
+                        rx.saturating_sub(prx) as f64 / dt,
+                        tx.saturating_sub(ptx) as f64 / dt,
+                    )
                 } else {
                     (0.0, 0.0)
                 }
@@ -221,7 +266,17 @@ impl Sampler {
         };
         self.prev_net = Some((now, rx, tx));
 
-        (procs, ResourceSample { cpus, mem, rx_rate, tx_rate, rx_total: rx, tx_total: tx })
+        (
+            procs,
+            ResourceSample {
+                cpus,
+                mem,
+                rx_rate,
+                tx_rate,
+                rx_total: rx,
+                tx_total: tx,
+            },
+        )
     }
 }
 
@@ -233,7 +288,11 @@ pub fn statvfs(path: &str) -> Option<(u64, u64, u64)> {
         return None;
     }
     let f = s.f_frsize as u64;
-    Some((s.f_blocks as u64 * f, s.f_bfree as u64 * f, s.f_bavail as u64 * f))
+    Some((
+        s.f_blocks as u64 * f,
+        s.f_bfree as u64 * f,
+        s.f_bavail as u64 * f,
+    ))
 }
 
 pub fn file_systems(show_all: bool) -> Vec<FsEntry> {
@@ -245,7 +304,14 @@ pub fn file_systems(show_all: bool) -> Vec<FsEntry> {
             if total == 0 && !show_all {
                 return None;
             }
-            Some(FsEntry { device: m.device, dir: m.dir, fstype: m.fstype, total, free, available })
+            Some(FsEntry {
+                device: m.device,
+                dir: m.dir,
+                fstype: m.fstype,
+                total,
+                free,
+                available,
+            })
         })
         .collect()
 }
@@ -277,16 +343,22 @@ pub fn spawn(config: Arc<Config>) -> (async_channel::Receiver<Msg>, mpsc::Sender
                     if tx.send_blocking(Msg::Processes(p, r)).is_err() {
                         return;
                     }
-                    next_proc = now + Duration::from_millis(config.interval_ms.load(Ordering::Relaxed) as u64);
+                    next_proc = now
+                        + Duration::from_millis(config.interval_ms.load(Ordering::Relaxed) as u64);
                 }
                 if now >= next_fs {
                     let fs = file_systems(config.show_all_fs.load(Ordering::Relaxed));
                     if tx.send_blocking(Msg::FileSystems(fs)).is_err() {
                         return;
                     }
-                    next_fs = now + Duration::from_millis(config.disks_interval_ms.load(Ordering::Relaxed) as u64);
+                    next_fs = now
+                        + Duration::from_millis(
+                            config.disks_interval_ms.load(Ordering::Relaxed) as u64
+                        );
                 }
-                let wait = next_proc.min(next_fs).saturating_duration_since(Instant::now());
+                let wait = next_proc
+                    .min(next_fs)
+                    .saturating_duration_since(Instant::now());
                 match ctl_rx.recv_timeout(wait) {
                     Ok(Control::Refresh) => {
                         next_proc = Instant::now();
@@ -333,7 +405,14 @@ mod tests {
     fn root_fs_listed() {
         let fs = file_systems(true);
         assert!(fs.iter().any(|f| f.dir == "/"));
-        let e = FsEntry { device: "d".into(), dir: "/".into(), fstype: "ext4".into(), total: 100, free: 40, available: 20 };
+        let e = FsEntry {
+            device: "d".into(),
+            dir: "/".into(),
+            fstype: "ext4".into(),
+            total: 100,
+            free: 40,
+            available: 20,
+        };
         assert_eq!(e.used(), 60);
         assert!((e.used_fraction() - 0.75).abs() < 1e-9);
     }

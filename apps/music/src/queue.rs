@@ -109,7 +109,15 @@ pub struct Queue<T> {
 
 impl<T: Clone + PartialEq> Queue<T> {
     pub fn new(rng: Rng) -> Self {
-        Queue { items: Vec::new(), order: Vec::new(), cursor: None, shuffle: false, repeat: Repeat::None, rng, pending_cycle: None }
+        Queue {
+            items: Vec::new(),
+            order: Vec::new(),
+            cursor: None,
+            shuffle: false,
+            repeat: Repeat::None,
+            rng,
+            pending_cycle: None,
+        }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -131,7 +139,11 @@ impl<T: Clone + PartialEq> Queue<T> {
         }
         let start = start.min(self.items.len() - 1);
         self.order = self.build_order(Some(start));
-        self.cursor = if self.shuffle { Some(0) } else { self.order.iter().position(|&i| i == start) };
+        self.cursor = if self.shuffle {
+            Some(0)
+        } else {
+            self.order.iter().position(|&i| i == start)
+        };
     }
 
     fn build_order(&mut self, first: Option<usize>) -> Vec<usize> {
@@ -231,7 +243,8 @@ impl<T: Clone + PartialEq> Queue<T> {
     }
 
     pub fn has_next(&self) -> bool {
-        self.cursor.is_some_and(|c| c + 1 < self.order.len() || self.repeat != Repeat::None)
+        self.cursor
+            .is_some_and(|c| c + 1 < self.order.len() || self.repeat != Repeat::None)
     }
 
     pub fn has_previous(&self) -> bool {
@@ -333,7 +346,6 @@ impl<T: Clone + PartialEq> Queue<T> {
             }
         }
     }
-
 }
 
 #[cfg(test)]
@@ -375,7 +387,11 @@ mod tests {
         assert_eq!(q.advance(true), Some(&0));
         assert_eq!(q.advance(false), Some(&1));
         q.jump(2);
-        assert_eq!(q.advance(false), Some(&0), "manual next wraps with repeat one");
+        assert_eq!(
+            q.advance(false),
+            Some(&0),
+            "manual next wraps with repeat one"
+        );
     }
 
     #[test]
@@ -430,7 +446,11 @@ mod tests {
         q.set_shuffle(true);
         assert_eq!(q.current(), Some(&4));
         let rest: HashSet<usize> = std::iter::from_fn(|| q.advance(true).copied()).collect();
-        assert_eq!(rest.len(), 5, "only the tracks after the current one remain");
+        assert_eq!(
+            rest.len(),
+            5,
+            "only the tracks after the current one remain"
+        );
         q.set_shuffle(false);
         let cur = *q.current().unwrap();
         assert_eq!(q.current_index(), Some(cur));

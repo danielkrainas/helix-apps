@@ -26,7 +26,10 @@ impl Session {
             return;
         }
         if let Err(e) = state::record(&self.state_path, outcome, VERSION) {
-            eprintln!("helix-tour: could not save {}: {e}", self.state_path.display());
+            eprintln!(
+                "helix-tour: could not save {}: {e}",
+                self.state_path.display()
+            );
         }
     }
 }
@@ -34,7 +37,11 @@ impl Session {
 pub fn run(state_path: PathBuf) -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
     helix_app_common::install_standard_actions(&app, "Tour", "Get to know the Helix desktop");
-    let session = Rc::new(Session { state_path, shown: Cell::new(false), recorded: Cell::new(false) });
+    let session = Rc::new(Session {
+        state_path,
+        shown: Cell::new(false),
+        recorded: Cell::new(false),
+    });
     app.connect_startup(|_| load_css());
     {
         let session = session.clone();
@@ -66,7 +73,11 @@ fn load_css() {
          .tour-nav { min-width: 40px; min-height: 40px; }",
     );
     if let Some(display) = gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &css,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 }
 
@@ -85,7 +96,12 @@ fn illustration(art: Art, areas: &mut Vec<gtk::DrawingArea>) -> gtk::DrawingArea
 }
 
 fn title_label(text: &str) -> gtk::Label {
-    gtk::Label::builder().label(text).wrap(true).justify(gtk::Justification::Center).css_classes(["title-1"]).build()
+    gtk::Label::builder()
+        .label(text)
+        .wrap(true)
+        .justify(gtk::Justification::Center)
+        .css_classes(["title-1"])
+        .build()
 }
 
 fn body_label(markup: &str) -> gtk::Label {
@@ -100,7 +116,11 @@ fn body_label(markup: &str) -> gtk::Label {
 }
 
 fn pill(label: &str, suggested: bool) -> gtk::Button {
-    let b = gtk::Button::builder().label(label).halign(gtk::Align::Center).css_classes(["pill"]).build();
+    let b = gtk::Button::builder()
+        .label(label)
+        .halign(gtk::Align::Center)
+        .css_classes(["pill"])
+        .build();
     if suggested {
         b.add_css_class("suggested-action");
     }
@@ -140,7 +160,12 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
         welcome.append(&os_label);
     }
     welcome.append(&body_label(pages::WELCOME_BODY));
-    let buttons = gtk::Box::builder().spacing(12).halign(gtk::Align::Center).margin_top(12).homogeneous(true).build();
+    let buttons = gtk::Box::builder()
+        .spacing(12)
+        .halign(gtk::Align::Center)
+        .margin_top(12)
+        .homogeneous(true)
+        .build();
     let no_thanks = pill("No Thanks", false);
     let start = pill("Start Tour", true);
     buttons.append(&no_thanks);
@@ -148,7 +173,11 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
     welcome.append(&buttons);
 
     // Tour view.
-    let carousel = adw::Carousel::builder().hexpand(true).vexpand(true).allow_long_swipes(false).build();
+    let carousel = adw::Carousel::builder()
+        .hexpand(true)
+        .vexpand(true)
+        .allow_long_swipes(false)
+        .build();
     for (i, page) in PAGES.iter().enumerate() {
         let b = page_box();
         b.append(&illustration(page.art, &mut areas));
@@ -202,12 +231,17 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
     let overlay = gtk::Overlay::builder().child(&carousel).build();
     overlay.add_overlay(&prev);
     overlay.add_overlay(&next);
-    let dots = adw::CarouselIndicatorDots::builder().carousel(&carousel).margin_bottom(18).build();
+    let dots = adw::CarouselIndicatorDots::builder()
+        .carousel(&carousel)
+        .margin_bottom(18)
+        .build();
     let tour = gtk::Box::new(gtk::Orientation::Vertical, 0);
     tour.append(&overlay);
     tour.append(&dots);
 
-    let stack = gtk::Stack::builder().transition_type(gtk::StackTransitionType::Crossfade).build();
+    let stack = gtk::Stack::builder()
+        .transition_type(gtk::StackTransitionType::Crossfade)
+        .build();
     stack.add_named(&welcome, Some("welcome"));
     stack.add_named(&tour, Some("tour"));
 
@@ -229,7 +263,8 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
     };
     update_arrows(0);
     let go = {
-        let (carousel, current, update_arrows) = (carousel.clone(), current.clone(), update_arrows.clone());
+        let (carousel, current, update_arrows) =
+            (carousel.clone(), current.clone(), update_arrows.clone());
         move |delta: i32| {
             let last = carousel.n_pages().saturating_sub(1) as i32;
             let target = (current.get() as i32 + delta).clamp(0, last) as u32;
@@ -285,7 +320,11 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
     {
         let stack = stack.clone();
         keys.connect_key_pressed(move |_, key, _, mods| {
-            if mods.intersects(gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::ALT_MASK | gdk::ModifierType::SUPER_MASK) {
+            if mods.intersects(
+                gdk::ModifierType::CONTROL_MASK
+                    | gdk::ModifierType::ALT_MASK
+                    | gdk::ModifierType::SUPER_MASK,
+            ) {
                 return glib::Propagation::Proceed;
             }
             let on_tour = stack.visible_child_name().as_deref() == Some("tour");

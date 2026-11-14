@@ -41,11 +41,20 @@ impl Sound {
 
 /// Finds `<data dir>/sounds/<theme>/stereo/<id>.{oga,ogg,wav}`, trying each
 /// theme (the user's first, `freedesktop` last) in every data directory.
-pub fn find_sound(id: &str, data_dirs: &[PathBuf], themes: &[String], exists: impl Fn(&Path) -> bool) -> Option<PathBuf> {
+pub fn find_sound(
+    id: &str,
+    data_dirs: &[PathBuf],
+    themes: &[String],
+    exists: impl Fn(&Path) -> bool,
+) -> Option<PathBuf> {
     for theme in themes {
         for dir in data_dirs {
             for ext in ["oga", "ogg", "wav"] {
-                let p = dir.join("sounds").join(theme).join("stereo").join(format!("{id}.{ext}"));
+                let p = dir
+                    .join("sounds")
+                    .join(theme)
+                    .join("stereo")
+                    .join(format!("{id}.{ext}"));
                 if exists(&p) {
                     return Some(p);
                 }
@@ -81,8 +90,13 @@ pub fn tone_on(elapsed: Duration) -> bool {
 }
 
 fn sink() -> Option<gst::Element> {
-    if let Some(desc) = std::env::var(SINK_ENV).ok().filter(|s| !s.trim().is_empty()) {
-        return gst::parse::bin_from_description(&desc, true).ok().map(|b| b.upcast());
+    if let Some(desc) = std::env::var(SINK_ENV)
+        .ok()
+        .filter(|s| !s.trim().is_empty())
+    {
+        return gst::parse::bin_from_description(&desc, true)
+            .ok()
+            .map(|b| b.upcast());
     }
     if let Ok(s) = gst::ElementFactory::make("pipewiresink").build() {
         if s.has_property("stream-properties", None) {
@@ -179,7 +193,9 @@ impl Player {
         let weak = pipeline.downgrade();
         let looping = kind.looping();
         let bus = pipeline.bus()?.add_watch_local(move |_, msg| {
-            let Some(p) = weak.upgrade() else { return glib::ControlFlow::Break };
+            let Some(p) = weak.upgrade() else {
+                return glib::ControlFlow::Break;
+            };
             match msg.view() {
                 gst::MessageView::Eos(_) if looping => {
                     let _ = p.seek_simple(gst::SeekFlags::FLUSH, gst::ClockTime::ZERO);
@@ -200,7 +216,9 @@ impl Player {
         let p2 = pipeline.downgrade();
         let source = (volume.is_some() || !looping).then(|| {
             glib::timeout_add_local(Duration::from_millis(50), move || {
-                let Some(p) = p2.upgrade() else { return glib::ControlFlow::Break };
+                let Some(p) = p2.upgrade() else {
+                    return glib::ControlFlow::Break;
+                };
                 let t = started.elapsed();
                 if !looping && t >= ONE_SHOT {
                     let _ = p.set_state(gst::State::Null);
@@ -219,7 +237,12 @@ impl Player {
             let _ = pipeline.set_state(gst::State::Null);
             return None;
         }
-        self.current = Some(Playing { kind, pipeline, _bus: bus.ok(), source });
+        self.current = Some(Playing {
+            kind,
+            pipeline,
+            _bus: bus.ok(),
+            source,
+        });
         Some(())
     }
 }
@@ -236,7 +259,10 @@ mod tests {
 
     #[test]
     fn sound_lookup_order() {
-        let dirs = vec![PathBuf::from("/home/u/.local/share"), PathBuf::from("/usr/share")];
+        let dirs = vec![
+            PathBuf::from("/home/u/.local/share"),
+            PathBuf::from("/usr/share"),
+        ];
         let themes = vec!["Yaru".to_string(), "freedesktop".to_string()];
         let have = |p: &Path| {
             p == Path::new("/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga")
@@ -244,9 +270,14 @@ mod tests {
         };
         assert_eq!(
             find_sound("alarm-clock-elapsed", &dirs, &themes, have),
-            Some(PathBuf::from("/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga"))
+            Some(PathBuf::from(
+                "/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga"
+            ))
         );
-        assert_eq!(find_sound("complete", &dirs, &themes, have), Some(PathBuf::from("/usr/share/sounds/Yaru/stereo/complete.ogg")));
+        assert_eq!(
+            find_sound("complete", &dirs, &themes, have),
+            Some(PathBuf::from("/usr/share/sounds/Yaru/stereo/complete.ogg"))
+        );
         assert_eq!(find_sound("bell", &dirs, &themes, have), None);
     }
 

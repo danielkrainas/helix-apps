@@ -16,7 +16,12 @@ pub enum ColorChoice {
 }
 
 impl ColorChoice {
-    pub const ALL: [ColorChoice; 4] = [ColorChoice::Auto, ColorChoice::Color, ColorChoice::Gray, ColorChoice::Lineart];
+    pub const ALL: [ColorChoice; 4] = [
+        ColorChoice::Auto,
+        ColorChoice::Color,
+        ColorChoice::Gray,
+        ColorChoice::Lineart,
+    ];
 
     pub fn label(self) -> &'static str {
         match self {
@@ -72,10 +77,15 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("s.json");
         assert_eq!(Private::load_from(&path), Private::default());
-        let p = Private { source: "Flatbed".into(), color_mode: ColorChoice::Lineart };
+        let p = Private {
+            source: "Flatbed".into(),
+            color_mode: ColorChoice::Lineart,
+        };
         p.save_to(&path).unwrap();
         assert_eq!(Private::load_from(&path), p);
-        assert!(std::fs::read_to_string(&path).unwrap().contains("\"color-mode\": \"lineart\""));
+        assert!(std::fs::read_to_string(&path)
+            .unwrap()
+            .contains("\"color-mode\": \"lineart\""));
         std::fs::write(&path, "{\"source\": \"ADF\"}").unwrap();
         assert_eq!(Private::load_from(&path).color_mode, ColorChoice::Auto);
     }

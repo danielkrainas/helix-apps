@@ -43,19 +43,28 @@ impl Smart {
             if self.attrs_failing == 1 {
                 "Disk is OK, one attribute is exceeding its threshold".into()
             } else {
-                format!("Disk is OK, {} attributes are exceeding their thresholds", self.attrs_failing)
+                format!(
+                    "Disk is OK, {} attributes are exceeding their thresholds",
+                    self.attrs_failing
+                )
             }
         } else if self.attrs_failed_in_past > 0 {
             if self.attrs_failed_in_past == 1 {
                 "Disk is OK, one attribute failed in the past".into()
             } else {
-                format!("Disk is OK, {} attributes failed in the past", self.attrs_failed_in_past)
+                format!(
+                    "Disk is OK, {} attributes failed in the past",
+                    self.attrs_failed_in_past
+                )
             }
         } else {
             "Disk is OK".into()
         };
         if self.temperature_k > 0.0 {
-            format!("{base} ({})", format::temperature_kelvin(self.temperature_k))
+            format!(
+                "{base} ({})",
+                format::temperature_kelvin(self.temperature_k)
+            )
         } else {
             base
         }
@@ -77,7 +86,10 @@ impl Smart {
             "error_servo" => "Last self-test failed (servo)".into(),
             "error_read" => "Last self-test failed (read)".into(),
             "error_handling" => "Last self-test failed (damage)".into(),
-            "inprogress" => format!("Self-test in progress — {}% remaining", self.selftest_percent_remaining),
+            "inprogress" => format!(
+                "Self-test in progress — {}% remaining",
+                self.selftest_percent_remaining
+            ),
             "" => "Unknown".into(),
             other => other.to_string(),
         }
@@ -178,7 +190,10 @@ impl Attribute {
                 if self.pretty == 1 {
                     "1 sector".into()
                 } else {
-                    format!("{} sectors", format::group_thousands(self.pretty.max(0) as u64))
+                    format!(
+                        "{} sectors",
+                        format::group_thousands(self.pretty.max(0) as u64)
+                    )
                 }
             }
             4 => format::temperature_kelvin(self.pretty as f64 / 1000.0),
@@ -213,28 +228,66 @@ mod tests {
     #[test]
     fn assessments() {
         assert_eq!(ok().assessment(), "Disk is OK (30° C / 86° F)");
-        let s = Smart { failing: true, ..ok() };
+        let s = Smart {
+            failing: true,
+            ..ok()
+        };
         assert!(s.assessment().starts_with("DISK IS LIKELY TO FAIL SOON"));
         assert!(s.is_warning());
-        let s = Smart { num_bad_sectors: 3, temperature_k: 0.0, ..ok() };
+        let s = Smart {
+            num_bad_sectors: 3,
+            temperature_k: 0.0,
+            ..ok()
+        };
         assert_eq!(s.assessment(), "Disk is OK, 3 bad sectors");
-        let s = Smart { attrs_failed_in_past: 1, temperature_k: 0.0, ..ok() };
-        assert_eq!(s.assessment(), "Disk is OK, one attribute failed in the past");
+        let s = Smart {
+            attrs_failed_in_past: 1,
+            temperature_k: 0.0,
+            ..ok()
+        };
+        assert_eq!(
+            s.assessment(),
+            "Disk is OK, one attribute failed in the past"
+        );
         assert!(!s.is_warning());
-        let s = Smart { enabled: false, ..ok() };
+        let s = Smart {
+            enabled: false,
+            ..ok()
+        };
         assert_eq!(s.assessment(), "SMART is not enabled");
-        assert_eq!(ok().selftest_description(), "Last self-test completed successfully");
+        assert_eq!(
+            ok().selftest_description(),
+            "Last self-test completed successfully"
+        );
     }
 
     fn attr(name: &str, unit: i32, pretty: i64) -> Attribute {
-        Attribute { id: 9, name: name.into(), flags: 0x32, value: 100, worst: 100, threshold: 0, pretty, pretty_unit: unit }
+        Attribute {
+            id: 9,
+            name: name.into(),
+            flags: 0x32,
+            value: 100,
+            worst: 100,
+            threshold: 0,
+            pretty,
+            pretty_unit: unit,
+        }
     }
 
     #[test]
     fn attribute_presentation() {
-        assert_eq!(attr("power-on-hours", 2, 3_600_000 * 5).pretty_value(), "5 hours");
-        assert_eq!(attr("power-on-hours", 2, 3_600_000).pretty_name(), "Power On Hours");
-        assert_eq!(attr("udma-crc-error-count", 1, 1234).pretty_name(), "UDMA CRC Error Count");
+        assert_eq!(
+            attr("power-on-hours", 2, 3_600_000 * 5).pretty_value(),
+            "5 hours"
+        );
+        assert_eq!(
+            attr("power-on-hours", 2, 3_600_000).pretty_name(),
+            "Power On Hours"
+        );
+        assert_eq!(
+            attr("udma-crc-error-count", 1, 1234).pretty_name(),
+            "UDMA CRC Error Count"
+        );
         assert_eq!(attr("x", 1, 1234).pretty_value(), "1,234");
         assert_eq!(attr("x", 3, 1).pretty_value(), "1 sector");
         assert_eq!(attr("x", 4, 303_150).pretty_value(), "30° C / 86° F");
@@ -243,10 +296,20 @@ mod tests {
         assert_eq!(a.kind(), "Old-Age");
         assert_eq!(a.updates(), "Online");
         assert_eq!(a.assessment(), "OK");
-        let a = Attribute { flags: 1, value: 5, threshold: 10, ..attr("x", 1, 0) };
+        let a = Attribute {
+            flags: 1,
+            value: 5,
+            threshold: 10,
+            ..attr("x", 1, 0)
+        };
         assert_eq!(a.kind(), "Pre-Fail");
         assert_eq!(a.assessment(), "FAILING");
-        let a = Attribute { value: 50, worst: 5, threshold: 10, ..attr("x", 1, 0) };
+        let a = Attribute {
+            value: 50,
+            worst: 5,
+            threshold: 10,
+            ..attr("x", 1, 0)
+        };
         assert_eq!(a.assessment(), "Failed in the past");
         assert_eq!(Attribute::normalized(-1), "N/A");
     }

@@ -78,7 +78,9 @@ impl Drop for Follow {
 
 pub fn current_uid() -> u32 {
     use std::os::unix::fs::MetadataExt;
-    std::fs::metadata("/proc/self").map(|m| m.uid()).unwrap_or(u32::MAX)
+    std::fs::metadata("/proc/self")
+        .map(|m| m.uid())
+        .unwrap_or(u32::MAX)
 }
 
 /// Whether the current user can read the system journal (by group
@@ -98,14 +100,26 @@ pub fn list_boots() -> Vec<Boot> {
             c.args(["-o", "json"]);
         }
         let out = c.stdin(Stdio::null()).stderr(Stdio::null()).output().ok()?;
-        out.status.success().then(|| String::from_utf8_lossy(&out.stdout).into_owned())
+        out.status
+            .success()
+            .then(|| String::from_utf8_lossy(&out.stdout).into_owned())
     };
     let boots = run(true)
         .and_then(|s| journal::parse_boots_json(&s))
         .filter(|b| !b.is_empty())
-        .or_else(|| run(false).map(|s| journal::parse_boots_text(&s)).filter(|b| !b.is_empty()));
+        .or_else(|| {
+            run(false)
+                .map(|s| journal::parse_boots_text(&s))
+                .filter(|b| !b.is_empty())
+        });
     boots.unwrap_or_else(|| {
-        vec![Boot { index: 0, id: String::new(), first: None, last: None, range_text: None }]
+        vec![Boot {
+            index: 0,
+            id: String::new(),
+            first: None,
+            last: None,
+            range_text: None,
+        }]
     })
 }
 
@@ -123,14 +137,24 @@ pub fn start(q: Query, follow: bool) -> (Handle, Option<Follow>, async_channel::
 
 /// Cursor of the newest entry of the queried boot (unfiltered).
 fn tail_cursor(args: &QueryArgs) -> Option<String> {
-    let out = Command::new(journalctl()).args(args.tail_args()).stdin(Stdio::null()).stderr(Stdio::null()).output().ok()?;
+    let out = Command::new(journalctl())
+        .args(args.tail_args())
+        .stdin(Stdio::null())
+        .stderr(Stdio::null())
+        .output()
+        .ok()?;
     let text = String::from_utf8_lossy(&out.stdout);
     let line = text.lines().find(|l| !l.trim().is_empty())?;
     Entry::parse(line).ok()?.get("__CURSOR").map(str::to_string)
 }
 
 /// Spawns `journalctl --follow` and a thread forwarding matching entries.
-fn spawn_follow(q: &Query, cursor: Option<&str>, slot: Arc<Mutex<FollowSlot>>, tx: async_channel::Sender<Msg>) {
+fn spawn_follow(
+    q: &Query,
+    cursor: Option<&str>,
+    slot: Arc<Mutex<FollowSlot>>,
+    tx: async_channel::Sender<Msg>,
+) {
     let Ok(mut guard) = slot.lock() else { return };
     if guard.cancelled {
         return;
@@ -144,7 +168,9 @@ fn spawn_follow(q: &Query, cursor: Option<&str>, slot: Arc<Mutex<FollowSlot>>, t
     else {
         return;
     };
-    let Some(stdout) = child.stdout.take() else { return };
+    let Some(stdout) = child.stdout.take() else {
+        return;
+    };
     guard.child = Some(child);
     drop(guard);
     let (category, search, uid) = (q.category, q.search.clone(), q.uid);
@@ -167,7 +193,9 @@ fn spawn_follow(q: &Query, cursor: Option<&str>, slot: Arc<Mutex<FollowSlot>>, t
             // Coalesce bursts: send once the already-read data is consumed.
             if (reader.buffer().is_empty() || batch.len() >= 500)
                 && !batch.is_empty()
-                && tx.send_blocking(Msg::Live(std::mem::take(&mut batch))).is_err()
+                && tx
+                    .send_blocking(Msg::Live(std::mem::take(&mut batch)))
+                    .is_err()
             {
                 break;
             }
@@ -182,7 +210,12 @@ fn spawn_follow(q: &Query, cursor: Option<&str>, slot: Arc<Mutex<FollowSlot>>, t
     });
 }
 
-fn run(q: Query, follow: Option<Arc<Mutex<FollowSlot>>>, more: mpsc::Receiver<usize>, tx: async_channel::Sender<Msg>) {
+fn run(
+    q: Query,
+    follow: Option<Arc<Mutex<FollowSlot>>>,
+    more: mpsc::Receiver<usize>,
+    tx: async_channel::Sender<Msg>,
+) {
     // Learn where "now" is before the paged query starts, so nothing written
     // in between is missed (overlap is de-duplicated by the UI).
     if let Some(slot) = follow {
@@ -220,7 +253,9 @@ fn run(q: Query, follow: Option<Arc<Mutex<FollowSlot>>>, more: mpsc::Receiver<us
         }));
     }
 
-    let Some(stdout) = child.stdout.take() else { return };
+    let Some(stdout) = child.stdout.take() else {
+        return;
+    };
     let mut reader = BufReader::with_capacity(256 * 1024, stdout);
     let mut buf = Vec::with_capacity(4096);
     let mut produced = 0usize;
@@ -252,7 +287,10 @@ fn run(q: Query, follow: Option<Arc<Mutex<FollowSlot>>>, more: mpsc::Receiver<us
                 if !batch.is_empty() && scanned.is_multiple_of(20_000) {
                     want -= batch.len();
                     produced += batch.len();
-                    if tx.send_blocking(Msg::Batch(std::mem::take(&mut batch))).is_err() {
+                    if tx
+                        .send_blocking(Msg::Batch(std::mem::take(&mut batch)))
+                        .is_err()
+                    {
                         break 'outer;
                     }
                 }
@@ -262,7 +300,9 @@ fn run(q: Query, follow: Option<Arc<Mutex<FollowSlot>>>, more: mpsc::Receiver<us
             if line.is_empty() {
                 continue;
             }
-            let Ok(entry) = Entry::parse(line) else { continue };
+            let Ok(entry) = Entry::parse(line) else {
+                continue;
+            };
             if q.category.matches(&entry, q.uid) && q.search.matches(&entry) {
                 batch.push(entry);
             }
@@ -277,7 +317,10 @@ fn run(q: Query, follow: Option<Arc<Mutex<FollowSlot>>>, more: mpsc::Receiver<us
                 let _ = t.join();
             }
             let failed = status.is_some_and(|s| !s.success());
-            let err = stderr_text.lock().map(|t| t.trim().to_string()).unwrap_or_default();
+            let err = stderr_text
+                .lock()
+                .map(|t| t.trim().to_string())
+                .unwrap_or_default();
             if failed && produced == 0 && !err.is_empty() && !err.contains("No entries") {
                 let _ = tx.send_blocking(Msg::Error(err));
             }
@@ -300,7 +343,9 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("helix-logs-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let script = dir.join("journalctl");
-        let line = |c: &str, m: &str| format!(r#"{{"__CURSOR":"{c}","MESSAGE":"{m}","PRIORITY":"6","_TRANSPORT":"journal"}}"#);
+        let line = |c: &str, m: &str| {
+            format!(r#"{{"__CURSOR":"{c}","MESSAGE":"{m}","PRIORITY":"6","_TRANSPORT":"journal"}}"#)
+        };
         std::fs::write(
             &script,
             format!(
@@ -319,7 +364,12 @@ mod tests {
         std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
         std::env::set_var("HELIX_LOGS_TEST_JOURNALCTL", &script);
 
-        let q = Query { args: QueryArgs::default(), category: Category::All, search: Search::default(), uid: 1000 };
+        let q = Query {
+            args: QueryArgs::default(),
+            category: Category::All,
+            search: Search::default(),
+            uid: 1000,
+        };
         let (h, follow, rx) = start(q, true);
         h.request(10);
         let (mut loaded, mut live, mut done) = (Vec::new(), Vec::new(), false);
@@ -346,9 +396,17 @@ mod tests {
     #[test]
     #[ignore]
     fn live_query() {
-        let mut args = QueryArgs { reverse: true, ..Default::default() };
+        let mut args = QueryArgs {
+            reverse: true,
+            ..Default::default()
+        };
         Category::All.prefilter(&mut args, current_uid());
-        let q = Query { args, category: Category::All, search: Search::default(), uid: current_uid() };
+        let q = Query {
+            args,
+            category: Category::All,
+            search: Search::default(),
+            uid: current_uid(),
+        };
         let (h, _follow, rx) = start(q, false);
         h.request(50);
         let mut got = 0;

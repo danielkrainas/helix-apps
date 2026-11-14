@@ -24,11 +24,19 @@ pub struct Place {
 
 impl Place {
     pub fn at(p: LatLon, name: &str) -> Place {
-        Place { name: name.to_string(), lat: p.lat, lon: p.lon, ..Default::default() }
+        Place {
+            name: name.to_string(),
+            lat: p.lat,
+            lon: p.lon,
+            ..Default::default()
+        }
     }
 
     pub fn location(&self) -> LatLon {
-        LatLon { lat: self.lat, lon: self.lon }
+        LatLon {
+            lat: self.lat,
+            lon: self.lon,
+        }
     }
 
     /// Identity for favorites: OSM object if known, else rounded coordinates.
@@ -42,7 +50,10 @@ impl Place {
 
     pub fn osm_url(&self) -> String {
         if !self.osm_type.is_empty() && self.osm_id != 0 {
-            format!("https://www.openstreetmap.org/{}/{}", self.osm_type, self.osm_id)
+            format!(
+                "https://www.openstreetmap.org/{}/{}",
+                self.osm_type, self.osm_id
+            )
         } else {
             format!(
                 "https://www.openstreetmap.org/?mlat={:.6}&mlon={:.6}#map=17/{:.6}/{:.6}",
@@ -53,7 +64,11 @@ impl Place {
 
     /// Short secondary line (address without the name).
     pub fn short_address(&self) -> String {
-        let parts: Vec<&str> = self.address.split(", ").filter(|p| *p != self.name).collect();
+        let parts: Vec<&str> = self
+            .address
+            .split(", ")
+            .filter(|p| *p != self.name)
+            .collect();
         parts.into_iter().take(3).collect::<Vec<_>>().join(", ")
     }
 }
@@ -106,22 +121,29 @@ fn parse_place(v: &Value) -> Option<Place> {
     let display = str_of(v, "display_name").to_string();
     let mut name = str_of(v, "name").to_string();
     if name.is_empty() {
-        name = address_title(v.get("address")).unwrap_or_else(|| {
-            display.split(", ").next().unwrap_or("").to_string()
-        });
+        name = address_title(v.get("address"))
+            .unwrap_or_else(|| display.split(", ").next().unwrap_or("").to_string());
     }
     let category = humanize_category(
-        v.get("category").or_else(|| v.get("class")).and_then(Value::as_str).unwrap_or(""),
+        v.get("category")
+            .or_else(|| v.get("class"))
+            .and_then(Value::as_str)
+            .unwrap_or(""),
         str_of(v, "type"),
     );
-    let bbox = v.get("boundingbox").and_then(Value::as_array).and_then(|a| {
-        if a.len() != 4 {
-            return None;
-        }
-        let n: Vec<f64> = a.iter().filter_map(num).collect();
-        (n.len() == 4).then(|| [n[0], n[1], n[2], n[3]])
-    });
-    let osm_id = v.get("osm_id").and_then(|i| i.as_u64().or_else(|| num(i).map(|f| f as u64)));
+    let bbox = v
+        .get("boundingbox")
+        .and_then(Value::as_array)
+        .and_then(|a| {
+            if a.len() != 4 {
+                return None;
+            }
+            let n: Vec<f64> = a.iter().filter_map(num).collect();
+            (n.len() == 4).then(|| [n[0], n[1], n[2], n[3]])
+        });
+    let osm_id = v
+        .get("osm_id")
+        .and_then(|i| i.as_u64().or_else(|| num(i).map(|f| f as u64)));
     let mut extras = Vec::new();
     if let Some(Value::Object(tags)) = v.get("extratags") {
         for (key, label) in [
@@ -167,7 +189,11 @@ fn address_title(addr: Option<&Value>) -> Option<String> {
     let road = str_of(addr, "road");
     let number = str_of(addr, "house_number");
     if !road.is_empty() {
-        return Some(if number.is_empty() { road.to_string() } else { format!("{road} {number}") });
+        return Some(if number.is_empty() {
+            road.to_string()
+        } else {
+            format!("{road} {number}")
+        });
     }
     ["village", "town", "city", "county", "state", "country"]
         .iter()
@@ -177,7 +203,8 @@ fn address_title(addr: Option<&Value>) -> Option<String> {
 }
 
 pub fn parse_search(json: &str) -> Result<Vec<Place>, String> {
-    let v: Value = serde_json::from_str(json).map_err(|_| "Invalid response from the search service".to_string())?;
+    let v: Value = serde_json::from_str(json)
+        .map_err(|_| "Invalid response from the search service".to_string())?;
     match v {
         Value::Array(items) => Ok(items.iter().filter_map(parse_place).collect()),
         Value::Object(_) if v.get("error").is_some() => Err(error_text(&v)),
@@ -186,7 +213,8 @@ pub fn parse_search(json: &str) -> Result<Vec<Place>, String> {
 }
 
 pub fn parse_reverse(json: &str) -> Result<Option<Place>, String> {
-    let v: Value = serde_json::from_str(json).map_err(|_| "Invalid response from the search service".to_string())?;
+    let v: Value = serde_json::from_str(json)
+        .map_err(|_| "Invalid response from the search service".to_string())?;
     if v.get("error").is_some() {
         // "Unable to geocode" means open sea etc.: not an error for the user.
         return Ok(None);
@@ -197,7 +225,11 @@ pub fn parse_reverse(json: &str) -> Result<Option<Place>, String> {
 fn error_text(v: &Value) -> String {
     match v.get("error") {
         Some(Value::String(s)) => s.clone(),
-        Some(e) => e.get("message").and_then(Value::as_str).unwrap_or("Search failed").to_string(),
+        Some(e) => e
+            .get("message")
+            .and_then(Value::as_str)
+            .unwrap_or("Search failed")
+            .to_string(),
         None => "Search failed".into(),
     }
 }
@@ -219,7 +251,11 @@ pub fn humanize_category(class: &str, kind: &str) -> String {
     if let Some(s) = special {
         return s.to_string();
     }
-    let raw = if kind.is_empty() || kind == "yes" { class } else { kind };
+    let raw = if kind.is_empty() || kind == "yes" {
+        class
+    } else {
+        kind
+    };
     let text = raw.replace('_', " ");
     let mut chars = text.chars();
     match chars.next() {
@@ -252,8 +288,14 @@ mod tests {
         assert_eq!(b.name, "Berlin");
         assert_eq!(b.category, "City");
         assert_eq!(b.osm_url(), "https://www.openstreetmap.org/node/240109189");
-        assert_eq!(b.bbox, Some([52.3570365, 52.6770365, 13.2288599, 13.5488599]));
-        assert_eq!(b.extras[0], ("Wikipedia".to_string(), "de:Berlin".to_string()));
+        assert_eq!(
+            b.bbox,
+            Some([52.3570365, 52.6770365, 13.2288599, 13.5488599])
+        );
+        assert_eq!(
+            b.extras[0],
+            ("Wikipedia".to_string(), "de:Berlin".to_string())
+        );
         assert_eq!(b.short_address(), "Deutschland");
         let s = &places[1];
         assert_eq!(s.name, "Main Street");
@@ -264,9 +306,14 @@ mod tests {
 
     #[test]
     fn errors_and_reverse() {
-        assert!(parse_search(r#"{"error":{"message":"Bad request"}}"#).unwrap_err().contains("Bad"));
+        assert!(parse_search(r#"{"error":{"message":"Bad request"}}"#)
+            .unwrap_err()
+            .contains("Bad"));
         assert!(parse_search("<html>").is_err());
-        assert_eq!(parse_reverse(r#"{"error":"Unable to geocode"}"#).unwrap(), None);
+        assert_eq!(
+            parse_reverse(r#"{"error":"Unable to geocode"}"#).unwrap(),
+            None
+        );
         let r = parse_reverse(
             r#"{"lat":"1","lon":"2","category":"place","type":"house","display_name":"1 A St, X",
                 "address":{"road":"A St","house_number":"1"}}"#,
@@ -279,7 +326,12 @@ mod tests {
 
     #[test]
     fn urls() {
-        let u = search_url("https://n.example/", "Café & Bar", 5, Some((1.0, 2.0, 3.0, 4.0)));
+        let u = search_url(
+            "https://n.example/",
+            "Café & Bar",
+            5,
+            Some((1.0, 2.0, 3.0, 4.0)),
+        );
         assert_eq!(
             u,
             "https://n.example/search?format=jsonv2&addressdetails=1&extratags=1&limit=5&q=Caf%C3%A9%20%26%20Bar&viewbox=1.00000,4.00000,3.00000,2.00000"

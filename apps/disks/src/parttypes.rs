@@ -21,27 +21,75 @@ pub static TYPES: &[PartType] = &[
     t("gpt", "c12a7328-f81f-11d2-ba4b-00a0c93ec93b", "EFI System"),
     t("gpt", "21686148-6449-6e6f-744e-656564454649", "BIOS Boot"),
     t("gpt", LINUX_FS_GPT, "Linux Filesystem"),
-    t("gpt", "4f68bce3-e8cd-4db1-96e7-fbcaf984b709", "Linux Root (x86-64)"),
-    t("gpt", "b921b045-1df0-41c3-af44-4c6f280d3fae", "Linux Root (ARM-64)"),
+    t(
+        "gpt",
+        "4f68bce3-e8cd-4db1-96e7-fbcaf984b709",
+        "Linux Root (x86-64)",
+    ),
+    t(
+        "gpt",
+        "b921b045-1df0-41c3-af44-4c6f280d3fae",
+        "Linux Root (ARM-64)",
+    ),
     t("gpt", "933ac7e1-2eb4-4f13-b844-0e14e2aef915", "Linux Home"),
-    t("gpt", "bc13c2ff-59e6-4262-a352-b275fd6f7172", "Linux Extended Boot"),
+    t(
+        "gpt",
+        "bc13c2ff-59e6-4262-a352-b275fd6f7172",
+        "Linux Extended Boot",
+    ),
     t("gpt", LINUX_SWAP_GPT, "Linux Swap"),
     t("gpt", "e6d6d379-f507-44c2-a23c-238f2a3df928", "Linux LVM"),
     t("gpt", "a19d880f-05fc-4d3b-a006-743f0f84911e", "Linux RAID"),
     t("gpt", LINUX_LUKS_GPT, "Linux LUKS"),
-    t("gpt", "8da63339-0007-60c0-c436-083ac8230908", "Linux Reserved"),
+    t(
+        "gpt",
+        "8da63339-0007-60c0-c436-083ac8230908",
+        "Linux Reserved",
+    ),
     t("gpt", BASIC_DATA_GPT, "Basic Data"),
-    t("gpt", "e3c9e316-0b5c-4db8-817d-f92df00215ae", "Microsoft Reserved"),
-    t("gpt", "de94bba4-06d1-4d40-a16a-bfd50179d6ac", "Microsoft Windows Recovery Environment"),
-    t("gpt", "5808c8aa-7e8f-42e0-85d2-e1e90434cfb3", "Microsoft LDM Metadata"),
-    t("gpt", "af9b60a0-1431-4f62-bc68-3311714a69ad", "Microsoft LDM Data"),
-    t("gpt", "48465300-0000-11aa-aa11-00306543ecac", "Apple HFS/HFS+"),
+    t(
+        "gpt",
+        "e3c9e316-0b5c-4db8-817d-f92df00215ae",
+        "Microsoft Reserved",
+    ),
+    t(
+        "gpt",
+        "de94bba4-06d1-4d40-a16a-bfd50179d6ac",
+        "Microsoft Windows Recovery Environment",
+    ),
+    t(
+        "gpt",
+        "5808c8aa-7e8f-42e0-85d2-e1e90434cfb3",
+        "Microsoft LDM Metadata",
+    ),
+    t(
+        "gpt",
+        "af9b60a0-1431-4f62-bc68-3311714a69ad",
+        "Microsoft LDM Data",
+    ),
+    t(
+        "gpt",
+        "48465300-0000-11aa-aa11-00306543ecac",
+        "Apple HFS/HFS+",
+    ),
     t("gpt", "7c3457ef-0000-11aa-aa11-00306543ecac", "Apple APFS"),
     t("gpt", "426f6f74-0000-11aa-aa11-00306543ecac", "Apple Boot"),
-    t("gpt", "516e7cb4-6ecf-11d6-8ff8-00022d09712b", "FreeBSD Data"),
+    t(
+        "gpt",
+        "516e7cb4-6ecf-11d6-8ff8-00022d09712b",
+        "FreeBSD Data",
+    ),
     t("gpt", "516e7cba-6ecf-11d6-8ff8-00022d09712b", "FreeBSD ZFS"),
-    t("gpt", "6a898cc3-1dd2-11b2-99a6-080020736631", "Solaris /usr or Apple ZFS"),
-    t("gpt", "024dee41-33e7-11d3-9d69-0008c781f39f", "MBR Partition Scheme"),
+    t(
+        "gpt",
+        "6a898cc3-1dd2-11b2-99a6-080020736631",
+        "Solaris /usr or Apple ZFS",
+    ),
+    t(
+        "gpt",
+        "024dee41-33e7-11d3-9d69-0008c781f39f",
+        "MBR Partition Scheme",
+    ),
     t("dos", "0x83", "Linux"),
     t("dos", "0x82", "Linux swap or Solaris"),
     t("dos", "0x8e", "Linux LVM"),
@@ -82,7 +130,13 @@ pub fn name(table: &str, id: &str) -> String {
         .iter()
         .find(|t| t.table == table && t.id == n)
         .map(|t| t.name.to_string())
-        .unwrap_or_else(|| if id.is_empty() { "Unknown".into() } else { format!("Unknown ({id})") })
+        .unwrap_or_else(|| {
+            if id.is_empty() {
+                "Unknown".into()
+            } else {
+                format!("Unknown ({id})")
+            }
+        })
 }
 
 /// Types offered when editing a partition on a table of type `table`.
@@ -125,7 +179,10 @@ mod tests {
     fn names() {
         assert_eq!(name("dos", "0x83"), "Linux");
         assert_eq!(name("dos", "0X7"), "HPFS/NTFS/exFAT");
-        assert_eq!(name("gpt", "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"), "EFI System");
+        assert_eq!(
+            name("gpt", "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"),
+            "EFI System"
+        );
         assert_eq!(name("gpt", "deadbeef"), "Unknown (deadbeef)");
         assert_eq!(name("gpt", ""), "Unknown");
     }

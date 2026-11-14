@@ -14,9 +14,16 @@ pub type Result<T> = std::result::Result<T, String>;
 #[derive(Debug, Clone)]
 pub enum SourceSpec {
     /// `videotestsrc` with the given pattern (tests / `HELIX_CAMERA_SOURCE=test`).
-    Test { pattern: &'static str, width: i32, height: i32 },
+    Test {
+        pattern: &'static str,
+        width: i32,
+        height: i32,
+    },
     /// A GStreamer device, optionally on a portal PipeWire remote `fd`.
-    Device { device: gst::Device, fd: Option<RawFd> },
+    Device {
+        device: gst::Device,
+        fd: Option<RawFd>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -70,7 +77,11 @@ fn try_set_str(e: &gst::Element, name: &str, value: &str) {
 
 fn source_element(spec: &SourceSpec) -> Result<gst::Element> {
     match spec {
-        SourceSpec::Test { pattern, width, height } => {
+        SourceSpec::Test {
+            pattern,
+            width,
+            height,
+        } => {
             let bin = gst::Bin::new();
             let src = make("videotestsrc")?;
             src.set_property("is-live", true);
@@ -136,7 +147,12 @@ impl Session {
         let flip = make("videoflip")?;
         let pconv = make("videoconvert")?;
         let pcaps = make("capsfilter")?;
-        pcaps.set_property("caps", gst::Caps::builder("video/x-raw").field("format", "RGBA").build());
+        pcaps.set_property(
+            "caps",
+            gst::Caps::builder("video/x-raw")
+                .field("format", "RGBA")
+                .build(),
+        );
         let appsink = gst_app::AppSink::builder()
             .max_buffers(1)
             .drop(true)
@@ -154,10 +170,13 @@ impl Session {
         still.set_property("enable-last-sample", true);
 
         pipeline
-            .add_many([&src, &decode, &convert, &tee, &pq, &flip, &pconv, &pcaps, &sq, &still])
+            .add_many([
+                &src, &decode, &convert, &tee, &pq, &flip, &pconv, &pcaps, &sq, &still,
+            ])
             .map_err(|e| e.to_string())?;
         pipeline.add(&appsink).map_err(|e| e.to_string())?;
-        src.link(&decode).map_err(|_| "Could not link the camera source".to_string())?;
+        src.link(&decode)
+            .map_err(|_| "Could not link the camera source".to_string())?;
         gst::Element::link_many([&convert, &tee]).map_err(|e| e.to_string())?;
         gst::Element::link_many([&tee, &pq, &flip, &pconv, &pcaps, appsink.upcast_ref()])
             .map_err(|e| e.to_string())?;
@@ -165,7 +184,9 @@ impl Session {
 
         let convert_weak = convert.downgrade();
         decode.connect_pad_added(move |_, pad| {
-            let Some(convert) = convert_weak.upgrade() else { return };
+            let Some(convert) = convert_weak.upgrade() else {
+                return;
+            };
             let sink = convert.static_pad("sink").unwrap();
             if sink.is_linked() {
                 return;
@@ -196,10 +217,17 @@ impl Session {
             add_recording_branch(&pipeline, &tee, rec)?;
         }
 
-        let session = Session { pipeline, still, flip, recording: record.map(|r| r.path.clone()) };
+        let session = Session {
+            pipeline,
+            still,
+            flip,
+            recording: record.map(|r| r.path.clone()),
+        };
         session.set_mirror(mirror);
         if session.pipeline.set_state(gst::State::Playing).is_err() {
-            let err = session.pop_error().unwrap_or_else(|| "Could not start the camera".into());
+            let err = session
+                .pop_error()
+                .unwrap_or_else(|| "Could not start the camera".into());
             session.stop();
             return Err(err);
         }
@@ -262,7 +290,11 @@ impl Drop for Session {
     }
 }
 
-fn add_recording_branch(pipeline: &gst::Pipeline, tee: &gst::Element, rec: &RecordSpec) -> Result<()> {
+fn add_recording_branch(
+    pipeline: &gst::Pipeline,
+    tee: &gst::Element,
+    rec: &RecordSpec,
+) -> Result<()> {
     let plan = &rec.plan;
     let vq = make("queue")?;
     let vconv = make("videoconvert")?;
@@ -273,7 +305,9 @@ fn add_recording_branch(pipeline: &gst::Pipeline, tee: &gst::Element, rec: &Reco
     sink.set_property("location", rec.path.to_string_lossy().to_string());
     sink.set_property("async", false);
 
-    pipeline.add_many([&vq, &vconv, &venc, &mux, &sink]).map_err(|e| e.to_string())?;
+    pipeline
+        .add_many([&vq, &vconv, &venc, &mux, &sink])
+        .map_err(|e| e.to_string())?;
     gst::Element::link_many([tee, &vq, &vconv, &venc]).map_err(|e| e.to_string())?;
     if let Some(parser) = plan.parser {
         let p = make(parser)?;
@@ -298,8 +332,11 @@ fn add_recording_branch(pipeline: &gst::Pipeline, tee: &gst::Element, rec: &Reco
         let ares = make("audioresample")?;
         let aenc = make(aenc_name)?;
         let aq = make("queue")?;
-        pipeline.add_many([&asrc, &aconv, &ares, &aenc, &aq]).map_err(|e| e.to_string())?;
-        gst::Element::link_many([&asrc, &aconv, &ares, &aenc, &aq, &mux]).map_err(|e| e.to_string())?;
+        pipeline
+            .add_many([&asrc, &aconv, &ares, &aenc, &aq])
+            .map_err(|e| e.to_string())?;
+        gst::Element::link_many([&asrc, &aconv, &ares, &aenc, &aq, &mux])
+            .map_err(|e| e.to_string())?;
     }
     Ok(())
 }
@@ -382,7 +419,9 @@ pub fn play_shutter_sound(silent: bool) {
         return;
     }
     std::thread::spawn(move || {
-        let Ok(playbin) = gst::ElementFactory::make("playbin").build() else { return };
+        let Ok(playbin) = gst::ElementFactory::make("playbin").build() else {
+            return;
+        };
         playbin.set_property("uri", format!("file://{SOUND}"));
         if silent {
             if let Ok(sink) = gst::ElementFactory::make("fakesink").build() {
@@ -411,7 +450,11 @@ mod tests {
         Camera {
             name: "Test".into(),
             location: Location::Front,
-            spec: SourceSpec::Test { pattern: "smpte", width: 320, height: 240 },
+            spec: SourceSpec::Test {
+                pattern: "smpte",
+                width: 320,
+                height: 240,
+            },
         }
     }
 
@@ -443,8 +486,14 @@ mod tests {
             f2.fetch_add(1, Ordering::SeqCst);
         });
         let session = Session::start(&test_camera(), true, sink, None).unwrap();
-        assert!(wait_for(|| frames.load(Ordering::SeqCst) >= 3), "no viewfinder frames");
-        assert!(wait_for(|| session.last_sample().is_some()), "no still sample");
+        assert!(
+            wait_for(|| frames.load(Ordering::SeqCst) >= 3),
+            "no viewfinder frames"
+        );
+        assert!(
+            wait_for(|| session.last_sample().is_some()),
+            "no still sample"
+        );
         let sample = session.last_sample().unwrap();
 
         let dir = temp_dir("photo");
@@ -470,7 +519,11 @@ mod tests {
         };
         let dir = temp_dir("video");
         let path = dir.join(format!("Video.{}", plan.format.extension()));
-        let spec = RecordSpec { path: path.clone(), plan: plan.clone(), audio: AudioInput::Test };
+        let spec = RecordSpec {
+            path: path.clone(),
+            plan: plan.clone(),
+            audio: AudioInput::Test,
+        };
         let sink: FrameSink = Arc::new(|_| {});
         let session = Session::start(&test_camera(), false, sink, Some(&spec)).unwrap();
         assert!(session.is_recording());
@@ -493,7 +546,10 @@ mod tests {
     /// Decodes `path` to the end and returns the media types of its streams.
     fn decoded_stream_kinds(path: &Path) -> Vec<String> {
         let pipeline = gst::Pipeline::new();
-        let src = gst::ElementFactory::make("filesrc").property("location", path.to_str().unwrap()).build().unwrap();
+        let src = gst::ElementFactory::make("filesrc")
+            .property("location", path.to_str().unwrap())
+            .build()
+            .unwrap();
         let decode = gst::ElementFactory::make("decodebin").build().unwrap();
         pipeline.add_many([&src, &decode]).unwrap();
         src.link(&decode).unwrap();
@@ -503,8 +559,13 @@ mod tests {
         decode.connect_pad_added(move |_, pad| {
             let Some(pipeline) = pw.upgrade() else { return };
             let caps = pad.current_caps().unwrap();
-            k2.lock().unwrap().push(caps.structure(0).unwrap().name().to_string());
-            let sink = gst::ElementFactory::make("fakesink").property("sync", false).build().unwrap();
+            k2.lock()
+                .unwrap()
+                .push(caps.structure(0).unwrap().name().to_string());
+            let sink = gst::ElementFactory::make("fakesink")
+                .property("sync", false)
+                .build()
+                .unwrap();
             pipeline.add(&sink).unwrap();
             sink.sync_state_with_parent().unwrap();
             pad.link(&sink.static_pad("sink").unwrap()).unwrap();
@@ -513,9 +574,15 @@ mod tests {
         let msg = pipeline
             .bus()
             .unwrap()
-            .timed_pop_filtered(gst::ClockTime::from_seconds(10), &[gst::MessageType::Eos, gst::MessageType::Error])
+            .timed_pop_filtered(
+                gst::ClockTime::from_seconds(10),
+                &[gst::MessageType::Eos, gst::MessageType::Error],
+            )
             .expect("playback finished");
-        assert!(matches!(msg.view(), gst::MessageView::Eos(_)), "playback error: {msg:?}");
+        assert!(
+            matches!(msg.view(), gst::MessageView::Eos(_)),
+            "playback error: {msg:?}"
+        );
         pipeline.set_state(gst::State::Null).unwrap();
         let kinds = kinds.lock().unwrap().clone();
         kinds
@@ -529,7 +596,11 @@ mod tests {
         };
         let dir = temp_dir("mp4");
         let path = dir.join("Video.mp4");
-        let spec = RecordSpec { path: path.clone(), plan, audio: AudioInput::Test };
+        let spec = RecordSpec {
+            path: path.clone(),
+            plan,
+            audio: AudioInput::Test,
+        };
         let session = Session::start(&test_camera(), false, Arc::new(|_| {}), Some(&spec)).unwrap();
         std::thread::sleep(Duration::from_millis(800));
         session.finish(Duration::from_secs(10)).unwrap();

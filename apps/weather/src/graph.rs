@@ -10,12 +10,22 @@ pub fn scale_y(values: &[f64], top: f64, bottom: f64) -> Vec<f64> {
     let span = max - min;
     values
         .iter()
-        .map(|&v| if span.abs() < f64::EPSILON { (top + bottom) / 2.0 } else { bottom - (v - min) / span * (bottom - top) })
+        .map(|&v| {
+            if span.abs() < f64::EPSILON {
+                (top + bottom) / 2.0
+            } else {
+                bottom - (v - min) / span * (bottom - top)
+            }
+        })
         .collect()
 }
 
 pub fn min_max(values: &[f64]) -> (f64, f64) {
-    values.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &v| (lo.min(v), hi.max(v)))
+    values
+        .iter()
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &v| {
+            (lo.min(v), hi.max(v))
+        })
 }
 
 /// Horizontal extent `(x0, x1)` of a `[lo, hi]` range bar inside `width`,
@@ -38,7 +48,12 @@ pub struct Rgba {
     pub a: f64,
 }
 
-pub const ACCENT: Rgba = Rgba { r: 0.208, g: 0.518, b: 0.894, a: 1.0 };
+pub const ACCENT: Rgba = Rgba {
+    r: 0.208,
+    g: 0.518,
+    b: 0.894,
+    a: 1.0,
+};
 
 fn set(cr: &cairo::Context, c: Rgba, alpha: f64) {
     cr.set_source_rgba(c.r, c.g, c.b, c.a * alpha);
@@ -46,12 +61,21 @@ fn set(cr: &cairo::Context, c: Rgba, alpha: f64) {
 
 /// Draws the temperature curve: one point per column of `col_w` pixels,
 /// with a filled area, line, dots and a value label above each point.
-pub fn draw_temperature(cr: &cairo::Context, values: &[f64], labels: &[String], col_w: f64, height: f64, fg: Rgba) {
+pub fn draw_temperature(
+    cr: &cairo::Context,
+    values: &[f64],
+    labels: &[String],
+    col_w: f64,
+    height: f64,
+    fg: Rgba,
+) {
     if values.is_empty() {
         return;
     }
     let ys = scale_y(values, 26.0, height - 12.0);
-    let xs: Vec<f64> = (0..values.len()).map(|i| col_w * (i as f64 + 0.5)).collect();
+    let xs: Vec<f64> = (0..values.len())
+        .map(|i| col_w * (i as f64 + 0.5))
+        .collect();
 
     // Filled area under the curve.
     cr.move_to(xs[0], height);
@@ -97,7 +121,14 @@ pub fn draw_temperature(cr: &cairo::Context, values: &[f64], labels: &[String], 
 }
 
 /// Draws a rounded min–max bar on a faint track.
-pub fn draw_range_bar(cr: &cairo::Context, (lo, hi): (f64, f64), (min, max): (f64, f64), width: f64, height: f64, fg: Rgba) {
+pub fn draw_range_bar(
+    cr: &cairo::Context,
+    (lo, hi): (f64, f64),
+    (min, max): (f64, f64),
+    width: f64,
+    height: f64,
+    fg: Rgba,
+) {
     let h = 6.0;
     let y = (height - h) / 2.0;
     rounded(cr, 0.0, y, width, h);
@@ -114,8 +145,20 @@ pub fn draw_range_bar(cr: &cairo::Context, (lo, hi): (f64, f64), (min, max): (f6
 fn rounded(cr: &cairo::Context, x: f64, y: f64, w: f64, h: f64) {
     let r = h / 2.0;
     cr.new_sub_path();
-    cr.arc(x + w - r, y + r, r, -std::f64::consts::FRAC_PI_2, std::f64::consts::FRAC_PI_2);
-    cr.arc(x + r, y + r, r, std::f64::consts::FRAC_PI_2, 3.0 * std::f64::consts::FRAC_PI_2);
+    cr.arc(
+        x + w - r,
+        y + r,
+        r,
+        -std::f64::consts::FRAC_PI_2,
+        std::f64::consts::FRAC_PI_2,
+    );
+    cr.arc(
+        x + r,
+        y + r,
+        r,
+        std::f64::consts::FRAC_PI_2,
+        3.0 * std::f64::consts::FRAC_PI_2,
+    );
     cr.close_path();
 }
 
@@ -145,8 +188,20 @@ mod tests {
     fn draws_to_image_surface() {
         let surface = cairo::ImageSurface::create(cairo::Format::ARgb32, 200, 100).unwrap();
         let cr = cairo::Context::new(&surface).unwrap();
-        let fg = Rgba { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
-        draw_temperature(&cr, &[1.0, 4.0, 2.0, 3.0], &["1°".into(), "4°".into(), "2°".into(), "3°".into()], 50.0, 100.0, fg);
+        let fg = Rgba {
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            a: 1.0,
+        };
+        draw_temperature(
+            &cr,
+            &[1.0, 4.0, 2.0, 3.0],
+            &["1°".into(), "4°".into(), "2°".into(), "3°".into()],
+            50.0,
+            100.0,
+            fg,
+        );
         draw_temperature(&cr, &[], &[], 50.0, 100.0, fg);
         draw_range_bar(&cr, (2.0, 5.0), (0.0, 10.0), 100.0, 20.0, fg);
         assert_eq!(cr.status(), Ok(()));

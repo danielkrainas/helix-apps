@@ -51,17 +51,28 @@ fn token(prefix: &str) -> String {
 pub fn fix_from_portal(d: &Dict) -> Option<Fix> {
     let f = |k: &str| d.get(k).and_then(|v| f64::try_from(v).ok());
     let (latitude, longitude) = (f("Latitude")?, f("Longitude")?);
-    valid(latitude, longitude).then_some(Fix { latitude, longitude, accuracy: f("Accuracy") })
+    valid(latitude, longitude).then_some(Fix {
+        latitude,
+        longitude,
+        accuracy: f("Accuracy"),
+    })
 }
 
 fn valid(lat: f64, lon: f64) -> bool {
-    lat.is_finite() && lon.is_finite() && (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&lon)
+    lat.is_finite()
+        && lon.is_finite()
+        && (-90.0..=90.0).contains(&lat)
+        && (-180.0..=180.0).contains(&lon)
 }
 
 fn via_portal() -> Result<Fix, String> {
     let conn = zbus::blocking::Connection::session().map_err(err)?;
-    let unique = conn.unique_name().map(|n| n.to_string()).unwrap_or_default();
-    let location = zbus::blocking::Proxy::new(&conn, PORTAL_BUS, PORTAL_PATH, LOCATION_IFACE).map_err(err)?;
+    let unique = conn
+        .unique_name()
+        .map(|n| n.to_string())
+        .unwrap_or_default();
+    let location =
+        zbus::blocking::Proxy::new(&conn, PORTAL_BUS, PORTAL_PATH, LOCATION_IFACE).map_err(err)?;
     let mut updates = location.receive_signal("LocationUpdated").map_err(err)?;
     let session_token = token("helix_session");
     let opts: HashMap<&str, Value> = HashMap::from([
@@ -70,25 +81,41 @@ fn via_portal() -> Result<Fix, String> {
     ]);
     let session: OwnedObjectPath = location.call("CreateSession", &(opts,)).map_err(err)?;
     let close = || {
-        let _ = conn.call_method(Some(PORTAL_BUS), session.as_str(), Some(SESSION_IFACE), "Close", &());
+        let _ = conn.call_method(
+            Some(PORTAL_BUS),
+            session.as_str(),
+            Some(SESSION_IFACE),
+            "Close",
+            &(),
+        );
     };
     let req_token = token("helix_location");
-    let request =
-        zbus::blocking::Proxy::new(&conn, PORTAL_BUS, portal_path("request", &unique, &req_token), REQUEST_IFACE).map_err(err)?;
+    let request = zbus::blocking::Proxy::new(
+        &conn,
+        PORTAL_BUS,
+        portal_path("request", &unique, &req_token),
+        REQUEST_IFACE,
+    )
+    .map_err(err)?;
     let mut responses = request.receive_signal("Response").map_err(err)?;
-    let opts: HashMap<&str, Value> = HashMap::from([("handle_token", Value::from(req_token.clone()))]);
+    let opts: HashMap<&str, Value> =
+        HashMap::from([("handle_token", Value::from(req_token.clone()))]);
     if let Err(e) = location.call::<_, _, OwnedObjectPath>("Start", &(&session, "", opts)) {
         close();
         return Err(err(e));
     }
-    let msg = responses.next().ok_or("The location portal closed the request")?;
+    let msg = responses
+        .next()
+        .ok_or("The location portal closed the request")?;
     let (code, _): (u32, Dict) = msg.body().deserialize().map_err(err)?;
     if code != 0 {
         close();
         return Err("Location access was denied".into());
     }
     for msg in updates.by_ref() {
-        let Ok((path, data)) = msg.body().deserialize::<(OwnedObjectPath, Dict)>() else { continue };
+        let Ok((path, data)) = msg.body().deserialize::<(OwnedObjectPath, Dict)>() else {
+            continue;
+        };
         if path != session {
             continue;
         }
@@ -103,7 +130,13 @@ fn via_portal() -> Result<Fix, String> {
 
 fn via_geoclue(desktop_id: &str) -> Result<Fix, String> {
     let conn = zbus::blocking::Connection::system().map_err(err)?;
-    let manager = zbus::blocking::Proxy::new(&conn, GEOCLUE_BUS, GEOCLUE_MANAGER, "org.freedesktop.GeoClue2.Manager").map_err(err)?;
+    let manager = zbus::blocking::Proxy::new(
+        &conn,
+        GEOCLUE_BUS,
+        GEOCLUE_MANAGER,
+        "org.freedesktop.GeoClue2.Manager",
+    )
+    .map_err(err)?;
     let client_path: OwnedObjectPath = manager.call("GetClient", &()).map_err(err)?;
     let client = zbus::blocking::proxy::Builder::<zbus::blocking::Proxy>::new(&conn)
         .destination(GEOCLUE_BUS)
@@ -116,18 +149,35 @@ fn via_geoclue(desktop_id: &str) -> Result<Fix, String> {
         .build()
         .map_err(err)?;
     client.set_property("DesktopId", desktop_id).map_err(err)?;
-    client.set_property("RequestedAccuracyLevel", GEOCLUE_ACCURACY_CITY).map_err(err)?;
+    client
+        .set_property("RequestedAccuracyLevel", GEOCLUE_ACCURACY_CITY)
+        .map_err(err)?;
     let mut updates = client.receive_signal("LocationUpdated").map_err(err)?;
     client.call::<_, _, ()>("Start", &()).map_err(err)?;
     let result = (|| {
         for msg in updates.by_ref() {
-            let Ok((_old, new)) = msg.body().deserialize::<(OwnedObjectPath, OwnedObjectPath)>() else { continue };
-            let loc = zbus::blocking::Proxy::new(&conn, GEOCLUE_BUS, new, "org.freedesktop.GeoClue2.Location").map_err(err)?;
+            let Ok((_old, new)) = msg
+                .body()
+                .deserialize::<(OwnedObjectPath, OwnedObjectPath)>()
+            else {
+                continue;
+            };
+            let loc = zbus::blocking::Proxy::new(
+                &conn,
+                GEOCLUE_BUS,
+                new,
+                "org.freedesktop.GeoClue2.Location",
+            )
+            .map_err(err)?;
             let lat: f64 = loc.get_property("Latitude").map_err(err)?;
             let lon: f64 = loc.get_property("Longitude").map_err(err)?;
             let acc: Option<f64> = loc.get_property("Accuracy").ok();
             if valid(lat, lon) {
-                return Ok(Fix { latitude: lat, longitude: lon, accuracy: acc });
+                return Ok(Fix {
+                    latitude: lat,
+                    longitude: lon,
+                    accuracy: acc,
+                });
             }
         }
         Err("No location received".to_string())
@@ -143,10 +193,13 @@ pub fn locate(desktop_id: &str, timeout: Duration) -> Result<Fix, String> {
     let (tx, rx) = mpsc::channel();
     let id = desktop_id.to_string();
     std::thread::spawn(move || {
-        let r = via_portal().or_else(|portal| via_geoclue(&id).map_err(|gc| format!("portal: {portal}; GeoClue: {gc}")));
+        let r = via_portal().or_else(|portal| {
+            via_geoclue(&id).map_err(|gc| format!("portal: {portal}; GeoClue: {gc}"))
+        });
         let _ = tx.send(r);
     });
-    rx.recv_timeout(timeout).unwrap_or_else(|_| Err("Timed out waiting for a location".into()))
+    rx.recv_timeout(timeout)
+        .unwrap_or_else(|_| Err("Timed out waiting for a location".into()))
 }
 
 #[cfg(test)]
@@ -155,7 +208,10 @@ mod tests {
 
     #[test]
     fn paths() {
-        assert_eq!(portal_path("session", ":1.7", "t"), "/org/freedesktop/portal/desktop/session/1_7/t");
+        assert_eq!(
+            portal_path("session", ":1.7", "t"),
+            "/org/freedesktop/portal/desktop/session/1_7/t"
+        );
     }
 
     #[test]
@@ -165,7 +221,14 @@ mod tests {
         assert!(fix_from_portal(&d).is_none());
         d.insert("Longitude".into(), OwnedValue::from(13.4f64));
         d.insert("Accuracy".into(), OwnedValue::from(1000.0f64));
-        assert_eq!(fix_from_portal(&d), Some(Fix { latitude: 52.5, longitude: 13.4, accuracy: Some(1000.0) }));
+        assert_eq!(
+            fix_from_portal(&d),
+            Some(Fix {
+                latitude: 52.5,
+                longitude: 13.4,
+                accuracy: Some(1000.0)
+            })
+        );
         d.insert("Latitude".into(), OwnedValue::from(95.0f64));
         assert!(fix_from_portal(&d).is_none());
     }

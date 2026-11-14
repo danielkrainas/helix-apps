@@ -13,8 +13,10 @@ use std::time::UNIX_EPOCH;
 const INDEX_VERSION: u32 = 1;
 const COVER_SIZE: i32 = 256;
 
-pub const AUDIO_EXTENSIONS: &[&str] =
-    &["mp3", "flac", "ogg", "oga", "opus", "m4a", "mp4", "aac", "wav", "wv", "ape", "aif", "aiff", "mpc", "spx"];
+pub const AUDIO_EXTENSIONS: &[&str] = &[
+    "mp3", "flac", "ogg", "oga", "opus", "m4a", "mp4", "aac", "wav", "wv", "ape", "aif", "aiff",
+    "mpc", "spx",
+];
 
 const COVER_NAMES: &[&str] = &["cover", "folder", "front", "album"];
 const COVER_EXTS: &[&str] = &["jpg", "jpeg", "png"];
@@ -40,12 +42,18 @@ pub fn save(file: &Path, tracks: &[Track]) -> std::io::Result<()> {
         version: u32,
         tracks: &'a [Track],
     }
-    let data = serde_json::to_vec(&Out { version: INDEX_VERSION, tracks }).map_err(std::io::Error::other)?;
+    let data = serde_json::to_vec(&Out {
+        version: INDEX_VERSION,
+        tracks,
+    })
+    .map_err(std::io::Error::other)?;
     write_atomic(file, &data)
 }
 
 pub fn is_audio(path: &Path) -> bool {
-    path.extension().and_then(|e| e.to_str()).is_some_and(|e| AUDIO_EXTENSIONS.iter().any(|a| a.eq_ignore_ascii_case(e)))
+    path.extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| AUDIO_EXTENSIONS.iter().any(|a| a.eq_ignore_ascii_case(e)))
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -73,18 +81,26 @@ struct FileInfo {
 }
 
 fn mtime_of(md: &std::fs::Metadata) -> i64 {
-    md.modified().ok().and_then(|t| t.duration_since(UNIX_EPOCH).ok()).map(|d| d.as_nanos() as i64).unwrap_or(0)
+    md.modified()
+        .ok()
+        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_nanos() as i64)
+        .unwrap_or(0)
 }
 
 fn is_hidden(path: &Path) -> bool {
-    path.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.starts_with('.'))
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|n| n.starts_with('.'))
 }
 
 fn walk(dir: &Path, files: &mut Vec<FileInfo>, dirs: &mut Vec<PathBuf>, depth: usize) {
     if depth > 32 {
         return;
     }
-    let Ok(rd) = std::fs::read_dir(dir) else { return };
+    let Ok(rd) = std::fs::read_dir(dir) else {
+        return;
+    };
     dirs.push(dir.to_path_buf());
     let mut entries: Vec<_> = rd.flatten().collect();
     entries.sort_by_key(|e| e.file_name());
@@ -98,9 +114,15 @@ fn walk(dir: &Path, files: &mut Vec<FileInfo>, dirs: &mut Vec<PathBuf>, depth: u
             walk(&path, files, dirs, depth + 1);
         } else if is_audio(&path) {
             // Symlinked files are followed, symlinked directories are not.
-            let Ok(md) = std::fs::metadata(&path) else { continue };
+            let Ok(md) = std::fs::metadata(&path) else {
+                continue;
+            };
             if md.is_file() {
-                files.push(FileInfo { mtime: mtime_of(&md), size: md.len(), path });
+                files.push(FileInfo {
+                    mtime: mtime_of(&md),
+                    size: md.len(),
+                    path,
+                });
             }
         }
     }
@@ -109,7 +131,12 @@ fn walk(dir: &Path, files: &mut Vec<FileInfo>, dirs: &mut Vec<PathBuf>, depth: u
 /// Scans `roots`, reusing entries of `previous` whose mtime and size are
 /// unchanged. Covers are written to `covers` (if given).
 #[cfg(test)]
-pub fn scan(roots: &[PathBuf], previous: Vec<Track>, covers: Option<&Path>, now: i64) -> (Vec<Track>, ScanReport) {
+pub fn scan(
+    roots: &[PathBuf],
+    previous: Vec<Track>,
+    covers: Option<&Path>,
+    now: i64,
+) -> (Vec<Track>, ScanReport) {
     scan_hybrid(roots, None, previous, covers, now)
 }
 
@@ -132,17 +159,22 @@ pub fn scan_hybrid(
     let covered: &[PathBuf] = tracker.as_ref().map_or(&[], |t| &t.covered);
     for (i, root) in roots.iter().enumerate() {
         // Skip roots nested in another root or indexed by Tracker.
-        if roots[..i].iter().any(|r| root.starts_with(r)) || covered.iter().any(|c| root.starts_with(c)) {
+        if roots[..i].iter().any(|r| root.starts_with(r))
+            || covered.iter().any(|c| root.starts_with(c))
+        {
             continue;
         }
         walk(root, &mut files, &mut report.dirs, 0);
     }
-    let mut old: HashMap<PathBuf, Track> = previous.into_iter().map(|t| (t.path.clone(), t)).collect();
+    let mut old: HashMap<PathBuf, Track> =
+        previous.into_iter().map(|t| (t.path.clone(), t)).collect();
     let mut folder_covers: HashMap<PathBuf, Option<String>> = HashMap::new();
     let mut out = Vec::with_capacity(files.len());
     for mut t in tracker.map(|t| t.tracks).unwrap_or_default() {
         // Symlinked or vanished files are skipped like in the walker.
-        let Ok(md) = std::fs::metadata(&t.path) else { continue };
+        let Ok(md) = std::fs::metadata(&t.path) else {
+            continue;
+        };
         if !md.is_file() {
             continue;
         }
@@ -167,7 +199,15 @@ pub fn scan_hybrid(
             None => now,
         };
         match &prev {
-            Some(p) if *p == Track { from_tracker: true, ..t.clone() } => report.unchanged += 1,
+            Some(p)
+                if *p
+                    == Track {
+                        from_tracker: true,
+                        ..t.clone()
+                    } =>
+            {
+                report.unchanged += 1
+            }
             Some(_) => report.updated += 1,
             None => report.added += 1,
         }
@@ -208,36 +248,63 @@ pub fn scan_hybrid(
 }
 
 fn clean(s: Option<std::borrow::Cow<'_, str>>) -> Option<String> {
-    s.map(|s| s.trim().trim_matches('\0').to_string()).filter(|s| !s.is_empty())
+    s.map(|s| s.trim().trim_matches('\0').to_string())
+        .filter(|s| !s.is_empty())
 }
 
 fn parse_number(s: &str) -> Option<u32> {
-    s.split('/').next().and_then(|n| n.trim().parse().ok()).filter(|n| *n > 0)
+    s.split('/')
+        .next()
+        .and_then(|n| n.trim().parse().ok())
+        .filter(|n| *n > 0)
 }
 
 /// Reads one file's tags. Unreadable files still produce a track named after
 /// the file.
-pub fn read_track(path: &Path, covers: Option<&Path>, folder_covers: &mut HashMap<PathBuf, Option<String>>) -> Track {
-    let stem = path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
-    let mut t = Track { path: path.to_path_buf(), title: stem, ..Default::default() };
+pub fn read_track(
+    path: &Path,
+    covers: Option<&Path>,
+    folder_covers: &mut HashMap<PathBuf, Option<String>>,
+) -> Track {
+    let stem = path
+        .file_stem()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let mut t = Track {
+        path: path.to_path_buf(),
+        title: stem,
+        ..Default::default()
+    };
     let mut embedded_cover = None;
     let mut title = None;
     if let Ok(file) = lofty::read_from_path(path) {
         t.duration_ms = file.properties().duration().as_millis() as u64;
         // Prefer the primary tag but fill gaps from the others.
         let mut tags: Vec<&lofty::tag::Tag> = file.primary_tag().into_iter().collect();
-        tags.extend(file.tags().iter().filter(|t| Some(t.tag_type()) != file.primary_tag().map(|p| p.tag_type())));
+        tags.extend(
+            file.tags()
+                .iter()
+                .filter(|t| Some(t.tag_type()) != file.primary_tag().map(|p| p.tag_type())),
+        );
         for tag in tags {
             title = title.or_else(|| clean(tag.title()));
             t.artist = t.artist.take().or_else(|| clean(tag.artist()));
             t.album = t.album.take().or_else(|| clean(tag.album()));
             t.genre = t.genre.take().or_else(|| clean(tag.genre()));
-            t.album_artist = t.album_artist.take().or_else(|| clean(tag.get_string(ItemKey::AlbumArtist).map(Into::into)));
+            t.album_artist = t
+                .album_artist
+                .take()
+                .or_else(|| clean(tag.get_string(ItemKey::AlbumArtist).map(Into::into)));
             t.track = t.track.or_else(|| tag.track().filter(|n| *n > 0));
             t.disc = t.disc.or_else(|| tag.disk().filter(|n| *n > 0));
-            t.year = t.year.or_else(|| tag.date().map(|d| d.year as u32).filter(|y| *y > 0)).or_else(|| {
-                tag.get_string(ItemKey::Year).and_then(|y| y.get(..4)).and_then(parse_number)
-            });
+            t.year = t
+                .year
+                .or_else(|| tag.date().map(|d| d.year as u32).filter(|y| *y > 0))
+                .or_else(|| {
+                    tag.get_string(ItemKey::Year)
+                        .and_then(|y| y.get(..4))
+                        .and_then(parse_number)
+                });
             if t.track.is_none() {
                 t.track = tag.get_string(ItemKey::TrackNumber).and_then(parse_number);
             }
@@ -268,21 +335,32 @@ fn cover_key(
         Some(data) => store_cover(dir, &data),
         None => {
             let folder = path.parent().map(Path::to_path_buf).unwrap_or_default();
-            folder_covers.entry(folder.clone()).or_insert_with(|| folder_cover(&folder, dir)).clone()
+            folder_covers
+                .entry(folder.clone())
+                .or_insert_with(|| folder_cover(&folder, dir))
+                .clone()
         }
     }
 }
 
 /// Extracts only the cover of `path` (embedded picture, else folder image).
-pub fn read_cover(path: &Path, dir: &Path, folder_covers: &mut HashMap<PathBuf, Option<String>>) -> Option<String> {
+pub fn read_cover(
+    path: &Path,
+    dir: &Path,
+    folder_covers: &mut HashMap<PathBuf, Option<String>>,
+) -> Option<String> {
     let embedded = lofty::read_from_path(path).ok().and_then(|file| {
-        file.tags().iter().find_map(|tag| pick_picture(tag.pictures()).map(|p| p.data().to_vec()))
+        file.tags()
+            .iter()
+            .find_map(|tag| pick_picture(tag.pictures()).map(|p| p.data().to_vec()))
     });
     cover_key(path, embedded, dir, folder_covers)
 }
 
 fn pick_picture(pics: &[Picture]) -> Option<&Picture> {
-    pics.iter().find(|p| p.pic_type() == PictureType::CoverFront).or_else(|| pics.first())
+    pics.iter()
+        .find(|p| p.pic_type() == PictureType::CoverFront)
+        .or_else(|| pics.first())
 }
 
 /// Path of a cached cover.
@@ -340,8 +418,15 @@ pub fn store_cover(dir: &Path, data: &[u8]) -> Option<String> {
         return None;
     }
     let scale = (COVER_SIZE as f64 / w.max(h) as f64).min(1.0);
-    let (nw, nh) = (((w as f64 * scale).round() as i32).max(1), ((h as f64 * scale).round() as i32).max(1));
-    let scaled = if scale < 1.0 { pb.scale_simple(nw, nh, gtk::gdk_pixbuf::InterpType::Bilinear)? } else { pb };
+    let (nw, nh) = (
+        ((w as f64 * scale).round() as i32).max(1),
+        ((h as f64 * scale).round() as i32).max(1),
+    );
+    let scaled = if scale < 1.0 {
+        pb.scale_simple(nw, nh, gtk::gdk_pixbuf::InterpType::Bilinear)?
+    } else {
+        pb
+    };
     std::fs::create_dir_all(dir).ok()?;
     let tmp = dir.join(format!("{key}.tmp"));
     scaled.savev(&tmp, "png", &[]).ok()?;
@@ -411,7 +496,8 @@ pub(crate) mod testutil {
 
     /// A tiny solid-colour PNG.
     pub fn png(r: u8) -> Vec<u8> {
-        let pb = gtk::gdk_pixbuf::Pixbuf::new(gtk::gdk_pixbuf::Colorspace::Rgb, false, 8, 4, 4).unwrap();
+        let pb =
+            gtk::gdk_pixbuf::Pixbuf::new(gtk::gdk_pixbuf::Colorspace::Rgb, false, 8, 4, 4).unwrap();
         pb.fill((r as u32) << 24 | 0xff);
         pb.save_to_bufferv("png", &[]).unwrap()
     }
@@ -423,7 +509,15 @@ mod tests {
     use super::*;
 
     fn tags<'a>(title: &'a str, track: u32) -> Tags<'a> {
-        Tags { title, artist: "Artist", album: "Album", album_artist: None, track, disc: 1, picture: None }
+        Tags {
+            title,
+            artist: "Artist",
+            album: "Album",
+            album_artist: None,
+            track,
+            disc: 1,
+            picture: None,
+        }
     }
 
     #[test]
@@ -434,7 +528,12 @@ mod tests {
         std::fs::create_dir(&a).unwrap();
         write_tagged_wav(
             &a.join("01.wav"),
-            &Tags { album_artist: Some("Band"), disc: 2, picture: Some(png(200)), ..tags("First", 3) },
+            &Tags {
+                album_artist: Some("Band"),
+                disc: 2,
+                picture: Some(png(200)),
+                ..tags("First", 3)
+            },
         );
         let b = root.path().join("b");
         std::fs::create_dir(&b).unwrap();
@@ -444,7 +543,12 @@ mod tests {
         std::fs::create_dir(root.path().join(".hidden")).unwrap();
         write_wav(&root.path().join(".hidden/x.wav"), 100);
 
-        let (tracks, report) = scan(&[root.path().to_path_buf()], Vec::new(), Some(covers.path()), 5);
+        let (tracks, report) = scan(
+            &[root.path().to_path_buf()],
+            Vec::new(),
+            Some(covers.path()),
+            5,
+        );
         assert_eq!(report.added, 2);
         assert_eq!(tracks.len(), 2);
         let t = &tracks[0];
@@ -467,26 +571,41 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let roots = [root.path().to_path_buf()];
         for (i, name) in ["one", "two", "three"].iter().enumerate() {
-            write_tagged_wav(&root.path().join(format!("{name}.wav")), &tags(name, i as u32 + 1));
+            write_tagged_wav(
+                &root.path().join(format!("{name}.wav")),
+                &tags(name, i as u32 + 1),
+            );
         }
         let (first, r1) = scan(&roots, Vec::new(), None, 100);
         assert_eq!((r1.added, r1.unchanged), (3, 0));
 
         // Nothing changed: everything is reused.
         let (second, r2) = scan(&roots, first.clone(), None, 200);
-        assert_eq!((r2.added, r2.updated, r2.removed, r2.unchanged), (0, 0, 0, 3));
+        assert_eq!(
+            (r2.added, r2.updated, r2.removed, r2.unchanged),
+            (0, 0, 0, 3)
+        );
         assert_eq!(second, first);
 
         // Retag one file (with a new mtime), delete one, add one.
         let two = root.path().join("two.wav");
         write_tagged_wav(&two, &tags("Two (Remastered)", 2));
         let f = std::fs::File::options().write(true).open(&two).unwrap();
-        f.set_modified(std::time::SystemTime::now() + std::time::Duration::from_secs(5)).unwrap();
+        f.set_modified(std::time::SystemTime::now() + std::time::Duration::from_secs(5))
+            .unwrap();
         std::fs::remove_file(root.path().join("three.wav")).unwrap();
         write_tagged_wav(&root.path().join("four.wav"), &tags("four", 4));
         let (third, r3) = scan(&roots, second, None, 300);
-        assert_eq!((r3.added, r3.updated, r3.removed, r3.unchanged), (1, 1, 1, 1));
-        let by_name = |n: &str| third.iter().find(|t| t.path.file_name().unwrap() == n).unwrap();
+        assert_eq!(
+            (r3.added, r3.updated, r3.removed, r3.unchanged),
+            (1, 1, 1, 1)
+        );
+        let by_name = |n: &str| {
+            third
+                .iter()
+                .find(|t| t.path.file_name().unwrap() == n)
+                .unwrap()
+        };
         assert_eq!(by_name("two.wav").title, "Two (Remastered)");
         assert_eq!(by_name("two.wav").added, 100, "date added survives updates");
         assert_eq!(by_name("four.wav").added, 300);
@@ -503,18 +622,39 @@ mod tests {
         let other = tempfile::tempdir().unwrap();
         let covers = tempfile::tempdir().unwrap();
         let a = indexed.path().join("a.wav");
-        write_tagged_wav(&a, &Tags { picture: Some(png(99)), ..tags("Local Title", 1) });
+        write_tagged_wav(
+            &a,
+            &Tags {
+                picture: Some(png(99)),
+                ..tags("Local Title", 1)
+            },
+        );
         write_wav(&indexed.path().join("not-in-tracker.wav"), 100);
         write_wav(&other.path().join("b.wav"), 100);
         let from_tracker = || crate::tracker::TrackerLibrary {
             covered: vec![indexed.path().to_path_buf()],
             tracks: vec![
-                Track { path: a.clone(), title: "Tracker Title".into(), added: 42, ..Default::default() },
-                Track { path: indexed.path().join("gone.wav"), title: "gone".into(), ..Default::default() },
+                Track {
+                    path: a.clone(),
+                    title: "Tracker Title".into(),
+                    added: 42,
+                    ..Default::default()
+                },
+                Track {
+                    path: indexed.path().join("gone.wav"),
+                    title: "gone".into(),
+                    ..Default::default()
+                },
             ],
         };
         let roots = [indexed.path().to_path_buf(), other.path().to_path_buf()];
-        let (tracks, r) = scan_hybrid(&roots, Some(from_tracker()), Vec::new(), Some(covers.path()), 7);
+        let (tracks, r) = scan_hybrid(
+            &roots,
+            Some(from_tracker()),
+            Vec::new(),
+            Some(covers.path()),
+            7,
+        );
         assert_eq!((r.added, r.from_tracker), (2, 1));
         assert_eq!(r.dirs, [other.path().to_path_buf()]);
         let t = tracks.iter().find(|t| t.path == a).unwrap();
@@ -522,19 +662,37 @@ mod tests {
         assert_eq!(t.added, 42);
         assert!(t.cover.is_some() && t.mtime != 0 && t.size != 0);
         assert!(tracks.iter().any(|t| t.path.ends_with("b.wav")));
-        assert!(!tracks.iter().any(|t| t.path.ends_with("not-in-tracker.wav")));
+        assert!(!tracks
+            .iter()
+            .any(|t| t.path.ends_with("not-in-tracker.wav")));
 
         // Second pass: nothing changed.
-        let (again, r2) = scan_hybrid(&roots, Some(from_tracker()), tracks.clone(), Some(covers.path()), 8);
-        assert_eq!((r2.added, r2.updated, r2.removed, r2.unchanged), (0, 0, 0, 2));
+        let (again, r2) = scan_hybrid(
+            &roots,
+            Some(from_tracker()),
+            tracks.clone(),
+            Some(covers.path()),
+            8,
+        );
+        assert_eq!(
+            (r2.added, r2.updated, r2.removed, r2.unchanged),
+            (0, 0, 0, 2)
+        );
         assert_eq!(again, tracks);
 
         // Tracker gone: everything is scanned locally, `added` survives.
         let (local, r3) = scan_hybrid(&roots, None, again, Some(covers.path()), 9);
         assert_eq!(local.len(), 3);
-        assert_eq!((r3.added, r3.updated, r3.unchanged), (1, 1, 1), "Tracker entries are re-read");
+        assert_eq!(
+            (r3.added, r3.updated, r3.unchanged),
+            (1, 1, 1),
+            "Tracker entries are re-read"
+        );
         let la = local.iter().find(|t| t.path == a).unwrap();
-        assert_eq!((la.added, la.title.as_str(), la.from_tracker), (42, "Local Title", false));
+        assert_eq!(
+            (la.added, la.title.as_str(), la.from_tracker),
+            (42, "Local Title", false)
+        );
     }
 
     #[test]
@@ -543,7 +701,12 @@ mod tests {
         let sub = root.path().join("sub");
         std::fs::create_dir(&sub).unwrap();
         write_wav(&sub.join("x.wav"), 100);
-        let (tracks, _) = scan(&[sub.clone(), root.path().to_path_buf(), sub], Vec::new(), None, 0);
+        let (tracks, _) = scan(
+            &[sub.clone(), root.path().to_path_buf(), sub],
+            Vec::new(),
+            None,
+            0,
+        );
         assert_eq!(tracks.len(), 1);
     }
 
@@ -553,6 +716,9 @@ mod tests {
         std::fs::write(d.path().join("folder.jpg"), b"x").unwrap();
         std::fs::write(d.path().join("COVER.jpeg"), b"x").unwrap();
         std::fs::write(d.path().join("cover.gif"), b"x").unwrap();
-        assert_eq!(find_folder_image(d.path()).unwrap().file_name().unwrap(), "COVER.jpeg");
+        assert_eq!(
+            find_folder_image(d.path()).unwrap().file_name().unwrap(),
+            "COVER.jpeg"
+        );
     }
 }

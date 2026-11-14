@@ -12,16 +12,42 @@ use std::sync::mpsc;
 pub enum Cmd {
     Resync,
     SetRange(DateTime<Utc>, DateTime<Utc>),
-    Create { cal: String, ics: Vec<String> },
-    Modify { cal: String, ics: Vec<String>, mod_type: ModType },
-    Remove { cal: String, ids: Vec<(String, String)>, mod_type: ModType },
+    Create {
+        cal: String,
+        ics: Vec<String>,
+    },
+    Modify {
+        cal: String,
+        ics: Vec<String>,
+        mod_type: ModType,
+    },
+    Remove {
+        cal: String,
+        ids: Vec<(String, String)>,
+        mod_type: ModType,
+    },
     /// Moves a whole series to another calendar.
-    Move { from: String, to: String, ics: Vec<String>, uid: String },
-    Search { query: String, tag: u64 },
+    Move {
+        from: String,
+        to: String,
+        ics: Vec<String>,
+        uid: String,
+    },
+    Search {
+        query: String,
+        tag: u64,
+    },
     WriteSource(Box<Source>),
-    CreateSource { uid: String, data: String },
+    CreateSource {
+        uid: String,
+        data: String,
+    },
     RemoveSource(Box<Source>),
-    Import { cal: String, events: Vec<String>, timezones: Vec<String> },
+    Import {
+        cal: String,
+        events: Vec<String>,
+        timezones: Vec<String>,
+    },
     Find(String),
     /// Fetch the VTIMEZONE for a TZID the client could not resolve.
     ResolveTimezone(String),
@@ -31,18 +57,38 @@ pub enum Cmd {
 pub enum Msg {
     Unavailable(String),
     Sources(Vec<Source>),
-    Opened { uid: String, writable: bool },
+    Opened {
+        uid: String,
+        writable: bool,
+    },
     Closed(String),
     /// A new view generation started for a calendar; drop its events.
-    Reset { cal: String, gen: u64 },
-    Upsert { cal: String, gen: u64, events: Vec<Event> },
-    Removed { cal: String, gen: u64, ids: Vec<(String, String)> },
-    Loaded { cal: String, gen: u64 },
+    Reset {
+        cal: String,
+        gen: u64,
+    },
+    Upsert {
+        cal: String,
+        gen: u64,
+        events: Vec<Event>,
+    },
+    Removed {
+        cal: String,
+        gen: u64,
+        ids: Vec<(String, String)>,
+    },
+    Loaded {
+        cal: String,
+        gen: u64,
+    },
     /// A TZID that needs resolving (send back [`Cmd::ResolveTimezone`]).
     TimezoneNeeded(String),
     /// VTIMEZONE text.
     TimezoneData(String),
-    SearchResults { tag: u64, results: Vec<(String, Event)> },
+    SearchResults {
+        tag: u64,
+        results: Vec<(String, Event)>,
+    },
     Found(Option<Box<(String, Event)>>),
     Imported(usize),
     Error(String),
@@ -70,7 +116,18 @@ pub fn start(out: async_channel::Sender<Msg>) -> Backend {
     let me = tx.clone();
     std::thread::Builder::new()
         .name("calendar-eds".into())
-        .spawn(move || Worker { out, eds: None, watch: None, open: HashMap::new(), range: None, gen: 0, tz_seen: HashSet::new() }.run(rx, me))
+        .spawn(move || {
+            Worker {
+                out,
+                eds: None,
+                watch: None,
+                open: HashMap::new(),
+                range: None,
+                gen: 0,
+                tz_seen: HashSet::new(),
+            }
+            .run(rx, me)
+        })
         .expect("spawn EDS worker");
     Backend { tx }
 }
@@ -161,7 +218,12 @@ impl Worker {
                         self.send(Msg::Error(format!("Could not create event: {e}")));
                     }
                 } else {
-                    self.with_temp(&eds, &cal, |c| c.create(&ics).map(|_| ()), "Could not create event");
+                    self.with_temp(
+                        &eds,
+                        &cal,
+                        |c| c.create(&ics).map(|_| ()),
+                        "Could not create event",
+                    );
                 }
             }
             Cmd::Modify { cal, ics, mod_type } => {
@@ -181,13 +243,17 @@ impl Worker {
             Cmd::Move { from, to, ics, uid } => {
                 let created = match self.open.get(&to) {
                     Some(o) => o.cal.create(&ics).map(|_| ()),
-                    None => eds.open_calendar(&to).and_then(|c| c.create(&ics).map(|_| ())),
+                    None => eds
+                        .open_calendar(&to)
+                        .and_then(|c| c.create(&ics).map(|_| ())),
                 };
                 match created {
                     Ok(()) => {
                         if let Some(o) = self.open.get(&from) {
                             if let Err(e) = o.cal.remove(&[(uid, String::new())], ModType::All) {
-                                self.send(Msg::Error(format!("Event copied but not removed from the old calendar: {e}")));
+                                self.send(Msg::Error(format!(
+                                    "Event copied but not removed from the old calendar: {e}"
+                                )));
                             }
                         }
                     }
@@ -216,7 +282,8 @@ impl Worker {
                 let mut found = None;
                 for (cal, o) in &self.open {
                     if let Ok(text) = o.cal.object(&uid, "") {
-                        if let Some(e) = parse_events(&text).iter().find_map(Event::from_component) {
+                        if let Some(e) = parse_events(&text).iter().find_map(Event::from_component)
+                        {
                             found = Some(Box::new((cal.clone(), e)));
                             break;
                         }
@@ -240,7 +307,11 @@ impl Worker {
                     self.send(Msg::Error(format!("Could not remove calendar: {e}")));
                 }
             }
-            Cmd::Import { cal, events, timezones } => {
+            Cmd::Import {
+                cal,
+                events,
+                timezones,
+            } => {
                 let n = events.len();
                 let mut ok = 0;
                 let mut result = |c: &Calendar| {
@@ -253,7 +324,8 @@ impl Worker {
                             Ok(_) => Ok(()),
                             Err(_) => {
                                 // Probably an existing UID: import as a copy.
-                                let mut ev = Event::parse(ics).ok_or_else(|| helix_eds::Error::Invalid("bad event".into()))?;
+                                let mut ev = Event::parse(ics)
+                                    .ok_or_else(|| helix_eds::Error::Invalid("bad event".into()))?;
                                 ev.uid = helix_eds::new_id();
                                 c.create(&[ev.to_ics(Utc::now())]).map(|_| ())
                             }
@@ -277,7 +349,13 @@ impl Worker {
         }
     }
 
-    fn with_temp(&self, eds: &Eds, cal: &str, f: impl FnOnce(&Calendar) -> helix_eds::Result<()>, what: &str) {
+    fn with_temp(
+        &self,
+        eds: &Eds,
+        cal: &str,
+        f: impl FnOnce(&Calendar) -> helix_eds::Result<()>,
+        what: &str,
+    ) {
         if let Err(e) = eds.open_calendar(cal).and_then(|c| f(&c)) {
             self.send(Msg::Error(format!("{what}: {e}")));
         }
@@ -291,15 +369,26 @@ impl Worker {
                 return;
             }
         };
-        let parent_enabled =
-            |s: &Source| s.parent().and_then(|p| sources.iter().find(|x| x.uid == p)).map(|p| p.enabled()).unwrap_or(true);
+        let parent_enabled = |s: &Source| {
+            s.parent()
+                .and_then(|p| sources.iter().find(|x| x.uid == p))
+                .map(|p| p.enabled())
+                .unwrap_or(true)
+        };
         let wanted: Vec<Source> = sources
             .iter()
-            .filter(|s| s.is(SourceKind::Calendar) && s.enabled() && s.selected() && parent_enabled(s))
+            .filter(|s| {
+                s.is(SourceKind::Calendar) && s.enabled() && s.selected() && parent_enabled(s)
+            })
             .cloned()
             .collect();
         self.send(Msg::Sources(sources.clone()));
-        let stale: Vec<String> = self.open.keys().filter(|k| !wanted.iter().any(|s| &s.uid == *k)).cloned().collect();
+        let stale: Vec<String> = self
+            .open
+            .keys()
+            .filter(|k| !wanted.iter().any(|s| &s.uid == *k))
+            .cloned()
+            .collect();
         for uid in stale {
             self.open.remove(&uid);
             self.send(Msg::Closed(uid));
@@ -310,11 +399,17 @@ impl Worker {
             }
             match eds.open_calendar(&s.uid) {
                 Ok(cal) => {
-                    self.send(Msg::Opened { uid: s.uid.clone(), writable: cal.writable });
+                    self.send(Msg::Opened {
+                        uid: s.uid.clone(),
+                        writable: cal.writable,
+                    });
                     self.open.insert(s.uid.clone(), Open { view: None, cal });
                     self.start_view(&s.uid);
                 }
-                Err(e) => self.send(Msg::Error(format!("Could not open “{}”: {e}", s.display_name()))),
+                Err(e) => self.send(Msg::Error(format!(
+                    "Could not open “{}”: {e}",
+                    s.display_name()
+                ))),
             }
         }
     }
@@ -330,15 +425,23 @@ impl Worker {
         let Some((from, to)) = self.range else { return };
         self.gen += 1;
         let gen = self.gen;
-        let Some(open) = self.open.get_mut(uid) else { return };
+        let Some(open) = self.open.get_mut(uid) else {
+            return;
+        };
         open.view = None;
-        let _ = self.out.send_blocking(Msg::Reset { cal: uid.to_string(), gen });
+        let _ = self.out.send_blocking(Msg::Reset {
+            cal: uid.to_string(),
+            gen,
+        });
         let tx = self.out.clone();
         let cal = uid.to_string();
         let mut seen_tz: HashSet<String> = self.tz_seen.clone();
         let view = open.cal.view(&sexp::occur_in_range(from, to), move |ev| {
             let parse = |v: Vec<String>| -> Vec<Event> {
-                v.iter().flat_map(|o| parse_events(o)).filter_map(|c| Event::from_component(&c)).collect()
+                v.iter()
+                    .flat_map(|o| parse_events(o))
+                    .filter_map(|c| Event::from_component(&c))
+                    .collect()
             };
             let m = match ev {
                 ViewEvent::Added(v) | ViewEvent::Modified(v) => {
@@ -352,17 +455,27 @@ impl Worker {
                             }
                         }
                     }
-                    Msg::Upsert { cal: cal.clone(), gen, events }
+                    Msg::Upsert {
+                        cal: cal.clone(),
+                        gen,
+                        events,
+                    }
                 }
-                ViewEvent::Removed(ids) => {
-                    Msg::Removed { cal: cal.clone(), gen, ids: ids.iter().map(|i| split_calendar_id(i)).collect() }
-                }
+                ViewEvent::Removed(ids) => Msg::Removed {
+                    cal: cal.clone(),
+                    gen,
+                    ids: ids.iter().map(|i| split_calendar_id(i)).collect(),
+                },
                 ViewEvent::Complete(err) => {
                     // E.g. a subscribed (webcal) feed that could not be fetched.
                     if let Some(e) = err.filter(|e| !e.is_empty()) {
-                        let _ = tx.send_blocking(Msg::Error(format!("Could not load calendar: {e}")));
+                        let _ =
+                            tx.send_blocking(Msg::Error(format!("Could not load calendar: {e}")));
                     }
-                    Msg::Loaded { cal: cal.clone(), gen }
+                    Msg::Loaded {
+                        cal: cal.clone(),
+                        gen,
+                    }
                 }
                 ViewEvent::Progress(..) => return,
             };
@@ -371,7 +484,9 @@ impl Worker {
         match view {
             Ok(v) => open.view = Some(v),
             Err(e) => {
-                let _ = self.out.send_blocking(Msg::Error(format!("Could not read calendar: {e}")));
+                let _ = self
+                    .out
+                    .send_blocking(Msg::Error(format!("Could not read calendar: {e}")));
             }
         }
     }

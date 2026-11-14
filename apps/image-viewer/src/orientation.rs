@@ -88,7 +88,14 @@ impl Orientation {
 
 /// Applies `o` to a pixel buffer with `bpp` bytes per pixel and the given row
 /// stride. Returns the packed corrected buffer and its size.
-pub fn apply(data: &[u8], w: u32, h: u32, stride: usize, bpp: usize, o: Orientation) -> (Vec<u8>, u32, u32) {
+pub fn apply(
+    data: &[u8],
+    w: u32,
+    h: u32,
+    stride: usize,
+    bpp: usize,
+    o: Orientation,
+) -> (Vec<u8>, u32, u32) {
     let (ow, oh) = o.display_size(w, h);
     let mut out = vec![0u8; ow as usize * oh as usize * bpp];
     for y in 0..oh {
@@ -146,11 +153,15 @@ mod tests {
     #[test]
     fn source_pixel_matches_correction_table() {
         fn mirror(d: &[u8], w: u32, h: u32) -> Vec<u8> {
-            (0..h).flat_map(|y| (0..w).rev().map(move |x| d[(y * w + x) as usize])).collect()
+            (0..h)
+                .flat_map(|y| (0..w).rev().map(move |x| d[(y * w + x) as usize]))
+                .collect()
         }
         fn rot_cw(d: &[u8], w: u32, h: u32) -> (Vec<u8>, u32, u32) {
             // New size h×w; out(x, y) = in(y, h-1-x).
-            let out = (0..w).flat_map(|y| (0..h).map(move |x| d[((h - 1 - x) * w + y) as usize])).collect();
+            let out = (0..w)
+                .flat_map(|y| (0..h).map(move |x| d[((h - 1 - x) * w + y) as usize]))
+                .collect();
             (out, h, w)
         }
         for v in 1..=8 {

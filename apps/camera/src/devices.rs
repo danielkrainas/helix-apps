@@ -56,7 +56,11 @@ pub fn filter_by_provider<T>(devices: Vec<(Provider, T)>) -> Vec<T> {
     let Some(best) = devices.iter().map(|(p, _)| *p).min() else {
         return Vec::new();
     };
-    devices.into_iter().filter(|(p, _)| *p == best).map(|(_, d)| d).collect()
+    devices
+        .into_iter()
+        .filter(|(p, _)| *p == best)
+        .map(|(_, d)| d)
+        .collect()
 }
 
 /// How the app obtains video.
@@ -92,7 +96,11 @@ pub fn pick_index(names: &[String], remembered: Option<&str>) -> Option<usize> {
     if names.is_empty() {
         return None;
     }
-    Some(remembered.and_then(|r| names.iter().position(|n| n == r)).unwrap_or(0))
+    Some(
+        remembered
+            .and_then(|r| names.iter().position(|n| n == r))
+            .unwrap_or(0),
+    )
 }
 
 #[cfg(test)]

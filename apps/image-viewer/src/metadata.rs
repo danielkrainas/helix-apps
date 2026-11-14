@@ -37,15 +37,23 @@ impl ExifInfo {
 /// WebP, HEIF). Returns `None` when there is no EXIF block.
 pub fn read_exif(path: &Path) -> Option<ExifInfo> {
     let file = std::fs::File::open(path).ok()?;
-    let exif = exif::Reader::new().read_from_container(&mut std::io::BufReader::new(file)).ok()?;
+    let exif = exif::Reader::new()
+        .read_from_container(&mut std::io::BufReader::new(file))
+        .ok()?;
     Some(from_exif(&exif))
 }
 
 fn ascii(exif: &exif::Exif, tag: Tag) -> Option<String> {
     match &exif.get_field(tag, In::PRIMARY)?.value {
         Value::Ascii(v) => {
-            let s = v.iter().map(|b| String::from_utf8_lossy(b)).collect::<Vec<_>>().join(" ");
-            let s = s.trim_matches(|c: char| c == '\0' || c.is_whitespace()).to_string();
+            let s = v
+                .iter()
+                .map(|b| String::from_utf8_lossy(b))
+                .collect::<Vec<_>>()
+                .join(" ");
+            let s = s
+                .trim_matches(|c: char| c == '\0' || c.is_whitespace())
+                .to_string();
             (!s.is_empty()).then_some(s)
         }
         _ => None,
@@ -55,15 +63,18 @@ fn ascii(exif: &exif::Exif, tag: Tag) -> Option<String> {
 fn rational(exif: &exif::Exif, tag: Tag) -> Option<(u32, u32)> {
     match &exif.get_field(tag, In::PRIMARY)?.value {
         Value::Rational(v) => v.first().map(|r| (r.num, r.denom)).filter(|(_, d)| *d != 0),
-        Value::SRational(v) => {
-            v.first().filter(|r| r.num >= 0 && r.denom > 0).map(|r| (r.num as u32, r.denom as u32))
-        }
+        Value::SRational(v) => v
+            .first()
+            .filter(|r| r.num >= 0 && r.denom > 0)
+            .map(|r| (r.num as u32, r.denom as u32)),
         _ => None,
     }
 }
 
 fn gps_coord(exif: &exif::Exif, tag: Tag, ref_tag: Tag, negative: &str) -> Option<f64> {
-    let Value::Rational(v) = &exif.get_field(tag, In::PRIMARY)?.value else { return None };
+    let Value::Rational(v) = &exif.get_field(tag, In::PRIMARY)?.value else {
+        return None;
+    };
     if v.len() < 3 || v.iter().any(|r| r.denom == 0) {
         return None;
     }
@@ -86,16 +97,26 @@ pub fn from_exif(exif: &exif::Exif) -> ExifInfo {
         .and_then(|f| f.value.get_uint(0))
         .filter(|v| *v > 0)
         .map(|v| v.to_string());
-    let gps = gps_coord(exif, Tag::GPSLatitude, Tag::GPSLatitudeRef, "S")
-        .zip(gps_coord(exif, Tag::GPSLongitude, Tag::GPSLongitudeRef, "W"));
+    let gps = gps_coord(exif, Tag::GPSLatitude, Tag::GPSLatitudeRef, "S").zip(gps_coord(
+        exif,
+        Tag::GPSLongitude,
+        Tag::GPSLongitudeRef,
+        "W",
+    ));
     ExifInfo {
         orientation,
-        date_taken: ascii(exif, Tag::DateTimeOriginal).or_else(|| ascii(exif, Tag::DateTime)).map(|d| format_exif_date(&d)),
-        camera: camera_name(ascii(exif, Tag::Make).as_deref(), ascii(exif, Tag::Model).as_deref()),
+        date_taken: ascii(exif, Tag::DateTimeOriginal)
+            .or_else(|| ascii(exif, Tag::DateTime))
+            .map(|d| format_exif_date(&d)),
+        camera: camera_name(
+            ascii(exif, Tag::Make).as_deref(),
+            ascii(exif, Tag::Model).as_deref(),
+        ),
         exposure: rational(exif, Tag::ExposureTime).map(|(n, d)| format_exposure(n, d)),
         aperture: rational(exif, Tag::FNumber).map(|(n, d)| format_aperture(n as f64 / d as f64)),
         iso,
-        focal_length: rational(exif, Tag::FocalLength).map(|(n, d)| format_focal_length(n as f64 / d as f64)),
+        focal_length: rational(exif, Tag::FocalLength)
+            .map(|(n, d)| format_focal_length(n as f64 / d as f64)),
         gps,
     }
 }
@@ -103,12 +124,19 @@ pub fn from_exif(exif: &exif::Exif) -> ExifInfo {
 /// "Canon" + "Canon EOS R5" → "Canon EOS R5"; "NIKON CORPORATION" +
 /// "NIKON D750" → "NIKON D750"; "Google" + "Pixel 7" → "Google Pixel 7".
 pub fn camera_name(make: Option<&str>, model: Option<&str>) -> Option<String> {
-    match (make.map(str::trim).filter(|s| !s.is_empty()), model.map(str::trim).filter(|s| !s.is_empty())) {
+    match (
+        make.map(str::trim).filter(|s| !s.is_empty()),
+        model.map(str::trim).filter(|s| !s.is_empty()),
+    ) {
         (None, None) => None,
         (Some(m), None) => Some(m.to_string()),
         (None, Some(m)) => Some(m.to_string()),
         (Some(make), Some(model)) => {
-            let first = make.split_whitespace().next().unwrap_or(make).to_lowercase();
+            let first = make
+                .split_whitespace()
+                .next()
+                .unwrap_or(make)
+                .to_lowercase();
             if model.to_lowercase().starts_with(&first) {
                 Some(model.to_string())
             } else {
@@ -186,7 +214,11 @@ pub mod tests {
     use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
 
     pub fn field(tag: Tag, value: Value) -> Field {
-        Field { tag, ifd_num: In::PRIMARY, value }
+        Field {
+            tag,
+            ifd_num: In::PRIMARY,
+            value,
+        }
     }
 
     fn r(num: u32, denom: u32) -> Rational {
@@ -236,15 +268,24 @@ pub mod tests {
         let fields = vec![
             field(Tag::Make, Value::Ascii(vec![b"Canon".to_vec()])),
             field(Tag::Model, Value::Ascii(vec![b"Canon EOS R5".to_vec()])),
-            field(Tag::DateTimeOriginal, Value::Ascii(vec![b"2024:01:10 12:34:56".to_vec()])),
+            field(
+                Tag::DateTimeOriginal,
+                Value::Ascii(vec![b"2024:01:10 12:34:56".to_vec()]),
+            ),
             field(Tag::ExposureTime, Value::Rational(vec![r(1, 250)])),
             field(Tag::FNumber, Value::Rational(vec![r(28, 10)])),
             field(Tag::PhotographicSensitivity, Value::Short(vec![400])),
             field(Tag::FocalLength, Value::Rational(vec![r(50, 1)])),
             field(Tag::GPSLatitudeRef, Value::Ascii(vec![b"N".to_vec()])),
-            field(Tag::GPSLatitude, Value::Rational(vec![r(48, 1), r(51, 1), r(3024, 100)])),
+            field(
+                Tag::GPSLatitude,
+                Value::Rational(vec![r(48, 1), r(51, 1), r(3024, 100)]),
+            ),
             field(Tag::GPSLongitudeRef, Value::Ascii(vec![b"W".to_vec()])),
-            field(Tag::GPSLongitude, Value::Rational(vec![r(2, 1), r(17, 1), r(4020, 100)])),
+            field(
+                Tag::GPSLongitude,
+                Value::Rational(vec![r(2, 1), r(17, 1), r(4020, 100)]),
+            ),
             orientation_field(6),
         ];
         write_jpeg(&path, 8, 4, &fields);
@@ -294,8 +335,14 @@ pub mod tests {
         assert_eq!(format_dimensions(6000, 4000), "6000 × 4000 (24 MP)");
         assert_eq!(format_dimensions(16, 16), "16 × 16");
         assert_eq!(geo_uri(1.5, -2.25), "geo:1.500000,-2.250000");
-        assert_eq!(camera_name(Some("NIKON CORPORATION"), Some("NIKON D750")).unwrap(), "NIKON D750");
-        assert_eq!(camera_name(Some("Google"), Some("Pixel 7")).unwrap(), "Google Pixel 7");
+        assert_eq!(
+            camera_name(Some("NIKON CORPORATION"), Some("NIKON D750")).unwrap(),
+            "NIKON D750"
+        );
+        assert_eq!(
+            camera_name(Some("Google"), Some("Pixel 7")).unwrap(),
+            "Google Pixel 7"
+        );
         assert_eq!(camera_name(None, Some("X")).unwrap(), "X");
         assert_eq!(camera_name(Some(" "), None), None);
     }

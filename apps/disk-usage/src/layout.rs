@@ -23,7 +23,12 @@ impl Rect {
         px >= self.x && px < self.x + self.w && py >= self.y && py < self.y + self.h
     }
     pub fn inset(&self, l: f64, t: f64, r: f64, b: f64) -> Rect {
-        Rect::new(self.x + l, self.y + t, (self.w - l - r).max(0.0), (self.h - t - b).max(0.0))
+        Rect::new(
+            self.x + l,
+            self.y + t,
+            (self.w - l - r).max(0.0),
+            (self.h - t - b).max(0.0),
+        )
     }
 }
 
@@ -73,7 +78,11 @@ pub fn squarify(weights: &[f64], rect: Rect) -> Vec<Rect> {
             let w = if last_row { r.w } else { sum / r.h };
             let mut y = r.y;
             for k in start..end {
-                let h = if k + 1 == end { r.y + r.h - y } else { areas[k] / w };
+                let h = if k + 1 == end {
+                    r.y + r.h - y
+                } else {
+                    areas[k] / w
+                };
                 out[order[k]] = Rect::new(r.x, y, w, h);
                 y += h;
             }
@@ -83,7 +92,11 @@ pub fn squarify(weights: &[f64], rect: Rect) -> Vec<Rect> {
             let h = if last_row { r.h } else { sum / r.w };
             let mut x = r.x;
             for k in start..end {
-                let w = if k + 1 == end { r.x + r.w - x } else { areas[k] / h };
+                let w = if k + 1 == end {
+                    r.x + r.w - x
+                } else {
+                    areas[k] / h
+                };
                 out[order[k]] = Rect::new(x, r.y, w, h);
                 x += w;
             }
@@ -107,14 +120,30 @@ pub const TREEMAP_PAD: f64 = 2.0;
 pub const TREEMAP_HEADER: f64 = 14.0;
 
 fn visible_children(tree: &ScanTree, id: NodeId) -> Vec<NodeId> {
-    tree.node(id).children.iter().copied().filter(|&c| !tree.node(c).removed && tree.node(c).size > 0).collect()
+    tree.node(id)
+        .children
+        .iter()
+        .copied()
+        .filter(|&c| !tree.node(c).removed && tree.node(c).size > 0)
+        .collect()
 }
 
 /// Nested treemap of `root` inside `rect`. Parents come before their
 /// children in the result, so the last tile containing a point is the
 /// deepest one.
-pub fn treemap(tree: &ScanTree, root: NodeId, rect: Rect, max_depth: usize, min_px: f64) -> Vec<Tile> {
-    let mut out = vec![Tile { node: root, rect, depth: 0, branch: 0 }];
+pub fn treemap(
+    tree: &ScanTree,
+    root: NodeId,
+    rect: Rect,
+    max_depth: usize,
+    min_px: f64,
+) -> Vec<Tile> {
+    let mut out = vec![Tile {
+        node: root,
+        rect,
+        depth: 0,
+        branch: 0,
+    }];
     #[allow(clippy::too_many_arguments)]
     fn recurse(
         tree: &ScanTree,
@@ -129,7 +158,11 @@ pub fn treemap(tree: &ScanTree, root: NodeId, rect: Rect, max_depth: usize, min_
         if depth >= max_depth {
             return;
         }
-        let header = if rect.h >= TREEMAP_HEADER * 2.5 && depth > 0 { TREEMAP_HEADER } else { 0.0 };
+        let header = if rect.h >= TREEMAP_HEADER * 2.5 && depth > 0 {
+            TREEMAP_HEADER
+        } else {
+            0.0
+        };
         let inner = rect.inset(TREEMAP_PAD, TREEMAP_PAD + header, TREEMAP_PAD, TREEMAP_PAD);
         if inner.w < min_px || inner.h < min_px {
             return;
@@ -141,7 +174,12 @@ pub fn treemap(tree: &ScanTree, root: NodeId, rect: Rect, max_depth: usize, min_
                 continue;
             }
             let b = branch.unwrap_or(i);
-            out.push(Tile { node: kid, rect: r, depth: depth + 1, branch: b });
+            out.push(Tile {
+                node: kid,
+                rect: r,
+                depth: depth + 1,
+                branch: b,
+            });
             recurse(tree, out, kid, r, depth + 1, Some(b), max_depth, min_px);
         }
     }
@@ -193,13 +231,31 @@ pub fn rings(tree: &ScanTree, root: NodeId, max_depth: usize, min_angle: f64) ->
             let s = span * tree.node(kid).size as f64 / total;
             if s >= min_angle {
                 let b = branch.unwrap_or(i);
-                out.push(Segment { node: kid, depth, start: a, end: a + s, branch: b });
-                recurse(tree, out, kid, a, s, depth + 1, Some(b), max_depth, min_angle);
+                out.push(Segment {
+                    node: kid,
+                    depth,
+                    start: a,
+                    end: a + s,
+                    branch: b,
+                });
+                recurse(
+                    tree,
+                    out,
+                    kid,
+                    a,
+                    s,
+                    depth + 1,
+                    Some(b),
+                    max_depth,
+                    min_angle,
+                );
             }
             a += s;
         }
     }
-    recurse(tree, &mut out, root, 0.0, TAU, 1, None, max_depth, min_angle);
+    recurse(
+        tree, &mut out, root, 0.0, TAU, 1, None, max_depth, min_angle,
+    );
     out
 }
 
@@ -217,7 +273,12 @@ impl RingGeometry {
         let radius = (width.min(height) / 2.0 - 8.0).max(10.0);
         // Centre disc is as wide as 1.5 rings.
         let ring_width = radius / (rings as f64 + 1.5);
-        RingGeometry { cx: width / 2.0, cy: height / 2.0, center_radius: ring_width * 1.5, ring_width }
+        RingGeometry {
+            cx: width / 2.0,
+            cy: height / 2.0,
+            center_radius: ring_width * 1.5,
+            ring_width,
+        }
     }
 
     pub fn inner_radius(&self, depth: usize) -> f64 {
@@ -248,7 +309,9 @@ pub fn ring_hit(segs: &[Segment], g: &RingGeometry, x: f64, y: f64) -> Option<Ri
     if a < 0.0 {
         a += TAU;
     }
-    segs.iter().position(|s| s.depth == depth && a >= s.start && a < s.end).map(RingHit::Segment)
+    segs.iter()
+        .position(|s| s.depth == depth && a >= s.start && a < s.end)
+        .map(RingHit::Segment)
 }
 
 #[cfg(test)]
@@ -278,7 +341,12 @@ mod tests {
         }
         for i in 0..rs.len() {
             for j in i + 1..rs.len() {
-                assert!(!overlaps(&rs[i], &rs[j]), "{:?} overlaps {:?}", rs[i], rs[j]);
+                assert!(
+                    !overlaps(&rs[i], &rs[j]),
+                    "{:?} overlaps {:?}",
+                    rs[i],
+                    rs[j]
+                );
             }
         }
         let sum: f64 = rs.iter().map(Rect::area).sum();
@@ -288,7 +356,10 @@ mod tests {
     #[test]
     fn squarify_classic_example_aspect_ratios() {
         // The paper's example: 6,6,4,3,2,2,1 in a 6x4 rectangle.
-        let rs = squarify(&[6.0, 6.0, 4.0, 3.0, 2.0, 2.0, 1.0], Rect::new(0.0, 0.0, 6.0, 4.0));
+        let rs = squarify(
+            &[6.0, 6.0, 4.0, 3.0, 2.0, 2.0, 1.0],
+            Rect::new(0.0, 0.0, 6.0, 4.0),
+        );
         // First two items stacked in a column of width 3.
         assert!(close(rs[0].w, 3.0) && close(rs[0].h, 2.0));
         assert!(close(rs[1].w, 3.0) && close(rs[1].h, 2.0));
@@ -353,11 +424,15 @@ mod tests {
         let RingHit::Segment(i) = hit else { panic!() };
         assert_eq!(t.node(segs[i].node).name, "a");
         // Straight left (270°) in ring 1 → "b" (216°..324°).
-        let RingHit::Segment(i) = ring_hit(&segs, &g, 200.0 - r1, 200.0).unwrap() else { panic!() };
+        let RingHit::Segment(i) = ring_hit(&segs, &g, 200.0 - r1, 200.0).unwrap() else {
+            panic!()
+        };
         assert_eq!(t.node(segs[i].node).name, "b");
         // Ring 2 at 3 o'clock → a1 (0..144°).
         let r2 = g.inner_radius(2) + g.ring_width / 2.0;
-        let RingHit::Segment(i) = ring_hit(&segs, &g, 200.0 + r2, 200.0).unwrap() else { panic!() };
+        let RingHit::Segment(i) = ring_hit(&segs, &g, 200.0 + r2, 200.0).unwrap() else {
+            panic!()
+        };
         assert_eq!(t.node(segs[i].node).name, "a1");
         // Ring 2 at 9 o'clock: b has no children → nothing.
         assert_eq!(ring_hit(&segs, &g, 200.0 - r2, 200.0), None);
@@ -385,6 +460,9 @@ mod tests {
         // Depth limit.
         assert_eq!(treemap(&t, ROOT, area, 1, 1.0).len(), 4);
         // Tiny area: nothing below the root.
-        assert_eq!(treemap(&t, ROOT, Rect::new(0.0, 0.0, 6.0, 6.0), 4, 4.0).len(), 1);
+        assert_eq!(
+            treemap(&t, ROOT, Rect::new(0.0, 0.0, 6.0, 6.0), 4, 4.0).len(),
+            1
+        );
     }
 }

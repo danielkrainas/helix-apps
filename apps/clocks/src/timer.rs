@@ -21,7 +21,11 @@ pub const PRESETS: [u64; 8] = [60, 120, 180, 300, 600, 900, 1800, 3600];
 
 impl Timer {
     pub fn new(name: impl Into<String>, duration: Duration) -> Self {
-        Timer { name: name.into(), duration, state: State::Stopped }
+        Timer {
+            name: name.into(),
+            duration,
+            state: State::Stopped,
+        }
     }
 
     pub fn remaining(&self, mono: Duration) -> Duration {
@@ -50,12 +54,16 @@ impl Timer {
             State::Stopped => self.duration,
             State::Paused { remaining } => remaining,
         };
-        self.state = State::Running { end: mono + remaining };
+        self.state = State::Running {
+            end: mono + remaining,
+        };
     }
 
     pub fn pause(&mut self, mono: Duration) {
         if self.is_running() {
-            self.state = State::Paused { remaining: self.remaining(mono) };
+            self.state = State::Paused {
+                remaining: self.remaining(mono),
+            };
         }
     }
 
@@ -129,7 +137,11 @@ mod tests {
         c.advance(Duration::from_millis(1));
         assert!(t.tick(c.mono()), "fires at zero");
         assert_eq!(t.state, State::Stopped);
-        assert_eq!(t.remaining(c.mono()), Duration::from_secs(180), "resets to full duration");
+        assert_eq!(
+            t.remaining(c.mono()),
+            Duration::from_secs(180),
+            "resets to full duration"
+        );
         assert!(!t.tick(c.mono()), "fires only once");
     }
 

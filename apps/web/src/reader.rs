@@ -52,27 +52,116 @@ const REMOVE_TAGS: &[&str] = &[
 ];
 
 const UNLIKELY: &[&str] = &[
-    "banner", "breadcrumb", "combx", "comment", "community", "cookie", "cover-wrap", "disqus",
-    "extra", "footer", "gdpr", "header", "legends", "menu", "related", "remark", "replies", "rss",
-    "shoutbox", "sidebar", "skyscraper", "social", "sponsor", "supplemental", "ad-break", "agegate",
-    "pagination", "pager", "popup", "yom-remote", "share", "newsletter", "subscribe", "promo",
-    "navbar", "masthead",
+    "banner",
+    "breadcrumb",
+    "combx",
+    "comment",
+    "community",
+    "cookie",
+    "cover-wrap",
+    "disqus",
+    "extra",
+    "footer",
+    "gdpr",
+    "header",
+    "legends",
+    "menu",
+    "related",
+    "remark",
+    "replies",
+    "rss",
+    "shoutbox",
+    "sidebar",
+    "skyscraper",
+    "social",
+    "sponsor",
+    "supplemental",
+    "ad-break",
+    "agegate",
+    "pagination",
+    "pager",
+    "popup",
+    "yom-remote",
+    "share",
+    "newsletter",
+    "subscribe",
+    "promo",
+    "navbar",
+    "masthead",
 ];
-const MAYBE: &[&str] = &["and", "article", "body", "column", "content", "main", "shadow", "story", "post", "text", "entry"];
+const MAYBE: &[&str] = &[
+    "and", "article", "body", "column", "content", "main", "shadow", "story", "post", "text",
+    "entry",
+];
 const POSITIVE: &[&str] = &[
-    "article", "body", "content", "entry", "hentry", "h-entry", "main", "page", "pagination", "post",
-    "text", "blog", "story", "prose",
+    "article",
+    "body",
+    "content",
+    "entry",
+    "hentry",
+    "h-entry",
+    "main",
+    "page",
+    "pagination",
+    "post",
+    "text",
+    "blog",
+    "story",
+    "prose",
 ];
 const NEGATIVE: &[&str] = &[
-    "-ad-", "hidden", "banner", "combx", "comment", "com-", "contact", "foot", "footer", "footnote",
-    "gdpr", "masthead", "media", "meta", "outbrain", "promo", "related", "scroll", "share",
-    "shoutbox", "sidebar", "skyscraper", "sponsor", "shopping", "tags", "tool", "widget", "byline",
-    "author", "dateline",
+    "-ad-",
+    "hidden",
+    "banner",
+    "combx",
+    "comment",
+    "com-",
+    "contact",
+    "foot",
+    "footer",
+    "footnote",
+    "gdpr",
+    "masthead",
+    "media",
+    "meta",
+    "outbrain",
+    "promo",
+    "related",
+    "scroll",
+    "share",
+    "shoutbox",
+    "sidebar",
+    "skyscraper",
+    "sponsor",
+    "shopping",
+    "tags",
+    "tool",
+    "widget",
+    "byline",
+    "author",
+    "dateline",
 ];
 
 const BLOCK_CHILD_TAGS: &[&str] = &[
-    "a", "blockquote", "dl", "div", "img", "ol", "p", "pre", "table", "ul", "section", "article",
-    "figure", "h1", "h2", "h3", "h4", "h5", "h6",
+    "a",
+    "blockquote",
+    "dl",
+    "div",
+    "img",
+    "ol",
+    "p",
+    "pre",
+    "table",
+    "ul",
+    "section",
+    "article",
+    "figure",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
 ];
 
 fn class_id(doc: &Document, n: NodeId) -> String {
@@ -163,17 +252,40 @@ impl Extractor<'_> {
             }
             let hidden = self.doc.attr(n, "hidden").is_some()
                 || self.doc.attr(n, "aria-hidden") == Some("true")
-                || self
-                    .doc
-                    .attr(n, "style")
-                    .is_some_and(|s| s.replace(' ', "").to_ascii_lowercase().contains("display:none"));
-            let unlikely = !matches!(tag, "body" | "html" | "article" | "main" | "a" | "table" | "tbody" | "tr" | "td" | "th" | "code" | "pre")
-                && {
-                    let ci = class_id(self.doc, n);
-                    let role = self.doc.attr(n, "role").unwrap_or("");
-                    (matches_any(&ci, UNLIKELY) && !matches_any(&ci, MAYBE))
-                        || matches!(role, "menu" | "menubar" | "complementary" | "navigation" | "alert" | "alertdialog" | "dialog")
-                };
+                || self.doc.attr(n, "style").is_some_and(|s| {
+                    s.replace(' ', "")
+                        .to_ascii_lowercase()
+                        .contains("display:none")
+                });
+            let unlikely = !matches!(
+                tag,
+                "body"
+                    | "html"
+                    | "article"
+                    | "main"
+                    | "a"
+                    | "table"
+                    | "tbody"
+                    | "tr"
+                    | "td"
+                    | "th"
+                    | "code"
+                    | "pre"
+            ) && {
+                let ci = class_id(self.doc, n);
+                let role = self.doc.attr(n, "role").unwrap_or("");
+                (matches_any(&ci, UNLIKELY) && !matches_any(&ci, MAYBE))
+                    || matches!(
+                        role,
+                        "menu"
+                            | "menubar"
+                            | "complementary"
+                            | "navigation"
+                            | "alert"
+                            | "alertdialog"
+                            | "dialog"
+                    )
+            };
             // Headers at the top of an article usually carry its title and
             // byline; page-level <header> elements are page furniture.
             let page_header = tag == "header" && !self.has_ancestor(n, "article");
@@ -241,9 +353,7 @@ impl Extractor<'_> {
                     1 => 2.0,
                     l => l as f64 * 3.0,
                 };
-                let entry = scores
-                    .entry(a)
-                    .or_insert_with(|| base_score(self.doc, a));
+                let entry = scores.entry(a).or_insert_with(|| base_score(self.doc, a));
                 *entry += score / divider;
                 ancestor = self.doc.parent(a);
                 level += 1;
@@ -254,7 +364,11 @@ impl Extractor<'_> {
         }
         let top = scores
             .iter()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal).then(b.0.cmp(a.0)))
+            .max_by(|a, b| {
+                a.1.partial_cmp(b.1)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+                    .then(b.0.cmp(a.0))
+            })
             .map(|(n, _)| *n)
             .unwrap_or(root);
         (top, scores)
@@ -318,7 +432,9 @@ impl Extractor<'_> {
 
     /// Drops link-heavy or empty containers inside the article.
     fn is_junk(&self, n: NodeId) -> bool {
-        let Some(tag) = self.doc.tag(n) else { return false };
+        let Some(tag) = self.doc.tag(n) else {
+            return false;
+        };
         match tag {
             "ul" | "ol" | "div" | "section" | "table" | "dl" => {
                 let len = self.text_len(n);
@@ -378,7 +494,11 @@ impl Extractor<'_> {
                         out.push('<');
                         out.push_str(tag);
                         for a in ["colspan", "rowspan"] {
-                            if let Some(v) = self.doc.attr(n, a).filter(|v| v.chars().all(|c| c.is_ascii_digit()) && !v.is_empty()) {
+                            if let Some(v) = self
+                                .doc
+                                .attr(n, a)
+                                .filter(|v| v.chars().all(|c| c.is_ascii_digit()) && !v.is_empty())
+                            {
                                 out.push_str(&format!(" {a}=\"{v}\""));
                             }
                         }
@@ -415,12 +535,18 @@ impl Extractor<'_> {
                     }
                     "div" | "section" | "article" | "main" | "header" => {
                         let blocky = self.doc.children(n).iter().any(|&c| {
-                            self.doc.tag(c).is_some_and(|t| BLOCK_CHILD_TAGS.contains(&t) && t != "a" && t != "img")
+                            self.doc.tag(c).is_some_and(|t| {
+                                BLOCK_CHILD_TAGS.contains(&t) && t != "a" && t != "img"
+                            })
                         });
                         if blocky {
                             self.serialize_children(n, out, title);
                         } else if !collapse_ws(&self.text(n)).is_empty()
-                            || self.doc.descendants(n).iter().any(|&d| self.doc.is(d, "img"))
+                            || self
+                                .doc
+                                .descendants(n)
+                                .iter()
+                                .any(|&d| self.doc.is(d, "img"))
                         {
                             out.push_str("<p>");
                             self.serialize_children(n, out, title);
@@ -466,7 +592,11 @@ fn meta(doc: &Document, keys: &[&str]) -> Option<String> {
             .unwrap_or("")
             .to_ascii_lowercase();
         if keys.contains(&key.as_str()) {
-            if let Some(c) = doc.attr(m, "content").map(collapse_ws).filter(|c| !c.is_empty()) {
+            if let Some(c) = doc
+                .attr(m, "content")
+                .map(collapse_ws)
+                .filter(|c| !c.is_empty())
+            {
                 return Some(c);
             }
         }
@@ -518,7 +648,9 @@ pub fn extract(html: &str, base_url: &str) -> Option<Article> {
             .find(|&n| {
                 doc.attr(n, "rel") == Some("author")
                     || doc.attr(n, "itemprop") == Some("author")
-                    || class_id(&doc, n).split_whitespace().any(|c| c == "byline" || c == "author")
+                    || class_id(&doc, n)
+                        .split_whitespace()
+                        .any(|c| c == "byline" || c == "author")
             })
             .map(|n| collapse_ws(&doc.text(n)))
             .filter(|b| !b.is_empty() && b.chars().count() < 100);
@@ -593,7 +725,11 @@ pub fn render(article: &Article, source_url: &str, font: FontStyle, colors: Colo
     }
     let site = article.site_name.clone().unwrap_or(host);
     if !site.is_empty() {
-        meta.push(format!("<a href=\"{}\">{}</a>", escape_attr(source_url), escape(&site)));
+        meta.push(format!(
+            "<a href=\"{}\">{}</a>",
+            escape_attr(source_url),
+            escape(&site)
+        ));
     }
     format!(
         "<!DOCTYPE html><html class=\"{scheme}\"><head><meta charset=\"utf-8\">\
@@ -659,15 +795,38 @@ mod tests {
         assert_eq!(a.site_name.as_deref(), Some("Example News"));
         assert!(a.is_readerable());
         assert!(a.content.contains("Sentence number 5 of the article"));
-        assert!(a.content.contains("<a href=\"https://news.example/more\">relative link</a>"));
-        assert!(a.content.contains("<img src=\"https://news.example/img/photo.jpg\" alt=\"A photo\">"));
-        assert!(a.content.contains("<pre><code>fn main() { println!(&quot;&lt;hi&gt;&quot;); }</code></pre>")
-            || a.content.contains("<pre><code>fn main() { println!(\"&lt;hi&gt;\"); }</code></pre>"));
+        assert!(a
+            .content
+            .contains("<a href=\"https://news.example/more\">relative link</a>"));
+        assert!(a
+            .content
+            .contains("<img src=\"https://news.example/img/photo.jpg\" alt=\"A photo\">"));
+        assert!(
+            a.content.contains(
+                "<pre><code>fn main() { println!(&quot;&lt;hi&gt;&quot;); }</code></pre>"
+            ) || a
+                .content
+                .contains("<pre><code>fn main() { println!(\"&lt;hi&gt;\"); }</code></pre>")
+        );
         for absent in [
-            "not content", "Footer text", "Comment text", "HIDDEN", "sidebar", "Tweet", "onclick",
-            "onerror", "evil", "iframe", "Home", "color: red",
+            "not content",
+            "Footer text",
+            "Comment text",
+            "HIDDEN",
+            "sidebar",
+            "Tweet",
+            "onclick",
+            "onerror",
+            "evil",
+            "iframe",
+            "Home",
+            "color: red",
         ] {
-            assert!(!a.content.contains(absent), "{absent} leaked into {}", a.content);
+            assert!(
+                !a.content.contains(absent),
+                "{absent} leaked into {}",
+                a.content
+            );
         }
         // The duplicated h1 is dropped; the title is rendered separately.
         assert!(!a.content.contains("<h1>"));
@@ -675,7 +834,10 @@ mod tests {
 
     #[test]
     fn short_pages_are_not_readerable() {
-        let a = extract("<html><body><p>Just a short note here, nothing more.</p></body></html>", "https://e/");
+        let a = extract(
+            "<html><body><p>Just a short note here, nothing more.</p></body></html>",
+            "https://e/",
+        );
         assert!(a.is_none_or(|a| !a.is_readerable()));
         assert!(extract("<html><body></body></html>", "https://e/").is_none());
         assert!(extract("", "https://e/").is_none());
@@ -684,7 +846,9 @@ mod tests {
     #[test]
     fn link_lists_are_not_articles() {
         let links: String = (0..40)
-            .map(|i| format!("<li><a href=\"/p{i}\">A fairly long link title number {i}, see</a></li>"))
+            .map(|i| {
+                format!("<li><a href=\"/p{i}\">A fairly long link title number {i}, see</a></li>")
+            })
             .collect();
         let html = format!("<body><div class=\"content\"><ul>{links}</ul></div></body>");
         let a = extract(&html, "https://e/");
@@ -708,7 +872,10 @@ mod tests {
 
     #[test]
     fn titles() {
-        assert_eq!(clean_title("A Long Story About Things - Site"), "A Long Story About Things");
+        assert_eq!(
+            clean_title("A Long Story About Things - Site"),
+            "A Long Story About Things"
+        );
         assert_eq!(clean_title("Short | Site"), "Short | Site");
         assert_eq!(clean_title("  Plain   title "), "Plain title");
     }
@@ -722,7 +889,12 @@ mod tests {
             content: "<p>x</p>".into(),
             text_length: 1,
         };
-        let html = render(&a, "https://site.example/a?b=\"c\"", FontStyle::Serif, ColorScheme::Dark);
+        let html = render(
+            &a,
+            "https://site.example/a?b=\"c\"",
+            FontStyle::Serif,
+            ColorScheme::Dark,
+        );
         assert!(html.contains("<h1>&lt;Title&gt;</h1>"));
         assert!(html.contains("Me &amp; You"));
         assert!(html.contains("site.example</a>"));

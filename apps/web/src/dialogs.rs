@@ -2,16 +2,16 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
-use webkit6::prelude::*;
 use std::rc::Rc;
+use webkit6::prelude::*;
 
 use crate::app::App;
 use crate::secrets;
-use crate::webapp;
-use crate::window::Window;
 use crate::session::RestorePolicy;
 use crate::settings::{CookiePolicy, OVERVIEW};
 use crate::store;
+use crate::webapp;
+use crate::window::Window;
 
 /// Shared rebuild callback for the search-engine list.
 type Refresh = Rc<dyn Fn()>;
@@ -93,7 +93,9 @@ pub fn show_preferences(app: &Rc<App>) {
     general.add(&group);
 
     // Reader mode (org.gnome.Epiphany.reader).
-    let reader_group = adw::PreferencesGroup::builder().title("Reader Mode").build();
+    let reader_group = adw::PreferencesGroup::builder()
+        .title("Reader Mode")
+        .build();
     let font = adw::ComboRow::builder()
         .title("Font Style")
         .model(&gtk::StringList::new(&["Sans", "Serif"]))
@@ -671,7 +673,8 @@ pub fn show_passwords(app: &Rc<App>) {
 
 fn load_passwords(group: adw::PreferencesGroup, stack: gtk::Stack, status: adw::StatusPage) {
     glib::spawn_future_local(async move {
-        let r = gio::spawn_blocking(|| secrets::Client::session_bus().and_then(|c| c.all_logins())).await;
+        let r = gio::spawn_blocking(|| secrets::Client::session_bus().and_then(|c| c.all_logins()))
+            .await;
         let logins = match r {
             Ok(Ok(l)) => l,
             Ok(Err(e)) => {
@@ -689,10 +692,19 @@ fn load_passwords(group: adw::PreferencesGroup, stack: gtk::Stack, status: adw::
             return;
         }
         for l in logins {
-            let host = l.origin.split_once("://").map(|(_, h)| h).unwrap_or(&l.origin).to_string();
+            let host = l
+                .origin
+                .split_once("://")
+                .map(|(_, h)| h)
+                .unwrap_or(&l.origin)
+                .to_string();
             let row = adw::ActionRow::builder()
                 .title(glib::markup_escape_text(&host))
-                .subtitle(glib::markup_escape_text(if l.username.is_empty() { "(no user name)" } else { &l.username }))
+                .subtitle(glib::markup_escape_text(if l.username.is_empty() {
+                    "(no user name)"
+                } else {
+                    &l.username
+                }))
                 .build();
             let del = gtk::Button::builder()
                 .icon_name("user-trash-symbolic")
@@ -763,7 +775,11 @@ pub fn install_web_app(w: &Rc<Window>) {
         .unwrap_or(host);
     let win = w.win.clone();
     let Some(icon) = launcher_icon(tab.view.favicon()) else {
-        message(&win, "Could Not Install Web Application", "No icon is available for this site.");
+        message(
+            &win,
+            "Could Not Install Web Application",
+            "No icon is available for this site.",
+        );
         return;
     };
     let exe = std::env::current_exe()
@@ -786,7 +802,9 @@ pub fn install_web_app(w: &Rc<Window>) {
 
 /// Removes this web app's launcher (web-app mode only) and quits.
 pub fn uninstall_web_app(app: &Rc<App>) {
-    let Some(wa) = app.web_app.clone() else { return };
+    let Some(wa) = app.web_app.clone() else {
+        return;
+    };
     let Some(w) = parent(app) else { return };
     let d = adw::AlertDialog::new(
         Some("Uninstall Web Application?"),
@@ -855,7 +873,9 @@ fn fill_allowed_sites(list: &gtk::ListBox, app: &Rc<App>) {
 /// Web Application Settings (web-app mode only): the extra allowed sites
 /// whose links stay inside the web app.
 pub fn show_web_app_preferences(app: &Rc<App>) {
-    let Some(wa) = app.web_app.clone() else { return };
+    let Some(wa) = app.web_app.clone() else {
+        return;
+    };
     let dialog = adw::PreferencesDialog::new();
     dialog.set_title("Web Application Settings");
     let page = adw::PreferencesPage::new();

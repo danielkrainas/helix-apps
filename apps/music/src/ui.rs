@@ -26,7 +26,11 @@ const MAX_MONITORS: usize = 2000;
 
 pub fn run() -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
-    helix_app_common::install_standard_actions(&app, APP_NAME, "Play and organize your music collection");
+    helix_app_common::install_standard_actions(
+        &app,
+        APP_NAME,
+        "Play and organize your music collection",
+    );
     app.connect_startup(|app| {
         load_css();
         for (action, accels) in ACCELS {
@@ -77,7 +81,11 @@ fn load_css() {
          .hm-disc { margin-top: 12px; }",
     );
     if let Some(display) = gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &css,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 }
 
@@ -88,7 +96,10 @@ pub fn toast(text: &str) -> adw::Toast {
 }
 
 fn now_secs() -> i64 {
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0)
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0)
 }
 
 /// Helix-only persistent state (things GNOME keeps elsewhere or not at all).
@@ -128,7 +139,8 @@ pub fn notification_body(t: &Track) -> String {
 }
 
 pub fn music_dir() -> PathBuf {
-    glib::user_special_dir(glib::UserDirectory::Music).unwrap_or_else(|| glib::home_dir().join("Music"))
+    glib::user_special_dir(glib::UserDirectory::Music)
+        .unwrap_or_else(|| glib::home_dir().join("Music"))
 }
 
 /// Registered track row widgets, updated when the playing track or a
@@ -224,10 +236,15 @@ impl App {
 
     fn new(application: &adw::Application) -> Rc<App> {
         let prefs = Prefs::new(SCHEMA);
-        let state: AppState =
-            std::fs::read(Self::state_file()).ok().and_then(|d| serde_json::from_slice(&d).ok()).unwrap_or_default();
+        let state: AppState = std::fs::read(Self::state_file())
+            .ok()
+            .and_then(|d| serde_json::from_slice(&d).ok())
+            .unwrap_or_default();
 
-        let window = adw::ApplicationWindow::builder().application(application).title(APP_NAME).build();
+        let window = adw::ApplicationWindow::builder()
+            .application(application)
+            .title(APP_NAME)
+            .build();
         let size: Vec<i32> = prefs.get("window-size", vec![768, 600]);
         if size.len() == 2 && size[0] > 200 && size[1] > 200 {
             window.set_default_size(size[0], size[1]);
@@ -243,39 +260,78 @@ impl App {
         // Root page: header with view switcher, search bar, view stack.
         let stack = adw::ViewStack::new();
         let header = adw::HeaderBar::new();
-        let switcher = adw::ViewSwitcher::builder().stack(&stack).policy(adw::ViewSwitcherPolicy::Wide).build();
+        let switcher = adw::ViewSwitcher::builder()
+            .stack(&stack)
+            .policy(adw::ViewSwitcherPolicy::Wide)
+            .build();
         header.set_title_widget(Some(&switcher));
-        let search_btn = gtk::ToggleButton::builder().icon_name("system-search-symbolic").tooltip_text("Search").build();
+        let search_btn = gtk::ToggleButton::builder()
+            .icon_name("system-search-symbolic")
+            .tooltip_text("Search")
+            .build();
         header.pack_start(&search_btn);
         let menu = gio::Menu::new();
         let s1 = gio::Menu::new();
         s1.append(Some("_Rescan Library"), Some("win.rescan"));
         s1.append(Some("_Import Playlist…"), Some("win.import-playlist"));
-        s1.append(Some("Import Playlists from _Search Index"), Some("win.import-index-playlists"));
+        s1.append(
+            Some("Import Playlists from _Search Index"),
+            Some("win.import-index-playlists"),
+        );
         menu.append_section(None, &s1);
         let s2 = gio::Menu::new();
         s2.append(Some("_Preferences"), Some("win.preferences"));
         s2.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
         s2.append(Some("_About Music"), Some("app.about"));
         menu.append_section(None, &s2);
-        let menu_btn = gtk::MenuButton::builder().icon_name("open-menu-symbolic").menu_model(&menu).primary(true).tooltip_text("Main Menu").build();
+        let menu_btn = gtk::MenuButton::builder()
+            .icon_name("open-menu-symbolic")
+            .menu_model(&menu)
+            .primary(true)
+            .tooltip_text("Main Menu")
+            .build();
         header.pack_end(&menu_btn);
 
-        let search_entry = gtk::SearchEntry::builder().placeholder_text("Search songs, albums and artists").hexpand(true).build();
-        let clamp = adw::Clamp::builder().maximum_size(500).child(&search_entry).build();
+        let search_entry = gtk::SearchEntry::builder()
+            .placeholder_text("Search songs, albums and artists")
+            .hexpand(true)
+            .build();
+        let clamp = adw::Clamp::builder()
+            .maximum_size(500)
+            .child(&search_entry)
+            .build();
         let search_bar = gtk::SearchBar::builder().child(&clamp).build();
         search_bar.connect_entry(&search_entry);
-        search_btn.bind_property("active", &search_bar, "search-mode-enabled").bidirectional().build();
+        search_btn
+            .bind_property("active", &search_bar, "search-mode-enabled")
+            .bidirectional()
+            .build();
 
         let albums_model = gio::ListStore::new::<glib::BoxedAnyObject>();
         let songs_model = gio::ListStore::new::<glib::BoxedAnyObject>();
         let songs_sorted = gtk::SortListModel::new(Some(songs_model.clone()), None::<gtk::Sorter>);
-        let artists_list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).build();
-        let playlists_list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).build();
+        let artists_list = gtk::ListBox::builder()
+            .selection_mode(gtk::SelectionMode::None)
+            .css_classes(["boxed-list"])
+            .build();
+        let playlists_list = gtk::ListBox::builder()
+            .selection_mode(gtk::SelectionMode::None)
+            .css_classes(["boxed-list"])
+            .build();
 
-        let empty_page = adw::StatusPage::builder().icon_name("folder-music-symbolic").title("No Music Found").build();
-        let scanning_page = adw::StatusPage::builder().title("Scanning Library…").build();
-        let spinner = gtk::Spinner::builder().spinning(true).width_request(32).height_request(32).halign(gtk::Align::Center).build();
+        let empty_page = adw::StatusPage::builder()
+            .icon_name("folder-music-symbolic")
+            .title("No Music Found")
+            .build();
+        let scanning_page = adw::StatusPage::builder()
+            .title("Scanning Library…")
+            .build();
+        let spinner = gtk::Spinner::builder()
+            .spinning(true)
+            .width_request(32)
+            .height_request(32)
+            .halign(gtk::Align::Center)
+            .build();
         scanning_page.set_child(Some(&spinner));
         let search_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
         let main_stack = gtk::Stack::new();
@@ -289,7 +345,11 @@ impl App {
         root_tv.add_top_bar(&header);
         root_tv.add_top_bar(&search_bar);
         root_tv.set_content(Some(&main_stack));
-        let root_page = adw::NavigationPage::builder().child(&root_tv).title(APP_NAME).tag("root").build();
+        let root_page = adw::NavigationPage::builder()
+            .child(&root_tv)
+            .title(APP_NAME)
+            .tag("root")
+            .build();
         let nav = adw::NavigationView::new();
         nav.add(&root_page);
         let toasts = adw::ToastOverlay::new();
@@ -303,7 +363,8 @@ impl App {
         window.set_content(Some(&outer));
 
         let (cmd_tx, cmd_rx) = async_channel::unbounded::<Command>();
-        let mpris = (std::env::var_os("HELIX_MUSIC_NO_MPRIS").is_none()).then(|| Mpris::start(cmd_tx.clone()));
+        let mpris = (std::env::var_os("HELIX_MUSIC_NO_MPRIS").is_none())
+            .then(|| Mpris::start(cmd_tx.clone()));
         let sink = std::env::var(player::SINK_ENV).ok();
 
         let mut queue = Queue::new(Rng::from_time());
@@ -321,7 +382,10 @@ impl App {
         let app = Rc::new_cyclic(|weak: &Weak<App>| {
             let player = match Player::new(sink.as_deref()) {
                 Ok(mut p) => {
-                    p.set_replaygain(player::ReplayGain::from_settings(prefs.get("replaygain", false), &state.replaygain_mode));
+                    p.set_replaygain(player::ReplayGain::from_settings(
+                        prefs.get("replaygain", false),
+                        &state.replaygain_mode,
+                    ));
                     let w = weak.clone();
                     p.attach(move |ev| {
                         if let Some(app) = w.upgrade() {
@@ -381,7 +445,9 @@ impl App {
             }
         });
         if app.player.is_none() {
-            app.toasts.add_toast(toast("Playback is unavailable (GStreamer could not be initialised)"));
+            app.toasts.add_toast(toast(
+                "Playback is unavailable (GStreamer could not be initialised)",
+            ));
         }
 
         app.build_views();
@@ -427,7 +493,11 @@ impl App {
     }
 
     pub fn save_stats(&self) {
-        if let Err(e) = self.stats.borrow().save(&Self::data_dir().join("stats.json")) {
+        if let Err(e) = self
+            .stats
+            .borrow()
+            .save(&Self::data_dir().join("stats.json"))
+        {
             eprintln!("helix-music: cannot save statistics: {e}");
         }
     }
@@ -445,7 +515,9 @@ impl App {
             return t.clone();
         }
         let tex = gdk::Texture::from_filename(index::cover_path(&Self::covers_dir(), key)).ok();
-        self.textures.borrow_mut().insert(key.to_string(), tex.clone());
+        self.textures
+            .borrow_mut()
+            .insert(key.to_string(), tex.clone());
         tex
     }
 
@@ -475,15 +547,20 @@ impl App {
                 // LocalSearch/Tracker when it runs (read-only queries); the
                 // built-in scanner covers everything else.
                 let ep = tracker::Endpoint::connect();
-                let indexed = ep.as_ref().and_then(|ep| match tracker::library(ep, &roots) {
-                    Ok(l) => Some(l),
-                    Err(e) => {
-                        eprintln!("helix-music: Tracker query failed, scanning folders instead: {e}");
-                        None
-                    }
-                });
+                let indexed = ep
+                    .as_ref()
+                    .and_then(|ep| match tracker::library(ep, &roots) {
+                        Ok(l) => Some(l),
+                        Err(e) => {
+                            eprintln!(
+                                "helix-music: Tracker query failed, scanning folders instead: {e}"
+                            );
+                            None
+                        }
+                    });
                 let used = indexed.is_some();
-                let (tracks, report) = index::scan_hybrid(&roots, indexed, previous, Some(&covers), now_secs());
+                let (tracks, report) =
+                    index::scan_hybrid(&roots, indexed, previous, Some(&covers), now_secs());
                 if report.changed() || !App::data_dir().join("library.json").exists() {
                     if let Err(e) = index::save(&App::data_dir().join("library.json"), &tracks) {
                         eprintln!("helix-music: cannot save index: {e}");
@@ -495,10 +572,13 @@ impl App {
             .expect("spawn scanner");
         let w = Rc::downgrade(self);
         glib::spawn_future_local(async move {
-            let Ok((tracks, report, ep)) = rx.recv().await else { return };
+            let Ok((tracks, report, ep)) = rx.recv().await else {
+                return;
+            };
             let Some(app) = w.upgrade() else { return };
             app.scanning.set(false);
-            app.using_tracker.set(report.from_tracker > 0 || ep.is_some());
+            app.using_tracker
+                .set(report.from_tracker > 0 || ep.is_some());
             if let Some(ep) = ep {
                 app.watch_tracker(ep);
             }
@@ -523,13 +603,23 @@ impl App {
     fn watch_dirs(self: &Rc<Self>, dirs: &[PathBuf]) {
         let mut monitors = Vec::new();
         for d in dirs.iter().take(MAX_MONITORS) {
-            let Ok(m) = gio::File::for_path(d).monitor_directory(gio::FileMonitorFlags::WATCH_MOVES, gio::Cancellable::NONE) else {
+            let Ok(m) = gio::File::for_path(d)
+                .monitor_directory(gio::FileMonitorFlags::WATCH_MOVES, gio::Cancellable::NONE)
+            else {
                 continue;
             };
             let w = Rc::downgrade(self);
             m.connect_changed(move |_, file, _, ev| {
                 use gio::FileMonitorEvent as E;
-                if !matches!(ev, E::ChangesDoneHint | E::Deleted | E::Created | E::MovedIn | E::MovedOut | E::Renamed) {
+                if !matches!(
+                    ev,
+                    E::ChangesDoneHint
+                        | E::Deleted
+                        | E::Created
+                        | E::MovedIn
+                        | E::MovedOut
+                        | E::Renamed
+                ) {
                     return;
                 }
                 let p = file.path().unwrap_or_default();
@@ -597,7 +687,11 @@ impl App {
             if let Some(s) = shuffle {
                 q.set_shuffle(s);
             }
-            let start = if shuffle == Some(true) { Rng::from_time().below(paths.len()) } else { start };
+            let start = if shuffle == Some(true) {
+                Rng::from_time().below(paths.len())
+            } else {
+                start
+            };
             q.set(paths, start);
         }
         if shuffle.is_some() {
@@ -630,11 +724,15 @@ impl App {
         if !self.state.borrow().notifications || self.window.is_active() {
             return;
         }
-        let Some(t) = self.current_track() else { return };
+        let Some(t) = self.current_track() else {
+            return;
+        };
         let n = gio::Notification::new(&t.title);
         n.set_body(Some(&notification_body(&t)));
         match &t.cover {
-            Some(k) => n.set_icon(&gio::FileIcon::new(&gio::File::for_path(index::cover_path(&Self::covers_dir(), k)))),
+            Some(k) => n.set_icon(&gio::FileIcon::new(&gio::File::for_path(
+                index::cover_path(&Self::covers_dir(), k),
+            ))),
             None => n.set_icon(&gio::ThemedIcon::new("audio-x-generic")),
         }
         n.set_priority(gio::NotificationPriority::Low);
@@ -643,7 +741,11 @@ impl App {
     }
 
     pub fn update_next_uri(&self) {
-        let next = self.queue.borrow_mut().peek_next(true).map(|p| model::path_to_uri(p));
+        let next = self
+            .queue
+            .borrow_mut()
+            .peek_next(true)
+            .map(|p| model::path_to_uri(p));
         if let Some(p) = &self.player {
             p.set_next(next);
         }
@@ -665,7 +767,11 @@ impl App {
     }
 
     pub fn play(self: &Rc<Self>) {
-        if self.player.as_ref().is_some_and(|p| p.state() != player::State::Playing) {
+        if self
+            .player
+            .as_ref()
+            .is_some_and(|p| p.state() != player::State::Playing)
+        {
             self.play_pause();
         }
     }
@@ -690,12 +796,21 @@ impl App {
         let moved = self.queue.borrow_mut().advance(false).is_some();
         if moved {
             let play = self.playing.get();
-            self.start_current(play || self.player.as_ref().is_some_and(|p| p.state() == player::State::Stopped));
+            self.start_current(
+                play || self
+                    .player
+                    .as_ref()
+                    .is_some_and(|p| p.state() == player::State::Stopped),
+            );
         }
     }
 
     pub fn previous(self: &Rc<Self>) {
-        let pos = self.player.as_ref().and_then(|p| p.position_ms()).unwrap_or(0);
+        let pos = self
+            .player
+            .as_ref()
+            .and_then(|p| p.position_ms())
+            .unwrap_or(0);
         if pos > 3000 {
             self.seek_ms(0);
             return;
@@ -736,7 +851,9 @@ impl App {
                 self.update_now_playing();
                 self.notify_track();
             }
-            Event::StreamStart { gapless: false } | Event::DurationChanged => self.update_position(None),
+            Event::StreamStart { gapless: false } | Event::DurationChanged => {
+                self.update_position(None)
+            }
             Event::Eos => {
                 // End of queue (nothing was queued gaplessly).
                 if let Some(p) = &self.player {
@@ -747,7 +864,8 @@ impl App {
             }
             Event::Error(e) => {
                 let name = self.current_track().map(|t| t.title).unwrap_or_default();
-                self.toasts.add_toast(toast(&format!("Cannot play “{name}”")));
+                self.toasts
+                    .add_toast(toast(&format!("Cannot play “{name}”")));
                 eprintln!("helix-music: playback error: {e}");
                 let has_next = self.queue.borrow().has_next();
                 let moved = has_next && self.queue.borrow_mut().advance(false).is_some();
@@ -763,8 +881,14 @@ impl App {
 
     fn set_playing(&self, playing: bool) {
         let changed = self.playing.replace(playing) != playing;
-        self.bar.play.set_icon_name(if playing { "media-playback-pause-symbolic" } else { "media-playback-start-symbolic" });
-        self.bar.play.set_tooltip_text(Some(if playing { "Pause" } else { "Play" }));
+        self.bar.play.set_icon_name(if playing {
+            "media-playback-pause-symbolic"
+        } else {
+            "media-playback-start-symbolic"
+        });
+        self.bar
+            .play
+            .set_tooltip_text(Some(if playing { "Pause" } else { "Play" }));
         if !playing {
             self.last_tick.set(None);
         }
@@ -773,7 +897,11 @@ impl App {
         }
         let status = if playing {
             "Playing"
-        } else if self.player.as_ref().is_some_and(|p| p.state() == player::State::Paused) {
+        } else if self
+            .player
+            .as_ref()
+            .is_some_and(|p| p.state() == player::State::Paused)
+        {
             "Paused"
         } else {
             "Stopped"
@@ -787,7 +915,11 @@ impl App {
         let want = self.playing.get() && self.prefs.get("inhibit-suspend", false);
         let cookie = self.inhibit_cookie.get();
         if want && cookie == 0 {
-            let c = self.app.inhibit(Some(&self.window), gtk::ApplicationInhibitFlags::SUSPEND, Some("Playing music"));
+            let c = self.app.inhibit(
+                Some(&self.window),
+                gtk::ApplicationInhibitFlags::SUSPEND,
+                Some("Playing music"),
+            );
             self.inhibit_cookie.set(c);
         } else if !want && cookie != 0 {
             self.app.uninhibit(cookie);
@@ -807,7 +939,11 @@ impl App {
         }
         if !self.counted.get() {
             if let Some(t) = self.current_track() {
-                let dur = self.player.as_ref().and_then(|p| p.duration_ms()).unwrap_or(t.duration_ms);
+                let dur = self
+                    .player
+                    .as_ref()
+                    .and_then(|p| p.duration_ms())
+                    .unwrap_or(t.duration_ms);
                 if playlist::counts_as_play(self.played_ms.get(), dur) {
                     self.counted.set(true);
                     self.stats.borrow_mut().record_play(&t.path, now_secs());
@@ -824,7 +960,10 @@ impl App {
         }
         let p = self.player.as_ref();
         let pos = pos.or_else(|| p.and_then(|p| p.position_ms())).unwrap_or(0);
-        let dur = p.and_then(|p| p.duration_ms()).or_else(|| self.current_track().map(|t| t.duration_ms)).unwrap_or(0);
+        let dur = p
+            .and_then(|p| p.duration_ms())
+            .or_else(|| self.current_track().map(|t| t.duration_ms))
+            .unwrap_or(0);
         self.suppress_ui.set(true);
         self.bar.scale.set_range(0.0, (dur.max(1)) as f64);
         self.bar.scale.set_value(pos.min(dur) as f64);
@@ -848,12 +987,15 @@ impl App {
                 self.bar.heart.set_sensitive(true);
                 let fav = self.stats.borrow().is_favorite(&t.path);
                 sync_heart(&self.bar.heart, fav);
-                self.window.set_title(Some(&format!("{} — {}", t.title, t.artist_name())));
+                self.window
+                    .set_title(Some(&format!("{} — {}", t.title, t.artist_name())));
             }
             None => {
                 self.bar.title.set_label("");
                 self.bar.artist.set_label("");
-                self.bar.cover.set_icon_name(Some("audio-x-generic-symbolic"));
+                self.bar
+                    .cover
+                    .set_icon_name(Some("audio-x-generic-symbolic"));
                 self.bar.heart.set_sensitive(false);
                 self.window.set_title(Some(APP_NAME));
             }
@@ -878,7 +1020,10 @@ impl App {
                 album_artist: t.album_artist.clone().unwrap_or_default(),
                 track_number: t.track,
                 length_us: t.duration_ms as i64 * 1000,
-                art_url: t.cover.as_ref().map(|k| model::path_to_uri(&index::cover_path(&Self::covers_dir(), k))),
+                art_url: t
+                    .cover
+                    .as_ref()
+                    .map(|k| model::path_to_uri(&index::cover_path(&Self::covers_dir(), k))),
                 url: t.uri(),
             });
             m.update(|s| {
@@ -954,9 +1099,17 @@ impl App {
             Command::Next => self.next(),
             Command::Previous => self.previous(),
             Command::Seek(off) => {
-                let pos = self.player.as_ref().and_then(|p| p.position_ms()).unwrap_or(0) as i64;
+                let pos = self
+                    .player
+                    .as_ref()
+                    .and_then(|p| p.position_ms())
+                    .unwrap_or(0) as i64;
                 let target = (pos + off / 1000).max(0) as u64;
-                let dur = self.player.as_ref().and_then(|p| p.duration_ms()).unwrap_or(u64::MAX);
+                let dur = self
+                    .player
+                    .as_ref()
+                    .and_then(|p| p.duration_ms())
+                    .unwrap_or(u64::MAX);
                 if target >= dur {
                     self.next();
                 } else {
@@ -1007,8 +1160,14 @@ impl App {
         let current = self.queue.borrow().current().cloned();
         let stats = self.stats.borrow();
         self.rows.borrow_mut().retain(|r| {
-            let Some(ind) = r.indicator.upgrade() else { return false };
-            ind.set_visible_child_name(if current.as_ref() == Some(&r.path) { "playing" } else { "number" });
+            let Some(ind) = r.indicator.upgrade() else {
+                return false;
+            };
+            ind.set_visible_child_name(if current.as_ref() == Some(&r.path) {
+                "playing"
+            } else {
+                "number"
+            });
             if let Some(h) = r.heart.upgrade() {
                 sync_heart(&h, stats.is_favorite(&r.path));
             }
@@ -1056,7 +1215,8 @@ impl App {
     }
 
     pub fn set_replaygain(&self, mode: player::ReplayGain) {
-        self.prefs.set("replaygain", mode != player::ReplayGain::Off);
+        self.prefs
+            .set("replaygain", mode != player::ReplayGain::Off);
         if mode != player::ReplayGain::Off {
             self.state.borrow_mut().replaygain_mode = mode.nick().into();
             self.save_state();
@@ -1067,7 +1227,10 @@ impl App {
     }
 
     pub fn replaygain(&self) -> player::ReplayGain {
-        player::ReplayGain::from_settings(self.prefs.get("replaygain", false), &self.state.borrow().replaygain_mode)
+        player::ReplayGain::from_settings(
+            self.prefs.get("replaygain", false),
+            &self.state.borrow().replaygain_mode,
+        )
     }
 
     fn install_actions(self: &Rc<Self>) {
@@ -1152,17 +1315,24 @@ impl App {
                 app.update_now_playing();
             }
         });
-        track_action("add-to-playlist", |app, i| app.add_to_playlist_dialog(vec![i]));
+        track_action("add-to-playlist", |app, i| {
+            app.add_to_playlist_dialog(vec![i])
+        });
         track_action("go-album", |app, i| {
             if let Some(a) = app.lib().album_of(i) {
                 app.show_album(a);
             }
         });
 
-        let remove = gio::SimpleAction::new("playlist-remove", Some(&<(String, u32)>::static_variant_type()));
+        let remove = gio::SimpleAction::new(
+            "playlist-remove",
+            Some(&<(String, u32)>::static_variant_type()),
+        );
         let w = Rc::downgrade(self);
         remove.connect_activate(move |_, v| {
-            if let (Some(app), Some((file, pos))) = (w.upgrade(), v.and_then(|v| v.get::<(String, u32)>())) {
+            if let (Some(app), Some((file, pos))) =
+                (w.upgrade(), v.and_then(|v| v.get::<(String, u32)>()))
+            {
                 app.remove_from_playlist(Path::new(&file), pos as usize);
             }
         });
@@ -1179,8 +1349,11 @@ impl App {
         let keys = gtk::EventControllerKey::new();
         let w = Rc::downgrade(self);
         keys.connect_key_pressed(move |_, key, _, mods| {
-            let Some(app) = w.upgrade() else { return glib::Propagation::Proceed };
-            let in_text = gtk::prelude::GtkWindowExt::focus(&app.window).is_some_and(|f| f.is::<gtk::Text>() || f.is::<gtk::Editable>());
+            let Some(app) = w.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
+            let in_text = gtk::prelude::GtkWindowExt::focus(&app.window)
+                .is_some_and(|f| f.is::<gtk::Text>() || f.is::<gtk::Editable>());
             if in_text {
                 return glib::Propagation::Proceed;
             }
@@ -1195,14 +1368,21 @@ impl App {
                 }
                 return glib::Propagation::Proceed;
             }
-            if mods.intersects(gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::ALT_MASK | gdk::ModifierType::SUPER_MASK) {
+            if mods.intersects(
+                gdk::ModifierType::CONTROL_MASK
+                    | gdk::ModifierType::ALT_MASK
+                    | gdk::ModifierType::SUPER_MASK,
+            ) {
                 return glib::Propagation::Proceed;
             }
             if key == gdk::Key::space {
                 app.play_pause();
                 return glib::Propagation::Stop;
             }
-            if let Some(c) = key.to_unicode().filter(|c| !c.is_control() && !c.is_whitespace()) {
+            if let Some(c) = key
+                .to_unicode()
+                .filter(|c| !c.is_control() && !c.is_whitespace())
+            {
                 app.nav.pop_to_tag("root");
                 app.search_bar.set_search_mode(true);
                 app.search_entry.set_text(&c.to_string());
@@ -1223,18 +1403,20 @@ impl App {
             }
         });
         let w = Rc::downgrade(self);
-        self.search_bar.connect_search_mode_enabled_notify(move |bar| {
-            if let Some(app) = w.upgrade() {
-                if !bar.is_search_mode() {
-                    app.search_entry.set_text("");
-                    app.update_main_stack();
+        self.search_bar
+            .connect_search_mode_enabled_notify(move |bar| {
+                if let Some(app) = w.upgrade() {
+                    if !bar.is_search_mode() {
+                        app.search_entry.set_text("");
+                        app.update_main_stack();
+                    }
                 }
-            }
-        });
+            });
     }
 
     pub fn update_main_stack(&self) {
-        let searching = self.search_bar.is_search_mode() && !self.search_entry.text().trim().is_empty();
+        let searching =
+            self.search_bar.is_search_mode() && !self.search_entry.text().trim().is_empty();
         let name = if searching {
             "search"
         } else if !self.lib().tracks.is_empty() {
@@ -1304,10 +1486,15 @@ impl App {
     }
 
     pub fn add_folder_dialog(self: &Rc<Self>) {
-        let dialog = gtk::FileDialog::builder().title("Add Music Folder").modal(true).build();
+        let dialog = gtk::FileDialog::builder()
+            .title("Add Music Folder")
+            .modal(true)
+            .build();
         let w = Rc::downgrade(self);
         dialog.select_folder(Some(&self.window), gio::Cancellable::NONE, move |res| {
-            let (Some(app), Ok(folder)) = (w.upgrade(), res) else { return };
+            let (Some(app), Ok(folder)) = (w.upgrade(), res) else {
+                return;
+            };
             let Some(path) = folder.path() else { return };
             app.add_folder(path);
         });
@@ -1338,23 +1525,58 @@ pub fn sync_heart(btn: &gtk::ToggleButton, on: bool) {
 
 pub fn set_heart_icon(btn: &gtk::ToggleButton) {
     let on = btn.is_active();
-    btn.set_icon_name(if on { "starred-symbolic" } else { "non-starred-symbolic" });
-    btn.set_tooltip_text(Some(if on { "Remove from Favorites" } else { "Add to Favorites" }));
+    btn.set_icon_name(if on {
+        "starred-symbolic"
+    } else {
+        "non-starred-symbolic"
+    });
+    btn.set_tooltip_text(Some(if on {
+        "Remove from Favorites"
+    } else {
+        "Add to Favorites"
+    }));
 }
 
 fn search_box_scroller(content: &gtk::Box) -> gtk::ScrolledWindow {
-    let clamp = adw::Clamp::builder().maximum_size(900).child(content).margin_top(12).margin_bottom(24).margin_start(12).margin_end(12).build();
-    gtk::ScrolledWindow::builder().child(&clamp).hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).build()
+    let clamp = adw::Clamp::builder()
+        .maximum_size(900)
+        .child(content)
+        .margin_top(12)
+        .margin_bottom(24)
+        .margin_start(12)
+        .margin_end(12)
+        .build();
+    gtk::ScrolledWindow::builder()
+        .child(&clamp)
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .vexpand(true)
+        .build()
 }
 
 fn flat_button(icon: &str, tip: &str) -> gtk::Button {
-    gtk::Button::builder().icon_name(icon).tooltip_text(tip).valign(gtk::Align::Center).css_classes(["flat"]).build()
+    gtk::Button::builder()
+        .icon_name(icon)
+        .tooltip_text(tip)
+        .valign(gtk::Align::Center)
+        .css_classes(["flat"])
+        .build()
 }
 
 fn build_player_bar() -> PlayerBar {
-    let cover = gtk::Image::builder().pixel_size(48).css_classes(["hm-cover"]).build();
-    let title = gtk::Label::builder().xalign(0.0).ellipsize(gtk::pango::EllipsizeMode::End).css_classes(["heading"]).build();
-    let artist = gtk::Label::builder().xalign(0.0).ellipsize(gtk::pango::EllipsizeMode::End).css_classes(["dim-label", "caption"]).build();
+    let cover = gtk::Image::builder()
+        .pixel_size(48)
+        .css_classes(["hm-cover"])
+        .build();
+    let title = gtk::Label::builder()
+        .xalign(0.0)
+        .ellipsize(gtk::pango::EllipsizeMode::End)
+        .css_classes(["heading"])
+        .build();
+    let artist = gtk::Label::builder()
+        .xalign(0.0)
+        .ellipsize(gtk::pango::EllipsizeMode::End)
+        .css_classes(["dim-label", "caption"])
+        .build();
     let info = gtk::Box::new(gtk::Orientation::Vertical, 2);
     info.set_valign(gtk::Align::Center);
     info.append(&title);
@@ -1367,15 +1589,28 @@ fn build_player_bar() -> PlayerBar {
     info.set_hexpand(true);
 
     let prev = flat_button("media-skip-backward-symbolic", "Previous");
-    let play = gtk::Button::builder().icon_name("media-playback-start-symbolic").tooltip_text("Play").valign(gtk::Align::Center).css_classes(["circular", "suggested-action"]).build();
+    let play = gtk::Button::builder()
+        .icon_name("media-playback-start-symbolic")
+        .tooltip_text("Play")
+        .valign(gtk::Align::Center)
+        .css_classes(["circular", "suggested-action"])
+        .build();
     let next = flat_button("media-skip-forward-symbolic", "Next");
     let controls = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     controls.append(&prev);
     controls.append(&play);
     controls.append(&next);
 
-    let elapsed = gtk::Label::builder().label("0:00").css_classes(["numeric", "caption"]).width_chars(5).build();
-    let total = gtk::Label::builder().label("0:00").css_classes(["numeric", "caption"]).width_chars(5).build();
+    let elapsed = gtk::Label::builder()
+        .label("0:00")
+        .css_classes(["numeric", "caption"])
+        .width_chars(5)
+        .build();
+    let total = gtk::Label::builder()
+        .label("0:00")
+        .css_classes(["numeric", "caption"])
+        .width_chars(5)
+        .build();
     let scale = gtk::Scale::with_range(gtk::Orientation::Horizontal, 0.0, 1.0, 1000.0);
     scale.set_hexpand(true);
     scale.set_draw_value(false);
@@ -1386,15 +1621,30 @@ fn build_player_bar() -> PlayerBar {
     seek.append(&scale);
     seek.append(&total);
 
-    let heart = gtk::ToggleButton::builder().icon_name("non-starred-symbolic").valign(gtk::Align::Center).css_classes(["flat"]).build();
-    let shuffle = gtk::ToggleButton::builder().icon_name("media-playlist-shuffle-symbolic").tooltip_text("Shuffle").valign(gtk::Align::Center).css_classes(["flat"]).build();
+    let heart = gtk::ToggleButton::builder()
+        .icon_name("non-starred-symbolic")
+        .valign(gtk::Align::Center)
+        .css_classes(["flat"])
+        .build();
+    let shuffle = gtk::ToggleButton::builder()
+        .icon_name("media-playlist-shuffle-symbolic")
+        .tooltip_text("Shuffle")
+        .valign(gtk::Align::Center)
+        .css_classes(["flat"])
+        .build();
     let repeat = flat_button("media-playlist-consecutive-symbolic", "Repeat");
     let volume = gtk::Scale::with_range(gtk::Orientation::Vertical, 0.0, 1.0, 0.05);
     volume.set_inverted(true);
     volume.set_size_request(-1, 140);
     volume.set_draw_value(false);
     let vol_pop = gtk::Popover::builder().child(&volume).build();
-    let vol_btn = gtk::MenuButton::builder().icon_name("audio-volume-high-symbolic").tooltip_text("Volume").popover(&vol_pop).valign(gtk::Align::Center).css_classes(["flat"]).build();
+    let vol_btn = gtk::MenuButton::builder()
+        .icon_name("audio-volume-high-symbolic")
+        .tooltip_text("Volume")
+        .popover(&vol_pop)
+        .valign(gtk::Align::Center)
+        .css_classes(["flat"])
+        .build();
     let vb = vol_btn.clone();
     volume.connect_value_changed(move |s| {
         let v = s.value();
@@ -1405,9 +1655,21 @@ fn build_player_bar() -> PlayerBar {
             _ => "audio-volume-high-symbolic",
         });
     });
-    let queue_btn = gtk::Button::builder().icon_name("view-list-symbolic").tooltip_text("Now Playing").action_name("win.now-playing").valign(gtk::Align::Center).css_classes(["flat"]).build();
+    let queue_btn = gtk::Button::builder()
+        .icon_name("view-list-symbolic")
+        .tooltip_text("Now Playing")
+        .action_name("win.now-playing")
+        .valign(gtk::Align::Center)
+        .css_classes(["flat"])
+        .build();
     let right = gtk::Box::new(gtk::Orientation::Horizontal, 2);
-    for w in [heart.upcast_ref::<gtk::Widget>(), shuffle.upcast_ref(), repeat.upcast_ref(), vol_btn.upcast_ref(), queue_btn.upcast_ref()] {
+    for w in [
+        heart.upcast_ref::<gtk::Widget>(),
+        shuffle.upcast_ref(),
+        repeat.upcast_ref(),
+        vol_btn.upcast_ref(),
+        queue_btn.upcast_ref(),
+    ] {
         right.append(w);
     }
 
@@ -1417,8 +1679,26 @@ fn build_player_bar() -> PlayerBar {
     row.append(&controls);
     row.append(&seek);
     row.append(&right);
-    let revealer = gtk::Revealer::builder().child(&row).transition_type(gtk::RevealerTransitionType::SlideUp).build();
-    PlayerBar { revealer, cover, title, artist, play, prev, next, elapsed, total, scale, heart, shuffle, repeat, volume }
+    let revealer = gtk::Revealer::builder()
+        .child(&row)
+        .transition_type(gtk::RevealerTransitionType::SlideUp)
+        .build();
+    PlayerBar {
+        revealer,
+        cover,
+        title,
+        artist,
+        play,
+        prev,
+        next,
+        elapsed,
+        total,
+        scale,
+        heart,
+        shuffle,
+        repeat,
+        volume,
+    }
 }
 
 const SHORTCUTS_UI: &str = r#"<?xml version="1.0" encoding="UTF-8"?>

@@ -10,8 +10,8 @@ use std::rc::Rc;
 use crate::columns;
 use crate::format;
 use crate::model::{self, ProcColumn, Whose};
-use helix_app_common::Prefs;
 use crate::sampler::ProcessInfo;
+use helix_app_common::Prefs;
 
 mod imp {
     use super::*;
@@ -79,9 +79,17 @@ impl ProcessObject {
             ("name", info.name.clone()),
             ("user", info.user.clone()),
             ("cpu-text", format!("{:.1}", info.cpu)),
-            ("memory-text", info.memory.map(|m| format::size(m, opts.iec)).unwrap_or_else(|| "N/A".into())),
+            (
+                "memory-text",
+                info.memory
+                    .map(|m| format::size(m, opts.iec))
+                    .unwrap_or_else(|| "N/A".into()),
+            ),
             ("pid-text", info.pid.to_string()),
-            ("priority-text", format!("{} ({})", format::priority(info.nice), info.nice)),
+            (
+                "priority-text",
+                format!("{} ({})", format::priority(info.nice), info.nice),
+            ),
             ("state-text", format::state(info.state).to_string()),
             ("cmdline", info.cmdline.clone()),
         ];
@@ -122,7 +130,13 @@ const COLUMNS: [(&str, &str, ProcColumn, bool, f32); 8] = [
     ("% CPU", "cpu-text", ProcColumn::Cpu, false, 1.0),
     ("Memory", "memory-text", ProcColumn::Memory, false, 1.0),
     ("ID", "pid-text", ProcColumn::Pid, false, 1.0),
-    ("Priority", "priority-text", ProcColumn::Priority, false, 0.0),
+    (
+        "Priority",
+        "priority-text",
+        ProcColumn::Priority,
+        false,
+        0.0,
+    ),
     ("State", "state-text", ProcColumn::State, false, 0.0),
     ("Command Line", "cmdline", ProcColumn::Command, true, 0.0),
 ];
@@ -149,10 +163,16 @@ impl ProcView {
     /// holding column visibility, widths, order and sort state.
     pub fn new(whose: Whose, uid: u32, opts: DisplayOpts, tree: Prefs) -> Rc<Self> {
         let store = gio::ListStore::new::<ProcessObject>();
-        let filter_state = Rc::new(RefCell::new(FilterState { whose, search: String::new(), uid }));
+        let filter_state = Rc::new(RefCell::new(FilterState {
+            whose,
+            search: String::new(),
+            uid,
+        }));
         let fs = filter_state.clone();
         let filter = gtk::CustomFilter::new(move |obj| {
-            let Some(p) = obj.downcast_ref::<ProcessObject>() else { return false };
+            let Some(p) = obj.downcast_ref::<ProcessObject>() else {
+                return false;
+            };
             let f = fs.borrow();
             model::matches(&p.info(), f.whose, f.uid, &f.search)
         });
@@ -180,9 +200,13 @@ impl ProcView {
         let mut sorters = Vec::new();
         let mut columns: Vec<(ProcColumn, gtk::ColumnViewColumn)> = Vec::new();
         let header_menu = gio::Menu::new();
-        let order = columns::order_from_setting(&tree.get::<Vec<i32>>(columns::COLUMNS_ORDER_KEY, vec![0]));
+        let order =
+            columns::order_from_setting(&tree.get::<Vec<i32>>(columns::COLUMNS_ORDER_KEY, vec![0]));
         for col in order {
-            let (title, prop, _, expand, xalign) = COLUMNS.into_iter().find(|c| c.2 == col).expect("column spec");
+            let (title, prop, _, expand, xalign) = COLUMNS
+                .into_iter()
+                .find(|c| c.2 == col)
+                .expect("column spec");
             let factory = gtk::SignalListItemFactory::new();
             let view_weak = view.downgrade();
             let menu_c = menu.clone();
@@ -206,20 +230,33 @@ impl ProcView {
                         .bind(&label, "tooltip-text", gtk::Widget::NONE);
                 }
                 // Right click selects the row and opens the context menu.
-                let click = gtk::GestureClick::builder().button(gdk_button_secondary()).build();
+                let click = gtk::GestureClick::builder()
+                    .button(gdk_button_secondary())
+                    .build();
                 let item_weak = item.downgrade();
                 let label_weak = label.downgrade();
                 let view_weak = view_weak.clone();
                 let menu_c = menu_c.clone();
                 let sel = sel.clone();
                 click.connect_pressed(move |g, _, x, y| {
-                    let (Some(item), Some(label), Some(view)) = (item_weak.upgrade(), label_weak.upgrade(), view_weak.upgrade()) else {
+                    let (Some(item), Some(label), Some(view)) = (
+                        item_weak.upgrade(),
+                        label_weak.upgrade(),
+                        view_weak.upgrade(),
+                    ) else {
                         return;
                     };
                     g.set_state(gtk::EventSequenceState::Claimed);
                     sel.set_selected(item.position());
-                    if let Some(p) = label.compute_point(&view, &gtk::graphene::Point::new(x as f32, y as f32)) {
-                        menu_c.set_pointing_to(Some(&gtk::gdk::Rectangle::new(p.x() as i32, p.y() as i32, 1, 1)));
+                    if let Some(p) =
+                        label.compute_point(&view, &gtk::graphene::Point::new(x as f32, y as f32))
+                    {
+                        menu_c.set_pointing_to(Some(&gtk::gdk::Rectangle::new(
+                            p.x() as i32,
+                            p.y() as i32,
+                            1,
+                            1,
+                        )));
                         menu_c.popup();
                     }
                 });
@@ -227,7 +264,10 @@ impl ProcView {
                 item.set_child(Some(&label));
             });
             let sorter = gtk::CustomSorter::new(move |a, b| {
-                let (Some(a), Some(b)) = (a.downcast_ref::<ProcessObject>(), b.downcast_ref::<ProcessObject>()) else {
+                let (Some(a), Some(b)) = (
+                    a.downcast_ref::<ProcessObject>(),
+                    b.downcast_ref::<ProcessObject>(),
+                ) else {
                     return gtk::Ordering::Equal;
                 };
                 model::compare(&a.info(), &b.info(), col).into()
@@ -242,7 +282,9 @@ impl ProcView {
                 .visible(tree.get(&col.visible_key(), col.default_visible()))
                 .header_menu(&header_menu)
                 .build();
-            if let Some(w) = columns::width_from_setting(tree.get(&col.width_key(), col.default_width())) {
+            if let Some(w) =
+                columns::width_from_setting(tree.get(&col.width_key(), col.default_width()))
+            {
                 column.set_fixed_width(w);
             }
             view.append_column(&column);
@@ -252,17 +294,23 @@ impl ProcView {
         // Header context menu: one check item per column, in default order.
         let col_actions = gio::SimpleActionGroup::new();
         for col in columns::ALL {
-            let (title, ..) = COLUMNS.into_iter().find(|c| c.2 == col).expect("column spec");
+            let (title, ..) = COLUMNS
+                .into_iter()
+                .find(|c| c.2 == col)
+                .expect("column spec");
             header_menu.append(Some(title), Some(&format!("proccol.{}", col.id())));
         }
         for (col, column) in &columns {
-            let action = gio::SimpleAction::new_stateful(col.id(), None, &column.is_visible().to_variant());
+            let action =
+                gio::SimpleAction::new_stateful(col.id(), None, &column.is_visible().to_variant());
             let column = column.clone();
             let all: Vec<gtk::ColumnViewColumn> = columns.iter().map(|(_, c)| c.clone()).collect();
             let tree = tree.clone();
             let key = col.visible_key();
             action.connect_change_state(move |a, v| {
-                let Some(visible) = v.and_then(|v| v.get::<bool>()) else { return };
+                let Some(visible) = v.and_then(|v| v.get::<bool>()) else {
+                    return;
+                };
                 // Never hide the last visible column.
                 if !visible && all.iter().filter(|c| c.is_visible()).count() <= 1 {
                     return;
@@ -285,7 +333,8 @@ impl ProcView {
                 if pending.replace(true) {
                     return;
                 }
-                let (pending, tree, key, c) = (pending.clone(), tree.clone(), key.clone(), c.downgrade());
+                let (pending, tree, key, c) =
+                    (pending.clone(), tree.clone(), key.clone(), c.downgrade());
                 glib::timeout_add_local_once(std::time::Duration::from_millis(500), move || {
                     pending.set(false);
                     let Some(c) = c.upgrade() else { return };
@@ -301,14 +350,30 @@ impl ProcView {
             tree.get(columns::SORT_COL_KEY, columns::DEFAULT_SORT_COL),
             tree.get(columns::SORT_ORDER_KEY, columns::DEFAULT_SORT_ORDER),
         );
-        let sort_column = columns.iter().find(|(c, _)| *c == sort_col).map(|(_, c)| c.clone());
-        let sort_type = if descending { gtk::SortType::Descending } else { gtk::SortType::Ascending };
+        let sort_column = columns
+            .iter()
+            .find(|(c, _)| *c == sort_col)
+            .map(|(_, c)| c.clone());
+        let sort_type = if descending {
+            gtk::SortType::Descending
+        } else {
+            gtk::SortType::Ascending
+        };
         view.sort_by_column(sort_column.as_ref(), sort_type);
         if let Some(sorter) = view.sorter().and_downcast::<gtk::ColumnViewSorter>() {
             let tree = tree.clone();
             sorter.connect_changed(move |s, _| {
-                let Some(col) = s.primary_sort_column().and_then(|c| c.id()).and_then(|id| column_by_id(&id)) else { return };
-                let (c, o) = columns::sort_to_settings(col, s.primary_sort_order() == gtk::SortType::Descending);
+                let Some(col) = s
+                    .primary_sort_column()
+                    .and_then(|c| c.id())
+                    .and_then(|id| column_by_id(&id))
+                else {
+                    return;
+                };
+                let (c, o) = columns::sort_to_settings(
+                    col,
+                    s.primary_sort_order() == gtk::SortType::Descending,
+                );
                 if tree.get(columns::SORT_COL_KEY, columns::DEFAULT_SORT_COL) != c {
                     tree.set(columns::SORT_COL_KEY, c);
                 }
@@ -338,14 +403,26 @@ impl ProcView {
             });
         }
 
-        let scroller = gtk::ScrolledWindow::builder().child(&view).vexpand(true).build();
+        let scroller = gtk::ScrolledWindow::builder()
+            .child(&view)
+            .vexpand(true)
+            .build();
 
-        let search_entry = gtk::SearchEntry::builder().placeholder_text("Search processes").hexpand(true).build();
-        let clamp = adw::Clamp::builder().maximum_size(500).child(&search_entry).build();
+        let search_entry = gtk::SearchEntry::builder()
+            .placeholder_text("Search processes")
+            .hexpand(true)
+            .build();
+        let clamp = adw::Clamp::builder()
+            .maximum_size(500)
+            .child(&search_entry)
+            .build();
         let search_bar = gtk::SearchBar::builder().child(&clamp).build();
         search_bar.connect_entry(&search_entry);
 
-        let end_button = gtk::Button::builder().label("End Process").action_name("win.proc-end").build();
+        let end_button = gtk::Button::builder()
+            .label("End Process")
+            .action_name("win.proc-end")
+            .build();
         end_button.add_css_class("destructive-action");
         let props_button = gtk::Button::builder()
             .icon_name("document-properties-symbolic")
@@ -391,7 +468,9 @@ impl ProcView {
     }
 
     pub fn selected(&self) -> Option<ProcessObject> {
-        self.selection.selected_item().and_downcast::<ProcessObject>()
+        self.selection
+            .selected_item()
+            .and_downcast::<ProcessObject>()
     }
 
     /// Opens the context menu for the selected row (keyboard Menu key).
@@ -400,7 +479,8 @@ impl ProcView {
             return;
         }
         let w = self.view.width();
-        self.menu.set_pointing_to(Some(&gtk::gdk::Rectangle::new(w / 3, 40, 1, 1)));
+        self.menu
+            .set_pointing_to(Some(&gtk::gdk::Rectangle::new(w / 3, 40, 1, 1)));
         self.menu.popup();
     }
 
@@ -426,7 +506,10 @@ impl ProcView {
             }
             objects.retain(|pid, _| alive.contains(pid));
         }
-        self.store.retain(|o| o.downcast_ref::<ProcessObject>().is_some_and(|p| alive.contains(&p.pid())));
+        self.store.retain(|o| {
+            o.downcast_ref::<ProcessObject>()
+                .is_some_and(|p| alive.contains(&p.pid()))
+        });
         self.store.extend_from_slice(&new_objects);
         self.filter.changed(gtk::FilterChange::Different);
         for s in &self.sorters {
@@ -452,7 +535,11 @@ impl ProcView {
         }
         let model = self.selection.model().expect("model");
         for i in 0..model.n_items() {
-            if model.item(i).and_downcast::<ProcessObject>().is_some_and(|p| p.pid() == pid) {
+            if model
+                .item(i)
+                .and_downcast::<ProcessObject>()
+                .is_some_and(|p| p.pid() == pid)
+            {
                 self.selection.set_selected(i);
                 return;
             }

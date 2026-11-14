@@ -35,7 +35,11 @@ fn main() -> glib::ExitCode {
         }
     }
     let path = state::default_path();
-    if !state::should_show(autostart, &state::State::load(&path), env!("CARGO_PKG_VERSION")) {
+    if !state::should_show(
+        autostart,
+        &state::State::load(&path),
+        env!("CARGO_PKG_VERSION"),
+    ) {
         return glib::ExitCode::SUCCESS;
     }
     ui::run(path)

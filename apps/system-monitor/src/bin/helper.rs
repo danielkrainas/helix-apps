@@ -31,7 +31,9 @@ fn execute(command: Command) -> Result<(), std::io::Error> {
         Command::Signal { signal, pid } => unsafe { libc::kill(pid, signal.number()) },
         // SAFETY: plain syscall on a single validated pid with a nice value
         // validated to be in -20..=19.
-        Command::Renice { nice, pid } => unsafe { libc::setpriority(libc::PRIO_PROCESS, pid as libc::id_t, nice) },
+        Command::Renice { nice, pid } => unsafe {
+            libc::setpriority(libc::PRIO_PROCESS, pid as libc::id_t, nice)
+        },
     };
     if rc == 0 {
         Ok(())
@@ -45,7 +47,12 @@ fn main() -> ExitCode {
     for a in std::env::args_os().skip(1) {
         match a.into_string() {
             Ok(s) => args.push(s),
-            Err(_) => return fail(EXIT_USAGE, format!("non-UTF-8 argument\n{}", helper_args::USAGE)),
+            Err(_) => {
+                return fail(
+                    EXIT_USAGE,
+                    format!("non-UTF-8 argument\n{}", helper_args::USAGE),
+                )
+            }
         }
     }
     let Invocation { command, dry_run } = match helper_args::parse(&args) {
@@ -69,7 +76,9 @@ fn main() -> ExitCode {
     }
     match execute(command) {
         Ok(()) => ExitCode::SUCCESS,
-        Err(e) if e.raw_os_error() == Some(libc::ESRCH) => fail(EXIT_NO_PROCESS, format!("no process with ID {pid}")),
+        Err(e) if e.raw_os_error() == Some(libc::ESRCH) => {
+            fail(EXIT_NO_PROCESS, format!("no process with ID {pid}"))
+        }
         Err(e) => fail(EXIT_FAILED, format!("cannot {}: {e}", command.describe())),
     }
 }

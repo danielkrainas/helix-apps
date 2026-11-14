@@ -76,7 +76,9 @@ pub fn due_at_autostart(state: &State, current: &str) -> bool {
     if !state.completed {
         return true;
     }
-    let Some(cur) = major(current) else { return false };
+    let Some(cur) = major(current) else {
+        return false;
+    };
     match state.version.as_deref().and_then(major) {
         Some(seen) => seen < cur,
         None => true,
@@ -107,7 +109,8 @@ mod tests {
     use super::*;
 
     fn temp_dir(tag: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("helix-tour-state-{tag}-{}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("helix-tour-state-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         dir
     }

@@ -103,8 +103,14 @@ fn web_app_menu() -> gio::Menu {
     s1.append(Some("Open in _Browser"), Some("win.open-in-browser"));
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
-    s2.append(Some("Web Application _Settings…"), Some("app.web-app-preferences"));
-    s2.append(Some("_Uninstall Web Application…"), Some("app.uninstall-web-app"));
+    s2.append(
+        Some("Web Application _Settings…"),
+        Some("app.web-app-preferences"),
+    );
+    s2.append(
+        Some("_Uninstall Web Application…"),
+        Some("app.uninstall-web-app"),
+    );
     s2.append(Some("_About Web"), Some("app.about"));
     menu.append_section(None, &s2);
     menu
@@ -127,7 +133,10 @@ fn main_menu() -> gio::Menu {
     s2.append(Some("_Find…"), Some("win.find"));
     s2.append(Some("_Print…"), Some("win.print"));
     s2.append(Some("_Fullscreen"), Some("win.fullscreen"));
-    s2.append(Some("Install Site as _Web Application…"), Some("win.install-web-app"));
+    s2.append(
+        Some("Install Site as _Web Application…"),
+        Some("win.install-web-app"),
+    );
     menu.append_section(None, &s2);
     let s3 = gio::Menu::new();
     s3.append(Some("_History"), Some("app.history"));
@@ -246,11 +255,8 @@ impl Window {
         zoom_box.append(&zout);
         zoom_box.append(&zreset);
         zoom_box.append(&zin);
-        let menu_pop = gtk::PopoverMenu::from_model(Some(&if web_app {
-            web_app_menu()
-        } else {
-            main_menu()
-        }));
+        let menu_pop =
+            gtk::PopoverMenu::from_model(Some(&if web_app { web_app_menu() } else { main_menu() }));
         menu_pop.add_child(&zoom_box, "zoom");
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
@@ -1007,7 +1013,11 @@ impl Window {
             let u = t.uri();
             u.starts_with("https://") || u.starts_with("http://")
         });
-        if let Some(a) = self.win.lookup_action("install-web-app").and_downcast::<gio::SimpleAction>() {
+        if let Some(a) = self
+            .win
+            .lookup_action("install-web-app")
+            .and_downcast::<gio::SimpleAction>()
+        {
             a.set_enabled(web_page && !self.private);
         }
         self.sync_entry();
@@ -1253,7 +1263,8 @@ impl Window {
                 format!("Search {} for “{}”", engine.name, q),
                 String::new(),
                 "system-search-symbolic",
-                app.resolve_input(query).unwrap_or_else(|| engine.search_url(&q)),
+                app.resolve_input(query)
+                    .unwrap_or_else(|| engine.search_url(&q)),
             )),
             Some(urlinput::Input::Url(u)) => {
                 rows.push((u.clone(), String::new(), "web-browser-symbolic", u))

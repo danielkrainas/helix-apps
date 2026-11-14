@@ -34,8 +34,17 @@ const ANTI_LINKS: &str = "X-FOLKS-ANTI-LINKS";
 
 /// vCard properties EDS uses for IM addresses (besides `IMPP`).
 const IM_PROPS: &[&str] = &[
-    "X-AIM", "X-JABBER", "X-YAHOO", "X-MSN", "X-ICQ", "X-GROUPWISE", "X-GADUGADU", "X-SKYPE", "X-GOOGLE-TALK",
-    "X-TWITTER", "X-MATRIX",
+    "X-AIM",
+    "X-JABBER",
+    "X-YAHOO",
+    "X-MSN",
+    "X-ICQ",
+    "X-GROUPWISE",
+    "X-GADUGADU",
+    "X-SKYPE",
+    "X-GOOGLE-TALK",
+    "X-TWITTER",
+    "X-MATRIX",
 ];
 
 /// Splits an attribute value into its list items (`,` or `;` separated,
@@ -50,12 +59,19 @@ fn values(raw: &str) -> Vec<String> {
 }
 
 fn attr_values(c: &Contact, name: &str) -> Vec<String> {
-    c.extra.iter().filter(|p| p.name.eq_ignore_ascii_case(name)).flat_map(|p| values(&p.value)).collect()
+    c.extra
+        .iter()
+        .filter(|p| p.name.eq_ignore_ascii_case(name))
+        .flat_map(|p| values(&p.value))
+        .collect()
 }
 
 /// Splits on `:` not escaped by a backslash and removes the escapes.
 fn split_colons(s: &str) -> Vec<String> {
-    split_unescaped(s, ':').iter().map(|p| p.replace("\\:", ":").replace("\\\\", "\\")).collect()
+    split_unescaped(s, ':')
+        .iter()
+        .map(|p| p.replace("\\:", ":").replace("\\\\", "\\"))
+        .collect()
 }
 
 /// Parses a folks local ID for an EDS persona: `<source-uid>:<contact-uid>`.
@@ -154,10 +170,15 @@ pub fn parse_relationships(text: &str) -> Vec<KeyFilePersona> {
             continue;
         }
         if let Some(name) = t.strip_prefix('[').and_then(|s| s.strip_suffix(']')) {
-            out.push(KeyFilePersona { id: name.to_string(), addresses: Vec::new() });
+            out.push(KeyFilePersona {
+                id: name.to_string(),
+                addresses: Vec::new(),
+            });
             continue;
         }
-        let (Some(p), Some((key, value))) = (out.last_mut(), t.split_once('=')) else { continue };
+        let (Some(p), Some((key, value))) = (out.last_mut(), t.split_once('=')) else {
+            continue;
+        };
         let key = key.trim();
         if key.starts_with("__") || key.contains('[') {
             continue;
@@ -175,11 +196,15 @@ pub fn parse_relationships(text: &str) -> Vec<KeyFilePersona> {
 
 /// Default location of folks' key-file store.
 pub fn relationships_path() -> PathBuf {
-    gtk::glib::user_data_dir().join("folks").join("relationships.ini")
+    gtk::glib::user_data_dir()
+        .join("folks")
+        .join("relationships.ini")
 }
 
 pub fn load_relationships(path: &Path) -> Vec<KeyFilePersona> {
-    std::fs::read_to_string(path).map(|t| parse_relationships(&t)).unwrap_or_default()
+    std::fs::read_to_string(path)
+        .map(|t| parse_relationships(&t))
+        .unwrap_or_default()
 }
 
 /// IM addresses of a contact, lower-cased and without URI scheme.
@@ -217,7 +242,10 @@ pub fn groups_from_keyfile(
         uids.sort();
         for uid in uids {
             let key: Key = (book.clone(), uid.clone());
-            index.entry(format!("{book}:{uid}").to_lowercase()).or_default().push(key.clone());
+            index
+                .entry(format!("{book}:{uid}").to_lowercase())
+                .or_default()
+                .push(key.clone());
             for a in im_addresses(&books[book][uid]) {
                 index.entry(a).or_default().push(key.clone());
             }
@@ -255,7 +283,9 @@ mod tests {
     fn books(entries: &[(&str, &str, &str)]) -> HashMap<String, HashMap<String, Contact>> {
         let mut m: HashMap<String, HashMap<String, Contact>> = HashMap::new();
         for (b, u, extra) in entries {
-            let c = contact(&format!("BEGIN:VCARD\r\nVERSION:3.0\r\nUID:{u}\r\nFN:{u}\r\n{extra}END:VCARD\r\n"));
+            let c = contact(&format!(
+                "BEGIN:VCARD\r\nVERSION:3.0\r\nUID:{u}\r\nFN:{u}\r\n{extra}END:VCARD\r\n"
+            ));
             m.entry(b.to_string()).or_default().insert(u.to_string(), c);
         }
         m
@@ -263,8 +293,14 @@ mod tests {
 
     #[test]
     fn local_ids() {
-        assert_eq!(parse_local_id("system-address-book:pas-id-1"), Some(k("system-address-book", "pas-id-1")));
-        assert_eq!(parse_local_id("eds:abc123:pas-id-2"), Some(k("abc123", "pas-id-2")));
+        assert_eq!(
+            parse_local_id("system-address-book:pas-id-1"),
+            Some(k("system-address-book", "pas-id-1"))
+        );
+        assert_eq!(
+            parse_local_id("eds:abc123:pas-id-2"),
+            Some(k("abc123", "pas-id-2"))
+        );
         assert_eq!(parse_local_id("eds:a\\:b:c"), Some(k("a:b", "c")));
         assert_eq!(parse_local_id("nocolon"), None);
         assert_eq!(parse_local_id(":x"), None);
@@ -285,7 +321,11 @@ mod tests {
         assert_eq!(
             g,
             vec![
-                vec![k("system-address-book", "p1"), k("google", "g7"), k("carddav", "c3")],
+                vec![
+                    k("system-address-book", "p1"),
+                    k("google", "g7"),
+                    k("carddav", "c3")
+                ],
                 vec![k("system-address-book", "p2"), k("google", "g8")],
             ]
         );
@@ -301,7 +341,10 @@ mod tests {
         let text = "# folks\n[0]\n__alias=Ada\njabber=Ada@Example.org;ada2@example.org;\n\n[1]\nmsn=\n[2]\nlocal-ids=sys:p1;goo:g1\n";
         let personas = parse_relationships(text);
         assert_eq!(personas.len(), 2);
-        assert_eq!(personas[0].addresses, vec!["ada@example.org", "ada2@example.org"]);
+        assert_eq!(
+            personas[0].addresses,
+            vec!["ada@example.org", "ada2@example.org"]
+        );
         let b = books(&[
             ("sys", "p1", "X-JABBER:ada@example.org\r\n"),
             ("goo", "g1", "IMPP:xmpp:ADA2@example.org\r\n"),
@@ -311,7 +354,13 @@ mod tests {
         for g in &mut groups {
             g.sort();
         }
-        assert_eq!(groups, vec![vec![k("goo", "g1"), k("sys", "p1")], vec![k("goo", "g1"), k("sys", "p1")]]);
+        assert_eq!(
+            groups,
+            vec![
+                vec![k("goo", "g1"), k("sys", "p1")],
+                vec![k("goo", "g1"), k("sys", "p1")]
+            ]
+        );
         assert!(groups_from_keyfile(&[], &b).is_empty());
         assert!(load_relationships(Path::new("/nonexistent/relationships.ini")).is_empty());
     }

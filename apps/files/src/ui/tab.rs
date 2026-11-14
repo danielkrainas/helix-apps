@@ -16,7 +16,8 @@ const INVALID: u32 = u32::MAX;
 
 /// The `GFile` a listed `GFileInfo` describes.
 pub fn info_file(info: &gio::FileInfo) -> Option<gio::File> {
-    info.attribute_object("standard::file").and_downcast::<gio::File>()
+    info.attribute_object("standard::file")
+        .and_downcast::<gio::File>()
 }
 
 /// The file to open for an item: its `standard::target-uri` if any.
@@ -142,13 +143,17 @@ impl Tab {
             let Some(info) = obj.downcast_ref::<gio::FileInfo>() else {
                 return false;
             };
-            s.borrow().show_hidden || !(info.boolean("standard::is-hidden") || info.boolean("standard::is-backup"))
+            s.borrow().show_hidden
+                || !(info.boolean("standard::is-hidden") || info.boolean("standard::is-backup"))
         });
         let filter_model = gtk::FilterListModel::new(Some(dir_list.clone()), Some(filter.clone()));
         filter_model.set_incremental(false);
         let s = settings.clone();
         let sorter = gtk::CustomSorter::new(move |a, b| {
-            match (a.downcast_ref::<gio::FileInfo>(), b.downcast_ref::<gio::FileInfo>()) {
+            match (
+                a.downcast_ref::<gio::FileInfo>(),
+                b.downcast_ref::<gio::FileInfo>(),
+            ) {
                 (Some(a), Some(b)) => item_entry_cmp(a, b, &s.borrow()).into(),
                 _ => gtk::Ordering::Equal,
             }
@@ -320,21 +325,26 @@ impl Tab {
             t.update_status();
         });
         let weak = Rc::downgrade(self);
-        self.selection.connect_items_changed(move |_, pos, _, added| {
-            if let Some(t) = weak.upgrade() {
-                t.restore_selection(pos, added);
-                if added > 0 && !t.pending_select.borrow().is_empty() {
-                    t.select_pending();
+        self.selection
+            .connect_items_changed(move |_, pos, _, added| {
+                if let Some(t) = weak.upgrade() {
+                    t.restore_selection(pos, added);
+                    if added > 0 && !t.pending_select.borrow().is_empty() {
+                        t.select_pending();
+                    }
+                    t.update_status();
+                    t.notify_window();
                 }
-                t.update_status();
-                t.notify_window();
-            }
-        });
+            });
         let weak = Rc::downgrade(self);
         self.selection.connect_selection_changed(move |_, _, _| {
             if let Some(t) = weak.upgrade() {
                 if !t.restoring.get() {
-                    *t.selected_uris.borrow_mut() = t.selected_files().iter().map(|f| f.uri().to_string()).collect();
+                    *t.selected_uris.borrow_mut() = t
+                        .selected_files()
+                        .iter()
+                        .map(|f| f.uri().to_string())
+                        .collect();
                 }
                 t.notify_window();
             }
@@ -365,7 +375,9 @@ impl Tab {
                 let Some(cvs) = sorter.downcast_ref::<gtk::ColumnViewSorter>() else {
                     return;
                 };
-                let Some(col) = cvs.primary_sort_column() else { return };
+                let Some(col) = cvs.primary_sort_column() else {
+                    return;
+                };
                 let key = match col.id().as_deref() {
                     Some("size") => SortKey::Size,
                     Some("type") => SortKey::Type,
@@ -467,8 +479,13 @@ impl Tab {
             }
             if let Some(icon) = t.info_at(pos).and_then(|i| i.icon()) {
                 let theme = gtk::IconTheme::for_display(&v.display());
-                let paintable =
-                    theme.lookup_by_gicon(&icon, 48, 1, gtk::TextDirection::None, gtk::IconLookupFlags::empty());
+                let paintable = theme.lookup_by_gicon(
+                    &icon,
+                    48,
+                    1,
+                    gtk::TextDirection::None,
+                    gtk::IconLookupFlags::empty(),
+                );
                 src.set_icon(Some(&paintable), 16, 16);
             }
             Some(gdk::ContentProvider::for_value(
@@ -498,7 +515,9 @@ impl Tab {
         let weak = Rc::downgrade(self);
         let v = view.clone();
         target.connect_drop(move |target, value, x, y| {
-            let Some(t) = weak.upgrade() else { return false };
+            let Some(t) = weak.upgrade() else {
+                return false;
+            };
             let Ok(list) = value.get::<gdk::FileList>() else {
                 return false;
             };
@@ -598,19 +617,23 @@ impl Tab {
                 }
             }
             // Cached thumbnails, loaded asynchronously.
-            let thumb = info
-                .attribute_byte_string("thumbnail::path")
-                .filter(|_| !info.has_attribute("thumbnail::is-valid") || info.boolean("thumbnail::is-valid"));
+            let thumb = info.attribute_byte_string("thumbnail::path").filter(|_| {
+                !info.has_attribute("thumbnail::is-valid") || info.boolean("thumbnail::is-valid")
+            });
             if let (Some(path), Some(file)) = (thumb, file) {
                 if t.thumbnail_allowed(&file) {
                     let img = img.clone();
                     let item = item.clone();
                     let expected = info.clone();
                     glib::spawn_future_local(async move {
-                        let Ok((bytes, _)) = gio::File::for_path(path.as_str()).load_bytes_future().await else {
+                        let Ok((bytes, _)) =
+                            gio::File::for_path(path.as_str()).load_bytes_future().await
+                        else {
                             return;
                         };
-                        let still = item.item().is_some_and(|i| i == expected.upcast::<glib::Object>());
+                        let still = item
+                            .item()
+                            .is_some_and(|i| i == expected.upcast::<glib::Object>());
                         if !still {
                             return;
                         }
@@ -659,7 +682,10 @@ impl Tab {
             else {
                 return;
             };
-            let Some(b) = obj.property::<Option<gtk::Widget>>("child").and_downcast::<gtk::Box>() else {
+            let Some(b) = obj
+                .property::<Option<gtk::Widget>>("child")
+                .and_downcast::<gtk::Box>()
+            else {
                 return;
             };
             let label = b.last_child().and_downcast::<gtk::Label>().unwrap();
@@ -687,7 +713,10 @@ impl Tab {
                 _ => {
                     let detailed = t.settings.borrow().detailed_dates;
                     let secs = info.attribute_uint64("time::modified") as i64;
-                    match (glib::DateTime::from_unix_local(secs), glib::DateTime::now_local()) {
+                    match (
+                        glib::DateTime::from_unix_local(secs),
+                        glib::DateTime::now_local(),
+                    ) {
                         (Ok(dt), Ok(now)) if secs > 0 => crate::fmt::date(&dt, &now, detailed),
                         _ => String::new(),
                     }
@@ -721,11 +750,17 @@ impl Tab {
                     gtk::FilterChange::MoreStrict
                 });
             }
-            if (old.sort_key, old.reversed, old.dirs_first) != (s.sort_key, s.reversed, s.dirs_first) {
+            if (old.sort_key, old.reversed, old.dirs_first)
+                != (s.sort_key, s.reversed, s.dirs_first)
+            {
                 self.sorter.changed(gtk::SorterChange::Different);
             }
-            if (old.grid_zoom, old.list_zoom, old.detailed_dates, &old.thumbnails)
-                != (s.grid_zoom, s.list_zoom, s.detailed_dates, &s.thumbnails)
+            if (
+                old.grid_zoom,
+                old.list_zoom,
+                old.detailed_dates,
+                &old.thumbnails,
+            ) != (s.grid_zoom, s.list_zoom, s.detailed_dates, &s.thumbnails)
             {
                 self.rebuild_factories();
             }
@@ -811,7 +846,9 @@ impl Tab {
 
     fn mount_and_reload(self: &Rc<Self>) {
         let file = self.location();
-        let op = self.window().map(|w| gtk::MountOperation::new(Some(&w.window)));
+        let op = self
+            .window()
+            .map(|w| gtk::MountOperation::new(Some(&w.window)));
         let weak = Rc::downgrade(self);
         file.mount_enclosing_volume(
             gio::MountMountFlags::NONE,
@@ -901,9 +938,11 @@ impl Tab {
         if fresh {
             let first = found[0].0;
             if self.settings.borrow().list_view {
-                self.list.scroll_to(first, None, gtk::ListScrollFlags::FOCUS, None);
+                self.list
+                    .scroll_to(first, None, gtk::ListScrollFlags::FOCUS, None);
             } else {
-                self.grid.scroll_to(first, gtk::ListScrollFlags::FOCUS, None);
+                self.grid
+                    .scroll_to(first, gtk::ListScrollFlags::FOCUS, None);
             }
         }
         self.pending_select
@@ -946,7 +985,9 @@ impl Tab {
     pub fn selected_infos(&self) -> Vec<gio::FileInfo> {
         let set = self.selection.selection();
         let n = set.size();
-        (0..n).filter_map(|i| self.info_at(set.nth(i as u32))).collect()
+        (0..n)
+            .filter_map(|i| self.info_at(set.nth(i as u32)))
+            .collect()
     }
 
     pub fn selected_files(&self) -> Vec<gio::File> {
@@ -966,7 +1007,8 @@ impl Tab {
         let selected = self.selection.selection();
         let all = gtk::Bitset::new_range(0, n);
         all.subtract(&selected);
-        self.selection.set_selection(&all, &gtk::Bitset::new_range(0, n));
+        self.selection
+            .set_selection(&all, &gtk::Bitset::new_range(0, n));
     }
 
     fn activate(self: &Rc<Self>, pos: u32) {
@@ -992,8 +1034,12 @@ impl Tab {
         let pt = view
             .compute_point(&self.root, &graphene::Point::new(x as f32, y as f32))
             .unwrap_or(graphene::Point::new(x as f32, y as f32));
-        self.popover
-            .set_pointing_to(Some(&gdk::Rectangle::new(pt.x() as i32, pt.y() as i32, 1, 1)));
+        self.popover.set_pointing_to(Some(&gdk::Rectangle::new(
+            pt.x() as i32,
+            pt.y() as i32,
+            1,
+            1,
+        )));
         self.popover.popup();
     }
 
@@ -1051,9 +1097,16 @@ impl Tab {
         let worker_cancel = cancel.clone();
         let show_hidden = settings.show_hidden;
         std::thread::spawn(move || {
-            search::run(&root, &query, depth, show_hidden, &worker_cancel, &mut |batch| {
-                let _ = tx.send_blocking(Some(batch));
-            });
+            search::run(
+                &root,
+                &query,
+                depth,
+                show_hidden,
+                &worker_cancel,
+                &mut |batch| {
+                    let _ = tx.send_blocking(Some(batch));
+                },
+            );
             let _ = tx.send_blocking(None);
         });
         let weak = Rc::downgrade(self);
@@ -1084,26 +1137,31 @@ impl Tab {
 
     fn build_other_locations(self: &Rc<Self>) {
         let page = adw::PreferencesPage::new();
-        let computer = adw::PreferencesGroup::builder().title("On This Computer").build();
+        let computer = adw::PreferencesGroup::builder()
+            .title("On This Computer")
+            .build();
         let monitor = gio::VolumeMonitor::get();
         let weak = Rc::downgrade(self);
-        let add_row =
-            |group: &adw::PreferencesGroup, title: &str, subtitle: &str, icon: &gio::Icon, target: gio::File| {
-                let row = adw::ActionRow::builder()
-                    .title(title)
-                    .subtitle(subtitle)
-                    .activatable(true)
-                    .build();
-                row.add_prefix(&gtk::Image::from_gicon(icon));
-                row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
-                let weak = weak.clone();
-                row.connect_activated(move |_| {
-                    if let Some(t) = weak.upgrade() {
-                        t.load(&target, true, vec![]);
-                    }
-                });
-                group.add(&row);
-            };
+        let add_row = |group: &adw::PreferencesGroup,
+                       title: &str,
+                       subtitle: &str,
+                       icon: &gio::Icon,
+                       target: gio::File| {
+            let row = adw::ActionRow::builder()
+                .title(title)
+                .subtitle(subtitle)
+                .activatable(true)
+                .build();
+            row.add_prefix(&gtk::Image::from_gicon(icon));
+            row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+            let weak = weak.clone();
+            row.connect_activated(move |_| {
+                if let Some(t) = weak.upgrade() {
+                    t.load(&target, true, vec![]);
+                }
+            });
+            group.add(&row);
+        };
         add_row(
             &computer,
             "Computer",
@@ -1129,7 +1187,13 @@ impl Tab {
                 .map(|p| p.display().to_string())
                 .unwrap_or_else(|| root.uri().to_string());
             let group = if root.is_native() { &computer } else { &remote };
-            add_row(group, &mount.name(), &subtitle, &mount.symbolic_icon(), root);
+            add_row(
+                group,
+                &mount.name(),
+                &subtitle,
+                &mount.symbolic_icon(),
+                root,
+            );
         }
         for vol in monitor.volumes() {
             if vol.get_mount().is_some() || !vol.can_mount() {

@@ -3,7 +3,17 @@
 use chrono::{Datelike, Duration, NaiveDate, NaiveTime, Timelike, Weekday};
 
 pub const MONTHS: [&str; 12] = [
-    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
     "December",
 ];
 
@@ -63,22 +73,54 @@ pub fn month_title(d: NaiveDate) -> String {
 pub fn range_title(start: NaiveDate, end_inclusive: NaiveDate) -> String {
     let (s, e) = (start, end_inclusive);
     if s.year() != e.year() {
-        format!("{} {} {} – {} {} {}", s.day(), month_short(s.month()), s.year(), e.day(), month_short(e.month()), e.year())
+        format!(
+            "{} {} {} – {} {} {}",
+            s.day(),
+            month_short(s.month()),
+            s.year(),
+            e.day(),
+            month_short(e.month()),
+            e.year()
+        )
     } else if s.month() != e.month() {
-        format!("{} {} – {} {} {}", s.day(), month_short(s.month()), e.day(), month_short(e.month()), e.year())
+        format!(
+            "{} {} – {} {} {}",
+            s.day(),
+            month_short(s.month()),
+            e.day(),
+            month_short(e.month()),
+            e.year()
+        )
     } else {
-        format!("{} – {} {} {}", s.day(), e.day(), month_short(e.month()), e.year())
+        format!(
+            "{} – {} {} {}",
+            s.day(),
+            e.day(),
+            month_short(e.month()),
+            e.year()
+        )
     }
 }
 
 /// "Friday, 13 November 2026".
 pub fn long_date(d: NaiveDate) -> String {
-    format!("{}, {} {} {}", d.format("%A"), d.day(), month_name(d.month()), d.year())
+    format!(
+        "{}, {} {} {}",
+        d.format("%A"),
+        d.day(),
+        month_name(d.month()),
+        d.year()
+    )
 }
 
 /// "Fri 13 Nov".
 pub fn short_date(d: NaiveDate) -> String {
-    format!("{} {} {}", weekday_short(d.weekday()), d.day(), month_short(d.month()))
+    format!(
+        "{} {} {}",
+        weekday_short(d.weekday()),
+        d.day(),
+        month_short(d.month())
+    )
 }
 
 pub fn format_time(t: NaiveTime, twelve: bool) -> String {
@@ -98,9 +140,17 @@ pub fn format_time(t: NaiveTime, twelve: bool) -> String {
 /// `9 pm`, `21:30`, `12am`.
 pub fn parse_time_input(s: &str) -> Option<NaiveTime> {
     let s = s.trim().to_lowercase();
-    let (body, suffix) = if let Some(b) = s.strip_suffix("am").or_else(|| s.strip_suffix("a.m.")).or_else(|| s.strip_suffix('a')) {
+    let (body, suffix) = if let Some(b) = s
+        .strip_suffix("am")
+        .or_else(|| s.strip_suffix("a.m."))
+        .or_else(|| s.strip_suffix('a'))
+    {
         (b.trim().to_string(), Some(false))
-    } else if let Some(b) = s.strip_suffix("pm").or_else(|| s.strip_suffix("p.m.")).or_else(|| s.strip_suffix('p')) {
+    } else if let Some(b) = s
+        .strip_suffix("pm")
+        .or_else(|| s.strip_suffix("p.m."))
+        .or_else(|| s.strip_suffix('p'))
+    {
         (b.trim().to_string(), Some(true))
     } else {
         (s.clone(), None)
@@ -147,13 +197,18 @@ pub fn first_weekday() -> Weekday {
     if name.is_empty() || name == "C" || name == "POSIX" {
         return Weekday::Mon;
     }
-    first_weekday_from_sources(&name, |n| std::fs::read_to_string(format!("/usr/share/i18n/locales/{n}")).ok())
-        .unwrap_or(Weekday::Mon)
+    first_weekday_from_sources(&name, |n| {
+        std::fs::read_to_string(format!("/usr/share/i18n/locales/{n}")).ok()
+    })
+    .unwrap_or(Weekday::Mon)
 }
 
 /// Resolves the first weekday by reading locale definitions through `read`
 /// (follows `copy` inside LC_TIME).
-pub fn first_weekday_from_sources(name: &str, read: impl Fn(&str) -> Option<String>) -> Option<Weekday> {
+pub fn first_weekday_from_sources(
+    name: &str,
+    read: impl Fn(&str) -> Option<String>,
+) -> Option<Weekday> {
     let mut current = name.to_string();
     for _ in 0..8 {
         let text = read(&current)?;
@@ -177,7 +232,10 @@ pub fn first_weekday_from_sources(name: &str, read: impl Fn(&str) -> Option<Stri
             match parts.next() {
                 Some("week") => {
                     let rest: String = parts.collect::<Vec<_>>().join("");
-                    week_start_day = rest.split(';').nth(1).and_then(|d| NaiveDate::parse_from_str(d, "%Y%m%d").ok());
+                    week_start_day = rest
+                        .split(';')
+                        .nth(1)
+                        .and_then(|d| NaiveDate::parse_from_str(d, "%Y%m%d").ok());
                 }
                 Some("first_weekday") => first = parts.next().and_then(|n| n.parse().ok()),
                 Some("copy") => copy = parts.next().map(|c| c.trim_matches('"').to_string()),
@@ -185,7 +243,8 @@ pub fn first_weekday_from_sources(name: &str, read: impl Fn(&str) -> Option<Stri
             }
         }
         if week_start_day.is_some() || first.is_some() {
-            let base = week_start_day.unwrap_or_else(|| NaiveDate::from_ymd_opt(1997, 11, 30).unwrap());
+            let base =
+                week_start_day.unwrap_or_else(|| NaiveDate::from_ymd_opt(1997, 11, 30).unwrap());
             let day = base + Duration::days(first.unwrap_or(1) as i64 - 1);
             return Some(day.weekday());
         }
@@ -229,9 +288,18 @@ mod tests {
     #[test]
     fn titles() {
         assert_eq!(month_title(d(2026, 11, 13)), "November 2026");
-        assert_eq!(range_title(d(2026, 11, 9), d(2026, 11, 15)), "9 – 15 Nov 2026");
-        assert_eq!(range_title(d(2026, 11, 30), d(2026, 12, 6)), "30 Nov – 6 Dec 2026");
-        assert_eq!(range_title(d(2026, 12, 28), d(2027, 1, 3)), "28 Dec 2026 – 3 Jan 2027");
+        assert_eq!(
+            range_title(d(2026, 11, 9), d(2026, 11, 15)),
+            "9 – 15 Nov 2026"
+        );
+        assert_eq!(
+            range_title(d(2026, 11, 30), d(2026, 12, 6)),
+            "30 Nov – 6 Dec 2026"
+        );
+        assert_eq!(
+            range_title(d(2026, 12, 28), d(2027, 1, 3)),
+            "28 Dec 2026 – 3 Jan 2027"
+        );
         assert_eq!(long_date(d(2026, 11, 13)), "Friday, 13 November 2026");
         assert_eq!(short_date(d(2026, 11, 13)), "Fri 13 Nov");
     }
@@ -270,10 +338,22 @@ mod tests {
                 .to_string(),
             )
         };
-        assert_eq!(first_weekday_from_sources("en_US", files), Some(Weekday::Sun));
-        assert_eq!(first_weekday_from_sources("en_GB", files), Some(Weekday::Mon));
-        assert_eq!(first_weekday_from_sources("de_AT", files), Some(Weekday::Mon));
-        assert_eq!(first_weekday_from_sources("ar_EG", files), Some(Weekday::Sat));
+        assert_eq!(
+            first_weekday_from_sources("en_US", files),
+            Some(Weekday::Sun)
+        );
+        assert_eq!(
+            first_weekday_from_sources("en_GB", files),
+            Some(Weekday::Mon)
+        );
+        assert_eq!(
+            first_weekday_from_sources("de_AT", files),
+            Some(Weekday::Mon)
+        );
+        assert_eq!(
+            first_weekday_from_sources("ar_EG", files),
+            Some(Weekday::Sat)
+        );
         assert_eq!(first_weekday_from_sources("xx_YY", files), None);
     }
 }

@@ -845,7 +845,10 @@ impl App {
         action("export-bookmarks", crate::dialogs::export_bookmarks);
         action("passwords", crate::dialogs::show_passwords);
         action("uninstall-web-app", crate::dialogs::uninstall_web_app);
-        action("web-app-preferences", crate::dialogs::show_web_app_preferences);
+        action(
+            "web-app-preferences",
+            crate::dialogs::show_web_app_preferences,
+        );
 
         let accels: &[(&str, &[&str])] = &[
             ("app.new-window", &["<Control>n"]),

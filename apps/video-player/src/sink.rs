@@ -39,8 +39,13 @@ impl FrameSlot {
 
 /// Builds the appsink. `notify` runs on a streaming thread after a new
 /// sample was stored.
-pub fn make_video_sink(slot: Arc<FrameSlot>, notify: impl Fn() + Send + Sync + 'static) -> gst_app::AppSink {
-    let caps = gst_video::VideoCapsBuilder::new().format_list(FORMATS.iter().copied()).build();
+pub fn make_video_sink(
+    slot: Arc<FrameSlot>,
+    notify: impl Fn() + Send + Sync + 'static,
+) -> gst_app::AppSink {
+    let caps = gst_video::VideoCapsBuilder::new()
+        .format_list(FORMATS.iter().copied())
+        .build();
     let notify = Arc::new(notify);
     let (slot2, notify2) = (slot.clone(), notify.clone());
     let sink = gst_app::AppSink::builder()
@@ -96,7 +101,10 @@ impl Frame {
             offset = meta.offset()[0];
         }
         let (width, height) = (info.width(), info.height());
-        if width == 0 || height == 0 || buffer.size() < offset + stride * (height as usize - 1) + width as usize * 4 {
+        if width == 0
+            || height == 0
+            || buffer.size() < offset + stride * (height as usize - 1) + width as usize * 4
+        {
             return None;
         }
         Some(Frame {
@@ -141,7 +149,10 @@ mod tests {
         pipeline.set_state(gst::State::Playing).unwrap();
         let bus = pipeline.bus().unwrap();
         let msg = bus
-            .timed_pop_filtered(gst::ClockTime::from_seconds(20), &[gst::MessageType::Eos, gst::MessageType::Error])
+            .timed_pop_filtered(
+                gst::ClockTime::from_seconds(20),
+                &[gst::MessageType::Eos, gst::MessageType::Error],
+            )
             .expect("encoder timed out");
         assert_eq!(msg.type_(), gst::MessageType::Eos, "{msg:?}");
         pipeline.set_state(gst::State::Null).unwrap();
@@ -161,7 +172,8 @@ mod tests {
         let sink = make_video_sink(slot.clone(), move || {
             let _ = tx.lock().unwrap().send(());
         });
-        let playbin = crate::player::make_playbin(sink.upcast_ref(), Some("fakesink sync=false")).unwrap();
+        let playbin =
+            crate::player::make_playbin(sink.upcast_ref(), Some("fakesink sync=false")).unwrap();
         let uri = gtk::glib::filename_to_uri(&clip, None).unwrap();
         playbin.set_property("uri", uri.as_str());
         playbin.set_state(gst::State::Playing).unwrap();
@@ -192,8 +204,12 @@ mod tests {
     fn slot_keeps_latest_only() {
         gst::init().unwrap();
         let slot = FrameSlot::default();
-        let s1 = gst::Sample::builder().buffer(&gst::Buffer::with_size(1).unwrap()).build();
-        let s2 = gst::Sample::builder().buffer(&gst::Buffer::with_size(2).unwrap()).build();
+        let s1 = gst::Sample::builder()
+            .buffer(&gst::Buffer::with_size(1).unwrap())
+            .build();
+        let s2 = gst::Sample::builder()
+            .buffer(&gst::Buffer::with_size(2).unwrap())
+            .build();
         assert!(slot.put(s1));
         assert!(!slot.put(s2));
         assert_eq!(slot.take().unwrap().buffer().unwrap().size(), 2);

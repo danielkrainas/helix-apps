@@ -4,7 +4,9 @@ use std::path::{Path, PathBuf};
 
 pub const SYSTEM_DIR: &str = "/usr/share/backgrounds";
 
-const IMAGE_EXTS: &[&str] = &["jpg", "jpeg", "png", "webp", "svg", "jxl", "tif", "tiff", "bmp", "gif"];
+const IMAGE_EXTS: &[&str] = &[
+    "jpg", "jpeg", "png", "webp", "svg", "jxl", "tif", "tiff", "bmp", "gif",
+];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Wallpaper {
@@ -28,7 +30,14 @@ pub fn is_image(path: &Path) -> bool {
 /// Splits `name-dark` / `name-light` / `name-d` / `name-l` into
 /// `(base, Some(is_dark))`; other stems give `(stem, None)`.
 fn variant_of(stem: &str) -> (&str, Option<bool>) {
-    for (suffix, dark) in [("-dark", true), ("-light", false), ("-d", true), ("-l", false), ("_dark", true), ("_light", false)] {
+    for (suffix, dark) in [
+        ("-dark", true),
+        ("-light", false),
+        ("-d", true),
+        ("-l", false),
+        ("_dark", true),
+        ("_light", false),
+    ] {
         if let Some(base) = stem.strip_suffix(suffix) {
             if !base.is_empty() {
                 return (base, Some(dark));
@@ -48,7 +57,11 @@ pub fn pair(paths: &[PathBuf]) -> Vec<Wallpaper> {
     let mut singles = Vec::new();
     for p in paths.iter().filter(|p| is_image(p)) {
         let stem = p.file_stem().and_then(|s| s.to_str()).unwrap_or_default();
-        let ext = p.extension().and_then(|s| s.to_str()).unwrap_or_default().to_ascii_lowercase();
+        let ext = p
+            .extension()
+            .and_then(|s| s.to_str())
+            .unwrap_or_default()
+            .to_ascii_lowercase();
         let dir = p.parent().map(Path::to_path_buf).unwrap_or_default();
         match variant_of(stem) {
             (base, Some(dark)) => {
@@ -59,13 +72,19 @@ pub fn pair(paths: &[PathBuf]) -> Vec<Wallpaper> {
                     slot.0 = Some(p.clone());
                 }
             }
-            (_, None) => singles.push(Wallpaper { light: p.clone(), dark: None }),
+            (_, None) => singles.push(Wallpaper {
+                light: p.clone(),
+                dark: None,
+            }),
         }
     }
     for (_, (light, dark)) in groups {
         match (light, dark) {
             (Some(l), d) => singles.push(Wallpaper { light: l, dark: d }),
-            (None, Some(d)) => singles.push(Wallpaper { light: d, dark: None }),
+            (None, Some(d)) => singles.push(Wallpaper {
+                light: d,
+                dark: None,
+            }),
             (None, None) => {}
         }
     }
@@ -76,12 +95,18 @@ pub fn pair(paths: &[PathBuf]) -> Vec<Wallpaper> {
 /// Lists image files in `dir` and its direct subdirectories.
 pub fn scan(dir: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
-    let Ok(rd) = std::fs::read_dir(dir) else { return out };
+    let Ok(rd) = std::fs::read_dir(dir) else {
+        return out;
+    };
     for e in rd.flatten() {
         let p = e.path();
         if p.is_dir() {
             if let Ok(sub) = std::fs::read_dir(&p) {
-                out.extend(sub.flatten().map(|e| e.path()).filter(|p| p.is_file() && is_image(p)));
+                out.extend(
+                    sub.flatten()
+                        .map(|e| e.path())
+                        .filter(|p| p.is_file() && is_image(p)),
+                );
             }
         } else if is_image(&p) {
             out.push(p);
@@ -145,13 +170,31 @@ mod tests {
             p("/bg/mixed-dark.png"),
             p("/bg/mixed-light.jpg"),
         ]);
-        assert!(ws.contains(&Wallpaper { light: p("/bg/fuwa-light.png"), dark: Some(p("/bg/fuwa-dark.png")) }));
-        assert!(ws.contains(&Wallpaper { light: p("/bg/adwaita-l.jxl"), dark: Some(p("/bg/adwaita-d.jxl")) }));
-        assert!(ws.contains(&Wallpaper { light: p("/bg/clouds.jpg"), dark: None }));
-        assert!(ws.contains(&Wallpaper { light: p("/bg/lonely-dark.png"), dark: None }));
+        assert!(ws.contains(&Wallpaper {
+            light: p("/bg/fuwa-light.png"),
+            dark: Some(p("/bg/fuwa-dark.png"))
+        }));
+        assert!(ws.contains(&Wallpaper {
+            light: p("/bg/adwaita-l.jxl"),
+            dark: Some(p("/bg/adwaita-d.jxl"))
+        }));
+        assert!(ws.contains(&Wallpaper {
+            light: p("/bg/clouds.jpg"),
+            dark: None
+        }));
+        assert!(ws.contains(&Wallpaper {
+            light: p("/bg/lonely-dark.png"),
+            dark: None
+        }));
         // Different extensions are not paired.
-        assert!(ws.contains(&Wallpaper { light: p("/bg/mixed-light.jpg"), dark: None }));
-        assert!(ws.contains(&Wallpaper { light: p("/bg/mixed-dark.png"), dark: None }));
+        assert!(ws.contains(&Wallpaper {
+            light: p("/bg/mixed-light.jpg"),
+            dark: None
+        }));
+        assert!(ws.contains(&Wallpaper {
+            light: p("/bg/mixed-dark.png"),
+            dark: None
+        }));
         assert_eq!(ws.len(), 6);
         let mut sorted = ws.clone();
         sorted.sort_by(|a, b| a.light.cmp(&b.light));
@@ -160,12 +203,22 @@ mod tests {
 
     #[test]
     fn current_detection() {
-        let wp = Wallpaper { light: p("/a-l.png"), dark: Some(p("/a-d.png")) };
+        let wp = Wallpaper {
+            light: p("/a-l.png"),
+            dark: Some(p("/a-d.png")),
+        };
         assert!(is_current(&wp, Some(&p("/a-l.png")), None));
-        assert!(is_current(&wp, Some(&p("/a-l.png")), Some(&p("/other.png"))));
+        assert!(is_current(
+            &wp,
+            Some(&p("/a-l.png")),
+            Some(&p("/other.png"))
+        ));
         assert!(!is_current(&wp, Some(&p("/b.png")), Some(&p("/a-d.png"))));
         assert!(is_current(&wp, None, Some(&p("/a-d.png"))));
-        let single = Wallpaper { light: p("/s.png"), dark: None };
+        let single = Wallpaper {
+            light: p("/s.png"),
+            dark: None,
+        };
         assert!(is_current(&single, None, Some(&p("/s.png"))));
         assert!(!is_current(&single, None, None));
     }
@@ -174,8 +227,14 @@ mod tests {
     fn unique_names() {
         let taken = [p("/d/pic.jpg"), p("/d/pic-1.jpg")];
         let exists = |c: &Path| taken.iter().any(|t| t == c);
-        assert_eq!(unique_destination(Path::new("/d"), "new.jpg", exists), p("/d/new.jpg"));
-        assert_eq!(unique_destination(Path::new("/d"), "pic.jpg", exists), p("/d/pic-2.jpg"));
+        assert_eq!(
+            unique_destination(Path::new("/d"), "new.jpg", exists),
+            p("/d/new.jpg")
+        );
+        assert_eq!(
+            unique_destination(Path::new("/d"), "pic.jpg", exists),
+            p("/d/pic-2.jpg")
+        );
     }
 
     #[test]

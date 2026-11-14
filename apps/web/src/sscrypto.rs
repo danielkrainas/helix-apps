@@ -166,7 +166,8 @@ mod tests {
     fn aes_cbc_matches_sp800_38a() {
         // NIST SP 800-38A F.2.1 (CBC-AES128), first block; PKCS#7 then adds
         // one full padding block.
-        let key = Zeroizing::new(<[u8; 16]>::try_from(hex("2b7e151628aed2a6abf7158809cf4f3c")).unwrap());
+        let key =
+            Zeroizing::new(<[u8; 16]>::try_from(hex("2b7e151628aed2a6abf7158809cf4f3c")).unwrap());
         let iv = <[u8; 16]>::try_from(hex("000102030405060708090a0b0c0d0e0f")).unwrap();
         let pt = hex("6bc1bee22e409f96e93d7e117393172a");
         let ct = encrypt_with_iv(&key, &iv, &pt);
@@ -243,7 +244,14 @@ mod tests {
         let a = KeyPair::generate();
         let p = PRIME.to_be_bytes();
         let p1 = PRIME.wrapping_sub(&U1024::ONE).to_be_bytes();
-        for bad in [&[][..], &[0][..], &[1][..], &p1[..], &p[..], &[1u8; 129][..]] {
+        for bad in [
+            &[][..],
+            &[0][..],
+            &[1][..],
+            &p1[..],
+            &p[..],
+            &[1u8; 129][..],
+        ] {
             assert!(a.derive(bad).is_none(), "{bad:?}");
         }
         assert!(a.derive(&[2]).is_some());

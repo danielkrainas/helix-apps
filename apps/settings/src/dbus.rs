@@ -20,10 +20,16 @@ fn proxy<'a>(conn: &Connection, dest: &'a str, path: &'a str, iface: &'a str) ->
     Proxy::new(conn, dest, path, iface).map_err(err)
 }
 
-const TIMEDATE: (&str, &str, &str) =
-    ("org.freedesktop.timedate1", "/org/freedesktop/timedate1", "org.freedesktop.timedate1");
-const HOSTNAME: (&str, &str, &str) =
-    ("org.freedesktop.hostname1", "/org/freedesktop/hostname1", "org.freedesktop.hostname1");
+const TIMEDATE: (&str, &str, &str) = (
+    "org.freedesktop.timedate1",
+    "/org/freedesktop/timedate1",
+    "org.freedesktop.timedate1",
+);
+const HOSTNAME: (&str, &str, &str) = (
+    "org.freedesktop.hostname1",
+    "/org/freedesktop/hostname1",
+    "org.freedesktop.hostname1",
+);
 const UPOWER_DISPLAY: (&str, &str, &str) = (
     "org.freedesktop.UPower",
     "/org/freedesktop/UPower/devices/DisplayDevice",
@@ -58,7 +64,9 @@ pub fn list_timezones() -> Vec<String> {
     };
     let mut zones = from_bus().unwrap_or_default();
     if zones.is_empty() {
-        zones = parse_zone_tab(&std::fs::read_to_string("/usr/share/zoneinfo/zone1970.tab").unwrap_or_default());
+        zones = parse_zone_tab(
+            &std::fs::read_to_string("/usr/share/zoneinfo/zone1970.tab").unwrap_or_default(),
+        );
         zones.push("UTC".into());
     }
     zones.sort();
@@ -124,8 +132,10 @@ pub fn read_hostname() -> Result<HostInfo> {
 pub fn set_hostname(pretty: &str, static_name: &str) -> Result<()> {
     let conn = system()?;
     let p = proxy(&conn, HOSTNAME.0, HOSTNAME.1, HOSTNAME.2)?;
-    p.call::<_, _, ()>("SetPrettyHostname", &(pretty, true)).map_err(err)?;
-    p.call::<_, _, ()>("SetStaticHostname", &(static_name, true)).map_err(err)
+    p.call::<_, _, ()>("SetPrettyHostname", &(pretty, true))
+        .map_err(err)?;
+    p.call::<_, _, ()>("SetStaticHostname", &(static_name, true))
+        .map_err(err)
 }
 
 #[derive(Debug, Clone, Default)]
@@ -165,7 +175,10 @@ mod tests {
 
     #[test]
     fn device_name_prefers_pretty() {
-        let mut h = HostInfo { hostname: "box".into(), ..Default::default() };
+        let mut h = HostInfo {
+            hostname: "box".into(),
+            ..Default::default()
+        };
         assert_eq!(h.device_name(), "box");
         h.pretty_hostname = "My Box".into();
         assert_eq!(h.device_name(), "My Box");

@@ -39,7 +39,9 @@ pub fn cpu_description(cpuinfo: &str) -> Option<String> {
     let mut model: Option<String> = None;
     let mut count = 0usize;
     for line in cpuinfo.lines() {
-        let Some((k, v)) = line.split_once(':') else { continue };
+        let Some((k, v)) = line.split_once(':') else {
+            continue;
+        };
         let k = k.trim();
         if k == "processor" {
             count += 1;
@@ -52,7 +54,11 @@ pub fn cpu_description(cpuinfo: &str) -> Option<String> {
         }
     }
     let model = model?;
-    Some(if count > 1 { format!("{model} × {count}") } else { model })
+    Some(if count > 1 {
+        format!("{model} × {count}")
+    } else {
+        model
+    })
 }
 
 /// Total memory in bytes from /proc/meminfo.
@@ -78,7 +84,9 @@ pub fn hardware_model(vendor: &str, model: &str) -> Option<String> {
         (true, true) => None,
         (true, false) => Some(model.to_string()),
         (false, true) => Some(vendor.to_string()),
-        (false, false) if model.to_lowercase().starts_with(&vendor.to_lowercase()) => Some(model.to_string()),
+        (false, false) if model.to_lowercase().starts_with(&vendor.to_lowercase()) => {
+            Some(model.to_string())
+        }
         _ => Some(format!("{vendor} {model}")),
     }
 }
@@ -108,23 +116,39 @@ mod tests {
 
     #[test]
     fn cpu() {
-        let info = "processor\t: 0\nmodel name\t: AMD  Ryzen 9 7950X 16-Core Processor\nflags: x\n\n\
+        let info =
+            "processor\t: 0\nmodel name\t: AMD  Ryzen 9 7950X 16-Core Processor\nflags: x\n\n\
                     processor\t: 1\nmodel name\t: AMD  Ryzen 9 7950X 16-Core Processor\n";
-        assert_eq!(cpu_description(info).unwrap(), "AMD Ryzen 9 7950X 16-Core Processor × 2");
-        assert_eq!(cpu_description("processor : 0\nmodel name : Foo\n").unwrap(), "Foo");
+        assert_eq!(
+            cpu_description(info).unwrap(),
+            "AMD Ryzen 9 7950X 16-Core Processor × 2"
+        );
+        assert_eq!(
+            cpu_description("processor : 0\nmodel name : Foo\n").unwrap(),
+            "Foo"
+        );
         assert_eq!(cpu_description("processor : 0\n"), None);
     }
 
     #[test]
     fn memory() {
-        assert_eq!(mem_total_bytes("MemTotal:       16314424 kB\nMemFree: 1 kB\n"), Some(16314424 * 1024));
+        assert_eq!(
+            mem_total_bytes("MemTotal:       16314424 kB\nMemFree: 1 kB\n"),
+            Some(16314424 * 1024)
+        );
         assert_eq!(mem_total_bytes("MemFree: 1 kB\n"), None);
     }
 
     #[test]
     fn hardware() {
-        assert_eq!(hardware_model("ASUS", "TUF GAMING").unwrap(), "ASUS TUF GAMING");
-        assert_eq!(hardware_model("Dell", "Dell XPS 13").unwrap(), "Dell XPS 13");
+        assert_eq!(
+            hardware_model("ASUS", "TUF GAMING").unwrap(),
+            "ASUS TUF GAMING"
+        );
+        assert_eq!(
+            hardware_model("Dell", "Dell XPS 13").unwrap(),
+            "Dell XPS 13"
+        );
         assert_eq!(hardware_model("", "X1").unwrap(), "X1");
         assert_eq!(hardware_model(" ", ""), None);
     }

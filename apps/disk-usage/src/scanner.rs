@@ -90,7 +90,11 @@ impl ScanTree {
     /// Looks up a child by name.
     #[cfg_attr(not(test), allow(dead_code))]
     pub fn child_named(&self, id: NodeId, name: &str) -> Option<NodeId> {
-        self.nodes[id].children.iter().copied().find(|&c| self.nodes[c].name == name)
+        self.nodes[id]
+            .children
+            .iter()
+            .copied()
+            .find(|&c| self.nodes[c].name == name)
     }
 
     /// Finds the node for a path below (or equal to) the root.
@@ -107,7 +111,9 @@ impl ScanTree {
     /// Detaches `id` from its parent and subtracts its sizes from all
     /// ancestors. Returns false for the root or an already removed node.
     pub fn remove(&mut self, id: NodeId) -> bool {
-        let Some(parent) = self.nodes[id].parent else { return false };
+        let Some(parent) = self.nodes[id].parent else {
+            return false;
+        };
         if self.nodes[id].removed {
             return false;
         }
@@ -346,7 +352,11 @@ pub fn scan(root: &Path, opts: &ScanOptions, progress: &Progress) -> Result<Scan
     };
     let id = scanner.new_node(name, None, &md);
     scanner.scan_dir(id, &root_path)?;
-    Ok(ScanTree { root_path, nodes: scanner.nodes, errors: scanner.errors })
+    Ok(ScanTree {
+        root_path,
+        nodes: scanner.nodes,
+        errors: scanner.errors,
+    })
 }
 
 #[cfg(test)]
@@ -403,7 +413,11 @@ mod tests {
         assert_eq!(t.ancestry(two).len(), 4);
 
         // Children are sorted largest first: "a" (75k+) before top.bin (10k).
-        let names: Vec<_> = root.children.iter().map(|&c| t.node(c).name.as_str()).collect();
+        let names: Vec<_> = root
+            .children
+            .iter()
+            .map(|&c| t.node(c).name.as_str())
+            .collect();
         assert_eq!(names, ["a", "top.bin"]);
     }
 
@@ -417,7 +431,10 @@ mod tests {
         let t = run(tmp.path(), &ScanOptions::default());
         let n = t.node(t.find(&p).unwrap());
         assert_eq!(n.apparent, 50 * 1024 * 1024);
-        assert!(n.size < n.apparent, "sparse file should allocate less than its length");
+        assert!(
+            n.size < n.apparent,
+            "sparse file should allocate less than its length"
+        );
     }
 
     #[test]
@@ -437,8 +454,12 @@ mod tests {
             .map(|n| n.size)
             .sum();
         assert_eq!(total_files, file_alloc);
-        let total_apparent: u64 =
-            t.nodes.iter().filter(|n| n.kind == Kind::File).map(|n| n.apparent).sum();
+        let total_apparent: u64 = t
+            .nodes
+            .iter()
+            .filter(|n| n.kind == Kind::File)
+            .map(|n| n.apparent)
+            .sum();
         assert_eq!(total_apparent, 40_000);
         // All three names are still listed.
         assert_eq!(t.nodes.iter().filter(|n| n.kind == Kind::File).count(), 3);
@@ -458,7 +479,11 @@ mod tests {
             let n = t.node(id);
             assert_eq!(n.kind, Kind::Symlink);
             assert!(n.children.is_empty());
-            assert!(n.apparent < 1000, "link counted with its own size, got {}", n.apparent);
+            assert!(
+                n.apparent < 1000,
+                "link counted with its own size, got {}",
+                n.apparent
+            );
         }
         assert!(t.root().apparent < 100_000);
         assert_eq!(t.root().items, 2);
@@ -472,14 +497,20 @@ mod tests {
         fs::create_dir_all(r.join("skip/inner")).unwrap();
         write_file(&r.join("keep/inner/f"), 1000);
         write_file(&r.join("skip/inner/f"), 900_000);
-        let opts = ScanOptions { excluded: vec![r.join("skip")], ..Default::default() };
+        let opts = ScanOptions {
+            excluded: vec![r.join("skip")],
+            ..Default::default()
+        };
         let t = run(r, &opts);
         assert!(t.find(&r.join("skip")).is_none());
         assert!(t.find(&r.join("keep/inner/f")).is_some());
         assert_eq!(t.root().items, 3);
         assert!(t.root().apparent < 900_000);
         // Excluding the root itself is ignored.
-        let opts = ScanOptions { excluded: vec![r.to_path_buf()], ..Default::default() };
+        let opts = ScanOptions {
+            excluded: vec![r.to_path_buf()],
+            ..Default::default()
+        };
         assert_eq!(run(r, &opts).root().items, 6);
     }
 
@@ -508,7 +539,10 @@ mod tests {
         write_file(&tmp.path().join("f"), 10);
         let p = Progress::default();
         p.cancel();
-        assert!(matches!(scan(tmp.path(), &ScanOptions::default(), &p), Err(ScanError::Cancelled)));
+        assert!(matches!(
+            scan(tmp.path(), &ScanOptions::default(), &p),
+            Err(ScanError::Cancelled)
+        ));
     }
 
     #[test]
@@ -516,7 +550,10 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let f = tmp.path().join("f");
         write_file(&f, 1);
-        assert!(matches!(scan(&f, &ScanOptions::default(), &Progress::default()), Err(ScanError::NotADirectory)));
+        assert!(matches!(
+            scan(&f, &ScanOptions::default(), &Progress::default()),
+            Err(ScanError::NotADirectory)
+        ));
     }
 
     #[test]

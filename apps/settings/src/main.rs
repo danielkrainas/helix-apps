@@ -23,7 +23,11 @@ fn main() -> glib::ExitCode {
         }
         Some("-l" | "--list") => {
             for p in panels::PANELS {
-                let state = if p.available { "available" } else { "unavailable" };
+                let state = if p.available {
+                    "available"
+                } else {
+                    "unavailable"
+                };
                 println!("{}\t{}\t{}", p.name, p.title, state);
             }
             return glib::ExitCode::SUCCESS;

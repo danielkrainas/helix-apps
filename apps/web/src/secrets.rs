@@ -18,9 +18,9 @@
 
 use crate::sscrypto;
 use std::collections::HashMap;
-use zeroize::{Zeroize, Zeroizing};
 use zbus::blocking::{Connection, Proxy};
 use zbus::zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Value};
+use zeroize::{Zeroize, Zeroizing};
 
 pub const SCHEMA: &str = "org.helix.Web.Password";
 pub const ATTR_SCHEMA: &str = "xdg:schema";
@@ -110,7 +110,10 @@ impl std::fmt::Display for Error {
             Error::Bus(e) => write!(f, "Secret Service error: {e}"),
             Error::Dismissed => write!(f, "the keyring prompt was dismissed"),
             Error::Unavailable => write!(f, "no Secret Service collection is available"),
-            Error::Crypto => write!(f, "could not set up or use the encrypted Secret Service session"),
+            Error::Crypto => write!(
+                f,
+                "could not set up or use the encrypted Secret Service session"
+            ),
         }
     }
 }
@@ -171,7 +174,11 @@ impl Client {
                 );
                 let (_out, session): (OwnedValue, OwnedObjectPath) =
                     svc.call("OpenSession", &("plain", Value::from("")))?;
-                Ok(Client { conn, session, key: None })
+                Ok(Client {
+                    conn,
+                    session,
+                    key: None,
+                })
             }
             Err(e) => Err(e.into()),
         }
@@ -248,7 +255,10 @@ impl Client {
 
     /// Every Helix login in the keyring.
     pub fn all_logins(&self) -> Result<Vec<Login>> {
-        self.find(&HashMap::from([(ATTR_SCHEMA.to_string(), SCHEMA.to_string())]))
+        self.find(&HashMap::from([(
+            ATTR_SCHEMA.to_string(),
+            SCHEMA.to_string(),
+        )]))
     }
 
     fn find(&self, attrs: &HashMap<String, String>) -> Result<Vec<Login>> {
@@ -331,7 +341,10 @@ impl Client {
             self.prompt(&prompt)?;
         }
         let props: HashMap<&str, Value> = HashMap::from([
-            ("org.freedesktop.Secret.Item.Label", Value::from(login.label())),
+            (
+                "org.freedesktop.Secret.Item.Label",
+                Value::from(login.label()),
+            ),
             (
                 "org.freedesktop.Secret.Item.Attributes",
                 Value::from(login.attributes()),
@@ -357,7 +370,12 @@ impl Client {
 
 impl Drop for Client {
     fn drop(&mut self) {
-        if let Ok(p) = Proxy::new(&self.conn, BUS, self.session.as_str(), "org.freedesktop.Secret.Session") {
+        if let Ok(p) = Proxy::new(
+            &self.conn,
+            BUS,
+            self.session.as_str(),
+            "org.freedesktop.Secret.Session",
+        ) {
             let _: zbus::Result<()> = p.call("Close", &());
         }
     }
@@ -432,7 +450,11 @@ pub mod mock {
 
     #[interface(name = "org.freedesktop.Secret.Service")]
     impl Service {
-        fn open_session(&self, algorithm: &str, input: Value<'_>) -> zbus::fdo::Result<(OwnedValue, OwnedObjectPath)> {
+        fn open_session(
+            &self,
+            algorithm: &str,
+            input: Value<'_>,
+        ) -> zbus::fdo::Result<(OwnedValue, OwnedObjectPath)> {
             let mut s = self.0.lock().unwrap();
             let output = match algorithm {
                 "plain" => {
@@ -458,7 +480,10 @@ pub mod mock {
             ))
         }
 
-        fn search_items(&self, attributes: HashMap<String, String>) -> (Vec<OwnedObjectPath>, Vec<OwnedObjectPath>) {
+        fn search_items(
+            &self,
+            attributes: HashMap<String, String>,
+        ) -> (Vec<OwnedObjectPath>, Vec<OwnedObjectPath>) {
             let s = self.0.lock().unwrap();
             let found: Vec<OwnedObjectPath> = s
                 .items
@@ -508,7 +533,11 @@ pub mod mock {
         }
 
         fn read_alias(&self, name: &str) -> OwnedObjectPath {
-            let p = if name == "default" { DEFAULT_ALIAS } else { "/" };
+            let p = if name == "default" {
+                DEFAULT_ALIAS
+            } else {
+                "/"
+            };
             OwnedObjectPath::try_from(p).unwrap()
         }
     }
@@ -553,7 +582,10 @@ pub mod mock {
                 s.items.push((id, attrs, plain, secret.3));
                 id
             };
-            server.at(item_path(id), Item(self.0.clone(), id)).await.map_err(zbus::fdo::Error::from)?;
+            server
+                .at(item_path(id), Item(self.0.clone(), id))
+                .await
+                .map_err(zbus::fdo::Error::from)?;
             Ok((
                 OwnedObjectPath::try_from(item_path(id)).unwrap(),
                 OwnedObjectPath::try_from("/").unwrap(),
@@ -577,14 +609,21 @@ pub mod mock {
         /// prompt handling.
         async fn delete(&self, #[zbus(object_server)] server: &ObjectServer) -> OwnedObjectPath {
             let path = format!("/org/freedesktop/secrets/prompt/delete{}", self.1);
-            server.at(path.as_str(), Prompt(self.0.clone(), Some(self.1))).await.unwrap();
+            server
+                .at(path.as_str(), Prompt(self.0.clone(), Some(self.1)))
+                .await
+                .unwrap();
             OwnedObjectPath::try_from(path).unwrap()
         }
     }
 
     #[interface(name = "org.freedesktop.Secret.Prompt")]
     impl Prompt {
-        async fn prompt(&self, _window_id: &str, #[zbus(signal_emitter)] emitter: SignalEmitter<'_>) {
+        async fn prompt(
+            &self,
+            _window_id: &str,
+            #[zbus(signal_emitter)] emitter: SignalEmitter<'_>,
+        ) {
             let dismissed = {
                 let mut s = self.0.lock().unwrap();
                 s.prompts_shown += 1;
@@ -600,7 +639,11 @@ pub mod mock {
         }
 
         #[zbus(signal)]
-        async fn completed(emitter: &SignalEmitter<'_>, dismissed: bool, result: Value<'_>) -> zbus::Result<()>;
+        async fn completed(
+            emitter: &SignalEmitter<'_>,
+            dismissed: bool,
+            result: Value<'_>,
+        ) -> zbus::Result<()>;
     }
 
     /// Starts the mock; returns a client connection and the shared store.
@@ -651,7 +694,10 @@ mod tests {
         assert_eq!(a[ATTR_ORIGIN], "https://example.com");
         assert_eq!(a[ATTR_USERNAME], "ada");
         assert_eq!(l.label(), "Password for ada on example.com");
-        assert_eq!(login("https://e:8443", "", "x").label(), "Password for e:8443");
+        assert_eq!(
+            login("https://e:8443", "", "x").label(),
+            "Password for e:8443"
+        );
         let q = query("https://example.com", None);
         assert_eq!(q.len(), 2);
         assert_eq!(query("o", Some("u"))[ATTR_USERNAME], "u");
@@ -663,11 +709,14 @@ mod tests {
         let c = Client::new(conn).unwrap();
         assert!(c.logins("https://example.com").unwrap().is_empty());
 
-        c.store(&login("https://example.com", "ada", "first")).unwrap();
-        c.store(&login("https://example.com", "bob", "pw-b")).unwrap();
+        c.store(&login("https://example.com", "ada", "first"))
+            .unwrap();
+        c.store(&login("https://example.com", "bob", "pw-b"))
+            .unwrap();
         c.store(&login("https://other.org", "ada", "pw-o")).unwrap();
         // Same origin and user: replaced, not duplicated.
-        c.store(&login("https://example.com", "ada", "second")).unwrap();
+        c.store(&login("https://example.com", "ada", "second"))
+            .unwrap();
         assert_eq!(store.lock().unwrap().items.len(), 3);
 
         let got = c.logins("https://example.com").unwrap();
@@ -686,7 +735,10 @@ mod tests {
         assert_eq!(c.logins("https://example.com").unwrap().len(), 1);
 
         store.lock().unwrap().dismiss_prompts = true;
-        assert!(matches!(c.delete("https://example.com", "ada"), Err(Error::Dismissed)));
+        assert!(matches!(
+            c.delete("https://example.com", "ada"),
+            Err(Error::Dismissed)
+        ));
         assert_eq!(c.logins("https://example.com").unwrap().len(), 1);
     }
 
@@ -697,7 +749,8 @@ mod tests {
         assert!(c.encrypted());
         assert_eq!(store.lock().unwrap().algorithm, sscrypto::ALGORITHM);
 
-        c.store(&login("https://example.com", "ada", "hunter2")).unwrap();
+        c.store(&login("https://example.com", "ada", "hunter2"))
+            .unwrap();
         // The mock decrypted it with the negotiated key...
         assert_eq!(store.lock().unwrap().items[0].2, b"hunter2");
         let got = c.logins("https://example.com").unwrap();
@@ -721,7 +774,10 @@ mod tests {
         // The service now answers in the clear (no IV): never accepted as
         // a password in an encrypted session.
         store.lock().unwrap().key = None;
-        assert!(matches!(c.logins("https://example.com"), Err(Error::Crypto)));
+        assert!(matches!(
+            c.logins("https://example.com"),
+            Err(Error::Crypto)
+        ));
     }
 
     #[test]
@@ -748,7 +804,11 @@ mod tests {
         }
         let c = Client::session_bus().unwrap();
         assert!(c.encrypted());
-        let l = login("https://interop.example", "ada", "pässwörd-0123456789abcdef");
+        let l = login(
+            "https://interop.example",
+            "ada",
+            "pässwörd-0123456789abcdef",
+        );
         c.store(&l).unwrap();
         assert_eq!(c.logins("https://interop.example").unwrap(), vec![l]);
     }

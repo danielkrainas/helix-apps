@@ -63,25 +63,69 @@ impl Panel for PowerPanel {
         // Battery (hidden until UPower reports one).
         let battery = widgets::group("Battery");
         battery.set_visible(false);
-        let level = gtk::LevelBar::builder().min_value(0.0).max_value(1.0).valign(gtk::Align::Center).width_request(160).build();
+        let level = gtk::LevelBar::builder()
+            .min_value(0.0)
+            .max_value(1.0)
+            .valign(gtk::Align::Center)
+            .width_request(160)
+            .build();
         let row = adw::ActionRow::builder().title("Battery").build();
         row.add_suffix(&level);
         battery.add(&row);
         page.add(&battery);
 
         let saving = widgets::group("Power Saving");
-        saving.add(&switch(&power, "idle-dim", true, false, "Dim Screen", "Reduces the screen brightness when the computer is inactive"));
-        let blank = preset_combo(&session, "idle-delay", Num::U32, 300, values::blank_delays, seconds_label, "Screen Blank");
+        saving.add(&switch(
+            &power,
+            "idle-dim",
+            true,
+            false,
+            "Dim Screen",
+            "Reduces the screen brightness when the computer is inactive",
+        ));
+        let blank = preset_combo(
+            &session,
+            "idle-delay",
+            Num::U32,
+            300,
+            values::blank_delays,
+            seconds_label,
+            "Screen Blank",
+        );
         blank.set_subtitle("Turns the screen off after a period of inactivity");
         saving.add(&blank);
         let mut battery_rows = Vec::new();
         for (source, label) in [("ac", "When Plugged In"), ("battery", "On Battery Power")] {
-            let type_key: &'static str = if source == "ac" { "sleep-inactive-ac-type" } else { "sleep-inactive-battery-type" };
-            let timeout_key: &'static str = if source == "ac" { "sleep-inactive-ac-timeout" } else { "sleep-inactive-battery-timeout" };
-            let sw = widgets::nick_switch(&power, type_key, ("suspend", "nothing"), "suspend", &format!("Automatic Suspend {label}"));
+            let type_key: &'static str = if source == "ac" {
+                "sleep-inactive-ac-type"
+            } else {
+                "sleep-inactive-battery-type"
+            };
+            let timeout_key: &'static str = if source == "ac" {
+                "sleep-inactive-ac-timeout"
+            } else {
+                "sleep-inactive-battery-timeout"
+            };
+            let sw = widgets::nick_switch(
+                &power,
+                type_key,
+                ("suspend", "nothing"),
+                "suspend",
+                &format!("Automatic Suspend {label}"),
+            );
             sw.set_subtitle("Pauses the computer after a period of inactivity");
-            let delay = preset_combo(&power, timeout_key, Num::I32, 900, values::suspend_delays, seconds_label, "Delay");
-            sw.bind_property("active", &delay, "sensitive").sync_create().build();
+            let delay = preset_combo(
+                &power,
+                timeout_key,
+                Num::I32,
+                900,
+                values::suspend_delays,
+                seconds_label,
+                "Delay",
+            );
+            sw.bind_property("active", &delay, "sensitive")
+                .sync_create()
+                .build();
             saving.add(&sw);
             saving.add(&delay);
             if source == "battery" {
@@ -95,10 +139,22 @@ impl Panel for PowerPanel {
 
         let general = widgets::group("General");
         general.add(&power_button_row(&power));
-        general.add(&switch(&iface, "show-battery-percentage", false, false, "Show Battery Percentage", "Show the exact charge level in the top bar"));
+        general.add(&switch(
+            &iface,
+            "show-battery-percentage",
+            false,
+            false,
+            "Show Battery Percentage",
+            "Show the exact charge level in the top bar",
+        ));
         page.add(&general);
 
-        let ui = Rc::new(BatteryUi { group: battery, level, row, on_battery_rows: battery_rows });
+        let ui = Rc::new(BatteryUi {
+            group: battery,
+            level,
+            row,
+            on_battery_rows: battery_rows,
+        });
         refresh(&ui);
         let weak = Rc::downgrade(&ui);
         glib::timeout_add_seconds_local(BATTERY_REFRESH_SECS, move || match weak.upgrade() {
@@ -117,5 +173,11 @@ impl Panel for PowerPanel {
 }
 
 fn power_button_row(power: &helix_app_common::Prefs) -> adw::ComboRow {
-    widgets::nick_combo(power, "power-button-action", "suspend", POWER_BUTTON_ACTIONS, "Power Button Behavior")
+    widgets::nick_combo(
+        power,
+        "power-button-action",
+        "suspend",
+        POWER_BUTTON_ACTIONS,
+        "Power Button Behavior",
+    )
 }

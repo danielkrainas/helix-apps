@@ -28,8 +28,13 @@ pub struct RawThumb {
 
 /// The freedesktop thumbnail path for `uri` in `flavour` (`normal`, `large`).
 pub fn cache_path(cache_root: &Path, uri: &str, flavour: &str) -> PathBuf {
-    let md5 = glib::compute_checksum_for_string(glib::ChecksumType::Md5, uri).map(|s| s.to_string()).unwrap_or_default();
-    cache_root.join("thumbnails").join(flavour).join(format!("{md5}.png"))
+    let md5 = glib::compute_checksum_for_string(glib::ChecksumType::Md5, uri)
+        .map(|s| s.to_string())
+        .unwrap_or_default();
+    cache_root
+        .join("thumbnails")
+        .join(flavour)
+        .join(format!("{md5}.png"))
 }
 
 /// Size that fits `w`×`h` into a `max`×`max` box (never upscaled).
@@ -46,7 +51,9 @@ pub fn fit(w: i32, h: i32, max: i32) -> (i32, i32) {
 
 fn mtime(path: &Path) -> Option<u64> {
     let m = std::fs::metadata(path).ok()?.modified().ok()?;
-    m.duration_since(std::time::UNIX_EPOCH).ok().map(|d| d.as_secs())
+    m.duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .map(|d| d.as_secs())
 }
 
 fn raw(pb: &Pixbuf) -> Option<RawThumb> {
@@ -78,7 +85,9 @@ fn from_cache(path: &Path, cache_root: &Path, size: i32) -> Option<RawThumb> {
     let want = mtime(path)?.to_string();
     for flavour in ["normal", "large"] {
         let p = cache_path(cache_root, &uri, flavour);
-        let Ok(pb) = Pixbuf::from_file(&p) else { continue };
+        let Ok(pb) = Pixbuf::from_file(&p) else {
+            continue;
+        };
         if pb.option("tEXt::Thumb::MTime").as_deref() == Some(want.as_str()) {
             return scaled(pb, size).as_ref().and_then(raw);
         }
@@ -121,7 +130,10 @@ mod tests {
     fn spec_example_cache_path() {
         // Example from the freedesktop thumbnail specification.
         let p = cache_path(Path::new("/c"), "file:///home/jens/photos/me.png", "normal");
-        assert_eq!(p, Path::new("/c/thumbnails/normal/c6ee772d9e49320e97ec29a7eb5b1697.png"));
+        assert_eq!(
+            p,
+            Path::new("/c/thumbnails/normal/c6ee772d9e49320e97ec29a7eb5b1697.png")
+        );
     }
 
     #[test]
@@ -151,12 +163,16 @@ mod tests {
         let small = Pixbuf::new(Colorspace::Rgb, false, 8, 10, 7).unwrap();
         small.fill(0x00ff_00ff);
         let m = mtime(&img).unwrap().to_string();
-        small.savev(&thumb, "png", &[("tEXt::Thumb::MTime", m.as_str())]).unwrap();
+        small
+            .savev(&thumb, "png", &[("tEXt::Thumb::MTime", m.as_str())])
+            .unwrap();
         let t = load(&img, &cache, SIZE).unwrap();
         assert_eq!((t.width, t.height), (10, 7));
 
         // A stale one is ignored.
-        small.savev(&thumb, "png", &[("tEXt::Thumb::MTime", "1")]).unwrap();
+        small
+            .savev(&thumb, "png", &[("tEXt::Thumb::MTime", "1")])
+            .unwrap();
         let t = load(&img, &cache, SIZE).unwrap();
         assert_eq!((t.width, t.height), (128, 64));
 

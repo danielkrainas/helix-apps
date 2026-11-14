@@ -33,12 +33,19 @@ pub fn contacts_with_email(email: &str) -> String {
 }
 
 fn make_time(t: DateTime<Utc>) -> String {
-    format!("(make-time {})", quote(&t.format("%Y%m%dT%H%M%SZ").to_string()))
+    format!(
+        "(make-time {})",
+        quote(&t.format("%Y%m%dT%H%M%SZ").to_string())
+    )
 }
 
 /// Calendar components with an occurrence in `[start, end)`.
 pub fn occur_in_range(start: DateTime<Utc>, end: DateTime<Utc>) -> String {
-    format!("(occur-in-time-range? {} {})", make_time(start), make_time(end))
+    format!(
+        "(occur-in-time-range? {} {})",
+        make_time(start),
+        make_time(end)
+    )
 }
 
 /// Calendar components whose summary, description or location contains `text`.
@@ -60,7 +67,10 @@ mod tests {
     #[test]
     fn quoting() {
         assert_eq!(quote(r#"a"b\c"#), r#""a\"b\\c""#);
-        assert_eq!(contacts_containing("x"), "(contains \"x-evolution-any-field\" \"x\")");
+        assert_eq!(
+            contacts_containing("x"),
+            "(contains \"x-evolution-any-field\" \"x\")"
+        );
     }
 
     #[test]

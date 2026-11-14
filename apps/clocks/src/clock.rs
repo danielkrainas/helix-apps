@@ -22,7 +22,9 @@ pub struct SystemClock {
 
 impl Default for SystemClock {
     fn default() -> Self {
-        SystemClock { epoch: Instant::now() }
+        SystemClock {
+            epoch: Instant::now(),
+        }
     }
 }
 
@@ -45,10 +47,14 @@ pub struct FakeClock {
 #[cfg(test)]
 impl FakeClock {
     pub fn new(now: DateTime<Utc>) -> Self {
-        FakeClock { now: std::cell::Cell::new(now), mono: std::cell::Cell::new(Duration::ZERO) }
+        FakeClock {
+            now: std::cell::Cell::new(now),
+            mono: std::cell::Cell::new(Duration::ZERO),
+        }
     }
     pub fn advance(&self, d: Duration) {
-        self.now.set(self.now.get() + chrono::Duration::from_std(d).unwrap());
+        self.now
+            .set(self.now.get() + chrono::Duration::from_std(d).unwrap());
         self.mono.set(self.mono.get() + d);
     }
 }

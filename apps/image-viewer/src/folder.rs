@@ -11,7 +11,11 @@ pub struct Extensions(HashSet<String>);
 
 impl Extensions {
     pub fn new<I: IntoIterator<Item = S>, S: AsRef<str>>(exts: I) -> Self {
-        Extensions(exts.into_iter().map(|e| e.as_ref().to_ascii_lowercase()).collect())
+        Extensions(
+            exts.into_iter()
+                .map(|e| e.as_ref().to_ascii_lowercase())
+                .collect(),
+        )
     }
 
     pub fn supports(&self, path: &Path) -> bool {
@@ -26,7 +30,9 @@ impl Extensions {
 }
 
 fn file_name(p: &Path) -> String {
-    p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()
+    p.file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default()
 }
 
 pub fn sort_paths(paths: &mut [PathBuf]) {
@@ -72,14 +78,21 @@ pub struct Playlist {
 
 impl Default for Playlist {
     fn default() -> Self {
-        Playlist { source: Source::Files, files: Vec::new(), index: None }
+        Playlist {
+            source: Source::Files,
+            files: Vec::new(),
+            index: None,
+        }
     }
 }
 
 impl Playlist {
     /// The list for a single opened file: its folder's images.
     pub fn for_file(path: &Path, exts: &Extensions) -> Self {
-        let dir = path.parent().map(Path::to_path_buf).unwrap_or_else(|| PathBuf::from("."));
+        let dir = path
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_else(|| PathBuf::from("."));
         let files = list_images(&dir, exts, Some(path));
         let index = files.iter().position(|p| p == path);
         // An unsupported/missing file still gets shown (and fails visibly).
@@ -87,21 +100,33 @@ impl Playlist {
             Some(i) => (files, Some(i)),
             None => (vec![path.to_path_buf()], Some(0)),
         };
-        Playlist { source: Source::Folder(dir), files, index }
+        Playlist {
+            source: Source::Folder(dir),
+            files,
+            index,
+        }
     }
 
     /// The list for an opened directory, starting at its first image.
     pub fn for_dir(dir: &Path, exts: &Extensions) -> Self {
         let files = list_images(dir, exts, None);
         let index = if files.is_empty() { None } else { Some(0) };
-        Playlist { source: Source::Folder(dir.to_path_buf()), files, index }
+        Playlist {
+            source: Source::Folder(dir.to_path_buf()),
+            files,
+            index,
+        }
     }
 
     /// An explicit list of files (kept in the given order).
     pub fn for_files(paths: Vec<PathBuf>, exts: &Extensions) -> Self {
         let files: Vec<PathBuf> = paths.into_iter().filter(|p| exts.supports(p)).collect();
         let index = if files.is_empty() { None } else { Some(0) };
-        Playlist { source: Source::Files, files, index }
+        Playlist {
+            source: Source::Files,
+            files,
+            index,
+        }
     }
 
     /// Picks the right constructor for what the user opened.
@@ -132,7 +157,9 @@ impl Playlist {
     }
 
     pub fn current(&self) -> Option<&Path> {
-        self.index.and_then(|i| self.files.get(i)).map(PathBuf::as_path)
+        self.index
+            .and_then(|i| self.files.get(i))
+            .map(PathBuf::as_path)
     }
 
     pub fn has_next(&self) -> bool {
@@ -170,7 +197,9 @@ impl Playlist {
     /// Removes `path` (e.g. after trashing it). If it was current, the image
     /// that takes its place (or the new last one) becomes current.
     pub fn remove(&mut self, path: &Path) {
-        let Some(pos) = self.files.iter().position(|p| p == path) else { return };
+        let Some(pos) = self.files.iter().position(|p| p == path) else {
+            return;
+        };
         self.files.remove(pos);
         self.index = match self.index {
             _ if self.files.is_empty() => None,
@@ -252,7 +281,17 @@ mod tests {
     #[test]
     fn folder_listing_filters_and_sorts() {
         let dir = tempfile::tempdir().unwrap();
-        touch(dir.path(), &["b10.png", "b2.JPG", "a.gif", ".hidden.png", "notes.txt", "c1.jpeg"]);
+        touch(
+            dir.path(),
+            &[
+                "b10.png",
+                "b2.JPG",
+                "a.gif",
+                ".hidden.png",
+                "notes.txt",
+                "c1.jpeg",
+            ],
+        );
         fs::create_dir(dir.path().join("sub.png")).unwrap();
         let list = list_images(dir.path(), &exts(), None);
         let n: Vec<String> = list.iter().map(|f| file_name(f)).collect();
@@ -282,7 +321,11 @@ mod tests {
         assert_eq!(p.current().unwrap(), dir.path().join("a.png"));
 
         let p = Playlist::open(
-            vec![dir.path().join("b.png"), dir.path().join("x.txt"), dir.path().join("a.png")],
+            vec![
+                dir.path().join("b.png"),
+                dir.path().join("x.txt"),
+                dir.path().join("a.png"),
+            ],
             &exts(),
         );
         assert_eq!(names(&p), ["b.png", "a.png"]);

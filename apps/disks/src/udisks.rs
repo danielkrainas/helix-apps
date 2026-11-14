@@ -65,7 +65,11 @@ fn convert(v: &Value) -> Prop {
         Value::Array(a) => {
             let sig = a.element_signature().to_string();
             match sig.as_str() {
-                "y" => Prop::Bytes(a.iter().filter_map(|e| if let Value::U8(b) = e { Some(*b) } else { None }).collect()),
+                "y" => Prop::Bytes(
+                    a.iter()
+                        .filter_map(|e| if let Value::U8(b) = e { Some(*b) } else { None })
+                        .collect(),
+                ),
                 "ay" => Prop::ByteStrings(
                     a.iter()
                         .filter_map(|e| match convert(e) {
@@ -74,8 +78,28 @@ fn convert(v: &Value) -> Prop {
                         })
                         .collect(),
                 ),
-                "o" => Prop::Paths(a.iter().filter_map(|e| if let Value::ObjectPath(p) = e { Some(p.to_string()) } else { None }).collect()),
-                "s" => Prop::Strings(a.iter().filter_map(|e| if let Value::Str(s) = e { Some(s.to_string()) } else { None }).collect()),
+                "o" => Prop::Paths(
+                    a.iter()
+                        .filter_map(|e| {
+                            if let Value::ObjectPath(p) = e {
+                                Some(p.to_string())
+                            } else {
+                                None
+                            }
+                        })
+                        .collect(),
+                ),
+                "s" => Prop::Strings(
+                    a.iter()
+                        .filter_map(|e| {
+                            if let Value::Str(s) = e {
+                                Some(s.to_string())
+                            } else {
+                                None
+                            }
+                        })
+                        .collect(),
+                ),
                 _ => Prop::Other,
             }
         }
@@ -92,13 +116,22 @@ fn convert_props(p: &HashMap<String, OwnedValue>) -> Props {
 /// Reads all UDisks2 objects (read-only `GetManagedObjects`).
 pub fn fetch(conn: &Connection) -> Result<Snapshot, String> {
     let reply = conn
-        .call_method(Some(SERVICE), ROOT, Some("org.freedesktop.DBus.ObjectManager"), "GetManagedObjects", &())
+        .call_method(
+            Some(SERVICE),
+            ROOT,
+            Some("org.freedesktop.DBus.ObjectManager"),
+            "GetManagedObjects",
+            &(),
+        )
         .map_err(|e| error_text(&e))?;
     let objs: Managed = reply.body().deserialize().map_err(|e| e.to_string())?;
     Ok(objs
         .iter()
         .map(|(path, ifs)| {
-            let ifs: Interfaces = ifs.iter().map(|(name, props)| (name.clone(), convert_props(props))).collect();
+            let ifs: Interfaces = ifs
+                .iter()
+                .map(|(name, props)| (name.clone(), convert_props(props)))
+                .collect();
             (path.to_string(), ifs)
         })
         .collect())
@@ -136,7 +169,10 @@ pub fn spawn_monitor(tx: async_channel::Sender<Event>) {
                     }
                 });
             }
-            Err(e) => eprintln!("helix-disks: cannot watch UDisks2 signals: {}", error_text(&e)),
+            Err(e) => eprintln!(
+                "helix-disks: cannot watch UDisks2 signals: {}",
+                error_text(&e)
+            ),
         }
         let send = |tx: &async_channel::Sender<Event>| match fetch(&conn) {
             Ok(s) => tx.send_blocking(Event::Snapshot(s)).is_ok(),
@@ -166,11 +202,18 @@ fn opts() -> Opts {
     o
 }
 
-fn call<B>(conn: &Connection, path: &str, iface: &str, method: &str, body: &B) -> Result<zbus::message::Message, String>
+fn call<B>(
+    conn: &Connection,
+    path: &str,
+    iface: &str,
+    method: &str,
+    body: &B,
+) -> Result<zbus::message::Message, String>
 where
     B: serde::ser::Serialize + zbus::zvariant::DynamicType,
 {
-    conn.call_method(Some(SERVICE), path, Some(iface), method, body).map_err(|e| error_text(&e))
+    conn.call_method(Some(SERVICE), path, Some(iface), method, body)
+        .map_err(|e| error_text(&e))
 }
 
 fn format_opts(label: &str, erase: bool, passphrase: &Option<String>) -> Opts {
@@ -188,7 +231,17 @@ fn format_opts(label: &str, erase: bool, passphrase: &Option<String>) -> Opts {
     o
 }
 
-type RawAttribute = (u8, String, u16, i32, i32, i32, i64, i32, HashMap<String, OwnedValue>);
+type RawAttribute = (
+    u8,
+    String,
+    u16,
+    i32,
+    i32,
+    i32,
+    i64,
+    i32,
+    HashMap<String, OwnedValue>,
+);
 
 /// Executes one operation. MUTATES SYSTEM STATE — only called from UI
 /// actions confirmed by the user, never from tests.
@@ -205,25 +258,55 @@ pub fn run(conn: &Connection, op: &Op) -> Result<OpOutput, String> {
         Op::SwapStart { block } => none(call(conn, block, SWAP, "Start", &(opts(),))),
         Op::SwapStop { block } => none(call(conn, block, SWAP, "Stop", &(opts(),))),
         Op::Unlock { block, passphrase } => {
-            let r = call(conn, block, ENCRYPTED, "Unlock", &(passphrase.as_str(), opts()))?;
+            let r = call(
+                conn,
+                block,
+                ENCRYPTED,
+                "Unlock",
+                &(passphrase.as_str(), opts()),
+            )?;
             let path: OwnedObjectPath = r.body().deserialize().map_err(|e| e.to_string())?;
             Ok(OpOutput::Path(path.to_string()))
         }
         Op::Lock { block } => none(call(conn, block, ENCRYPTED, "Lock", &(opts(),))),
-        Op::Format { block, fs_type, label, erase, passphrase, update_partition_type } => {
+        Op::Format {
+            block,
+            fs_type,
+            label,
+            erase,
+            passphrase,
+            update_partition_type,
+        } => {
             let mut o = format_opts(label, *erase, passphrase);
             o.insert("update-partition-type", Value::Bool(*update_partition_type));
             o.insert("tear-down", Value::Bool(true));
             none(call(conn, block, BLOCK, "Format", &(fs_type.as_str(), o)))
         }
-        Op::CreatePartition { table, offset, size, part_type, name, fs_type, label, passphrase } => {
+        Op::CreatePartition {
+            table,
+            offset,
+            size,
+            part_type,
+            name,
+            fs_type,
+            label,
+            passphrase,
+        } => {
             let fo = format_opts(label, false, passphrase);
             let r = call(
                 conn,
                 table,
                 TABLE,
                 "CreatePartitionAndFormat",
-                &(*offset, *size, part_type.as_str(), name.as_str(), opts(), fs_type.as_str(), fo),
+                &(
+                    *offset,
+                    *size,
+                    part_type.as_str(),
+                    name.as_str(),
+                    opts(),
+                    fs_type.as_str(),
+                    fo,
+                ),
             )?;
             let path: OwnedObjectPath = r.body().deserialize().map_err(|e| e.to_string())?;
             Ok(OpOutput::Path(path.to_string()))
@@ -233,12 +316,36 @@ pub fn run(conn: &Connection, op: &Op) -> Result<OpOutput, String> {
             o.insert("tear-down", Value::Bool(true));
             none(call(conn, block, PARTITION, "Delete", &(o,)))
         }
-        Op::SetPartitionType { block, part_type } => none(call(conn, block, PARTITION, "SetType", &(part_type.as_str(), opts()))),
-        Op::SetPartitionName { block, name } => none(call(conn, block, PARTITION, "SetName", &(name.as_str(), opts()))),
-        Op::SetPartitionFlags { block, flags } => none(call(conn, block, PARTITION, "SetFlags", &(*flags, opts()))),
-        Op::SetLabel { block, label } => none(call(conn, block, FILESYSTEM, "SetLabel", &(label.as_str(), opts()))),
+        Op::SetPartitionType { block, part_type } => none(call(
+            conn,
+            block,
+            PARTITION,
+            "SetType",
+            &(part_type.as_str(), opts()),
+        )),
+        Op::SetPartitionName { block, name } => none(call(
+            conn,
+            block,
+            PARTITION,
+            "SetName",
+            &(name.as_str(), opts()),
+        )),
+        Op::SetPartitionFlags { block, flags } => {
+            none(call(conn, block, PARTITION, "SetFlags", &(*flags, opts())))
+        }
+        Op::SetLabel { block, label } => none(call(
+            conn,
+            block,
+            FILESYSTEM,
+            "SetLabel",
+            &(label.as_str(), opts()),
+        )),
         Op::Check { block } | Op::Repair { block } => {
-            let method = if matches!(op, Op::Check { .. }) { "Check" } else { "Repair" };
+            let method = if matches!(op, Op::Check { .. }) {
+                "Check"
+            } else {
+                "Repair"
+            };
             let r = call(conn, block, FILESYSTEM, method, &(opts(),))?;
             let ok: bool = r.body().deserialize().map_err(|e| e.to_string())?;
             Ok(OpOutput::Bool(ok))
@@ -251,16 +358,20 @@ pub fn run(conn: &Connection, op: &Op) -> Result<OpOutput, String> {
             let raw: Vec<RawAttribute> = r.body().deserialize().map_err(|e| e.to_string())?;
             Ok(OpOutput::Attributes(
                 raw.into_iter()
-                    .map(|(id, name, flags, value, worst, threshold, pretty, pretty_unit, _)| Attribute {
-                        id,
-                        name,
-                        flags,
-                        value,
-                        worst,
-                        threshold,
-                        pretty,
-                        pretty_unit,
-                    })
+                    .map(
+                        |(id, name, flags, value, worst, threshold, pretty, pretty_unit, _)| {
+                            Attribute {
+                                id,
+                                name,
+                                flags,
+                                value,
+                                worst,
+                                threshold,
+                                pretty,
+                                pretty_unit,
+                            }
+                        },
+                    )
                     .collect(),
             ))
         }
@@ -268,11 +379,25 @@ pub fn run(conn: &Connection, op: &Op) -> Result<OpOutput, String> {
 }
 
 /// Attaches `path` as a loop device (`Manager.LoopSetup`). Mutating.
-pub fn loop_setup(conn: &Connection, path: &std::path::Path, read_only: bool) -> Result<String, String> {
-    let file = std::fs::OpenOptions::new().read(true).write(!read_only).open(path).map_err(|e| e.to_string())?;
+pub fn loop_setup(
+    conn: &Connection,
+    path: &std::path::Path,
+    read_only: bool,
+) -> Result<String, String> {
+    let file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(!read_only)
+        .open(path)
+        .map_err(|e| e.to_string())?;
     let mut o = opts();
     o.insert("read-only", Value::Bool(read_only));
-    let r = call(conn, MANAGER, iface::MANAGER, "LoopSetup", &(Fd::from(file.as_fd()), o))?;
+    let r = call(
+        conn,
+        MANAGER,
+        iface::MANAGER,
+        "LoopSetup",
+        &(Fd::from(file.as_fd()), o),
+    )?;
     let p: OwnedObjectPath = r.body().deserialize().map_err(|e| e.to_string())?;
     Ok(p.to_string())
 }
@@ -305,7 +430,10 @@ pub fn copy_with_progress<R: Read, W: Write>(
     let mut done = 0u64;
     while done < total {
         if cancel.load(Ordering::Relaxed) {
-            return Err(io::Error::new(io::ErrorKind::Interrupted, "Operation was cancelled"));
+            return Err(io::Error::new(
+                io::ErrorKind::Interrupted,
+                "Operation was cancelled",
+            ));
         }
         let want = buf.len().min((total - done) as usize);
         let n = match src.read(&mut buf[..want]) {
@@ -333,7 +461,10 @@ mod tests {
         let mut out = Vec::new();
         let mut calls = Vec::new();
         let cancel = AtomicBool::new(false);
-        let n = copy_with_progress(&mut &data[..], &mut out, 2_500_000, &cancel, |d| calls.push(d)).unwrap();
+        let n = copy_with_progress(&mut &data[..], &mut out, 2_500_000, &cancel, |d| {
+            calls.push(d)
+        })
+        .unwrap();
         assert_eq!(n, 2_500_000);
         assert_eq!(out, data[..2_500_000]);
         assert_eq!(calls, vec![1_048_576, 2_097_152, 2_500_000]);
@@ -343,11 +474,15 @@ mod tests {
     fn copy_cancel_and_short_source() {
         let data = [1u8; 10];
         let cancel = AtomicBool::new(true);
-        let err = copy_with_progress(&mut &data[..], &mut Vec::new(), 10, &cancel, |_| {}).unwrap_err();
+        let err =
+            copy_with_progress(&mut &data[..], &mut Vec::new(), 10, &cancel, |_| {}).unwrap_err();
         assert_eq!(err.kind(), io::ErrorKind::Interrupted);
         let cancel = AtomicBool::new(false);
         let mut out = Vec::new();
-        assert_eq!(copy_with_progress(&mut &data[..], &mut out, 100, &cancel, |_| {}).unwrap(), 10);
+        assert_eq!(
+            copy_with_progress(&mut &data[..], &mut out, 100, &cancel, |_| {}).unwrap(),
+            10
+        );
     }
 
     #[test]
@@ -355,11 +490,17 @@ mod tests {
         assert_eq!(convert(&Value::U32(7)), Prop::U64(7));
         assert_eq!(convert(&Value::I32(-1)), Prop::I64(-1));
         assert_eq!(convert(&Value::from("x")), Prop::Str("x".into()));
-        assert_eq!(convert(&Value::from(ObjectPath::try_from("/a").unwrap())), Prop::Path("/a".into()));
+        assert_eq!(
+            convert(&Value::from(ObjectPath::try_from("/a").unwrap())),
+            Prop::Path("/a".into())
+        );
         let bytes = Value::from(vec![b'/', b'd', 0u8]);
         assert_eq!(convert(&bytes), Prop::Bytes(vec![b'/', b'd', 0]));
         let aay = Value::from(vec![vec![b'/', 0u8], vec![b'/', b'm', 0u8]]);
-        assert_eq!(convert(&aay), Prop::ByteStrings(vec![vec![b'/', 0], vec![b'/', b'm', 0]]));
+        assert_eq!(
+            convert(&aay),
+            Prop::ByteStrings(vec![vec![b'/', 0], vec![b'/', b'm', 0]])
+        );
         let ao = Value::from(Array::from(vec![ObjectPath::try_from("/x").unwrap()]));
         assert_eq!(convert(&ao), Prop::Paths(vec!["/x".into()]));
         assert_eq!(convert(&Value::new(Value::Bool(true))), Prop::Bool(true));

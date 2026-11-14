@@ -26,7 +26,9 @@ impl KeyFile {
                     continue;
                 }
                 let group = kf.groups.last_mut().unwrap();
-                group.1.push((k.trim_end().to_string(), unescape(v.trim_start())));
+                group
+                    .1
+                    .push((k.trim_end().to_string(), unescape(v.trim_start())));
             }
         }
         kf
@@ -193,8 +195,14 @@ mod tests {
     fn parses_groups_and_locales() {
         let kf = KeyFile::parse(DATA);
         assert_eq!(kf.get("Data Source", "DisplayName"), Some("Personal"));
-        assert_eq!(kf.get_locale("Data Source", "DisplayName", &["de".into()]), Some("Persönlich"));
-        assert_eq!(kf.get_locale("Data Source", "DisplayName", &["fr".into()]), Some("Personal"));
+        assert_eq!(
+            kf.get_locale("Data Source", "DisplayName", &["de".into()]),
+            Some("Persönlich")
+        );
+        assert_eq!(
+            kf.get_locale("Data Source", "DisplayName", &["fr".into()]),
+            Some("Personal")
+        );
         assert_eq!(kf.get_bool("Calendar", "Selected"), Some(false));
         assert!(kf.has_group("Calendar"));
         assert!(!kf.has_group("Address Book"));
@@ -209,7 +217,10 @@ mod tests {
         let text = kf.to_string();
         let again = KeyFile::parse(&text);
         assert_eq!(again.get_bool("Calendar", "Selected"), Some(true));
-        assert_eq!(again.get_locale("Data Source", "DisplayName", &["de".into()]), Some(" Work\nstuff"));
+        assert_eq!(
+            again.get_locale("Data Source", "DisplayName", &["de".into()]),
+            Some(" Work\nstuff")
+        );
         assert_eq!(again.get("Alarms", "IncludeMe"), Some("true"));
         assert_eq!(again, kf);
     }

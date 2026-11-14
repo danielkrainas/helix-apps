@@ -26,12 +26,20 @@ pub fn open(ui: &Rc<Ui>) {
 
     // Group calendars by account.
     let mut groups: BTreeMap<String, Vec<&Source>> = BTreeMap::new();
-    for s in sources.iter().filter(|s| s.is(SourceKind::Calendar) && s.enabled()) {
-        groups.entry(source::account_label(s, &sources)).or_default().push(s);
+    for s in sources
+        .iter()
+        .filter(|s| s.is(SourceKind::Calendar) && s.enabled())
+    {
+        groups
+            .entry(source::account_label(s, &sources))
+            .or_default()
+            .push(s);
     }
     for (account, mut cals) in groups {
         cals.sort_by_key(|s| s.display_name().to_lowercase());
-        let group = adw::PreferencesGroup::builder().title(glib::markup_escape_text(&account).as_str()).build();
+        let group = adw::PreferencesGroup::builder()
+            .title(glib::markup_escape_text(&account).as_str())
+            .build();
         for s in cals {
             group.add(&calendar_row(ui, &dialog, s));
         }
@@ -44,11 +52,20 @@ pub fn open(ui: &Rc<Ui>) {
         .description("Calendars from online accounts (Google, Nextcloud, Microsoft…) are added in Settings → Online Accounts.")
         .build();
     let name = adw::EntryRow::builder().title("Calendar Name").build();
-    let used: Vec<String> = sources.iter().filter_map(|s| s.color().map(str::to_string)).collect();
-    let color = gtk::ColorDialogButton::new(Some(gtk::ColorDialog::builder().with_alpha(false).build()));
+    let used: Vec<String> = sources
+        .iter()
+        .filter_map(|s| s.color().map(str::to_string))
+        .collect();
+    let color =
+        gtk::ColorDialogButton::new(Some(gtk::ColorDialog::builder().with_alpha(false).build()));
     color.set_rgba(&rgba(colors::next_free(&used)));
     color.set_valign(gtk::Align::Center);
-    let add = gtk::Button::builder().label("Add").css_classes(["suggested-action"]).valign(gtk::Align::Center).sensitive(false).build();
+    let add = gtk::Button::builder()
+        .label("Add")
+        .css_classes(["suggested-action"])
+        .valign(gtk::Align::Center)
+        .sensitive(false)
+        .build();
     name.add_suffix(&color);
     name.add_suffix(&add);
     let a = add.clone();
@@ -83,14 +100,22 @@ pub fn open(ui: &Rc<Ui>) {
 
 /// "New Calendar from URL": subscribes to an iCalendar feed through EDS'
 /// `webcal` backend (read-only, refreshed by EDS).
-fn url_group(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, used: &[String]) -> adw::PreferencesGroup {
+fn url_group(
+    ui: &Rc<Ui>,
+    dialog: &adw::PreferencesDialog,
+    used: &[String],
+) -> adw::PreferencesGroup {
     let group = adw::PreferencesGroup::builder()
         .title("New Calendar from URL")
         .description("Subscribe to a published calendar (.ics). It is read-only and refreshed automatically.")
         .build();
-    let url = adw::EntryRow::builder().title("Calendar Address (https:// or webcal://)").input_purpose(gtk::InputPurpose::Url).build();
+    let url = adw::EntryRow::builder()
+        .title("Calendar Address (https:// or webcal://)")
+        .input_purpose(gtk::InputPurpose::Url)
+        .build();
     let name = adw::EntryRow::builder().title("Calendar Name").build();
-    let color = gtk::ColorDialogButton::new(Some(gtk::ColorDialog::builder().with_alpha(false).build()));
+    let color =
+        gtk::ColorDialogButton::new(Some(gtk::ColorDialog::builder().with_alpha(false).build()));
     color.set_rgba(&rgba(colors::next_free(used)));
     color.set_valign(gtk::Align::Center);
     color.set_tooltip_text(Some("Calendar Colour"));
@@ -110,7 +135,10 @@ fn url_group(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, used: &[String]) -> a
         .sensitive(false)
         .build();
     let bx = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    let list = gtk::ListBox::builder().css_classes(["boxed-list"]).selection_mode(gtk::SelectionMode::None).build();
+    let list = gtk::ListBox::builder()
+        .css_classes(["boxed-list"])
+        .selection_mode(gtk::SelectionMode::None)
+        .build();
     list.append(&url);
     list.append(&name);
     bx.append(&list);
@@ -147,9 +175,16 @@ fn url_group(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, used: &[String]) -> a
                 }
             };
             let typed = name.text().trim().to_string();
-            let n = if typed.is_empty() { manage_names::name_from_url(&parsed) } else { typed };
+            let n = if typed.is_empty() {
+                manage_names::name_from_url(&parsed)
+            } else {
+                typed
+            };
             let data = source::new_webcal_calendar(&n, &hex(&color.rgba()), &parsed);
-            ui.backend.send(Cmd::CreateSource { uid: source::new_uid(), data });
+            ui.backend.send(Cmd::CreateSource {
+                uid: source::new_uid(),
+                data,
+            });
             dialog.add_toast(adw::Toast::new(&format!("Subscribed to “{n}”")));
             url.set_text("");
             name.set_text("");
@@ -172,7 +207,10 @@ pub mod manage_names {
     /// (`_`/`-` become spaces), else the host.
     pub fn name_from_url(url: &WebcalUrl) -> String {
         let file = url.path.rsplit('/').find(|s| !s.is_empty()).unwrap_or("");
-        let file = file.strip_suffix(".ics").or_else(|| file.strip_suffix(".ICS")).unwrap_or(file);
+        let file = file
+            .strip_suffix(".ics")
+            .or_else(|| file.strip_suffix(".ICS"))
+            .unwrap_or(file);
         let decoded = percent_decode(file).replace(['_', '-'], " ");
         let decoded = decoded.trim();
         if decoded.is_empty() {
@@ -209,8 +247,14 @@ pub mod manage_names {
         #[test]
         fn names() {
             let n = |u: &str| name_from_url(&parse_webcal_url(u).unwrap());
-            assert_eq!(n("webcal://example.org/feeds/public_holidays.ics"), "public holidays");
-            assert_eq!(n("https://example.org/My%20Team-Calendar.ics?x=1"), "My Team Calendar");
+            assert_eq!(
+                n("webcal://example.org/feeds/public_holidays.ics"),
+                "public holidays"
+            );
+            assert_eq!(
+                n("https://example.org/My%20Team-Calendar.ics?x=1"),
+                "My Team Calendar"
+            );
             assert_eq!(n("https://cal.example.org/"), "cal.example.org");
             assert_eq!(n("https://example.org/a/%zz"), "%zz");
             assert_eq!(n("https://example.org/x%4"), "x%4");
@@ -219,16 +263,28 @@ pub mod manage_names {
 }
 
 fn calendar_row(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gtk::Widget {
-    let backend = s.backend_name(SourceKind::Calendar).unwrap_or("").to_string();
-    let color = gtk::ColorDialogButton::new(Some(gtk::ColorDialog::builder().with_alpha(false).build()));
+    let backend = s
+        .backend_name(SourceKind::Calendar)
+        .unwrap_or("")
+        .to_string();
+    let color =
+        gtk::ColorDialogButton::new(Some(gtk::ColorDialog::builder().with_alpha(false).build()));
     color.set_rgba(&rgba(&colors::normalize(s.color())));
     color.set_valign(gtk::Align::Center);
     color.set_sensitive(s.writable);
-    let shown = gtk::Switch::builder().active(s.selected()).valign(gtk::Align::Center).sensitive(s.writable).build();
+    let shown = gtk::Switch::builder()
+        .active(s.selected())
+        .valign(gtk::Align::Center)
+        .sensitive(s.writable)
+        .build();
     shown.set_tooltip_text(Some("Show in Calendar"));
 
     let row: gtk::Widget = if s.writable && backend == "local" {
-        let r = adw::EntryRow::builder().title("Name").text(s.display_name()).show_apply_button(true).build();
+        let r = adw::EntryRow::builder()
+            .title("Name")
+            .text(s.display_name())
+            .show_apply_button(true)
+            .build();
         r.add_prefix(&color);
         r.add_suffix(&shown);
         let (ui2, src) = (ui.clone(), s.clone());

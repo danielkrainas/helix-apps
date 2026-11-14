@@ -125,7 +125,9 @@ pub const HELPER_PATH: &str = "/usr/libexec/helix-system-monitor/helix-system-mo
 /// Helper path, overridable with `HELIX_SYSTEM_MONITOR_HELPER` for
 /// development installs (pkexec still requires a matching polkit policy).
 pub fn helper_path() -> std::path::PathBuf {
-    std::env::var_os("HELIX_SYSTEM_MONITOR_HELPER").map(Into::into).unwrap_or_else(|| HELPER_PATH.into())
+    std::env::var_os("HELIX_SYSTEM_MONITOR_HELPER")
+        .map(Into::into)
+        .unwrap_or_else(|| HELPER_PATH.into())
 }
 
 /// Whether a failed direct attempt should be retried through the helper.
@@ -134,7 +136,10 @@ pub fn needs_privileges(e: &Error) -> bool {
 }
 
 /// `pkexec` argv for running `command` through the helper.
-pub fn pkexec_argv(helper: &std::path::Path, command: crate::helper_args::Command) -> Vec<std::ffi::OsString> {
+pub fn pkexec_argv(
+    helper: &std::path::Path,
+    command: crate::helper_args::Command,
+) -> Vec<std::ffi::OsString> {
     let mut v: Vec<std::ffi::OsString> = vec!["pkexec".into(), helper.into()];
     v.extend(command.to_args().into_iter().map(Into::into));
     v
@@ -148,11 +153,21 @@ pub fn interpret_exit(code: Option<i32>, stderr: &str) -> Result<(), Error> {
     match code {
         Some(0) => Ok(()),
         Some(126) => Err(Error::Other("Authorization was denied or cancelled".into())),
-        Some(127) => Err(Error::Other("Not authorized to control this process".into())),
+        Some(127) => Err(Error::Other(
+            "Not authorized to control this process".into(),
+        )),
         Some(3) => Err(Error::NoSuchProcess),
         _ => {
-            let msg = stderr.lines().rev().find(|l| !l.trim().is_empty()).unwrap_or("The privileged helper failed");
-            Err(Error::Other(msg.trim().trim_start_matches("helix-system-monitor-helper: ").to_string()))
+            let msg = stderr
+                .lines()
+                .rev()
+                .find(|l| !l.trim().is_empty())
+                .unwrap_or("The privileged helper failed");
+            Err(Error::Other(
+                msg.trim()
+                    .trim_start_matches("helix-system-monitor-helper: ")
+                    .to_string(),
+            ))
         }
     }
 }
@@ -207,7 +222,12 @@ mod tests {
     }
 
     fn spawn_sleep() -> Guard {
-        Guard(Command::new("sleep").arg("30").spawn().expect("spawn sleep"))
+        Guard(
+            Command::new("sleep")
+                .arg("30")
+                .spawn()
+                .expect("spawn sleep"),
+        )
     }
 
     #[test]
@@ -263,15 +283,27 @@ mod tests {
         assert!(needs_privileges(&Error::PermissionDenied));
         assert!(!needs_privileges(&Error::NoSuchProcess));
         assert_eq!(Action::End.helper_signal(), Signal::Term);
-        assert_eq!(Action::Continue.helper_signal().number(), Action::Continue.signal());
-        let argv = pkexec_argv(std::path::Path::new(HELPER_PATH), Command::Renice { nice: -5, pid: 42 });
+        assert_eq!(
+            Action::Continue.helper_signal().number(),
+            Action::Continue.signal()
+        );
+        let argv = pkexec_argv(
+            std::path::Path::new(HELPER_PATH),
+            Command::Renice { nice: -5, pid: 42 },
+        );
         let argv: Vec<_> = argv.iter().map(|s| s.to_str().unwrap()).collect();
         assert_eq!(argv, ["pkexec", HELPER_PATH, "renice", "-5", "42"]);
         assert_eq!(interpret_exit(Some(0), ""), Ok(()));
         assert_eq!(interpret_exit(Some(3), ""), Err(Error::NoSuchProcess));
-        assert!(matches!(interpret_exit(Some(126), ""), Err(Error::Other(_))));
+        assert!(matches!(
+            interpret_exit(Some(126), ""),
+            Err(Error::Other(_))
+        ));
         assert_eq!(
-            interpret_exit(Some(4), "helix-system-monitor-helper: cannot do it: EPERM\n"),
+            interpret_exit(
+                Some(4),
+                "helix-system-monitor-helper: cannot do it: EPERM\n"
+            ),
             Err(Error::Other("cannot do it: EPERM".into()))
         );
     }

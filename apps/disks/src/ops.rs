@@ -8,12 +8,25 @@ use crate::smart::Attribute;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Op {
-    Mount { block: String },
-    Unmount { block: String },
-    SwapStart { block: String },
-    SwapStop { block: String },
-    Unlock { block: String, passphrase: String },
-    Lock { block: String },
+    Mount {
+        block: String,
+    },
+    Unmount {
+        block: String,
+    },
+    SwapStart {
+        block: String,
+    },
+    SwapStop {
+        block: String,
+    },
+    Unlock {
+        block: String,
+        passphrase: String,
+    },
+    Lock {
+        block: String,
+    },
     /// `Block.Format`. `fs_type` may be `empty`, `gpt`, `dos` or a filesystem.
     Format {
         block: String,
@@ -33,17 +46,43 @@ pub enum Op {
         label: String,
         passphrase: Option<String>,
     },
-    DeletePartition { block: String },
-    SetPartitionType { block: String, part_type: String },
-    SetPartitionName { block: String, name: String },
-    SetPartitionFlags { block: String, flags: u64 },
-    SetLabel { block: String, label: String },
-    Check { block: String },
-    Repair { block: String },
-    PowerOff { drive: String },
-    Eject { drive: String },
-    LoopDetach { block: String },
-    SmartAttributes { drive: String },
+    DeletePartition {
+        block: String,
+    },
+    SetPartitionType {
+        block: String,
+        part_type: String,
+    },
+    SetPartitionName {
+        block: String,
+        name: String,
+    },
+    SetPartitionFlags {
+        block: String,
+        flags: u64,
+    },
+    SetLabel {
+        block: String,
+        label: String,
+    },
+    Check {
+        block: String,
+    },
+    Repair {
+        block: String,
+    },
+    PowerOff {
+        drive: String,
+    },
+    Eject {
+        drive: String,
+    },
+    LoopDetach {
+        block: String,
+    },
+    SmartAttributes {
+        drive: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -87,13 +126,19 @@ fn teardown_rec(v: &Volume, out: &mut Vec<Op>) {
     }
     let Some(block) = &v.block_path else { return };
     if v.is_mounted() {
-        out.push(Op::Unmount { block: block.clone() });
+        out.push(Op::Unmount {
+            block: block.clone(),
+        });
     }
     if v.swap_active == Some(true) {
-        out.push(Op::SwapStop { block: block.clone() });
+        out.push(Op::SwapStop {
+            block: block.clone(),
+        });
     }
     if v.is_unlocked() {
-        out.push(Op::Lock { block: block.clone() });
+        out.push(Op::Lock {
+            block: block.clone(),
+        });
     }
 }
 
@@ -139,8 +184,18 @@ mod tests {
                 Op::Lock { block: SDA2.into() },
             ]
         );
-        let ops = plan_remove(d, Op::PowerOff { drive: DRIVE.into() });
-        assert_eq!(ops.last(), Some(&Op::PowerOff { drive: DRIVE.into() }));
+        let ops = plan_remove(
+            d,
+            Op::PowerOff {
+                drive: DRIVE.into(),
+            },
+        );
+        assert_eq!(
+            ops.last(),
+            Some(&Op::PowerOff {
+                drive: DRIVE.into()
+            })
+        );
     }
 
     #[test]

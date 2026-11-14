@@ -88,11 +88,19 @@ impl Store {
 
     /// The master component of a series (or the event itself).
     pub fn master(&self, cal: &str, uid: &str) -> Option<&Event> {
-        self.calendars.get(cal)?.get(&(uid.to_string(), String::new()))
+        self.calendars
+            .get(cal)?
+            .get(&(uid.to_string(), String::new()))
     }
 
     /// Items overlapping `[from, to)` in calendars accepted by `visible`.
-    pub fn items(&self, from: NaiveDateTime, to: NaiveDateTime, zones: &Zones, visible: impl Fn(&str) -> bool) -> Vec<Item> {
+    pub fn items(
+        &self,
+        from: NaiveDateTime,
+        to: NaiveDateTime,
+        zones: &Zones,
+        visible: impl Fn(&str) -> bool,
+    ) -> Vec<Item> {
         let mut out = Vec::new();
         for (cal, comps) in &self.calendars {
             if !visible(cal) {
@@ -116,7 +124,8 @@ impl Store {
                     all_day: inst.all_day,
                     summary: e.summary.clone(),
                     location: e.location.clone(),
-                    recurring: masters.get(e.uid.as_str()).copied().unwrap_or(false) || e.recurrence_id.is_some(),
+                    recurring: masters.get(e.uid.as_str()).copied().unwrap_or(false)
+                        || e.recurrence_id.is_some(),
                 });
             }
         }
@@ -166,13 +175,22 @@ mod tests {
         assert_eq!(items.len(), 6);
         assert_eq!(items[0].summary, "Holiday", "all-day first");
         assert!(items.iter().filter(|i| i.uid == "r").all(|i| i.recurring));
-        let only_c1 = s.items(dt("2026-11-01 00:00"), dt("2026-12-01 00:00"), &z, |c| c == "c1");
+        let only_c1 = s.items(dt("2026-11-01 00:00"), dt("2026-12-01 00:00"), &z, |c| {
+            c == "c1"
+        });
         assert_eq!(only_c1.len(), 5);
-        let day: Vec<&Item> = items.iter().filter(|i| i.on_day(NaiveDate::from_ymd_opt(2026, 11, 13).unwrap())).collect();
+        let day: Vec<&Item> = items
+            .iter()
+            .filter(|i| i.on_day(NaiveDate::from_ymd_opt(2026, 11, 13).unwrap()))
+            .collect();
         assert_eq!(day.len(), 3);
 
         s.remove("c1", &[("r".into(), String::new())]);
-        assert_eq!(s.items(dt("2026-11-01 00:00"), dt("2026-12-01 00:00"), &z, |_| true).len(), 3);
+        assert_eq!(
+            s.items(dt("2026-11-01 00:00"), dt("2026-12-01 00:00"), &z, |_| true)
+                .len(),
+            3
+        );
         s.clear("c2");
         assert!(s.get("c2", &("b".into(), String::new())).is_none());
         assert!(s.master("c1", "a").is_some());

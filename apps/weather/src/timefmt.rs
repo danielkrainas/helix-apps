@@ -10,8 +10,18 @@ pub struct DateTime {
     pub minute: u32,
 }
 
-const WEEKDAYS: [&str; 7] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAYS: [&str; 7] = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+];
+const MONTHS: [&str; 12] = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
 /// Days since 1970-01-01 for a proleptic Gregorian date.
 pub fn days_from_civil(y: i32, m: u32, d: u32) -> i64 {
@@ -64,7 +74,13 @@ impl DateTime {
             }
             None => (0, 0),
         };
-        Some(DateTime { year, month, day, hour, minute })
+        Some(DateTime {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+        })
     }
 
     /// Civil time at `unix` seconds shifted by `offset` seconds.
@@ -73,7 +89,13 @@ impl DateTime {
         let days = t.div_euclid(86_400);
         let secs = t.rem_euclid(86_400);
         let (year, month, day) = civil_from_days(days);
-        DateTime { year, month, day, hour: (secs / 3600) as u32, minute: ((secs % 3600) / 60) as u32 }
+        DateTime {
+            year,
+            month,
+            day,
+            hour: (secs / 3600) as u32,
+            minute: ((secs % 3600) / 60) as u32,
+        }
     }
 
     pub fn days(&self) -> i64 {
@@ -174,7 +196,10 @@ mod tests {
     #[test]
     fn parse_forms() {
         let t = DateTime::parse("2026-11-12T23:30").unwrap();
-        assert_eq!((t.year, t.month, t.day, t.hour, t.minute), (2026, 11, 12, 23, 30));
+        assert_eq!(
+            (t.year, t.month, t.day, t.hour, t.minute),
+            (2026, 11, 12, 23, 30)
+        );
         let d = DateTime::parse("2026-11-12").unwrap();
         assert_eq!((d.hour, d.minute), (0, 0));
         assert!(DateTime::parse("2026-13-01").is_none());
@@ -191,9 +216,18 @@ mod tests {
             assert_eq!(days_from_civil(y, m, d), z);
         }
         // 2026-11-12 is a Thursday.
-        assert_eq!(DateTime::parse("2026-11-12").unwrap().weekday_name(), "Thursday");
-        assert_eq!(DateTime::parse("2024-02-29").unwrap().weekday_name(), "Thursday");
-        assert_eq!(DateTime::parse("2000-01-01").unwrap().weekday_short(), "Sat");
+        assert_eq!(
+            DateTime::parse("2026-11-12").unwrap().weekday_name(),
+            "Thursday"
+        );
+        assert_eq!(
+            DateTime::parse("2024-02-29").unwrap().weekday_name(),
+            "Thursday"
+        );
+        assert_eq!(
+            DateTime::parse("2000-01-01").unwrap().weekday_short(),
+            "Sat"
+        );
     }
 
     #[test]
@@ -218,17 +252,35 @@ mod tests {
         assert_eq!(format_hour(&t, true), "1 PM");
         let today = DateTime::parse("2026-11-12").unwrap();
         assert_eq!(day_label(&today, &today), "Today");
-        assert_eq!(day_label(&DateTime::parse("2026-11-13").unwrap(), &today), "Tomorrow");
-        assert_eq!(day_label(&DateTime::parse("2026-11-14").unwrap(), &today), "Saturday");
+        assert_eq!(
+            day_label(&DateTime::parse("2026-11-13").unwrap(), &today),
+            "Tomorrow"
+        );
+        assert_eq!(
+            day_label(&DateTime::parse("2026-11-14").unwrap(), &today),
+            "Saturday"
+        );
     }
 
     #[test]
     fn updated() {
         let lt = DateTime::parse("2026-11-12T09:15").unwrap();
         assert_eq!(updated_text(1000, 1030, &lt, false), "Updated just now");
-        assert_eq!(updated_text(1000, 1000 + 60, &lt, false), "Updated 1 minute ago");
-        assert_eq!(updated_text(1000, 1000 + 25 * 60, &lt, false), "Updated 25 minutes ago");
-        assert_eq!(updated_text(1000, 1000 + 2 * 3600, &lt, false), "Updated 2 hours ago");
-        assert_eq!(updated_text(1000, 1000 + 86_400, &lt, false), "Updated Thu 12 Nov, 09:15");
+        assert_eq!(
+            updated_text(1000, 1000 + 60, &lt, false),
+            "Updated 1 minute ago"
+        );
+        assert_eq!(
+            updated_text(1000, 1000 + 25 * 60, &lt, false),
+            "Updated 25 minutes ago"
+        );
+        assert_eq!(
+            updated_text(1000, 1000 + 2 * 3600, &lt, false),
+            "Updated 2 hours ago"
+        );
+        assert_eq!(
+            updated_text(1000, 1000 + 86_400, &lt, false),
+            "Updated Thu 12 Nov, 09:15"
+        );
     }
 }

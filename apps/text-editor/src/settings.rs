@@ -54,12 +54,17 @@ impl Settings {
             style_variant: p.get_enum_nick("style-variant", "follow"),
             restore_session: p.get("restore-session", d.restore_session),
             show_right_margin: p.get("show-right-margin", d.show_right_margin),
-            right_margin_position: p.get::<u32>("right-margin-position", d.right_margin_position).clamp(1, 1000),
+            right_margin_position: p
+                .get::<u32>("right-margin-position", d.right_margin_position)
+                .clamp(1, 1000),
         }
     }
 
     pub fn indent(&self) -> crate::textops::Indent {
-        crate::textops::Indent { tab_width: self.tab_width, use_spaces: self.indent_spaces }
+        crate::textops::Indent {
+            tab_width: self.tab_width,
+            use_spaces: self.indent_spaces,
+        }
     }
 }
 
@@ -107,12 +112,24 @@ mod tests {
 
     #[test]
     fn css() {
-        let f = FontSpec { family: "Source Code Pro".into(), size: 10.0, size_px: false, weight: 400, italic: false };
+        let f = FontSpec {
+            family: "Source Code Pro".into(),
+            size: 10.0,
+            size_px: false,
+            weight: 400,
+            italic: false,
+        };
         assert_eq!(
             font_css(".ed", &f, 1.2),
             ".ed { font-family: \"Source Code Pro\", monospace; font-size: 12.0pt; font-weight: 400; font-style: normal; }"
         );
-        let f = FontSpec { family: "A\"b, Mono".into(), size: 0.0, size_px: true, weight: 700, italic: true };
+        let f = FontSpec {
+            family: "A\"b, Mono".into(),
+            size: 0.0,
+            size_px: true,
+            weight: 700,
+            italic: true,
+        };
         assert_eq!(
             font_css("x", &f, 1.0),
             "x { font-family: \"Ab\", \"Mono\", monospace; font-size: 11.0px; font-weight: 700; font-style: italic; }"

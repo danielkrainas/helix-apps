@@ -128,7 +128,10 @@ impl Document {
             return;
         }
         let order = reorder_indices(self.pages.len(), op);
-        let mut old: Vec<Option<Page>> = std::mem::take(&mut self.pages).into_iter().map(Some).collect();
+        let mut old: Vec<Option<Page>> = std::mem::take(&mut self.pages)
+            .into_iter()
+            .map(Some)
+            .collect();
         self.pages = order.into_iter().filter_map(|i| old[i].take()).collect();
         if op == Reorder::FlipOdd {
             for p in self.pages.iter_mut().step_by(2) {
@@ -149,7 +152,11 @@ pub fn reorder_indices(n: usize, op: Reorder) -> Vec<usize> {
             let mut out = Vec::with_capacity(n);
             for i in 0..front {
                 out.push(i);
-                let back = if op == Reorder::Combine { front + i } else { n - 1 - i };
+                let back = if op == Reorder::Combine {
+                    front + i
+                } else {
+                    n - 1 - i
+                };
                 if back >= front && back < n && !out.contains(&back) {
                     out.push(back);
                 }
@@ -182,9 +189,15 @@ mod tests {
     #[test]
     fn combine_orders() {
         assert_eq!(reorder_indices(6, Reorder::Combine), vec![0, 3, 1, 4, 2, 5]);
-        assert_eq!(reorder_indices(6, Reorder::CombineReversed), vec![0, 5, 1, 4, 2, 3]);
+        assert_eq!(
+            reorder_indices(6, Reorder::CombineReversed),
+            vec![0, 5, 1, 4, 2, 3]
+        );
         assert_eq!(reorder_indices(5, Reorder::Combine), vec![0, 3, 1, 4, 2]);
-        assert_eq!(reorder_indices(5, Reorder::CombineReversed), vec![0, 4, 1, 3, 2]);
+        assert_eq!(
+            reorder_indices(5, Reorder::CombineReversed),
+            vec![0, 4, 1, 3, 2]
+        );
         assert_eq!(reorder_indices(1, Reorder::Combine), vec![0]);
         assert_eq!(reorder_indices(3, Reorder::Reverse), vec![2, 1, 0]);
     }

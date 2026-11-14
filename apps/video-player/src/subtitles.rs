@@ -46,7 +46,11 @@ pub fn discover(video: &Path) -> Option<PathBuf> {
     let candidates: Vec<PathBuf> = std::fs::read_dir(dir)
         .ok()?
         .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().map(|t| t.is_file() || t.is_symlink()).unwrap_or(false))
+        .filter(|e| {
+            e.file_type()
+                .map(|t| t.is_file() || t.is_symlink())
+                .unwrap_or(false)
+        })
         .map(|e| e.path())
         .filter(|p| is_subtitle_file(p))
         .collect();
@@ -64,7 +68,12 @@ mod tests {
     #[test]
     fn exact_beats_tagged_and_ext_priority() {
         let v = p("/m/Movie.mkv");
-        let c = vec![p("/m/Movie.en.srt"), p("/m/movie.vtt"), p("/m/Movie.srt"), p("/m/Other.srt")];
+        let c = vec![
+            p("/m/Movie.en.srt"),
+            p("/m/movie.vtt"),
+            p("/m/Movie.srt"),
+            p("/m/Other.srt"),
+        ];
         assert_eq!(pick(&v, &c), Some(p("/m/Movie.srt")));
         let c = vec![p("/m/Movie.en.srt"), p("/m/MOVIE.VTT")];
         assert_eq!(pick(&v, &c), Some(p("/m/MOVIE.VTT")));
@@ -75,7 +84,12 @@ mod tests {
     #[test]
     fn rejects_unrelated() {
         let v = p("/m/Movie.mkv");
-        let c = vec![p("/m/Movie2.srt"), p("/m/Movie.en.forced.srt"), p("/m/Movie.txt"), p("/m/Movie..srt")];
+        let c = vec![
+            p("/m/Movie2.srt"),
+            p("/m/Movie.en.forced.srt"),
+            p("/m/Movie.txt"),
+            p("/m/Movie..srt"),
+        ];
         assert_eq!(pick(&v, &c), None);
     }
 

@@ -37,7 +37,9 @@ fn push_unique_typed(into: &mut Vec<Typed>, items: &[Typed], norm: impl Fn(&str)
 }
 
 fn phone_norm(s: &str) -> String {
-    s.chars().filter(|c| c.is_ascii_digit() || *c == '+').collect()
+    s.chars()
+        .filter(|c| c.is_ascii_digit() || *c == '+')
+        .collect()
 }
 
 /// Merges contacts for display: scalar fields come from the first member
@@ -74,10 +76,16 @@ pub fn merge(contacts: &[&Contact]) -> Contact {
         }
         push_unique_typed(&mut out.emails, &c.emails, |s| s.trim().to_lowercase());
         push_unique_typed(&mut out.phones, &c.phones, phone_norm);
-        push_unique_typed(&mut out.urls, &c.urls, |s| s.trim().trim_end_matches('/').to_lowercase());
+        push_unique_typed(&mut out.urls, &c.urls, |s| {
+            s.trim().trim_end_matches('/').to_lowercase()
+        });
         push_unique_typed(&mut out.ims, &c.ims, |s| s.trim().to_lowercase());
         for a in &c.addresses {
-            if !out.addresses.iter().any(|x: &Address| x.one_line().eq_ignore_ascii_case(&a.one_line())) {
+            if !out
+                .addresses
+                .iter()
+                .any(|x: &Address| x.one_line().eq_ignore_ascii_case(&a.one_line()))
+            {
                 out.addresses.push(a.clone());
             }
         }
@@ -96,8 +104,11 @@ pub fn build(books: &HashMap<String, HashMap<String, Contact>>, links: &Links) -
     let mut out = Vec::new();
     let mut used: std::collections::HashSet<Key> = Default::default();
     for group in &links.groups {
-        let members: Vec<Key> =
-            group.iter().filter(|(b, u)| books.get(b).is_some_and(|m| m.contains_key(u))).cloned().collect();
+        let members: Vec<Key> = group
+            .iter()
+            .filter(|(b, u)| books.get(b).is_some_and(|m| m.contains_key(u)))
+            .cloned()
+            .collect();
         if members.is_empty() {
             continue;
         }
@@ -117,7 +128,10 @@ pub fn build(books: &HashMap<String, HashMap<String, Contact>>, links: &Links) -
             if used.contains(&key) || c.is_list {
                 continue;
             }
-            out.push(Individual { members: vec![key], contact: c.clone() });
+            out.push(Individual {
+                members: vec![key],
+                contact: c.clone(),
+            });
         }
     }
     out
@@ -148,7 +162,11 @@ mod tests {
     use helix_eds::vcard::StructuredName;
 
     fn contact(name: &str, email: &str) -> Contact {
-        let mut c = Contact { name: StructuredName::guess_from(name), full_name: name.into(), ..Default::default() };
+        let mut c = Contact {
+            name: StructuredName::guess_from(name),
+            full_name: name.into(),
+            ..Default::default()
+        };
         if !email.is_empty() {
             c.emails.push(Typed::new(&["HOME"], email));
         }
@@ -193,7 +211,10 @@ mod tests {
         let mut list = build(&books(), &Links::default());
         sort(&mut list, false);
         let names: Vec<String> = list.iter().map(|i| i.contact.display_name()).collect();
-        assert_eq!(names, ["4 Non Blondes", "adam Young", "Zoe Adams", "ZOE@a.org"]);
+        assert_eq!(
+            names,
+            ["4 Non Blondes", "adam Young", "Zoe Adams", "ZOE@a.org"]
+        );
         assert_eq!(group_letter(&list[0].contact.sort_key(false)), "#");
         assert_eq!(group_letter("adam young"), "A");
         assert_eq!(group_letter("éclair"), "É");

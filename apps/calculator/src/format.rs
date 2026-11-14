@@ -11,8 +11,12 @@ pub enum NumberFormat {
 }
 
 impl NumberFormat {
-    pub const ALL: [NumberFormat; 4] =
-        [NumberFormat::Automatic, NumberFormat::Fixed, NumberFormat::Scientific, NumberFormat::Engineering];
+    pub const ALL: [NumberFormat; 4] = [
+        NumberFormat::Automatic,
+        NumberFormat::Fixed,
+        NumberFormat::Scientific,
+        NumberFormat::Engineering,
+    ];
 
     pub fn nick(self) -> &'static str {
         match self {
@@ -31,7 +35,10 @@ impl NumberFormat {
         }
     }
     pub fn from_nick(s: &str) -> Self {
-        Self::ALL.into_iter().find(|f| f.nick() == s).unwrap_or(NumberFormat::Automatic)
+        Self::ALL
+            .into_iter()
+            .find(|f| f.nick() == s)
+            .unwrap_or(NumberFormat::Automatic)
     }
 }
 
@@ -48,7 +55,14 @@ pub struct Options {
 
 impl Default for Options {
     fn default() -> Self {
-        Options { format: NumberFormat::Automatic, accuracy: 9, thousands: false, show_zeroes: false, base: 10, word_size: 64 }
+        Options {
+            format: NumberFormat::Automatic,
+            accuracy: 9,
+            thousands: false,
+            show_zeroes: false,
+            base: 10,
+            word_size: 64,
+        }
     }
 }
 
@@ -65,7 +79,11 @@ pub fn format_int(raw: u64, o: &Options) -> String {
     if o.base == 10 {
         let s = to_signed(raw, o.word_size);
         let digits = group(&s.unsigned_abs().to_string(), o.thousands, ',', 3);
-        return if s < 0 { format!("{MINUS}{digits}") } else { digits };
+        return if s < 0 {
+            format!("{MINUS}{digits}")
+        } else {
+            digits
+        };
     }
     let digits = match o.base {
         2 => format!("{raw:b}"),
@@ -105,7 +123,11 @@ fn trim_zeroes(s: &str) -> &str {
 
 fn fixed(x: f64, o: &Options) -> String {
     let s = format!("{:.*}", o.accuracy, x.abs());
-    let s = if o.show_zeroes { s.as_str() } else { trim_zeroes(&s) };
+    let s = if o.show_zeroes {
+        s.as_str()
+    } else {
+        trim_zeroes(&s)
+    };
     let (int, frac) = s.split_once('.').map_or((s, None), |(a, b)| (a, Some(b)));
     let mut out = String::new();
     if x < 0.0 && s.chars().any(|c| c != '0' && c != '.') {
@@ -139,12 +161,20 @@ fn exponential(x: f64, o: &Options, step: i32) -> String {
     exp -= exp.rem_euclid(step);
     let mut mantissa = x / 10f64.powi(exp);
     // Rounding may push the mantissa to 10 (or 1000 for engineering).
-    let rounded: f64 = format!("{:.*}", o.accuracy, mantissa).parse().unwrap_or(mantissa);
+    let rounded: f64 = format!("{:.*}", o.accuracy, mantissa)
+        .parse()
+        .unwrap_or(mantissa);
     if rounded.abs() >= 10f64.powi(step) {
         exp += step;
         mantissa = x / 10f64.powi(exp);
     }
-    let m = fixed(mantissa, &Options { thousands: false, ..*o });
+    let m = fixed(
+        mantissa,
+        &Options {
+            thousands: false,
+            ..*o
+        },
+    );
     if exp == 0 {
         m
     } else {
@@ -174,7 +204,10 @@ mod tests {
     use super::*;
 
     fn opts(format: NumberFormat) -> Options {
-        Options { format, ..Default::default() }
+        Options {
+            format,
+            ..Default::default()
+        }
     }
 
     #[test]
@@ -190,7 +223,12 @@ mod tests {
 
     #[test]
     fn fixed_and_options() {
-        let o = Options { thousands: true, show_zeroes: true, accuracy: 2, ..opts(NumberFormat::Fixed) };
+        let o = Options {
+            thousands: true,
+            show_zeroes: true,
+            accuracy: 2,
+            ..opts(NumberFormat::Fixed)
+        };
         assert_eq!(format_real(1234567.891, &o), "1,234,567.89");
         assert_eq!(format_real(5.0, &o), "5.00");
         assert_eq!(format_real(-0.001, &o), "0.00");
@@ -198,18 +236,39 @@ mod tests {
 
     #[test]
     fn exponential_forms() {
-        assert_eq!(format_real(12345.0, &opts(NumberFormat::Scientific)), "1.2345×10⁴");
-        assert_eq!(format_real(12345.0, &opts(NumberFormat::Engineering)), "12.345×10³");
-        assert_eq!(format_real(9.9999999999, &opts(NumberFormat::Scientific)), "1×10¹");
+        assert_eq!(
+            format_real(12345.0, &opts(NumberFormat::Scientific)),
+            "1.2345×10⁴"
+        );
+        assert_eq!(
+            format_real(12345.0, &opts(NumberFormat::Engineering)),
+            "12.345×10³"
+        );
+        assert_eq!(
+            format_real(9.9999999999, &opts(NumberFormat::Scientific)),
+            "1×10¹"
+        );
     }
 
     #[test]
     fn ints() {
-        let o = Options { base: 16, word_size: 8, ..Default::default() };
+        let o = Options {
+            base: 16,
+            word_size: 8,
+            ..Default::default()
+        };
         assert_eq!(format_int(255, &o), "FF₁₆");
-        let o = Options { base: 10, word_size: 8, ..Default::default() };
+        let o = Options {
+            base: 10,
+            word_size: 8,
+            ..Default::default()
+        };
         assert_eq!(format_int(255, &o), "−1");
-        let o = Options { base: 2, thousands: true, ..Default::default() };
+        let o = Options {
+            base: 2,
+            thousands: true,
+            ..Default::default()
+        };
         assert_eq!(format_int(0b1_0110_1001, &o), "1 0110 1001₂");
     }
 

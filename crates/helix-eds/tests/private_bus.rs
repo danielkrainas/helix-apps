@@ -18,7 +18,10 @@ fn private_eds() -> Option<Eds> {
         return None;
     }
     let addr = std::env::var("DBUS_SESSION_BUS_ADDRESS").expect("bus address");
-    assert!(!addr.contains("/run/user/"), "refusing to run on the real session bus: {addr}");
+    assert!(
+        !addr.contains("/run/user/"),
+        "refusing to run on the real session bus: {addr}"
+    );
     Some(Eds::with_address(&addr).expect("connect"))
 }
 
@@ -26,7 +29,9 @@ fn wait_for<T>(rx: &mpsc::Receiver<ViewEvent>, mut pred: impl FnMut(&ViewEvent) 
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
     loop {
         let left = deadline.saturating_duration_since(std::time::Instant::now());
-        let ev = rx.recv_timeout(left).expect("timed out waiting for view event");
+        let ev = rx
+            .recv_timeout(left)
+            .expect("timed out waiting for view event");
         if let Some(v) = pred(&ev) {
             return v;
         }
@@ -48,11 +53,14 @@ fn wait_source(eds: &Eds, uid: &str, present: bool) -> Option<helix_eds::Source>
 fn contacts_round_trip() {
     let Some(eds) = private_eds() else { return };
     let sources = eds.sources().unwrap();
-    assert!(sources.iter().any(|s| s.uid == "system-address-book" && s.is(SourceKind::AddressBook)));
+    assert!(sources
+        .iter()
+        .any(|s| s.uid == "system-address-book" && s.is(SourceKind::AddressBook)));
 
     // A new local address book.
     let uid = source::new_uid();
-    eds.create_source(&uid, &source::new_local_address_book("Helix Test")).unwrap();
+    eds.create_source(&uid, &source::new_local_address_book("Helix Test"))
+        .unwrap();
     let src = wait_source(&eds, &uid, true).unwrap();
     assert_eq!(src.display_name(), "Helix Test");
     assert!(src.removable && src.writable);
@@ -60,13 +68,19 @@ fn contacts_round_trip() {
     let book = eds.open_book(&uid).unwrap();
     assert!(book.writable);
     let (tx, rx) = mpsc::channel();
-    let _view = book.view(&sexp::all_contacts(), move |ev| {
-        let _ = tx.send(ev);
-    })
-    .unwrap();
-    wait_for(&rx, |e| matches!(e, ViewEvent::Complete(None)).then_some(()));
+    let _view = book
+        .view(&sexp::all_contacts(), move |ev| {
+            let _ = tx.send(ev);
+        })
+        .unwrap();
+    wait_for(&rx, |e| {
+        matches!(e, ViewEvent::Complete(None)).then_some(())
+    });
 
-    let mut c = Contact { name: StructuredName::guess_from("Grace Hopper"), ..Default::default() };
+    let mut c = Contact {
+        name: StructuredName::guess_from("Grace Hopper"),
+        ..Default::default()
+    };
     c.emails.push(Typed::new(&["WORK"], "grace@example.org"));
     c.note = "Line one\nline; two".into();
     let uids = book.create(&[c]).unwrap();
@@ -88,9 +102,22 @@ fn contacts_round_trip() {
         ViewEvent::Modified(v) => Some(v.clone()),
         _ => None,
     });
-    assert_eq!(Contact::parse(&modified[0]).unwrap().phones[0].value, "+1 555 0100");
-    assert_eq!(book.contacts(&sexp::contacts_containing("hopper")).unwrap().len(), 1);
-    assert_eq!(book.contacts(&sexp::contacts_with_email("grace@example.org")).unwrap().len(), 1);
+    assert_eq!(
+        Contact::parse(&modified[0]).unwrap().phones[0].value,
+        "+1 555 0100"
+    );
+    assert_eq!(
+        book.contacts(&sexp::contacts_containing("hopper"))
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        book.contacts(&sexp::contacts_with_email("grace@example.org"))
+            .unwrap()
+            .len(),
+        1
+    );
 
     book.remove(&uids).unwrap();
     let removed = wait_for(&rx, |e| match e {
@@ -109,7 +136,8 @@ fn contacts_round_trip() {
 fn calendar_round_trip() {
     let Some(eds) = private_eds() else { return };
     let uid = source::new_uid();
-    eds.create_source(&uid, &source::new_local_calendar("Helix Cal", "#62a0ea")).unwrap();
+    eds.create_source(&uid, &source::new_local_calendar("Helix Cal", "#62a0ea"))
+        .unwrap();
     let mut src = wait_source(&eds, &uid, true).unwrap();
     assert_eq!(src.color(), Some("#62a0ea"));
     assert!(src.selected());
@@ -119,7 +147,14 @@ fn calendar_round_trip() {
     eds.write_source(&src).unwrap();
     let mut ok = false;
     for _ in 0..50 {
-        if !eds.sources().unwrap().into_iter().find(|s| s.uid == uid).unwrap().selected() {
+        if !eds
+            .sources()
+            .unwrap()
+            .into_iter()
+            .find(|s| s.uid == uid)
+            .unwrap()
+            .selected()
+        {
             ok = true;
             break;
         }
@@ -130,14 +165,18 @@ fn calendar_round_trip() {
     let cal = eds.open_calendar(&uid).unwrap();
     assert!(cal.writable);
     let zones = Zones::new(chrono_tz::Europe::Berlin);
-    let start = NaiveDate::from_ymd_opt(2026, 11, 2).unwrap().and_hms_opt(9, 0, 0).unwrap();
+    let start = NaiveDate::from_ymd_opt(2026, 11, 2)
+        .unwrap()
+        .and_hms_opt(9, 0, 0)
+        .unwrap();
     let mut ev = Event::new(
         Time::Zoned(start, "Europe/Berlin".into()),
         Time::Zoned(start + Duration::hours(1), "Europe/Berlin".into()),
     );
     ev.summary = "Daily sync".into();
     ev.rrule = helix_eds::rrule::RRule::parse("FREQ=DAILY;COUNT=5");
-    ev.alarms.push(helix_eds::ical::Alarm::before(Duration::minutes(10)));
+    ev.alarms
+        .push(helix_eds::ical::Alarm::before(Duration::minutes(10)));
 
     let range_from = Utc::now() - Duration::days(3650);
     let range_to = Utc::now() + Duration::days(3650);
@@ -147,17 +186,27 @@ fn calendar_round_trip() {
             let _ = tx.send(e);
         })
         .unwrap();
-    wait_for(&rx, |e| matches!(e, ViewEvent::Complete(None)).then_some(()));
+    wait_for(&rx, |e| {
+        matches!(e, ViewEvent::Complete(None)).then_some(())
+    });
 
     let created = cal.create(&[ev.to_ics(Utc::now())]).unwrap();
     assert_eq!(created, vec![ev.uid.clone()]);
     wait_for(&rx, |e| matches!(e, ViewEvent::Added(_)).then_some(()));
 
-    let events = cal.events(&sexp::occur_in_range(range_from, range_to)).unwrap();
+    let events = cal
+        .events(&sexp::occur_in_range(range_from, range_to))
+        .unwrap();
     assert_eq!(events.len(), 1);
     assert_eq!(events[0].summary, "Daily sync");
-    assert_eq!(events[0].alarms[0].before_start, Some(Duration::minutes(10)));
-    let from = NaiveDate::from_ymd_opt(2026, 11, 1).unwrap().and_hms_opt(0, 0, 0).unwrap();
+    assert_eq!(
+        events[0].alarms[0].before_start,
+        Some(Duration::minutes(10))
+    );
+    let from = NaiveDate::from_ymd_opt(2026, 11, 1)
+        .unwrap()
+        .and_hms_opt(0, 0, 0)
+        .unwrap();
     let to = from + Duration::days(30);
     let inst = expand(&events, from, to, &zones);
     assert_eq!(inst.len(), 5);
@@ -170,7 +219,8 @@ fn calendar_round_trip() {
     detached.start = Time::Zoned(third.start + Duration::hours(3), "Europe/Berlin".into());
     detached.end = Time::Zoned(third.start + Duration::hours(4), "Europe/Berlin".into());
     detached.summary = "Moved sync".into();
-    cal.modify(&[detached.to_ics(Utc::now())], ModType::This).unwrap();
+    cal.modify(&[detached.to_ics(Utc::now())], ModType::This)
+        .unwrap();
     std::thread::sleep(std::time::Duration::from_millis(300));
     let events = cal.events(&sexp::all_events()).unwrap();
     let inst = expand(&events, from, to, &zones);
@@ -180,7 +230,8 @@ fn calendar_round_trip() {
 
     // Delete the fourth occurrence only.
     let fourth = inst[3].clone();
-    cal.remove(&[(fourth.uid.clone(), fourth.rid.clone())], ModType::This).unwrap();
+    cal.remove(&[(fourth.uid.clone(), fourth.rid.clone())], ModType::This)
+        .unwrap();
     std::thread::sleep(std::time::Duration::from_millis(300));
     let events = cal.events(&sexp::all_events()).unwrap();
     let inst = expand(&events, from, to, &zones);
@@ -188,10 +239,14 @@ fn calendar_round_trip() {
     assert!(inst.iter().all(|i| i.start != fourth.start));
 
     // Search.
-    assert!(!cal.objects(&sexp::events_containing("sync")).unwrap().is_empty());
+    assert!(!cal
+        .objects(&sexp::events_containing("sync"))
+        .unwrap()
+        .is_empty());
 
     // Delete the series.
-    cal.remove(&[(ev.uid.clone(), String::new())], ModType::All).unwrap();
+    cal.remove(&[(ev.uid.clone(), String::new())], ModType::All)
+        .unwrap();
     wait_for(&rx, |e| matches!(e, ViewEvent::Removed(_)).then_some(()));
     assert!(cal.events(&sexp::all_events()).unwrap().is_empty());
     drop(_view);
@@ -235,11 +290,18 @@ END:VCALENDAR\r\n";
     let url = source::parse_webcal_url(&format!("http://127.0.0.1:{port}/holidays.ics")).unwrap();
 
     let uid = source::new_uid();
-    eds.create_source(&uid, &source::new_webcal_calendar("Holidays", "#e66100", &url)).unwrap();
+    eds.create_source(
+        &uid,
+        &source::new_webcal_calendar("Holidays", "#e66100", &url),
+    )
+    .unwrap();
     let src = wait_source(&eds, &uid, true).unwrap();
     assert_eq!(src.backend_name(SourceKind::Calendar), Some("webcal"));
     assert_eq!(src.parent(), Some("webcal-stub"));
-    assert_eq!(source::webcal_url(&src).unwrap(), format!("http://127.0.0.1:{port}/holidays.ics"));
+    assert_eq!(
+        source::webcal_url(&src).unwrap(),
+        format!("http://127.0.0.1:{port}/holidays.ics")
+    );
     assert!(src.removable);
 
     let cal = eds.open_calendar(&uid).unwrap();
@@ -255,7 +317,10 @@ END:VCALENDAR\r\n";
         ViewEvent::Added(v) => Some(v.clone()),
         _ => None,
     });
-    assert!(added.iter().any(|o| o.contains("Christmas Day")), "{added:?}");
+    assert!(
+        added.iter().any(|o| o.contains("Christmas Day")),
+        "{added:?}"
+    );
     assert!(hits.load(std::sync::atomic::Ordering::SeqCst) >= 1);
     let events = cal.events(&sexp::all_events()).unwrap();
     assert_eq!(events.len(), 1);

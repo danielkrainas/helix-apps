@@ -48,12 +48,16 @@ mod imp {
         }
 
         fn size_allocate(&self, width: i32, height: i32, _baseline: i32) {
-            self.view.borrow_mut().set_viewport(width as f64, height as f64);
+            self.view
+                .borrow_mut()
+                .set_viewport(width as f64, height as f64);
             self.obj().notify_zoom();
         }
 
         fn snapshot(&self, snapshot: &gtk::Snapshot) {
-            let Some(texture) = self.texture.borrow().clone() else { return };
+            let Some(texture) = self.texture.borrow().clone() else {
+                return;
+            };
             let v = *self.view.borrow();
             let (x, y, w, h) = v.image_rect();
             let z = v.zoom();
@@ -66,10 +70,14 @@ mod imp {
             };
             snapshot.save();
             // Rotate around the centre of the on-screen image rectangle.
-            snapshot.translate(&graphene::Point::new((x + w / 2.0) as f32, (y + h / 2.0) as f32));
+            snapshot.translate(&graphene::Point::new(
+                (x + w / 2.0) as f32,
+                (y + h / 2.0) as f32,
+            ));
             snapshot.rotate(v.rotation as f32);
             let (iw, ih) = (v.image.0 * z, v.image.1 * z);
-            let rect = graphene::Rect::new((-iw / 2.0) as f32, (-ih / 2.0) as f32, iw as f32, ih as f32);
+            let rect =
+                graphene::Rect::new((-iw / 2.0) as f32, (-ih / 2.0) as f32, iw as f32, ih as f32);
             snapshot.append_scaled_texture(&texture, filter, &rect);
             snapshot.restore();
         }
@@ -205,11 +213,17 @@ impl ImageCanvas {
             #[upgrade_or]
             glib::Propagation::Proceed,
             move |c, dx, dy| {
-                let ctrl = c.current_event_state().contains(gdk::ModifierType::CONTROL_MASK);
+                let ctrl = c
+                    .current_event_state()
+                    .contains(gdk::ModifierType::CONTROL_MASK);
                 let wheel = c.unit() == gdk::ScrollUnit::Wheel;
                 if ctrl {
                     let anchor = canvas.pointer();
-                    let factor = if wheel { crate::view::ZOOM_STEP.powf(-dy) } else { (1.0 - dy / 100.0).max(0.1) };
+                    let factor = if wheel {
+                        crate::view::ZOOM_STEP.powf(-dy)
+                    } else {
+                        (1.0 - dy / 100.0).max(0.1)
+                    };
                     canvas.update_view(|v| {
                         let z = v.zoom() * factor;
                         v.zoom_to(z, anchor);

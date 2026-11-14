@@ -29,7 +29,11 @@ impl Matcher {
         if query.is_empty() {
             return Err("empty query".into());
         }
-        let pattern = if opts.regex { query.to_string() } else { regex::escape(query) };
+        let pattern = if opts.regex {
+            query.to_string()
+        } else {
+            regex::escape(query)
+        };
         let re = RegexBuilder::new(&pattern)
             .case_insensitive(!opts.case_sensitive)
             .multi_line(true)
@@ -39,7 +43,10 @@ impl Matcher {
     }
 
     fn word_bounded(text: &str, r: &Range<usize>) -> bool {
-        let before = text[..r.start].chars().next_back().is_some_and(is_word_char);
+        let before = text[..r.start]
+            .chars()
+            .next_back()
+            .is_some_and(is_word_char);
         let after = text[r.end..].chars().next().is_some_and(is_word_char);
         !before && !after
     }
@@ -111,7 +118,10 @@ pub fn pick(matches: &[Range<usize>], offset: usize, backward: bool) -> Option<u
         return None;
     }
     if backward {
-        matches.iter().rposition(|m| m.start < offset).or(Some(matches.len() - 1))
+        matches
+            .iter()
+            .rposition(|m| m.start < offset)
+            .or(Some(matches.len() - 1))
     } else {
         matches.iter().position(|m| m.start >= offset).or(Some(0))
     }
@@ -122,7 +132,11 @@ mod tests {
     use super::*;
 
     fn opts(case_sensitive: bool, whole_word: bool, regex: bool) -> SearchOptions {
-        SearchOptions { case_sensitive, whole_word, regex }
+        SearchOptions {
+            case_sensitive,
+            whole_word,
+            regex,
+        }
     }
 
     #[test]
@@ -152,7 +166,10 @@ mod tests {
         let text = "mail bob@example now";
         let found = m.find_all(text);
         assert_eq!(found, vec![5..16]);
-        assert_eq!(m.replacement_for(text, found[0].clone(), "$2:$1"), "example:bob");
+        assert_eq!(
+            m.replacement_for(text, found[0].clone(), "$2:$1"),
+            "example:bob"
+        );
         let (out, n) = m.replace_all(text, "<$1>");
         assert_eq!((out.as_str(), n), ("mail <bob> now", 1));
     }

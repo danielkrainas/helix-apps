@@ -24,7 +24,11 @@ pub enum Art {
 type Rgb = (f64, f64, f64);
 
 const fn hex(v: u32) -> Rgb {
-    (((v >> 16) & 0xff) as f64 / 255.0, ((v >> 8) & 0xff) as f64 / 255.0, (v & 0xff) as f64 / 255.0)
+    (
+        ((v >> 16) & 0xff) as f64 / 255.0,
+        ((v >> 8) & 0xff) as f64 / 255.0,
+        (v & 0xff) as f64 / 255.0,
+    )
 }
 
 struct Palette {
@@ -270,16 +274,38 @@ fn draw_launcher(cr: &Context, p: &Palette) {
             }
         }
     }
-    stroke_rounded(cr, 72.0 + 46.0 - 5.0, 68.0 - 5.0, 42.0, 42.0, 12.0, p.accent, 2.5);
+    stroke_rounded(
+        cr,
+        72.0 + 46.0 - 5.0,
+        68.0 - 5.0,
+        42.0,
+        42.0,
+        12.0,
+        p.accent,
+        2.5,
+    );
 }
 
 fn draw_workspaces(cr: &Context, p: &Palette) {
     let xs = [16.0, 132.0, 248.0];
     for (i, &x) in xs.iter().enumerate() {
         let active = i == 1;
-        let (y, w, h) = if active { (40.0, 96.0, 72.0) } else { (52.0, 96.0, 60.0) };
+        let (y, w, h) = if active {
+            (40.0, 96.0, 72.0)
+        } else {
+            (52.0, 96.0, 60.0)
+        };
         fill_rounded(cr, x, y, w, h, 8.0, p.screen);
-        stroke_rounded(cr, x, y, w, h, 8.0, if active { p.accent } else { p.frame }, if active { 3.0 } else { 2.0 });
+        stroke_rounded(
+            cr,
+            x,
+            y,
+            w,
+            h,
+            8.0,
+            if active { p.accent } else { p.frame },
+            if active { 3.0 } else { 2.0 },
+        );
         match i {
             0 => window(cr, p, x + 10.0, y + 14.0, 56.0, 38.0, p.teal),
             1 => {
@@ -374,10 +400,20 @@ fn draw_help(cr: &Context, p: &Palette) {
 
 fn draw_done(cr: &Context, p: &Palette) {
     let confetti: [(f64, f64, f64, usize); 14] = [
-        (60.0, 40.0, 0.3, 0), (96.0, 170.0, 1.1, 1), (300.0, 50.0, 2.0, 2), (276.0, 176.0, 0.7, 3),
-        (40.0, 120.0, 1.6, 4), (322.0, 118.0, 0.2, 0), (120.0, 24.0, 2.6, 2), (244.0, 22.0, 1.3, 1),
-        (140.0, 196.0, 0.9, 4), (220.0, 200.0, 2.2, 3), (84.0, 84.0, 0.5, 1), (290.0, 90.0, 1.9, 4),
-        (70.0, 196.0, 2.9, 2), (318.0, 190.0, 1.4, 0),
+        (60.0, 40.0, 0.3, 0),
+        (96.0, 170.0, 1.1, 1),
+        (300.0, 50.0, 2.0, 2),
+        (276.0, 176.0, 0.7, 3),
+        (40.0, 120.0, 1.6, 4),
+        (322.0, 118.0, 0.2, 0),
+        (120.0, 24.0, 2.6, 2),
+        (244.0, 22.0, 1.3, 1),
+        (140.0, 196.0, 0.9, 4),
+        (220.0, 200.0, 2.2, 3),
+        (84.0, 84.0, 0.5, 1),
+        (290.0, 90.0, 1.9, 4),
+        (70.0, 196.0, 2.9, 2),
+        (318.0, 190.0, 1.4, 0),
     ];
     let colors = [p.accent, p.teal, p.amber, p.coral, p.violet];
     for (i, &(x, y, rot, c)) in confetti.iter().enumerate() {
@@ -438,12 +474,20 @@ mod tests {
     #[test]
     fn all_illustrations_render() {
         let arts = [
-            Art::Welcome, Art::Overview, Art::Launcher, Art::Workspaces,
-            Art::Windows, Art::Touchpad, Art::Help, Art::Done,
+            Art::Welcome,
+            Art::Overview,
+            Art::Launcher,
+            Art::Workspaces,
+            Art::Windows,
+            Art::Touchpad,
+            Art::Help,
+            Art::Done,
         ];
         for dark in [false, true] {
             for art in arts {
-                let mut surface = gtk::cairo::ImageSurface::create(gtk::cairo::Format::ARgb32, WIDTH, HEIGHT).unwrap();
+                let mut surface =
+                    gtk::cairo::ImageSurface::create(gtk::cairo::Format::ARgb32, WIDTH, HEIGHT)
+                        .unwrap();
                 {
                     let cr = Context::new(&surface).unwrap();
                     draw(art, &cr, WIDTH, HEIGHT, dark);

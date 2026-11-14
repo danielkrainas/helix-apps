@@ -13,13 +13,19 @@ fn cap(max: u32) -> usize {
 /// Moves `item` to the front of `list`, de-duplicating and truncating to `max`
 /// (a `max` of 0 means the default).
 pub fn push(list: &[String], item: &str, max: u32) -> Vec<String> {
-    std::iter::once(item.to_string()).chain(list.iter().filter(|s| *s != item).cloned()).take(cap(max)).collect()
+    std::iter::once(item.to_string())
+        .chain(list.iter().filter(|s| *s != item).cloned())
+        .take(cap(max))
+        .collect()
 }
 
 /// Cleans a list read from settings: drops empty and duplicate entries.
 pub fn sanitize(list: Vec<String>, max: u32) -> Vec<String> {
     let mut seen = std::collections::HashSet::new();
-    list.into_iter().filter(|s| !s.is_empty() && seen.insert(s.clone())).take(cap(max)).collect()
+    list.into_iter()
+        .filter(|s| !s.is_empty() && seen.insert(s.clone()))
+        .take(cap(max))
+        .collect()
 }
 
 #[cfg(test)]

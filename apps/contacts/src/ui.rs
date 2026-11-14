@@ -11,8 +11,8 @@ use std::rc::Rc;
 
 use crate::backend::{self, Backend, Cmd, Msg};
 use crate::editor::{set_avatar_bytes, Editor};
-use crate::individual::{self, Individual};
 use crate::folks;
+use crate::individual::{self, Individual};
 use crate::links::{Key, Links};
 
 pub const APP_ID: &str = "org.helix.Contacts";
@@ -137,10 +137,15 @@ impl Ui {
         }
 
         // Sidebar.
-        let new_button = gtk::Button::builder().icon_name("list-add-symbolic").tooltip_text("New Contact").build();
+        let new_button = gtk::Button::builder()
+            .icon_name("list-add-symbolic")
+            .tooltip_text("New Contact")
+            .build();
         new_button.set_action_name(Some("win.new-contact"));
-        let select_button =
-            gtk::ToggleButton::builder().icon_name("selection-mode-symbolic").tooltip_text("Select Contacts").build();
+        let select_button = gtk::ToggleButton::builder()
+            .icon_name("selection-mode-symbolic")
+            .tooltip_text("Select Contacts")
+            .build();
         let menu = gio::Menu::new();
         let sort = gio::Menu::new();
         sort.append(Some("Sort by _First Name"), Some("win.sort::first"));
@@ -155,22 +160,30 @@ impl Ui {
         about.append(Some("_Keyboard Shortcuts"), Some("win.shortcuts"));
         about.append(Some("_About Contacts"), Some("app.about"));
         menu.append_section(None, &about);
-        let menu_button =
-            gtk::MenuButton::builder().icon_name("open-menu-symbolic").menu_model(&menu).tooltip_text("Main Menu").build();
+        let menu_button = gtk::MenuButton::builder()
+            .icon_name("open-menu-symbolic")
+            .menu_model(&menu)
+            .tooltip_text("Main Menu")
+            .build();
         menu_button.set_primary(true);
         let side_header = adw::HeaderBar::new();
         side_header.pack_start(&new_button);
         side_header.pack_end(&menu_button);
         side_header.pack_end(&select_button);
 
-        let search = gtk::SearchEntry::builder().placeholder_text("Search contacts").hexpand(true).build();
+        let search = gtk::SearchEntry::builder()
+            .placeholder_text("Search contacts")
+            .hexpand(true)
+            .build();
         let search_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         search_box.set_margin_start(6);
         search_box.set_margin_end(6);
         search_box.set_margin_bottom(6);
         search_box.append(&search);
 
-        let list = gtk::ListBox::builder().css_classes(["navigation-sidebar"]).build();
+        let list = gtk::ListBox::builder()
+            .css_classes(["navigation-sidebar"])
+            .build();
         let list_scroll = gtk::ScrolledWindow::builder()
             .child(&list)
             .hscrollbar_policy(gtk::PolicyType::Never)
@@ -179,7 +192,10 @@ impl Ui {
         let list_stack = gtk::Stack::new();
         list_stack.add_named(&list_scroll, Some("list"));
         list_stack.add_named(
-            &adw::StatusPage::builder().icon_name("system-search-symbolic").title("No Results").build(),
+            &adw::StatusPage::builder()
+                .icon_name("system-search-symbolic")
+                .title("No Results")
+                .build(),
             Some("no-results"),
         );
         let empty = adw::StatusPage::builder()
@@ -189,23 +205,44 @@ impl Ui {
             .build();
         let empty_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
         empty_box.set_halign(gtk::Align::Center);
-        let create = gtk::Button::builder().label("Create Contact").css_classes(["pill", "suggested-action"]).build();
+        let create = gtk::Button::builder()
+            .label("Create Contact")
+            .css_classes(["pill", "suggested-action"])
+            .build();
         create.set_action_name(Some("win.new-contact"));
-        let import = gtk::Button::builder().label("Import…").css_classes(["pill"]).build();
+        let import = gtk::Button::builder()
+            .label("Import…")
+            .css_classes(["pill"])
+            .build();
         import.set_action_name(Some("win.import"));
         empty_box.append(&create);
         empty_box.append(&import);
         empty.set_child(Some(&empty_box));
         list_stack.add_named(&empty, Some("empty"));
-        let loading = gtk::Spinner::builder().spinning(true).width_request(32).height_request(32).halign(gtk::Align::Center).valign(gtk::Align::Center).build();
+        let loading = gtk::Spinner::builder()
+            .spinning(true)
+            .width_request(32)
+            .height_request(32)
+            .halign(gtk::Align::Center)
+            .valign(gtk::Align::Center)
+            .build();
         list_stack.add_named(&loading, Some("loading"));
         list_stack.set_visible_child_name("loading");
 
         let action_bar = gtk::ActionBar::new();
-        let link_button = gtk::Button::builder().label("Link").sensitive(false).build();
-        let export_button = gtk::Button::builder().label("Export…").sensitive(false).build();
-        let delete_button =
-            gtk::Button::builder().label("Delete").css_classes(["destructive-action"]).sensitive(false).build();
+        let link_button = gtk::Button::builder()
+            .label("Link")
+            .sensitive(false)
+            .build();
+        let export_button = gtk::Button::builder()
+            .label("Export…")
+            .sensitive(false)
+            .build();
+        let delete_button = gtk::Button::builder()
+            .label("Delete")
+            .css_classes(["destructive-action"])
+            .sensitive(false)
+            .build();
         action_bar.pack_start(&link_button);
         action_bar.pack_start(&export_button);
         action_bar.pack_end(&delete_button);
@@ -216,15 +253,34 @@ impl Ui {
         side_view.add_top_bar(&search_box);
         side_view.set_content(Some(&list_stack));
         side_view.add_bottom_bar(&action_bar);
-        let side_page = adw::NavigationPage::builder().title("Contacts").child(&side_view).tag("sidebar").build();
+        let side_page = adw::NavigationPage::builder()
+            .title("Contacts")
+            .child(&side_view)
+            .tag("sidebar")
+            .build();
 
         // Content.
         let content_header = adw::HeaderBar::new();
-        let edit_button = gtk::Button::builder().icon_name("document-edit-symbolic").tooltip_text("Edit Contact").visible(false).build();
+        let edit_button = gtk::Button::builder()
+            .icon_name("document-edit-symbolic")
+            .tooltip_text("Edit Contact")
+            .visible(false)
+            .build();
         edit_button.set_action_name(Some("win.edit"));
-        let done_button = gtk::Button::builder().label("Done").css_classes(["suggested-action"]).visible(false).build();
-        let cancel_button = gtk::Button::builder().label("Cancel").visible(false).build();
-        let contact_menu = gtk::MenuButton::builder().icon_name("view-more-symbolic").tooltip_text("Contact Menu").visible(false).build();
+        let done_button = gtk::Button::builder()
+            .label("Done")
+            .css_classes(["suggested-action"])
+            .visible(false)
+            .build();
+        let cancel_button = gtk::Button::builder()
+            .label("Cancel")
+            .visible(false)
+            .build();
+        let contact_menu = gtk::MenuButton::builder()
+            .icon_name("view-more-symbolic")
+            .tooltip_text("Contact Menu")
+            .visible(false)
+            .build();
         content_header.pack_start(&cancel_button);
         content_header.pack_end(&contact_menu);
         content_header.pack_end(&edit_button);
@@ -233,9 +289,16 @@ impl Ui {
         let content_view = adw::ToolbarView::new();
         content_view.add_top_bar(&content_header);
         content_view.set_content(Some(&content_body));
-        let content_page = adw::NavigationPage::builder().title("Contact").child(&content_view).tag("content").build();
+        let content_page = adw::NavigationPage::builder()
+            .title("Contact")
+            .child(&content_view)
+            .tag("content")
+            .build();
 
-        let split = adw::NavigationSplitView::builder().sidebar(&side_page).content(&content_page).build();
+        let split = adw::NavigationSplitView::builder()
+            .sidebar(&side_page)
+            .content(&content_page)
+            .build();
         split.set_min_sidebar_width(260.0);
         split.set_max_sidebar_width(360.0);
 
@@ -243,7 +306,11 @@ impl Ui {
             .icon_name("dialog-warning-symbolic")
             .title("Contacts Service Unavailable")
             .build();
-        let retry = gtk::Button::builder().label("Retry").css_classes(["pill"]).halign(gtk::Align::Center).build();
+        let retry = gtk::Button::builder()
+            .label("Retry")
+            .css_classes(["pill"])
+            .halign(gtk::Align::Center)
+            .build();
         unavailable_page.set_child(Some(&retry));
         let unavailable_view = adw::ToolbarView::new();
         unavailable_view.add_top_bar(&adw::HeaderBar::new());
@@ -273,7 +340,10 @@ impl Ui {
             external_links: RefCell::new(Vec::new()),
             folks_personas: folks::load_relationships(&folks::relationships_path()),
             self_uid,
-            state: RefCell::new(State { startup: Some(opts.clone()), ..Default::default() }),
+            state: RefCell::new(State {
+                startup: Some(opts.clone()),
+                ..Default::default()
+            }),
             editor: RefCell::default(),
             rebuild_pending: Cell::new(false),
             toasts,
@@ -393,7 +463,11 @@ impl Ui {
         let weak = Rc::downgrade(self);
         self.export_button.connect_clicked(move |_| {
             if let Some(ui) = weak.upgrade() {
-                let contacts = ui.checked_individuals().into_iter().map(|i| i.contact).collect();
+                let contacts = ui
+                    .checked_individuals()
+                    .into_iter()
+                    .map(|i| i.contact)
+                    .collect();
                 ui.export(contacts);
             }
         });
@@ -428,7 +502,9 @@ impl Ui {
         let keys = gtk::EventControllerKey::new();
         let weak = Rc::downgrade(self);
         keys.connect_key_pressed(move |_, key, _, mods| {
-            let Some(ui) = weak.upgrade() else { return glib::Propagation::Proceed };
+            let Some(ui) = weak.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
             if key == gtk::gdk::Key::Escape {
                 if ui.editor.borrow().is_some() {
                     ui.finish_edit(false);
@@ -472,33 +548,59 @@ impl Ui {
                 app.set_accels_for_action(&format!("win.{name}"), accels);
             }
         };
-        add("new-contact", &["<Control>n"], Box::new(|ui| ui.new_contact(None)));
+        add(
+            "new-contact",
+            &["<Control>n"],
+            Box::new(|ui| ui.new_contact(None)),
+        );
         add("edit", &["<Control>e"], Box::new(|ui| ui.start_edit()));
-        add("search", &["<Control>f"], Box::new(|ui| {
-            ui.split.set_show_content(false);
-            ui.search.grab_focus();
-        }));
+        add(
+            "search",
+            &["<Control>f"],
+            Box::new(|ui| {
+                ui.split.set_show_content(false);
+                ui.search.grab_focus();
+            }),
+        );
         add("import", &["<Control>i"], Box::new(|ui| ui.choose_import()));
-        add("shortcuts", &["<Control>question"], Box::new(|ui| show_shortcuts(&ui.window)));
-        add("delete-contact", &[], Box::new(|ui| {
-            if let Some(ind) = ui.selected_individual() {
-                ui.delete_keys(ind.members.clone());
-            }
-        }));
-        add("unlink", &[], Box::new(|ui| {
-            if let Some(ind) = ui.selected_individual() {
-                let external = ui.external_links.borrow().clone();
-                ui.links.borrow_mut().unlink_members(&ind.members, &external);
-                ui.save_links();
-                ui.rebuild();
-                ui.toast("Contacts unlinked");
-            }
-        }));
-        add("export-contact", &[], Box::new(|ui| {
-            if let Some(ind) = ui.selected_individual() {
-                ui.export(vec![ind.contact.clone()]);
-            }
-        }));
+        add(
+            "shortcuts",
+            &["<Control>question"],
+            Box::new(|ui| show_shortcuts(&ui.window)),
+        );
+        add(
+            "delete-contact",
+            &[],
+            Box::new(|ui| {
+                if let Some(ind) = ui.selected_individual() {
+                    ui.delete_keys(ind.members.clone());
+                }
+            }),
+        );
+        add(
+            "unlink",
+            &[],
+            Box::new(|ui| {
+                if let Some(ind) = ui.selected_individual() {
+                    let external = ui.external_links.borrow().clone();
+                    ui.links
+                        .borrow_mut()
+                        .unlink_members(&ind.members, &external);
+                    ui.save_links();
+                    ui.rebuild();
+                    ui.toast("Contacts unlinked");
+                }
+            }),
+        );
+        add(
+            "export-contact",
+            &[],
+            Box::new(|ui| {
+                if let Some(ind) = ui.selected_individual() {
+                    ui.export(vec![ind.contact.clone()]);
+                }
+            }),
+        );
 
         let surname = self.prefs.get("sort-on-surname", false);
         let sort = gio::SimpleAction::new_stateful(
@@ -508,7 +610,9 @@ impl Ui {
         );
         let weak = Rc::downgrade(self);
         sort.connect_activate(move |a, v| {
-            let (Some(ui), Some(v)) = (weak.upgrade(), v) else { return };
+            let (Some(ui), Some(v)) = (weak.upgrade(), v) else {
+                return;
+            };
             a.set_state(v);
             ui.prefs.set("sort-on-surname", v.str() == Some("surname"));
             ui.refresh_list();
@@ -516,10 +620,16 @@ impl Ui {
         w.add_action(&sort);
 
         let default_book = self.default_book();
-        let book = gio::SimpleAction::new_stateful("default-book", Some(glib::VariantTy::STRING), &default_book.to_variant());
+        let book = gio::SimpleAction::new_stateful(
+            "default-book",
+            Some(glib::VariantTy::STRING),
+            &default_book.to_variant(),
+        );
         let weak = Rc::downgrade(self);
         book.connect_activate(move |a, v| {
-            let (Some(ui), Some(v)) = (weak.upgrade(), v) else { return };
+            let (Some(ui), Some(v)) = (weak.upgrade(), v) else {
+                return;
+            };
             a.set_state(v);
             if let Some(s) = v.str() {
                 ui.defaults.set("default-address-book", s.to_string());
@@ -529,21 +639,39 @@ impl Ui {
     }
 
     fn default_book(&self) -> String {
-        let configured = self.defaults.get("default-address-book", "system-address-book".to_string());
+        let configured = self
+            .defaults
+            .get("default-address-book", "system-address-book".to_string());
         let st = self.state.borrow();
         if st.writable.get(&configured).copied().unwrap_or(false) || st.writable.is_empty() {
             return configured;
         }
-        if st.writable.get("system-address-book").copied().unwrap_or(false) {
+        if st
+            .writable
+            .get("system-address-book")
+            .copied()
+            .unwrap_or(false)
+        {
             return "system-address-book".into();
         }
-        let mut w: Vec<&String> = st.writable.iter().filter(|(_, w)| **w).map(|(k, _)| k).collect();
+        let mut w: Vec<&String> = st
+            .writable
+            .iter()
+            .filter(|(_, w)| **w)
+            .map(|(k, _)| k)
+            .collect();
         w.sort();
         w.first().map(|s| s.to_string()).unwrap_or(configured)
     }
 
     fn book_name(&self, uid: &str) -> String {
-        self.state.borrow().sources.iter().find(|s| s.uid == uid).map(|s| s.display_name()).unwrap_or_else(|| uid.to_string())
+        self.state
+            .borrow()
+            .sources
+            .iter()
+            .find(|s| s.uid == uid)
+            .map(|s| s.display_name())
+            .unwrap_or_else(|| uid.to_string())
     }
 
     /// Writable books as (uid, "Name (Account)") pairs.
@@ -642,7 +770,10 @@ impl Ui {
             }
             Msg::Loaded(book) => {
                 let n = self.state.borrow().books.get(&book).map_or(0, |m| m.len());
-                glib::g_debug!("helix-contacts", "address book {book} loaded with {n} contacts");
+                glib::g_debug!(
+                    "helix-contacts",
+                    "address book {book} loaded with {n} contacts"
+                );
                 self.state.borrow_mut().loaded.insert(book);
                 self.schedule_rebuild();
                 self.maybe_initial_setup();
@@ -657,7 +788,10 @@ impl Ui {
                     }
                 }
             }
-            Msg::Imported(n) => self.toast(&format!("Imported {n} contact{}", if n == 1 { "" } else { "s" })),
+            Msg::Imported(n) => self.toast(&format!(
+                "Imported {n} contact{}",
+                if n == 1 { "" } else { "s" }
+            )),
             Msg::Error(e) => self.toast(&e),
         }
     }
@@ -669,7 +803,11 @@ impl Ui {
             item.set_action_and_target_value(Some("win.default-book"), Some(&uid.to_variant()));
             self.book_menu.append_item(&item);
         }
-        if let Some(a) = self.window.lookup_action("default-book").and_downcast::<gio::SimpleAction>() {
+        if let Some(a) = self
+            .window
+            .lookup_action("default-book")
+            .and_downcast::<gio::SimpleAction>()
+        {
             a.set_state(&self.default_book().to_variant());
         }
     }
@@ -733,9 +871,19 @@ impl Ui {
         let query = self.search.text().to_string();
         let (shown, selection_mode, checked, selected, any, loaded) = {
             let st = self.state.borrow();
-            let shown: Vec<Individual> = individual::filter(&st.individuals, &query).into_iter().cloned().collect();
+            let shown: Vec<Individual> = individual::filter(&st.individuals, &query)
+                .into_iter()
+                .cloned()
+                .collect();
             let loaded = !st.books.is_empty() && st.books.keys().all(|b| st.loaded.contains(b));
-            (shown, st.selection_mode, st.checked.clone(), st.selected.clone(), !st.individuals.is_empty(), loaded)
+            (
+                shown,
+                st.selection_mode,
+                st.checked.clone(),
+                st.selected.clone(),
+                !st.individuals.is_empty(),
+                loaded,
+            )
         };
         while let Some(row) = self.list.row_at_index(0) {
             self.list.remove(&row);
@@ -747,7 +895,10 @@ impl Ui {
             hbox.set_margin_top(4);
             hbox.set_margin_bottom(4);
             if selection_mode {
-                let check = gtk::CheckButton::builder().active(checked.contains(&ind.id())).can_focus(false).build();
+                let check = gtk::CheckButton::builder()
+                    .active(checked.contains(&ind.id()))
+                    .can_focus(false)
+                    .build();
                 check.set_sensitive(false);
                 hbox.append(&check);
             }
@@ -795,7 +946,11 @@ impl Ui {
             let cur = keys.get(i).cloned().unwrap_or_default();
             let prev = before.map(|b| keys.get(b.index() as usize).cloned().unwrap_or_default());
             if !cur.is_empty() && prev.as_deref() != Some(cur.as_str()) {
-                let l = gtk::Label::builder().label(&cur).xalign(0.0).css_classes(["heading", "dim-label"]).build();
+                let l = gtk::Label::builder()
+                    .label(&cur)
+                    .xalign(0.0)
+                    .css_classes(["heading", "dim-label"])
+                    .build();
                 l.set_margin_start(12);
                 l.set_margin_top(8);
                 l.set_margin_bottom(4);
@@ -812,7 +967,9 @@ impl Ui {
             "list"
         } else if any {
             "no-results"
-        } else if loaded || self.state.borrow().books.is_empty() && !self.state.borrow().sources.is_empty() {
+        } else if loaded
+            || self.state.borrow().books.is_empty() && !self.state.borrow().sources.is_empty()
+        {
             "empty"
         } else {
             "loading"
@@ -842,16 +999,26 @@ impl Ui {
     fn selected_individual(&self) -> Option<Individual> {
         let st = self.state.borrow();
         let key = st.selected.as_ref()?;
-        st.individuals.iter().find(|i| i.members.contains(key)).cloned()
+        st.individuals
+            .iter()
+            .find(|i| i.members.contains(key))
+            .cloned()
     }
 
     fn checked_individuals(&self) -> Vec<Individual> {
         let st = self.state.borrow();
-        st.individuals.iter().filter(|i| st.checked.contains(&i.id())).cloned().collect()
+        st.individuals
+            .iter()
+            .filter(|i| st.checked.contains(&i.id()))
+            .cloned()
+            .collect()
     }
 
     fn checked_keys(&self) -> Vec<Key> {
-        self.checked_individuals().into_iter().flat_map(|i| i.members).collect()
+        self.checked_individuals()
+            .into_iter()
+            .flat_map(|i| i.members)
+            .collect()
     }
 
     fn set_header_mode(&self, editing: bool, ind: Option<&Individual>) {
@@ -865,7 +1032,10 @@ impl Ui {
 
     fn primary_writable(&self, ind: &Individual) -> Option<Key> {
         let st = self.state.borrow();
-        ind.members.iter().find(|(b, _)| st.writable.get(b).copied().unwrap_or(false)).cloned()
+        ind.members
+            .iter()
+            .find(|(b, _)| st.writable.get(b).copied().unwrap_or(false))
+            .cloned()
     }
 
     fn show_placeholder(&self) {
@@ -889,7 +1059,9 @@ impl Ui {
         menu.append(Some("_Export…"), Some("win.export-contact"));
         let writable_all = {
             let st = self.state.borrow();
-            ind.members.iter().all(|(b, _)| st.writable.get(b).copied().unwrap_or(false))
+            ind.members
+                .iter()
+                .all(|(b, _)| st.writable.get(b).copied().unwrap_or(false))
         };
         if writable_all {
             menu.append(Some("_Delete Contact"), Some("win.delete-contact"));
@@ -916,7 +1088,10 @@ impl Ui {
         if !c.nickname.is_empty() && c.nickname != name {
             sub.push(format!("“{}”", c.nickname));
         }
-        let job: Vec<&str> = [c.title.as_str(), c.org.as_str()].into_iter().filter(|s| !s.is_empty()).collect();
+        let job: Vec<&str> = [c.title.as_str(), c.org.as_str()]
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .collect();
         if !job.is_empty() {
             sub.push(job.join(", "));
         }
@@ -931,14 +1106,22 @@ impl Ui {
         if !c.emails.is_empty() {
             let g = group("Email");
             for e in &c.emails {
-                g.add(&self.value_row(&e.value, vcard::generic_label(&e.types), Some(format!("mailto:{}", e.value))));
+                g.add(&self.value_row(
+                    &e.value,
+                    vcard::generic_label(&e.types),
+                    Some(format!("mailto:{}", e.value)),
+                ));
             }
             page.append(&g);
         }
         if !c.phones.is_empty() {
             let g = group("Phone");
             for p in &c.phones {
-                let tel: String = p.value.chars().filter(|ch| ch.is_ascii_digit() || *ch == '+').collect();
+                let tel: String = p
+                    .value
+                    .chars()
+                    .filter(|ch| ch.is_ascii_digit() || *ch == '+')
+                    .collect();
                 g.add(&self.value_row(&p.value, phone_label(p), Some(format!("tel:{tel}"))));
             }
             page.append(&g);
@@ -947,14 +1130,22 @@ impl Ui {
             let g = group("Address");
             for a in &c.addresses {
                 let q = glib::Uri::escape_string(&a.one_line(), None, false);
-                g.add(&self.value_row(&a.formatted(), vcard::generic_label(&a.types), Some(format!("geo:0,0?q={q}"))));
+                g.add(&self.value_row(
+                    &a.formatted(),
+                    vcard::generic_label(&a.types),
+                    Some(format!("geo:0,0?q={q}")),
+                ));
             }
             page.append(&g);
         }
         if !c.urls.is_empty() {
             let g = group("Website");
             for u in &c.urls {
-                let uri = if u.value.contains("://") { u.value.clone() } else { format!("https://{}", u.value) };
+                let uri = if u.value.contains("://") {
+                    u.value.clone()
+                } else {
+                    format!("https://{}", u.value)
+                };
                 g.add(&self.value_row(&u.value, vcard::generic_label(&u.types), Some(uri)));
             }
             page.append(&g);
@@ -989,13 +1180,18 @@ impl Ui {
             l.set_margin_bottom(12);
             l.set_margin_start(12);
             l.set_margin_end(12);
-            let frame = gtk::Frame::builder().child(&l).css_classes(["view"]).build();
+            let frame = gtk::Frame::builder()
+                .child(&l)
+                .css_classes(["view"])
+                .build();
             g.add(&frame);
             page.append(&g);
         }
         let g = group("Address Books");
         for (b, _) in &ind.members {
-            let row = adw::ActionRow::builder().title(glib::markup_escape_text(&self.book_name(b)).as_str()).build();
+            let row = adw::ActionRow::builder()
+                .title(glib::markup_escape_text(&self.book_name(b)).as_str())
+                .build();
             let st = self.state.borrow();
             if let Some(src) = st.sources.iter().find(|s| &s.uid == b) {
                 let account = helix_eds::source::account_label(src, &st.sources);
@@ -1009,7 +1205,10 @@ impl Ui {
         page.append(&g);
 
         let clamp = adw::Clamp::builder().maximum_size(600).child(&page).build();
-        let scroll = gtk::ScrolledWindow::builder().child(&clamp).hscrollbar_policy(gtk::PolicyType::Never).build();
+        let scroll = gtk::ScrolledWindow::builder()
+            .child(&clamp)
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .build();
         self.content_body.set_child(Some(&scroll));
     }
 
@@ -1065,9 +1264,19 @@ impl Ui {
         if self.editor.borrow().is_some() {
             return;
         }
-        let Some(ind) = self.selected_individual() else { return };
-        let Some(key) = self.primary_writable(&ind) else { return };
-        let base = self.state.borrow().books.get(&key.0).and_then(|m| m.get(&key.1)).cloned();
+        let Some(ind) = self.selected_individual() else {
+            return;
+        };
+        let Some(key) = self.primary_writable(&ind) else {
+            return;
+        };
+        let base = self
+            .state
+            .borrow()
+            .books
+            .get(&key.0)
+            .and_then(|m| m.get(&key.1))
+            .cloned();
         let Some(base) = base else { return };
         let ed = Editor::new(&base, &[], "");
         self.open_editor(ed, Some(key), &base.display_name());
@@ -1083,7 +1292,9 @@ impl Ui {
     }
 
     fn finish_edit(self: &Rc<Self>, save: bool) {
-        let Some((ed, key)) = self.editor.borrow().clone() else { return };
+        let Some((ed, key)) = self.editor.borrow().clone() else {
+            return;
+        };
         if save {
             let contact = match ed.collect() {
                 Ok(c) => c,
@@ -1093,7 +1304,10 @@ impl Ui {
                 }
             };
             match key {
-                Some((book, _)) => self.backend.send(Cmd::Modify { book, contact: Box::new(contact) }),
+                Some((book, _)) => self.backend.send(Cmd::Modify {
+                    book,
+                    contact: Box::new(contact),
+                }),
                 None => {
                     let book = ed.chosen_book().unwrap_or_else(|| self.default_book());
                     let tag = {
@@ -1102,7 +1316,11 @@ impl Ui {
                         st.select_created = Some(st.next_tag);
                         st.next_tag
                     };
-                    self.backend.send(Cmd::Create { book, contact: Box::new(contact), tag });
+                    self.backend.send(Cmd::Create {
+                        book,
+                        contact: Box::new(contact),
+                        tag,
+                    });
                 }
             }
         }
@@ -1136,7 +1354,10 @@ impl Ui {
         self.select_button.set_active(false);
         self.rebuild();
         let weak = Rc::downgrade(self);
-        let toast = adw::Toast::builder().title("Contacts linked").button_label("Undo").build();
+        let toast = adw::Toast::builder()
+            .title("Contacts linked")
+            .button_label("Undo")
+            .build();
         toast.connect_button_clicked(move |_| {
             if let Some(ui) = weak.upgrade() {
                 *ui.links.borrow_mut() = before.clone();
@@ -1150,7 +1371,9 @@ impl Ui {
     fn delete_keys(self: &Rc<Self>, keys: Vec<Key>) {
         let writable: Vec<Key> = {
             let st = self.state.borrow();
-            keys.into_iter().filter(|(b, _)| st.writable.get(b).copied().unwrap_or(false)).collect()
+            keys.into_iter()
+                .filter(|(b, _)| st.writable.get(b).copied().unwrap_or(false))
+                .collect()
         };
         if writable.is_empty() {
             self.toast("These contacts are read-only");
@@ -1159,12 +1382,22 @@ impl Ui {
         // Count individuals, not raw members.
         let n = {
             let st = self.state.borrow();
-            st.individuals.iter().filter(|i| i.members.iter().any(|m| writable.contains(m))).count()
+            st.individuals
+                .iter()
+                .filter(|i| i.members.iter().any(|m| writable.contains(m)))
+                .count()
         };
-        self.state.borrow_mut().pending_delete.extend(writable.iter().cloned());
+        self.state
+            .borrow_mut()
+            .pending_delete
+            .extend(writable.iter().cloned());
         self.rebuild();
         let toast = adw::Toast::builder()
-            .title(if n == 1 { "Contact deleted".to_string() } else { format!("{n} contacts deleted") })
+            .title(if n == 1 {
+                "Contact deleted".to_string()
+            } else {
+                format!("{n} contacts deleted")
+            })
             .button_label("Undo")
             .timeout(5)
             .build();
@@ -1226,7 +1459,10 @@ impl Ui {
         filter.add_suffix("vcf");
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&filter);
-        let dialog = gtk::FileDialog::builder().title("Import Contacts").filters(&filters).build();
+        let dialog = gtk::FileDialog::builder()
+            .title("Import Contacts")
+            .filters(&filters)
+            .build();
         let weak = Rc::downgrade(self);
         dialog.open(Some(&self.window), None::<&gio::Cancellable>, move |res| {
             if let (Some(ui), Ok(file)) = (weak.upgrade(), res) {
@@ -1245,12 +1481,18 @@ impl Ui {
                 return;
             }
         };
-        let contacts: Vec<Contact> = vcard::parse_many(&text).iter().map(Contact::from_vcard).collect();
+        let contacts: Vec<Contact> = vcard::parse_many(&text)
+            .iter()
+            .map(Contact::from_vcard)
+            .collect();
         if contacts.is_empty() {
             self.toast("No contacts found in the file");
             return;
         }
-        self.backend.send(Cmd::Import { book: self.default_book(), contacts });
+        self.backend.send(Cmd::Import {
+            book: self.default_book(),
+            contacts,
+        });
     }
 
     fn export(&self, contacts: Vec<Contact>) {
@@ -1262,7 +1504,10 @@ impl Ui {
         } else {
             "contacts.vcf".to_string()
         };
-        let dialog = gtk::FileDialog::builder().title("Export Contacts").initial_name(name).build();
+        let dialog = gtk::FileDialog::builder()
+            .title("Export Contacts")
+            .initial_name(name)
+            .build();
         let toasts = self.toasts.clone();
         dialog.save(Some(&self.window), None::<&gio::Cancellable>, move |res| {
             let Ok(file) = res else { return };
@@ -1273,13 +1518,20 @@ impl Ui {
                     let mut c = c.clone();
                     if let Some(bytes) = c.photo_bytes() {
                         // Embed linked photos so the file stands alone.
-                        c.photo = Some(vcard::Photo::Inline { mime: None, data: bytes });
+                        c.photo = Some(vcard::Photo::Inline {
+                            mime: None,
+                            data: bytes,
+                        });
                     }
                     c.to_vcard_string()
                 })
                 .collect();
             let msg = match std::fs::write(&path, text) {
-                Ok(()) => format!("Exported {} contact{}", contacts.len(), if contacts.len() == 1 { "" } else { "s" }),
+                Ok(()) => format!(
+                    "Exported {} contact{}",
+                    contacts.len(),
+                    if contacts.len() == 1 { "" } else { "s" }
+                ),
                 Err(e) => format!("Export failed: {e}"),
             };
             toasts.add_toast(adw::Toast::new(&msg));
@@ -1332,10 +1584,18 @@ impl Ui {
         if !all_loaded {
             return;
         }
-        let Some(opts) = self.state.borrow_mut().startup.take() else { return };
+        let Some(opts) = self.state.borrow_mut().startup.take() else {
+            return;
+        };
         self.rebuild();
         if let Some(uid) = &opts.individual {
-            let found = self.state.borrow().individuals.iter().find(|i| i.contains_uid(uid)).cloned();
+            let found = self
+                .state
+                .borrow()
+                .individuals
+                .iter()
+                .find(|i| i.contains_uid(uid))
+                .cloned();
             match found {
                 Some(ind) => {
                     self.state.borrow_mut().selected = Some(ind.members[0].clone());
@@ -1351,7 +1611,12 @@ impl Ui {
                 .borrow()
                 .individuals
                 .iter()
-                .find(|i| i.contact.emails.iter().any(|e| e.value.eq_ignore_ascii_case(email)))
+                .find(|i| {
+                    i.contact
+                        .emails
+                        .iter()
+                        .any(|e| e.value.eq_ignore_ascii_case(email))
+                })
                 .cloned();
             match found {
                 Some(ind) => {
@@ -1368,8 +1633,20 @@ impl Ui {
 /// Formats a vCard date for display ("17 May 1990" or "17 May").
 fn format_vcard_date(v: &str) -> Option<String> {
     let (y, m, d) = vcard::parse_date(v)?;
-    const MONTHS: [&str; 12] =
-        ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const MONTHS: [&str; 12] = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    ];
     let month = MONTHS.get(m as usize - 1)?;
     Some(match y {
         Some(y) => format!("{d} {month} {y}"),
@@ -1392,12 +1669,19 @@ fn show_shortcuts(win: &adw::ApplicationWindow) {
     let group = adw::PreferencesGroup::new();
     for (title, keys) in rows {
         let row = adw::ActionRow::builder().title(title).build();
-        row.add_suffix(&gtk::Label::builder().label(keys).css_classes(["dim-label"]).build());
+        row.add_suffix(
+            &gtk::Label::builder()
+                .label(keys)
+                .css_classes(["dim-label"])
+                .build(),
+        );
         group.add(&row);
     }
     let page = adw::PreferencesPage::new();
     page.add(&group);
-    let dialog = adw::PreferencesDialog::builder().title("Keyboard Shortcuts").build();
+    let dialog = adw::PreferencesDialog::builder()
+        .title("Keyboard Shortcuts")
+        .build();
     dialog.add(&page);
     dialog.present(Some(win));
 }
@@ -1406,8 +1690,14 @@ fn show_shortcuts(win: &adw::ApplicationWindow) {
 mod tests {
     #[test]
     fn date_formatting() {
-        assert_eq!(super::format_vcard_date("1990-05-17").as_deref(), Some("17 May 1990"));
-        assert_eq!(super::format_vcard_date("--1224").as_deref(), Some("24 December"));
+        assert_eq!(
+            super::format_vcard_date("1990-05-17").as_deref(),
+            Some("17 May 1990")
+        );
+        assert_eq!(
+            super::format_vcard_date("--1224").as_deref(),
+            Some("24 December")
+        );
         assert_eq!(super::format_vcard_date("garbage"), None);
     }
 }

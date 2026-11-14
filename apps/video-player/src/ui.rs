@@ -22,8 +22,14 @@ const VOLUME_STEP: f64 = 0.05;
 const SAVE_INTERVAL: Duration = Duration::from_secs(10);
 /// Delay before volume/speed changes are written to disk.
 const SETTINGS_SAVE_DELAY: Duration = Duration::from_millis(500);
-const SPEEDS: &[(&str, &str)] =
-    &[("0.5", "0.5×"), ("0.75", "0.75×"), ("1", "Normal"), ("1.25", "1.25×"), ("1.5", "1.5×"), ("2", "2×")];
+const SPEEDS: &[(&str, &str)] = &[
+    ("0.5", "0.5×"),
+    ("0.75", "0.75×"),
+    ("1", "Normal"),
+    ("1.25", "1.25×"),
+    ("1.5", "1.5×"),
+    ("2", "2×"),
+];
 
 pub fn run(target: Option<String>) -> glib::ExitCode {
     if let Err(err) = gst::init() {
@@ -32,7 +38,10 @@ pub fn run(target: Option<String>) -> glib::ExitCode {
     }
     // Single instance: a second launch forwards its file to the running
     // process over D-Bus (`open`) and exits.
-    let app = adw::Application::builder().application_id(APP_ID).flags(gio::ApplicationFlags::HANDLES_OPEN).build();
+    let app = adw::Application::builder()
+        .application_id(APP_ID)
+        .flags(gio::ApplicationFlags::HANDLES_OPEN)
+        .build();
     helix_app_common::install_standard_actions(&app, APP_NAME, "Play videos");
     app.connect_startup(|app| {
         load_css();
@@ -48,7 +57,9 @@ pub fn run(target: Option<String>) -> glib::ExitCode {
         }
     });
     app.connect_open(move |app, files, _hint| {
-        let Some(ui) = ensure_ui(app, &current) else { return };
+        let Some(ui) = ensure_ui(app, &current) else {
+            return;
+        };
         // One video at a time: the first file wins.
         if let Some(file) = files.first() {
             ui.open_uri(&file.uri());
@@ -89,7 +100,10 @@ fn ensure_ui(app: &adw::Application, current: &RefCell<std::rc::Weak<Ui>>) -> Op
 
 const ACCELS: &[(&str, &[&str])] = &[
     ("win.open", &["<Control>o"]),
-    ("win.play-pause", &["space", "KP_Space", "AudioPlay", "AudioPause"]),
+    (
+        "win.play-pause",
+        &["space", "KP_Space", "AudioPlay", "AudioPause"],
+    ),
     ("win.seek-back", &["Left", "KP_Left"]),
     ("win.seek-forward", &["Right", "KP_Right"]),
     ("win.volume-up", &["Up", "KP_Up"]),
@@ -112,7 +126,11 @@ fn load_css() {
          .vp-seek { min-width: 120px; }",
     );
     if let Some(display) = gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &css,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 }
 
@@ -202,7 +220,11 @@ fn primary_menu() -> gio::Menu {
 
 fn header(menu: &gio::Menu) -> (adw::HeaderBar, gtk::MenuButton) {
     let header = adw::HeaderBar::new();
-    let open = gtk::Button::builder().icon_name("document-open-symbolic").tooltip_text("Open…").action_name("win.open").build();
+    let open = gtk::Button::builder()
+        .icon_name("document-open-symbolic")
+        .tooltip_text("Open…")
+        .action_name("win.open")
+        .build();
     header.pack_start(&open);
     let menu_button = gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
@@ -288,7 +310,10 @@ impl Ui {
             .hexpand(true)
             .vexpand(true)
             .build();
-        let video_page = gtk::Overlay::builder().child(&picture).css_classes(["vp-video"]).build();
+        let video_page = gtk::Overlay::builder()
+            .child(&picture)
+            .css_classes(["vp-video"])
+            .build();
 
         let title = adw::WindowTitle::new(APP_NAME, "");
         let (video_header, mb) = header(&menu);
@@ -313,8 +338,16 @@ impl Ui {
         video_page.add_overlay(&spinner);
 
         let play_button = icon_button("media-playback-start-symbolic", "Play", "win.play-pause");
-        let elapsed = gtk::Label::builder().label("0:00").css_classes(["vp-time", "numeric"]).xalign(1.0).build();
-        let remaining = gtk::Label::builder().label("--:--").css_classes(["vp-time", "numeric"]).xalign(0.0).build();
+        let elapsed = gtk::Label::builder()
+            .label("0:00")
+            .css_classes(["vp-time", "numeric"])
+            .xalign(1.0)
+            .build();
+        let remaining = gtk::Label::builder()
+            .label("--:--")
+            .css_classes(["vp-time", "numeric"])
+            .xalign(0.0)
+            .build();
         let seek = gtk::Scale::builder()
             .orientation(gtk::Orientation::Horizontal)
             .adjustment(&gtk::Adjustment::new(0.0, 0.0, 1.0, 1.0, 10.0, 0.0))
@@ -381,7 +414,8 @@ impl Ui {
             .css_classes(["flat"])
             .direction(gtk::ArrowType::Up)
             .build();
-        let fullscreen_button = icon_button("view-fullscreen-symbolic", "Fullscreen", "win.fullscreen");
+        let fullscreen_button =
+            icon_button("view-fullscreen-symbolic", "Fullscreen", "win.fullscreen");
 
         let controls = gtk::Box::builder()
             .orientation(gtk::Orientation::Horizontal)
@@ -408,7 +442,9 @@ impl Ui {
             .build();
         video_page.add_overlay(&controls_revealer);
 
-        let stack = gtk::Stack::builder().transition_type(gtk::StackTransitionType::Crossfade).build();
+        let stack = gtk::Stack::builder()
+            .transition_type(gtk::StackTransitionType::Crossfade)
+            .build();
         stack.add_named(&empty_view, Some("empty"));
         stack.add_named(&error_view, Some("error"));
         stack.add_named(&video_page, Some("video"));
@@ -447,7 +483,10 @@ impl Ui {
             resume: RefCell::new(ResumeStore::load(&resume_path)),
             mpris,
             bus_watch: RefCell::new(None),
-            st: RefCell::new(St { frame_duration: 1.0 / 25.0, ..Default::default() }),
+            st: RefCell::new(St {
+                frame_duration: 1.0 / 25.0,
+                ..Default::default()
+            }),
             settings: Cell::new(settings),
             settings_save: RefCell::new(None),
             updating: Cell::new(false),
@@ -531,39 +570,64 @@ impl Ui {
         simple("play-pause", |ui| ui.toggle_play());
         simple("seek-back", |ui| ui.seek_relative(-SEEK_STEP));
         simple("seek-forward", |ui| ui.seek_relative(SEEK_STEP));
-        simple("volume-up", |ui| ui.set_volume(ui.player.volume() + VOLUME_STEP));
-        simple("volume-down", |ui| ui.set_volume(ui.player.volume() - VOLUME_STEP));
+        simple("volume-up", |ui| {
+            ui.set_volume(ui.player.volume() + VOLUME_STEP)
+        });
+        simple("volume-down", |ui| {
+            ui.set_volume(ui.player.volume() - VOLUME_STEP)
+        });
         simple("toggle-mute", |ui| ui.set_muted(!ui.player.muted()));
-        simple("fullscreen", |ui| ui.window.set_fullscreened(!ui.window.is_fullscreen()));
+        simple("fullscreen", |ui| {
+            ui.window.set_fullscreened(!ui.window.is_fullscreen())
+        });
         simple("leave-fullscreen", |ui| ui.window.set_fullscreened(false));
         simple("frame-next", |ui| ui.frame_step(true));
         simple("frame-prev", |ui| ui.frame_step(false));
         simple("screenshot", |ui| ui.screenshot());
         simple("load-subtitle", |ui| ui.subtitle_dialog());
 
-        let speed = gio::SimpleAction::new_stateful("speed", Some(glib::VariantTy::STRING), &"1".to_variant());
+        let speed = gio::SimpleAction::new_stateful(
+            "speed",
+            Some(glib::VariantTy::STRING),
+            &"1".to_variant(),
+        );
         let weak = Rc::downgrade(self);
         speed.connect_activate(move |_, param| {
-            let (Some(ui), Some(v)) = (weak.upgrade(), param.and_then(|p| p.get::<String>())) else { return };
+            let (Some(ui), Some(v)) = (weak.upgrade(), param.and_then(|p| p.get::<String>()))
+            else {
+                return;
+            };
             if let Ok(rate) = v.parse::<f64>() {
                 ui.set_rate(rate);
             }
         });
         w.add_action(&speed);
 
-        let audio = gio::SimpleAction::new_stateful("audio-track", Some(glib::VariantTy::INT32), &0i32.to_variant());
+        let audio = gio::SimpleAction::new_stateful(
+            "audio-track",
+            Some(glib::VariantTy::INT32),
+            &0i32.to_variant(),
+        );
         let weak = Rc::downgrade(self);
         audio.connect_activate(move |a, param| {
-            let (Some(ui), Some(i)) = (weak.upgrade(), param.and_then(|p| p.get::<i32>())) else { return };
+            let (Some(ui), Some(i)) = (weak.upgrade(), param.and_then(|p| p.get::<i32>())) else {
+                return;
+            };
             ui.player.set_audio(i);
             a.set_state(&i.to_variant());
         });
         w.add_action(&audio);
 
-        let text = gio::SimpleAction::new_stateful("subtitle-track", Some(glib::VariantTy::INT32), &(-1i32).to_variant());
+        let text = gio::SimpleAction::new_stateful(
+            "subtitle-track",
+            Some(glib::VariantTy::INT32),
+            &(-1i32).to_variant(),
+        );
         let weak = Rc::downgrade(self);
         text.connect_activate(move |a, param| {
-            let (Some(ui), Some(i)) = (weak.upgrade(), param.and_then(|p| p.get::<i32>())) else { return };
+            let (Some(ui), Some(i)) = (weak.upgrade(), param.and_then(|p| p.get::<i32>())) else {
+                return;
+            };
             ui.player.set_text(i);
             a.set_state(&i.to_variant());
         });
@@ -572,7 +636,9 @@ impl Ui {
     }
 
     fn action(&self, name: &str) -> Option<gio::SimpleAction> {
-        self.window.lookup_action(name).and_downcast::<gio::SimpleAction>()
+        self.window
+            .lookup_action(name)
+            .and_downcast::<gio::SimpleAction>()
     }
 
     fn update_action_states(&self) {
@@ -580,7 +646,15 @@ impl Ui {
             let st = self.st.borrow();
             st.uri.is_some() && !st.error
         };
-        for name in ["play-pause", "seek-back", "seek-forward", "frame-next", "frame-prev", "speed", "load-subtitle"] {
+        for name in [
+            "play-pause",
+            "seek-back",
+            "seek-forward",
+            "frame-next",
+            "frame-prev",
+            "speed",
+            "load-subtitle",
+        ] {
             if let Some(a) = self.action(name) {
                 a.set_enabled(has_media);
             }
@@ -616,8 +690,16 @@ impl Ui {
             self,
             move |w| {
                 let fs = w.is_fullscreen();
-                ui.fullscreen_button.set_icon_name(if fs { "view-restore-symbolic" } else { "view-fullscreen-symbolic" });
-                ui.fullscreen_button.set_tooltip_text(Some(if fs { "Leave Fullscreen" } else { "Fullscreen" }));
+                ui.fullscreen_button.set_icon_name(if fs {
+                    "view-restore-symbolic"
+                } else {
+                    "view-fullscreen-symbolic"
+                });
+                ui.fullscreen_button.set_tooltip_text(Some(if fs {
+                    "Leave Fullscreen"
+                } else {
+                    "Fullscreen"
+                }));
                 ui.update_action_states();
                 ui.mpris.update(|s| s.fullscreen = fs);
                 ui.mpris.changed(&[Prop::Fullscreen]);
@@ -644,7 +726,10 @@ impl Ui {
             move |_| ui.schedule_hide()
         ));
         self.video_page.add_controller(motion);
-        for w in [controls.upcast_ref::<gtk::Widget>(), self.header_revealer.upcast_ref()] {
+        for w in [
+            controls.upcast_ref::<gtk::Widget>(),
+            self.header_revealer.upcast_ref(),
+        ] {
             let m = gtk::EventControllerMotion::new();
             m.connect_enter(glib::clone!(
                 #[weak(rename_to = ui)]
@@ -676,7 +761,11 @@ impl Ui {
             }
         ));
         self.window.add_controller(keys);
-        for b in self.menu_buttons.iter().chain([&self.volume_button, &self.speed_button, &self.tracks_button]) {
+        for b in self.menu_buttons.iter().chain([
+            &self.volume_button,
+            &self.speed_button,
+            &self.tracks_button,
+        ]) {
             b.connect_active_notify(glib::clone!(
                 #[weak(rename_to = ui)]
                 self,
@@ -760,7 +849,9 @@ impl Ui {
             #[upgrade_or]
             false,
             move |_, value, _, _| {
-                let Ok(list) = value.get::<gdk::FileList>() else { return false };
+                let Ok(list) = value.get::<gdk::FileList>() else {
+                    return false;
+                };
                 match list.files().first() {
                     Some(file) => {
                         ui.open_uri(&file.uri());
@@ -785,7 +876,11 @@ impl Ui {
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&videos);
         filters.append(&all);
-        let dialog = gtk::FileDialog::builder().title("Open Video").modal(true).filters(&filters).build();
+        let dialog = gtk::FileDialog::builder()
+            .title("Open Video")
+            .modal(true)
+            .filters(&filters)
+            .build();
         dialog.open(
             Some(&self.window),
             None::<&gio::Cancellable>,
@@ -809,7 +904,11 @@ impl Ui {
         }
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&subs);
-        let dialog = gtk::FileDialog::builder().title("Load Subtitle File").modal(true).filters(&filters).build();
+        let dialog = gtk::FileDialog::builder()
+            .title("Load Subtitle File")
+            .modal(true)
+            .filters(&filters)
+            .build();
         dialog.open(
             Some(&self.window),
             None::<&gio::Cancellable>,
@@ -917,8 +1016,12 @@ impl Ui {
     // ---- frames / bus / ticks -------------------------------------------
 
     fn on_frame(&self) {
-        let Some(sample) = self.player.slot.take() else { return };
-        let Some(frame) = Frame::from_sample(&sample) else { return };
+        let Some(sample) = self.player.slot.take() else {
+            return;
+        };
+        let Some(frame) = Frame::from_sample(&sample) else {
+            return;
+        };
         self.paintable.set_frame(&frame);
         let first = {
             let mut st = self.st.borrow_mut();
@@ -934,7 +1037,9 @@ impl Ui {
 
     fn on_bus(self: &Rc<Self>, msg: &gst::Message) {
         use gst::MessageView as M;
-        let from_playbin = msg.src().is_some_and(|s| s == self.player.playbin.upcast_ref::<gst::Object>());
+        let from_playbin = msg
+            .src()
+            .is_some_and(|s| s == self.player.playbin.upcast_ref::<gst::Object>());
         match msg.view() {
             M::Element(_) => {
                 if let Ok(m) = gst_pbutils::MissingPluginMessage::parse(msg) {
@@ -980,7 +1085,9 @@ impl Ui {
                 self.refresh_duration();
             }
             M::Application(a) => {
-                if a.structure().is_some_and(|s| s.name() == player::TRACKS_CHANGED) {
+                if a.structure()
+                    .is_some_and(|s| s.name() == player::TRACKS_CHANGED)
+                {
                     self.rebuild_tracks_menu();
                 }
             }
@@ -1032,10 +1139,12 @@ impl Ui {
         // Missing codec for a secondary stream (e.g. audio): warn once.
         let missing = {
             let mut st = self.st.borrow_mut();
-            (!st.missing.is_empty() && !std::mem::replace(&mut st.missing_toasted, true)).then(|| st.missing.join(", "))
+            (!st.missing.is_empty() && !std::mem::replace(&mut st.missing_toasted, true))
+                .then(|| st.missing.join(", "))
         };
         if let Some(m) = missing {
-            self.toasts.add_toast(adw::Toast::new(&format!("Missing codec: {m}")));
+            self.toasts
+                .add_toast(adw::Toast::new(&format!("Missing codec: {m}")));
         }
         let uri = self.st.borrow().uri.clone();
         if let Some(pos) = uri.and_then(|u| self.resume.borrow().lookup(&u)) {
@@ -1063,13 +1172,19 @@ impl Ui {
         self.updating.set(true);
         self.seek.adjustment().set_upper(d.unwrap_or(1.0));
         self.updating.set(false);
-        self.mpris.update(|s| s.length_us = d.map(|d| (d * 1e6) as i64));
+        self.mpris
+            .update(|s| s.length_us = d.map(|d| (d * 1e6) as i64));
         self.mpris.changed(&[Prop::Metadata]);
     }
 
     fn on_playing_changed(&self, playing: bool) {
-        self.play_button.set_icon_name(if playing { "media-playback-pause-symbolic" } else { "media-playback-start-symbolic" });
-        self.play_button.set_tooltip_text(Some(if playing { "Pause" } else { "Play" }));
+        self.play_button.set_icon_name(if playing {
+            "media-playback-pause-symbolic"
+        } else {
+            "media-playback-start-symbolic"
+        });
+        self.play_button
+            .set_tooltip_text(Some(if playing { "Pause" } else { "Play" }));
         self.set_inhibit(playing);
         let has_media = self.st.borrow().uri.is_some() && !self.st.borrow().error;
         let status = match (playing, has_media) {
@@ -1090,7 +1205,9 @@ impl Ui {
         if self.st.borrow().uri.is_none() || self.st.borrow().error {
             return;
         }
-        let Some(pos) = self.player.position() else { return };
+        let Some(pos) = self.player.position() else {
+            return;
+        };
         if self.st.borrow().duration.is_none() {
             self.refresh_duration();
         }
@@ -1102,7 +1219,11 @@ impl Ui {
         }
         self.mpris.update(|s| s.position_us = (pos * 1e6) as i64);
         let due = self.player.is_playing()
-            && self.st.borrow().last_save.is_none_or(|t| t.elapsed() >= SAVE_INTERVAL);
+            && self
+                .st
+                .borrow()
+                .last_save
+                .is_none_or(|t| t.elapsed() >= SAVE_INTERVAL);
         if due {
             self.save_position();
         }
@@ -1123,7 +1244,9 @@ impl Ui {
         if eos || self.st.borrow().error {
             return;
         }
-        let Some(pos) = self.player.position() else { return };
+        let Some(pos) = self.player.position() else {
+            return;
+        };
         self.st.borrow_mut().last_save = Some(Instant::now());
         let mut store = self.resume.borrow_mut();
         if store.record(&uri, pos, d, resume::now_unix()) {
@@ -1220,12 +1343,16 @@ impl Ui {
     }
 
     fn seek_hover(&self, x: f64) {
-        let Some(d) = self.st.borrow().duration else { return };
+        let Some(d) = self.st.borrow().duration else {
+            return;
+        };
         let rect = self.seek.range_rect();
         let width = rect.width().max(1) as f64;
         let frac = ((x - rect.x() as f64) / width).clamp(0.0, 1.0);
-        self.seek_label.set_label(&timefmt::format_secs(frac * d, d >= 3600.0));
-        self.seek_popover.set_pointing_to(Some(&gdk::Rectangle::new(x as i32, 0, 1, 1)));
+        self.seek_label
+            .set_label(&timefmt::format_secs(frac * d, d >= 3600.0));
+        self.seek_popover
+            .set_pointing_to(Some(&gdk::Rectangle::new(x as i32, 0, 1, 1)));
         if !self.seek_popover.is_visible() {
             self.seek_popover.popup();
         }
@@ -1245,7 +1372,12 @@ impl Ui {
     }
 
     fn set_rate(&self, rate: f64) {
-        let rate = Settings { rate, ..self.settings.get() }.sanitized().rate;
+        let rate = Settings {
+            rate,
+            ..self.settings.get()
+        }
+        .sanitized()
+        .rate;
         if self.st.borrow().prerolled {
             self.player.set_rate(rate);
         }
@@ -1344,7 +1476,11 @@ impl Ui {
         let mut st = self.st.borrow_mut();
         match (on, st.inhibit) {
             (true, None) => {
-                let cookie = self.app.inhibit(Some(&self.window), gtk::ApplicationInhibitFlags::IDLE, Some("Playing video"));
+                let cookie = self.app.inhibit(
+                    Some(&self.window),
+                    gtk::ApplicationInhibitFlags::IDLE,
+                    Some("Playing video"),
+                );
                 if cookie != 0 {
                     st.inhibit = Some(cookie);
                 }
@@ -1364,7 +1500,10 @@ impl Ui {
             let section = gio::Menu::new();
             for t in &audio {
                 let item = gio::MenuItem::new(Some(&t.label), None);
-                item.set_action_and_target_value(Some("win.audio-track"), Some(&t.index.to_variant()));
+                item.set_action_and_target_value(
+                    Some("win.audio-track"),
+                    Some(&t.index.to_variant()),
+                );
                 section.append_item(&item);
             }
             menu.append_section(Some("Audio"), &section);
@@ -1375,7 +1514,10 @@ impl Ui {
         section.append_item(&none);
         for t in self.player.text_tracks() {
             let item = gio::MenuItem::new(Some(&t.label), None);
-            item.set_action_and_target_value(Some("win.subtitle-track"), Some(&t.index.to_variant()));
+            item.set_action_and_target_value(
+                Some("win.subtitle-track"),
+                Some(&t.index.to_variant()),
+            );
             section.append_item(&item);
         }
         section.append(Some("Load Subtitle File…"), Some("win.load-subtitle"));
@@ -1405,7 +1547,11 @@ impl Ui {
         st.showing_video
             && !st.over_controls
             && self.player.is_playing()
-            && !self.menu_buttons.iter().chain([&self.volume_button, &self.speed_button, &self.tracks_button]).any(|b| b.is_active())
+            && !self
+                .menu_buttons
+                .iter()
+                .chain([&self.volume_button, &self.speed_button, &self.tracks_button])
+                .any(|b| b.is_active())
     }
 
     fn schedule_hide(&self) {
@@ -1429,10 +1575,18 @@ impl Ui {
     // ---- screenshot -----------------------------------------------------
 
     fn screenshot(self: &Rc<Self>) {
-        let Some(texture) = self.paintable.texture() else { return };
-        let (name, pos) = (self.st.borrow().name.clone(), self.player.position().unwrap_or(0.0));
+        let Some(texture) = self.paintable.texture() else {
+            return;
+        };
+        let (name, pos) = (
+            self.st.borrow().name.clone(),
+            self.player.position().unwrap_or(0.0),
+        );
         let dir = screenshot::target_dir();
-        let path: PathBuf = screenshot::unique_path(&dir, &screenshot::base_name(&name, pos), "png", |p| p.exists());
+        let path: PathBuf =
+            screenshot::unique_path(&dir, &screenshot::base_name(&name, pos), "png", |p| {
+                p.exists()
+            });
         let handle = gio::spawn_blocking(move || texture.save_to_png(&path).map(|_| path));
         glib::spawn_future_local(glib::clone!(
             #[weak(rename_to = ui)]
@@ -1441,7 +1595,9 @@ impl Ui {
                 let msg = match handle.await {
                     Ok(Ok(path)) => format!(
                         "Screenshot saved as “{}”",
-                        path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()
+                        path.file_name()
+                            .map(|n| n.to_string_lossy().into_owned())
+                            .unwrap_or_default()
                     ),
                     Ok(Err(err)) => format!("Could not save screenshot: {err}"),
                     Err(_) => "Could not save screenshot".to_string(),

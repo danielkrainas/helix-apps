@@ -54,16 +54,26 @@ struct Reverse {
 
 /// Parses a Nominatim `format=jsonv2` reverse response.
 pub fn parse_nominatim(body: &str, fix: Fix) -> Result<Place, String> {
-    let r: Reverse = serde_json::from_str(body).map_err(|e| format!("Unexpected reverse geocoding data: {e}"))?;
+    let r: Reverse = serde_json::from_str(body)
+        .map_err(|e| format!("Unexpected reverse geocoding data: {e}"))?;
     if let Some(e) = r.error {
         return Err(e);
     }
     let a = r.address.unwrap_or_default();
-    let name = [a.city, a.town, a.village, a.municipality, a.hamlet, a.suburb, a.county, r.name]
-        .into_iter()
-        .flatten()
-        .find(|s| !s.trim().is_empty())
-        .ok_or("No place name at this position")?;
+    let name = [
+        a.city,
+        a.town,
+        a.village,
+        a.municipality,
+        a.hamlet,
+        a.suburb,
+        a.county,
+        r.name,
+    ]
+    .into_iter()
+    .flatten()
+    .find(|s| !s.trim().is_empty())
+    .ok_or("No place name at this position")?;
     Ok(Place {
         admin1: a.state,
         country: a.country,
@@ -73,7 +83,10 @@ pub fn parse_nominatim(body: &str, fix: Fix) -> Result<Place, String> {
 }
 
 fn nominatim(fix: Fix, language: &str) -> Result<Place, String> {
-    let agent = ureq::AgentBuilder::new().timeout(Duration::from_secs(15)).user_agent(USER_AGENT).build();
+    let agent = ureq::AgentBuilder::new()
+        .timeout(Duration::from_secs(15))
+        .user_agent(USER_AGENT)
+        .build();
     let req = agent
         .get(NOMINATIM_URL)
         .query("format", "jsonv2")
@@ -81,14 +94,22 @@ fn nominatim(fix: Fix, language: &str) -> Result<Place, String> {
         .query("lon", &format!("{:.4}", fix.longitude))
         .query("zoom", "10")
         .query("accept-language", language);
-    let body = req.call().map_err(|e| e.to_string())?.into_string().map_err(|e| e.to_string())?;
+    let body = req
+        .call()
+        .map_err(|e| e.to_string())?
+        .into_string()
+        .map_err(|e| e.to_string())?;
     parse_nominatim(&body, fix)
 }
 
 /// Names `fix` (blocking; may use the network).
 pub fn name_place(fix: Fix, db: Option<&gwdb::Db>, language: &str) -> Place {
     db.and_then(|d| offline(d, fix))
-        .or_else(|| nominatim(fix, language).map_err(|e| eprintln!("helix-weather: reverse geocoding: {e}")).ok())
+        .or_else(|| {
+            nominatim(fix, language)
+                .map_err(|e| eprintln!("helix-weather: reverse geocoding: {e}"))
+                .ok()
+        })
         .unwrap_or_else(|| Place::at(FALLBACK_NAME, fix.latitude, fix.longitude))
 }
 
@@ -106,7 +127,11 @@ mod tests {
     use super::*;
 
     fn fix(lat: f64, lon: f64) -> Fix {
-        Fix { latitude: lat, longitude: lon, accuracy: None }
+        Fix {
+            latitude: lat,
+            longitude: lon,
+            accuracy: None,
+        }
     }
 
     #[test]
@@ -116,7 +141,11 @@ mod tests {
         assert_eq!(p.name, "Munich");
         assert_eq!(p.subtitle(), "Bavaria, Germany");
         assert_eq!(p.timezone.as_deref(), Some("Europe/Berlin"));
-        assert_eq!((p.latitude, p.longitude), (48.2, 11.6), "keeps the real position");
+        assert_eq!(
+            (p.latitude, p.longitude),
+            (48.2, 11.6),
+            "keeps the real position"
+        );
         assert!(offline(&db, fix(0.0, 0.0)).is_none());
         // Without any source the fallback name is used (no network here:
         // a far-away fix with the database would hit Nominatim).
@@ -131,7 +160,10 @@ mod tests {
         assert_eq!(p.country.as_deref(), Some("Deutschland"));
         assert_eq!(p.country_code.as_deref(), Some("DE"));
         let village = r#"{"address":{"village":"Kleinort","county":"Kreis","country":"X"}}"#;
-        assert_eq!(parse_nominatim(village, fix(1.0, 1.0)).unwrap().name, "Kleinort");
+        assert_eq!(
+            parse_nominatim(village, fix(1.0, 1.0)).unwrap().name,
+            "Kleinort"
+        );
         assert!(parse_nominatim(r#"{"error":"Unable to geocode"}"#, fix(0.0, 0.0)).is_err());
         assert!(parse_nominatim(r#"{"address":{}}"#, fix(0.0, 0.0)).is_err());
         assert!(parse_nominatim("nope", fix(0.0, 0.0)).is_err());

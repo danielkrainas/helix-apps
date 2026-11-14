@@ -150,7 +150,8 @@ impl Tab {
             .build();
         crash_reload.add_css_class("pill");
         crash_reload.add_css_class("suggested-action");
-        let crash_page = crate::sandbox::crashed_page(webkit6::WebProcessTerminationReason::Crashed);
+        let crash_page =
+            crate::sandbox::crashed_page(webkit6::WebProcessTerminationReason::Crashed);
         crash_page.set_child(Some(&crash_reload));
         crash_page.add_css_class("view");
         crash_page.set_visible(false);
@@ -567,11 +568,15 @@ impl Tab {
                 // allowed site) in the regular browser.
                 if let Some(app) = self.app.upgrade() {
                     if app.web_app.is_some() {
-                        let target = action.request().and_then(|r| r.uri()).map(|u| u.to_string());
+                        let target = action
+                            .request()
+                            .and_then(|r| r.uri())
+                            .map(|u| u.to_string());
                         let user = action.is_user_gesture()
                             || action.navigation_type() == webkit6::NavigationType::LinkClicked;
                         if let Some(uri) = target.filter(|u| {
-                            (u.starts_with("http://") || u.starts_with("https://")) && !app.keeps_link(u)
+                            (u.starts_with("http://") || u.starts_with("https://"))
+                                && !app.keeps_link(u)
                         }) {
                             if user || kind == webkit6::PolicyDecisionType::NewWindowAction {
                                 decision.ignore();
@@ -670,9 +675,13 @@ impl Tab {
             self.view.load_uri(&uri);
             return;
         }
-        let Some(app) = self.app.upgrade() else { return };
+        let Some(app) = self.app.upgrade() else {
+            return;
+        };
         let article = self.reader_article.borrow().clone();
-        let Some((source, article)) = article else { return };
+        let Some((source, article)) = article else {
+            return;
+        };
         let (font, colors) = {
             let s = app.settings.borrow();
             let dark = adw::StyleManager::default().is_dark() || s.reader_colors == "dark";
@@ -691,11 +700,15 @@ impl Tab {
     }
 
     fn fill_passwords(self: &Rc<Self>, uri: &str) {
-        let Some(app) = self.app.upgrade() else { return };
+        let Some(app) = self.app.upgrade() else {
+            return;
+        };
         if !app.settings.borrow().remember_passwords || self.security.get() == Security::Broken {
             return;
         }
-        let Some(origin) = urlinput::origin_of(uri) else { return };
+        let Some(origin) = urlinput::origin_of(uri) else {
+            return;
+        };
         let weak = Rc::downgrade(self);
         // Only ask the keyring when the page has a password field.
         self.view.evaluate_javascript(
@@ -716,7 +729,8 @@ impl Tab {
                     let Some(t) = weak.upgrade() else { return };
                     match logins {
                         Ok(Ok(list)) => {
-                            let same_page = urlinput::origin_of(&t.uri()).as_deref() == Some(&origin);
+                            let same_page =
+                                urlinput::origin_of(&t.uri()).as_deref() == Some(&origin);
                             if let Some(login) = passwords::pick_fill(&list).filter(|_| same_page) {
                                 t.view.evaluate_javascript(
                                     &passwords::fill_script(login),
@@ -736,12 +750,18 @@ impl Tab {
     }
 
     fn password_submitted(self: &Rc<Self>, json: &str) {
-        let Some(app) = self.app.upgrade() else { return };
+        let Some(app) = self.app.upgrade() else {
+            return;
+        };
         if self.private || !app.settings.borrow().remember_passwords {
             return;
         }
-        let Some(origin) = urlinput::origin_of(&self.uri()) else { return };
-        let Some(sub) = passwords::parse_message(json, &origin) else { return };
+        let Some(origin) = urlinput::origin_of(&self.uri()) else {
+            return;
+        };
+        let Some(sub) = passwords::parse_message(json, &origin) else {
+            return;
+        };
         if app.permissions.borrow().get(&origin, Kind::SavePassword) == Decision::Deny {
             return;
         }
@@ -774,7 +794,9 @@ impl Tab {
     /// `Some(true)` save, `Some(false)` never for this site, `None` not now.
     fn answer_password(&self, answer: Option<bool>) {
         self.pw_revealer.set_reveal_child(false);
-        let Some(sub) = self.pw_pending.take() else { return };
+        let Some(sub) = self.pw_pending.take() else {
+            return;
+        };
         match answer {
             Some(true) => {
                 let login = sub.to_login();

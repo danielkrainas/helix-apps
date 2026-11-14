@@ -70,7 +70,11 @@ pub fn show(win: &Rc<Window>, files: Vec<gio::File>) {
         let mut infos = Vec::new();
         for f in &files {
             match f
-                .query_info_future(ATTRS, gio::FileQueryInfoFlags::NONE, glib::Priority::DEFAULT)
+                .query_info_future(
+                    ATTRS,
+                    gio::FileQueryInfoFlags::NONE,
+                    glib::Priority::DEFAULT,
+                )
                 .await
             {
                 Ok(i) => infos.push((f.clone(), i)),
@@ -121,7 +125,10 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
             measure_into(vec![file.clone()], contents, cancel.clone());
         } else {
             let bytes = info.size().max(0) as u64;
-            group.add(&row("Size", &format!("{} ({} bytes)", fmt::size(bytes), bytes)));
+            group.add(&row(
+                "Size",
+                &format!("{} ({} bytes)", fmt::size(bytes), bytes),
+            ));
         }
         if let Some(parent) = file.parent() {
             let r = row("Parent Folder", &super::window::display_location(&parent));
@@ -139,7 +146,10 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
                         t.load(&parent, true, vec![f.clone()]);
                     }
                 }
-                if let Some(d) = b.ancestor(adw::Dialog::static_type()).and_downcast::<adw::Dialog>() {
+                if let Some(d) = b
+                    .ancestor(adw::Dialog::static_type())
+                    .and_downcast::<adw::Dialog>()
+                {
                     d.close();
                 }
             });
@@ -176,7 +186,10 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
         let f = file.clone();
         glib::spawn_future_local(async move {
             match f
-                .query_filesystem_info_future("filesystem::free,filesystem::size", glib::Priority::LOW)
+                .query_filesystem_info_future(
+                    "filesystem::free,filesystem::size",
+                    glib::Priority::LOW,
+                )
                 .await
             {
                 Ok(fs) if fs.has_attribute("filesystem::free") => {
@@ -200,10 +213,20 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
         title.set_text(&format!("{} selected", fmt::item_count(infos.len() as u64)));
         let contents = row("Contents", "Calculating…");
         group.add(&contents);
-        measure_into(infos.iter().map(|(f, _)| f.clone()).collect(), contents, cancel.clone());
+        measure_into(
+            infos.iter().map(|(f, _)| f.clone()).collect(),
+            contents,
+            cancel.clone(),
+        );
         if let Some(parent) = infos[0].0.parent() {
-            if infos.iter().all(|(f, _)| f.parent().is_some_and(|p| p.equal(&parent))) {
-                group.add(&row("Parent Folder", &super::window::display_location(&parent)));
+            if infos
+                .iter()
+                .all(|(f, _)| f.parent().is_some_and(|p| p.equal(&parent)))
+            {
+                group.add(&row(
+                    "Parent Folder",
+                    &super::window::display_location(&parent),
+                ));
             }
         }
         page.add(&group);
@@ -222,8 +245,14 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
     dialog.present(Some(&win.window));
 }
 
-fn permissions_group(win: &Rc<Window>, file: &gio::File, info: &gio::FileInfo) -> adw::PreferencesGroup {
-    let group = adw::PreferencesGroup::builder().title("Permissions").build();
+fn permissions_group(
+    win: &Rc<Window>,
+    file: &gio::File,
+    info: &gio::FileInfo,
+) -> adw::PreferencesGroup {
+    let group = adw::PreferencesGroup::builder()
+        .title("Permissions")
+        .build();
     let mode = Rc::new(std::cell::Cell::new(info.attribute_uint32("unix::mode")));
     let editable = file.is_native() && {
         let uid = info.attribute_uint32("unix::uid");
@@ -233,11 +262,19 @@ fn permissions_group(win: &Rc<Window>, file: &gio::File, info: &gio::FileInfo) -
     summary.add_css_class("monospace");
     summary.add_css_class("dim-label");
     group.set_header_suffix(Some(&summary));
-    for (who, label) in [(Who::Owner, "Owner"), (Who::Group, "Group"), (Who::Others, "Others")] {
+    for (who, label) in [
+        (Who::Owner, "Owner"),
+        (Who::Group, "Group"),
+        (Who::Others, "Others"),
+    ] {
         let r = adw::ActionRow::builder().title(label).build();
         let b = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         b.set_valign(gtk::Align::Center);
-        for (perm, plabel) in [(Perm::Read, "Read"), (Perm::Write, "Write"), (Perm::Execute, "Execute")] {
+        for (perm, plabel) in [
+            (Perm::Read, "Read"),
+            (Perm::Write, "Write"),
+            (Perm::Execute, "Execute"),
+        ] {
             let check = gtk::CheckButton::with_label(plabel);
             check.set_active(mode.get() & fmt::mode_bit(who, perm) != 0);
             check.set_sensitive(editable);
@@ -259,7 +296,11 @@ fn permissions_group(win: &Rc<Window>, file: &gio::File, info: &gio::FileInfo) -
                 let win = win.clone();
                 glib::spawn_future_local(async move {
                     match file
-                        .set_attributes_future(&info, gio::FileQueryInfoFlags::NONE, glib::Priority::DEFAULT)
+                        .set_attributes_future(
+                            &info,
+                            gio::FileQueryInfoFlags::NONE,
+                            glib::Priority::DEFAULT,
+                        )
                         .await
                     {
                         Ok(_) => {
@@ -281,7 +322,9 @@ fn permissions_group(win: &Rc<Window>, file: &gio::File, info: &gio::FileInfo) -
         group.add(&r);
     }
     if !editable {
-        group.set_description(Some("You are not the owner, so you cannot change these permissions."));
+        group.set_description(Some(
+            "You are not the owner, so you cannot change these permissions.",
+        ));
     }
     group
 }
@@ -289,5 +332,7 @@ fn permissions_group(win: &Rc<Window>, file: &gio::File, info: &gio::FileInfo) -
 /// Current user id (owner of /proc/self).
 fn current_uid() -> u32 {
     use std::os::unix::fs::MetadataExt;
-    std::fs::metadata("/proc/self").map(|m| m.uid()).unwrap_or(u32::MAX)
+    std::fs::metadata("/proc/self")
+        .map(|m| m.uid())
+        .unwrap_or(u32::MAX)
 }

@@ -5,12 +5,17 @@ use std::path::{Path, PathBuf};
 /// Parses an OSC 7 `file://HOST/PATH` URI into `(host, path)`.
 /// The path is percent-decoded; the host may be empty.
 pub fn parse_file_uri(uri: &str) -> Option<(String, PathBuf)> {
-    let rest = uri.strip_prefix("file://").or_else(|| uri.strip_prefix("kitty-shell-cwd://"))?;
+    let rest = uri
+        .strip_prefix("file://")
+        .or_else(|| uri.strip_prefix("kitty-shell-cwd://"))?;
     let i = rest.find('/')?;
     let (host, path) = (&rest[..i], &rest[i..]);
     let bytes = percent_decode(path)?;
     use std::os::unix::ffi::OsStringExt;
-    Some((host.to_string(), PathBuf::from(std::ffi::OsString::from_vec(bytes))))
+    Some((
+        host.to_string(),
+        PathBuf::from(std::ffi::OsString::from_vec(bytes)),
+    ))
 }
 
 fn percent_decode(s: &str) -> Option<Vec<u8>> {
@@ -69,7 +74,8 @@ pub fn tab_title(window_title: Option<&str>, cwd: Option<&Path>, home: &Path) ->
 /// Quotes `s` for a POSIX shell if needed.
 pub fn shell_quote(s: &str) -> String {
     let safe = !s.is_empty()
-        && s.chars().all(|c| c.is_alphanumeric() || "-_./,:@%+=~".contains(c));
+        && s.chars()
+            .all(|c| c.is_alphanumeric() || "-_./,:@%+=~".contains(c));
     if safe {
         s.to_string()
     } else {
@@ -94,7 +100,10 @@ mod tests {
 
     #[test]
     fn osc7_uris() {
-        assert_eq!(parse_file_uri("file:///home/u"), Some((String::new(), "/home/u".into())));
+        assert_eq!(
+            parse_file_uri("file:///home/u"),
+            Some((String::new(), "/home/u".into()))
+        );
         assert_eq!(
             parse_file_uri("file://box/home/u/My%20Docs"),
             Some(("box".into(), "/home/u/My Docs".into()))
@@ -102,13 +111,22 @@ mod tests {
         assert_eq!(parse_file_uri("file://box"), None);
         assert_eq!(parse_file_uri("http://x/y"), None);
         assert_eq!(parse_file_uri("file:///bad%2"), None);
-        assert_eq!(parse_file_uri("file:///%C3%A9").unwrap().1, PathBuf::from("/é"));
+        assert_eq!(
+            parse_file_uri("file:///%C3%A9").unwrap().1,
+            PathBuf::from("/é")
+        );
     }
 
     #[test]
     fn local_hosts() {
-        assert_eq!(local_dir_from_uri("file://box/tmp", "box"), Some("/tmp".into()));
-        assert_eq!(local_dir_from_uri("file://localhost/tmp", "box"), Some("/tmp".into()));
+        assert_eq!(
+            local_dir_from_uri("file://box/tmp", "box"),
+            Some("/tmp".into())
+        );
+        assert_eq!(
+            local_dir_from_uri("file://localhost/tmp", "box"),
+            Some("/tmp".into())
+        );
         assert_eq!(local_dir_from_uri("file://other/tmp", "box"), None);
     }
 
@@ -125,7 +143,10 @@ mod tests {
     fn titles() {
         let home = Path::new("/home/u");
         assert_eq!(tab_title(Some("vim"), Some(Path::new("/tmp")), home), "vim");
-        assert_eq!(tab_title(Some("  "), Some(Path::new("/home/u/x")), home), "~/x");
+        assert_eq!(
+            tab_title(Some("  "), Some(Path::new("/home/u/x")), home),
+            "~/x"
+        );
         assert_eq!(tab_title(None, None, home), "Terminal");
     }
 

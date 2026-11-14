@@ -28,13 +28,14 @@ fn main() -> glib::ExitCode {
             let roots: Vec<PathBuf> = args[1..].iter().map(PathBuf::from).collect();
             // Uses the LocalSearch/Tracker index for folders it covers
             // (read-only), unless HELIX_MUSIC_NO_TRACKER is set.
-            let indexed = tracker::Endpoint::connect().and_then(|ep| match tracker::library(&ep, &roots) {
-                Ok(l) => Some(l),
-                Err(e) => {
-                    eprintln!("helix-music: Tracker query failed: {e}");
-                    None
-                }
-            });
+            let indexed =
+                tracker::Endpoint::connect().and_then(|ep| match tracker::library(&ep, &roots) {
+                    Ok(l) => Some(l),
+                    Err(e) => {
+                        eprintln!("helix-music: Tracker query failed: {e}");
+                        None
+                    }
+                });
             let (tracks, report) = index::scan_hybrid(&roots, indexed, Vec::new(), None, 0);
             let lib = model::Library::new(tracks);
             for album in &lib.albums {
@@ -62,7 +63,11 @@ fn main() -> glib::ExitCode {
         Some("--gnome-music") if args.len() <= 2 => {
             // Prints what would be imported from GNOME Music's database
             // (read-only: a copy is queried).
-            let Some(db) = args.get(1).map(PathBuf::from).or_else(gnome_import::find_db) else {
+            let Some(db) = args
+                .get(1)
+                .map(PathBuf::from)
+                .or_else(gnome_import::find_db)
+            else {
                 eprintln!("helix-music: no GNOME Music database found");
                 return glib::ExitCode::FAILURE;
             };

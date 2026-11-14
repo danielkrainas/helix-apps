@@ -46,7 +46,9 @@ impl Tab {
 
     /// Whether a program other than the shell is in the foreground.
     pub fn is_busy(&self) -> bool {
-        let Some(pid) = self.child_pid.get() else { return false };
+        let Some(pid) = self.child_pid.get() else {
+            return false;
+        };
         match self.term.pty() {
             Some(pty) => process::is_busy(pty.fd().as_raw_fd(), pid),
             None => false,
@@ -98,7 +100,11 @@ impl Tab {
         if self.term.search_get_regex().is_none() {
             self.update_search();
         }
-        let found = if up { self.term.search_find_previous() } else { self.term.search_find_next() };
+        let found = if up {
+            self.term.search_find_previous()
+        } else {
+            self.term.search_find_next()
+        };
         if found || self.search_entry.text().is_empty() {
             self.search_entry.remove_css_class("error");
         } else {
@@ -123,9 +129,15 @@ pub struct Window {
 
 impl Window {
     pub fn new(app: &Rc<App>) -> Rc<Window> {
-        let win = adw::ApplicationWindow::builder().application(&app.gtk).title("Terminal").build();
+        let win = adw::ApplicationWindow::builder()
+            .application(&app.gtk)
+            .title("Terminal")
+            .build();
         let tab_view = adw::TabView::new();
-        let tab_bar = adw::TabBar::builder().view(&tab_view).autohide(true).build();
+        let tab_bar = adw::TabBar::builder()
+            .view(&tab_view)
+            .autohide(true)
+            .build();
 
         let header = adw::HeaderBar::new();
         let new_tab = gtk::Button::builder()
@@ -152,7 +164,10 @@ impl Window {
             .primary(true)
             .build();
         header.pack_end(&menu_button);
-        let tab_button = adw::TabButton::builder().view(&tab_view).action_name("overview.open").build();
+        let tab_button = adw::TabButton::builder()
+            .view(&tab_view)
+            .action_name("overview.open")
+            .build();
         header.pack_end(&tab_button);
         let find = gtk::Button::builder()
             .icon_name("edit-find-symbolic")
@@ -199,7 +214,11 @@ impl Window {
     }
 
     fn tab_for_child(&self, child: &gtk::Widget) -> Option<Rc<Tab>> {
-        self.tabs.borrow().iter().find(|t| t.root.upcast_ref::<gtk::Widget>() == child).cloned()
+        self.tabs
+            .borrow()
+            .iter()
+            .find(|t| t.root.upcast_ref::<gtk::Widget>() == child)
+            .cloned()
     }
 
     fn current_cwd(&self) -> Option<PathBuf> {
@@ -233,7 +252,10 @@ impl Window {
             .build();
 
         // Find bar.
-        let search_entry = gtk::SearchEntry::builder().placeholder_text("Find").hexpand(true).build();
+        let search_entry = gtk::SearchEntry::builder()
+            .placeholder_text("Find")
+            .hexpand(true)
+            .build();
         let prev = gtk::Button::builder()
             .icon_name("go-up-symbolic")
             .tooltip_text("Previous Match (older output)")
@@ -247,7 +269,10 @@ impl Window {
             .tooltip_text("Match Case")
             .build();
         match_case.set_label("Aa");
-        let use_regex = gtk::ToggleButton::builder().label(".*").tooltip_text("Regular Expression").build();
+        let use_regex = gtk::ToggleButton::builder()
+            .label(".*")
+            .tooltip_text("Regular Expression")
+            .build();
         let nav = gtk::Box::builder().css_classes(["linked"]).build();
         nav.append(&prev);
         nav.append(&next);
@@ -256,8 +281,14 @@ impl Window {
         bar_box.append(&nav);
         bar_box.append(&match_case);
         bar_box.append(&use_regex);
-        let clamp = adw::Clamp::builder().maximum_size(560).child(&bar_box).build();
-        let search_bar = gtk::SearchBar::builder().child(&clamp).show_close_button(true).build();
+        let clamp = adw::Clamp::builder()
+            .maximum_size(560)
+            .child(&bar_box)
+            .build();
+        let search_bar = gtk::SearchBar::builder()
+            .child(&clamp)
+            .show_close_button(true)
+            .build();
         search_bar.connect_entry(&search_entry);
 
         let banner = adw::Banner::builder().button_label("_Close").build();
@@ -292,13 +323,15 @@ impl Window {
     }
 
     fn spawn(&self, tab: &Rc<Tab>, launch: Launch) {
-        let argv: Vec<String> =
-            if launch.command.is_empty() {
-                let setting = self.app.upgrade().map(|a| a.prefs.get("shell", Vec::<String>::new()));
-                process::shell_argv(setting.unwrap_or_default())
-            } else {
-                launch.command
-            };
+        let argv: Vec<String> = if launch.command.is_empty() {
+            let setting = self
+                .app
+                .upgrade()
+                .map(|a| a.prefs.get("shell", Vec::<String>::new()));
+            process::shell_argv(setting.unwrap_or_default())
+        } else {
+            launch.command
+        };
         let cwd = launch
             .cwd
             .filter(|p| p.is_dir())
@@ -328,7 +361,10 @@ impl Window {
                         }
                     }
                     Err(e) => {
-                        let msg = format!("\x1b[1;31mFailed to start “{what}”: {}\x1b[0m\r\n", e.message());
+                        let msg = format!(
+                            "\x1b[1;31mFailed to start “{what}”: {}\x1b[0m\r\n",
+                            e.message()
+                        );
                         tab.term.feed(msg.as_bytes());
                         tab.banner.set_title(&format!("Could not start “{what}”"));
                         tab.banner.set_revealed(true);
@@ -347,8 +383,13 @@ impl Window {
             let Some(w) = tab.window() else { return };
             tab.child_pid.set(None);
             if tab.is_command {
-                let code = if libc::WIFEXITED(status) { libc::WEXITSTATUS(status) } else { status };
-                tab.banner.set_title(&format!("Process exited with status {code}"));
+                let code = if libc::WIFEXITED(status) {
+                    libc::WEXITSTATUS(status)
+                } else {
+                    status
+                };
+                tab.banner
+                    .set_title(&format!("Process exited with status {code}"));
                 tab.banner.set_revealed(true);
             } else {
                 let page = w.tab_view.page(&tab.root);
@@ -413,12 +454,20 @@ impl Window {
         scroll.set_propagation_phase(gtk::PropagationPhase::Capture);
         let wk = Rc::downgrade(tab);
         scroll.connect_scroll(move |c, _, dy| {
-            if !c.current_event_state().contains(gdk::ModifierType::CONTROL_MASK) || dy == 0.0 {
+            if !c
+                .current_event_state()
+                .contains(gdk::ModifierType::CONTROL_MASK)
+                || dy == 0.0
+            {
                 return glib::Propagation::Proceed;
             }
             if let Some(w) = wk.upgrade().and_then(|t| t.window()) {
                 let app = w.app();
-                let s = if dy < 0.0 { search::zoom_in(app.font_scale()) } else { search::zoom_out(app.font_scale()) };
+                let s = if dy < 0.0 {
+                    search::zoom_in(app.font_scale())
+                } else {
+                    search::zoom_out(app.font_scale())
+                };
                 app.set_font_scale(s);
             }
             glib::Propagation::Stop
@@ -436,10 +485,17 @@ impl Window {
                 .term
                 .check_hyperlink_at(x, y)
                 .map(|s| s.to_string())
-                .or_else(|| tab.term.check_match_at(x, y).0.map(|s| search::normalize_url(&s)));
+                .or_else(|| {
+                    tab.term
+                        .check_match_at(x, y)
+                        .0
+                        .map(|s| search::normalize_url(&s))
+                });
             *tab.link.borrow_mut() = link.clone();
             w.update_link_actions();
-            let ctrl = g.current_event_state().contains(gdk::ModifierType::CONTROL_MASK);
+            let ctrl = g
+                .current_event_state()
+                .contains(gdk::ModifierType::CONTROL_MASK);
             if g.current_button() == 1 && ctrl {
                 if let Some(uri) = link {
                     g.set_state(gtk::EventSequenceState::Claimed);
@@ -470,7 +526,9 @@ impl Window {
         drop.set_types(&[gdk::FileList::static_type(), glib::Type::STRING]);
         let tk = Rc::downgrade(tab);
         drop.connect_drop(move |_, value, _, _| {
-            let Some(tab) = tk.upgrade() else { return false };
+            let Some(tab) = tk.upgrade() else {
+                return false;
+            };
             if let Ok(list) = value.get::<gdk::FileList>() {
                 let paths: Vec<String> = list
                     .files()
@@ -480,7 +538,8 @@ impl Window {
                         None => f.uri().to_string(),
                     })
                     .collect();
-                tab.term.paste_text(&paths::dropped_paths_text(paths.iter().map(String::as_str)));
+                tab.term
+                    .paste_text(&paths::dropped_paths_text(paths.iter().map(String::as_str)));
                 tab.term.grab_focus();
                 return true;
             }
@@ -531,7 +590,12 @@ impl Window {
         let tk = Rc::downgrade(tab);
         keys.connect_key_pressed(move |_, key, _, state| {
             let shift = state.contains(gdk::ModifierType::SHIFT_MASK);
-            if shift && matches!(key, gdk::Key::Return | gdk::Key::KP_Enter | gdk::Key::ISO_Enter) {
+            if shift
+                && matches!(
+                    key,
+                    gdk::Key::Return | gdk::Key::KP_Enter | gdk::Key::ISO_Enter
+                )
+            {
                 if let Some(t) = tk.upgrade() {
                     t.find(false);
                 }
@@ -547,15 +611,16 @@ impl Window {
             }
         });
         let tk = Rc::downgrade(tab);
-        tab.search_bar.connect_search_mode_enabled_notify(move |bar| {
-            if let Some(t) = tk.upgrade() {
-                if !bar.is_search_mode() {
-                    t.term.search_set_regex(None, 0);
-                    t.term.unselect_all();
-                    t.term.grab_focus();
+        tab.search_bar
+            .connect_search_mode_enabled_notify(move |bar| {
+                if let Some(t) = tk.upgrade() {
+                    if !bar.is_search_mode() {
+                        t.term.search_set_regex(None, 0);
+                        t.term.unselect_all();
+                        t.term.grab_focus();
+                    }
                 }
-            }
-        });
+            });
         let tk = Rc::downgrade(tab);
         prev.connect_clicked(move |_| {
             if let Some(t) = tk.upgrade() {
@@ -579,9 +644,16 @@ impl Window {
     }
 
     fn update_link_actions(&self) {
-        let has = self.current_tab().map(|t| t.link.borrow().is_some()).unwrap_or(false);
+        let has = self
+            .current_tab()
+            .map(|t| t.link.borrow().is_some())
+            .unwrap_or(false);
         for name in ["open-link", "copy-link"] {
-            if let Some(a) = self.win.lookup_action(name).and_downcast::<gio::SimpleAction>() {
+            if let Some(a) = self
+                .win
+                .lookup_action(name)
+                .and_downcast::<gio::SimpleAction>()
+            {
                 a.set_enabled(has);
             }
         }
@@ -599,7 +671,10 @@ impl Window {
                 .unwrap_or_default();
             page.set_tooltip(&glib::markup_escape_text(&tip));
         }
-        let title = self.current_tab().map(|t| t.title()).unwrap_or_else(|| "Terminal".into());
+        let title = self
+            .current_tab()
+            .map(|t| t.title())
+            .unwrap_or_else(|| "Terminal".into());
         self.win.set_title(Some(&title));
     }
 
@@ -608,7 +683,9 @@ impl Window {
     fn start_tint_poll(&self) {
         let wk = self.this.clone();
         glib::timeout_add_local(Duration::from_secs(1), move || {
-            let Some(w) = wk.upgrade() else { return glib::ControlFlow::Break };
+            let Some(w) = wk.upgrade() else {
+                return glib::ControlFlow::Break;
+            };
             w.update_tint();
             glib::ControlFlow::Continue
         });
@@ -637,7 +714,9 @@ impl Window {
     fn connect_signals(&self) {
         let wk = self.this.clone();
         self.tab_view.connect_close_page(move |tv, page| {
-            let Some(w) = wk.upgrade() else { return glib::Propagation::Proceed };
+            let Some(w) = wk.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
             let Some(tab) = w.tab_for_child(&page.child()) else {
                 tv.close_page_finish(page, true);
                 return glib::Propagation::Stop;
@@ -719,18 +798,28 @@ impl Window {
         self.overview.connect_create_tab(move |_| {
             let w = wk.upgrade().expect("window alive");
             let cwd = w.current_cwd();
-            w.new_tab(Launch { cwd, command: Vec::new() })
+            w.new_tab(Launch {
+                cwd,
+                command: Vec::new(),
+            })
         });
 
         let wk = self.this.clone();
         self.win.connect_close_request(move |_| {
-            let Some(w) = wk.upgrade() else { return glib::Propagation::Proceed };
+            let Some(w) = wk.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
             if w.closing.get() {
                 w.app().remove_window(&w);
                 return glib::Propagation::Proceed;
             }
-            let names: Vec<String> =
-                w.tabs.borrow().iter().filter(|t| t.is_busy()).map(|t| t.busy_name()).collect();
+            let names: Vec<String> = w
+                .tabs
+                .borrow()
+                .iter()
+                .filter(|t| t.is_busy())
+                .map(|t| t.busy_name())
+                .collect();
             if names.is_empty() {
                 w.closing.set(true);
                 w.app().remove_window(&w);
@@ -768,14 +857,23 @@ impl Window {
             "new-tab",
             Box::new(|w| {
                 let cwd = w.current_cwd();
-                w.new_tab(Launch { cwd, command: Vec::new() });
+                w.new_tab(Launch {
+                    cwd,
+                    command: Vec::new(),
+                });
             }),
         );
         add(
             "new-window",
             Box::new(|w| {
                 let cwd = w.current_cwd();
-                w.app().open(false, Launch { cwd, command: Vec::new() });
+                w.app().open(
+                    false,
+                    Launch {
+                        cwd,
+                        command: Vec::new(),
+                    },
+                );
             }),
         );
         add(
@@ -840,14 +938,20 @@ impl Window {
                 }
             }),
         );
-        add("zoom-in", Box::new(|w| {
-            let app = w.app();
-            app.set_font_scale(search::zoom_in(app.font_scale()));
-        }));
-        add("zoom-out", Box::new(|w| {
-            let app = w.app();
-            app.set_font_scale(search::zoom_out(app.font_scale()));
-        }));
+        add(
+            "zoom-in",
+            Box::new(|w| {
+                let app = w.app();
+                app.set_font_scale(search::zoom_in(app.font_scale()));
+            }),
+        );
+        add(
+            "zoom-out",
+            Box::new(|w| {
+                let app = w.app();
+                app.set_font_scale(search::zoom_out(app.font_scale()));
+            }),
+        );
         add("zoom-reset", Box::new(|w| w.app().set_font_scale(1.0)));
         add(
             "open-link",
@@ -865,7 +969,10 @@ impl Window {
                 }
             }),
         );
-        add("tab-overview", Box::new(|w| w.overview.set_open(!w.overview.is_open())));
+        add(
+            "tab-overview",
+            Box::new(|w| w.overview.set_open(!w.overview.is_open())),
+        );
         add(
             "fullscreen",
             Box::new(|w| {
@@ -876,19 +983,29 @@ impl Window {
                 }
             }),
         );
-        add("show-shortcuts", Box::new(|w| crate::shortcuts::show(&w.win)));
+        add(
+            "show-shortcuts",
+            Box::new(|w| crate::shortcuts::show(&w.win)),
+        );
         self.update_link_actions();
     }
 }
 
 /// Asks whether to close despite running programs. Returns true to close.
 async fn confirm_close(win: &adw::ApplicationWindow, names: &[String], window: bool) -> bool {
-    let heading = if window { "Close Window?" } else { "Close Tab?" };
+    let heading = if window {
+        "Close Window?"
+    } else {
+        "Close Tab?"
+    };
     let body = if names.len() == 1 {
         format!("“{}” is still running. Closing will stop it.", names[0])
     } else {
         let list: Vec<String> = names.iter().map(|n| format!("• {n}")).collect();
-        format!("Some programs are still running:\n{}\nClosing will stop them.", list.join("\n"))
+        format!(
+            "Some programs are still running:\n{}\nClosing will stop them.",
+            list.join("\n")
+        )
     };
     let dialog = adw::AlertDialog::new(Some(heading), Some(&body));
     dialog.add_responses(&[("cancel", "_Cancel"), ("close", "C_lose")]);

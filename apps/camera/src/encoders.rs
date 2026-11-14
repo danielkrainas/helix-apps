@@ -8,7 +8,11 @@ pub enum VideoFormat {
 }
 
 impl VideoFormat {
-    pub const ALL: [VideoFormat; 3] = [VideoFormat::WebmVp8, VideoFormat::WebmVp9, VideoFormat::Mp4H264];
+    pub const ALL: [VideoFormat; 3] = [
+        VideoFormat::WebmVp8,
+        VideoFormat::WebmVp9,
+        VideoFormat::Mp4H264,
+    ];
 
     pub fn id(self) -> &'static str {
         match self {
@@ -97,7 +101,10 @@ pub fn plan(format: VideoFormat, has: &impl Fn(&str) -> bool) -> Option<EncoderP
 
 /// Every format with whether it is usable.
 pub fn availability(has: &impl Fn(&str) -> bool) -> Vec<(VideoFormat, bool)> {
-    VideoFormat::ALL.into_iter().map(|f| (f, plan(f, has).is_some())).collect()
+    VideoFormat::ALL
+        .into_iter()
+        .map(|f| (f, plan(f, has).is_some()))
+        .collect()
 }
 
 /// The preferred format if available, otherwise the first one that is.
@@ -126,7 +133,14 @@ mod tests {
     #[test]
     fn full_registry_prefers_requested() {
         let has = reg(&[
-            "vp8enc", "vp9enc", "opusenc", "webmmux", "x264enc", "avenc_aac", "mp4mux", "h264parse",
+            "vp8enc",
+            "vp9enc",
+            "opusenc",
+            "webmmux",
+            "x264enc",
+            "avenc_aac",
+            "mp4mux",
+            "h264parse",
         ]);
         let p = choose(VideoFormat::Mp4H264, &has).unwrap();
         assert_eq!(p.video_encoder, "x264enc");
@@ -134,7 +148,10 @@ mod tests {
         assert_eq!(p.muxer, "mp4mux");
         assert_eq!(p.parser, Some("h264parse"));
         let p = choose(VideoFormat::WebmVp9, &has).unwrap();
-        assert_eq!((p.video_encoder, p.audio_encoder, p.parser), ("vp9enc", Some("opusenc"), None));
+        assert_eq!(
+            (p.video_encoder, p.audio_encoder, p.parser),
+            ("vp9enc", Some("opusenc"), None)
+        );
     }
 
     #[test]
@@ -146,7 +163,11 @@ mod tests {
         assert_eq!(p.audio_encoder, Some("voaacenc"));
         assert_eq!(
             availability(&has),
-            vec![(VideoFormat::WebmVp8, false), (VideoFormat::WebmVp9, false), (VideoFormat::Mp4H264, true)]
+            vec![
+                (VideoFormat::WebmVp8, false),
+                (VideoFormat::WebmVp9, false),
+                (VideoFormat::Mp4H264, true)
+            ]
         );
     }
 
@@ -174,7 +195,11 @@ mod tests {
 
     #[test]
     fn photo_requirements() {
-        assert!(can_take_photos(&reg(&["appsrc", "jpegenc", "videoconvert"])));
+        assert!(can_take_photos(&reg(&[
+            "appsrc",
+            "jpegenc",
+            "videoconvert"
+        ])));
         assert!(!can_take_photos(&reg(&["appsrc", "videoconvert"])));
     }
 }

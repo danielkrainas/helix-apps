@@ -4,7 +4,11 @@
 /// for every label once the duration reaches an hour so widths stay stable)
 /// or when the value itself is at least an hour.
 pub fn format_secs(secs: f64, long: bool) -> String {
-    let total = if secs.is_finite() && secs > 0.0 { secs.floor() as u64 } else { 0 };
+    let total = if secs.is_finite() && secs > 0.0 {
+        secs.floor() as u64
+    } else {
+        0
+    };
     let (h, m, s) = (total / 3600, (total / 60) % 60, total % 60);
     if h > 0 || long {
         format!("{h}:{m:02}:{s:02}")

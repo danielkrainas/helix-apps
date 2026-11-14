@@ -61,7 +61,10 @@ pub struct Response {
 
 impl Response {
     fn html(s: String) -> Response {
-        Response { mime: "text/html".into(), body: s.into_bytes() }
+        Response {
+            mime: "text/html".into(),
+            body: s.into_bytes(),
+        }
     }
 }
 
@@ -88,12 +91,19 @@ fn html_title(path: &Path) -> Option<String> {
 }
 
 pub fn file_uri(path: &Path) -> String {
-    format!("file://{}", uri::percent_encode(&path.to_string_lossy(), "/"))
+    format!(
+        "file://{}",
+        uri::percent_encode(&path.to_string_lossy(), "/")
+    )
 }
 
 impl Library {
     pub fn new(dirs: Vec<PathBuf>, locales: Vec<String>) -> Library {
-        Library { dirs, locales, cache: Mutex::default() }
+        Library {
+            dirs,
+            locales,
+            cache: Mutex::default(),
+        }
     }
 
     pub fn from_env() -> Library {
@@ -121,7 +131,11 @@ impl Library {
                 let m = MallardDoc::load(&found.dir)?;
                 if let DocRef::Path(p) = doc {
                     if p.is_file() {
-                        start_page = m.pages.values().find(|pg| pg.path == *p).map(|pg| pg.id.clone());
+                        start_page = m
+                            .pages
+                            .values()
+                            .find(|pg| pg.path == *p)
+                            .map(|pg| pg.id.clone());
                     }
                 }
                 Content::Mallard(m)
@@ -129,8 +143,15 @@ impl Library {
             Format::DocBook => Content::DocBook(DocBookDoc::load(&found.entry)?),
             Format::Html => Content::Html,
         };
-        let loaded = Arc::new(LoadedDoc { found, content, start_page });
-        self.cache.lock().unwrap().insert(doc.clone(), loaded.clone());
+        let loaded = Arc::new(LoadedDoc {
+            found,
+            content,
+            start_page,
+        });
+        self.cache
+            .lock()
+            .unwrap()
+            .insert(doc.clone(), loaded.clone());
         Ok(loaded)
     }
 
@@ -167,7 +188,9 @@ impl Library {
         match loc {
             Location::Home { search: None } => Response::html(self.home()),
             Location::Home { search: Some(q) } => Response::html(self.search_all(q)),
-            Location::Doc { doc, page, search, .. } => match self.load(doc) {
+            Location::Doc {
+                doc, page, search, ..
+            } => match self.load(doc) {
                 Err(e) => Response::html(html::error_page("Document Not Found", &e)),
                 Ok(d) => match search {
                     Some(q) => Response::html(search_page(doc, &d, q)),
@@ -176,7 +199,10 @@ impl Library {
             },
             Location::Resource { doc, path } => match self.resource(doc, path) {
                 Some(r) => r,
-                None => Response { mime: "text/plain".into(), body: b"Not found".to_vec() },
+                None => Response {
+                    mime: "text/plain".into(),
+                    body: b"Not found".to_vec(),
+                },
             },
             Location::External(u) => Response::html(html::error_page("External Link", u)),
         }
@@ -209,7 +235,10 @@ impl Library {
             Some((_, h)) => h,
             None => html::error_page(
                 "Page Not Found",
-                &format!("The page \u{201C}{}\u{201D} was not found in this document.", page.unwrap_or("index")),
+                &format!(
+                    "The page \u{201C}{}\u{201D} was not found in this document.",
+                    page.unwrap_or("index")
+                ),
             ),
         }
     }
@@ -222,7 +251,10 @@ impl Library {
             return None;
         }
         let body = std::fs::read(&path).ok()?;
-        Some(Response { mime: html::guess_mime(rel).to_string(), body })
+        Some(Response {
+            mime: html::guess_mime(rel).to_string(),
+            body,
+        })
     }
 
     fn home(&self) -> String {
@@ -279,7 +311,10 @@ fn mallard_listing(docref: &DocRef, m: &MallardDoc) -> (String, String) {
             desc: Some(p.meta.desc.clone()),
         })
         .collect();
-    let body = format!("<h1>Pages</h1>{}", html::link_list("links-topic", None, &items));
+    let body = format!(
+        "<h1>Pages</h1>{}",
+        html::link_list("links-topic", None, &items)
+    );
     ("Pages".into(), html::page("Pages", &body))
 }
 
@@ -288,8 +323,14 @@ fn result_item(docref: &DocRef, e: &search::Entry, q: &str, doc_title: Option<&s
         Some(p) if p != "index" => docref.page_uri(Some(p), None),
         _ => docref.page_uri(None, None),
     };
-    let snip = if e.desc.is_empty() { search::snippet(&e.body, q, 160) } else { e.desc.clone() };
-    let doc = doc_title.map(|t| format!(" <span class=\"doc-name\">\u{2014} {}</span>", escape(t))).unwrap_or_default();
+    let snip = if e.desc.is_empty() {
+        search::snippet(&e.body, q, 160)
+    } else {
+        e.desc.clone()
+    };
+    let doc = doc_title
+        .map(|t| format!(" <span class=\"doc-name\">\u{2014} {}</span>", escape(t)))
+        .unwrap_or_default();
     format!(
         "<li><a href=\"{}\">{}</a>{doc}<span class=\"snippet\">{}</span></li>",
         escape_attr(&uri),
@@ -303,11 +344,17 @@ fn results_page(q: &str, items: &[String], back: Option<(String, String)>) -> St
     if let Some((uri, title)) = back {
         body.push_str(&html::trail(&[(uri, title)]));
     }
-    body.push_str(&format!("<h1>Search results for \u{201C}{}\u{201D}</h1>", escape(q)));
+    body.push_str(&format!(
+        "<h1>Search results for \u{201C}{}\u{201D}</h1>",
+        escape(q)
+    ));
     if items.is_empty() {
         body.push_str("<p>No matching pages were found.</p>");
     } else {
-        body.push_str(&format!("<ul class=\"links results\">{}</ul>", items.concat()));
+        body.push_str(&format!(
+            "<ul class=\"links results\">{}</ul>",
+            items.concat()
+        ));
     }
     html::page(&format!("Search: {q}"), &body)
 }
@@ -315,7 +362,11 @@ fn results_page(q: &str, items: &[String], back: Option<(String, String)>) -> St
 fn search_page(docref: &DocRef, d: &LoadedDoc, q: &str) -> String {
     let entries = d.search_entries();
     let hits = search::rank(&entries, q);
-    let items: Vec<String> = hits.iter().take(100).map(|h| result_item(docref, &entries[h.index], q, None)).collect();
+    let items: Vec<String> = hits
+        .iter()
+        .take(100)
+        .map(|h| result_item(docref, &entries[h.index], q, None))
+        .collect();
     results_page(q, &items, Some((docref.page_uri(None, None), d.title())))
 }
 
@@ -353,7 +404,11 @@ mod tests {
         .unwrap();
         let web = root.join("help/C/web");
         fs::create_dir_all(&web).unwrap();
-        fs::write(web.join("index.html"), "<html><head><title>Web Manual</title></head></html>").unwrap();
+        fs::write(
+            web.join("index.html"),
+            "<html><head><title>Web Manual</title></head></html>",
+        )
+        .unwrap();
         let lib = Library::new(vec![root.join("help")], vec!["C".into()]);
         (root, lib)
     }
@@ -366,7 +421,10 @@ mod tests {
     fn end_to_end() {
         let (root, lib) = setup();
         let docs = lib.documents();
-        assert_eq!(docs.iter().map(|d| d.title.as_str()).collect::<Vec<_>>(), ["Fixture Help", "Web Manual"]);
+        assert_eq!(
+            docs.iter().map(|d| d.title.as_str()).collect::<Vec<_>>(),
+            ["Fixture Help", "Web Manual"]
+        );
         assert!(docs[1].uri.starts_with("file://"));
         let cwd = Path::new("/");
         let home = body(lib.respond(&uri::parse("help:", cwd)));
@@ -378,7 +436,10 @@ mod tests {
         let res = lib.respond(&uri::parse("help:fixture/figures/a.png", cwd));
         assert_eq!(res.mime, "image/png");
         assert_eq!(res.body, b"PNG");
-        let esc = lib.respond(&Location::Resource { doc: DocRef::Id("fixture".into()), path: "../secret.txt".into() });
+        let esc = lib.respond(&Location::Resource {
+            doc: DocRef::Id("fixture".into()),
+            path: "../secret.txt".into(),
+        });
         assert_ne!(esc.body, b"SECRET");
 
         let s = body(lib.respond(&uri::parse("help:fixture?search=wireless%20password", cwd)));
@@ -395,12 +456,18 @@ mod tests {
         assert!(nopage.contains("Page Not Found"));
 
         // A .page file opened directly starts at that page.
-        let direct = body(lib.respond(&uri::parse(&root.join("help/C/fixture/wifi.page").to_string_lossy(), cwd)));
+        let direct = body(lib.respond(&uri::parse(
+            &root.join("help/C/fixture/wifi.page").to_string_lossy(),
+            cwd,
+        )));
         assert!(direct.contains("<h1>Wireless networks</h1>"));
         let d = lib.load(&DocRef::Id("fixture".into())).unwrap();
         let toc: Vec<Option<String>> = d.toc().into_iter().map(|t| t.1).collect();
         assert_eq!(toc, [None, Some("print".into()), Some("wifi".into())]);
-        assert_eq!(lib.html_entry(&DocRef::Id("web".into())).unwrap(), file_uri(&root.join("help/C/web/index.html")));
+        assert_eq!(
+            lib.html_entry(&DocRef::Id("web".into())).unwrap(),
+            file_uri(&root.join("help/C/web/index.html"))
+        );
         let _ = fs::remove_dir_all(root);
     }
 
@@ -413,7 +480,10 @@ mod tests {
         let idx = body(lib.respond(&uri::parse(&format!("ghelp:{}", demo.display()), cwd)));
         let docref = DocRef::Path(demo.clone());
         assert!(idx.contains(&escape_attr(&docref.resource_uri("figures/logo.svg"))));
-        assert!(idx.contains(&escape_attr(&docref.page_uri(Some("start"), None))), "{idx}");
+        assert!(
+            idx.contains(&escape_attr(&docref.page_uri(Some("start"), None))),
+            "{idx}"
+        );
         let start = body(lib.respond(&uri::parse(&docref.page_uri(Some("start"), None), cwd)));
         assert!(start.contains("On GNOME and Helix") && !start.contains("Unity only"));
         let logo = lib.respond(&uri::parse(&docref.resource_uri("figures/logo.svg"), cwd));
@@ -447,7 +517,9 @@ mod tests {
             };
             let ids: Vec<Option<String>> = match &loaded.content {
                 Content::Mallard(m) => m.pages.keys().cloned().map(Some).collect(),
-                Content::DocBook(db) => std::iter::once(None).chain(db.chunks.iter().map(|c| Some(c.id.clone()))).collect(),
+                Content::DocBook(db) => std::iter::once(None)
+                    .chain(db.chunks.iter().map(|c| Some(c.id.clone())))
+                    .collect(),
                 Content::Html => vec![],
             };
             for p in ids {
@@ -459,7 +531,10 @@ mod tests {
             }
             println!("{:30} {:5} pages  {}", d.id, loaded.toc().len(), d.title);
         }
-        println!("{pages} pages rendered in {:?}; failures: {failures:?}", start.elapsed());
+        println!(
+            "{pages} pages rendered in {:?}; failures: {failures:?}",
+            start.elapsed()
+        );
         assert!(failures.is_empty());
     }
 }

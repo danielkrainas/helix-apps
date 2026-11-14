@@ -22,14 +22,22 @@ pub fn make_audio_sink(desc: Option<&str>) -> Option<gst::Element> {
         Ok(bin) => Some(bin.upcast()),
         Err(err) => {
             eprintln!("helix-video-player: bad {AUDIO_SINK_ENV} ({err}); using fakesink");
-            gst::ElementFactory::make("fakesink").property("sync", true).build().ok()
+            gst::ElementFactory::make("fakesink")
+                .property("sync", true)
+                .build()
+                .ok()
         }
     }
 }
 
 /// Creates a playbin rendering into `video_sink`.
-pub fn make_playbin(video_sink: &gst::Element, audio_sink_desc: Option<&str>) -> Result<gst::Element, glib::BoolError> {
-    let playbin = gst::ElementFactory::make("playbin").name("helix-playbin").build()?;
+pub fn make_playbin(
+    video_sink: &gst::Element,
+    audio_sink_desc: Option<&str>,
+) -> Result<gst::Element, glib::BoolError> {
+    let playbin = gst::ElementFactory::make("playbin")
+        .name("helix-playbin")
+        .build()?;
     playbin.set_property("video-sink", video_sink);
     if let Some(audio) = make_audio_sink(audio_sink_desc) {
         playbin.set_property("audio-sink", &audio);
@@ -37,7 +45,12 @@ pub fn make_playbin(video_sink: &gst::Element, audio_sink_desc: Option<&str>) ->
     if let Ok(tempo) = gst::ElementFactory::make("scaletempo").build() {
         playbin.set_property("audio-filter", &tempo);
     }
-    for signal in ["audio-changed", "text-changed", "audio-tags-changed", "text-tags-changed"] {
+    for signal in [
+        "audio-changed",
+        "text-changed",
+        "audio-tags-changed",
+        "text-tags-changed",
+    ] {
         let weak = playbin.downgrade();
         let handler = move |_: &[glib::Value]| -> Option<glib::Value> {
             if let Some(pb) = weak.upgrade() {
@@ -59,13 +72,27 @@ pub struct Track {
 }
 
 /// Human-readable label for a track.
-pub fn track_label(index: i32, title: Option<&str>, language: Option<&str>, codec: Option<&str>) -> String {
+pub fn track_label(
+    index: i32,
+    title: Option<&str>,
+    language: Option<&str>,
+    codec: Option<&str>,
+) -> String {
     let title = title.map(str::trim).filter(|s| !s.is_empty());
-    let lang = language.map(str::trim).filter(|s| !s.is_empty() && *s != "und");
+    let lang = language
+        .map(str::trim)
+        .filter(|s| !s.is_empty() && *s != "und");
     match (title, lang) {
         (Some(t), Some(l)) => format!("{t} ({l})"),
         (Some(t), None) => t.to_string(),
-        (None, Some(l)) => format!("{} — {}", l, codec.map(str::trim).filter(|c| !c.is_empty()).unwrap_or("Track")),
+        (None, Some(l)) => format!(
+            "{} — {}",
+            l,
+            codec
+                .map(str::trim)
+                .filter(|c| !c.is_empty())
+                .unwrap_or("Track")
+        ),
         (None, None) => format!("Track {}", index + 1),
     }
 }
@@ -82,7 +109,11 @@ impl Player {
         let sink = sink::make_video_sink(slot.clone(), notify);
         let env = std::env::var(AUDIO_SINK_ENV).ok();
         let playbin = make_playbin(sink.upcast_ref(), env.as_deref())?;
-        Ok(Player { playbin, slot, rate: Cell::new(1.0) })
+        Ok(Player {
+            playbin,
+            slot,
+            rate: Cell::new(1.0),
+        })
     }
 
     pub fn bus(&self) -> gst::Bus {
@@ -102,7 +133,11 @@ impl Player {
     }
 
     pub fn set_state(&self, play: bool) {
-        let state = if play { gst::State::Playing } else { gst::State::Paused };
+        let state = if play {
+            gst::State::Playing
+        } else {
+            gst::State::Paused
+        };
         let _ = self.playbin.set_state(state);
     }
 
@@ -126,7 +161,9 @@ impl Player {
     }
 
     pub fn position(&self) -> Option<f64> {
-        self.playbin.query_position::<gst::ClockTime>().map(|t| t.nseconds() as f64 / 1e9)
+        self.playbin
+            .query_position::<gst::ClockTime>()
+            .map(|t| t.nseconds() as f64 / 1e9)
     }
 
     pub fn duration(&self) -> Option<f64> {
@@ -144,9 +181,20 @@ impl Player {
     fn seek_with(&self, secs: f64, rate: f64, accurate: bool) -> bool {
         let pos = gst::ClockTime::from_nseconds((secs.max(0.0) * 1e9) as u64);
         let mut flags = gst::SeekFlags::FLUSH;
-        flags |= if accurate { gst::SeekFlags::ACCURATE } else { gst::SeekFlags::KEY_UNIT };
+        flags |= if accurate {
+            gst::SeekFlags::ACCURATE
+        } else {
+            gst::SeekFlags::KEY_UNIT
+        };
         self.playbin
-            .seek(rate, flags, gst::SeekType::Set, pos, gst::SeekType::None, gst::ClockTime::NONE)
+            .seek(
+                rate,
+                flags,
+                gst::SeekType::Set,
+                pos,
+                gst::SeekType::None,
+                gst::ClockTime::NONE,
+            )
             .is_ok()
     }
 
@@ -189,9 +237,17 @@ impl Player {
 
     fn set_flag(&self, nick: &str, on: bool) {
         let value = self.playbin.property_value("flags");
-        let Some(class) = glib::FlagsClass::with_type(value.type_()) else { return };
-        let Some(builder) = class.builder_with_value(value) else { return };
-        let builder = if on { builder.set_by_nick(nick) } else { builder.unset_by_nick(nick) };
+        let Some(class) = glib::FlagsClass::with_type(value.type_()) else {
+            return;
+        };
+        let Some(builder) = class.builder_with_value(value) else {
+            return;
+        };
+        let builder = if on {
+            builder.set_by_nick(nick)
+        } else {
+            builder.unset_by_nick(nick)
+        };
         if let Some(v) = builder.build() {
             self.playbin.set_property_from_value("flags", &v);
         }
@@ -208,17 +264,34 @@ impl Player {
         let n = self.playbin.property::<i32>(count_prop);
         (0..n)
             .map(|i| {
-                let tags = self.playbin.emit_by_name::<Option<gst::TagList>>(signal, &[&i]);
-                let get = |f: fn(&gst::TagListRef) -> Option<String>| tags.as_ref().and_then(|t| f(t));
+                let tags = self
+                    .playbin
+                    .emit_by_name::<Option<gst::TagList>>(signal, &[&i]);
+                let get =
+                    |f: fn(&gst::TagListRef) -> Option<String>| tags.as_ref().and_then(|t| f(t));
                 let title = get(|t| t.get::<gst::tags::Title>().map(|v| v.get().to_string()));
-                let lang = get(|t| t.get::<gst::tags::LanguageCode>().map(|v| v.get().to_string()))
-                    .or_else(|| get(|t| t.get::<gst::tags::LanguageName>().map(|v| v.get().to_string())));
+                let lang = get(|t| {
+                    t.get::<gst::tags::LanguageCode>()
+                        .map(|v| v.get().to_string())
+                })
+                .or_else(|| {
+                    get(|t| {
+                        t.get::<gst::tags::LanguageName>()
+                            .map(|v| v.get().to_string())
+                    })
+                });
                 let codec = get(|t| {
                     t.get::<gst::tags::AudioCodec>()
                         .map(|v| v.get().to_string())
-                        .or_else(|| t.get::<gst::tags::SubtitleCodec>().map(|v| v.get().to_string()))
+                        .or_else(|| {
+                            t.get::<gst::tags::SubtitleCodec>()
+                                .map(|v| v.get().to_string())
+                        })
                 });
-                Track { index: i, label: track_label(i, title.as_deref(), lang.as_deref(), codec.as_deref()) }
+                Track {
+                    index: i,
+                    label: track_label(i, title.as_deref(), lang.as_deref(), codec.as_deref()),
+                }
             })
             .collect()
     }
@@ -291,8 +364,14 @@ mod tests {
     #[test]
     fn labels() {
         assert_eq!(track_label(0, None, None, None), "Track 1");
-        assert_eq!(track_label(1, Some("Commentary"), Some("en"), None), "Commentary (en)");
-        assert_eq!(track_label(1, Some("Commentary"), Some("und"), None), "Commentary");
+        assert_eq!(
+            track_label(1, Some("Commentary"), Some("en"), None),
+            "Commentary (en)"
+        );
+        assert_eq!(
+            track_label(1, Some("Commentary"), Some("und"), None),
+            "Commentary"
+        );
         assert_eq!(track_label(2, None, Some("de"), Some("AAC")), "de — AAC");
         assert_eq!(track_label(2, Some("  "), Some("de"), None), "de — Track");
     }

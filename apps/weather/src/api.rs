@@ -65,14 +65,22 @@ impl Forecast {
     /// empty slice when all data is in the past.
     pub fn hours_from(&self, now: &DateTime, n: usize) -> &[Hour] {
         let start = now.hour_floor();
-        let i = self.hourly.iter().position(|h| h.time >= start).unwrap_or(self.hourly.len());
+        let i = self
+            .hourly
+            .iter()
+            .position(|h| h.time >= start)
+            .unwrap_or(self.hourly.len());
         let end = (i + n).min(self.hourly.len());
         &self.hourly[i..end]
     }
 
     /// Daily entries from the day containing `now` onwards.
     pub fn days_from(&self, now: &DateTime) -> &[Day] {
-        let i = self.daily.iter().position(|d| d.date.days() >= now.days()).unwrap_or(self.daily.len());
+        let i = self
+            .daily
+            .iter()
+            .position(|d| d.date.days() >= now.days())
+            .unwrap_or(self.daily.len());
         &self.daily[i..]
     }
 
@@ -158,7 +166,10 @@ fn at<T: Clone>(v: &[Option<T>], i: usize) -> Option<T> {
 /// Checks for Open-Meteo's `{"error": true, "reason": …}` body.
 fn api_error(body: &str) -> Option<String> {
     let e: ApiError = serde_json::from_str(body).ok()?;
-    e.error.then(|| e.reason.unwrap_or_else(|| "The weather service reported an error".into()))
+    e.error.then(|| {
+        e.reason
+            .unwrap_or_else(|| "The weather service reported an error".into())
+    })
 }
 
 /// Parses a forecast response body.
@@ -166,11 +177,14 @@ pub fn parse_forecast(body: &str) -> Result<Forecast, String> {
     if let Some(reason) = api_error(body) {
         return Err(reason);
     }
-    let raw: RawForecast = serde_json::from_str(body).map_err(|e| format!("Unexpected forecast data: {e}"))?;
+    let raw: RawForecast =
+        serde_json::from_str(body).map_err(|e| format!("Unexpected forecast data: {e}"))?;
     let c = raw.current;
     let current = Current {
         time: DateTime::parse(&c.time).ok_or("Invalid time in forecast data")?,
-        temperature: c.temperature_2m.ok_or("Forecast data has no current temperature")?,
+        temperature: c
+            .temperature_2m
+            .ok_or("Forecast data has no current temperature")?,
         apparent: c.apparent_temperature,
         humidity: c.relative_humidity_2m,
         is_day: c.is_day.unwrap_or(1) != 0,
@@ -211,7 +225,13 @@ pub fn parse_forecast(body: &str) -> Result<Forecast, String> {
             })
         })
         .collect();
-    Ok(Forecast { utc_offset: raw.utc_offset_seconds, timezone: raw.timezone, current, hourly, daily })
+    Ok(Forecast {
+        utc_offset: raw.utc_offset_seconds,
+        timezone: raw.timezone,
+        current,
+        hourly,
+        daily,
+    })
 }
 
 /// Parses a geocoding response body. An absent `results` key means no match.
@@ -219,25 +239,34 @@ pub fn parse_geocoding(body: &str) -> Result<Vec<Place>, String> {
     if let Some(reason) = api_error(body) {
         return Err(reason);
     }
-    let raw: RawGeocoding = serde_json::from_str(body).map_err(|e| format!("Unexpected search data: {e}"))?;
+    let raw: RawGeocoding =
+        serde_json::from_str(body).map_err(|e| format!("Unexpected search data: {e}"))?;
     Ok(raw.results)
 }
 
 // ---- HTTP ----
 
 fn agent() -> ureq::Agent {
-    ureq::AgentBuilder::new().timeout(Duration::from_secs(15)).user_agent(USER_AGENT).build()
+    ureq::AgentBuilder::new()
+        .timeout(Duration::from_secs(15))
+        .user_agent(USER_AGENT)
+        .build()
 }
 
 fn get(req: ureq::Request) -> Result<String, String> {
     match req.call() {
-        Ok(resp) => resp.into_string().map_err(|e| format!("Could not read response: {e}")),
+        Ok(resp) => resp
+            .into_string()
+            .map_err(|e| format!("Could not read response: {e}")),
         // Open-Meteo returns a JSON body with a reason on 4xx.
         Err(ureq::Error::Status(code, resp)) => {
             let body = resp.into_string().unwrap_or_default();
-            Err(api_error(&body).unwrap_or_else(|| format!("The weather service returned HTTP {code}")))
+            Err(api_error(&body)
+                .unwrap_or_else(|| format!("The weather service returned HTTP {code}")))
         }
-        Err(ureq::Error::Transport(t)) => Err(format!("Could not connect to the weather service: {t}")),
+        Err(ureq::Error::Transport(t)) => {
+            Err(format!("Could not connect to the weather service: {t}"))
+        }
     }
 }
 
@@ -271,7 +300,11 @@ pub fn search(query: &str, language: &str) -> Result<Vec<Place>, String> {
 
 /// Two-letter UI language for geocoding results, from the locale.
 pub fn ui_language(locale: &str) -> String {
-    let lang: String = locale.chars().take_while(|c| c.is_ascii_alphabetic()).collect::<String>().to_lowercase();
+    let lang: String = locale
+        .chars()
+        .take_while(|c| c.is_ascii_alphabetic())
+        .collect::<String>()
+        .to_lowercase();
     if lang.len() == 2 || lang.len() == 3 {
         lang
     } else {
@@ -303,7 +336,10 @@ mod tests {
         assert_eq!(c.pressure, Some(997.5));
 
         assert_eq!(f.hourly.len(), 72);
-        assert_eq!(f.hourly[0].time, DateTime::parse("2026-11-12T00:00").unwrap());
+        assert_eq!(
+            f.hourly[0].time,
+            DateTime::parse("2026-11-12T00:00").unwrap()
+        );
         assert_eq!(f.hourly[0].temperature, 4.1);
         assert_eq!(f.hourly[5].precipitation, None, "null values are tolerated");
         assert!(!f.hourly[0].is_day);
@@ -343,15 +379,25 @@ mod tests {
         let f = parse_forecast(FORECAST).unwrap();
         let now = DateTime::parse("2026-11-14T10:00").unwrap();
         assert_eq!(f.days_from(&now).len(), 8);
-        assert_eq!(f.today(&now).unwrap().date, DateTime::parse("2026-11-14").unwrap());
+        assert_eq!(
+            f.today(&now).unwrap().date,
+            DateTime::parse("2026-11-14").unwrap()
+        );
         assert!(f.today(&DateTime::parse("2027-01-01").unwrap()).is_none());
     }
 
     #[test]
     fn forecast_errors() {
-        let e = parse_forecast(r#"{"error":true,"reason":"Latitude must be in range of -90 to 90°. Given: 999.0."}"#);
-        assert_eq!(e.unwrap_err(), "Latitude must be in range of -90 to 90°. Given: 999.0.");
-        assert!(parse_forecast("{}").unwrap_err().starts_with("Unexpected forecast data"));
+        let e = parse_forecast(
+            r#"{"error":true,"reason":"Latitude must be in range of -90 to 90°. Given: 999.0."}"#,
+        );
+        assert_eq!(
+            e.unwrap_err(),
+            "Latitude must be in range of -90 to 90°. Given: 999.0."
+        );
+        assert!(parse_forecast("{}")
+            .unwrap_err()
+            .starts_with("Unexpected forecast data"));
         assert!(parse_forecast("<html>").is_err());
     }
 
@@ -370,7 +416,9 @@ mod tests {
 
     #[test]
     fn geocoding_no_results() {
-        assert!(parse_geocoding(r#"{"generationtime_ms":0.07}"#).unwrap().is_empty());
+        assert!(parse_geocoding(r#"{"generationtime_ms":0.07}"#)
+            .unwrap()
+            .is_empty());
         assert!(parse_geocoding(r#"{"error":true}"#).is_err());
     }
 

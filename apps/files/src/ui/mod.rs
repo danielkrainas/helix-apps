@@ -91,7 +91,10 @@ pub struct Shared {
 }
 
 fn zoom_index(table: &[(&str, i32)], nick: &str, default: usize) -> usize {
-    table.iter().position(|(n, _)| *n == nick).unwrap_or(default)
+    table
+        .iter()
+        .position(|(n, _)| *n == nick)
+        .unwrap_or(default)
 }
 
 impl Shared {
@@ -107,18 +110,26 @@ impl Shared {
             detailed_dates: p.get_enum_nick("date-time-format", "simple") == "detailed",
             grid_zoom: zoom_index(
                 &GRID_ZOOM,
-                &self.icon_prefs.get_enum_nick("default-zoom-level", "medium"),
+                &self
+                    .icon_prefs
+                    .get_enum_nick("default-zoom-level", "medium"),
                 2,
             ),
             list_zoom: zoom_index(
                 &LIST_ZOOM,
-                &self.list_prefs.get_enum_nick("default-zoom-level", "medium"),
+                &self
+                    .list_prefs
+                    .get_enum_nick("default-zoom-level", "medium"),
                 1,
             ),
             list_view: p.get_enum_nick("default-folder-viewer", "icon-view") == "list-view",
             columns: self.list_prefs.get(
                 "default-visible-columns",
-                vec!["name".to_string(), "size".to_string(), "date_modified".to_string()],
+                vec![
+                    "name".to_string(),
+                    "size".to_string(),
+                    "date_modified".to_string(),
+                ],
             ),
             show_delete: p.get("show-delete-permanently", false),
             show_link: p.get("show-create-link", false),
@@ -152,7 +163,9 @@ impl Shared {
     }
 
     pub fn remove_window(&self, w: &Window) {
-        self.windows.borrow_mut().retain(|x| !std::ptr::eq(x.as_ref(), w));
+        self.windows
+            .borrow_mut()
+            .retain(|x| !std::ptr::eq(x.as_ref(), w));
     }
 }
 
@@ -187,10 +200,17 @@ pub fn open_locations(
         let mut groups: Vec<(gio::File, Vec<gio::File>)> = Vec::new();
         for f in files {
             let is_dir = match f
-                .query_info_future("standard::type", gio::FileQueryInfoFlags::NONE, glib::Priority::DEFAULT)
+                .query_info_future(
+                    "standard::type",
+                    gio::FileQueryInfoFlags::NONE,
+                    glib::Priority::DEFAULT,
+                )
                 .await
             {
-                Ok(info) => matches!(info.file_type(), gio::FileType::Directory | gio::FileType::Mountable),
+                Ok(info) => matches!(
+                    info.file_type(),
+                    gio::FileType::Directory | gio::FileType::Mountable
+                ),
                 // Unmounted remote locations: treat as folders, the view mounts them.
                 Err(_) => f.path().is_none(),
             };
@@ -234,7 +254,11 @@ fn load_css() {
          .sidebar-eject { padding: 0; min-height: 24px; min-width: 24px; }",
     );
     if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &css,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 }
 
@@ -243,7 +267,10 @@ fn install_app_actions(shared: &Rc<Shared>) {
     let s = shared.clone();
     let new_window = gio::ActionEntry::builder("new-window")
         .activate(move |_: &adw::Application, _, _| {
-            let loc = s.active_window().and_then(|w| w.current_tab()).map(|t| t.location());
+            let loc = s
+                .active_window()
+                .and_then(|w| w.current_tab())
+                .map(|t| t.location());
             Window::new(&s, loc, vec![]).window.present();
         })
         .build();
@@ -271,7 +298,10 @@ fn install_app_actions(shared: &Rc<Shared>) {
         ("win.search", &["<Control>f"]),
         ("win.view-mode::grid", &["<Control>1"]),
         ("win.view-mode::list", &["<Control>2"]),
-        ("win.zoom-in", &["<Control>plus", "<Control>equal", "<Control>KP_Add"]),
+        (
+            "win.zoom-in",
+            &["<Control>plus", "<Control>equal", "<Control>KP_Add"],
+        ),
         ("win.zoom-out", &["<Control>minus", "<Control>KP_Subtract"]),
         ("win.zoom-reset", &["<Control>0", "<Control>KP_0"]),
         ("win.show-hidden", &["<Control>h"]),

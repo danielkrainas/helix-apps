@@ -61,7 +61,10 @@ impl ResumeStore {
             .and_then(|bytes| serde_json::from_slice::<FileFormat>(&bytes).ok())
             .map(|f| f.entries)
             .unwrap_or_default();
-        ResumeStore { path: Some(path.to_path_buf()), entries }
+        ResumeStore {
+            path: Some(path.to_path_buf()),
+            entries,
+        }
     }
 
     /// Stored position for `uri`, if any.
@@ -80,7 +83,11 @@ impl ResumeStore {
         if !worth_remembering(position, duration) {
             return self.entries.remove(uri).is_some();
         }
-        let entry = Entry { position, duration: duration.unwrap_or(0.0), updated: now };
+        let entry = Entry {
+            position,
+            duration: duration.unwrap_or(0.0),
+            updated: now,
+        };
         let changed = self.entries.get(uri) != Some(&entry);
         self.entries.insert(uri.to_string(), entry);
         self.prune();
@@ -95,8 +102,11 @@ impl ResumeStore {
         if self.entries.len() <= MAX_ENTRIES {
             return;
         }
-        let mut by_age: Vec<(u64, String)> =
-            self.entries.iter().map(|(k, e)| (e.updated, k.clone())).collect();
+        let mut by_age: Vec<(u64, String)> = self
+            .entries
+            .iter()
+            .map(|(k, e)| (e.updated, k.clone()))
+            .collect();
         by_age.sort();
         let excess = self.entries.len() - MAX_ENTRIES;
         for (_, key) in by_age.into_iter().take(excess) {
@@ -106,11 +116,16 @@ impl ResumeStore {
 
     /// Writes the store atomically (temp file + rename).
     pub fn save(&self) -> std::io::Result<()> {
-        let Some(path) = &self.path else { return Ok(()) };
+        let Some(path) = &self.path else {
+            return Ok(());
+        };
         if let Some(dir) = path.parent() {
             std::fs::create_dir_all(dir)?;
         }
-        let data = FileFormat { version: 1, entries: self.entries.clone() };
+        let data = FileFormat {
+            version: 1,
+            entries: self.entries.clone(),
+        };
         let json = serde_json::to_vec_pretty(&data).map_err(std::io::Error::other)?;
         let tmp = path.with_extension("json.tmp");
         std::fs::write(&tmp, json)?;

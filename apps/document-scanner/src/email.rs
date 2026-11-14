@@ -26,7 +26,9 @@ const KEEP: Duration = Duration::from_secs(24 * 3600);
 
 /// Directory that holds the per-email temporary folders.
 pub fn base_dir() -> PathBuf {
-    gtk::glib::user_cache_dir().join("helix-document-scanner").join("email")
+    gtk::glib::user_cache_dir()
+        .join("helix-document-scanner")
+        .join("email")
 }
 
 /// Removes temporary email folders older than a day.
@@ -45,10 +47,19 @@ pub fn prune(base: &Path, now: SystemTime) {
 }
 
 /// Saves `pages` for attaching into a new folder below `base`.
-pub fn write_attachments(base: &Path, pages: &[Page], format: Format, quality: u8) -> Result<Vec<PathBuf>, String> {
-    let nanos = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
+pub fn write_attachments(
+    base: &Path,
+    pages: &[Page],
+    format: Format,
+    quality: u8,
+) -> Result<Vec<PathBuf>, String> {
+    let nanos = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
     let dir = base.join(format!("{}-{nanos}", std::process::id()));
-    std::fs::create_dir_all(&dir).map_err(|e| format!("Could not create {}: {e}", dir.display()))?;
+    std::fs::create_dir_all(&dir)
+        .map_err(|e| format!("Could not create {}: {e}", dir.display()))?;
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -60,7 +71,11 @@ pub fn write_attachments(base: &Path, pages: &[Page], format: Format, quality: u
 
 /// Asks the Email portal on `conn` to open a compose window with `files`
 /// attached. Returns the request object path.
-pub fn compose_via_portal(conn: &zbus::blocking::Connection, files: &[PathBuf], parent: &str) -> Result<String, String> {
+pub fn compose_via_portal(
+    conn: &zbus::blocking::Connection,
+    files: &[PathBuf],
+    parent: &str,
+) -> Result<String, String> {
     let opened: Vec<std::fs::File> = files
         .iter()
         .map(|f| std::fs::File::open(f).map_err(|e| format!("{}: {e}", f.display())))
@@ -70,9 +85,16 @@ pub fn compose_via_portal(conn: &zbus::blocking::Connection, files: &[PathBuf], 
     options.insert("attachment_fds", Value::from(fds));
     options.insert("subject", Value::from(SUBJECT));
     let reply = conn
-        .call_method(Some(PORTAL_BUS), PORTAL_PATH, Some(PORTAL_IFACE), "ComposeEmail", &(parent, options))
+        .call_method(
+            Some(PORTAL_BUS),
+            PORTAL_PATH,
+            Some(PORTAL_IFACE),
+            "ComposeEmail",
+            &(parent, options),
+        )
         .map_err(|e| e.to_string())?;
-    let handle: zbus::zvariant::OwnedObjectPath = reply.body().deserialize().map_err(|e| e.to_string())?;
+    let handle: zbus::zvariant::OwnedObjectPath =
+        reply.body().deserialize().map_err(|e| e.to_string())?;
     Ok(handle.to_string())
 }
 
@@ -126,7 +148,17 @@ mod tests {
     fn fallback_arguments() {
         let args = xdg_email_args(&[PathBuf::from("/t/a b.jpg"), PathBuf::from("/t/c.jpg")]);
         let args: Vec<&str> = args.iter().map(|a| a.to_str().unwrap()).collect();
-        assert_eq!(args, ["--subject", "Scanned Document", "--attach", "/t/a b.jpg", "--attach", "/t/c.jpg"]);
+        assert_eq!(
+            args,
+            [
+                "--subject",
+                "Scanned Document",
+                "--attach",
+                "/t/a b.jpg",
+                "--attach",
+                "/t/c.jpg"
+            ]
+        );
     }
 
     #[test]
@@ -139,7 +171,10 @@ mod tests {
         assert_eq!(jpgs.len(), 2);
         assert!(jpgs[1].ends_with("Scanned Document-2.jpg"));
         assert_ne!(pdf[0].parent(), jpgs[0].parent());
-        prune(base.path(), SystemTime::now() + Duration::from_secs(2 * 24 * 3600));
+        prune(
+            base.path(),
+            SystemTime::now() + Duration::from_secs(2 * 24 * 3600),
+        );
         assert_eq!(std::fs::read_dir(base.path()).unwrap().count(), 0);
     }
 
@@ -149,7 +184,11 @@ mod tests {
 
     #[zbus::interface(name = "org.freedesktop.portal.Email")]
     impl MockEmail {
-        fn compose_email(&self, parent_window: String, options: HashMap<String, OwnedValue>) -> OwnedObjectPath {
+        fn compose_email(
+            &self,
+            parent_window: String,
+            options: HashMap<String, OwnedValue>,
+        ) -> OwnedObjectPath {
             let mut contents = Vec::new();
             if let Some(Value::Array(arr)) = options.get("attachment_fds").map(|v| &**v) {
                 for v in arr.iter() {
@@ -162,7 +201,9 @@ mod tests {
                     }
                 }
             }
-            let subject = options.get("subject").and_then(|v| String::try_from(v.try_clone().ok()?).ok());
+            let subject = options
+                .get("subject")
+                .and_then(|v| String::try_from(v.try_clone().ok()?).ok());
             let _ = self.tx.send((parent_window, contents, subject));
             OwnedObjectPath::try_from("/org/freedesktop/portal/desktop/request/1_1/t").unwrap()
         }
@@ -216,7 +257,10 @@ mod tests {
                 .unwrap()
                 .build()
                 .unwrap();
-            let client = zbus::blocking::connection::Builder::address(address.as_str()).unwrap().build().unwrap();
+            let client = zbus::blocking::connection::Builder::address(address.as_str())
+                .unwrap()
+                .build()
+                .unwrap();
             let files = write_attachments(tmp.path(), &[page(), page()], Format::Png, 75).unwrap();
             let handle = compose_via_portal(&client, &files, "").unwrap();
             assert!(handle.starts_with("/org/freedesktop/portal/desktop/request/"));

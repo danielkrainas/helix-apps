@@ -23,7 +23,9 @@ pub struct Colors {
 }
 
 pub fn parse_color(s: &str, fallback: &str) -> gdk::RGBA {
-    gdk::RGBA::parse(s).or_else(|_| gdk::RGBA::parse(fallback)).unwrap_or(gdk::RGBA::RED)
+    gdk::RGBA::parse(s)
+        .or_else(|_| gdk::RGBA::parse(fallback))
+        .unwrap_or(gdk::RGBA::RED)
 }
 
 fn cpu_color(i: usize) -> gdk::RGBA {
@@ -49,7 +51,10 @@ struct Graph {
 
 impl Graph {
     fn new(scale: Scale, points: usize) -> Rc<Self> {
-        let area = gtk::DrawingArea::builder().content_height(160).hexpand(true).build();
+        let area = gtk::DrawingArea::builder()
+            .content_height(160)
+            .hexpand(true)
+            .build();
         let g = Rc::new(Graph {
             area,
             history: RefCell::new(History::new(points)),
@@ -100,8 +105,13 @@ impl Graph {
             }
         }
         // Time labels.
-        let span_s = history.capacity().saturating_sub(1) as f64 * self.interval_ms.get() as f64 / 1000.0;
-        for (frac, text) in [(0.0, format!("{span_s:.0} seconds")), (0.5, format!("{:.0}", span_s / 2.0)), (1.0, "0".to_string())] {
+        let span_s =
+            history.capacity().saturating_sub(1) as f64 * self.interval_ms.get() as f64 / 1000.0;
+        for (frac, text) in [
+            (0.0, format!("{span_s:.0} seconds")),
+            (0.5, format!("{:.0}", span_s / 2.0)),
+            (1.0, "0".to_string()),
+        ] {
             if let Ok(ext) = cr.text_extents(&text) {
                 let x = (left + gw * frac - ext.width() * frac).clamp(left, right - ext.width());
                 cr.move_to(x, h - 4.0);
@@ -137,9 +147,18 @@ impl Graph {
 }
 
 fn swatch(color: gdk::RGBA) -> gtk::DrawingArea {
-    let a = gtk::DrawingArea::builder().content_width(14).content_height(14).valign(gtk::Align::Center).build();
+    let a = gtk::DrawingArea::builder()
+        .content_width(14)
+        .content_height(14)
+        .valign(gtk::Align::Center)
+        .build();
     a.set_draw_func(move |_, cr, w, h| {
-        cr.set_source_rgba(color.red() as f64, color.green() as f64, color.blue() as f64, 1.0);
+        cr.set_source_rgba(
+            color.red() as f64,
+            color.green() as f64,
+            color.blue() as f64,
+            1.0,
+        );
         cr.rectangle(0.0, 0.0, w as f64, h as f64);
         let _ = cr.fill();
     });
@@ -226,7 +245,11 @@ impl ResView {
         content.append(&section("CPU", &cpu.area, &cpu_legend));
         content.append(&section("Memory and Swap", &mem.area, &mem_legend));
         content.append(&section("Network", &net.area, &net_legend));
-        let page = gtk::ScrolledWindow::builder().child(&content).hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).build();
+        let page = gtk::ScrolledWindow::builder()
+            .child(&content)
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vexpand(true)
+            .build();
 
         Rc::new(ResView {
             page,
@@ -284,7 +307,13 @@ impl ResView {
         }
         self.cpu.history.borrow_mut().push(&r.cpus);
 
-        let frac = |used: u64, total: u64| if total == 0 { 0.0 } else { used as f64 / total as f64 };
+        let frac = |used: u64, total: u64| {
+            if total == 0 {
+                0.0
+            } else {
+                used as f64 / total as f64
+            }
+        };
         let m = &r.mem;
         let mem_f = frac(m.mem_used(), m.mem_total);
         let swap_f = frac(m.swap_used(), m.swap_total);
@@ -299,13 +328,26 @@ impl ResView {
         self.swap_label.set_label(&if m.swap_total == 0 {
             "Not available".to_string()
         } else {
-            format!("{} ({:.1} %) of {}", format::size(m.swap_used(), iec), swap_f * 100.0, format::size(m.swap_total, iec))
+            format!(
+                "{} ({:.1} %) of {}",
+                format::size(m.swap_used(), iec),
+                swap_f * 100.0,
+                format::size(m.swap_total, iec)
+            )
         });
 
         self.net.history.borrow_mut().push(&[r.rx_rate, r.tx_rate]);
         let bits = self.bits.get();
-        self.rx_label.set_label(&format!("{}   Total received {}", format::rate(r.rx_rate, bits), format::size(r.rx_total, false)));
-        self.tx_label.set_label(&format!("{}   Total sent {}", format::rate(r.tx_rate, bits), format::size(r.tx_total, false)));
+        self.rx_label.set_label(&format!(
+            "{}   Total received {}",
+            format::rate(r.rx_rate, bits),
+            format::size(r.rx_total, false)
+        ));
+        self.tx_label.set_label(&format!(
+            "{}   Total sent {}",
+            format::rate(r.tx_rate, bits),
+            format::size(r.tx_total, false)
+        ));
 
         for g in [&self.cpu, &self.mem, &self.net] {
             g.area.queue_draw();

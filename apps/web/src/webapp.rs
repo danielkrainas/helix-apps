@@ -83,7 +83,9 @@ impl Prefs {
 
     /// Whether `uri` is on one of the extra allowed sites.
     pub fn allows(&self, uri: &str) -> bool {
-        let Ok(u) = url::Url::parse(uri) else { return false };
+        let Ok(u) = url::Url::parse(uri) else {
+            return false;
+        };
         self.additional_urls
             .iter()
             .filter_map(|s| SiteRule::parse(s))
@@ -114,7 +116,10 @@ impl SiteRule {
             Some((s, r)) => (Some(s.to_ascii_lowercase()), r),
             None => (None, input),
         };
-        if scheme.as_deref().is_some_and(|s| s != "http" && s != "https") {
+        if scheme
+            .as_deref()
+            .is_some_and(|s| s != "http" && s != "https")
+        {
             return None;
         }
         let (subdomains, rest) = match rest.strip_prefix("*.") {
@@ -123,7 +128,11 @@ impl SiteRule {
         };
         // Let the URL parser validate and normalise (IDNA, case, default
         // port) the authority; any path, query or fragment is dropped.
-        let u = url::Url::parse(&format!("{}://{rest}", scheme.as_deref().unwrap_or("https"))).ok()?;
+        let u = url::Url::parse(&format!(
+            "{}://{rest}",
+            scheme.as_deref().unwrap_or("https")
+        ))
+        .ok()?;
         if !u.username().is_empty() || u.password().is_some() {
             return None;
         }
@@ -139,7 +148,12 @@ impl SiteRule {
             h => h.to_string(),
         };
         let port = u.port();
-        Some(SiteRule { scheme, host, subdomains, port })
+        Some(SiteRule {
+            scheme,
+            host,
+            subdomains,
+            port,
+        })
     }
 
     fn matches(&self, u: &url::Url) -> bool {
@@ -154,10 +168,12 @@ impl SiteRule {
             Some(p) => u.port_or_known_default() == Some(p),
             None => u.port().is_none(),
         };
-        let Some(host) = u.host_str() else { return false };
+        let Some(host) = u.host_str() else {
+            return false;
+        };
         let host = host.to_ascii_lowercase();
-        let host_ok = host == self.host
-            || (self.subdomains && host.ends_with(&format!(".{}", self.host)));
+        let host_ok =
+            host == self.host || (self.subdomains && host.ends_with(&format!(".{}", self.host)));
         port_ok && host_ok
     }
 }
@@ -217,9 +233,9 @@ pub fn make_id(name: &str, url: &str) -> String {
         id.insert(0, '_');
     }
     // Disambiguate apps with the same name for different sites.
-    let hash = url
-        .bytes()
-        .fold(0xcbf29ce484222325u64, |h, b| (h ^ b as u64).wrapping_mul(0x100000001b3));
+    let hash = url.bytes().fold(0xcbf29ce484222325u64, |h, b| {
+        (h ^ b as u64).wrapping_mul(0x100000001b3)
+    });
     id.truncate(56);
     format!("{id}_{:06x}", hash & 0xff_ffff)
 }
@@ -361,7 +377,12 @@ pub fn install(name: &str, url: &str, icon: &[u8], exe: &str) -> Result<(WebApp,
     let no_options: HashMap<&str, Value> = HashMap::new();
     let () = launcher.call(
         "Install",
-        &(install_token.as_str(), app.desktop_file_id().as_str(), entry.as_str(), no_options),
+        &(
+            install_token.as_str(),
+            app.desktop_file_id().as_str(),
+            entry.as_str(),
+            no_options,
+        ),
     )?;
     Ok((app, chosen))
 }
@@ -392,7 +413,10 @@ mod tests {
         assert!(long.len() <= 64);
         for id in [a, b, long] {
             assert_eq!(parse_arg(&format!("--web-app={id}")), Some(id.clone()));
-            let app = WebApp { id, url: "https://x/".into() };
+            let app = WebApp {
+                id,
+                url: "https://x/".into(),
+            };
             assert!(gtk::gio::Application::id_is_valid(&app.app_id()));
         }
         assert_eq!(parse_arg("--web-app="), None);
@@ -406,8 +430,14 @@ mod tests {
         assert_eq!(exec_quote("/usr/bin/helix-web"), "/usr/bin/helix-web");
         assert_eq!(exec_quote("https://e.com/a?b=1"), "\"https://e.com/a?b=1\"");
         assert_eq!(exec_quote("https://e.com/%20"), "\"https://e.com/%%20\"");
-        assert_eq!(exec_quote("/opt/my app/helix-web"), "\"/opt/my app/helix-web\"");
-        assert_eq!(exec_quote("a\"b$c`d\\e"), "\"a\\\\\"b\\\\$c\\\\`d\\\\\\\\e\"");
+        assert_eq!(
+            exec_quote("/opt/my app/helix-web"),
+            "\"/opt/my app/helix-web\""
+        );
+        assert_eq!(
+            exec_quote("a\"b$c`d\\e"),
+            "\"a\\\\\"b\\\\$c\\\\`d\\\\\\\\e\""
+        );
     }
 
     #[test]
@@ -423,12 +453,18 @@ mod tests {
         assert!(e.contains("StartupWMClass=org.helix.Web.WebApp_mail_abc123\n"));
         assert!(!e.contains("\nName="));
         assert!(!e.contains("\nIcon="));
-        assert_eq!(app.desktop_file_id(), "org.helix.Web.WebApp_mail_abc123.desktop");
+        assert_eq!(
+            app.desktop_file_id(),
+            "org.helix.Web.WebApp_mail_abc123.desktop"
+        );
     }
 
     #[test]
     fn ownership_and_paths() {
-        let app = WebApp { id: "x".into(), url: "https://www.example.com/app".into() };
+        let app = WebApp {
+            id: "x".into(),
+            url: "https://www.example.com/app".into(),
+        };
         assert!(app.owns("https://example.com/other"));
         assert!(app.owns("https://login.example.com/"));
         assert!(!app.owns("https://example.org/"));
@@ -442,20 +478,46 @@ mod tests {
 
     #[test]
     fn site_normalisation() {
-        assert_eq!(normalize_site("Example.com").as_deref(), Some("example.com"));
-        assert_eq!(normalize_site("  example.com/login?x=1 ").as_deref(), Some("example.com"));
+        assert_eq!(
+            normalize_site("Example.com").as_deref(),
+            Some("example.com")
+        );
+        assert_eq!(
+            normalize_site("  example.com/login?x=1 ").as_deref(),
+            Some("example.com")
+        );
         assert_eq!(
             normalize_site("HTTPS://SSO.Example.com:443/path").as_deref(),
             Some("https://sso.example.com")
         );
-        assert_eq!(normalize_site("http://e.com:8080").as_deref(), Some("http://e.com:8080"));
+        assert_eq!(
+            normalize_site("http://e.com:8080").as_deref(),
+            Some("http://e.com:8080")
+        );
         assert_eq!(normalize_site("e.com:8443").as_deref(), Some("e.com:8443"));
-        assert_eq!(normalize_site("*.Example.org").as_deref(), Some("*.example.org"));
-        assert_eq!(normalize_site("bücher.de").as_deref(), Some("xn--bcher-kva.de"));
-        assert_eq!(normalize_site("127.0.0.1:3000").as_deref(), Some("127.0.0.1:3000"));
+        assert_eq!(
+            normalize_site("*.Example.org").as_deref(),
+            Some("*.example.org")
+        );
+        assert_eq!(
+            normalize_site("bücher.de").as_deref(),
+            Some("xn--bcher-kva.de")
+        );
+        assert_eq!(
+            normalize_site("127.0.0.1:3000").as_deref(),
+            Some("127.0.0.1:3000")
+        );
         let bad = [
-            "", "   ", "ftp://e.com", "mailto:a@b.c", "*.", "*.1.2.3.4", "a..b", "https://",
-            "user:pw@e.com", "e com",
+            "",
+            "   ",
+            "ftp://e.com",
+            "mailto:a@b.c",
+            "*.",
+            "*.1.2.3.4",
+            "a..b",
+            "https://",
+            "user:pw@e.com",
+            "e com",
         ];
         for b in bad {
             assert_eq!(normalize_site(b), None, "{b}");
@@ -465,8 +527,14 @@ mod tests {
     #[test]
     fn additional_site_matching() {
         let mut p = Prefs::default();
-        assert_eq!(p.add("accounts.example.net/signin").as_deref(), Some("accounts.example.net"));
-        assert_eq!(p.add("ACCOUNTS.example.net").as_deref(), Some("accounts.example.net"));
+        assert_eq!(
+            p.add("accounts.example.net/signin").as_deref(),
+            Some("accounts.example.net")
+        );
+        assert_eq!(
+            p.add("ACCOUNTS.example.net").as_deref(),
+            Some("accounts.example.net")
+        );
         assert_eq!(p.additional_urls.len(), 1, "duplicates are not added");
         p.add("https://pay.example.org").unwrap();
         p.add("*.cdn.example.com").unwrap();
@@ -497,7 +565,10 @@ mod tests {
         assert!(!p.allows("javascript:alert(1)"));
         assert!(!p.allows("garbage"));
 
-        let app = WebApp { id: "x".into(), url: "https://mail.example.com/".into() };
+        let app = WebApp {
+            id: "x".into(),
+            url: "https://mail.example.com/".into(),
+        };
         assert!(app.keeps("https://mail.example.com/inbox", &p));
         assert!(app.keeps("https://accounts.example.net/", &p));
         assert!(!app.keeps("https://news.example.net/", &p));
@@ -513,6 +584,9 @@ mod tests {
         let json = serde_json::to_string(&p).unwrap();
         assert_eq!(json, r#"{"additional-urls":["sso.example.com"]}"#);
         assert_eq!(serde_json::from_str::<Prefs>(&json).unwrap(), p);
-        assert_eq!(serde_json::from_str::<Prefs>("{}").unwrap(), Prefs::default());
+        assert_eq!(
+            serde_json::from_str::<Prefs>("{}").unwrap(),
+            Prefs::default()
+        );
     }
 }

@@ -189,7 +189,9 @@ impl Sane {
         let mut version: Word = 0;
         // SAFETY: plain FFI call; no auth callback.
         check(unsafe { sane_init(&mut version, None) })?;
-        Ok(Sane { _not_send: std::marker::PhantomData })
+        Ok(Sane {
+            _not_send: std::marker::PhantomData,
+        })
     }
 
     pub fn devices(&self, local_only: bool) -> Result<Vec<Device>> {
@@ -226,7 +228,10 @@ impl Sane {
         let mut h: Handle = ptr::null_mut();
         // SAFETY: valid C string and out-pointer.
         check(unsafe { sane_open(cname.as_ptr(), &mut h) })?;
-        Ok(DeviceHandle { handle: h, _sane: self })
+        Ok(DeviceHandle {
+            handle: h,
+            _sane: self,
+        })
     }
 }
 
@@ -259,7 +264,13 @@ impl DeviceHandle<'_> {
         let mut n: Word = 0;
         // SAFETY: option 0 is always the integer option count.
         let s = unsafe {
-            sane_control_option(self.handle, 0, ACTION_GET_VALUE, &mut n as *mut Word as *mut c_void, ptr::null_mut())
+            sane_control_option(
+                self.handle,
+                0,
+                ACTION_GET_VALUE,
+                &mut n as *mut Word as *mut c_void,
+                ptr::null_mut(),
+            )
         };
         if s == STATUS_GOOD {
             n
@@ -280,7 +291,11 @@ impl DeviceHandle<'_> {
             let constraint = match d.constraint_type {
                 CONSTRAINT_RANGE if !d.constraint.is_null() => {
                     let r = &*(d.constraint as *const RawRange);
-                    Constraint::Range { min: r.min, max: r.max, quant: r.quant }
+                    Constraint::Range {
+                        min: r.min,
+                        max: r.max,
+                        quant: r.quant,
+                    }
                 }
                 CONSTRAINT_WORD_LIST if !d.constraint.is_null() => {
                     let w = d.constraint as *const Word;
@@ -313,7 +328,9 @@ impl DeviceHandle<'_> {
     }
 
     pub fn options(&self) -> Vec<OptionDesc> {
-        (1..self.option_count()).filter_map(|i| self.option(i)).collect()
+        (1..self.option_count())
+            .filter_map(|i| self.option(i))
+            .collect()
     }
 
     pub fn get_word(&self, opt: &OptionDesc) -> Result<Word> {
@@ -324,7 +341,13 @@ impl DeviceHandle<'_> {
         let mut buf = vec![0 as Word; n.max(1)];
         // SAFETY: buffer is at least `size` bytes.
         check(unsafe {
-            sane_control_option(self.handle, opt.index, ACTION_GET_VALUE, buf.as_mut_ptr() as *mut c_void, ptr::null_mut())
+            sane_control_option(
+                self.handle,
+                opt.index,
+                ACTION_GET_VALUE,
+                buf.as_mut_ptr() as *mut c_void,
+                ptr::null_mut(),
+            )
         })?;
         Ok(buf[0])
     }
@@ -336,7 +359,13 @@ impl DeviceHandle<'_> {
         let mut info: Word = 0;
         // SAFETY: buffer is at least `size` bytes.
         check(unsafe {
-            sane_control_option(self.handle, opt.index, ACTION_SET_VALUE, buf.as_mut_ptr() as *mut c_void, &mut info)
+            sane_control_option(
+                self.handle,
+                opt.index,
+                ACTION_SET_VALUE,
+                buf.as_mut_ptr() as *mut c_void,
+                &mut info,
+            )
         })?;
         Ok(info)
     }
@@ -347,7 +376,13 @@ impl DeviceHandle<'_> {
         let mut info: Word = 0;
         // SAFETY: NUL-terminated buffer of at least `size` bytes.
         check(unsafe {
-            sane_control_option(self.handle, opt.index, ACTION_SET_VALUE, buf.as_mut_ptr() as *mut c_void, &mut info)
+            sane_control_option(
+                self.handle,
+                opt.index,
+                ACTION_SET_VALUE,
+                buf.as_mut_ptr() as *mut c_void,
+                &mut info,
+            )
         })?;
         Ok(info)
     }

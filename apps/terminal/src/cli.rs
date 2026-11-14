@@ -40,7 +40,9 @@ where
             "-V" | "--version" => return Ok(Parsed::Version),
             "--tab" => opts.tab = true,
             "-w" | "--working-directory" => {
-                let dir = args.next().ok_or_else(|| format!("{arg} needs a directory"))?;
+                let dir = args
+                    .next()
+                    .ok_or_else(|| format!("{arg} needs a directory"))?;
                 opts.working_directory = Some(cwd.join(dir));
             }
             "--" | "-e" | "-x" | "--command" => {
@@ -79,9 +81,18 @@ mod tests {
 
     #[test]
     fn working_directory() {
-        assert_eq!(run(&["--working-directory", "/tmp"]).working_directory, Some("/tmp".into()));
-        assert_eq!(run(&["-w", "src"]).working_directory, Some("/home/u/src".into()));
-        assert_eq!(run(&["--working-directory=a/b"]).working_directory, Some("/home/u/a/b".into()));
+        assert_eq!(
+            run(&["--working-directory", "/tmp"]).working_directory,
+            Some("/tmp".into())
+        );
+        assert_eq!(
+            run(&["-w", "src"]).working_directory,
+            Some("/home/u/src".into())
+        );
+        assert_eq!(
+            run(&["--working-directory=a/b"]).working_directory,
+            Some("/home/u/a/b".into())
+        );
         assert!(parse(["--working-directory"], Path::new("/")).is_err());
     }
 

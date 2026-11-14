@@ -72,8 +72,15 @@ fn window_state_path() -> std::path::PathBuf {
 }
 
 pub fn run() -> glib::ExitCode {
-    let app = adw::Application::builder().application_id(APP_ID).flags(gio::ApplicationFlags::NON_UNIQUE).build();
-    helix_app_common::install_standard_actions(&app, "Logs", "View detailed event logs for the system");
+    let app = adw::Application::builder()
+        .application_id(APP_ID)
+        .flags(gio::ApplicationFlags::NON_UNIQUE)
+        .build();
+    helix_app_common::install_standard_actions(
+        &app,
+        "Logs",
+        "View detailed event logs for the system",
+    );
     app.connect_startup(|_| load_css());
     app.connect_activate(|app| {
         let window = build(app);
@@ -91,7 +98,11 @@ fn load_css() {
          .log-field-value { font-family: monospace; }",
     );
     if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &css,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 }
 
@@ -134,7 +145,10 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
         l.set_margin_start(6);
         sidebar_list.append(&l);
     }
-    let sidebar_scroll = gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).child(&sidebar_list).build();
+    let sidebar_scroll = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .child(&sidebar_list)
+        .build();
     let sidebar_tv = adw::ToolbarView::new();
     let sidebar_header = adw::HeaderBar::new();
     sidebar_tv.add_top_bar(&sidebar_header);
@@ -145,7 +159,9 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     let store = gio::ListStore::new::<glib::BoxedAnyObject>();
     let factory = gtk::SignalListItemFactory::new();
     factory.connect_setup(|_, item| {
-        let Some(item) = item.downcast_ref::<gtk::ListItem>() else { return };
+        let Some(item) = item.downcast_ref::<gtk::ListItem>() else {
+            return;
+        };
         let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
         row.add_css_class("log-row");
         let time = label("", &["log-time", "dim-label", "numeric"]);
@@ -166,16 +182,31 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
         item.set_child(Some(&row));
     });
     factory.connect_bind(|_, item| {
-        let Some(item) = item.downcast_ref::<gtk::ListItem>() else { return };
-        let Some(obj) = item.item().and_downcast::<glib::BoxedAnyObject>() else { return };
-        let Some(row) = item.child().and_downcast::<gtk::Box>() else { return };
+        let Some(item) = item.downcast_ref::<gtk::ListItem>() else {
+            return;
+        };
+        let Some(obj) = item.item().and_downcast::<glib::BoxedAnyObject>() else {
+            return;
+        };
+        let Some(row) = item.child().and_downcast::<gtk::Box>() else {
+            return;
+        };
         let entry = obj.borrow::<Entry>();
         let time = row.first_child().and_downcast::<gtk::Label>();
-        let msg = time.as_ref().and_then(|t| t.next_sibling()).and_downcast::<gtk::Label>();
-        let proc_ = msg.as_ref().and_then(|m| m.next_sibling()).and_downcast::<gtk::Label>();
-        let (Some(time), Some(msg), Some(proc_)) = (time, msg, proc_) else { return };
+        let msg = time
+            .as_ref()
+            .and_then(|t| t.next_sibling())
+            .and_downcast::<gtk::Label>();
+        let proc_ = msg
+            .as_ref()
+            .and_then(|m| m.next_sibling())
+            .and_downcast::<gtk::Label>();
+        let (Some(time), Some(msg), Some(proc_)) = (time, msg, proc_) else {
+            return;
+        };
         let tz = glib::TimeZone::local();
-        let now = glib::DateTime::now(&tz).unwrap_or_else(|_| glib::DateTime::now_utc().expect("clock"));
+        let now =
+            glib::DateTime::now(&tz).unwrap_or_else(|_| glib::DateTime::now_utc().expect("clock"));
         time.set_text(&format::row_time(entry.timestamp_usec(), &now, &tz));
         msg.set_text(&format::one_line(entry.message()));
         proc_.set_text(entry.process());
@@ -196,10 +227,23 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     let list = gtk::ListView::new(Some(selection), Some(factory));
     list.set_single_click_activate(true);
     list.add_css_class("rich-list");
-    let scrolled = gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).child(&list).build();
+    let scrolled = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .vexpand(true)
+        .child(&list)
+        .build();
 
-    let empty = adw::StatusPage::builder().icon_name("edit-find-symbolic").title("No Events").build();
-    let loading_page = gtk::Spinner::builder().spinning(true).halign(gtk::Align::Center).valign(gtk::Align::Center).width_request(32).height_request(32).build();
+    let empty = adw::StatusPage::builder()
+        .icon_name("edit-find-symbolic")
+        .title("No Events")
+        .build();
+    let loading_page = gtk::Spinner::builder()
+        .spinning(true)
+        .halign(gtk::Align::Center)
+        .valign(gtk::Align::Center)
+        .width_request(32)
+        .height_request(32)
+        .build();
     let stack = gtk::Stack::new();
     stack.add_named(&scrolled, Some("list"));
     stack.add_named(&empty, Some("empty"));
@@ -211,7 +255,10 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     let boot_dropdown = gtk::DropDown::from_strings(&["Current Boot"]);
     boot_dropdown.set_tooltip_text(Some("Boot"));
     header.set_title_widget(Some(&boot_dropdown));
-    let search_button = gtk::ToggleButton::builder().icon_name("system-search-symbolic").tooltip_text("Search").build();
+    let search_button = gtk::ToggleButton::builder()
+        .icon_name("system-search-symbolic")
+        .tooltip_text("Search")
+        .build();
     header.pack_start(&search_button);
     let menu = gio::Menu::new();
     let s1 = gio::Menu::new();
@@ -219,29 +266,53 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     s1.append(Some("_Refresh"), Some("win.refresh"));
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
-    s2.append(Some("_Newest First"), Some(&format!("win.sort-order::{SORT_DESC}")));
-    s2.append(Some("_Oldest First"), Some(&format!("win.sort-order::{SORT_ASC}")));
+    s2.append(
+        Some("_Newest First"),
+        Some(&format!("win.sort-order::{SORT_DESC}")),
+    );
+    s2.append(
+        Some("_Oldest First"),
+        Some(&format!("win.sort-order::{SORT_ASC}")),
+    );
     menu.append_section(Some("Sort"), &s2);
     let s3 = gio::Menu::new();
     s3.append(Some("_About Logs"), Some("app.about"));
     menu.append_section(None, &s3);
-    let menu_button = gtk::MenuButton::builder().icon_name("open-menu-symbolic").menu_model(&menu).primary(true).tooltip_text("Main Menu").build();
+    let menu_button = gtk::MenuButton::builder()
+        .icon_name("open-menu-symbolic")
+        .menu_model(&menu)
+        .primary(true)
+        .tooltip_text("Main Menu")
+        .build();
     header.pack_end(&menu_button);
     let spinner = gtk::Spinner::new();
     header.pack_end(&spinner);
 
     // Search bar.
-    let search_entry = gtk::SearchEntry::builder().hexpand(true).placeholder_text("Search events (FIELD=value restricts to a journal field)").build();
+    let search_entry = gtk::SearchEntry::builder()
+        .hexpand(true)
+        .placeholder_text("Search events (FIELD=value restricts to a journal field)")
+        .build();
     let field_dropdown = gtk::DropDown::from_strings(&SearchField::ALL.map(|f| f.label()));
     field_dropdown.set_tooltip_text(Some("Search in"));
     let search_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     search_box.append(&search_entry);
     search_box.append(&field_dropdown);
-    let search_clamp = adw::Clamp::builder().maximum_size(600).child(&search_box).build();
-    let search_bar = gtk::SearchBar::builder().child(&search_clamp).show_close_button(false).build();
+    let search_clamp = adw::Clamp::builder()
+        .maximum_size(600)
+        .child(&search_box)
+        .build();
+    let search_bar = gtk::SearchBar::builder()
+        .child(&search_clamp)
+        .show_close_button(false)
+        .build();
     search_bar.connect_entry(&search_entry);
     search_bar.set_key_capture_widget(Some(&window));
-    search_button.bind_property("active", &search_bar, "search-mode-enabled").bidirectional().sync_create().build();
+    search_button
+        .bind_property("active", &search_bar, "search-mode-enabled")
+        .bidirectional()
+        .sync_create()
+        .build();
 
     let banner = adw::Banner::builder()
         .title("Only your own logs are shown. Join the “systemd-journal” group to see system logs.")
@@ -292,7 +363,13 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
         state: RefCell::new(State {
             prefs: prefs.clone(),
             uid: worker::current_uid(),
-            boots: vec![Boot { index: 0, id: String::new(), first: None, last: None, range_text: None }],
+            boots: vec![Boot {
+                index: 0,
+                id: String::new(),
+                first: None,
+                last: None,
+                range_text: None,
+            }],
             category: Category::Important,
             search_text: String::new(),
             search_field: SearchField::All,
@@ -324,7 +401,9 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
         let a = app_state.clone();
         sidebar_list.connect_row_selected(move |_, row| {
             let Some(row) = row else { return };
-            let Some(cat) = Category::ALL.get(row.index() as usize).copied() else { return };
+            let Some(cat) = Category::ALL.get(row.index() as usize).copied() else {
+                return;
+            };
             a.ui.list_page.set_title(cat.label());
             a.ui.split.set_show_content(true);
             if a.state.borrow().category != cat {
@@ -358,7 +437,10 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     {
         let a = app_state.clone();
         field_dropdown.connect_selected_notify(move |d| {
-            let f = SearchField::ALL.get(d.selected() as usize).copied().unwrap_or_default();
+            let f = SearchField::ALL
+                .get(d.selected() as usize)
+                .copied()
+                .unwrap_or_default();
             a.state.borrow_mut().search_field = f;
             if !a.state.borrow().search_text.trim().is_empty() {
                 reload(&a);
@@ -377,7 +459,9 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     {
         let a = app_state.clone();
         list.connect_activate(move |_, pos| {
-            let Some(obj) = a.ui.store.item(pos).and_downcast::<glib::BoxedAnyObject>() else { return };
+            let Some(obj) = a.ui.store.item(pos).and_downcast::<glib::BoxedAnyObject>() else {
+                return;
+            };
             let entry = obj.borrow::<Entry>().clone();
             let page = detail_page(&entry, &a.ui.toasts);
             a.ui.nav.push(&page);
@@ -412,12 +496,17 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     {
         let a = app_state.clone();
         sort.connect_activate(move |action, param| {
-            let Some(nick) = param.and_then(|p| p.get::<String>()) else { return };
+            let Some(nick) = param.and_then(|p| p.get::<String>()) else {
+                return;
+            };
             action.set_state(&nick.to_variant());
             let desc = nick != SORT_ASC;
             if a.state.borrow().descending != desc {
                 a.state.borrow_mut().descending = desc;
-                a.state.borrow().prefs.set_enum_nick("sort-order", if desc { SORT_DESC } else { SORT_ASC });
+                a.state
+                    .borrow()
+                    .prefs
+                    .set_enum_nick("sort-order", if desc { SORT_DESC } else { SORT_ASC });
                 reload(&a);
             }
         });
@@ -441,7 +530,11 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
 
     window.connect_close_request(|w| {
         let (width, height) = w.default_size();
-        let ws = WindowState { width, height, maximized: w.is_maximized() };
+        let ws = WindowState {
+            width,
+            height,
+            maximized: w.is_maximized(),
+        };
         if let Ok(json) = serde_json::to_vec(&ws) {
             let _ = std::fs::write(window_state_path(), json);
         }
@@ -476,7 +569,8 @@ fn load_boots(a: &Rc<App>) {
         let current = boots.iter().position(|b| b.index == 0).unwrap_or(0);
         a.state.borrow_mut().boots = boots;
         a.suppress_boot_change.set(true);
-        a.ui.boot_dropdown.set_model(Some(&gtk::StringList::new(&refs)));
+        a.ui.boot_dropdown
+            .set_model(Some(&gtk::StringList::new(&refs)));
         a.ui.boot_dropdown.set_selected(current as u32);
         a.suppress_boot_change.set(false);
     });
@@ -502,8 +596,10 @@ fn insert_live(a: &Rc<App>, entries: Vec<Entry>, at_top: bool) {
     }
     let adj = a.ui.scrolled.vadjustment();
     let descending = a.state.borrow().descending;
-    let follow_edge = a.ui.store.n_items() == 0 || live::at_live_edge(descending, adj.value(), adj.page_size(), adj.upper());
-    let objs: Vec<glib::BoxedAnyObject> = entries.into_iter().map(glib::BoxedAnyObject::new).collect();
+    let follow_edge = a.ui.store.n_items() == 0
+        || live::at_live_edge(descending, adj.value(), adj.page_size(), adj.upper());
+    let objs: Vec<glib::BoxedAnyObject> =
+        entries.into_iter().map(glib::BoxedAnyObject::new).collect();
     if at_top {
         a.ui.store.splice(0, 0, &objs);
     } else {
@@ -511,7 +607,11 @@ fn insert_live(a: &Rc<App>, entries: Vec<Entry>, at_top: bool) {
     }
     a.ui.stack.set_visible_child_name("list");
     if follow_edge {
-        let pos = if at_top { 0 } else { a.ui.store.n_items().saturating_sub(1) };
+        let pos = if at_top {
+            0
+        } else {
+            a.ui.store.n_items().saturating_sub(1)
+        };
         a.ui.list.scroll_to(pos, gtk::ListScrollFlags::NONE, None);
     }
 }
@@ -527,7 +627,11 @@ fn reload(a: &Rc<App>) {
         st.live.clear();
         st.loading = true;
         st.done = false;
-        let mut args = QueryArgs { boot, reverse: st.descending, ..Default::default() };
+        let mut args = QueryArgs {
+            boot,
+            reverse: st.descending,
+            ..Default::default()
+        };
         st.category.prefilter(&mut args, st.uid);
         let query = worker::Query {
             args,
@@ -555,7 +659,8 @@ fn reload(a: &Rc<App>) {
             match msg {
                 worker::Msg::Batch(entries) => {
                     let entries = a.state.borrow_mut().live.loaded(entries);
-                    let objs: Vec<glib::BoxedAnyObject> = entries.into_iter().map(glib::BoxedAnyObject::new).collect();
+                    let objs: Vec<glib::BoxedAnyObject> =
+                        entries.into_iter().map(glib::BoxedAnyObject::new).collect();
                     a.ui.store.extend_from_slice(&objs);
                     a.state.borrow_mut().loading = false;
                     a.ui.spinner.set_spinning(false);
@@ -579,9 +684,18 @@ fn reload(a: &Rc<App>) {
                             let st = a.state.borrow();
                             !Search::new(&st.search_text, st.search_field).is_empty()
                         };
-                        if a.ui.stack.visible_child_name().as_deref() != Some("empty") || !searching {
-                            a.ui.empty.set_icon_name(Some(if searching { "edit-find-symbolic" } else { "document-open-recent-symbolic" }));
-                            a.ui.empty.set_title(if searching { "No Results" } else { "No Events" });
+                        if a.ui.stack.visible_child_name().as_deref() != Some("empty") || !searching
+                        {
+                            a.ui.empty.set_icon_name(Some(if searching {
+                                "edit-find-symbolic"
+                            } else {
+                                "document-open-recent-symbolic"
+                            }));
+                            a.ui.empty.set_title(if searching {
+                                "No Results"
+                            } else {
+                                "No Events"
+                            });
                             a.ui.empty.set_description(None);
                         }
                         a.ui.stack.set_visible_child_name("empty");
@@ -593,7 +707,11 @@ fn reload(a: &Rc<App>) {
                         let st = a.state.borrow();
                         (st.descending, st.done)
                     };
-                    let placement = a.state.borrow_mut().live.followed(entries, descending, done);
+                    let placement = a
+                        .state
+                        .borrow_mut()
+                        .live
+                        .followed(entries, descending, done);
                     match placement {
                         Placement::Prepend(v) => insert_live(&a, v, true),
                         Placement::Append(v) => insert_live(&a, v, false),
@@ -608,7 +726,8 @@ fn reload(a: &Rc<App>) {
                 worker::Msg::Error(e) => {
                     a.ui.empty.set_icon_name(Some("dialog-error-symbolic"));
                     a.ui.empty.set_title("Unable to Read Logs");
-                    a.ui.empty.set_description(Some(&glib::markup_escape_text(&e)));
+                    a.ui.empty
+                        .set_description(Some(&glib::markup_escape_text(&e)));
                     a.ui.stack.set_visible_child_name("empty");
                 }
             }
@@ -634,7 +753,11 @@ fn maybe_load_more(a: &Rc<App>) {
 }
 
 fn export_view(a: &Rc<App>) {
-    let dialog = gtk::FileDialog::builder().title("Export Logs").initial_name("logs.txt").modal(true).build();
+    let dialog = gtk::FileDialog::builder()
+        .title("Export Logs")
+        .initial_name("logs.txt")
+        .modal(true)
+        .build();
     let a2 = a.clone();
     dialog.save(Some(&a.ui.window), None::<&gio::Cancellable>, move |res| {
         let Ok(file) = res else { return };
@@ -650,7 +773,12 @@ fn export_view(a: &Rc<App>) {
         let toasts = a2.ui.toasts.clone();
         glib::spawn_future_local(async move {
             let res = file
-                .replace_contents_future(text.into_bytes(), None, false, gio::FileCreateFlags::REPLACE_DESTINATION)
+                .replace_contents_future(
+                    text.into_bytes(),
+                    None,
+                    false,
+                    gio::FileCreateFlags::REPLACE_DESTINATION,
+                )
                 .await;
             let msg = match res {
                 Ok(_) => "Logs exported".to_string(),
@@ -669,7 +797,10 @@ fn detail_page(entry: &Entry, toasts: &adw::ToastOverlay) -> adw::NavigationPage
 
     let header = adw::HeaderBar::new();
     header.set_title_widget(Some(&adw::WindowTitle::new(title, &time)));
-    let copy = gtk::Button::builder().icon_name("edit-copy-symbolic").tooltip_text("Copy Event").build();
+    let copy = gtk::Button::builder()
+        .icon_name("edit-copy-symbolic")
+        .tooltip_text("Copy Event")
+        .build();
     {
         let text = entry.to_export_fields();
         let toasts = toasts.clone();
@@ -698,7 +829,10 @@ fn detail_page(entry: &Entry, toasts: &adw::ToastOverlay) -> adw::NavigationPage
         v.set_selectable(true);
         b.append(&n);
         b.append(&v);
-        let row = gtk::ListBoxRow::builder().child(&b).activatable(false).build();
+        let row = gtk::ListBoxRow::builder()
+            .child(&b)
+            .activatable(false)
+            .build();
         listbox.append(&row);
     };
     let mut time_added = false;
@@ -718,8 +852,18 @@ fn detail_page(entry: &Entry, toasts: &adw::ToastOverlay) -> adw::NavigationPage
         add_row("Time", &time);
     }
 
-    let clamp = adw::Clamp::builder().maximum_size(900).child(&listbox).margin_top(12).margin_bottom(12).margin_start(12).margin_end(12).build();
-    let scrolled = gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).child(&clamp).build();
+    let clamp = adw::Clamp::builder()
+        .maximum_size(900)
+        .child(&listbox)
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
+        .build();
+    let scrolled = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .child(&clamp)
+        .build();
     let tv = adw::ToolbarView::new();
     tv.add_top_bar(&header);
     tv.set_content(Some(&scrolled));

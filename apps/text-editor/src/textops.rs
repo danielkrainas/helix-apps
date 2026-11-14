@@ -27,7 +27,9 @@ impl Indent {
 
 /// Leading whitespace of `line`.
 pub fn leading_whitespace(line: &str) -> &str {
-    let end = line.find(|c: char| c != ' ' && c != '\t').unwrap_or(line.len());
+    let end = line
+        .find(|c: char| c != ' ' && c != '\t')
+        .unwrap_or(line.len());
     &line[..end]
 }
 
@@ -36,7 +38,10 @@ pub fn leading_whitespace(line: &str) -> &str {
 /// after an opening bracket.
 pub fn newline_indent(before_cursor: &str, indent: &Indent) -> String {
     let mut ws = leading_whitespace(before_cursor).to_string();
-    if matches!(before_cursor.trim_end().chars().last(), Some('{' | '[' | '(')) {
+    if matches!(
+        before_cursor.trim_end().chars().last(),
+        Some('{' | '[' | '(')
+    ) {
         ws.push_str(&indent.unit());
     }
     ws
@@ -45,7 +50,13 @@ pub fn newline_indent(before_cursor: &str, indent: &Indent) -> String {
 /// Visual column (0-based) at the end of `prefix`, expanding tabs.
 pub fn visual_column(prefix: &str, tab_width: u32) -> u32 {
     let w = tab_width.max(1);
-    prefix.chars().fold(0, |col, c| if c == '\t' { col + w - col % w } else { col + 1 })
+    prefix.chars().fold(0, |col, c| {
+        if c == '\t' {
+            col + w - col % w
+        } else {
+            col + 1
+        }
+    })
 }
 
 /// Width of an indentation string in columns.
@@ -74,7 +85,11 @@ pub fn unindent_line(line: &str, indent: &Indent) -> String {
     let mut kept = String::new();
     let mut col = 0;
     for c in ws.chars() {
-        let next = if c == '\t' { col + unit - col % unit } else { col + 1 };
+        let next = if c == '\t' {
+            col + unit - col % unit
+        } else {
+            col + 1
+        };
         if next > target {
             break;
         }
@@ -106,8 +121,14 @@ pub fn parse_goto(s: &str) -> Option<(u32, Option<u32>)> {
 mod tests {
     use super::*;
 
-    const SPACES4: Indent = Indent { tab_width: 4, use_spaces: true };
-    const TABS: Indent = Indent { tab_width: 8, use_spaces: false };
+    const SPACES4: Indent = Indent {
+        tab_width: 4,
+        use_spaces: true,
+    };
+    const TABS: Indent = Indent {
+        tab_width: 8,
+        use_spaces: false,
+    };
 
     #[test]
     fn units() {

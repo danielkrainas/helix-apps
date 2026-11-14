@@ -16,7 +16,12 @@ pub struct Property {
 
 impl Property {
     pub fn new(name: &str, value: impl Into<String>) -> Self {
-        Property { group: None, name: name.to_ascii_uppercase(), params: Vec::new(), value: value.into() }
+        Property {
+            group: None,
+            name: name.to_ascii_uppercase(),
+            params: Vec::new(),
+            value: value.into(),
+        }
     }
 
     /// Builds a property whose value is plain text (escaped here).
@@ -73,7 +78,10 @@ impl Property {
 
     /// The value split on unescaped `;` and unescaped.
     pub fn structured(&self) -> Vec<String> {
-        split_unescaped(&self.value, ';').iter().map(|s| unescape_text(s)).collect()
+        split_unescaped(&self.value, ';')
+            .iter()
+            .map(|s| unescape_text(s))
+            .collect()
     }
 
     /// The value split on unescaped `,` and unescaped.
@@ -107,7 +115,10 @@ impl Property {
 }
 
 fn quote_param(v: &str) -> String {
-    let v: String = v.chars().filter(|c| *c != '"' && *c != '\r' && *c != '\n').collect();
+    let v: String = v
+        .chars()
+        .filter(|c| *c != '"' && *c != '\r' && *c != '\n')
+        .collect();
     if v.contains([':', ';', ',']) {
         format!("\"{v}\"")
     } else {
@@ -192,8 +203,16 @@ pub fn parse_line(line: &str) -> Option<Property> {
         let vals = split_param_values(&pval);
         params.push((pname, vals));
     }
-    let mut prop = Property { group, name: name.to_ascii_uppercase(), params, value: value.to_string() };
-    if prop.param("ENCODING").is_some_and(|e| e.eq_ignore_ascii_case("QUOTED-PRINTABLE")) {
+    let mut prop = Property {
+        group,
+        name: name.to_ascii_uppercase(),
+        params,
+        value: value.to_string(),
+    };
+    if prop
+        .param("ENCODING")
+        .is_some_and(|e| e.eq_ignore_ascii_case("QUOTED-PRINTABLE"))
+    {
         prop.value = decode_quoted_printable(&prop.value);
         prop.params.retain(|(n, _)| n != "ENCODING");
     }
@@ -239,7 +258,9 @@ fn decode_quoted_printable(v: &str) -> String {
     let mut i = 0;
     while i < bytes.len() {
         if bytes[i] == b'=' && i + 2 < bytes.len() {
-            let hex = std::str::from_utf8(&bytes[i + 1..i + 3]).ok().and_then(|h| u8::from_str_radix(h, 16).ok());
+            let hex = std::str::from_utf8(&bytes[i + 1..i + 3])
+                .ok()
+                .and_then(|h| u8::from_str_radix(h, 16).ok());
             if let Some(b) = hex {
                 out.push(b);
                 i += 3;
@@ -387,7 +408,9 @@ mod tests {
 
     #[test]
     fn to_line_quotes_when_needed() {
-        let p = Property::new("X", "v").with_param("LABEL", "a,b").with_param("TYPE", "home");
+        let p = Property::new("X", "v")
+            .with_param("LABEL", "a,b")
+            .with_param("TYPE", "home");
         assert_eq!(p.to_line(), "X;LABEL=\"a,b\";TYPE=home:v");
     }
 }

@@ -12,7 +12,12 @@ pub enum SearchField {
 }
 
 impl SearchField {
-    pub const ALL: [SearchField; 4] = [SearchField::All, SearchField::Message, SearchField::Process, SearchField::Unit];
+    pub const ALL: [SearchField; 4] = [
+        SearchField::All,
+        SearchField::Message,
+        SearchField::Process,
+        SearchField::Unit,
+    ];
 
     pub fn label(self) -> &'static str {
         match self {
@@ -41,7 +46,8 @@ pub struct Search {
 
 fn is_field_name(s: &str) -> bool {
     !s.is_empty()
-        && s.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+        && s.chars()
+            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
         && !s.starts_with(|c: char| c.is_ascii_digit())
 }
 
@@ -53,7 +59,9 @@ fn contains_ci(haystack: &str, needle_lower: &str) -> bool {
         if n.is_empty() {
             return true;
         }
-        return h.windows(n.len()).any(|w| w.iter().zip(n).all(|(a, b)| a.to_ascii_lowercase() == *b));
+        return h
+            .windows(n.len())
+            .any(|w| w.iter().zip(n).all(|(a, b)| a.to_ascii_lowercase() == *b));
     }
     haystack.to_lowercase().contains(needle_lower)
 }
@@ -82,7 +90,9 @@ impl Search {
                 SearchField::Process => contains_ci(e.process(), w),
                 SearchField::Unit => contains_ci(e.unit(), w),
                 SearchField::All => {
-                    contains_ci(e.message(), w) || contains_ci(e.process(), w) || contains_ci(e.unit(), w)
+                    contains_ci(e.message(), w)
+                        || contains_ci(e.process(), w)
+                        || contains_ci(e.unit(), w)
                 }
             },
         })
@@ -103,7 +113,12 @@ mod tests {
 
     fn hits(text: &str, field: SearchField) -> Vec<usize> {
         let s = Search::new(text, field);
-        fixture().iter().enumerate().filter(|(_, e)| s.matches(e)).map(|(i, _)| i).collect()
+        fixture()
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| s.matches(e))
+            .map(|(i, _)| i)
+            .collect()
     }
 
     #[test]
@@ -131,7 +146,10 @@ mod tests {
     #[test]
     fn words_are_anded() {
         assert_eq!(hits("failed wlp2s0", SearchField::All), [5]);
-        assert_eq!(hits("failed nothing-here", SearchField::All), Vec::<usize>::new());
+        assert_eq!(
+            hits("failed nothing-here", SearchField::All),
+            Vec::<usize>::new()
+        );
         // Words may match different fields.
         assert_eq!(hits("networkmanager change", SearchField::All), [5]);
     }

@@ -50,17 +50,26 @@ fn duration_choices(secs: &[u32], zero_label: Option<&str>) -> Vec<Choice<i64>> 
 
 /// `org.gnome.desktop.session idle-delay` presets (seconds; 0 = never).
 pub fn blank_delays() -> Vec<Choice<i64>> {
-    duration_choices(&[60, 120, 180, 240, 300, 480, 600, 720, 900, 0], Some("Never"))
+    duration_choices(
+        &[60, 120, 180, 240, 300, 480, 600, 720, 900, 0],
+        Some("Never"),
+    )
 }
 
 /// `org.gnome.desktop.screensaver lock-delay` presets (seconds).
 pub fn lock_delays() -> Vec<Choice<i64>> {
-    duration_choices(&[0, 30, 60, 120, 180, 300, 1800, 3600], Some("Screen Turns Off"))
+    duration_choices(
+        &[0, 30, 60, 120, 180, 300, 1800, 3600],
+        Some("Screen Turns Off"),
+    )
 }
 
 /// `sleep-inactive-*-timeout` presets (seconds).
 pub fn suspend_delays() -> Vec<Choice<i64>> {
-    duration_choices(&[900, 1200, 1500, 1800, 2700, 3600, 4800, 5400, 6000, 7200], None)
+    duration_choices(
+        &[900, 1200, 1500, 1800, 2700, 3600, 4800, 5400, 6000, 7200],
+        None,
+    )
 }
 
 fn days_label(d: i64) -> String {
@@ -75,7 +84,14 @@ fn days_label(d: i64) -> String {
 pub fn recent_ages() -> Vec<Choice<i64>> {
     [1, 7, 30, -1]
         .into_iter()
-        .map(|d| Choice { value: d, label: if d < 0 { "Forever".into() } else { days_label(d) } })
+        .map(|d| Choice {
+            value: d,
+            label: if d < 0 {
+                "Forever".into()
+            } else {
+                days_label(d)
+            },
+        })
         .collect()
 }
 
@@ -83,7 +99,10 @@ pub fn recent_ages() -> Vec<Choice<i64>> {
 pub fn old_files_ages() -> Vec<Choice<i64>> {
     [1, 2, 3, 4, 5, 6, 7, 14, 30]
         .into_iter()
-        .map(|d| Choice { value: d, label: days_label(d) })
+        .map(|d| Choice {
+            value: d,
+            label: days_label(d),
+        })
         .collect()
 }
 
@@ -104,7 +123,13 @@ pub fn with_current(
         .position(|c| c.value > 0 && c.value > current)
         .or_else(|| presets.iter().rposition(|c| c.value > 0).map(|i| i + 1))
         .unwrap_or(presets.len());
-    presets.insert(pos, Choice { value: current, label: label(current) });
+    presets.insert(
+        pos,
+        Choice {
+            value: current,
+            label: label(current),
+        },
+    );
     (presets, pos)
 }
 
@@ -123,7 +148,11 @@ pub const ACCENT_COLORS: &[(&str, &str, &str)] = &[
 
 /// Normalises an `accent-color` nick; unknown values become `blue`.
 pub fn accent_nick(nick: &str) -> &'static str {
-    ACCENT_COLORS.iter().find(|c| c.0 == nick).map(|c| c.0).unwrap_or("blue")
+    ACCENT_COLORS
+        .iter()
+        .find(|c| c.0 == nick)
+        .map(|c| c.0)
+        .unwrap_or("blue")
 }
 
 /// Style cards of the Appearance panel.
@@ -163,8 +192,13 @@ pub fn text_factor(large: bool) -> f64 {
     }
 }
 
-pub const CURSOR_SIZES: &[(i32, &str)] =
-    &[(24, "Default"), (32, "Medium"), (48, "Large"), (64, "Larger"), (96, "Largest")];
+pub const CURSOR_SIZES: &[(i32, &str)] = &[
+    (24, "Default"),
+    (32, "Medium"),
+    (48, "Large"),
+    (64, "Larger"),
+    (96, "Largest"),
+];
 
 /// Index of the closest cursor size preset.
 pub fn cursor_size_index(size: i32) -> usize {
@@ -176,9 +210,12 @@ pub fn cursor_size_index(size: i32) -> usize {
         .unwrap_or(0)
 }
 
-pub const POWER_BUTTON_ACTIONS: &[(&str, &str)] =
-    &[("suspend", "Suspend"), ("interactive", "Power Off"), ("hibernate", "Hibernate"), ("nothing", "Nothing")];
-
+pub const POWER_BUTTON_ACTIONS: &[(&str, &str)] = &[
+    ("suspend", "Suspend"),
+    ("interactive", "Power Off"),
+    ("hibernate", "Hibernate"),
+    ("nothing", "Nothing"),
+];
 
 /// Keyboard repeat interval bounds (ms) for the speed slider.
 pub const REPEAT_FAST_MS: f64 = 10.0;
@@ -263,7 +300,18 @@ mod tests {
             .iter()
             .map(|c| c.0)
             .chain(POWER_BUTTON_ACTIONS.iter().map(|a| a.0))
-            .chain(["default", "prefer-dark", "prefer-light", "24h", "12h", "fingers", "areas", "flat", "enabled", "disabled"]);
+            .chain([
+                "default",
+                "prefer-dark",
+                "prefer-light",
+                "24h",
+                "12h",
+                "fingers",
+                "areas",
+                "flat",
+                "enabled",
+                "disabled",
+            ]);
         for nick in nicks {
             assert!(xml.contains(&format!("nick=\"{nick}\"")), "{nick}");
         }
@@ -397,8 +445,14 @@ mod tests {
         assert_eq!(battery_state_label(1), "Charging");
         assert_eq!(battery_state_label(4), "Fully Charged");
         assert_eq!(battery_state_label(99), "Unknown");
-        assert_eq!(battery_time_label(2, 3900, 0).unwrap(), "1 hour 5 minutes remaining");
-        assert_eq!(battery_time_label(1, 0, 600).unwrap(), "10 minutes until fully charged");
+        assert_eq!(
+            battery_time_label(2, 3900, 0).unwrap(),
+            "1 hour 5 minutes remaining"
+        );
+        assert_eq!(
+            battery_time_label(1, 0, 600).unwrap(),
+            "10 minutes until fully charged"
+        );
         assert_eq!(battery_time_label(4, 0, 0), None);
         assert_eq!(battery_time_label(2, 0, 0), None);
     }

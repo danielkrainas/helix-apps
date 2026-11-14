@@ -18,7 +18,10 @@ pub struct Links {
 
 impl Links {
     pub fn load(path: &Path) -> Links {
-        std::fs::read_to_string(path).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default()
+        std::fs::read_to_string(path)
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or_default()
     }
 
     pub fn save(&self, path: &Path) -> std::io::Result<()> {
@@ -62,7 +65,8 @@ impl Links {
     /// containing them and, for members that an external (GNOME/folks)
     /// group links, records them so that link is ignored from now on.
     pub fn unlink_members(&mut self, members: &[Key], external: &[Vec<Key>]) {
-        self.groups.retain(|g| !g.iter().any(|k| members.contains(k)));
+        self.groups
+            .retain(|g| !g.iter().any(|k| members.contains(k)));
         for m in members {
             if external.iter().any(|g| g.contains(m)) && !self.ignore_external.contains(m) {
                 self.ignore_external.push(m.clone());
@@ -73,9 +77,16 @@ impl Links {
     /// Helix links merged with external (read-only) link groups, minus the
     /// members the user unlinked.
     pub fn effective(&self, external: &[Vec<Key>]) -> Links {
-        let mut out = Links { groups: self.groups.clone(), ignore_external: Vec::new() };
+        let mut out = Links {
+            groups: self.groups.clone(),
+            ignore_external: Vec::new(),
+        };
         for g in external {
-            let g: Vec<Key> = g.iter().filter(|k| !self.ignore_external.contains(k)).cloned().collect();
+            let g: Vec<Key> = g
+                .iter()
+                .filter(|k| !self.ignore_external.contains(k))
+                .cloned()
+                .collect();
             if g.len() > 1 {
                 out.link(&g);
             }
@@ -144,7 +155,10 @@ mod tests {
     fn external_groups_merge_and_unlink() {
         let mut l = Links::default();
         l.link(&[k("a", "1"), k("a", "2")]);
-        let ext = vec![vec![k("a", "2"), k("g", "7")], vec![k("x", "1"), k("y", "1")]];
+        let ext = vec![
+            vec![k("a", "2"), k("g", "7")],
+            vec![k("x", "1"), k("y", "1")],
+        ];
         let eff = l.effective(&ext);
         assert_eq!(eff.groups.len(), 2);
         assert_eq!(eff.group_of(&k("g", "7")).unwrap().len(), 3);
@@ -153,7 +167,10 @@ mod tests {
         l.unlink_members(&members, &ext);
         assert!(l.groups.is_empty());
         assert_eq!(l.ignore_external, vec![k("a", "2"), k("g", "7")]);
-        assert_eq!(l.effective(&ext).groups, vec![vec![k("x", "1"), k("y", "1")]]);
+        assert_eq!(
+            l.effective(&ext).groups,
+            vec![vec![k("x", "1"), k("y", "1")]]
+        );
         // Old links.json files (no ignore list) still load.
         let old: Links = serde_json::from_str(r#"{"groups":[[["a","1"],["b","2"]]]}"#).unwrap();
         assert!(old.ignore_external.is_empty());

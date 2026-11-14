@@ -40,7 +40,10 @@ pub fn run(standalone: bool, files: Vec<String>) -> glib::ExitCode {
     if standalone {
         flags |= gio::ApplicationFlags::NON_UNIQUE;
     }
-    let gtk_app = adw::Application::builder().application_id(APP_ID).flags(flags).build();
+    let gtk_app = adw::Application::builder()
+        .application_id(APP_ID)
+        .flags(flags)
+        .build();
     let holder: Rc<RefCell<Option<Rc<App>>>> = Rc::default();
 
     gtk_app.connect_startup({
@@ -55,7 +58,9 @@ pub fn run(standalone: bool, files: Vec<String>) -> glib::ExitCode {
     gtk_app.connect_activate({
         let holder = holder.clone();
         move |_| {
-            let Some(app) = holder.borrow().clone() else { return };
+            let Some(app) = holder.borrow().clone() else {
+                return;
+            };
             match app.active_window() {
                 Some(w) => w.win.present(),
                 None => {
@@ -71,7 +76,9 @@ pub fn run(standalone: bool, files: Vec<String>) -> glib::ExitCode {
     gtk_app.connect_open({
         let holder = holder.clone();
         move |_, files, _| {
-            let Some(app) = holder.borrow().clone() else { return };
+            let Some(app) = holder.borrow().clone() else {
+                return;
+            };
             let win = app.active_window().unwrap_or_else(|| app.new_window(true));
             for f in files {
                 win.open_file(f.clone());
@@ -87,7 +94,9 @@ pub fn run(standalone: bool, files: Vec<String>) -> glib::ExitCode {
             }
         }
     });
-    let mut argv = vec![std::env::args().next().unwrap_or_else(|| "helix-text-editor".into())];
+    let mut argv = vec![std::env::args()
+        .next()
+        .unwrap_or_else(|| "helix-text-editor".into())];
     argv.extend(files);
     gtk_app.run_with_args(&argv)
 }
@@ -100,7 +109,11 @@ impl App {
         let recent = store.load_recent();
         let css = gtk::CssProvider::new();
         if let Some(display) = gtk::gdk::Display::default() {
-            gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &css,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
             let static_css = gtk::CssProvider::new();
             static_css.load_from_string(
                 ".change-banner { padding: 6px 12px; background: alpha(@accent_bg_color, 0.15); }
@@ -110,7 +123,11 @@ impl App {
                  .statusbar button { min-height: 24px; padding: 2px 8px; font-size: 0.9em; }
                  linegutter { background: alpha(currentColor, 0.03); }",
             );
-            gtk::style_context_add_provider_for_display(&display, &static_css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &static_css,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
         }
         let app = Rc::new_cyclic(|this| App {
             this: this.clone(),
@@ -197,7 +214,10 @@ impl App {
             ("app.quit", &["<Control>q"]),
             ("app.new-window", &["<Control>n"]),
             ("app.preferences", &["<Control>comma"]),
-            ("app.zoom-in", &["<Control>plus", "<Control>equal", "<Control>KP_Add"]),
+            (
+                "app.zoom-in",
+                &["<Control>plus", "<Control>equal", "<Control>KP_Add"],
+            ),
             ("app.zoom-out", &["<Control>minus", "<Control>KP_Subtract"]),
             ("app.zoom-reset", &["<Control>0", "<Control>KP_0"]),
             ("window.close", &["<Control><Shift>w"]),
@@ -240,11 +260,17 @@ impl App {
         let desc = gtk::pango::FontDescription::from_string(&name);
         use glib::translate::IntoGlib;
         FontSpec {
-            family: desc.family().map(|f| f.to_string()).unwrap_or_else(|| "Monospace".into()),
+            family: desc
+                .family()
+                .map(|f| f.to_string())
+                .unwrap_or_else(|| "Monospace".into()),
             size: desc.size() as f64 / gtk::pango::SCALE as f64,
             size_px: desc.is_size_absolute(),
             weight: desc.weight().into_glib().clamp(100, 1000) as u32,
-            italic: matches!(desc.style(), gtk::pango::Style::Italic | gtk::pango::Style::Oblique),
+            italic: matches!(
+                desc.style(),
+                gtk::pango::Style::Italic | gtk::pango::Style::Oblique
+            ),
         }
     }
 
@@ -280,7 +306,11 @@ impl App {
     }
 
     fn zoom(&self, step: i32) {
-        let z = if step == 0 { 0 } else { (self.zoom.get() + step).clamp(settings::ZOOM_MIN, settings::ZOOM_MAX) };
+        let z = if step == 0 {
+            0
+        } else {
+            (self.zoom.get() + step).clamp(settings::ZOOM_MIN, settings::ZOOM_MAX)
+        };
         self.zoom.set(z);
         self.apply_settings();
         if let Some(w) = self.active_window() {
@@ -294,7 +324,12 @@ impl App {
         let active = self.gtk.active_window();
         let windows = self.windows.borrow();
         active
-            .and_then(|a| windows.iter().find(|w| w.win.upcast_ref::<gtk::Window>() == &a).cloned())
+            .and_then(|a| {
+                windows
+                    .iter()
+                    .find(|w| w.win.upcast_ref::<gtk::Window>() == &a)
+                    .cloned()
+            })
             .or_else(|| windows.last().cloned())
     }
 
@@ -308,16 +343,26 @@ impl App {
     }
 
     pub fn window_removed(&self, win: &Window) {
-        self.windows.borrow_mut().retain(|w| !std::ptr::eq(w.as_ref(), win));
+        self.windows
+            .borrow_mut()
+            .retain(|w| !std::ptr::eq(w.as_ref(), win));
     }
 
     pub fn window_of(&self, doc: &Doc) -> Option<Rc<Window>> {
         let tv = doc.root.ancestor(adw::TabView::static_type())?;
-        self.windows.borrow().iter().find(|w| w.tab_view.upcast_ref::<gtk::Widget>() == &tv).cloned()
+        self.windows
+            .borrow()
+            .iter()
+            .find(|w| w.tab_view.upcast_ref::<gtk::Widget>() == &tv)
+            .cloned()
     }
 
     pub fn doc_for_child(&self, child: &gtk::Widget) -> Option<Rc<Doc>> {
-        self.docs.borrow().iter().find(|d| d.root.upcast_ref::<gtk::Widget>() == child).cloned()
+        self.docs
+            .borrow()
+            .iter()
+            .find(|d| d.root.upcast_ref::<gtk::Widget>() == child)
+            .cloned()
     }
 
     pub fn find_doc_by_file(&self, file: &gio::File) -> Option<Rc<Doc>> {
@@ -334,7 +379,9 @@ impl App {
 
     pub fn unregister_doc(&self, doc: &Doc) {
         doc.dispose();
-        self.docs.borrow_mut().retain(|d| !std::ptr::eq(d.as_ref(), doc));
+        self.docs
+            .borrow_mut()
+            .retain(|d| !std::ptr::eq(d.as_ref(), doc));
         self.schedule_autosave();
     }
 
@@ -387,7 +434,9 @@ impl App {
             let selected = w.tab_view.selected_page();
             for i in 0..w.tab_view.n_pages() {
                 let page = w.tab_view.nth_page(i);
-                let Some(doc) = self.doc_for_child(&page.child()) else { continue };
+                let Some(doc) = self.doc_for_child(&page.child()) else {
+                    continue;
+                };
                 let uri = doc.uri();
                 let modified = doc.is_modified();
                 if uri.is_none() && !modified {
@@ -489,7 +538,9 @@ impl App {
                 let file = t.uri.as_deref().map(gio::File::for_uri);
                 let select = active.as_deref() == Some(t.id.as_str());
                 if t.draft {
-                    let Some(text) = self.store.read_draft(&t.id) else { continue };
+                    let Some(text) = self.store.read_draft(&t.id) else {
+                        continue;
+                    };
                     let doc = win.add_doc(Some(t.id.clone()), select);
                     doc.restore_draft(&text, file, fmt);
                     doc.goto(t.line + 1, Some(t.column + 1));
@@ -522,7 +573,10 @@ impl App {
         if self.standalone {
             return;
         }
-        if !self.quitting.get() && self.settings.borrow().restore_session && !self.docs.borrow().is_empty() {
+        if !self.quitting.get()
+            && self.settings.borrow().restore_session
+            && !self.docs.borrow().is_empty()
+        {
             self.save_session_now();
         }
     }

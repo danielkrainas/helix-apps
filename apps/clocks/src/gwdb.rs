@@ -45,11 +45,16 @@ struct Ctx {
 }
 
 fn child_text<'a>(n: roxmltree::Node<'a, 'a>, tag: &str) -> Option<&'a str> {
-    n.children().find(|c| c.has_tag_name(tag)).and_then(|c| c.text()).map(str::trim)
+    n.children()
+        .find(|c| c.has_tag_name(tag))
+        .and_then(|c| c.text())
+        .map(str::trim)
 }
 
 fn node_name(n: roxmltree::Node) -> Option<String> {
-    child_text(n, "_name").or_else(|| child_text(n, "name")).map(str::to_string)
+    child_text(n, "_name")
+        .or_else(|| child_text(n, "name"))
+        .map(str::to_string)
 }
 
 fn coords(n: roxmltree::Node) -> Option<(f64, f64)> {
@@ -66,7 +71,11 @@ fn own_tz(n: roxmltree::Node) -> Option<String> {
     let zones: Vec<&str> = n
         .children()
         .filter(|c| c.has_tag_name("timezones"))
-        .flat_map(|c| c.children().filter(|z| z.has_tag_name("timezone")).filter_map(|z| z.attribute("id")))
+        .flat_map(|c| {
+            c.children()
+                .filter(|z| z.has_tag_name("timezone"))
+                .filter_map(|z| z.attribute("id"))
+        })
         .collect();
     (zones.len() == 1).then(|| zones[0].to_string())
 }
@@ -89,11 +98,19 @@ fn walk(n: roxmltree::Node, ctx: &Ctx, db: &mut Db) {
             "state" => sub.state = node_name(c),
             "city" => {
                 if let (Some(name), Some(co)) = (node_name(c), coords(c)) {
-                    db.cities.push(City { name, coords: co, tz: sub.tz.clone(), country: sub.country.clone(), state: sub.state.clone() });
+                    db.cities.push(City {
+                        name,
+                        coords: co,
+                        tz: sub.tz.clone(),
+                        country: sub.country.clone(),
+                        state: sub.state.clone(),
+                    });
                 }
             }
             "location" => {
-                if let (Some(name), Some(code), Some(co)) = (node_name(c), child_text(c, "code"), coords(c)) {
+                if let (Some(name), Some(code), Some(co)) =
+                    (node_name(c), child_text(c, "code"), coords(c))
+                {
                     db.stations.push(Station {
                         name,
                         code: code.to_string(),
@@ -112,14 +129,23 @@ fn walk(n: roxmltree::Node, ctx: &Ctx, db: &mut Db) {
 
 /// Great-circle distance in kilometres.
 pub fn distance_km(a: (f64, f64), b: (f64, f64)) -> f64 {
-    let (la1, lo1, la2, lo2) = (a.0.to_radians(), a.1.to_radians(), b.0.to_radians(), b.1.to_radians());
-    let h = ((la2 - la1) / 2.0).sin().powi(2) + la1.cos() * la2.cos() * ((lo2 - lo1) / 2.0).sin().powi(2);
+    let (la1, lo1, la2, lo2) = (
+        a.0.to_radians(),
+        a.1.to_radians(),
+        b.0.to_radians(),
+        b.1.to_radians(),
+    );
+    let h = ((la2 - la1) / 2.0).sin().powi(2)
+        + la1.cos() * la2.cos() * ((lo2 - lo1) / 2.0).sin().powi(2);
     2.0 * 6371.0 * h.sqrt().asin()
 }
 
 impl Db {
     pub fn parse(xml: &str) -> Option<Db> {
-        let opts = roxmltree::ParsingOptions { allow_dtd: true, ..Default::default() };
+        let opts = roxmltree::ParsingOptions {
+            allow_dtd: true,
+            ..Default::default()
+        };
         let doc = roxmltree::Document::parse_with_options(xml, opts).ok()?;
         let mut db = Db::default();
         walk(doc.root_element(), &Ctx::default(), &mut db);
@@ -140,11 +166,15 @@ impl Db {
     }
 
     pub fn station(&self, code: &str) -> Option<&Station> {
-        (!code.is_empty()).then(|| self.stations.iter().find(|s| s.code == code)).flatten()
+        (!code.is_empty())
+            .then(|| self.stations.iter().find(|s| s.code == code))
+            .flatten()
     }
 
     pub fn nearest_station(&self, at: (f64, f64)) -> Option<&Station> {
-        self.stations.iter().min_by(|a, b| distance_km(a.coords, at).total_cmp(&distance_km(b.coords, at)))
+        self.stations
+            .iter()
+            .min_by(|a, b| distance_km(a.coords, at).total_cmp(&distance_km(b.coords, at)))
     }
 
     /// The nearest city within `max_km`.
@@ -217,8 +247,15 @@ mod tests {
         assert_eq!(m.tz.as_deref(), Some("Europe/Berlin"));
         assert_eq!(m.country.as_deref(), Some("Germany"));
         assert_eq!(m.state.as_deref(), Some("Bavaria"));
-        assert_eq!(db.station("KORD").unwrap().tz.as_deref(), Some("America/Chicago"));
-        assert_eq!(db.station("XXXX").unwrap().tz, None, "ambiguous country zone");
+        assert_eq!(
+            db.station("KORD").unwrap().tz.as_deref(),
+            Some("America/Chicago")
+        );
+        assert_eq!(
+            db.station("XXXX").unwrap().tz,
+            None,
+            "ambiguous country zone"
+        );
         assert!(db.station("").is_none());
         let c = &db.cities[0];
         assert_eq!((c.name.as_str(), c.coords), ("Munich", (48.15, 11.583333)));
@@ -236,7 +273,12 @@ mod tests {
     fn installed_database_if_present() {
         let t = std::time::Instant::now();
         let Some(db) = Db::load() else { return };
-        eprintln!("Locations.xml: {} stations, {} cities in {:?}", db.stations.len(), db.cities.len(), t.elapsed());
+        eprintln!(
+            "Locations.xml: {} stations, {} cities in {:?}",
+            db.stations.len(),
+            db.cities.len(),
+            t.elapsed()
+        );
         let m = db.station("EDDM").unwrap();
         assert_eq!(m.tz.as_deref(), Some("Europe/Berlin"));
         let c = db.nearest_city((48.14, 11.58), 50.0).unwrap();

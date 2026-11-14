@@ -62,7 +62,10 @@ pub struct Drive {
 pub enum VolumeKind {
     Block,
     /// Unallocated space in the partition table of block `table`.
-    Free { table: String, logical: bool },
+    Free {
+        table: String,
+        logical: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -192,7 +195,14 @@ impl Volume {
             };
         }
         if let Some(clear) = &self.encrypted {
-            return format!("{name} — {}", if clear.is_some() { "Unlocked" } else { "Locked" });
+            return format!(
+                "{name} — {}",
+                if clear.is_some() {
+                    "Unlocked"
+                } else {
+                    "Locked"
+                }
+            );
         }
         if let Some(active) = self.swap_active {
             return format!("{name} — {}", if active { "Active" } else { "Not Active" });
@@ -251,18 +261,26 @@ impl Volume {
 impl Drive {
     /// Sidebar/page title, e.g. `2.0 TB Hard Disk`.
     pub fn title(&self) -> String {
-        let size = if self.size > 0 { format!("{} ", format::size(self.size)) } else { String::new() };
+        let size = if self.size > 0 {
+            format!("{} ", format::size(self.size))
+        } else {
+            String::new()
+        };
         match self.kind {
             DriveKind::Loop => format!("{size}Loop Device"),
             DriveKind::Disk if self.optical => "CD/DVD Drive".into(),
-            DriveKind::Disk if self.media.starts_with("flash") || (self.media_removable && !self.optical) => {
+            DriveKind::Disk
+                if self.media.starts_with("flash") || (self.media_removable && !self.optical) =>
+            {
                 if self.media_available {
                     format!("{size}Drive")
                 } else {
                     "Card Reader".into()
                 }
             }
-            DriveKind::Disk if self.removable || self.connection_bus == "usb" => format!("{size}Drive"),
+            DriveKind::Disk if self.removable || self.connection_bus == "usb" => {
+                format!("{size}Drive")
+            }
             DriveKind::Disk if self.rotation_rate == 0 => format!("{size}Solid-State Disk"),
             DriveKind::Disk => format!("{size}Hard Disk"),
         }
@@ -273,7 +291,12 @@ impl Drive {
         if self.kind == DriveKind::Loop {
             return self.backing_file.clone().unwrap_or_default();
         }
-        [self.vendor.trim(), self.model.trim()].iter().filter(|s| !s.is_empty()).cloned().collect::<Vec<_>>().join(" ")
+        [self.vendor.trim(), self.model.trim()]
+            .iter()
+            .filter(|s| !s.is_empty())
+            .cloned()
+            .collect::<Vec<_>>()
+            .join(" ")
     }
 
     pub fn subtitle(&self) -> String {
@@ -290,8 +313,12 @@ impl Drive {
             DriveKind::Loop => "media-optical-symbolic",
             DriveKind::Disk if self.optical => "drive-optical-symbolic",
             DriveKind::Disk if self.media.starts_with("flash") => "media-flash-symbolic",
-            DriveKind::Disk if self.removable && self.connection_bus == "usb" => "drive-harddisk-usb-symbolic",
-            DriveKind::Disk if self.removable || self.media_removable => "drive-removable-media-symbolic",
+            DriveKind::Disk if self.removable && self.connection_bus == "usb" => {
+                "drive-harddisk-usb-symbolic"
+            }
+            DriveKind::Disk if self.removable || self.media_removable => {
+                "drive-removable-media-symbolic"
+            }
             DriveKind::Disk if self.rotation_rate == 0 => "drive-harddisk-solidstate-symbolic",
             DriveKind::Disk => "drive-harddisk-symbolic",
         }
@@ -320,20 +347,33 @@ impl Drive {
 
 /// Whether `mount_point` is a snap package mount (`/snap/<name>/<rev>`).
 pub fn is_snap_mount(mount_point: &str) -> bool {
-    mount_point.strip_prefix("/snap/").is_some_and(|rest| !rest.is_empty())
+    mount_point
+        .strip_prefix("/snap/")
+        .is_some_and(|rest| !rest.is_empty())
 }
 
 impl Drive {
     /// A loop device backing a `/snap/*` mount (snapd's squashfs images).
     pub fn is_snap_loop(&self) -> bool {
-        self.kind == DriveKind::Loop && self.all_volumes().iter().any(|v| v.mount_points().iter().any(|m| is_snap_mount(m)))
+        self.kind == DriveKind::Loop
+            && self
+                .all_volumes()
+                .iter()
+                .any(|v| v.mount_points().iter().any(|m| is_snap_mount(m)))
     }
 }
 
 impl Model {
     /// The model as shown: snap loop devices removed when `hide_snap_loops`.
     pub fn visible(&self, hide_snap_loops: bool) -> Model {
-        Model { drives: self.drives.iter().filter(|d| !(hide_snap_loops && d.is_snap_loop())).cloned().collect() }
+        Model {
+            drives: self
+                .drives
+                .iter()
+                .filter(|d| !(hide_snap_loops && d.is_snap_loop()))
+                .cloned()
+                .collect(),
+        }
     }
 
     pub fn find_drive(&self, key: &str) -> Option<&Drive> {
@@ -366,7 +406,14 @@ fn has(snap: &Snapshot, path: &str, name: &str) -> bool {
 
 /// Natural ordering key for device names (`loop2` < `loop10`).
 fn natural_key(s: &str) -> (String, u64) {
-    let digits: String = s.chars().rev().take_while(|c| c.is_ascii_digit()).collect::<Vec<_>>().into_iter().rev().collect();
+    let digits: String = s
+        .chars()
+        .rev()
+        .take_while(|c| c.is_ascii_digit())
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect();
     let prefix = s[..s.len() - digits.len()].to_string();
     (prefix, digits.parse().unwrap_or(0))
 }
@@ -393,7 +440,9 @@ fn block_volume(snap: &Snapshot, path: &str, depth: usize) -> Volume {
     let b = iface(snap, path, iface::BLOCK).unwrap_or(&empty);
     let partition = iface(snap, path, iface::PARTITION).map(|p| {
         let table_path = p.path("Table").unwrap_or_default();
-        let table_type = iface(snap, &table_path, iface::TABLE).map(|t| t.str("Type")).unwrap_or_default();
+        let table_type = iface(snap, &table_path, iface::TABLE)
+            .map(|t| t.str("Type"))
+            .unwrap_or_default();
         PartitionInfo {
             number: p.u64("Number") as u32,
             type_id: p.str("Type"),
@@ -406,15 +455,25 @@ fn block_volume(snap: &Snapshot, path: &str, depth: usize) -> Volume {
             table_type,
         }
     });
-    let offset = iface(snap, path, iface::PARTITION).map(|p| p.u64("Offset")).unwrap_or(0);
+    let offset = iface(snap, path, iface::PARTITION)
+        .map(|p| p.u64("Offset"))
+        .unwrap_or(0);
     // Extended partitions' block devices report 1 KiB; the partition entry
     // has the real extent.
-    let size = iface(snap, path, iface::PARTITION).map(|p| p.u64("Size")).filter(|s| *s > 0).unwrap_or_else(|| b.u64("Size"));
+    let size = iface(snap, path, iface::PARTITION)
+        .map(|p| p.u64("Size"))
+        .filter(|s| *s > 0)
+        .unwrap_or_else(|| b.u64("Size"));
     let filesystem = iface(snap, path, iface::FILESYSTEM).map(|f| f.bytestrings("MountPoints"));
     let encrypted = iface(snap, path, iface::ENCRYPTED).map(|e| {
         e.path("CleartextDevice").or_else(|| {
             snap.iter()
-                .find(|(_, ifs)| ifs.get(iface::BLOCK).and_then(|b| b.path("CryptoBackingDevice")).as_deref() == Some(path))
+                .find(|(_, ifs)| {
+                    ifs.get(iface::BLOCK)
+                        .and_then(|b| b.path("CryptoBackingDevice"))
+                        .as_deref()
+                        == Some(path)
+                })
                 .map(|(p, _)| p.clone())
         })
     });
@@ -468,7 +527,10 @@ fn partitions_of(snap: &Snapshot, table: &str) -> Vec<String> {
 
 fn free_volume(table: &str, span: Span, logical: bool) -> Volume {
     Volume {
-        kind: VolumeKind::Free { table: table.to_string(), logical },
+        kind: VolumeKind::Free {
+            table: table.to_string(),
+            logical,
+        },
         block_path: None,
         device: String::new(),
         offset: span.offset,
@@ -497,12 +559,21 @@ fn logical_volumes(snap: &Snapshot, table: &str, ext_offset: u64, ext_size: u64)
     let logical: Vec<Volume> = partitions_of(snap, table)
         .iter()
         .filter(|p| {
-            iface(snap, p, iface::PARTITION)
-                .is_some_and(|pp| pp.bool("IsContained") && pp.u64("Offset") >= ext_offset && pp.u64("Offset") < ext_end)
+            iface(snap, p, iface::PARTITION).is_some_and(|pp| {
+                pp.bool("IsContained")
+                    && pp.u64("Offset") >= ext_offset
+                    && pp.u64("Offset") < ext_end
+            })
         })
         .map(|p| block_volume(snap, p, 1))
         .collect();
-    let used: Vec<Span> = logical.iter().map(|v| Span { offset: v.offset, size: v.size }).collect();
+    let used: Vec<Span> = logical
+        .iter()
+        .map(|v| Span {
+            offset: v.offset,
+            size: v.size,
+        })
+        .collect();
     // Each logical partition is preceded by an EBR padded to 1 MiB, so only
     // gaps larger than that are useful free space.
     let free = layout::free_spans(ext_offset, ext_end, &used, MIB + 1);
@@ -520,7 +591,13 @@ fn disk_volumes(snap: &Snapshot, block: &str, disk_size: u64) -> (Option<String>
             .filter(|p| !iface(snap, p, iface::PARTITION).is_some_and(|pp| pp.bool("IsContained")))
             .map(|p| block_volume(snap, p, 0))
             .collect();
-        let used: Vec<Span> = top.iter().map(|v| Span { offset: v.offset, size: v.size }).collect();
+        let used: Vec<Span> = top
+            .iter()
+            .map(|v| Span {
+                offset: v.offset,
+                size: v.size,
+            })
+            .collect();
         let (start, end) = layout::table_region(&ttype, disk_size);
         let free = layout::free_spans(start, end, &used, layout::min_free_gap(disk_size));
         let mut all = top;
@@ -537,8 +614,9 @@ fn whole_disk_block(snap: &Snapshot, drive: &str) -> Option<String> {
     let mut v: Vec<&String> = snap
         .iter()
         .filter(|(path, ifs)| {
-            ifs.get(iface::BLOCK).is_some_and(|b| b.path("Drive").as_deref() == Some(drive) && b.path("CryptoBackingDevice").is_none())
-                && !has(snap, path, iface::PARTITION)
+            ifs.get(iface::BLOCK).is_some_and(|b| {
+                b.path("Drive").as_deref() == Some(drive) && b.path("CryptoBackingDevice").is_none()
+            }) && !has(snap, path, iface::PARTITION)
         })
         .map(|(p, _)| p)
         .collect();
@@ -550,10 +628,17 @@ fn whole_disk_block(snap: &Snapshot, drive: &str) -> Option<String> {
 pub fn build(snap: &Snapshot) -> Model {
     let mut disks = Vec::new();
     for (path, ifs) in snap {
-        let Some(d) = ifs.get(iface::DRIVE) else { continue };
+        let Some(d) = ifs.get(iface::DRIVE) else {
+            continue;
+        };
         let block_path = whole_disk_block(snap, path);
-        let b = block_path.as_deref().and_then(|bp| iface(snap, bp, iface::BLOCK));
-        let disk_size = b.map(|b| b.u64("Size")).filter(|s| *s > 0).unwrap_or(d.u64("Size"));
+        let b = block_path
+            .as_deref()
+            .and_then(|bp| iface(snap, bp, iface::BLOCK));
+        let disk_size = b
+            .map(|b| b.u64("Size"))
+            .filter(|s| *s > 0)
+            .unwrap_or(d.u64("Size"));
         let (table_type, volumes) = match &block_path {
             Some(bp) => disk_volumes(snap, bp, b.map(|b| b.u64("Size")).unwrap_or(0)),
             None => (None, Vec::new()),
@@ -587,11 +672,15 @@ pub fn build(snap: &Snapshot) -> Model {
             volumes,
         });
     }
-    disks.sort_by(|a, b| (a.removable, &a.sort_key, &a.device).cmp(&(b.removable, &b.sort_key, &b.device)));
+    disks.sort_by(|a, b| {
+        (a.removable, &a.sort_key, &a.device).cmp(&(b.removable, &b.sort_key, &b.device))
+    });
 
     let mut loops = Vec::new();
     for (path, ifs) in snap {
-        let (Some(l), Some(b)) = (ifs.get(iface::LOOP), ifs.get(iface::BLOCK)) else { continue };
+        let (Some(l), Some(b)) = (ifs.get(iface::LOOP), ifs.get(iface::BLOCK)) else {
+            continue;
+        };
         if ifs.contains_key(iface::PARTITION) || b.u64("Size") == 0 {
             continue;
         }
@@ -646,7 +735,9 @@ pub fn dump(model: &Model) -> String {
             format::size(v.size),
             v.offset,
             v.contents(),
-            v.partition_type().map(|t| format!(" ({t})")).unwrap_or_default(),
+            v.partition_type()
+                .map(|t| format!(" ({t})"))
+                .unwrap_or_default(),
             indent = indent
         );
         for c in &v.children {
@@ -698,7 +789,14 @@ pub mod fixtures {
             ("CryptoBackingDevice", Prop::Path("/".into())),
             ("IdUsage", Prop::Str(usage.into())),
             ("IdType", Prop::Str(ty.into())),
-            ("IdVersion", Prop::Str(if ty == "ext4" { "1.0".into() } else { String::new() })),
+            (
+                "IdVersion",
+                Prop::Str(if ty == "ext4" {
+                    "1.0".into()
+                } else {
+                    String::new()
+                }),
+            ),
             ("IdLabel", Prop::Str(label.into())),
             ("IdUUID", Prop::Str(format!("uuid-{dev}"))),
             ("ReadOnly", Prop::Bool(false)),
@@ -762,32 +860,81 @@ pub mod fixtures {
             SDA.into(),
             obj([
                 (iface::BLOCK, block("/dev/sda", disk, DRIVE, "", "", "")),
-                (iface::TABLE, props([("Type", Prop::Str("gpt".into())), ("Partitions", Prop::Paths(vec![SDA2.into(), SDA1.into()]))])),
+                (
+                    iface::TABLE,
+                    props([
+                        ("Type", Prop::Str("gpt".into())),
+                        ("Partitions", Prop::Paths(vec![SDA2.into(), SDA1.into()])),
+                    ]),
+                ),
             ]),
         );
         s.insert(
             SDA1.into(),
             obj([
-                (iface::BLOCK, block("/dev/sda1", 512 * MIB, DRIVE, "filesystem", "vfat", "EFI")),
-                (iface::PARTITION, part(SDA, 1, MIB, 512 * MIB, "c12a7328-f81f-11d2-ba4b-00a0c93ec93b")),
-                (iface::FILESYSTEM, props([("MountPoints", Prop::ByteStrings(vec![b"/boot/efi\0".to_vec()]))])),
+                (
+                    iface::BLOCK,
+                    block("/dev/sda1", 512 * MIB, DRIVE, "filesystem", "vfat", "EFI"),
+                ),
+                (
+                    iface::PARTITION,
+                    part(
+                        SDA,
+                        1,
+                        MIB,
+                        512 * MIB,
+                        "c12a7328-f81f-11d2-ba4b-00a0c93ec93b",
+                    ),
+                ),
+                (
+                    iface::FILESYSTEM,
+                    props([(
+                        "MountPoints",
+                        Prop::ByteStrings(vec![b"/boot/efi\0".to_vec()]),
+                    )]),
+                ),
             ]),
         );
         s.insert(
             SDA2.into(),
             obj([
-                (iface::BLOCK, block("/dev/sda2", 200 * GB, DRIVE, "crypto", "crypto_LUKS", "")),
-                (iface::PARTITION, part(SDA, 2, 513 * MIB, 200 * GB, "ca7d7ccb-63ed-4c53-861c-1742536059cc")),
-                (iface::ENCRYPTED, props([("CleartextDevice", Prop::Path(DM0.into()))])),
+                (
+                    iface::BLOCK,
+                    block("/dev/sda2", 200 * GB, DRIVE, "crypto", "crypto_LUKS", ""),
+                ),
+                (
+                    iface::PARTITION,
+                    part(
+                        SDA,
+                        2,
+                        513 * MIB,
+                        200 * GB,
+                        "ca7d7ccb-63ed-4c53-861c-1742536059cc",
+                    ),
+                ),
+                (
+                    iface::ENCRYPTED,
+                    props([("CleartextDevice", Prop::Path(DM0.into()))]),
+                ),
             ]),
         );
-        let mut clear = block("/dev/dm-0", 200 * GB - 16 * MIB, "/", "filesystem", "ext4", "root");
+        let mut clear = block(
+            "/dev/dm-0",
+            200 * GB - 16 * MIB,
+            "/",
+            "filesystem",
+            "ext4",
+            "root",
+        );
         clear.insert("CryptoBackingDevice".into(), Prop::Path(SDA2.into()));
         s.insert(
             DM0.into(),
             obj([
                 (iface::BLOCK, clear),
-                (iface::FILESYSTEM, props([("MountPoints", Prop::ByteStrings(vec![b"/\0".to_vec()]))])),
+                (
+                    iface::FILESYSTEM,
+                    props([("MountPoints", Prop::ByteStrings(vec![b"/\0".to_vec()]))]),
+                ),
             ]),
         );
 
@@ -819,9 +966,15 @@ pub mod fixtures {
         s.insert(
             SDB1.into(),
             obj([
-                (iface::BLOCK, block("/dev/sdb1", 4 * GB, USB, "filesystem", "vfat", "STICK")),
+                (
+                    iface::BLOCK,
+                    block("/dev/sdb1", 4 * GB, USB, "filesystem", "vfat", "STICK"),
+                ),
                 (iface::PARTITION, part(SDB, 1, MIB, 4 * GB, "0x0c")),
-                (iface::FILESYSTEM, props([("MountPoints", Prop::ByteStrings(vec![]))])),
+                (
+                    iface::FILESYSTEM,
+                    props([("MountPoints", Prop::ByteStrings(vec![]))]),
+                ),
             ]),
         );
         // Extended partition from 8 GB to 16 GB, one logical of 2 GB.
@@ -835,7 +988,10 @@ pub mod fixtures {
         s.insert(
             SDB5.into(),
             obj([
-                (iface::BLOCK, block("/dev/sdb5", 2 * GB, USB, "other", "swap", "")),
+                (
+                    iface::BLOCK,
+                    block("/dev/sdb5", 2 * GB, USB, "other", "swap", ""),
+                ),
                 (iface::PARTITION, part(SDB, 5, 8 * GB + MIB, 2 * GB, "0x82")),
                 (iface::SWAP, props([("Active", Prop::Bool(false))])),
             ]),
@@ -843,17 +999,45 @@ pub mod fixtures {
 
         let lp = |dev: &str, size: u64, file: &str| {
             obj([
-                (iface::BLOCK, block(dev, size, "/", "filesystem", "squashfs", "")),
-                (iface::LOOP, props([("BackingFile", bytes(file)), ("Autoclear", Prop::Bool(true))])),
-                (iface::FILESYSTEM, props([("MountPoints", Prop::ByteStrings(vec![]))])),
+                (
+                    iface::BLOCK,
+                    block(dev, size, "/", "filesystem", "squashfs", ""),
+                ),
+                (
+                    iface::LOOP,
+                    props([
+                        ("BackingFile", bytes(file)),
+                        ("Autoclear", Prop::Bool(true)),
+                    ]),
+                ),
+                (
+                    iface::FILESYSTEM,
+                    props([("MountPoints", Prop::ByteStrings(vec![]))]),
+                ),
             ])
         };
-        s.insert(LOOP10.into(), lp("/dev/loop10", 50 * MIB, "/var/lib/snapd/snaps/b.snap"));
-        s.insert(LOOP1.into(), lp("/dev/loop1", 100 * MIB, "/home/u/image.iso"));
+        s.insert(
+            LOOP10.into(),
+            lp("/dev/loop10", 50 * MIB, "/var/lib/snapd/snaps/b.snap"),
+        );
+        s.insert(
+            LOOP1.into(),
+            lp("/dev/loop1", 100 * MIB, "/home/u/image.iso"),
+        );
         s.insert(LOOP0.into(), lp("/dev/loop0", 0, ""));
         // A mounted snap: the loop device backs /snap/core22/1234.
-        let mut snapl = lp("/dev/loop2", 70 * MIB, "/var/lib/snapd/snaps/core22_1234.snap");
-        snapl.insert(iface::FILESYSTEM.into(), props([("MountPoints", Prop::ByteStrings(vec![b"/snap/core22/1234\0".to_vec()]))]));
+        let mut snapl = lp(
+            "/dev/loop2",
+            70 * MIB,
+            "/var/lib/snapd/snaps/core22_1234.snap",
+        );
+        snapl.insert(
+            iface::FILESYSTEM.into(),
+            props([(
+                "MountPoints",
+                Prop::ByteStrings(vec![b"/snap/core22/1234\0".to_vec()]),
+            )]),
+        );
         s.insert(LOOP2.into(), snapl);
         s
     }
@@ -884,7 +1068,10 @@ mod tests {
         assert_eq!(d.icon_name(), "drive-harddisk-solidstate-symbolic");
         assert_eq!(d.partitioning(), "GUID Partition Table");
         assert_eq!(d.serial, "SN123");
-        assert_eq!(d.smart.as_ref().unwrap().assessment(), "Disk is OK (30° C / 86° F)");
+        assert_eq!(
+            d.smart.as_ref().unwrap().assessment(),
+            "Disk is OK (30° C / 86° F)"
+        );
     }
 
     #[test]
@@ -913,7 +1100,13 @@ mod tests {
         assert_eq!(free.contents(), "Unallocated Space");
         assert_eq!(free.offset, 513 * 1024 * 1024 + 200 * GB);
         assert_eq!(free.offset + free.size, 256 * GB - 33 * 512);
-        assert_eq!(free.kind, VolumeKind::Free { table: SDA.into(), logical: false });
+        assert_eq!(
+            free.kind,
+            VolumeKind::Free {
+                table: SDA.into(),
+                logical: false
+            }
+        );
         assert_eq!(d.find_volume(&free.key()).unwrap(), free);
     }
 
@@ -928,7 +1121,10 @@ mod tests {
         let kinds: Vec<String> = d.volumes.iter().map(|v| v.short_name()).collect();
         assert_eq!(kinds, vec!["STICK", "Free Space", "Extended Partition"]);
         assert_eq!(d.volumes[0].contents(), "FAT — Not Mounted");
-        assert_eq!(d.volumes[0].partition_type().as_deref(), Some("W95 FAT32 (LBA)"));
+        assert_eq!(
+            d.volumes[0].partition_type().as_deref(),
+            Some("W95 FAT32 (LBA)")
+        );
         let ext = &d.volumes[2];
         assert_eq!(ext.contents(), "Extended Partition");
         assert_eq!(ext.size, 8 * GB);
@@ -936,7 +1132,13 @@ mod tests {
         assert_eq!(ext.children[0].device, "/dev/sdb5");
         assert_eq!(ext.children[0].contents(), "Swap — Not Active");
         assert!(ext.children[1].is_free());
-        assert_eq!(ext.children[1].kind, VolumeKind::Free { table: SDB.into(), logical: true });
+        assert_eq!(
+            ext.children[1].kind,
+            VolumeKind::Free {
+                table: SDB.into(),
+                logical: true
+            }
+        );
         assert_eq!(ext.children[1].offset + ext.children[1].size, 16 * GB);
     }
 
@@ -969,7 +1171,11 @@ mod tests {
         // Unmounted squashfs from the snapd directory is not a snap mount.
         assert!(!m.find_drive(LOOP10).unwrap().is_snap_loop());
         assert!(!m.find_drive(LOOP1).unwrap().is_snap_loop());
-        assert!(m.drives.iter().filter(|d| d.kind != DriveKind::Loop).all(|d| !d.is_snap_loop()));
+        assert!(m
+            .drives
+            .iter()
+            .filter(|d| d.kind != DriveKind::Loop)
+            .all(|d| !d.is_snap_loop()));
 
         let hidden = m.visible(true);
         assert!(hidden.find_drive(LOOP2).is_none());
@@ -982,8 +1188,14 @@ mod tests {
     fn find_device_paths() {
         let m = build(&snapshot());
         assert_eq!(m.find_device("/dev/sda"), Some((DRIVE.into(), None)));
-        assert_eq!(m.find_device("/dev/dm-0"), Some((DRIVE.into(), Some(DM0.into()))));
-        assert_eq!(m.find_device("/dev/sdb5"), Some((USB.into(), Some(SDB5.into()))));
+        assert_eq!(
+            m.find_device("/dev/dm-0"),
+            Some((DRIVE.into(), Some(DM0.into())))
+        );
+        assert_eq!(
+            m.find_device("/dev/sdb5"),
+            Some((USB.into(), Some(SDB5.into())))
+        );
         assert_eq!(m.find_device("/dev/nope"), None);
     }
 
@@ -992,7 +1204,11 @@ mod tests {
         let mut s = snapshot();
         let b = s.get_mut(SDB).unwrap().get_mut(iface::BLOCK).unwrap();
         b.insert("Size".into(), crate::props::Prop::U64(0));
-        s.get_mut(USB).unwrap().get_mut(iface::DRIVE).unwrap().insert("Size".into(), crate::props::Prop::U64(0));
+        s.get_mut(USB)
+            .unwrap()
+            .get_mut(iface::DRIVE)
+            .unwrap()
+            .insert("Size".into(), crate::props::Prop::U64(0));
         s.get_mut(SDB).unwrap().remove(iface::TABLE);
         let m = build(&s);
         let d = m.find_drive(USB).unwrap();
@@ -1005,7 +1221,14 @@ mod tests {
     fn locked_and_unknown_contents() {
         let mut s = snapshot();
         s.remove(DM0);
-        s.get_mut(SDA2).unwrap().get_mut(iface::ENCRYPTED).unwrap().insert("CleartextDevice".into(), crate::props::Prop::Path("/".into()));
+        s.get_mut(SDA2)
+            .unwrap()
+            .get_mut(iface::ENCRYPTED)
+            .unwrap()
+            .insert(
+                "CleartextDevice".into(),
+                crate::props::Prop::Path("/".into()),
+            );
         let m = build(&s);
         let v = &m.find_drive(DRIVE).unwrap().volumes[1];
         assert_eq!(v.contents(), "LUKS Encryption — Locked");

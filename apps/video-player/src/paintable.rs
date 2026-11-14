@@ -45,11 +45,16 @@ mod imp {
         }
 
         fn snapshot(&self, snapshot: &gdk::Snapshot, width: f64, height: f64) {
-            let Some(texture) = self.texture.borrow().clone() else { return };
-            let Some(snapshot) = snapshot.downcast_ref::<gtk::Snapshot>() else { return };
+            let Some(texture) = self.texture.borrow().clone() else {
+                return;
+            };
+            let Some(snapshot) = snapshot.downcast_ref::<gtk::Snapshot>() else {
+                return;
+            };
             let (dw, dh) = self.display.get();
             let r = fit::fit_contain(dw, dh, width, height);
-            let bounds = graphene::Rect::new(r.x as f32, r.y as f32, r.width as f32, r.height as f32);
+            let bounds =
+                graphene::Rect::new(r.x as f32, r.y as f32, r.width as f32, r.height as f32);
             snapshot.append_scaled_texture(&texture, gsk::ScalingFilter::Linear, &bounds);
         }
     }
@@ -88,14 +93,22 @@ pub fn texture_for(frame: &Frame) -> Option<gdk::Texture> {
         glib::Bytes::from_bytes(&bytes, frame.offset..frame.offset + len)
     };
     Some(
-        gdk::MemoryTexture::new(frame.width as i32, frame.height as i32, format, &bytes, frame.stride)
-            .upcast(),
+        gdk::MemoryTexture::new(
+            frame.width as i32,
+            frame.height as i32,
+            format,
+            &bytes,
+            frame.stride,
+        )
+        .upcast(),
     )
 }
 
 impl VideoPaintable {
     pub fn set_frame(&self, frame: &Frame) {
-        let Some(texture) = texture_for(frame) else { return };
+        let Some(texture) = texture_for(frame) else {
+            return;
+        };
         let imp = self.imp();
         let display = fit::display_size(frame.width, frame.height, frame.par.0, frame.par.1);
         imp.texture.replace(Some(texture));
@@ -122,7 +135,13 @@ impl VideoPaintable {
 mod tests {
     use super::*;
 
-    fn frame(format: gst_video::VideoFormat, w: u32, h: u32, stride: usize, offset: usize) -> Frame {
+    fn frame(
+        format: gst_video::VideoFormat,
+        w: u32,
+        h: u32,
+        stride: usize,
+        offset: usize,
+    ) -> Frame {
         gst::init().unwrap();
         let size = offset + stride * h as usize;
         let mut data = vec![0u8; size];
@@ -147,7 +166,8 @@ mod tests {
         let tex = texture_for(&f).expect("texture");
         assert_eq!((tex.width(), tex.height()), (4, 2));
         let dir = tempfile::tempdir().unwrap();
-        let path = crate::screenshot::unique_path(dir.path(), "clip 0-00-01", "png", |p| p.exists());
+        let path =
+            crate::screenshot::unique_path(dir.path(), "clip 0-00-01", "png", |p| p.exists());
         tex.save_to_png(&path).unwrap();
         let png = std::fs::read(&path).unwrap();
         assert_eq!(&png[1..4], b"PNG");

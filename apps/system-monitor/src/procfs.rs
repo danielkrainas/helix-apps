@@ -101,7 +101,9 @@ pub fn parse_pid_status(text: &str) -> Option<PidStatus> {
     let mut st = PidStatus::default();
     let mut have_uid = false;
     for line in text.lines() {
-        let Some((key, value)) = line.split_once(':') else { continue };
+        let Some((key, value)) = line.split_once(':') else {
+            continue;
+        };
         let value = value.trim();
         match key {
             "Name" => st.name = unescape_status_name(value),
@@ -241,7 +243,12 @@ pub fn cpu_usage(prev: &CpuTimes, cur: &CpuTimes) -> f64 {
 /// time between the samples, in clock ticks (one CPU's worth). Without
 /// Solaris mode, a process using every core of an N-CPU machine shows
 /// N×100 %; in Solaris mode the result is divided by `ncpus`.
-pub fn process_cpu_percent(proc_ticks: u64, elapsed_ticks: f64, ncpus: usize, solaris: bool) -> f64 {
+pub fn process_cpu_percent(
+    proc_ticks: u64,
+    elapsed_ticks: f64,
+    ncpus: usize,
+    solaris: bool,
+) -> f64 {
     if elapsed_ticks <= 0.0 {
         return 0.0;
     }
@@ -317,11 +324,18 @@ pub fn parse_net_dev(text: &str) -> Vec<NetDev> {
             if iface.is_empty() || iface.contains('|') {
                 return None;
             }
-            let v: Vec<u64> = rest.split_whitespace().filter_map(|s| s.parse().ok()).collect();
+            let v: Vec<u64> = rest
+                .split_whitespace()
+                .filter_map(|s| s.parse().ok())
+                .collect();
             if v.len() < 16 {
                 return None;
             }
-            Some(NetDev { iface: iface.to_string(), rx_bytes: v[0], tx_bytes: v[8] })
+            Some(NetDev {
+                iface: iface.to_string(),
+                rx_bytes: v[0],
+                tx_bytes: v[8],
+            })
         })
         .collect()
 }
@@ -349,8 +363,13 @@ pub fn unescape_mount_field(s: &str) -> String {
     let mut out = Vec::with_capacity(b.len());
     let mut i = 0;
     while i < b.len() {
-        if b[i] == b'\\' && i + 3 < b.len() && b[i + 1..i + 4].iter().all(|c| (b'0'..=b'7').contains(c)) {
-            let v = (b[i + 1] - b'0') as u32 * 64 + (b[i + 2] - b'0') as u32 * 8 + (b[i + 3] - b'0') as u32;
+        if b[i] == b'\\'
+            && i + 3 < b.len()
+            && b[i + 1..i + 4].iter().all(|c| (b'0'..=b'7').contains(c))
+        {
+            let v = (b[i + 1] - b'0') as u32 * 64
+                + (b[i + 2] - b'0') as u32 * 8
+                + (b[i + 3] - b'0') as u32;
             out.push(v as u8);
             i += 4;
         } else {
@@ -377,10 +396,38 @@ pub fn parse_mounts(text: &str) -> Vec<Mount> {
 
 /// File system types that do not represent storage.
 const PSEUDO_FS: &[&str] = &[
-    "autofs", "binfmt_misc", "bpf", "cgroup", "cgroup2", "configfs", "debugfs", "devpts", "devtmpfs",
-    "efivarfs", "fusectl", "hugetlbfs", "mqueue", "nsfs", "overlay", "proc", "pstore", "ramfs",
-    "rpc_pipefs", "securityfs", "selinuxfs", "squashfs", "sysfs", "tmpfs", "tracefs", "nfsd",
-    "fuse.gvfsd-fuse", "fuse.portal", "fuse.snapfuse", "fuse.lxcfs", "ecryptfs", "none",
+    "autofs",
+    "binfmt_misc",
+    "bpf",
+    "cgroup",
+    "cgroup2",
+    "configfs",
+    "debugfs",
+    "devpts",
+    "devtmpfs",
+    "efivarfs",
+    "fusectl",
+    "hugetlbfs",
+    "mqueue",
+    "nsfs",
+    "overlay",
+    "proc",
+    "pstore",
+    "ramfs",
+    "rpc_pipefs",
+    "securityfs",
+    "selinuxfs",
+    "squashfs",
+    "sysfs",
+    "tmpfs",
+    "tracefs",
+    "nfsd",
+    "fuse.gvfsd-fuse",
+    "fuse.portal",
+    "fuse.snapfuse",
+    "fuse.lxcfs",
+    "ecryptfs",
+    "none",
 ];
 
 pub fn is_pseudo_fs(fstype: &str) -> bool {
@@ -467,7 +514,10 @@ mod tests {
 
     #[test]
     fn pid_status_kernel_thread() {
-        let s = parse_pid_status("Name:\tkthreadd\nState:\tS (sleeping)\nUid:\t0\t0\t0\t0\nThreads:\t1\n").unwrap();
+        let s = parse_pid_status(
+            "Name:\tkthreadd\nState:\tS (sleeping)\nUid:\t0\t0\t0\t0\nThreads:\t1\n",
+        )
+        .unwrap();
         assert_eq!(s.uid, 0);
         assert_eq!(s.private_memory(), None);
         assert_eq!(s.shared_memory(), None);
@@ -480,12 +530,25 @@ mod tests {
     #[test]
     fn cmdline_and_name() {
         let args = parse_cmdline(b"/usr/lib/firefox/firefox-bin\0-contentproc\0\0-isForBrowser\0");
-        assert_eq!(args, vec!["/usr/lib/firefox/firefox-bin", "-contentproc", "-isForBrowser"]);
+        assert_eq!(
+            args,
+            vec![
+                "/usr/lib/firefox/firefox-bin",
+                "-contentproc",
+                "-isForBrowser"
+            ]
+        );
         assert!(parse_cmdline(b"").is_empty());
         assert_eq!(display_name("firefox-bin", &args), "firefox-bin");
         let long = vec!["/usr/bin/gnome-session-binary".to_string()];
-        assert_eq!(display_name("gnome-session-b", &long), "gnome-session-binary");
-        assert_eq!(display_name("Web Content", &["/usr/lib/firefox/firefox".to_string()]), "Web Content");
+        assert_eq!(
+            display_name("gnome-session-b", &long),
+            "gnome-session-binary"
+        );
+        assert_eq!(
+            display_name("Web Content", &["/usr/lib/firefox/firefox".to_string()]),
+            "Web Content"
+        );
         assert_eq!(display_name("kworker/0:1", &[]), "kworker/0:1");
     }
 
@@ -505,8 +568,17 @@ mod tests {
 
     #[test]
     fn cpu_usage_between_samples() {
-        let a = CpuTimes { user: 100, idle: 900, ..Default::default() };
-        let b = CpuTimes { user: 175, system: 25, idle: 1000, ..Default::default() };
+        let a = CpuTimes {
+            user: 100,
+            idle: 900,
+            ..Default::default()
+        };
+        let b = CpuTimes {
+            user: 175,
+            system: 25,
+            idle: 1000,
+            ..Default::default()
+        };
         assert!((cpu_usage(&a, &b) - 0.5).abs() < 1e-9);
         assert_eq!(cpu_usage(&a, &a), 0.0);
         // Counter going backwards (CPU hot-unplug) must not panic.
@@ -541,7 +613,8 @@ mod tests {
         assert_eq!(m.mem_used(), (16303428 - 8151714) * 1024);
         assert_eq!(m.swap_used(), 1048574 * 1024);
         // Old kernels without MemAvailable.
-        let old = parse_meminfo("MemTotal: 1000 kB\nMemFree: 100 kB\nBuffers: 50 kB\nCached: 250 kB\n");
+        let old =
+            parse_meminfo("MemTotal: 1000 kB\nMemFree: 100 kB\nBuffers: 50 kB\nCached: 250 kB\n");
         assert_eq!(old.mem_available, 400 * 1024);
         assert_eq!(old.swap_used(), 0);
     }
@@ -552,7 +625,14 @@ mod tests {
     fn net_dev() {
         let d = parse_net_dev(NET_DEV_FIXTURE);
         assert_eq!(d.len(), 3);
-        assert_eq!(d[1], NetDev { iface: "eth0".into(), rx_bytes: 123456789, tx_bytes: 9876543 });
+        assert_eq!(
+            d[1],
+            NetDev {
+                iface: "eth0".into(),
+                rx_bytes: 123456789,
+                tx_bytes: 9876543
+            }
+        );
         assert_eq!(net_totals(&d), (123456789 + 1000, 9876543 + 2000));
     }
 

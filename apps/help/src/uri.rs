@@ -19,10 +19,20 @@ pub enum DocRef {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Location {
-    Home { search: Option<String> },
-    Doc { doc: DocRef, page: Option<String>, search: Option<String>, fragment: Option<String> },
+    Home {
+        search: Option<String>,
+    },
+    Doc {
+        doc: DocRef,
+        page: Option<String>,
+        search: Option<String>,
+        fragment: Option<String>,
+    },
     /// A file inside a document (image, video…), relative to its directory.
-    Resource { doc: DocRef, path: String },
+    Resource {
+        doc: DocRef,
+        path: String,
+    },
     /// Anything the viewer doesn't render itself (http, mailto, …).
     External(String),
 }
@@ -33,7 +43,10 @@ pub fn percent_decode(s: &str) -> String {
     let mut i = 0;
     while i < bytes.len() {
         if bytes[i] == b'%' && i + 2 < bytes.len() {
-            if let Some(v) = std::str::from_utf8(&bytes[i + 1..i + 3]).ok().and_then(|h| u8::from_str_radix(h, 16).ok()) {
+            if let Some(v) = std::str::from_utf8(&bytes[i + 1..i + 3])
+                .ok()
+                .and_then(|h| u8::from_str_radix(h, 16).ok())
+            {
                 out.push(v);
                 i += 3;
                 continue;
@@ -81,7 +94,11 @@ fn split_query(s: &str) -> (&str, &str) {
 
 fn absolutize(p: &str, cwd: &Path) -> PathBuf {
     let p = Path::new(p);
-    let joined = if p.is_absolute() { p.to_path_buf() } else { cwd.join(p) };
+    let joined = if p.is_absolute() {
+        p.to_path_buf()
+    } else {
+        cwd.join(p)
+    };
     // Lexical normalisation of `.` and `..`.
     let mut out = PathBuf::new();
     for c in joined.components() {
@@ -103,7 +120,11 @@ pub fn parse(input: &str, cwd: &Path) -> Location {
     let scheme = input.split_once(':').map(|(s, _)| s.to_ascii_lowercase());
     let scheme_ok = scheme
         .as_deref()
-        .map(|s| !s.is_empty() && s.chars().all(|c| c.is_ascii_alphanumeric() || "+-.".contains(c)))
+        .map(|s| {
+            !s.is_empty()
+                && s.chars()
+                    .all(|c| c.is_ascii_alphanumeric() || "+-.".contains(c))
+        })
         .unwrap_or(false);
     let rest = |s: &str| &input[s.len() + 1..];
     match scheme.as_deref() {
@@ -112,7 +133,10 @@ pub fn parse(input: &str, cwd: &Path) -> Location {
         Some("ghelp") | Some("gnome-help") => parse_ghelp(rest(scheme.as_deref().unwrap()), cwd),
         Some("file") => {
             let r = rest("file");
-            let r = r.strip_prefix("//").map(|x| x.find('/').map(|i| &x[i..]).unwrap_or("/")).unwrap_or(r);
+            let r = r
+                .strip_prefix("//")
+                .map(|x| x.find('/').map(|i| &x[i..]).unwrap_or("/"))
+                .unwrap_or(r);
             let (r, frag) = split_fragment(r);
             let (path, _) = split_query(r);
             path_location(absolutize(&percent_decode(path), cwd), None, frag)
@@ -129,9 +153,17 @@ pub fn parse(input: &str, cwd: &Path) -> Location {
 
 fn path_location(path: PathBuf, page: Option<String>, fragment: Option<String>) -> Location {
     if path.extension().is_some_and(|e| e == "html" || e == "htm") {
-        return Location::External(format!("file://{}", percent_encode(&path.to_string_lossy(), "/")));
+        return Location::External(format!(
+            "file://{}",
+            percent_encode(&path.to_string_lossy(), "/")
+        ));
     }
-    Location::Doc { doc: DocRef::Path(path), page, search: None, fragment }
+    Location::Doc {
+        doc: DocRef::Path(path),
+        page,
+        search: None,
+        fragment,
+    }
 }
 
 fn parse_help(rest: &str) -> Location {
@@ -152,15 +184,22 @@ fn parse_help(rest: &str) -> Location {
     match page {
         // Anything that looks like a file path is a resource.
         Some(p) if p.contains('/') || has_file_extension(&p) => Location::Resource { doc, path: p },
-        page => Location::Doc { doc, page, search, fragment },
+        page => Location::Doc {
+            doc,
+            page,
+            search,
+            fragment,
+        },
     }
 }
 
 fn has_file_extension(p: &str) -> bool {
     const EXT: &[&str] = &[
-        "png", "jpg", "jpeg", "gif", "svg", "webp", "ogv", "webm", "mp4", "ogg", "oga", "mp3", "css", "js", "txt",
+        "png", "jpg", "jpeg", "gif", "svg", "webp", "ogv", "webm", "mp4", "ogg", "oga", "mp3",
+        "css", "js", "txt",
     ];
-    p.rsplit_once('.').is_some_and(|(_, e)| EXT.contains(&e.to_ascii_lowercase().as_str()))
+    p.rsplit_once('.')
+        .is_some_and(|(_, e)| EXT.contains(&e.to_ascii_lowercase().as_str()))
 }
 
 fn parse_ghelp(rest: &str, cwd: &Path) -> Location {
@@ -173,9 +212,15 @@ fn parse_ghelp(rest: &str, cwd: &Path) -> Location {
         if query.contains('=') {
             if let Some(res) = query_param(query, "res") {
                 if path.starts_with('/') {
-                    return Location::Resource { doc: DocRef::Path(absolutize(&path, cwd)), path: res };
+                    return Location::Resource {
+                        doc: DocRef::Path(absolutize(&path, cwd)),
+                        path: res,
+                    };
                 }
-                return Location::Resource { doc: DocRef::Id(path), path: res };
+                return Location::Resource {
+                    doc: DocRef::Id(path),
+                    path: res,
+                };
             }
             page = query_param(query, "page");
             search = query_param(query, "search").filter(|s| !s.trim().is_empty());
@@ -185,13 +230,28 @@ fn parse_ghelp(rest: &str, cwd: &Path) -> Location {
     }
     if path.starts_with('/') {
         match path_location(absolutize(&path, cwd), page, fragment) {
-            Location::Doc { doc, page, fragment, .. } => Location::Doc { doc, page, search, fragment },
+            Location::Doc {
+                doc,
+                page,
+                fragment,
+                ..
+            } => Location::Doc {
+                doc,
+                page,
+                search,
+                fragment,
+            },
             other => other,
         }
     } else if path.is_empty() {
         Location::Home { search }
     } else {
-        Location::Doc { doc: DocRef::Id(path), page, search, fragment }
+        Location::Doc {
+            doc: DocRef::Id(path),
+            page,
+            search,
+            fragment,
+        }
     }
 }
 
@@ -200,10 +260,18 @@ impl DocRef {
     pub fn page_uri(&self, page: Option<&str>, fragment: Option<&str>) -> String {
         let mut s = match (self, page) {
             (DocRef::Id(id), None) => format!("help:{}", percent_encode(id, "")),
-            (DocRef::Id(id), Some(p)) => format!("help:{}/{}", percent_encode(id, ""), percent_encode(p, "")),
-            (DocRef::Path(path), None) => format!("ghelp:{}", percent_encode(&path.to_string_lossy(), "/")),
+            (DocRef::Id(id), Some(p)) => {
+                format!("help:{}/{}", percent_encode(id, ""), percent_encode(p, ""))
+            }
+            (DocRef::Path(path), None) => {
+                format!("ghelp:{}", percent_encode(&path.to_string_lossy(), "/"))
+            }
             (DocRef::Path(path), Some(p)) => {
-                format!("ghelp:{}?page={}", percent_encode(&path.to_string_lossy(), "/"), percent_encode(p, ""))
+                format!(
+                    "ghelp:{}?page={}",
+                    percent_encode(&path.to_string_lossy(), "/"),
+                    percent_encode(p, "")
+                )
             }
         };
         if let Some(f) = fragment.filter(|f| !f.is_empty()) {
@@ -217,15 +285,26 @@ impl DocRef {
         let q = percent_encode(query, "");
         match self {
             DocRef::Id(id) => format!("help:{}?search={q}", percent_encode(id, "")),
-            DocRef::Path(p) => format!("ghelp:{}?search={q}", percent_encode(&p.to_string_lossy(), "/")),
+            DocRef::Path(p) => format!(
+                "ghelp:{}?search={q}",
+                percent_encode(&p.to_string_lossy(), "/")
+            ),
         }
     }
 
     pub fn resource_uri(&self, rel: &str) -> String {
         match self {
-            DocRef::Id(id) => format!("help:{}/{}", percent_encode(id, ""), percent_encode(rel, "/")),
+            DocRef::Id(id) => format!(
+                "help:{}/{}",
+                percent_encode(id, ""),
+                percent_encode(rel, "/")
+            ),
             DocRef::Path(p) => {
-                format!("ghelp:{}?res={}", percent_encode(&p.to_string_lossy(), "/"), percent_encode(rel, "/"))
+                format!(
+                    "ghelp:{}?res={}",
+                    percent_encode(&p.to_string_lossy(), "/"),
+                    percent_encode(rel, "/")
+                )
             }
         }
     }
@@ -244,7 +323,12 @@ mod tests {
     }
 
     fn doc(id: &str, page: Option<&str>) -> Location {
-        Location::Doc { doc: DocRef::Id(id.into()), page: page.map(Into::into), search: None, fragment: None }
+        Location::Doc {
+            doc: DocRef::Id(id.into()),
+            page: page.map(Into::into),
+            search: None,
+            fragment: None,
+        }
     }
 
     #[test]
@@ -253,7 +337,10 @@ mod tests {
         assert_eq!(p("help-list:"), Location::Home { search: None });
         assert_eq!(p("help:gnome-help"), doc("gnome-help", None));
         assert_eq!(p("help:gnome-help/"), doc("gnome-help", None));
-        assert_eq!(p("help:gnome-help/net-wireless"), doc("gnome-help", Some("net-wireless")));
+        assert_eq!(
+            p("help:gnome-help/net-wireless"),
+            doc("gnome-help", Some("net-wireless"))
+        );
         assert_eq!(
             p("help:doc/page#sec"),
             Location::Doc {
@@ -272,12 +359,26 @@ mod tests {
                 fragment: None
             }
         );
-        assert_eq!(p("help:?search=x"), Location::Home { search: Some("x".into()) });
+        assert_eq!(
+            p("help:?search=x"),
+            Location::Home {
+                search: Some("x".into())
+            }
+        );
         assert_eq!(
             p("help:doc/figures/a.png"),
-            Location::Resource { doc: DocRef::Id("doc".into()), path: "figures/a.png".into() }
+            Location::Resource {
+                doc: DocRef::Id("doc".into()),
+                path: "figures/a.png".into()
+            }
         );
-        assert_eq!(p("help:doc/a.svg"), Location::Resource { doc: DocRef::Id("doc".into()), path: "a.svg".into() });
+        assert_eq!(
+            p("help:doc/a.svg"),
+            Location::Resource {
+                doc: DocRef::Id("doc".into()),
+                path: "a.svg".into()
+            }
+        );
     }
 
     #[test]
@@ -290,20 +391,35 @@ mod tests {
             search: None,
             fragment: None,
         };
-        assert_eq!(p("ghelp:/usr/share/help/C/x"), pathdoc("/usr/share/help/C/x", None));
+        assert_eq!(
+            p("ghelp:/usr/share/help/C/x"),
+            pathdoc("/usr/share/help/C/x", None)
+        );
         assert_eq!(p("ghelp:/d?page=intro"), pathdoc("/d", Some("intro")));
         assert_eq!(p("ghelp:/d?intro"), pathdoc("/d", Some("intro")));
         assert_eq!(p("/d/index.page"), pathdoc("/d/index.page", None));
         assert_eq!(p("./docs/../mydoc"), pathdoc("/work/mydoc", None));
         assert_eq!(p("mydoc"), pathdoc("/work/mydoc", None));
         assert_eq!(p("file:///d/My%20Doc"), pathdoc("/d/My Doc", None));
-        assert_eq!(p("ghelp:/d?res=fig/a.png"), Location::Resource { doc: DocRef::Path("/d".into()), path: "fig/a.png".into() });
-        assert_eq!(p("/x/index.html"), Location::External("file:///x/index.html".into()));
+        assert_eq!(
+            p("ghelp:/d?res=fig/a.png"),
+            Location::Resource {
+                doc: DocRef::Path("/d".into()),
+                path: "fig/a.png".into()
+            }
+        );
+        assert_eq!(
+            p("/x/index.html"),
+            Location::External("file:///x/index.html".into())
+        );
     }
 
     #[test]
     fn external() {
-        assert_eq!(p("https://example.org/"), Location::External("https://example.org/".into()));
+        assert_eq!(
+            p("https://example.org/"),
+            Location::External("https://example.org/".into())
+        );
         assert_eq!(p("mailto:a@b"), Location::External("mailto:a@b".into()));
     }
 
@@ -328,9 +444,17 @@ mod tests {
                 "{uri}"
             );
             let s = d.search_uri("a&b c");
-            assert!(matches!(parse(&s, cwd), Location::Doc { search: Some(q), .. } if q == "a&b c"));
+            assert!(
+                matches!(parse(&s, cwd), Location::Doc { search: Some(q), .. } if q == "a&b c")
+            );
             let r = d.resource_uri("figures/x 1.png");
-            assert_eq!(parse(&r, cwd), Location::Resource { doc: d.clone(), path: "figures/x 1.png".into() });
+            assert_eq!(
+                parse(&r, cwd),
+                Location::Resource {
+                    doc: d.clone(),
+                    path: "figures/x 1.png".into()
+                }
+            );
         }
     }
 }

@@ -130,7 +130,11 @@ pub fn parse_hex(s: &str) -> Option<(f32, f32, f32)> {
     if h.len() != 6 || !h.is_ascii() {
         return None;
     }
-    let c = |i: usize| u8::from_str_radix(&h[i..i + 2], 16).ok().map(|v| v as f32 / 255.0);
+    let c = |i: usize| {
+        u8::from_str_radix(&h[i..i + 2], 16)
+            .ok()
+            .map(|v| v as f32 / 255.0)
+    };
     Some((c(0)?, c(2)?, c(4)?))
 }
 
@@ -166,7 +170,14 @@ mod tests {
     #[test]
     fn palettes_valid_and_readable() {
         for p in [&LIGHT, &DARK, &HACKER] {
-            let all = [p.foreground, p.background, p.cursor, p.cursor_foreground, p.highlight, p.highlight_foreground];
+            let all = [
+                p.foreground,
+                p.background,
+                p.cursor,
+                p.cursor_foreground,
+                p.highlight,
+                p.highlight_foreground,
+            ];
             for c in all.iter().chain(p.colors.iter()) {
                 assert!(parse_hex(c).is_some(), "{} {c}", p.name);
             }
@@ -174,7 +185,11 @@ mod tests {
                 let (r, g, b) = parse_hex(s).unwrap();
                 0.2126 * r + 0.7152 * g + 0.0722 * b
             };
-            assert!((lum(p.foreground) - lum(p.background)).abs() > 0.5, "{}", p.name);
+            assert!(
+                (lum(p.foreground) - lum(p.background)).abs() > 0.5,
+                "{}",
+                p.name
+            );
         }
     }
 

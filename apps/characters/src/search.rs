@@ -33,7 +33,11 @@ fn strip_vs16(s: &str) -> String {
 
 fn is_word_start(hay: &str, term: &str) -> bool {
     hay.match_indices(term).any(|(i, _)| {
-        i == 0 || matches!(hay[..i].chars().next_back(), Some(' ' | '-' | '_' | ':' | ','))
+        i == 0
+            || matches!(
+                hay[..i].chars().next_back(),
+                Some(' ' | '-' | '_' | ':' | ',')
+            )
     })
 }
 
@@ -51,14 +55,24 @@ impl Index {
                     keywords.push(n.to_lowercase());
                 }
             }
-            entries.push(Entry { text: e.as_str().to_string(), name: e.name().to_lowercase(), keywords, is_emoji: true });
+            entries.push(Entry {
+                text: e.as_str().to_string(),
+                name: e.name().to_lowercase(),
+                keywords,
+                is_emoji: true,
+            });
         }
         for c in all_code_points() {
             if emoji_singles.contains(&c) {
                 continue;
             }
             if let Some(n) = unicode_name(c) {
-                entries.push(Entry { text: c.to_string(), name: n.to_lowercase(), keywords: Vec::new(), is_emoji: false });
+                entries.push(Entry {
+                    text: c.to_string(),
+                    name: n.to_lowercase(),
+                    keywords: Vec::new(),
+                    is_emoji: false,
+                });
             }
         }
         Index { entries }
@@ -94,7 +108,9 @@ impl Index {
             .iter()
             .enumerate()
             .filter_map(|(i, e)| {
-                let fields = || std::iter::once(e.name.as_str()).chain(e.keywords.iter().map(String::as_str));
+                let fields = || {
+                    std::iter::once(e.name.as_str()).chain(e.keywords.iter().map(String::as_str))
+                };
                 if !terms.iter().all(|t| fields().any(|f| f.contains(t))) {
                     return None;
                 }
@@ -111,7 +127,11 @@ impl Index {
             })
             .collect();
         scored.sort_unstable();
-        out.extend(scored.into_iter().map(|(_, _, i)| self.entries[i].text.clone()));
+        out.extend(
+            scored
+                .into_iter()
+                .map(|(_, _, i)| self.entries[i].text.clone()),
+        );
         let mut seen = HashSet::new();
         out.retain(|s| seen.insert(s.clone()));
         out.truncate(MAX_RESULTS);

@@ -7,7 +7,9 @@ use std::rc::Rc;
 
 use super::sidebar::Sidebar;
 use super::tab::{info_file, info_is_dir, info_target, Tab};
-use super::{dialogs, jobs, properties, ClipState, Shared, Undo, GRID_ZOOM, LIST_ZOOM, OTHER_LOCATIONS};
+use super::{
+    dialogs, jobs, properties, ClipState, Shared, Undo, GRID_ZOOM, LIST_ZOOM, OTHER_LOCATIONS,
+};
 use crate::ops::Job;
 use crate::pathbar::{self, Target};
 use crate::sorting::SortKey;
@@ -117,8 +119,14 @@ pub fn location_title(file: &gio::File) -> String {
 }
 
 impl Window {
-    pub fn new(shared: &Rc<Shared>, location: Option<gio::File>, select: Vec<gio::File>) -> Rc<Window> {
-        let (w, h) = shared.window_state.get::<(i32, i32)>("initial-size", (890, 550));
+    pub fn new(
+        shared: &Rc<Shared>,
+        location: Option<gio::File>,
+        select: Vec<gio::File>,
+    ) -> Rc<Window> {
+        let (w, h) = shared
+            .window_state
+            .get::<(i32, i32)>("initial-size", (890, 550));
         let window = adw::ApplicationWindow::builder()
             .application(&shared.app)
             .title("Files")
@@ -218,7 +226,9 @@ impl Window {
             .tooltip_text("View Options")
             .build();
         header.pack_end(&view_menu_btn);
-        let view_btn = gtk::Button::builder().action_name("win.toggle-view").build();
+        let view_btn = gtk::Button::builder()
+            .action_name("win.toggle-view")
+            .build();
         header.pack_end(&view_btn);
         let search_btn = gtk::ToggleButton::builder()
             .icon_name("system-search-symbolic")
@@ -247,7 +257,10 @@ impl Window {
             .hexpand(true)
             .build();
         search_entry.set_width_chars(40);
-        let search_clamp = adw::Clamp::builder().maximum_size(500).child(&search_entry).build();
+        let search_clamp = adw::Clamp::builder()
+            .maximum_size(500)
+            .child(&search_entry)
+            .build();
         let search_bar = gtk::SearchBar::builder().child(&search_clamp).build();
         search_bar.connect_entry(&search_entry);
         search_bar.set_key_capture_widget(Some(&window));
@@ -260,7 +273,10 @@ impl Window {
         // ----- tabs -----
         let tab_view = adw::TabView::new();
         tab_view.set_vexpand(true);
-        let tab_bar = adw::TabBar::builder().view(&tab_view).autohide(true).build();
+        let tab_bar = adw::TabBar::builder()
+            .view(&tab_view)
+            .autohide(true)
+            .build();
         let banner = adw::Banner::builder()
             .title("Trash")
             .button_label("_Empty…")
@@ -435,17 +451,18 @@ impl Window {
             }
         });
         let weak = Rc::downgrade(self);
-        self.search_bar.connect_search_mode_enabled_notify(move |bar| {
-            let Some(w) = weak.upgrade() else { return };
-            if !bar.is_search_mode() {
-                if let Some(t) = w.current_tab() {
-                    if t.is_searching() {
-                        t.set_search("");
+        self.search_bar
+            .connect_search_mode_enabled_notify(move |bar| {
+                let Some(w) = weak.upgrade() else { return };
+                if !bar.is_search_mode() {
+                    if let Some(t) = w.current_tab() {
+                        if t.is_searching() {
+                            t.set_search("");
+                        }
+                        t.focus_view();
                     }
-                    t.focus_view();
                 }
-            }
-        });
+            });
 
         // Mouse back/forward buttons.
         let click = gtk::GestureClick::new();
@@ -552,7 +569,9 @@ impl Window {
         }
         self.action_set_enabled("up", loc.parent().is_some() && !tab.is_other_locations());
         self.rebuild_crumbs(&loc);
-        if self.path_stack.visible_child_name().as_deref() == Some("entry") && !self.location_entry.has_focus() {
+        if self.path_stack.visible_child_name().as_deref() == Some("entry")
+            && !self.location_entry.has_focus()
+        {
             self.location_entry.set_text(&display_location(&loc));
         }
         self.banner
@@ -575,7 +594,11 @@ impl Window {
     }
 
     fn action_set_enabled(&self, name: &str, enabled: bool) {
-        if let Some(a) = self.window.lookup_action(name).and_downcast::<gio::SimpleAction>() {
+        if let Some(a) = self
+            .window
+            .lookup_action(name)
+            .and_downcast::<gio::SimpleAction>()
+        {
             a.set_enabled(enabled);
         }
     }
@@ -657,14 +680,21 @@ impl Window {
             t.apply_settings();
         }
         let set_state = |name: &str, v: glib::Variant| {
-            if let Some(a) = self.window.lookup_action(name).and_downcast::<gio::SimpleAction>() {
+            if let Some(a) = self
+                .window
+                .lookup_action(name)
+                .and_downcast::<gio::SimpleAction>()
+            {
                 a.set_state(&v);
             }
         };
         set_state("show-hidden", s.show_hidden.to_variant());
         set_state("sort", s.sort_key.nick().to_variant());
         set_state("sort-reversed", s.reversed.to_variant());
-        set_state("view-mode", if s.list_view { "list" } else { "grid" }.to_variant());
+        set_state(
+            "view-mode",
+            if s.list_view { "list" } else { "grid" }.to_variant(),
+        );
         if s.list_view {
             self.view_btn.set_icon_name("view-grid-symbolic");
             self.view_btn.set_tooltip_text(Some("Grid View"));
@@ -772,7 +802,8 @@ impl Window {
 
     fn show_location_entry(&self, focus: bool) {
         if let Some(t) = self.current_tab() {
-            self.location_entry.set_text(&display_location(&t.location()));
+            self.location_entry
+                .set_text(&display_location(&t.location()));
         }
         self.path_stack.set_visible_child_name("entry");
         if focus {
@@ -791,7 +822,11 @@ impl Window {
     }
 
     /// Attaches a file drop target to `widget`, dropping into `dest()`.
-    pub fn attach_drop(self: &Rc<Self>, widget: &gtk::Widget, dest: impl Fn() -> gio::File + 'static) {
+    pub fn attach_drop(
+        self: &Rc<Self>,
+        widget: &gtk::Widget,
+        dest: impl Fn() -> gio::File + 'static,
+    ) {
         let target = gtk::DropTarget::new(
             gdk::FileList::static_type(),
             gdk::DragAction::COPY | gdk::DragAction::MOVE,
@@ -836,7 +871,11 @@ impl Window {
         let weak = Rc::downgrade(self);
         glib::spawn_future_local(async move {
             let info = file
-                .query_info_future("standard::type", gio::FileQueryInfoFlags::NONE, glib::Priority::DEFAULT)
+                .query_info_future(
+                    "standard::type",
+                    gio::FileQueryInfoFlags::NONE,
+                    glib::Priority::DEFAULT,
+                )
                 .await;
             let Some(w) = weak.upgrade() else { return };
             match info {
@@ -881,7 +920,9 @@ impl Window {
         let mut dirs = Vec::new();
         let mut files = Vec::new();
         for info in infos {
-            let Some(target) = info_target(info) else { continue };
+            let Some(target) = info_target(info) else {
+                continue;
+            };
             if info_is_dir(info) {
                 dirs.push(target);
             } else {
@@ -911,17 +952,23 @@ impl Window {
         let launcher = gtk::FileLauncher::new(Some(file));
         let weak = Rc::downgrade(self);
         let uri = file.uri();
-        launcher.launch(Some(&self.window), None::<&gio::Cancellable>, move |res| match res {
-            Ok(()) => {
-                gtk::RecentManager::default().add_item(&uri);
-            }
-            Err(e) if e.matches(gtk::DialogError::Dismissed) || e.matches(gtk::DialogError::Cancelled) => {}
-            Err(e) => {
-                if let Some(w) = weak.upgrade() {
-                    w.toast(&format!("Could not open file: {}", e.message()));
+        launcher.launch(
+            Some(&self.window),
+            None::<&gio::Cancellable>,
+            move |res| match res {
+                Ok(()) => {
+                    gtk::RecentManager::default().add_item(&uri);
                 }
-            }
-        });
+                Err(e)
+                    if e.matches(gtk::DialogError::Dismissed)
+                        || e.matches(gtk::DialogError::Cancelled) => {}
+                Err(e) => {
+                    if let Some(w) = weak.upgrade() {
+                        w.toast(&format!("Could not open file: {}", e.message()));
+                    }
+                }
+            },
+        );
     }
 
     pub fn mount_volume(self: &Rc<Self>, vol: &gio::Volume, new_tab: bool) {
@@ -971,9 +1018,19 @@ impl Window {
             }
         };
         if mount.can_eject() {
-            mount.eject_with_operation(gio::MountUnmountFlags::NONE, Some(&op), None::<&gio::Cancellable>, cb);
+            mount.eject_with_operation(
+                gio::MountUnmountFlags::NONE,
+                Some(&op),
+                None::<&gio::Cancellable>,
+                cb,
+            );
         } else {
-            mount.unmount_with_operation(gio::MountUnmountFlags::NONE, Some(&op), None::<&gio::Cancellable>, cb);
+            mount.unmount_with_operation(
+                gio::MountUnmountFlags::NONE,
+                Some(&op),
+                None::<&gio::Cancellable>,
+                cb,
+            );
         }
     }
 
@@ -989,7 +1046,9 @@ impl Window {
             gdk::ContentProvider::for_value(&gdk::FileList::from_array(&files).to_value()),
             gdk::ContentProvider::for_bytes(
                 "x-special/gnome-copied-files",
-                &glib::Bytes::from_owned(crate::clipformat::format_copied_files(cut, &uris).into_bytes()),
+                &glib::Bytes::from_owned(
+                    crate::clipformat::format_copied_files(cut, &uris).into_bytes(),
+                ),
             ),
             gdk::ContentProvider::for_bytes(
                 "text/plain;charset=utf-8",
@@ -1023,13 +1082,18 @@ impl Window {
                 .await
             {
                 let mut data = Vec::new();
-                while let Ok(bytes) = stream.read_bytes_future(65536, glib::Priority::DEFAULT).await {
+                while let Ok(bytes) = stream
+                    .read_bytes_future(65536, glib::Priority::DEFAULT)
+                    .await
+                {
                     if bytes.is_empty() {
                         break;
                     }
                     data.extend_from_slice(&bytes);
                 }
-                if let Some((cut, uris)) = crate::clipformat::parse_copied_files(&String::from_utf8_lossy(&data)) {
+                if let Some((cut, uris)) =
+                    crate::clipformat::parse_copied_files(&String::from_utf8_lossy(&data))
+                {
                     return Some(ClipState {
                         files: uris.iter().map(|u| gio::File::for_uri(u)).collect(),
                         cut,
@@ -1052,7 +1116,9 @@ impl Window {
     }
 
     fn paste(self: &Rc<Self>) {
-        let Some(tab) = self.current_tab() else { return };
+        let Some(tab) = self.current_tab() else {
+            return;
+        };
         let dest = tab.location();
         let weak = Rc::downgrade(self);
         glib::spawn_future_local(async move {
@@ -1063,7 +1129,10 @@ impl Window {
             };
             if clip.cut {
                 // A cut can only be pasted once.
-                w.window.clipboard().set_content(None::<&gdk::ContentProvider>).ok();
+                w.window
+                    .clipboard()
+                    .set_content(None::<&gdk::ContentProvider>)
+                    .ok();
                 *w.shared.clipboard.borrow_mut() = None;
                 w.start_job(
                     Job::Move {
@@ -1107,11 +1176,20 @@ impl Window {
                 }
             }
             if is_trash && !out.trashed.is_empty() {
-                w.shared.undo.borrow_mut().push(Undo::Trash(out.trashed.clone()));
+                w.shared
+                    .undo
+                    .borrow_mut()
+                    .push(Undo::Trash(out.trashed.clone()));
                 let msg = if out.trashed.len() == 1 {
-                    format!("“{}” moved to Trash", crate::ops::display_name(&out.trashed[0]))
+                    format!(
+                        "“{}” moved to Trash",
+                        crate::ops::display_name(&out.trashed[0])
+                    )
                 } else {
-                    format!("{} moved to Trash", crate::fmt::item_count(out.trashed.len() as u64))
+                    format!(
+                        "{} moved to Trash",
+                        crate::fmt::item_count(out.trashed.len() as u64)
+                    )
                 };
                 let toast = adw::Toast::builder()
                     .title(msg)
@@ -1124,12 +1202,21 @@ impl Window {
         });
     }
 
-    pub fn drop_files(self: &Rc<Self>, files: Vec<gio::File>, dest: &gio::File, action: gdk::DragAction) -> bool {
+    pub fn drop_files(
+        self: &Rc<Self>,
+        files: Vec<gio::File>,
+        dest: &gio::File,
+        action: gdk::DragAction,
+    ) -> bool {
         if files.is_empty() || dest.uri() == OTHER_LOCATIONS {
             return false;
         }
         // Dropping onto the folder the items already live in does nothing.
-        if action == gdk::DragAction::MOVE && files.iter().all(|f| f.parent().is_some_and(|p| p.equal(dest))) {
+        if action == gdk::DragAction::MOVE
+            && files
+                .iter()
+                .all(|f| f.parent().is_some_and(|p| p.equal(dest)))
+        {
             return false;
         }
         if files.iter().any(|f| f.equal(dest)) {
@@ -1154,7 +1241,9 @@ impl Window {
     }
 
     fn trash_selection(self: &Rc<Self>) {
-        let Some(tab) = self.current_tab() else { return };
+        let Some(tab) = self.current_tab() else {
+            return;
+        };
         if tab.is_trash() {
             return self.delete_selection();
         }
@@ -1165,16 +1254,24 @@ impl Window {
     }
 
     fn delete_selection(self: &Rc<Self>) {
-        let Some(tab) = self.current_tab() else { return };
+        let Some(tab) = self.current_tab() else {
+            return;
+        };
         let files = tab.selected_files();
         if files.is_empty() {
             return;
         }
         let weak = Rc::downgrade(self);
         let heading = if files.len() == 1 {
-            format!("Permanently Delete “{}”?", crate::ops::display_name(&files[0]))
+            format!(
+                "Permanently Delete “{}”?",
+                crate::ops::display_name(&files[0])
+            )
         } else {
-            format!("Permanently Delete {}?", crate::fmt::item_count(files.len() as u64))
+            format!(
+                "Permanently Delete {}?",
+                crate::fmt::item_count(files.len() as u64)
+            )
         };
         dialogs::confirm(
             &self.window,
@@ -1217,7 +1314,9 @@ impl Window {
             Undo::Rename { file, old_name } => {
                 let weak = Rc::downgrade(self);
                 glib::spawn_future_local(async move {
-                    let res = file.set_display_name_future(&old_name, glib::Priority::DEFAULT).await;
+                    let res = file
+                        .set_display_name_future(&old_name, glib::Priority::DEFAULT)
+                        .await;
                     if let (Some(w), Err(e)) = (weak.upgrade(), res) {
                         w.toast(&format!("Could not undo rename: {}", e.message()));
                     }
@@ -1227,7 +1326,9 @@ impl Window {
     }
 
     fn rename_selection(self: &Rc<Self>) {
-        let Some(tab) = self.current_tab() else { return };
+        let Some(tab) = self.current_tab() else {
+            return;
+        };
         let infos = tab.selected_infos();
         let [info] = infos.as_slice() else { return };
         let Some(file) = info_file(info) else { return };
@@ -1240,7 +1341,11 @@ impl Window {
         let undo_name = old.clone();
         dialogs::name_dialog(
             &self.window,
-            if is_dir { "Rename Folder" } else { "Rename File" },
+            if is_dir {
+                "Rename Folder"
+            } else {
+                "Rename File"
+            },
             "_Rename",
             &old,
             is_dir,
@@ -1251,7 +1356,10 @@ impl Window {
                 let old = undo_name.clone();
                 let tab = tab.clone();
                 glib::spawn_future_local(async move {
-                    match file.set_display_name_future(&new_name, glib::Priority::DEFAULT).await {
+                    match file
+                        .set_display_name_future(&new_name, glib::Priority::DEFAULT)
+                        .await
+                    {
                         Ok(new_file) => {
                             w.shared.undo.borrow_mut().push(Undo::Rename {
                                 file: new_file.clone(),
@@ -1267,7 +1375,9 @@ impl Window {
     }
 
     fn new_folder(self: &Rc<Self>) {
-        let Some(tab) = self.current_tab() else { return };
+        let Some(tab) = self.current_tab() else {
+            return;
+        };
         let dir = tab.location();
         let weak = Rc::downgrade(self);
         let d = dir.clone();
@@ -1293,7 +1403,9 @@ impl Window {
     }
 
     fn add_bookmark(self: &Rc<Self>) {
-        let Some(tab) = self.current_tab() else { return };
+        let Some(tab) = self.current_tab() else {
+            return;
+        };
         let loc = tab.location();
         if tab.is_other_locations() {
             return;
@@ -1435,7 +1547,9 @@ impl Window {
                 w.tab_view.close_page(&p);
             }
         });
-        add("toggle-sidebar", |w| w.split.set_show_sidebar(!w.split.shows_sidebar()));
+        add("toggle-sidebar", |w| {
+            w.split.set_show_sidebar(!w.split.shows_sidebar())
+        });
         add("toggle-view", |w| {
             let list = w.shared.view_settings().list_view;
             w.set_view_mode(!list);
@@ -1491,9 +1605,14 @@ impl Window {
             let weak = Rc::downgrade(w);
             glib::spawn_future_local(async move {
                 let Some(w) = weak.upgrade() else { return };
-                let Some(clip) = w.read_clipboard().await else { return };
+                let Some(clip) = w.read_clipboard().await else {
+                    return;
+                };
                 if clip.cut {
-                    w.window.clipboard().set_content(None::<&gdk::ContentProvider>).ok();
+                    w.window
+                        .clipboard()
+                        .set_content(None::<&gdk::ContentProvider>)
+                        .ok();
                     *w.shared.clipboard.borrow_mut() = None;
                     w.start_job(
                         Job::Move {
@@ -1587,7 +1706,8 @@ impl Window {
 
         // Stateful actions.
         let s = self.shared.view_settings();
-        let show_hidden = gio::SimpleAction::new_stateful("show-hidden", None, &s.show_hidden.to_variant());
+        let show_hidden =
+            gio::SimpleAction::new_stateful("show-hidden", None, &s.show_hidden.to_variant());
         let weak = Rc::downgrade(self);
         show_hidden.connect_activate(move |a, _| {
             let Some(w) = weak.upgrade() else { return };
@@ -1597,8 +1717,11 @@ impl Window {
         });
         win.add_action(&show_hidden);
 
-        let sort =
-            gio::SimpleAction::new_stateful("sort", Some(glib::VariantTy::STRING), &s.sort_key.nick().to_variant());
+        let sort = gio::SimpleAction::new_stateful(
+            "sort",
+            Some(glib::VariantTy::STRING),
+            &s.sort_key.nick().to_variant(),
+        );
         let weak = Rc::downgrade(self);
         sort.connect_activate(move |_, v| {
             let (Some(w), Some(nick)) = (weak.upgrade(), v.and_then(|v| v.get::<String>())) else {
@@ -1635,9 +1758,10 @@ impl Window {
     }
 
     fn set_view_mode(&self, list: bool) {
-        self.shared
-            .prefs
-            .set_enum_nick("default-folder-viewer", if list { "list-view" } else { "icon-view" });
+        self.shared.prefs.set_enum_nick(
+            "default-folder-viewer",
+            if list { "list-view" } else { "icon-view" },
+        );
         self.shared.settings_changed();
         if let Some(t) = self.current_tab() {
             t.focus_view();
@@ -1647,8 +1771,12 @@ impl Window {
     /// `delta` > 0 zooms in, < 0 out, 0 resets.
     fn zoom(&self, delta: i32) {
         let s = self.shared.view_settings();
-        let (prefs, table, current, default): (&helix_app_common::Prefs, &[(&str, i32)], usize, usize) = if s.list_view
-        {
+        let (prefs, table, current, default): (
+            &helix_app_common::Prefs,
+            &[(&str, i32)],
+            usize,
+            usize,
+        ) = if s.list_view {
             (&self.shared.list_prefs, &LIST_ZOOM, s.list_zoom, 1)
         } else {
             (&self.shared.icon_prefs, &GRID_ZOOM, s.grid_zoom, 2)

@@ -75,7 +75,10 @@ impl Default for State {
 
 /// Track id object path for a file path.
 pub fn track_id(path: &std::path::Path) -> String {
-    format!("/org/helix/Music/Track/{:016x}", crate::index::fnv1a(path.as_os_str().as_encoded_bytes()))
+    format!(
+        "/org/helix/Music/Track/{:016x}",
+        crate::index::fnv1a(path.as_os_str().as_encoded_bytes())
+    )
 }
 
 fn ov<'a>(v: impl Into<Value<'a>>) -> OwnedValue {
@@ -85,10 +88,14 @@ fn ov<'a>(v: impl Into<Value<'a>>) -> OwnedValue {
 pub fn metadata_map(m: Option<&Metadata>) -> HashMap<String, OwnedValue> {
     let mut map = HashMap::new();
     let Some(m) = m else {
-        map.insert("mpris:trackid".into(), ov(ObjectPath::from_static_str_unchecked(NO_TRACK)));
+        map.insert(
+            "mpris:trackid".into(),
+            ov(ObjectPath::from_static_str_unchecked(NO_TRACK)),
+        );
         return map;
     };
-    let id = ObjectPath::try_from(m.track_id.clone()).unwrap_or_else(|_| ObjectPath::from_static_str_unchecked(NO_TRACK));
+    let id = ObjectPath::try_from(m.track_id.clone())
+        .unwrap_or_else(|_| ObjectPath::from_static_str_unchecked(NO_TRACK));
     map.insert("mpris:trackid".into(), ov(id));
     map.insert("mpris:length".into(), ov(m.length_us));
     map.insert("xesam:title".into(), ov(m.title.clone()));
@@ -148,10 +155,19 @@ impl Root {
     }
     #[zbus(property)]
     fn supported_mime_types(&self) -> Vec<String> {
-        ["audio/mpeg", "audio/flac", "audio/ogg", "audio/x-vorbis+ogg", "audio/opus", "audio/mp4", "audio/x-wav", "audio/aac"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect()
+        [
+            "audio/mpeg",
+            "audio/flac",
+            "audio/ogg",
+            "audio/x-vorbis+ogg",
+            "audio/opus",
+            "audio/mp4",
+            "audio/x-wav",
+            "audio/aac",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect()
     }
 }
 
@@ -193,10 +209,15 @@ impl PlayerIface {
         self.send(Command::Seek(offset));
     }
     fn set_position(&self, track_id: OwnedObjectPath, position: i64) {
-        self.send(Command::SetPosition(track_id.as_str().to_string(), position));
+        self.send(Command::SetPosition(
+            track_id.as_str().to_string(),
+            position,
+        ));
     }
     fn open_uri(&self, _uri: &str) -> zbus::fdo::Result<()> {
-        Err(zbus::fdo::Error::NotSupported("OpenUri is not supported".into()))
+        Err(zbus::fdo::Error::NotSupported(
+            "OpenUri is not supported".into(),
+        ))
     }
 
     #[zbus(signal)]
@@ -307,7 +328,9 @@ impl Mpris {
     }
 
     pub fn update(&self, f: impl FnOnce(&mut State)) {
-        let Ok(mut st) = self.state.lock() else { return };
+        let Ok(mut st) = self.state.lock() else {
+            return;
+        };
         let old = st.clone();
         f(&mut st);
         let new = st.clone();
@@ -394,11 +417,17 @@ mod tests {
             url: "file:///m/a.flac".into(),
         };
         let map = metadata_map(Some(&m));
-        assert!(map["mpris:trackid"].to_string().contains("/org/helix/Music/Track/"));
+        assert!(map["mpris:trackid"]
+            .to_string()
+            .contains("/org/helix/Music/Track/"));
         assert_eq!(i64::try_from(&map["mpris:length"]).unwrap(), 5_000_000);
         assert!(!map.contains_key("xesam:albumArtist"));
         let empty = metadata_map(None);
         assert_eq!(empty.len(), 1);
-        assert_eq!(track_id(std::path::Path::new("/m/a.flac")), m.track_id, "stable ids");
+        assert_eq!(
+            track_id(std::path::Path::new("/m/a.flac")),
+            m.track_id,
+            "stable ids"
+        );
     }
 }

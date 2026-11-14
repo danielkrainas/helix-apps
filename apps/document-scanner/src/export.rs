@@ -77,9 +77,17 @@ pub fn output_paths(path: &Path, n: usize, format: Format) -> Vec<PathBuf> {
     if format == Format::Pdf || n <= 1 {
         return vec![path.to_path_buf()];
     }
-    let stem = path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
-    let ext = path.extension().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
-    (1..=n).map(|i| path.with_file_name(format!("{stem}-{i}.{ext}"))).collect()
+    let stem = path
+        .file_stem()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let ext = path
+        .extension()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    (1..=n)
+        .map(|i| path.with_file_name(format!("{stem}-{i}.{ext}")))
+        .collect()
 }
 
 fn color_type(p: &Page) -> ExtendedColorType {
@@ -95,7 +103,8 @@ pub fn encode_jpeg(p: &Page, quality: u8) -> Result<Vec<u8>, String> {
     let mut enc = JpegEncoder::new_with_quality(&mut out, quality.clamp(1, 100));
     let dpi = p.dpi.round().clamp(1.0, u16::MAX as f64) as u16;
     enc.set_pixel_density(PixelDensity::dpi(dpi));
-    enc.encode(&p.pixels, p.width, p.height, color_type(p)).map_err(|e| e.to_string())?;
+    enc.encode(&p.pixels, p.width, p.height, color_type(p))
+        .map_err(|e| e.to_string())?;
     Ok(out)
 }
 
@@ -135,11 +144,20 @@ pub fn encode_pdf(pages: &[Page], quality: u8) -> Result<Vec<u8>, String> {
             page_height: ph,
         });
     }
-    Ok(pdf::build(&images, "Helix Document Scanner", Some(&pdf_date_now())))
+    Ok(pdf::build(
+        &images,
+        "Helix Document Scanner",
+        Some(&pdf_date_now()),
+    ))
 }
 
 /// Saves `pages` to `path` in `format`; returns the files written.
-pub fn save(pages: &[Page], path: &Path, format: Format, quality: u8) -> Result<Vec<PathBuf>, String> {
+pub fn save(
+    pages: &[Page],
+    path: &Path,
+    format: Format,
+    quality: u8,
+) -> Result<Vec<PathBuf>, String> {
     if pages.is_empty() {
         return Err("The document has no pages".into());
     }
@@ -152,8 +170,11 @@ pub fn save(pages: &[Page], path: &Path, format: Format, quality: u8) -> Result<
         Format::Png | Format::Jpeg => {
             for (page, out) in pages.iter().zip(&paths) {
                 let page = page.cropped();
-                let data =
-                    if format == Format::Png { encode_png(&page)? } else { encode_jpeg(&page, quality)? };
+                let data = if format == Format::Png {
+                    encode_png(&page)?
+                } else {
+                    encode_jpeg(&page, quality)?
+                };
                 write(out, &data)?;
             }
         }
@@ -183,7 +204,12 @@ pub fn pdf_date(unix: i64) -> String {
     let d = doy - (153 * mp + 2) / 5 + 1;
     let m = if mp < 10 { mp + 3 } else { mp - 9 };
     let y = yoe + era * 400 + i64::from(m <= 2);
-    format!("{y:04}{m:02}{d:02}{:02}{:02}{:02}Z", rem / 3600, rem % 3600 / 60, rem % 60)
+    format!(
+        "{y:04}{m:02}{d:02}{:02}{:02}{:02}Z",
+        rem / 3600,
+        rem % 3600 / 60,
+        rem % 60
+    )
 }
 
 #[cfg(test)]
@@ -193,7 +219,13 @@ mod tests {
 
     fn page(color: bool) -> Page {
         let c = if color { 3 } else { 1 };
-        Page::new(20, 10, c, (0..200 * c as u32).map(|v| v as u8).collect(), 150.0)
+        Page::new(
+            20,
+            10,
+            c,
+            (0..200 * c as u32).map(|v| v as u8).collect(),
+            150.0,
+        )
     }
 
     #[test]
@@ -213,7 +245,10 @@ mod tests {
         assert_eq!(output_paths(p, 1, Format::Jpeg), vec![p.to_path_buf()]);
         assert_eq!(
             output_paths(p, 2, Format::Jpeg),
-            vec![PathBuf::from("/d/Scanned Document-1.jpg"), PathBuf::from("/d/Scanned Document-2.jpg")]
+            vec![
+                PathBuf::from("/d/Scanned Document-1.jpg"),
+                PathBuf::from("/d/Scanned Document-2.jpg")
+            ]
         );
         assert_eq!(output_paths(Path::new("/d/x.pdf"), 3, Format::Pdf).len(), 1);
     }
@@ -250,7 +285,10 @@ mod tests {
         assert_eq!(written, vec![pdf_path.clone()]);
         let data = std::fs::read(&pdf_path).unwrap();
         assert!(data.starts_with(b"%PDF-"));
-        let s: String = data.iter().map(|&b| if b.is_ascii() { b as char } else { '?' }).collect();
+        let s: String = data
+            .iter()
+            .map(|&b| if b.is_ascii() { b as char } else { '?' })
+            .collect();
         assert!(s.contains("/Count 2"));
         assert!(s.contains("/DCTDecode") && s.contains("/FlateDecode"));
         // 20 px at 150 dpi = 9.6 pt.

@@ -95,15 +95,24 @@ pub enum Event {
     /// SANE could not be initialised at all.
     Unavailable(String),
     Devices(Vec<Device>),
-    Opened { device: String, caps: Capabilities },
-    OpenFailed { device: String, error: String },
+    Opened {
+        device: String,
+        caps: Capabilities,
+    },
+    OpenFailed {
+        device: String,
+        error: String,
+    },
     ScanStarted,
     /// A new page is being scanned (0-based count within this scan).
     PageStarted(usize),
     /// Progress of the current page, 0…1.
     Progress(f64),
     Page(Page),
-    ScanFinished { cancelled: bool, error: Option<String> },
+    ScanFinished {
+        cancelled: bool,
+        error: Option<String>,
+    },
 }
 
 pub struct Scanner {
@@ -178,8 +187,14 @@ fn worker(rx: mpsc::Receiver<Cmd>, tx: async_channel::Sender<Event>, cancel: Arc
                 }
             },
             Cmd::Open(name) => match ensure_open(&sane, &mut current, &name) {
-                Ok(h) => send(Event::Opened { device: name, caps: capabilities(h) }),
-                Err(e) => send(Event::OpenFailed { device: name, error: e }),
+                Ok(h) => send(Event::Opened {
+                    device: name,
+                    caps: capabilities(h),
+                }),
+                Err(e) => send(Event::OpenFailed {
+                    device: name,
+                    error: e,
+                }),
             },
             Cmd::Scan(req) => {
                 send(Event::ScanStarted);
@@ -188,10 +203,16 @@ fn worker(rx: mpsc::Receiver<Cmd>, tx: async_channel::Sender<Event>, cancel: Arc
                     Err(e) => Err(e),
                 };
                 match result {
-                    Ok(cancelled) => send(Event::ScanFinished { cancelled, error: None }),
+                    Ok(cancelled) => send(Event::ScanFinished {
+                        cancelled,
+                        error: None,
+                    }),
                     Err(e) => {
                         debug!("scan failed: {e}");
-                        send(Event::ScanFinished { cancelled: false, error: Some(e) })
+                        send(Event::ScanFinished {
+                            cancelled: false,
+                            error: Some(e),
+                        })
                     }
                 }
             }
@@ -209,7 +230,9 @@ fn ensure_open<'a, 'b>(
     if current.as_ref().map(|(n, _)| n.as_str()) != Some(name) {
         *current = None;
         debug!("opening {name}");
-        let h = sane.open(name).map_err(|e| format!("Unable to connect to scanner: {e}"))?;
+        let h = sane
+            .open(name)
+            .map_err(|e| format!("Unable to connect to scanner: {e}"))?;
         *current = Some((name.to_string(), h));
     }
     Ok(&current.as_ref().unwrap().1)
@@ -240,7 +263,9 @@ pub fn capabilities(h: &DeviceHandle) -> Capabilities {
 
 /// Sets a string option if present and settable; returns refreshed options.
 fn set_string(h: &DeviceHandle, opts: Vec<OptionDesc>, name: &str, value: &str) -> Vec<OptionDesc> {
-    let Some(o) = find(&opts, name).filter(|o| o.settable()) else { return opts };
+    let Some(o) = find(&opts, name).filter(|o| o.settable()) else {
+        return opts;
+    };
     match h.set_string(o, value) {
         Ok(_) => debug!("{name} = {value}"),
         Err(e) => debug!("setting {name} = {value} failed: {e}"),
@@ -250,8 +275,14 @@ fn set_string(h: &DeviceHandle, opts: Vec<OptionDesc>, name: &str, value: &str) 
 
 /// Sets a numeric option given as a real value (converted for FIXED).
 fn set_number(h: &DeviceHandle, opts: Vec<OptionDesc>, name: &str, value: f64) -> Vec<OptionDesc> {
-    let Some(o) = find(&opts, name).filter(|o| o.settable()) else { return opts };
-    let mut w = if o.is_fixed() { sane::to_fixed(value) } else { value.round() as sane::Word };
+    let Some(o) = find(&opts, name).filter(|o| o.settable()) else {
+        return opts;
+    };
+    let mut w = if o.is_fixed() {
+        sane::to_fixed(value)
+    } else {
+        value.round() as sane::Word
+    };
     if let Constraint::Range { min, max, quant } = o.constraint {
         w = options::clamp_to_range(w, min, max, quant);
     }
@@ -265,12 +296,18 @@ fn set_number(h: &DeviceHandle, opts: Vec<OptionDesc>, name: &str, value: f64) -
 fn word_value(h: &DeviceHandle, opts: &[OptionDesc], name: &str) -> Option<f64> {
     let o = find(opts, name)?;
     let w = h.get_word(o).ok()?;
-    Some(if o.is_fixed() { sane::from_fixed(w) } else { w as f64 })
+    Some(if o.is_fixed() {
+        sane::from_fixed(w)
+    } else {
+        w as f64
+    })
 }
 
 fn range_real(o: &OptionDesc) -> Option<(f64, f64)> {
     match o.constraint {
-        Constraint::Range { min, max, .. } if o.is_fixed() => Some((sane::from_fixed(min), sane::from_fixed(max))),
+        Constraint::Range { min, max, .. } if o.is_fixed() => {
+            Some((sane::from_fixed(min), sane::from_fixed(max)))
+        }
         Constraint::Range { min, max, .. } => Some((min as f64, max as f64)),
         _ => None,
     }
@@ -282,15 +319,19 @@ fn configure(h: &DeviceHandle, req: &ScanRequest) -> f64 {
 
     // Source.
     let sources = strings(find(&opts, "source"));
-    let source = req.source.clone().filter(|s| sources.contains(s)).or_else(|| {
-        let kind = match (req.kind, req.page_side) {
-            (ScanKind::Feeder, PageSide::Both) => SourceKind::AdfDuplex,
-            (ScanKind::Feeder, PageSide::Back) => SourceKind::AdfBack,
-            (ScanKind::Feeder, PageSide::Front) => SourceKind::Adf,
-            _ => SourceKind::Flatbed,
-        };
-        options::pick_source(&sources, kind)
-    });
+    let source = req
+        .source
+        .clone()
+        .filter(|s| sources.contains(s))
+        .or_else(|| {
+            let kind = match (req.kind, req.page_side) {
+                (ScanKind::Feeder, PageSide::Both) => SourceKind::AdfDuplex,
+                (ScanKind::Feeder, PageSide::Back) => SourceKind::AdfBack,
+                (ScanKind::Feeder, PageSide::Front) => SourceKind::Adf,
+                _ => SourceKind::Flatbed,
+            };
+            options::pick_source(&sources, kind)
+        });
     if let Some(s) = source {
         opts = set_string(h, opts, "source", &s);
     }
@@ -311,7 +352,11 @@ fn configure(h: &DeviceHandle, req: &ScanRequest) -> f64 {
     let mm = |o: &OptionDesc| o.unit == 3;
     let area: Vec<(String, f64, f64)> = ["tl-x", "tl-y", "br-x", "br-y"]
         .iter()
-        .filter_map(|n| find(&opts, n).filter(|o| mm(o)).and_then(|o| range_real(o).map(|(a, b)| (n.to_string(), a, b))))
+        .filter_map(|n| {
+            find(&opts, n)
+                .filter(|o| mm(o))
+                .and_then(|o| range_real(o).map(|(a, b)| (n.to_string(), a, b)))
+        })
         .collect();
     if area.len() == 4 {
         let (x0, y0) = (area[0].1, area[1].1);
@@ -336,7 +381,9 @@ fn configure(h: &DeviceHandle, req: &ScanRequest) -> f64 {
         }
     }
 
-    word_value(h, &opts, "resolution").filter(|d| *d > 0.0).unwrap_or(req.dpi as f64)
+    word_value(h, &opts, "resolution")
+        .filter(|d| *d > 0.0)
+        .unwrap_or(req.dpi as f64)
 }
 
 fn frame_format(f: i32) -> Option<FrameFormat> {
@@ -357,7 +404,12 @@ enum PageResult {
 }
 
 /// Runs a scan. Returns `Ok(true)` if it was cancelled.
-fn scan(h: &DeviceHandle, req: &ScanRequest, cancel: &AtomicBool, send: &dyn Fn(Event)) -> Result<bool, String> {
+fn scan(
+    h: &DeviceHandle,
+    req: &ScanRequest,
+    cancel: &AtomicBool,
+    send: &dyn Fn(Event),
+) -> Result<bool, String> {
     let dpi = configure(h, req);
     let mut count = 0usize;
     let result = loop {
@@ -373,7 +425,11 @@ fn scan(h: &DeviceHandle, req: &ScanRequest, cancel: &AtomicBool, send: &dyn Fn(
             }
             Ok(PageResult::Cancelled) => break Ok(true),
             Ok(PageResult::NoDocs) => {
-                break if count == 0 { Err("Document feeder empty".to_string()) } else { Ok(false) };
+                break if count == 0 {
+                    Err("Document feeder empty".to_string())
+                } else {
+                    Ok(false)
+                };
             }
             Err(e) => break Err(e),
         }
@@ -393,7 +449,12 @@ fn scan(h: &DeviceHandle, req: &ScanRequest, cancel: &AtomicBool, send: &dyn Fn(
     result
 }
 
-fn scan_page(h: &DeviceHandle, dpi: f64, cancel: &AtomicBool, send: &dyn Fn(Event)) -> Result<PageResult, String> {
+fn scan_page(
+    h: &DeviceHandle,
+    dpi: f64,
+    cancel: &AtomicBool,
+    send: &dyn Fn(Event),
+) -> Result<PageResult, String> {
     let mut builder = PageBuilder::new();
     let mut buf = vec![0u8; 64 * 1024];
     let mut first = true;
@@ -405,10 +466,17 @@ fn scan_page(h: &DeviceHandle, dpi: f64, cancel: &AtomicBool, send: &dyn Fn(Even
             Err(e) => return Err(format!("Unable to start scan: {e}")),
         }
         first = false;
-        let p = h.parameters().map_err(|e| format!("Error communicating with scanner: {e}"))?;
+        let p = h
+            .parameters()
+            .map_err(|e| format!("Error communicating with scanner: {e}"))?;
         debug!("frame {:?}", p);
-        let format = frame_format(p.format).ok_or_else(|| format!("Unsupported frame format {}", p.format))?;
-        let expected = if p.lines > 0 { (p.bytes_per_line as usize) * p.lines as usize } else { 0 };
+        let format = frame_format(p.format)
+            .ok_or_else(|| format!("Unsupported frame format {}", p.format))?;
+        let expected = if p.lines > 0 {
+            (p.bytes_per_line as usize) * p.lines as usize
+        } else {
+            0
+        };
         let mut data = Vec::with_capacity(expected);
         let mut last_progress = -1.0;
         loop {
@@ -463,7 +531,16 @@ mod tests {
     }
 
     fn pages(events: &[Event]) -> Vec<&Page> {
-        events.iter().filter_map(|e| if let Event::Page(p) = e { Some(p) } else { None }).collect()
+        events
+            .iter()
+            .filter_map(|e| {
+                if let Event::Page(p) = e {
+                    Some(p)
+                } else {
+                    None
+                }
+            })
+            .collect()
     }
 
     fn finished(e: &Event) -> bool {
@@ -486,14 +563,25 @@ mod tests {
 
         let (scanner, rx) = Scanner::spawn();
         scanner.send(Cmd::Refresh);
-        let ev = wait(&rx, |e| matches!(e, Event::Devices(_) | Event::Unavailable(_)));
-        let Some(Event::Devices(devs)) = ev.last() else { panic!("SANE unavailable") };
+        let ev = wait(&rx, |e| {
+            matches!(e, Event::Devices(_) | Event::Unavailable(_))
+        });
+        let Some(Event::Devices(devs)) = ev.last() else {
+            panic!("SANE unavailable")
+        };
         assert!(!devs.is_empty());
-        assert!(devs.iter().all(|d| d.name.starts_with("test:")), "non-test device visible: {devs:?}");
+        assert!(
+            devs.iter().all(|d| d.name.starts_with("test:")),
+            "non-test device visible: {devs:?}"
+        );
 
         scanner.send(Cmd::Open("test:0".into()));
-        let ev = wait(&rx, |e| matches!(e, Event::Opened { .. } | Event::OpenFailed { .. }));
-        let Some(Event::Opened { caps, .. }) = ev.last() else { panic!("open failed: {:?}", ev.last()) };
+        let ev = wait(&rx, |e| {
+            matches!(e, Event::Opened { .. } | Event::OpenFailed { .. })
+        });
+        let Some(Event::Opened { caps, .. }) = ev.last() else {
+            panic!("open failed: {:?}", ev.last())
+        };
         assert!(caps.modes.iter().any(|m| m == "Color"));
         assert!(caps.sources.iter().any(|s| s == "Flatbed"));
         assert!(caps.resolutions.contains(&75));
@@ -513,33 +601,67 @@ mod tests {
         };
         scanner.send(Cmd::Scan(req.clone()));
         let ev = wait(&rx, finished);
-        assert!(matches!(ev.last(), Some(Event::ScanFinished { cancelled: false, error: None })), "{:?}", ev.last());
+        assert!(
+            matches!(
+                ev.last(),
+                Some(Event::ScanFinished {
+                    cancelled: false,
+                    error: None
+                })
+            ),
+            "{:?}",
+            ev.last()
+        );
         let p = pages(&ev);
         assert_eq!(p.len(), 1);
         assert_eq!(p[0].channels, 3);
         assert_eq!(p[0].dpi, 75.0);
         // 50 × 40 mm at 75 dpi ≈ 148 × 118 px.
         assert!((p[0].width as i32 - 148).abs() <= 2, "width {}", p[0].width);
-        assert!((p[0].height as i32 - 118).abs() <= 2, "height {}", p[0].height);
+        assert!(
+            (p[0].height as i32 - 118).abs() <= 2,
+            "height {}",
+            p[0].height
+        );
 
         // Grey text scan.
-        scanner.send(Cmd::Scan(ScanRequest { color: ColorMode::Gray, text: true, ..req.clone() }));
+        scanner.send(Cmd::Scan(ScanRequest {
+            color: ColorMode::Gray,
+            text: true,
+            ..req.clone()
+        }));
         let ev = wait(&rx, finished);
         let p = pages(&ev);
         assert_eq!((p.len(), p[0].channels, p[0].text), (1, 1, true));
 
         // Batch scanning stops when cancelled.
-        scanner.send(Cmd::Scan(ScanRequest { kind: ScanKind::Batch, page_delay_ms: 10_000, ..req.clone() }));
+        scanner.send(Cmd::Scan(ScanRequest {
+            kind: ScanKind::Batch,
+            page_delay_ms: 10_000,
+            ..req.clone()
+        }));
         let ev = wait(&rx, |e| matches!(e, Event::Page(_)));
         assert_eq!(pages(&ev).len(), 1);
         scanner.cancel();
         let ev = wait(&rx, finished);
-        assert!(matches!(ev.last(), Some(Event::ScanFinished { cancelled: true, .. })));
+        assert!(matches!(
+            ev.last(),
+            Some(Event::ScanFinished {
+                cancelled: true,
+                ..
+            })
+        ));
 
         // Feeder scan delivers pages until the feeder is empty.
-        scanner.send(Cmd::Scan(ScanRequest { kind: ScanKind::Feeder, ..req }));
+        scanner.send(Cmd::Scan(ScanRequest {
+            kind: ScanKind::Feeder,
+            ..req
+        }));
         let ev = wait(&rx, finished);
-        assert!(!pages(&ev).is_empty() || matches!(ev.last(), Some(Event::ScanFinished { error: Some(_), .. })));
+        assert!(
+            !pages(&ev).is_empty()
+                || matches!(ev.last(), Some(Event::ScanFinished { error: Some(_), .. }))
+        );
         drop(scanner);
     }
 }

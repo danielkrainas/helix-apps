@@ -50,22 +50,42 @@ fn token(prefix: &str) -> String {
 pub fn fix_from_dict(d: &Dict) -> Option<Fix> {
     let f = |k: &str| d.get(k).and_then(|v| f64::try_from(v).ok());
     let (lat, lon) = (f("Latitude")?, f("Longitude")?);
-    if !(lat.is_finite() && lon.is_finite() && (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&lon)) {
+    if !(lat.is_finite()
+        && lon.is_finite()
+        && (-90.0..=90.0).contains(&lat)
+        && (-180.0..=180.0).contains(&lon))
+    {
         return None;
     }
-    let description = d.get("Description").and_then(|v| String::try_from(v.clone()).ok()).unwrap_or_default();
-    Some(Fix { lat, lon, accuracy: f("Accuracy").unwrap_or(f64::NAN), description })
+    let description = d
+        .get("Description")
+        .and_then(|v| String::try_from(v.clone()).ok())
+        .unwrap_or_default();
+    Some(Fix {
+        lat,
+        lon,
+        accuracy: f("Accuracy").unwrap_or(f64::NAN),
+        description,
+    })
 }
 
 /// Maps a D-Bus error name to a user-facing message.
 pub fn friendly_error(name: &str, detail: Option<&str>) -> String {
-    const ABSENT: [&str; 5] = ["ServiceUnknown", "NameHasNoOwner", "UnknownInterface", "UnknownMethod", "UnknownObject"];
+    const ABSENT: [&str; 5] = [
+        "ServiceUnknown",
+        "NameHasNoOwner",
+        "UnknownInterface",
+        "UnknownMethod",
+        "UnknownObject",
+    ];
     if ABSENT.iter().any(|s| name.ends_with(s)) {
         "The location portal is not available".to_string()
     } else if name.ends_with("AccessDenied") || name.ends_with("NotAllowed") {
         "Location access was denied".to_string()
     } else {
-        detail.map(str::to_string).unwrap_or_else(|| name.to_string())
+        detail
+            .map(str::to_string)
+            .unwrap_or_else(|| name.to_string())
     }
 }
 
@@ -86,13 +106,24 @@ enum Event {
 }
 
 fn close_session(conn: &Connection, session: &OwnedObjectPath) {
-    let _ = conn.call_method(Some(PORTAL_BUS), session.as_str(), Some(SESSION_IFACE), "Close", &());
+    let _ = conn.call_method(
+        Some(PORTAL_BUS),
+        session.as_str(),
+        Some(SESSION_IFACE),
+        "Close",
+        &(),
+    );
 }
 
 fn run(conn: &Connection, accuracy: u32, events: &mpsc::Sender<Event>) -> Result<Fix, String> {
-    let unique = conn.unique_name().map(|n| n.to_string()).ok_or("Not connected to a message bus")?;
+    let unique = conn
+        .unique_name()
+        .map(|n| n.to_string())
+        .ok_or("Not connected to a message bus")?;
     let location = Proxy::new(conn, PORTAL_BUS, PORTAL_PATH, LOCATION_IFACE).map_err(friendly)?;
-    let mut updates = location.receive_signal("LocationUpdated").map_err(friendly)?;
+    let mut updates = location
+        .receive_signal("LocationUpdated")
+        .map_err(friendly)?;
 
     let session_token = token("session");
     let opts: HashMap<&str, Value> = HashMap::from([
@@ -105,13 +136,23 @@ fn run(conn: &Connection, accuracy: u32, events: &mpsc::Sender<Event>) -> Result
     let _ = events.send(Event::Session(session.clone()));
 
     let request_token = token("request");
-    let request =
-        Proxy::new(conn, PORTAL_BUS, portal_path("request", &unique, &request_token), REQUEST_IFACE).map_err(friendly)?;
+    let request = Proxy::new(
+        conn,
+        PORTAL_BUS,
+        portal_path("request", &unique, &request_token),
+        REQUEST_IFACE,
+    )
+    .map_err(friendly)?;
     let mut responses = request.receive_signal("Response").map_err(friendly)?;
-    let opts: HashMap<&str, Value> = HashMap::from([("handle_token", Value::from(request_token.as_str()))]);
-    location.call::<_, _, OwnedObjectPath>("Start", &(&session, "", opts)).map_err(friendly)?;
+    let opts: HashMap<&str, Value> =
+        HashMap::from([("handle_token", Value::from(request_token.as_str()))]);
+    location
+        .call::<_, _, OwnedObjectPath>("Start", &(&session, "", opts))
+        .map_err(friendly)?;
 
-    let msg = responses.next().ok_or("The location portal closed the request")?;
+    let msg = responses
+        .next()
+        .ok_or("The location portal closed the request")?;
     let (code, _): (u32, Dict) = msg.body().deserialize().map_err(|e| e.to_string())?;
     match code {
         0 => {}
@@ -119,7 +160,9 @@ fn run(conn: &Connection, accuracy: u32, events: &mpsc::Sender<Event>) -> Result
         _ => return Err("The location request was cancelled".into()),
     }
     for msg in updates.by_ref() {
-        let Ok((path, data)) = msg.body().deserialize::<(OwnedObjectPath, Dict)>() else { continue };
+        let Ok((path, data)) = msg.body().deserialize::<(OwnedObjectPath, Dict)>() else {
+            continue;
+        };
         if path != session {
             continue;
         }
@@ -170,9 +213,14 @@ mod tests {
 
     #[test]
     fn paths_and_tokens() {
-        assert_eq!(portal_path("request", ":1.7", "t"), "/org/freedesktop/portal/desktop/request/1_7/t");
+        assert_eq!(
+            portal_path("request", ":1.7", "t"),
+            "/org/freedesktop/portal/desktop/request/1_7/t"
+        );
         assert_ne!(token("a"), token("a"));
-        assert!(token("x").chars().all(|c| c.is_ascii_alphanumeric() || c == '_'));
+        assert!(token("x")
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_'));
     }
 
     #[test]
@@ -181,7 +229,10 @@ mod tests {
             friendly_error("org.freedesktop.DBus.Error.ServiceUnknown", None),
             "The location portal is not available"
         );
-        assert_eq!(friendly_error("org.freedesktop.portal.Error.NotAllowed", Some("x")), "Location access was denied");
+        assert_eq!(
+            friendly_error("org.freedesktop.portal.Error.NotAllowed", Some("x")),
+            "Location access was denied"
+        );
         assert_eq!(friendly_error("org.example.Other", Some("boom")), "boom");
     }
 
@@ -194,10 +245,18 @@ mod tests {
         let f = fix_from_dict(&d).unwrap();
         assert!(f.accuracy.is_nan());
         d.insert("Accuracy".into(), OwnedValue::from(25.0f64));
-        d.insert("Description".into(), OwnedValue::try_from(Value::from("Berlin")).unwrap());
+        d.insert(
+            "Description".into(),
+            OwnedValue::try_from(Value::from("Berlin")).unwrap(),
+        );
         assert_eq!(
             fix_from_dict(&d),
-            Some(Fix { lat: 52.5, lon: 13.4, accuracy: 25.0, description: "Berlin".into() })
+            Some(Fix {
+                lat: 52.5,
+                lon: 13.4,
+                accuracy: 25.0,
+                description: "Berlin".into()
+            })
         );
         d.insert("Latitude".into(), OwnedValue::from(95.0f64));
         assert!(fix_from_dict(&d).is_none());
@@ -250,7 +309,9 @@ mod mock_portal {
                 s.accuracy_requested = options.get("accuracy").and_then(|v| u32::try_from(v).ok());
                 s.sessions.push(path.clone());
             }
-            server.at(path.as_str(), Session(self.0.clone(), path.clone())).await?;
+            server
+                .at(path.as_str(), Session(self.0.clone(), path.clone()))
+                .await?;
             Ok(OwnedObjectPath::try_from(path).unwrap())
         }
 
@@ -273,15 +334,31 @@ mod mock_portal {
                 (s.response, s.send_fix)
             };
             let empty: HashMap<&str, Value> = HashMap::new();
-            conn.emit_signal(Some(sender.as_str()), request.as_str(), REQUEST_IFACE, "Response", &(code, empty))
-                .await?;
+            conn.emit_signal(
+                Some(sender.as_str()),
+                request.as_str(),
+                REQUEST_IFACE,
+                "Response",
+                &(code, empty),
+            )
+            .await?;
             if code == 0 && send_fix {
                 // An update for a different session must be ignored.
-                let other = OwnedObjectPath::try_from("/org/freedesktop/portal/desktop/session/x/other").unwrap();
-                let bogus: HashMap<&str, Value> =
-                    HashMap::from([("Latitude", Value::from(1.0)), ("Longitude", Value::from(1.0))]);
-                conn.emit_signal(Some(sender.as_str()), PORTAL_PATH, LOCATION_IFACE, "LocationUpdated", &(other, bogus))
-                    .await?;
+                let other =
+                    OwnedObjectPath::try_from("/org/freedesktop/portal/desktop/session/x/other")
+                        .unwrap();
+                let bogus: HashMap<&str, Value> = HashMap::from([
+                    ("Latitude", Value::from(1.0)),
+                    ("Longitude", Value::from(1.0)),
+                ]);
+                conn.emit_signal(
+                    Some(sender.as_str()),
+                    PORTAL_PATH,
+                    LOCATION_IFACE,
+                    "LocationUpdated",
+                    &(other, bogus),
+                )
+                .await?;
                 let fix: HashMap<&str, Value> = HashMap::from([
                     ("Latitude", Value::from(48.8584)),
                     ("Longitude", Value::from(2.2945)),
@@ -289,8 +366,14 @@ mod mock_portal {
                     ("Altitude", Value::from(35.0)),
                     ("Description", Value::from("Mock fix")),
                 ]);
-                conn.emit_signal(Some(sender.as_str()), PORTAL_PATH, LOCATION_IFACE, "LocationUpdated", &(session, fix))
-                    .await?;
+                conn.emit_signal(
+                    Some(sender.as_str()),
+                    PORTAL_PATH,
+                    LOCATION_IFACE,
+                    "LocationUpdated",
+                    &(session, fix),
+                )
+                .await?;
             }
             Ok(OwnedObjectPath::try_from(request).unwrap())
         }
@@ -312,8 +395,12 @@ mod mock_portal {
 
     impl Bus {
         fn start() -> Option<Bus> {
-            let n = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).ok()?.as_nanos();
-            let dir = std::env::temp_dir().join(format!("helix-maps-bus-{}-{n}", std::process::id()));
+            let n = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .ok()?
+                .as_nanos();
+            let dir =
+                std::env::temp_dir().join(format!("helix-maps-bus-{}-{n}", std::process::id()));
             std::fs::create_dir_all(&dir).ok()?;
             let config = dir.join("bus.conf");
             std::fs::write(
@@ -347,17 +434,26 @@ mod mock_portal {
                 .spawn()
                 .ok()?;
             let mut line = String::new();
-            BufReader::new(child.stdout.take()?).read_line(&mut line).ok()?;
+            BufReader::new(child.stdout.take()?)
+                .read_line(&mut line)
+                .ok()?;
             let address = line.trim().to_string();
             if address.is_empty() {
                 let _ = child.kill();
                 return None;
             }
-            Some(Bus { child, address, dir })
+            Some(Bus {
+                child,
+                address,
+                dir,
+            })
         }
 
         fn connect(&self) -> Connection {
-            zbus::blocking::connection::Builder::address(self.address.as_str()).unwrap().build().unwrap()
+            zbus::blocking::connection::Builder::address(self.address.as_str())
+                .unwrap()
+                .build()
+                .unwrap()
         }
 
         fn serve(&self, state: Shared) -> Connection {
@@ -391,10 +487,21 @@ mod mock_portal {
     #[test]
     fn granted_fix() {
         let Some(bus) = bus() else { return };
-        let state: Shared = Arc::new(Mutex::new(State { send_fix: true, ..Default::default() }));
+        let state: Shared = Arc::new(Mutex::new(State {
+            send_fix: true,
+            ..Default::default()
+        }));
         let _server = bus.serve(state.clone());
         let fix = locate_on(bus.connect(), ACCURACY_EXACT, Duration::from_secs(10)).unwrap();
-        assert_eq!(fix, Fix { lat: 48.8584, lon: 2.2945, accuracy: 12.0, description: "Mock fix".into() });
+        assert_eq!(
+            fix,
+            Fix {
+                lat: 48.8584,
+                lon: 2.2945,
+                accuracy: 12.0,
+                description: "Mock fix".into()
+            }
+        );
         let s = state.lock().unwrap();
         assert_eq!(s.accuracy_requested, Some(ACCURACY_EXACT));
         assert_eq!(s.sessions.len(), 1);
@@ -404,7 +511,11 @@ mod mock_portal {
     #[test]
     fn denied() {
         let Some(bus) = bus() else { return };
-        let state: Shared = Arc::new(Mutex::new(State { response: 1, send_fix: true, ..Default::default() }));
+        let state: Shared = Arc::new(Mutex::new(State {
+            response: 1,
+            send_fix: true,
+            ..Default::default()
+        }));
         let _server = bus.serve(state.clone());
         let err = locate_on(bus.connect(), ACCURACY_EXACT, Duration::from_secs(10)).unwrap_err();
         assert_eq!(err, "Location access was denied");

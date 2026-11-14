@@ -127,11 +127,17 @@ impl RRule {
                             return None;
                         }
                         let (ord, code) = d.split_at(d.len() - 2);
-                        let ord = if ord.is_empty() { 0 } else { ord.trim_start_matches('+').parse().ok()? };
+                        let ord = if ord.is_empty() {
+                            0
+                        } else {
+                            ord.trim_start_matches('+').parse().ok()?
+                        };
                         r.by_day.push((ord, parse_weekday(code)?));
                     }
                 }
-                "BYMONTHDAY" => r.by_month_day = v.split(',').filter_map(|x| x.parse().ok()).collect(),
+                "BYMONTHDAY" => {
+                    r.by_month_day = v.split(',').filter_map(|x| x.parse().ok()).collect()
+                }
                 "BYMONTH" => r.by_month = v.split(',').filter_map(|x| x.parse().ok()).collect(),
                 "BYSETPOS" => r.by_set_pos = v.split(',').filter_map(|x| x.parse().ok()).collect(),
                 "WKST" => r.wkst = parse_weekday(&v)?,
@@ -144,7 +150,10 @@ impl RRule {
 
     /// Whether the expansion below understands every part of the rule.
     pub fn is_supported(&self) -> bool {
-        matches!(self.freq, Freq::Daily | Freq::Weekly | Freq::Monthly | Freq::Yearly) && self.other.is_empty()
+        matches!(
+            self.freq,
+            Freq::Daily | Freq::Weekly | Freq::Monthly | Freq::Yearly
+        ) && self.other.is_empty()
     }
 
     /// Generates occurrence start times (wall clock, event frame) from
@@ -162,7 +171,11 @@ impl RRule {
         if !self.is_supported() {
             return out;
         }
-        let limit_count = self.count.map(|c| c as usize).unwrap_or(usize::MAX).min(max);
+        let limit_count = self
+            .count
+            .map(|c| c as usize)
+            .unwrap_or(usize::MAX)
+            .min(max);
         let time = dtstart.time();
         let interval = self.interval.max(1) as i64;
         let mut period: i64 = 0;
@@ -177,14 +190,16 @@ impl RRule {
                     let d = dtstart.date() + Duration::days(period * interval);
                     let ok = self.month_ok(d)
                         && (self.by_month_day.is_empty() || self.month_day_ok(d))
-                        && (self.by_day.is_empty() || self.by_day.iter().any(|(_, w)| *w == d.weekday()));
+                        && (self.by_day.is_empty()
+                            || self.by_day.iter().any(|(_, w)| *w == d.weekday()));
                     (d, if ok { vec![d] } else { vec![] })
                 }
                 Freq::Weekly => {
                     let offset = (7 + dtstart.weekday().num_days_from_monday() as i64
                         - self.wkst.num_days_from_monday() as i64)
                         % 7;
-                    let week_start = dtstart.date() - Duration::days(offset) + Duration::weeks(period * interval);
+                    let week_start = dtstart.date() - Duration::days(offset)
+                        + Duration::weeks(period * interval);
                     let days: Vec<Weekday> = if self.by_day.is_empty() {
                         vec![dtstart.weekday()]
                     } else {
@@ -198,8 +213,12 @@ impl RRule {
                     (week_start, c)
                 }
                 Freq::Monthly => {
-                    let total = dtstart.year() as i64 * 12 + dtstart.month0() as i64 + period * interval;
-                    let (y, m) = ((total.div_euclid(12)) as i32, (total.rem_euclid(12)) as u32 + 1);
+                    let total =
+                        dtstart.year() as i64 * 12 + dtstart.month0() as i64 + period * interval;
+                    let (y, m) = (
+                        (total.div_euclid(12)) as i32,
+                        (total.rem_euclid(12)) as u32 + 1,
+                    );
                     let first = NaiveDate::from_ymd_opt(y, m, 1).unwrap();
                     let c = if self.by_month.is_empty() || self.by_month.contains(&m) {
                         self.month_candidates(y, m, dtstart.day())
@@ -210,14 +229,24 @@ impl RRule {
                 }
                 Freq::Yearly => {
                     let y = dtstart.year() + (period * interval) as i32;
-                    let Some(first) = NaiveDate::from_ymd_opt(y, 1, 1) else { break };
+                    let Some(first) = NaiveDate::from_ymd_opt(y, 1, 1) else {
+                        break;
+                    };
                     let mut c = Vec::new();
-                    if self.by_month.is_empty() && self.by_month_day.is_empty() && !self.by_day.is_empty() {
+                    if self.by_month.is_empty()
+                        && self.by_month_day.is_empty()
+                        && !self.by_day.is_empty()
+                    {
                         // BYDAY relative to the whole year.
-                        let days: Vec<NaiveDate> = first.iter_days().take_while(|d| d.year() == y).collect();
+                        let days: Vec<NaiveDate> =
+                            first.iter_days().take_while(|d| d.year() == y).collect();
                         c = select_by_day(&days, &self.by_day);
                     } else {
-                        let months = if self.by_month.is_empty() { vec![dtstart.month()] } else { self.by_month.clone() };
+                        let months = if self.by_month.is_empty() {
+                            vec![dtstart.month()]
+                        } else {
+                            self.by_month.clone()
+                        };
                         for m in months {
                             c.extend(self.month_candidates(y, m, dtstart.day()));
                         }
@@ -254,7 +283,9 @@ impl RRule {
                     break 'outer;
                 }
             }
-            if period_start.and_time(time) > horizon || until.is_some_and(|u| period_start.and_time(time) > u) {
+            if period_start.and_time(time) > horizon
+                || until.is_some_and(|u| period_start.and_time(time) > u)
+            {
                 break;
             }
             period += 1;
@@ -275,10 +306,14 @@ impl RRule {
     }
 
     fn month_candidates(&self, y: i32, m: u32, default_day: u32) -> Vec<NaiveDate> {
-        let Some(first) = NaiveDate::from_ymd_opt(y, m, 1) else { return vec![] };
+        let Some(first) = NaiveDate::from_ymd_opt(y, m, 1) else {
+            return vec![];
+        };
         let days: Vec<NaiveDate> = first.iter_days().take_while(|d| d.month() == m).collect();
         let mut c: Vec<NaiveDate> = if self.by_day.is_empty() && self.by_month_day.is_empty() {
-            NaiveDate::from_ymd_opt(y, m, default_day).into_iter().collect()
+            NaiveDate::from_ymd_opt(y, m, default_day)
+                .into_iter()
+                .collect()
         } else if self.by_day.is_empty() {
             days.into_iter().filter(|d| self.month_day_ok(*d)).collect()
         } else {
@@ -298,7 +333,11 @@ impl RRule {
 fn select_by_day(days: &[NaiveDate], by_day: &[(i32, Weekday)]) -> Vec<NaiveDate> {
     let mut out = Vec::new();
     for (ord, wd) in by_day {
-        let matching: Vec<NaiveDate> = days.iter().copied().filter(|d| d.weekday() == *wd).collect();
+        let matching: Vec<NaiveDate> = days
+            .iter()
+            .copied()
+            .filter(|d| d.weekday() == *wd)
+            .collect();
         if *ord == 0 {
             out.extend(matching);
         } else {
@@ -328,7 +367,9 @@ fn parse_until(v: &str) -> Option<Until> {
     }
     let utc = v.ends_with('Z');
     let v = v.trim_end_matches('Z');
-    NaiveDateTime::parse_from_str(v, "%Y%m%dT%H%M%S").ok().map(|value| Until::DateTime { value, utc })
+    NaiveDateTime::parse_from_str(v, "%Y%m%dT%H%M%S")
+        .ok()
+        .map(|value| Until::DateTime { value, utc })
 }
 
 impl std::fmt::Display for RRule {
@@ -342,20 +383,34 @@ impl std::fmt::Display for RRule {
         }
         match self.until {
             Some(Until::Date(d)) => write!(f, ";UNTIL={}", d.format("%Y%m%d"))?,
-            Some(Until::DateTime { value, utc }) => {
-                write!(f, ";UNTIL={}{}", value.format("%Y%m%dT%H%M%S"), if utc { "Z" } else { "" })?
-            }
+            Some(Until::DateTime { value, utc }) => write!(
+                f,
+                ";UNTIL={}{}",
+                value.format("%Y%m%dT%H%M%S"),
+                if utc { "Z" } else { "" }
+            )?,
             None => {}
         }
         if !self.by_day.is_empty() {
             let v: Vec<String> = self
                 .by_day
                 .iter()
-                .map(|(o, w)| if *o == 0 { weekday_code(*w).to_string() } else { format!("{o}{}", weekday_code(*w)) })
+                .map(|(o, w)| {
+                    if *o == 0 {
+                        weekday_code(*w).to_string()
+                    } else {
+                        format!("{o}{}", weekday_code(*w))
+                    }
+                })
                 .collect();
             write!(f, ";BYDAY={}", v.join(","))?;
         }
-        let join = |v: &[i32]| v.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(",");
+        let join = |v: &[i32]| {
+            v.iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        };
         if !self.by_month_day.is_empty() {
             write!(f, ";BYMONTHDAY={}", join(&self.by_month_day))?;
         }
@@ -395,16 +450,31 @@ mod tests {
     #[test]
     fn daily_with_count_and_interval() {
         let r = RRule::parse("FREQ=DAILY;INTERVAL=2;COUNT=3").unwrap();
-        assert_eq!(fmt(&r.occurrences(dt("2026-01-30 09:00"), None, far(), 1000)), ["2026-01-30", "2026-02-01", "2026-02-03"]);
+        assert_eq!(
+            fmt(&r.occurrences(dt("2026-01-30 09:00"), None, far(), 1000)),
+            ["2026-01-30", "2026-02-01", "2026-02-03"]
+        );
     }
 
     #[test]
     fn weekly_byday_until() {
         let r = RRule::parse("FREQ=WEEKLY;BYDAY=MO,WE,FR;UNTIL=20261113T235959Z").unwrap();
-        let o = r.occurrences(dt("2026-11-02 10:00"), Some(dt("2026-11-13 23:59")), far(), 1000);
+        let o = r.occurrences(
+            dt("2026-11-02 10:00"),
+            Some(dt("2026-11-13 23:59")),
+            far(),
+            1000,
+        );
         assert_eq!(
             fmt(&o),
-            ["2026-11-02", "2026-11-04", "2026-11-06", "2026-11-09", "2026-11-11", "2026-11-13"]
+            [
+                "2026-11-02",
+                "2026-11-04",
+                "2026-11-06",
+                "2026-11-09",
+                "2026-11-11",
+                "2026-11-13"
+            ]
         );
     }
 
@@ -413,14 +483,20 @@ mod tests {
         let r = RRule::parse("FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,SU;WKST=SU;COUNT=4").unwrap();
         // RFC 5545 example: starting Tue 1997-08-05.
         let o = r.occurrences(dt("1997-08-05 09:00"), None, far(), 100);
-        assert_eq!(fmt(&o), ["1997-08-05", "1997-08-17", "1997-08-19", "1997-08-31"]);
+        assert_eq!(
+            fmt(&o),
+            ["1997-08-05", "1997-08-17", "1997-08-19", "1997-08-31"]
+        );
     }
 
     #[test]
     fn monthly_by_month_day_skips_short_months() {
         let r = RRule::parse("FREQ=MONTHLY;COUNT=4").unwrap();
         let o = r.occurrences(dt("2026-01-31 08:00"), None, far(), 100);
-        assert_eq!(fmt(&o), ["2026-01-31", "2026-03-31", "2026-05-31", "2026-07-31"]);
+        assert_eq!(
+            fmt(&o),
+            ["2026-01-31", "2026-03-31", "2026-05-31", "2026-07-31"]
+        );
     }
 
     #[test]
@@ -465,13 +541,20 @@ mod tests {
         assert!(!r.is_supported());
         assert!(RRule::parse("INTERVAL=2").is_none());
         let u = RRule::parse("FREQ=DAILY;UNTIL=20260105").unwrap();
-        assert_eq!(u.until, Some(Until::Date(NaiveDate::from_ymd_opt(2026, 1, 5).unwrap())));
+        assert_eq!(
+            u.until,
+            Some(Until::Date(NaiveDate::from_ymd_opt(2026, 1, 5).unwrap()))
+        );
         assert_eq!(u.to_string(), "FREQ=DAILY;UNTIL=20260105");
     }
 
     #[test]
     fn unsupported_yields_only_dtstart() {
         let r = RRule::parse("FREQ=HOURLY;COUNT=5").unwrap();
-        assert_eq!(r.occurrences(dt("2026-01-01 09:00"), None, far(), 100).len(), 1);
+        assert_eq!(
+            r.occurrences(dt("2026-01-01 09:00"), None, far(), 100)
+                .len(),
+            1
+        );
     }
 }

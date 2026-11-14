@@ -64,8 +64,13 @@ fn push_value(out: &mut Vec<(String, String)>, key: &str, v: &Value, nested: boo
 
 impl Entry {
     #[cfg(test)]
-    pub fn from_fields<K: Into<String>, V: Into<String>>(fields: impl IntoIterator<Item = (K, V)>) -> Self {
-        let mut fields: Vec<(String, String)> = fields.into_iter().map(|(k, v)| (k.into(), v.into())).collect();
+    pub fn from_fields<K: Into<String>, V: Into<String>>(
+        fields: impl IntoIterator<Item = (K, V)>,
+    ) -> Self {
+        let mut fields: Vec<(String, String)> = fields
+            .into_iter()
+            .map(|(k, v)| (k.into(), v.into()))
+            .collect();
         fields.sort_by(|a, b| a.0.cmp(&b.0));
         Entry { fields }
     }
@@ -73,7 +78,9 @@ impl Entry {
     /// Parses one line of `journalctl -o json` output.
     pub fn parse(line: &str) -> Result<Entry, ParseError> {
         let v: Value = serde_json::from_str(line).map_err(|e| ParseError::Json(e.to_string()))?;
-        let Value::Object(map) = v else { return Err(ParseError::NotAnObject) };
+        let Value::Object(map) = v else {
+            return Err(ParseError::NotAnObject);
+        };
         let mut fields = Vec::with_capacity(map.len());
         for (k, v) in &map {
             push_value(&mut fields, k, v, false);
@@ -86,13 +93,19 @@ impl Entry {
     /// First value of `key`.
     pub fn get(&self, key: &str) -> Option<&str> {
         let i = self.fields.partition_point(|(k, _)| k.as_str() < key);
-        self.fields.get(i).filter(|(k, _)| k == key).map(|(_, v)| v.as_str())
+        self.fields
+            .get(i)
+            .filter(|(k, _)| k == key)
+            .map(|(_, v)| v.as_str())
     }
 
     /// All values of `key`.
     pub fn get_all<'a>(&'a self, key: &'a str) -> impl Iterator<Item = &'a str> + 'a {
         let i = self.fields.partition_point(|(k, _)| k.as_str() < key);
-        self.fields[i..].iter().take_while(move |(k, _)| k == key).map(|(_, v)| v.as_str())
+        self.fields[i..]
+            .iter()
+            .take_while(move |(k, _)| k == key)
+            .map(|(_, v)| v.as_str())
     }
 
     pub fn has(&self, key: &str) -> bool {
@@ -105,7 +118,10 @@ impl Entry {
 
     /// Syslog priority 0 (emerg) … 7 (debug); 6 (info) when absent.
     pub fn priority(&self) -> u8 {
-        self.get("PRIORITY").and_then(|p| p.trim().parse::<u8>().ok()).filter(|p| *p <= 7).unwrap_or(6)
+        self.get("PRIORITY")
+            .and_then(|p| p.trim().parse::<u8>().ok())
+            .filter(|p| *p <= 7)
+            .unwrap_or(6)
     }
 
     /// Wall-clock time in microseconds since the epoch.
@@ -121,7 +137,11 @@ impl Entry {
 
     /// Name of the originating process.
     pub fn process(&self) -> &str {
-        if let Some(p) = self.get("SYSLOG_IDENTIFIER").or_else(|| self.get("_COMM")).filter(|s| !s.is_empty()) {
+        if let Some(p) = self
+            .get("SYSLOG_IDENTIFIER")
+            .or_else(|| self.get("_COMM"))
+            .filter(|s| !s.is_empty())
+        {
             return p;
         }
         if self.transport() == "kernel" {
@@ -149,7 +169,12 @@ impl Entry {
         for f in FIRST {
             out.extend(self.get_all(f).map(|v| (f, v)));
         }
-        out.extend(self.fields.iter().filter(|(k, _)| !FIRST.contains(&k.as_str())).map(|(k, v)| (k.as_str(), v.as_str())));
+        out.extend(
+            self.fields
+                .iter()
+                .filter(|(k, _)| !FIRST.contains(&k.as_str()))
+                .map(|(k, v)| (k.as_str(), v.as_str())),
+        );
         out
     }
 
@@ -198,7 +223,8 @@ pub fn parse_boots_json(s: &str) -> Option<Vec<Boot>> {
     let arr = v.as_array()?;
     let num = |v: Option<&Value>| -> Option<i64> {
         let v = v?;
-        v.as_i64().or_else(|| v.as_str().and_then(|s| s.parse().ok()))
+        v.as_i64()
+            .or_else(|| v.as_str().and_then(|s| s.parse().ok()))
     };
     let mut boots: Vec<Boot> = arr
         .iter()
@@ -229,8 +255,18 @@ pub fn parse_boots_text(s: &str) -> Vec<Boot> {
                 return None;
             }
             let rest: Vec<&str> = parts.collect();
-            let range_text = if rest.is_empty() { None } else { Some(rest.join(" ").replace('—', " – ")) };
-            Some(Boot { index, id: id.to_string(), first: None, last: None, range_text })
+            let range_text = if rest.is_empty() {
+                None
+            } else {
+                Some(rest.join(" ").replace('—', " – "))
+            };
+            Some(Boot {
+                index,
+                id: id.to_string(),
+                first: None,
+                last: None,
+                range_text,
+            })
         })
         .collect();
     boots.sort_by_key(|b| std::cmp::Reverse(b.index));
@@ -256,7 +292,12 @@ impl QueryArgs {
     /// `after_cursor` (or, without a cursor, only entries written from now
     /// on), oldest first. `limit`, `since` and `reverse` do not apply.
     pub fn follow_args(&self, after_cursor: Option<&str>) -> Vec<String> {
-        let base = QueryArgs { reverse: false, limit: None, since: None, ..self.clone() };
+        let base = QueryArgs {
+            reverse: false,
+            limit: None,
+            since: None,
+            ..self.clone()
+        };
         let mut a = base.to_args();
         let mut extra = vec!["--follow".to_string()];
         match after_cursor {
@@ -264,7 +305,10 @@ impl QueryArgs {
             None => extra.push("--lines=0".into()),
         }
         // Options must precede the field matches.
-        let at = a.iter().position(|x| x.starts_with("--boot=")).map_or(a.len(), |i| i + 1);
+        let at = a
+            .iter()
+            .position(|x| x.starts_with("--boot="))
+            .map_or(a.len(), |i| i + 1);
         a.splice(at..at, extra);
         a
     }
@@ -272,7 +316,12 @@ impl QueryArgs {
     /// Arguments that print only the newest entry of the boot, unfiltered,
     /// to learn the cursor that live following starts after.
     pub fn tail_args(&self) -> Vec<String> {
-        let base = QueryArgs { boot: self.boot.clone(), reverse: true, limit: Some(1), ..Default::default() };
+        let base = QueryArgs {
+            boot: self.boot.clone(),
+            reverse: true,
+            limit: Some(1),
+            ..Default::default()
+        };
         base.to_args()
     }
 }
@@ -322,7 +371,9 @@ pub fn can_read_system_journal(uid: u32, gids: &[u32], group_file: &str) -> bool
     const GROUPS: [&str; 3] = ["systemd-journal", "adm", "wheel"];
     group_file.lines().any(|line| {
         let mut p = line.split(':');
-        let (Some(name), _, Some(gid)) = (p.next(), p.next(), p.next()) else { return false };
+        let (Some(name), _, Some(gid)) = (p.next(), p.next(), p.next()) else {
+            return false;
+        };
         GROUPS.contains(&name) && gid.parse::<u32>().is_ok_and(|g| gids.contains(&g))
     })
 }
@@ -332,7 +383,11 @@ pub fn parse_proc_groups(status: &str) -> Vec<u32> {
     status
         .lines()
         .find_map(|l| l.strip_prefix("Groups:"))
-        .map(|g| g.split_whitespace().filter_map(|n| n.parse().ok()).collect())
+        .map(|g| {
+            g.split_whitespace()
+                .filter_map(|n| n.parse().ok())
+                .collect()
+        })
         .unwrap_or_default()
 }
 
@@ -343,7 +398,11 @@ mod tests {
     const FIXTURE: &str = include_str!("../tests/fixtures/journal.jsonl");
 
     fn fixture() -> Vec<Entry> {
-        FIXTURE.lines().filter(|l| !l.trim().is_empty()).map(|l| Entry::parse(l).unwrap()).collect()
+        FIXTURE
+            .lines()
+            .filter(|l| !l.trim().is_empty())
+            .map(|l| Entry::parse(l).unwrap())
+            .collect()
     }
 
     #[test]
@@ -427,7 +486,11 @@ mod tests {
         assert_eq!(b[0].index, 0);
         assert_eq!(b[0].id, "920f917b2c9e49b4ae70ef5fabbe99e6");
         assert_eq!(b[1].index, -1);
-        assert!(b[1].range_text.as_deref().unwrap().starts_with("Tue 2026-10-13"));
+        assert!(b[1]
+            .range_text
+            .as_deref()
+            .unwrap()
+            .starts_with("Tue 2026-10-13"));
     }
 
     #[test]
@@ -438,16 +501,31 @@ mod tests {
             limit: Some(10),
             reverse: true,
             max_priority: Some(3),
-            any_of: vec![("_TRANSPORT".into(), "audit".into()), ("SYSLOG_FACILITY".into(), "4".into())],
+            any_of: vec![
+                ("_TRANSPORT".into(), "audit".into()),
+                ("SYSLOG_FACILITY".into(), "4".into()),
+            ],
         };
         assert_eq!(
             q.to_args(),
             [
-                "--no-pager", "-o", "json", "--boot=abc", "--reverse", "--since=2026-01-01", "--lines=10",
-                "--priority=3", "_TRANSPORT=audit", "+", "SYSLOG_FACILITY=4"
+                "--no-pager",
+                "-o",
+                "json",
+                "--boot=abc",
+                "--reverse",
+                "--since=2026-01-01",
+                "--lines=10",
+                "--priority=3",
+                "_TRANSPORT=audit",
+                "+",
+                "SYSLOG_FACILITY=4"
             ]
         );
-        assert_eq!(QueryArgs::default().to_args(), ["--no-pager", "-o", "json", "--boot=0"]);
+        assert_eq!(
+            QueryArgs::default().to_args(),
+            ["--no-pager", "-o", "json", "--boot=0"]
+        );
     }
 
     #[test]
@@ -457,21 +535,49 @@ mod tests {
             limit: Some(10),
             reverse: true,
             max_priority: Some(3),
-            any_of: vec![("_UID".into(), "1000".into()), ("_SYSTEMD_OWNER_UID".into(), "1000".into())],
+            any_of: vec![
+                ("_UID".into(), "1000".into()),
+                ("_SYSTEMD_OWNER_UID".into(), "1000".into()),
+            ],
             ..Default::default()
         };
         assert_eq!(
             q.follow_args(Some("s=1;i=2")),
             [
-                "--no-pager", "-o", "json", "--boot=abc", "--follow", "--after-cursor=s=1;i=2", "--priority=3",
-                "_UID=1000", "+", "_SYSTEMD_OWNER_UID=1000"
+                "--no-pager",
+                "-o",
+                "json",
+                "--boot=abc",
+                "--follow",
+                "--after-cursor=s=1;i=2",
+                "--priority=3",
+                "_UID=1000",
+                "+",
+                "_SYSTEMD_OWNER_UID=1000"
             ]
         );
         assert_eq!(
             QueryArgs::default().follow_args(None),
-            ["--no-pager", "-o", "json", "--boot=0", "--follow", "--lines=0"]
+            [
+                "--no-pager",
+                "-o",
+                "json",
+                "--boot=0",
+                "--follow",
+                "--lines=0"
+            ]
         );
-        assert_eq!(q.tail_args(), ["--no-pager", "-o", "json", "--boot=abc", "--reverse", "--lines=1"]);
+        assert_eq!(
+            q.tail_args(),
+            [
+                "--no-pager",
+                "-o",
+                "json",
+                "--boot=abc",
+                "--reverse",
+                "--lines=1"
+            ]
+        );
     }
 
     #[test]
@@ -481,7 +587,10 @@ mod tests {
         assert!(can_read_system_journal(1000, &[1000, 4], groups));
         assert!(can_read_system_journal(1000, &[101], groups));
         assert!(!can_read_system_journal(1000, &[1000, 27], groups));
-        assert_eq!(parse_proc_groups("Name:\tx\nGroups:\t4 24 27 \nX: 1"), [4, 24, 27]);
+        assert_eq!(
+            parse_proc_groups("Name:\tx\nGroups:\t4 24 27 \nX: 1"),
+            [4, 24, 27]
+        );
         assert!(is_limited_access_hint(
             "Hint: You are currently not seeing messages from other users and the system."
         ));

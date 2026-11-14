@@ -12,11 +12,15 @@ pub struct VCard {
 
 impl VCard {
     pub fn get(&self, name: &str) -> Option<&Property> {
-        self.props.iter().find(|p| p.name.eq_ignore_ascii_case(name))
+        self.props
+            .iter()
+            .find(|p| p.name.eq_ignore_ascii_case(name))
     }
 
     pub fn all<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a Property> + 'a {
-        self.props.iter().filter(move |p| p.name.eq_ignore_ascii_case(name))
+        self.props
+            .iter()
+            .filter(move |p| p.name.eq_ignore_ascii_case(name))
     }
 
     pub fn remove_all(&mut self, name: &str) {
@@ -24,7 +28,9 @@ impl VCard {
     }
 
     pub fn version(&self) -> &str {
-        self.get("VERSION").map(|p| p.value.as_str()).unwrap_or("3.0")
+        self.get("VERSION")
+            .map(|p| p.value.as_str())
+            .unwrap_or("3.0")
     }
 
     /// Serializes with CRLF line endings and folding.
@@ -48,7 +54,9 @@ pub fn parse_many(text: &str) -> Vec<VCard> {
     let mut cur: Option<VCard> = None;
     let mut depth = 0;
     for line in contentline::unfold(text) {
-        let Some(p) = contentline::parse_line(&line) else { continue };
+        let Some(p) = contentline::parse_line(&line) else {
+            continue;
+        };
         if p.name == "BEGIN" && p.value.eq_ignore_ascii_case("VCARD") {
             depth += 1;
             if depth == 1 {
@@ -89,17 +97,31 @@ pub struct StructuredName {
 
 impl StructuredName {
     pub fn is_empty(&self) -> bool {
-        [&self.family, &self.given, &self.additional, &self.prefix, &self.suffix].iter().all(|s| s.is_empty())
+        [
+            &self.family,
+            &self.given,
+            &self.additional,
+            &self.prefix,
+            &self.suffix,
+        ]
+        .iter()
+        .all(|s| s.is_empty())
     }
 
     /// "Prefix Given Additional Family Suffix" with empty parts skipped.
     pub fn display(&self) -> String {
-        [&self.prefix, &self.given, &self.additional, &self.family, &self.suffix]
-            .iter()
-            .filter(|s| !s.is_empty())
-            .map(|s| s.as_str())
-            .collect::<Vec<_>>()
-            .join(" ")
+        [
+            &self.prefix,
+            &self.given,
+            &self.additional,
+            &self.family,
+            &self.suffix,
+        ]
+        .iter()
+        .filter(|s| !s.is_empty())
+        .map(|s| s.as_str())
+        .collect::<Vec<_>>()
+        .join(" ")
     }
 
     /// Splits a free-form full name into given/family parts (last word is the
@@ -108,7 +130,10 @@ impl StructuredName {
         let words: Vec<&str> = full.split_whitespace().collect();
         match words.len() {
             0 => StructuredName::default(),
-            1 => StructuredName { given: words[0].to_string(), ..Default::default() },
+            1 => StructuredName {
+                given: words[0].to_string(),
+                ..Default::default()
+            },
             n => StructuredName {
                 given: words[0].to_string(),
                 additional: words[1..n - 1].join(" "),
@@ -130,7 +155,11 @@ pub struct Typed {
 
 impl Typed {
     pub fn new(types: &[&str], value: &str) -> Typed {
-        Typed { types: types.iter().map(|t| t.to_ascii_uppercase()).collect(), value: value.to_string(), pref: false }
+        Typed {
+            types: types.iter().map(|t| t.to_ascii_uppercase()).collect(),
+            value: value.to_string(),
+            pref: false,
+        }
     }
 
     pub fn has(&self, t: &str) -> bool {
@@ -152,9 +181,17 @@ pub struct Address {
 
 impl Address {
     pub fn is_empty(&self) -> bool {
-        [&self.po_box, &self.extended, &self.street, &self.locality, &self.region, &self.postal_code, &self.country]
-            .iter()
-            .all(|s| s.trim().is_empty())
+        [
+            &self.po_box,
+            &self.extended,
+            &self.street,
+            &self.locality,
+            &self.region,
+            &self.postal_code,
+            &self.country,
+        ]
+        .iter()
+        .all(|s| s.trim().is_empty())
     }
 
     /// Multi-line postal formatting (street, extended, PO box, "locality
@@ -166,8 +203,11 @@ impl Address {
                 lines.push(l.trim().to_string());
             }
         }
-        let city: Vec<&str> =
-            [&self.locality, &self.region, &self.postal_code].iter().map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
+        let city: Vec<&str> = [&self.locality, &self.region, &self.postal_code]
+            .iter()
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .collect();
         if !city.is_empty() {
             lines.push(city.join(" "));
         }
@@ -225,9 +265,28 @@ pub struct Contact {
 }
 
 const MANAGED: &[&str] = &[
-    "VERSION", "UID", "FN", "N", "NICKNAME", "ORG", "TITLE", "ROLE", "EMAIL", "TEL", "ADR", "URL", "IMPP",
-    "BDAY", "ANNIVERSARY", "X-EVOLUTION-ANNIVERSARY", "NOTE", "CATEGORIES", "PHOTO", "X-EVOLUTION-FILE-AS",
-    "X-EVOLUTION-LIST", "REV",
+    "VERSION",
+    "UID",
+    "FN",
+    "N",
+    "NICKNAME",
+    "ORG",
+    "TITLE",
+    "ROLE",
+    "EMAIL",
+    "TEL",
+    "ADR",
+    "URL",
+    "IMPP",
+    "BDAY",
+    "ANNIVERSARY",
+    "X-EVOLUTION-ANNIVERSARY",
+    "NOTE",
+    "CATEGORIES",
+    "PHOTO",
+    "X-EVOLUTION-FILE-AS",
+    "X-EVOLUTION-LIST",
+    "REV",
 ];
 
 fn types_of(p: &Property) -> (Vec<String>, bool) {
@@ -246,12 +305,19 @@ fn types_of(p: &Property) -> (Vec<String>, bool) {
 
 fn typed(p: &Property) -> Typed {
     let (types, pref) = types_of(p);
-    Typed { types, value: p.text_value(), pref }
+    Typed {
+        types,
+        value: p.text_value(),
+        pref,
+    }
 }
 
 impl Contact {
     pub fn from_vcard(card: &VCard) -> Contact {
-        let mut c = Contact { version: card.version().to_string(), ..Default::default() };
+        let mut c = Contact {
+            version: card.version().to_string(),
+            ..Default::default()
+        };
         for p in &card.props {
             match p.name.as_str() {
                 "VERSION" => {}
@@ -339,7 +405,11 @@ impl Contact {
                 .collect::<Vec<_>>()
                 .join(";"),
         ));
-        let file_as = if self.file_as.trim().is_empty() { self.default_file_as() } else { self.file_as.clone() };
+        let file_as = if self.file_as.trim().is_empty() {
+            self.default_file_as()
+        } else {
+            self.file_as.clone()
+        };
         props.push(Property::text("X-EVOLUTION-FILE-AS", &file_as));
         if !self.nickname.is_empty() {
             props.push(Property::text("NICKNAME", &self.nickname));
@@ -373,11 +443,19 @@ impl Contact {
         push_typed(&mut props, "EMAIL", &self.emails);
         push_typed(&mut props, "TEL", &self.phones);
         for a in self.addresses.iter().filter(|a| !a.is_empty()) {
-            let v = [&a.po_box, &a.extended, &a.street, &a.locality, &a.region, &a.postal_code, &a.country]
-                .iter()
-                .map(|s| escape_text(s.trim()))
-                .collect::<Vec<_>>()
-                .join(";");
+            let v = [
+                &a.po_box,
+                &a.extended,
+                &a.street,
+                &a.locality,
+                &a.region,
+                &a.postal_code,
+                &a.country,
+            ]
+            .iter()
+            .map(|s| escape_text(s.trim()))
+            .collect::<Vec<_>>()
+            .join(";");
             let mut p = Property::new("ADR", v);
             for ty in &a.types {
                 p.add_param("TYPE", ty);
@@ -390,7 +468,10 @@ impl Contact {
             props.push(Property::new("BDAY", self.birthday.clone()));
         }
         if !self.anniversary.is_empty() {
-            props.push(Property::new("X-EVOLUTION-ANNIVERSARY", self.anniversary.clone()));
+            props.push(Property::new(
+                "X-EVOLUTION-ANNIVERSARY",
+                self.anniversary.clone(),
+            ));
         }
         if !self.note.is_empty() {
             props.push(Property::text("NOTE", &self.note));
@@ -398,12 +479,19 @@ impl Contact {
         if !self.categories.is_empty() {
             props.push(Property::new(
                 "CATEGORIES",
-                self.categories.iter().map(|c| escape_text(c)).collect::<Vec<_>>().join(","),
+                self.categories
+                    .iter()
+                    .map(|c| escape_text(c))
+                    .collect::<Vec<_>>()
+                    .join(","),
             ));
         }
         match &self.photo {
             Some(Photo::Inline { mime, data }) => {
-                let mut p = Property::new("PHOTO", base64::engine::general_purpose::STANDARD.encode(data));
+                let mut p = Property::new(
+                    "PHOTO",
+                    base64::engine::general_purpose::STANDARD.encode(data),
+                );
                 p.add_param("ENCODING", "b");
                 if let Some(m) = mime {
                     let sub = m.rsplit('/').next().unwrap_or(m).to_ascii_uppercase();
@@ -411,7 +499,9 @@ impl Contact {
                 }
                 props.push(p);
             }
-            Some(Photo::Uri(uri)) => props.push(Property::new("PHOTO", uri.clone()).with_param("VALUE", "uri")),
+            Some(Photo::Uri(uri)) => {
+                props.push(Property::new("PHOTO", uri.clone()).with_param("VALUE", "uri"))
+            }
             None => {}
         }
         if self.is_list {
@@ -420,7 +510,12 @@ impl Contact {
         if !self.rev.is_empty() {
             props.push(Property::new("REV", self.rev.clone()));
         }
-        props.extend(self.extra.iter().filter(|p| !MANAGED.contains(&p.name.as_str())).cloned());
+        props.extend(
+            self.extra
+                .iter()
+                .filter(|p| !MANAGED.contains(&p.name.as_str()))
+                .cloned(),
+        );
         VCard { props }
     }
 
@@ -436,10 +531,19 @@ impl Contact {
             self.name.display(),
             self.nickname.trim().to_string(),
             self.org.trim().to_string(),
-            self.emails.first().map(|e| e.value.clone()).unwrap_or_default(),
-            self.phones.first().map(|e| e.value.clone()).unwrap_or_default(),
+            self.emails
+                .first()
+                .map(|e| e.value.clone())
+                .unwrap_or_default(),
+            self.phones
+                .first()
+                .map(|e| e.value.clone())
+                .unwrap_or_default(),
         ];
-        candidates.into_iter().find(|s| !s.is_empty()).unwrap_or_default()
+        candidates
+            .into_iter()
+            .find(|s| !s.is_empty())
+            .unwrap_or_default()
     }
 
     pub fn default_file_as(&self) -> String {
@@ -483,15 +587,28 @@ impl Contact {
         if hay.iter().any(|h| h.to_lowercase().contains(&needle)) {
             return true;
         }
-        if self.emails.iter().chain(self.urls.iter()).any(|e| e.value.to_lowercase().contains(&needle)) {
-            return true;
-        }
-        if digits.len() >= 3
-            && self.phones.iter().any(|p| p.value.chars().filter(|c| c.is_ascii_digit()).collect::<String>().contains(&digits))
+        if self
+            .emails
+            .iter()
+            .chain(self.urls.iter())
+            .any(|e| e.value.to_lowercase().contains(&needle))
         {
             return true;
         }
-        self.addresses.iter().any(|a| a.one_line().to_lowercase().contains(&needle))
+        if digits.len() >= 3
+            && self.phones.iter().any(|p| {
+                p.value
+                    .chars()
+                    .filter(|c| c.is_ascii_digit())
+                    .collect::<String>()
+                    .contains(&digits)
+            })
+        {
+            return true;
+        }
+        self.addresses
+            .iter()
+            .any(|a| a.one_line().to_lowercase().contains(&needle))
     }
 
     pub fn photo_bytes(&self) -> Option<Vec<u8>> {
@@ -528,14 +645,22 @@ fn decode_photo(p: &Property) -> Option<Photo> {
     let value = p.value.trim();
     if let Some(rest) = value.strip_prefix("data:") {
         let (meta, data) = rest.split_once(',')?;
-        let mime = meta.split(';').next().filter(|m| !m.is_empty()).map(str::to_string);
-        let bytes = base64::engine::general_purpose::STANDARD.decode(data.trim()).ok()?;
+        let mime = meta
+            .split(';')
+            .next()
+            .filter(|m| !m.is_empty())
+            .map(str::to_string);
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(data.trim())
+            .ok()?;
         return Some(Photo::Inline { mime, data: bytes });
     }
     let enc = p.param("ENCODING").unwrap_or("").to_ascii_lowercase();
     if enc == "b" || enc == "base64" {
         let clean: String = value.chars().filter(|c| !c.is_whitespace()).collect();
-        let bytes = base64::engine::general_purpose::STANDARD.decode(clean).ok()?;
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(clean)
+            .ok()?;
         let mime = p.param("TYPE").map(|t| {
             if t.contains('/') {
                 t.to_ascii_lowercase()
@@ -597,18 +722,28 @@ pub const PHONE_TYPES: &[(&str, &[&str])] = &[
 ];
 
 /// Email / address / URL type choices: (label, TYPE values).
-pub const GENERIC_TYPES: &[(&str, &[&str])] = &[("Personal", &["HOME"]), ("Work", &["WORK"]), ("Other", &["OTHER"])];
+pub const GENERIC_TYPES: &[(&str, &[&str])] = &[
+    ("Personal", &["HOME"]),
+    ("Work", &["WORK"]),
+    ("Other", &["OTHER"]),
+];
 
 /// Index into [`PHONE_TYPES`] that best matches `t`.
 pub fn phone_type_index(t: &Typed) -> usize {
     let label = phone_label(t);
-    PHONE_TYPES.iter().position(|(l, _)| *l == label).unwrap_or(PHONE_TYPES.len() - 1)
+    PHONE_TYPES
+        .iter()
+        .position(|(l, _)| *l == label)
+        .unwrap_or(PHONE_TYPES.len() - 1)
 }
 
 /// Index into [`GENERIC_TYPES`] that best matches `types`.
 pub fn generic_type_index(types: &[String]) -> usize {
     let label = generic_label(types);
-    GENERIC_TYPES.iter().position(|(l, _)| *l == label).unwrap_or(GENERIC_TYPES.len() - 1)
+    GENERIC_TYPES
+        .iter()
+        .position(|(l, _)| *l == label)
+        .unwrap_or(GENERIC_TYPES.len() - 1)
 }
 
 /// Parses a vCard date (`YYYY-MM-DD`, `YYYYMMDD`, `--MMDD`, `--MM-DD`, with an
@@ -663,7 +798,10 @@ mod tests {
         assert_eq!(phone_label(&c.phones[0]), "Mobile");
         assert_eq!(phone_label(&c.phones[1]), "Work Fax");
         assert_eq!(c.addresses[0].street, "12 St James, Square");
-        assert_eq!(c.addresses[0].formatted(), "12 St James, Square\nLondon SW1Y\nUK");
+        assert_eq!(
+            c.addresses[0].formatted(),
+            "12 St James, Square\nLondon SW1Y\nUK"
+        );
         assert_eq!(c.note, "First programmer\nof sorts");
         assert_eq!(c.categories, vec!["Friends", "Science"]);
         assert_eq!(c.extra.len(), 2);
@@ -710,10 +848,28 @@ mod tests {
 
     #[test]
     fn photo_inline_v3_and_v4() {
-        let v3 = Contact::parse("BEGIN:VCARD\nVERSION:3.0\nPHOTO;ENCODING=b;TYPE=PNG:aGVs\n bG8=\nEND:VCARD\n").unwrap();
-        assert_eq!(v3.photo, Some(Photo::Inline { mime: Some("image/png".into()), data: b"hello".to_vec() }));
-        let v4 = Contact::parse("BEGIN:VCARD\nVERSION:4.0\nPHOTO:data:image/jpeg;base64,aGVsbG8=\nEND:VCARD\n").unwrap();
-        assert_eq!(v4.photo, Some(Photo::Inline { mime: Some("image/jpeg".into()), data: b"hello".to_vec() }));
+        let v3 = Contact::parse(
+            "BEGIN:VCARD\nVERSION:3.0\nPHOTO;ENCODING=b;TYPE=PNG:aGVs\n bG8=\nEND:VCARD\n",
+        )
+        .unwrap();
+        assert_eq!(
+            v3.photo,
+            Some(Photo::Inline {
+                mime: Some("image/png".into()),
+                data: b"hello".to_vec()
+            })
+        );
+        let v4 = Contact::parse(
+            "BEGIN:VCARD\nVERSION:4.0\nPHOTO:data:image/jpeg;base64,aGVsbG8=\nEND:VCARD\n",
+        )
+        .unwrap();
+        assert_eq!(
+            v4.photo,
+            Some(Photo::Inline {
+                mime: Some("image/jpeg".into()),
+                data: b"hello".to_vec()
+            })
+        );
         let out = v4.to_vcard_string();
         assert!(out.contains("PHOTO;ENCODING=b;TYPE=JPEG:aGVsbG8="));
     }
@@ -732,15 +888,24 @@ mod tests {
     fn dates() {
         assert_eq!(parse_date("--0517"), Some((None, 5, 17)));
         assert_eq!(parse_date("19900517"), Some((Some(1990), 5, 17)));
-        assert_eq!(parse_date("1990-05-17T00:00:00Z"), Some((Some(1990), 5, 17)));
+        assert_eq!(
+            parse_date("1990-05-17T00:00:00Z"),
+            Some((Some(1990), 5, 17))
+        );
         assert_eq!(parse_date("1990-13-17"), None);
         assert_eq!(format_date(1990, 5, 7), "1990-05-07");
     }
 
     #[test]
     fn type_indices() {
-        assert_eq!(PHONE_TYPES[phone_type_index(&Typed::new(&["CELL"], "1"))].0, "Mobile");
-        assert_eq!(GENERIC_TYPES[generic_type_index(&["WORK".into()])].0, "Work");
+        assert_eq!(
+            PHONE_TYPES[phone_type_index(&Typed::new(&["CELL"], "1"))].0,
+            "Mobile"
+        );
+        assert_eq!(
+            GENERIC_TYPES[generic_type_index(&["WORK".into()])].0,
+            "Work"
+        );
         assert_eq!(GENERIC_TYPES[generic_type_index(&[])].0, "Other");
     }
 }

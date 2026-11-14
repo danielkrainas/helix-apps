@@ -20,7 +20,10 @@ pub fn is_displayable(c: char) -> bool {
 
 /// Whether `c` is a combining mark (needs a base to be visible).
 pub fn is_mark(c: char) -> bool {
-    matches!(get_general_category(c), Gc::NonspacingMark | Gc::SpacingMark | Gc::EnclosingMark)
+    matches!(
+        get_general_category(c),
+        Gc::NonspacingMark | Gc::SpacingMark | Gc::EnclosingMark
+    )
 }
 
 /// The Unicode name of a code point, upper case, if it has one.
@@ -52,8 +55,11 @@ pub fn display_name(s: &str) -> String {
     if let Some(e) = emojis::get(s) {
         return sentence_case(e.name());
     }
-    let names: Vec<String> =
-        s.chars().filter(|&c| c != '\u{FE0F}').map(|c| unicode_name(c).unwrap_or_else(|| fallback_name(c))).collect();
+    let names: Vec<String> = s
+        .chars()
+        .filter(|&c| c != '\u{FE0F}')
+        .map(|c| unicode_name(c).unwrap_or_else(|| fallback_name(c)))
+        .collect();
     if names.is_empty() {
         String::new()
     } else {
@@ -63,12 +69,18 @@ pub fn display_name(s: &str) -> String {
 
 /// `U+0041`, space separated for sequences.
 pub fn codepoints(s: &str) -> String {
-    s.chars().map(|c| format!("U+{:04X}", c as u32)).collect::<Vec<_>>().join(" ")
+    s.chars()
+        .map(|c| format!("U+{:04X}", c as u32))
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 /// UTF-8 bytes in upper-case hex, space separated.
 pub fn utf8_hex(s: &str) -> String {
-    s.bytes().map(|b| format!("{b:02X}")).collect::<Vec<_>>().join(" ")
+    s.bytes()
+        .map(|b| format!("{b:02X}"))
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 /// Text to show in a grid cell: combining marks get a dotted-circle base.
@@ -91,7 +103,10 @@ pub fn see_also(s: &str) -> Vec<String> {
     } else {
         let mut chars = s.chars();
         if let (Some(c), None) = (chars.next(), chars.next()) {
-            let forms = [c.to_uppercase().collect::<String>(), c.to_lowercase().collect::<String>()];
+            let forms = [
+                c.to_uppercase().collect::<String>(),
+                c.to_lowercase().collect::<String>(),
+            ];
             for f in forms {
                 if f.chars().count() == 1 {
                     out.push(f);
@@ -108,7 +123,9 @@ pub fn see_also(s: &str) -> Vec<String> {
 pub fn parse_codepoint(q: &str) -> Option<char> {
     let q = q.trim();
     let lower = q.to_ascii_lowercase();
-    let hex = ["u+", "0x", "\\u"].iter().find_map(|p| lower.strip_prefix(p))?;
+    let hex = ["u+", "0x", "\\u"]
+        .iter()
+        .find_map(|p| lower.strip_prefix(p))?;
     if hex.is_empty() || hex.len() > 6 {
         return None;
     }

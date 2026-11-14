@@ -36,8 +36,15 @@ struct App {
 }
 
 pub fn run(initial_search: Option<String>) -> glib::ExitCode {
-    let app = adw::Application::builder().application_id(APP_ID).flags(gio::ApplicationFlags::NON_UNIQUE).build();
-    helix_app_common::install_standard_actions(&app, "Characters", "Character map and emoji picker");
+    let app = adw::Application::builder()
+        .application_id(APP_ID)
+        .flags(gio::ApplicationFlags::NON_UNIQUE)
+        .build();
+    helix_app_common::install_standard_actions(
+        &app,
+        "Characters",
+        "Character map and emoji picker",
+    );
     let initial = RefCell::new(initial_search);
     app.connect_startup(|_| {
         // Build the search index in the background so the first search is fast.
@@ -65,7 +72,11 @@ pub fn run(initial_search: Option<String>) -> glib::ExitCode {
 /// Window geometry is app-private: `org.gnome.Characters` has no key for it.
 fn save_geometry(w: &gtk::Window) {
     let (width, height) = w.default_size();
-    let state = winstate::WindowState { width, height, maximized: w.is_maximized() };
+    let state = winstate::WindowState {
+        width,
+        height,
+        maximized: w.is_maximized(),
+    };
     if let Err(e) = state.save(&winstate::default_path()) {
         eprintln!("helix-characters: could not save window size: {e}");
     }
@@ -80,13 +91,20 @@ fn load_css() {
          .char-variant { font-size: 18pt; min-width: 44px; min-height: 44px; }",
     );
     if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(&display, &provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 }
 
 impl App {
     fn recent(&self) -> Vec<String> {
-        recent::sanitize(self.prefs.get("recent-characters", Vec::<String>::new()), self.max_recent())
+        recent::sanitize(
+            self.prefs.get("recent-characters", Vec::<String>::new()),
+            self.max_recent(),
+        )
     }
 
     fn max_recent(&self) -> u32 {
@@ -130,7 +148,9 @@ impl App {
         self.stack.set_visible_child_name("loading");
         let app = self.clone();
         glib::spawn_future_local(async move {
-            let items = gio::spawn_blocking(move || cat.characters()).await.unwrap_or_default();
+            let items = gio::spawn_blocking(move || cat.characters())
+                .await
+                .unwrap_or_default();
             let items = Rc::new(items);
             app.cache.borrow_mut().insert(cat, items.clone());
             if app.generation.get() == generation {
@@ -153,7 +173,9 @@ impl App {
         }
         let app = self.clone();
         glib::spawn_future_local(async move {
-            let results = gio::spawn_blocking(move || search::index().search(&query)).await.unwrap_or_default();
+            let results = gio::spawn_blocking(move || search::index().search(&query))
+                .await
+                .unwrap_or_default();
             if app.generation.get() == generation {
                 app.set_items(&results, "no-results");
             }
@@ -167,7 +189,12 @@ impl App {
         if self.current.get() == Category::Recent && !self.searching() {
             self.show_category(Category::Recent);
         }
-        self.toasts.add_toast(adw::Toast::builder().title("Character copied to clipboard").timeout(2).build());
+        self.toasts.add_toast(
+            adw::Toast::builder()
+                .title("Character copied to clipboard")
+                .timeout(2)
+                .build(),
+        );
     }
 
     fn select_sidebar(&self, cat: Category) {
@@ -180,7 +207,11 @@ impl App {
 }
 
 fn sidebar_row(cat: Category) -> gtk::ListBoxRow {
-    let hbox = gtk::Box::builder().spacing(12).margin_start(6).margin_end(6).build();
+    let hbox = gtk::Box::builder()
+        .spacing(12)
+        .margin_start(6)
+        .margin_end(6)
+        .build();
     let icon = gtk::Image::new();
     if let Some(name) = cat.icon_name() {
         icon.set_icon_name(Some(name));
@@ -223,40 +254,73 @@ fn build(gapp: &adw::Application) -> Rc<App> {
             i if i == letters_start => Some("Letters & Symbols"),
             _ => None,
         };
-        row.set_header(heading.map(|h| {
-            let label = gtk::Label::builder().label(h).xalign(0.0).margin_start(12).margin_top(12).margin_bottom(3).build();
-            label.add_css_class("heading");
-            label.add_css_class("dim-label");
-            label
-        }).as_ref());
+        row.set_header(
+            heading
+                .map(|h| {
+                    let label = gtk::Label::builder()
+                        .label(h)
+                        .xalign(0.0)
+                        .margin_start(12)
+                        .margin_top(12)
+                        .margin_bottom(3)
+                        .build();
+                    label.add_css_class("heading");
+                    label.add_css_class("dim-label");
+                    label
+                })
+                .as_ref(),
+        );
     });
     let sidebar_toolbar = adw::ToolbarView::new();
     let sidebar_header = adw::HeaderBar::new();
     sidebar_toolbar.add_top_bar(&sidebar_header);
     sidebar_toolbar.set_content(Some(
-        &gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).child(&sidebar).build(),
+        &gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .child(&sidebar)
+            .build(),
     ));
-    let sidebar_page = adw::NavigationPage::builder().title("Characters").child(&sidebar_toolbar).build();
+    let sidebar_page = adw::NavigationPage::builder()
+        .title("Characters")
+        .child(&sidebar_toolbar)
+        .build();
 
     // Content.
     let title = adw::WindowTitle::new("Characters", "");
     let header = adw::HeaderBar::new();
     header.set_title_widget(Some(&title));
-    let search_button = gtk::ToggleButton::builder().icon_name("system-search-symbolic").tooltip_text("Search").build();
+    let search_button = gtk::ToggleButton::builder()
+        .icon_name("system-search-symbolic")
+        .tooltip_text("Search")
+        .build();
     header.pack_start(&search_button);
     let menu = gio::Menu::new();
     menu.append(Some("_About Characters"), Some("app.about"));
     menu.append(Some("_Quit"), Some("app.quit"));
     header.pack_end(
-        &gtk::MenuButton::builder().icon_name("open-menu-symbolic").menu_model(&menu).tooltip_text("Main Menu").build(),
+        &gtk::MenuButton::builder()
+            .icon_name("open-menu-symbolic")
+            .menu_model(&menu)
+            .tooltip_text("Main Menu")
+            .build(),
     );
 
-    let search_entry = gtk::SearchEntry::builder().placeholder_text("Search characters").hexpand(true).build();
-    let clamp = adw::Clamp::builder().maximum_size(500).child(&search_entry).build();
+    let search_entry = gtk::SearchEntry::builder()
+        .placeholder_text("Search characters")
+        .hexpand(true)
+        .build();
+    let clamp = adw::Clamp::builder()
+        .maximum_size(500)
+        .child(&search_entry)
+        .build();
     let search_bar = gtk::SearchBar::builder().child(&clamp).build();
     search_bar.connect_entry(&search_entry);
     search_bar.set_key_capture_widget(Some(&window));
-    search_button.bind_property("active", &search_bar, "search-mode-enabled").bidirectional().sync_create().build();
+    search_button
+        .bind_property("active", &search_bar, "search-mode-enabled")
+        .bidirectional()
+        .sync_create()
+        .build();
 
     let model = gtk::StringList::new(&[]);
     let factory = gtk::SignalListItemFactory::new();
@@ -289,7 +353,13 @@ fn build(gapp: &adw::Application) -> Rc<App> {
     grid.update_property(&[gtk::accessible::Property::Label("Characters")]);
 
     let stack = gtk::Stack::new();
-    stack.add_named(&gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).child(&grid).build(), Some("grid"));
+    stack.add_named(
+        &gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .child(&grid)
+            .build(),
+        Some("grid"),
+    );
     stack.add_named(
         &adw::StatusPage::builder()
             .icon_name("document-open-recent-symbolic")
@@ -306,7 +376,13 @@ fn build(gapp: &adw::Application) -> Rc<App> {
             .build(),
         Some("no-results"),
     );
-    let spinner = gtk::Spinner::builder().spinning(true).width_request(32).height_request(32).halign(gtk::Align::Center).valign(gtk::Align::Center).build();
+    let spinner = gtk::Spinner::builder()
+        .spinning(true)
+        .width_request(32)
+        .height_request(32)
+        .halign(gtk::Align::Center)
+        .valign(gtk::Align::Center)
+        .build();
     stack.add_named(&spinner, Some("loading"));
 
     let toasts = adw::ToastOverlay::new();
@@ -315,11 +391,19 @@ fn build(gapp: &adw::Application) -> Rc<App> {
     content_toolbar.add_top_bar(&header);
     content_toolbar.add_top_bar(&search_bar);
     content_toolbar.set_content(Some(&toasts));
-    let content_page = adw::NavigationPage::builder().title("Characters").child(&content_toolbar).build();
+    let content_page = adw::NavigationPage::builder()
+        .title("Characters")
+        .child(&content_toolbar)
+        .build();
 
-    let split = adw::NavigationSplitView::builder().sidebar(&sidebar_page).content(&content_page).show_content(true).build();
+    let split = adw::NavigationSplitView::builder()
+        .sidebar(&sidebar_page)
+        .content(&content_page)
+        .show_content(true)
+        .build();
     window.set_content(Some(&split));
-    let breakpoint = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 560sp").unwrap());
+    let breakpoint =
+        adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 560sp").unwrap());
     breakpoint.add_setter(&split, "collapsed", Some(&true.to_value()));
     window.add_breakpoint(breakpoint);
     window.connect_close_request(|w| {
@@ -349,7 +433,9 @@ fn build(gapp: &adw::Application) -> Rc<App> {
     let a = app.clone();
     sidebar.connect_row_selected(move |_, row| {
         let Some(row) = row else { return };
-        let Some(cat) = a.sidebar_cats.get(row.index() as usize).copied() else { return };
+        let Some(cat) = a.sidebar_cats.get(row.index() as usize).copied() else {
+            return;
+        };
         if a.search_bar.is_search_mode() {
             // Leaving search: clearing the entry would re-show the old category,
             // so switch first and then close the bar.
@@ -379,12 +465,18 @@ fn build(gapp: &adw::Application) -> Rc<App> {
     });
 
     let search_action = gio::ActionEntry::builder("search")
-        .activate(move |_: &adw::ApplicationWindow, _, _| search_button.set_active(!search_button.is_active()))
+        .activate(move |_: &adw::ApplicationWindow, _, _| {
+            search_button.set_active(!search_button.is_active())
+        })
         .build();
     window.add_action_entries([search_action]);
     gapp.set_accels_for_action("win.search", &["<Control>f"]);
 
-    let initial = if app.recent().is_empty() { Category::Smileys } else { Category::Recent };
+    let initial = if app.recent().is_empty() {
+        Category::Smileys
+    } else {
+        Category::Recent
+    };
     app.select_sidebar(initial);
     app
 }
@@ -397,12 +489,22 @@ fn show_details(app: &Rc<App>, text: String) {
 
     let glyph = gtk::Label::builder().selectable(true).build();
     glyph.add_css_class("char-detail-glyph");
-    let name = gtk::Label::builder().wrap(true).justify(gtk::Justification::Center).selectable(true).build();
+    let name = gtk::Label::builder()
+        .wrap(true)
+        .justify(gtk::Justification::Center)
+        .selectable(true)
+        .build();
     name.add_css_class("title-3");
     let group = adw::PreferencesGroup::new();
-    let cp_row = adw::ActionRow::builder().title("Code point").subtitle_selectable(true).build();
+    let cp_row = adw::ActionRow::builder()
+        .title("Code point")
+        .subtitle_selectable(true)
+        .build();
     cp_row.add_css_class("property");
-    let utf8_row = adw::ActionRow::builder().title("UTF-8").subtitle_selectable(true).build();
+    let utf8_row = adw::ActionRow::builder()
+        .title("UTF-8")
+        .subtitle_selectable(true)
+        .build();
     utf8_row.add_css_class("property");
     group.add(&cp_row);
     group.add(&utf8_row);
@@ -417,7 +519,11 @@ fn show_details(app: &Rc<App>, text: String) {
         .homogeneous(true)
         .build();
 
-    let copy_button = gtk::Button::builder().label("_Copy Character").use_underline(true).halign(gtk::Align::Center).build();
+    let copy_button = gtk::Button::builder()
+        .label("_Copy Character")
+        .use_underline(true)
+        .halign(gtk::Align::Center)
+        .build();
     copy_button.add_css_class("suggested-action");
     copy_button.add_css_class("pill");
 
@@ -435,7 +541,11 @@ fn show_details(app: &Rc<App>, text: String) {
     body.append(&see_also);
     body.append(&copy_button);
     toolbar.set_content(Some(
-        &gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).propagate_natural_height(true).child(&body).build(),
+        &gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .propagate_natural_height(true)
+            .child(&body)
+            .build(),
     ));
     dialog.set_child(Some(&toolbar));
 
@@ -460,7 +570,10 @@ fn show_details(app: &Rc<App>, text: String) {
         see_also_label.set_visible(!variants.is_empty());
         see_also.set_visible(!variants.is_empty());
         for v in variants {
-            let b = gtk::Button::builder().label(charinfo::grid_label(&v)).tooltip_text(charinfo::display_name(&v)).build();
+            let b = gtk::Button::builder()
+                .label(charinfo::grid_label(&v))
+                .tooltip_text(charinfo::display_name(&v))
+                .build();
             b.add_css_class("flat");
             b.add_css_class("char-variant");
             let wf = weak_fill.clone();

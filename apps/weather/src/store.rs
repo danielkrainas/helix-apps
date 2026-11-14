@@ -43,7 +43,11 @@ impl Place {
     /// "Region, Country" (whatever parts are known).
     pub fn subtitle(&self) -> String {
         let mut parts: Vec<&str> = Vec::new();
-        if let Some(a) = self.admin1.as_deref().filter(|a| !a.is_empty() && *a != self.name) {
+        if let Some(a) = self
+            .admin1
+            .as_deref()
+            .filter(|a| !a.is_empty() && *a != self.name)
+        {
             parts.push(a);
         }
         if let Some(c) = self.country.as_deref().filter(|c| !c.is_empty()) {
@@ -54,7 +58,8 @@ impl Place {
 
     /// Whether two places denote the same spot (≈100 m).
     pub fn same_as(&self, other: &Place) -> bool {
-        (self.latitude - other.latitude).abs() < 0.001 && (self.longitude - other.longitude).abs() < 0.001
+        (self.latitude - other.latitude).abs() < 0.001
+            && (self.longitude - other.longitude).abs() < 0.001
     }
 
     /// Stable cache key derived from the coordinates.
@@ -76,7 +81,9 @@ pub struct Locations {
 
 impl Locations {
     pub fn selected_place(&self) -> Option<&Place> {
-        self.locations.get(self.selected).or_else(|| self.locations.first())
+        self.locations
+            .get(self.selected)
+            .or_else(|| self.locations.first())
     }
 
     /// Adds `place` (unless already present) and selects it.
@@ -95,7 +102,10 @@ impl Locations {
     /// automatic place is selected when nothing else was (empty list or the
     /// previous automatic place was selected).
     pub fn set_automatic(&mut self, place: Option<Place>) {
-        let was_auto_selected = self.locations.get(self.selected).is_some_and(|p| p.automatic);
+        let was_auto_selected = self
+            .locations
+            .get(self.selected)
+            .is_some_and(|p| p.automatic);
         let had_auto = self.locations.first().is_some_and(|p| p.automatic);
         let was_empty = self.locations.iter().all(|p| p.automatic);
         if had_auto {
@@ -137,7 +147,10 @@ impl Locations {
     }
 
     pub fn load(path: &Path) -> Locations {
-        let mut l: Locations = std::fs::read(path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
+        let mut l: Locations = std::fs::read(path)
+            .ok()
+            .and_then(|b| serde_json::from_slice(&b).ok())
+            .unwrap_or_default();
         if l.selected >= l.locations.len() {
             l.selected = 0;
         }
@@ -189,7 +202,11 @@ mod tests {
     use super::*;
 
     fn place(name: &str, lat: f64, lon: f64) -> Place {
-        Place { admin1: Some("Region".into()), country: Some("Country".into()), ..Place::at(name, lat, lon) }
+        Place {
+            admin1: Some("Region".into()),
+            country: Some("Country".into()),
+            ..Place::at(name, lat, lon)
+        }
     }
 
     #[test]
@@ -218,11 +235,16 @@ mod tests {
         l.set_automatic(Some(place("Here", 5.0, 5.0)));
         assert_eq!(l.selected_place().unwrap().name, "A");
         let json = serde_json::to_string(&l).unwrap();
-        assert_eq!(json.matches("\"automatic\":true").count(), 1, "manual places omit the flag");
+        assert_eq!(
+            json.matches("\"automatic\":true").count(),
+            1,
+            "manual places omit the flag"
+        );
     }
 
     fn temp_dir(tag: &str) -> PathBuf {
-        let d = std::env::temp_dir().join(format!("helix-weather-test-{tag}-{}", std::process::id()));
+        let d =
+            std::env::temp_dir().join(format!("helix-weather-test-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d
@@ -274,7 +296,11 @@ mod tests {
         assert_eq!(Locations::load(&path), l);
         std::fs::write(&path, b"{ not json").unwrap();
         assert_eq!(Locations::load(&path), Locations::default());
-        std::fs::write(&path, br#"{"selected":7,"locations":[{"name":"X","latitude":1,"longitude":2}]}"#).unwrap();
+        std::fs::write(
+            &path,
+            br#"{"selected":7,"locations":[{"name":"X","latitude":1,"longitude":2}]}"#,
+        )
+        .unwrap();
         let l = Locations::load(&path);
         assert_eq!(l.selected, 0);
         assert_eq!(l.locations[0].name, "X");
@@ -286,7 +312,10 @@ mod tests {
         let dir = temp_dir("cache");
         let p = place("A", 52.52437, 13.41053);
         assert!(load_cache(&dir, &p).is_none());
-        let entry = CachedForecast { fetched: 1234, body: "{\"x\":1}".into() };
+        let entry = CachedForecast {
+            fetched: 1234,
+            body: "{\"x\":1}".into(),
+        };
         save_cache(&dir, &p, &entry).unwrap();
         assert_eq!(load_cache(&dir, &p), Some(entry));
         assert!(cache_path(&dir, &p).ends_with("forecast-52.524_13.411.json"));

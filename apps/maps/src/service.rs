@@ -26,9 +26,23 @@ pub struct Endpoints {
 
 #[derive(Debug, Clone)]
 pub enum Job {
-    Search { id: u64, query: String, limit: u32, viewbox: Option<(f64, f64, f64, f64)> },
-    Reverse { id: u64, at: LatLon, zoom: u32 },
-    Route { id: u64, mode: Mode, from: Endpoint, to: Endpoint },
+    Search {
+        id: u64,
+        query: String,
+        limit: u32,
+        viewbox: Option<(f64, f64, f64, f64)>,
+    },
+    Reverse {
+        id: u64,
+        at: LatLon,
+        zoom: u32,
+    },
+    Route {
+        id: u64,
+        mode: Mode,
+        from: Endpoint,
+        to: Endpoint,
+    },
 }
 
 impl Job {
@@ -43,9 +57,19 @@ impl Job {
 
 #[derive(Debug)]
 pub enum Reply {
-    Search { id: u64, result: Result<Vec<Place>, String> },
-    Reverse { id: u64, at: LatLon, result: Result<Option<Place>, String> },
-    Route { id: u64, result: Result<Box<(Route, Place, Place)>, String> },
+    Search {
+        id: u64,
+        result: Result<Vec<Place>, String>,
+    },
+    Reverse {
+        id: u64,
+        at: LatLon,
+        result: Result<Option<Place>, String>,
+    },
+    Route {
+        id: u64,
+        result: Result<Box<(Route, Place, Place)>, String>,
+    },
 }
 
 /// Keeps only the newest job of each kind, preserving arrival order.
@@ -77,7 +101,13 @@ pub fn accept_language(names: &[String]) -> String {
     }
     tags.iter()
         .enumerate()
-        .map(|(i, t)| if i == 0 { t.clone() } else { format!("{t};q={:.1}", (1.0 - 0.1 * i as f64).max(0.1)) })
+        .map(|(i, t)| {
+            if i == 0 {
+                t.clone()
+            } else {
+                format!("{t};q={:.1}", (1.0 - 0.1 * i as f64).max(0.1))
+            }
+        })
         .collect::<Vec<_>>()
         .join(",")
 }
@@ -148,7 +178,12 @@ fn run(
     let slot = job.slot();
     let lang = Some(ep.language.as_str());
     match job {
-        Job::Search { id, query, limit, viewbox } => {
+        Job::Search {
+            id,
+            query,
+            limit,
+            viewbox,
+        } => {
             if !wait_turn(limiter, slot, rx, pending) {
                 return None;
             }
@@ -207,7 +242,10 @@ fn run(
                 Err(e) => Err(e),
             };
             match result {
-                Ok(Some(r)) => Some(Reply::Route { id, result: Ok(Box::new(r)) }),
+                Ok(Some(r)) => Some(Reply::Route {
+                    id,
+                    result: Ok(Box::new(r)),
+                }),
                 Ok(None) => None,
                 Err(e) => Some(Reply::Route { id, result: Err(e) }),
             }
@@ -220,15 +258,42 @@ mod tests {
     use super::*;
 
     fn ep() -> Endpoints {
-        Endpoints { geocoder: String::new(), router: String::new(), language: String::new() }
+        Endpoints {
+            geocoder: String::new(),
+            router: String::new(),
+            language: String::new(),
+        }
     }
 
     #[test]
     fn collapse_keeps_newest_per_kind() {
         let jobs = vec![
-            (Job::Search { id: 1, query: "a".into(), limit: 1, viewbox: None }, ep()),
-            (Job::Reverse { id: 2, at: LatLon { lat: 0.0, lon: 0.0 }, zoom: 18 }, ep()),
-            (Job::Search { id: 3, query: "b".into(), limit: 1, viewbox: None }, ep()),
+            (
+                Job::Search {
+                    id: 1,
+                    query: "a".into(),
+                    limit: 1,
+                    viewbox: None,
+                },
+                ep(),
+            ),
+            (
+                Job::Reverse {
+                    id: 2,
+                    at: LatLon { lat: 0.0, lon: 0.0 },
+                    zoom: 18,
+                },
+                ep(),
+            ),
+            (
+                Job::Search {
+                    id: 3,
+                    query: "b".into(),
+                    limit: 1,
+                    viewbox: None,
+                },
+                ep(),
+            ),
         ];
         let ids: Vec<u64> = collapse(jobs)
             .into_iter()
@@ -241,8 +306,10 @@ mod tests {
 
     #[test]
     fn languages() {
-        let names: Vec<String> =
-            ["de_DE.UTF-8", "de_DE", "de", "C"].iter().map(|s| s.to_string()).collect();
+        let names: Vec<String> = ["de_DE.UTF-8", "de_DE", "de", "C"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
         assert_eq!(accept_language(&names), "de-DE,de;q=0.9");
         assert_eq!(accept_language(&["C".to_string()]), "en");
     }

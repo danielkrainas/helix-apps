@@ -22,8 +22,22 @@ impl Panel for NotificationsPanel {
         let prefs = ctx.prefs(NOTIFICATIONS);
         let page = widgets::page();
         let general = widgets::group("");
-        general.add(&switch(&prefs, "show-banners", true, true, "Do Not Disturb", "Notification banners are hidden"));
-        general.add(&switch(&prefs, "show-in-lock-screen", true, false, "Lock Screen Notifications", "Show notifications on the lock screen"));
+        general.add(&switch(
+            &prefs,
+            "show-banners",
+            true,
+            true,
+            "Do Not Disturb",
+            "Notification banners are hidden",
+        ));
+        general.add(&switch(
+            &prefs,
+            "show-in-lock-screen",
+            true,
+            false,
+            "Lock Screen Notifications",
+            "Show notifications on the lock screen",
+        ));
         page.add(&general);
 
         let schema = helix_app_common::lookup_schema(APP_SCHEMA);
@@ -34,14 +48,24 @@ impl Panel for NotificationsPanel {
                 .iter()
                 .map(|id| {
                     let info = gio::DesktopAppInfo::new(&format!("{id}.desktop"));
-                    let name = info.as_ref().map(|i| i.display_name().to_string()).unwrap_or_else(|| id.clone());
+                    let name = info
+                        .as_ref()
+                        .map(|i| i.display_name().to_string())
+                        .unwrap_or_else(|| id.clone());
                     (id.clone(), name, info.and_then(|i| i.icon()))
                 })
                 .collect();
             entries.sort_by_key(|e| e.1.to_lowercase());
             for (id, name, icon) in entries {
-                let settings = gio::Settings::new_full(&schema, None::<&gio::SettingsBackend>, Some(&app_path(&id)));
-                let row = adw::SwitchRow::builder().title(name.as_str()).use_markup(false).build();
+                let settings = gio::Settings::new_full(
+                    &schema,
+                    None::<&gio::SettingsBackend>,
+                    Some(&app_path(&id)),
+                );
+                let row = adw::SwitchRow::builder()
+                    .title(name.as_str())
+                    .use_markup(false)
+                    .build();
                 let image = gtk::Image::builder().pixel_size(32).build();
                 match icon {
                     Some(icon) => image.set_from_gicon(&icon),
@@ -61,6 +85,9 @@ impl Panel for NotificationsPanel {
 mod tests {
     #[test]
     fn path() {
-        assert_eq!(super::app_path("org-gnome-Calculator"), "/org/gnome/desktop/notifications/application/org-gnome-Calculator/");
+        assert_eq!(
+            super::app_path("org-gnome-Calculator"),
+            "/org/gnome/desktop/notifications/application/org-gnome-Calculator/"
+        );
     }
 }

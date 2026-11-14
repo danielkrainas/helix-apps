@@ -35,7 +35,11 @@ const PAGES: [(&str, &str, &str); 4] = [
 
 pub fn run() -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
-    helix_app_common::install_standard_actions(&app, "Clocks", "World clocks, alarms, a stopwatch and timers");
+    helix_app_common::install_standard_actions(
+        &app,
+        "Clocks",
+        "World clocks, alarms, a stopwatch and timers",
+    );
     app.add_main_option(
         "hidden",
         glib::Char::from(0),
@@ -100,7 +104,11 @@ fn load_css() {
          .alarm-inactive .alarm-time { opacity: 0.55; }",
     );
     if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &css,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 }
 
@@ -205,13 +213,21 @@ impl Ui {
         let clock = SystemClock::default();
         let db = tz::load_locations();
         let local = tz::local_zone()
-            .or_else(|| glib::TimeZone::local().identifier().as_str().parse::<Tz>().ok())
+            .or_else(|| {
+                glib::TimeZone::local()
+                    .identifier()
+                    .as_str()
+                    .parse::<Tz>()
+                    .ok()
+            })
             .unwrap_or(chrono_tz::UTC);
         let now = clock.now();
 
         let gw = gwdb::Db::load().map(Rc::new);
-        let world =
-            prefs.get_variant("world-clocks").map(|v| store::world_clocks_from_variant(&v, &db, gw.as_deref())).unwrap_or_default();
+        let world = prefs
+            .get_variant("world-clocks")
+            .map(|v| store::world_clocks_from_variant(&v, &db, gw.as_deref()))
+            .unwrap_or_default();
         let mut alarms: Vec<AlarmEntry> = prefs
             .get_variant("alarms")
             .map(|v| store::alarms_from_variant(&v))
@@ -220,9 +236,17 @@ impl Ui {
             .map(|a| AlarmEntry::new(a, now, &local))
             .collect();
         alarms.sort_by_key(|e| (e.alarm.hour, e.alarm.minute));
-        let timers = prefs.get_variant("timers").map(|v| store::timers_from_variant(&v)).unwrap_or_default();
+        let timers = prefs
+            .get_variant("timers")
+            .map(|v| store::timers_from_variant(&v))
+            .unwrap_or_default();
 
-        let window = adw::ApplicationWindow::builder().application(app).title("Clocks").width_request(360).height_request(294).build();
+        let window = adw::ApplicationWindow::builder()
+            .application(app)
+            .title("Clocks")
+            .width_request(360)
+            .height_request(294)
+            .build();
         let (w, h) = win_prefs.get::<(i32, i32)>("size", (870, 690));
         window.set_default_size(w.max(360), h.max(294));
         if win_prefs.get("maximized", false) {
@@ -232,7 +256,10 @@ impl Ui {
         // Header
         let stack = adw::ViewStack::new();
         let header = adw::HeaderBar::new();
-        let switcher = adw::ViewSwitcher::builder().stack(&stack).policy(adw::ViewSwitcherPolicy::Wide).build();
+        let switcher = adw::ViewSwitcher::builder()
+            .stack(&stack)
+            .policy(adw::ViewSwitcherPolicy::Wide)
+            .build();
         header.set_title_widget(Some(&switcher));
         let add_button = gtk::Button::from_icon_name("list-add-symbolic");
         header.pack_start(&add_button);
@@ -260,7 +287,11 @@ impl Ui {
             .description("Use the + button to add world clocks")
             .vexpand(true)
             .build();
-        let empty_add = gtk::Button::builder().label("_Add Location").use_underline(true).halign(gtk::Align::Center).build();
+        let empty_add = gtk::Button::builder()
+            .label("_Add Location")
+            .use_underline(true)
+            .halign(gtk::Align::Center)
+            .build();
         empty_add.add_css_class("pill");
         empty_add.add_css_class("suggested-action");
         world_empty.set_child(Some(&empty_add));
@@ -278,14 +309,21 @@ impl Ui {
             .description("Use the + button to add alarms")
             .vexpand(true)
             .build();
-        let alarm_add = gtk::Button::builder().label("_Add Alarm").use_underline(true).halign(gtk::Align::Center).build();
+        let alarm_add = gtk::Button::builder()
+            .label("_Add Alarm")
+            .use_underline(true)
+            .halign(gtk::Align::Center)
+            .build();
         alarm_add.add_css_class("pill");
         alarm_add.add_css_class("suggested-action");
         alarm_empty.set_child(Some(&alarm_add));
         alarm_stack.add_named(&alarm_empty, Some("empty"));
         let alarm_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
         alarm_box.append(&alarm_list);
-        let note = label("Alarms only ring while Clocks is running.", &["dim-label", "caption"]);
+        let note = label(
+            "Alarms only ring while Clocks is running.",
+            &["dim-label", "caption"],
+        );
         note.set_visible(false);
         alarm_box.append(&note);
         alarm_stack.add_named(&scrolled_clamped(&alarm_box), Some("list"));
@@ -318,7 +356,11 @@ impl Ui {
         // Timer page
         let timer_list = boxed_list();
         let timer_stack = gtk::Stack::new();
-        let timer_cancel = gtk::Button::builder().label("_Cancel").use_underline(true).halign(gtk::Align::Center).build();
+        let timer_cancel = gtk::Button::builder()
+            .label("_Cancel")
+            .use_underline(true)
+            .halign(gtk::Align::Center)
+            .build();
         timer_cancel.add_css_class("pill");
 
         stack.add_titled_with_icon(&world_nav, Some(PAGES[0].0), PAGES[0].1, PAGES[0].2);
@@ -334,7 +376,11 @@ impl Ui {
         window.set_content(Some(&toolbar));
         let bp = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 550sp").unwrap());
         bp.add_setter(&switcher_bar, "reveal", Some(&true.to_value()));
-        bp.add_setter(&header, "title-widget", Some(&None::<gtk::Widget>.to_value()));
+        bp.add_setter(
+            &header,
+            "title-widget",
+            Some(&None::<gtk::Widget>.to_value()),
+        );
         window.add_breakpoint(bp);
 
         let twelve = iface.get_enum_nick("clock-format", "24h") == "12h";
@@ -405,7 +451,9 @@ impl Ui {
         alarm_add.connect_clicked(with_ui(&weak, |ui| ui.show_alarm_dialog(None)));
         sw_primary.connect_clicked(with_ui(&weak, |ui| ui.stopwatch_primary()));
         sw_secondary.connect_clicked(with_ui(&weak, |ui| ui.stopwatch_secondary()));
-        timer_cancel.connect_clicked(with_ui(&weak, |ui| ui.timer_stack.set_visible_child_name("list")));
+        timer_cancel.connect_clicked(with_ui(&weak, |ui| {
+            ui.timer_stack.set_visible_child_name("list")
+        }));
 
         if let Some(s) = iface.gsettings() {
             let weak = weak.clone();
@@ -450,14 +498,18 @@ impl Ui {
     }
 
     fn page(&self) -> String {
-        self.stack.visible_child_name().map(|s| s.to_string()).unwrap_or_default()
+        self.stack
+            .visible_child_name()
+            .map(|s| s.to_string())
+            .unwrap_or_default()
     }
 
     fn update_header(&self) {
         let page = self.page();
         let in_details = page == "world" && self.world_nav.navigation_stack().n_items() > 1;
         self.back_button.set_visible(in_details);
-        self.add_button.set_visible(!in_details && page != "stopwatch");
+        self.add_button
+            .set_visible(!in_details && page != "stopwatch");
         self.add_button.set_tooltip_text(Some(match page.as_str() {
             "world" => "Add Location",
             "alarm" => "Add Alarm",
@@ -470,7 +522,8 @@ impl Ui {
             "world" => self.show_add_location(),
             "alarm" => self.show_alarm_dialog(None),
             "timer" => {
-                self.timer_cancel.set_visible(!self.timers.borrow().is_empty());
+                self.timer_cancel
+                    .set_visible(!self.timers.borrow().is_empty());
                 self.timer_stack.set_visible_child_name("setup");
             }
             _ => {}
@@ -497,7 +550,8 @@ impl Ui {
         });
         self.window.add_action(&page);
         for (i, (name, _, _)) in PAGES.iter().enumerate() {
-            self.app.set_accels_for_action(&format!("win.page::{name}"), &[&format!("<Alt>{}", i + 1)]);
+            self.app
+                .set_accels_for_action(&format!("win.page::{name}"), &[&format!("<Alt>{}", i + 1)]);
         }
         let weak = Rc::downgrade(self);
         let new = gio::SimpleAction::new("new", None);
@@ -525,7 +579,9 @@ impl Ui {
         for (trigger, which) in [("space", 0), ("l", 1), ("Delete", 2), ("BackSpace", 2)] {
             let weak = Rc::downgrade(self);
             let action = gtk::CallbackAction::new(move |_, _| {
-                let Some(ui) = weak.upgrade() else { return glib::Propagation::Proceed };
+                let Some(ui) = weak.upgrade() else {
+                    return glib::Propagation::Proceed;
+                };
                 if ui.page() != "stopwatch" {
                     return glib::Propagation::Proceed;
                 }
@@ -537,7 +593,8 @@ impl Ui {
                         }
                     }
                     _ => {
-                        let paused = matches!(ui.stopwatch.borrow().state, stopwatch::State::Paused { .. });
+                        let paused =
+                            matches!(ui.stopwatch.borrow().state, stopwatch::State::Paused { .. });
                         if paused {
                             ui.stopwatch_secondary()
                         }
@@ -555,7 +612,8 @@ impl Ui {
         if let Some(overlay) = builder.object::<gtk::ShortcutsWindow>("help_overlay") {
             self.window.set_help_overlay(Some(&overlay));
         }
-        self.app.set_accels_for_action("win.show-help-overlay", &["<Control>question"]);
+        self.app
+            .set_accels_for_action("win.show-help-overlay", &["<Control>question"]);
     }
 
     fn has_active_alarms(&self) -> bool {
@@ -632,8 +690,16 @@ impl Ui {
             .and_then(tz::zone_by_id)
             .or(tz_city.map(|l| l.zone))
             .unwrap_or(self.local);
-        let name = city.map(|c| c.name.clone()).unwrap_or_else(|| tz::city_from_zone(zone.name()));
-        WorldClock { name, zone, coords: Some(at), country: city.and_then(|c| c.country.clone()), station: None }
+        let name = city
+            .map(|c| c.name.clone())
+            .unwrap_or_else(|| tz::city_from_zone(zone.name()));
+        WorldClock {
+            name,
+            zone,
+            coords: Some(at),
+            country: city.and_then(|c| c.country.clone()),
+            station: None,
+        }
     }
 
     fn tick(self: &Rc<Self>) {
@@ -661,19 +727,24 @@ impl Ui {
         if self.prefs.get("geolocation", true) {
             let located = self.here.borrow().clone();
             let here = self.db.iter().find(|l| l.zone == self.local);
-            let mut wc = located.or_else(|| here.map(WorldClock::from_location)).unwrap_or(WorldClock {
-                name: tz::city_from_zone(self.local.name()),
-                zone: self.local,
-                coords: None,
-                country: None,
-                station: None,
-            });
+            let mut wc = located
+                .or_else(|| here.map(WorldClock::from_location))
+                .unwrap_or(WorldClock {
+                    name: tz::city_from_zone(self.local.name()),
+                    zone: self.local,
+                    coords: None,
+                    country: None,
+                    station: None,
+                });
             wc.country = Some("Current Location".into());
             entries.push((wc, false));
         }
         entries.extend(self.world.borrow().iter().cloned().map(|c| (c, true)));
         for (i, (wc, removable)) in entries.into_iter().enumerate() {
-            let row = adw::ActionRow::builder().title(glib::markup_escape_text(&wc.name)).activatable(true).build();
+            let row = adw::ActionRow::builder()
+                .title(glib::markup_escape_text(&wc.name))
+                .activatable(true)
+                .build();
             let icon = gtk::Image::new();
             icon.set_pixel_size(24);
             let time = label("", &["world-time", "clock-time"]);
@@ -705,16 +776,27 @@ impl Ui {
                 }
             });
             self.world_list.append(&row);
-            rows.push(WorldRow { time, icon, row, zone: wc.zone, coords: wc.coords, country: wc.country });
+            rows.push(WorldRow {
+                time,
+                icon,
+                row,
+                zone: wc.zone,
+                coords: wc.coords,
+                country: wc.country,
+            });
         }
         let empty = rows.is_empty();
         self.world_rows.replace(rows);
-        self.world_stack.set_visible_child_name(if empty { "empty" } else { "list" });
+        self.world_stack
+            .set_visible_child_name(if empty { "empty" } else { "list" });
         self.update_world(self.clock.now());
     }
 
     fn save_world(&self) {
-        self.prefs.set_variant("world-clocks", store::world_clocks_to_variant(&self.world.borrow(), self.gw.as_deref()));
+        self.prefs.set_variant(
+            "world-clocks",
+            store::world_clocks_to_variant(&self.world.borrow(), self.gw.as_deref()),
+        );
     }
 
     fn is_day(zone: Tz, coords: Option<(f64, f64)>, now: DateTime<Utc>) -> bool {
@@ -732,8 +814,13 @@ impl Ui {
             let lt = now.with_timezone(&r.zone);
             r.time.set_text(&tz::format_time(lt.time(), twelve));
             let day = Self::is_day(r.zone, r.coords, now);
-            r.icon.set_icon_name(Some(if day { "weather-clear-symbolic" } else { "weather-clear-night-symbolic" }));
-            r.icon.set_tooltip_text(Some(if day { "Day" } else { "Night" }));
+            r.icon.set_icon_name(Some(if day {
+                "weather-clear-symbolic"
+            } else {
+                "weather-clear-night-symbolic"
+            }));
+            r.icon
+                .set_tooltip_text(Some(if day { "Day" } else { "Night" }));
             let rel = tz::relative_day_at(r.zone, self.local, now);
             let diff = tz::describe_offset(tz::utc_offset(r.zone, now) - local_off);
             let mut parts: Vec<String> = Vec::new();
@@ -744,7 +831,8 @@ impl Ui {
                 parts.push(rel.label().into());
             }
             parts.push(diff);
-            r.row.set_subtitle(&glib::markup_escape_text(&parts.join(" • ")));
+            r.row
+                .set_subtitle(&glib::markup_escape_text(&parts.join(" • ")));
         }
         if let Some(d) = self.details.borrow().as_ref() {
             self.update_details(d, now);
@@ -780,14 +868,22 @@ impl Ui {
             if wc.coords.is_none() && matches!(key, "rise" | "set" | "length") {
                 continue;
             }
-            let row = adw::ActionRow::builder().title(title).subtitle_selectable(true).build();
+            let row = adw::ActionRow::builder()
+                .title(title)
+                .subtitle_selectable(true)
+                .build();
             row.add_css_class("property");
             group.add(&row);
             rows.push((row, key));
         }
         page_box.append(&group);
         let page = adw::NavigationPage::new(&scrolled_clamped(&page_box), &wc.name);
-        let d = Details { clock: wc, time, date, rows };
+        let d = Details {
+            clock: wc,
+            time,
+            date,
+            rows,
+        };
         self.update_details(&d, self.clock.now());
         self.details.replace(Some(d));
         self.world_nav.push(&page);
@@ -801,7 +897,10 @@ impl Ui {
         d.time.set_text(&tz::format_time_secs(lt.time(), twelve));
         d.date.set_text(&lt.format("%A, %-d %B %Y").to_string());
         let off = tz::utc_offset(zone, now);
-        let sun = d.clock.coords.map(|(la, lo)| sun::sun_times(lt.date_naive(), la, lo));
+        let sun = d
+            .clock
+            .coords
+            .map(|(la, lo)| sun::sun_times(lt.date_naive(), la, lo));
         let fmt = |t: DateTime<Utc>| tz::format_time(t.with_timezone(&zone).time(), twelve);
         for (row, key) in &d.rows {
             let text = match *key {
@@ -828,9 +927,16 @@ impl Ui {
     }
 
     fn show_add_location(self: &Rc<Self>) {
-        let dialog = adw::Dialog::builder().title("Add a New World Clock").content_width(420).content_height(520).build();
+        let dialog = adw::Dialog::builder()
+            .title("Add a New World Clock")
+            .content_width(420)
+            .content_height(520)
+            .build();
         let header = adw::HeaderBar::new();
-        let search = gtk::SearchEntry::builder().placeholder_text("Search for a city or time zone").hexpand(true).build();
+        let search = gtk::SearchEntry::builder()
+            .placeholder_text("Search for a city or time zone")
+            .hexpand(true)
+            .build();
         let search_bar = gtk::Box::new(gtk::Orientation::Vertical, 0);
         search_bar.set_margin_start(12);
         search_bar.set_margin_end(12);
@@ -838,9 +944,15 @@ impl Ui {
         search_bar.append(&search);
         let list = boxed_list();
         let results = gtk::Stack::new();
-        let hint = adw::StatusPage::builder().icon_name("system-search-symbolic").title("Search for a City").build();
+        let hint = adw::StatusPage::builder()
+            .icon_name("system-search-symbolic")
+            .title("Search for a City")
+            .build();
         hint.add_css_class("compact");
-        let none = adw::StatusPage::builder().icon_name("system-search-symbolic").title("No Results").build();
+        let none = adw::StatusPage::builder()
+            .icon_name("system-search-symbolic")
+            .title("No Results")
+            .build();
         none.add_css_class("compact");
         results.add_named(&hint, Some("hint"));
         results.add_named(&none, Some("none"));
@@ -874,7 +986,11 @@ impl Ui {
                 let local_off = tz::utc_offset(ui.local, now);
                 for &i in &hits {
                     let l = &ui.db[i];
-                    let added = ui.world.borrow().iter().any(|w| w.zone == l.zone && w.name == l.city);
+                    let added = ui
+                        .world
+                        .borrow()
+                        .iter()
+                        .any(|w| w.zone == l.zone && w.name == l.city);
                     let row = adw::ActionRow::builder()
                         .title(glib::markup_escape_text(&l.city))
                         .subtitle(glib::markup_escape_text(&format!(
@@ -904,7 +1020,9 @@ impl Ui {
             let dialog = dialog.clone();
             list.connect_row_activated(move |_, row| {
                 let Some(ui) = weak.upgrade() else { return };
-                let Some(&i) = shown.borrow().get(row.index() as usize) else { return };
+                let Some(&i) = shown.borrow().get(row.index() as usize) else {
+                    return;
+                };
                 let wc = WorldClock::from_location(&ui.db[i]);
                 if !ui.world.borrow().contains(&wc) {
                     ui.world.borrow_mut().push(wc);
@@ -929,8 +1047,14 @@ impl Ui {
     // --------------------------------------------------------------- Alarms
 
     fn save_alarms(&self) {
-        let alarms: Vec<Alarm> = self.alarms.borrow().iter().map(|e| e.alarm.clone()).collect();
-        self.prefs.set_variant("alarms", store::alarms_to_variant(&alarms));
+        let alarms: Vec<Alarm> = self
+            .alarms
+            .borrow()
+            .iter()
+            .map(|e| e.alarm.clone())
+            .collect();
+        self.prefs
+            .set_variant("alarms", store::alarms_to_variant(&alarms));
         self.update_keep_alive();
     }
 
@@ -940,7 +1064,8 @@ impl Ui {
         }
         let twelve = self.twelve.get();
         let entries = self.alarms.borrow().clone();
-        self.alarm_stack.set_visible_child_name(if entries.is_empty() { "empty" } else { "list" });
+        self.alarm_stack
+            .set_visible_child_name(if entries.is_empty() { "empty" } else { "list" });
         for e in entries {
             let a = &e.alarm;
             let row = gtk::ListBoxRow::new();
@@ -974,8 +1099,14 @@ impl Ui {
             sub.set_ellipsize(gtk::pango::EllipsizeMode::End);
             vb.append(&sub);
             hb.append(&vb);
-            let switch = gtk::Switch::builder().active(a.active).valign(gtk::Align::Center).build();
-            switch.update_property(&[gtk::accessible::Property::Label(&format!("Enable alarm {}", a.name))]);
+            let switch = gtk::Switch::builder()
+                .active(a.active)
+                .valign(gtk::Align::Center)
+                .build();
+            switch.update_property(&[gtk::accessible::Property::Label(&format!(
+                "Enable alarm {}",
+                a.name
+            ))]);
             hb.append(&switch);
             row.set_child(Some(&hb));
             if !a.active {
@@ -1024,11 +1155,20 @@ impl Ui {
         let a = existing.unwrap_or_else(|| {
             let salt = self.id_salt.get() + 1;
             self.id_salt.set(salt);
-            Alarm { id: alarm::new_id(self.clock.now(), salt), ..Alarm::default() }
+            Alarm {
+                id: alarm::new_id(self.clock.now(), salt),
+                ..Alarm::default()
+            }
         });
         let twelve = self.twelve.get();
-        let dialog = adw::Dialog::builder().title(if editing { "Edit Alarm" } else { "New Alarm" }).content_width(420).build();
-        let header = adw::HeaderBar::builder().show_end_title_buttons(false).show_start_title_buttons(false).build();
+        let dialog = adw::Dialog::builder()
+            .title(if editing { "Edit Alarm" } else { "New Alarm" })
+            .content_width(420)
+            .build();
+        let header = adw::HeaderBar::builder()
+            .show_end_title_buttons(false)
+            .show_start_title_buttons(false)
+            .build();
         let cancel = gtk::Button::with_mnemonic("_Cancel");
         let save = gtk::Button::with_mnemonic(if editing { "_Done" } else { "_Add" });
         save.add_css_class("suggested-action");
@@ -1045,7 +1185,10 @@ impl Ui {
         let time_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         time_box.set_halign(gtk::Align::Center);
         let (hmin, hmax, hval) = if twelve {
-            let h12 = match a.hour % 12 { 0 => 12, h => h };
+            let h12 = match a.hour % 12 {
+                0 => 12,
+                h => h,
+            };
             (1.0, 12.0, h12 as f64)
         } else {
             (0.0, 23.0, a.hour as f64)
@@ -1086,11 +1229,27 @@ impl Ui {
         let group = adw::PreferencesGroup::new();
         let name = adw::EntryRow::builder().title("Name").text(&a.name).build();
         group.add(&name);
-        let labels: Vec<String> = alarm::DURATION_CHOICES.iter().map(|m| format!("{m} minute{}", if *m == 1 { "" } else { "s" })).collect();
+        let labels: Vec<String> = alarm::DURATION_CHOICES
+            .iter()
+            .map(|m| format!("{m} minute{}", if *m == 1 { "" } else { "s" }))
+            .collect();
         let label_refs: Vec<&str> = labels.iter().map(String::as_str).collect();
-        let pick = |v: u32| alarm::DURATION_CHOICES.iter().position(|m| *m == v).unwrap_or(3) as u32;
-        let ring = adw::ComboRow::builder().title("Ring Duration").model(&gtk::StringList::new(&label_refs)).selected(pick(a.ring_minutes)).build();
-        let snooze = adw::ComboRow::builder().title("Snooze Duration").model(&gtk::StringList::new(&label_refs)).selected(pick(a.snooze_minutes)).build();
+        let pick = |v: u32| {
+            alarm::DURATION_CHOICES
+                .iter()
+                .position(|m| *m == v)
+                .unwrap_or(3) as u32
+        };
+        let ring = adw::ComboRow::builder()
+            .title("Ring Duration")
+            .model(&gtk::StringList::new(&label_refs))
+            .selected(pick(a.ring_minutes))
+            .build();
+        let snooze = adw::ComboRow::builder()
+            .title("Snooze Duration")
+            .model(&gtk::StringList::new(&label_refs))
+            .selected(pick(a.snooze_minutes))
+            .build();
         group.add(&ring);
         group.add(&snooze);
         content.append(&group);
@@ -1145,13 +1304,19 @@ impl Ui {
             let text = name.text().trim().to_string();
             let edited = Alarm {
                 id: a.id.clone(),
-                name: if text.is_empty() { "Alarm".into() } else { text },
+                name: if text.is_empty() {
+                    "Alarm".into()
+                } else {
+                    text
+                },
                 active: true,
                 hour: h,
                 minute: minute.value() as u32,
                 days,
-                ring_minutes: alarm::DURATION_CHOICES[ring.selected() as usize % alarm::DURATION_CHOICES.len()],
-                snooze_minutes: alarm::DURATION_CHOICES[snooze.selected() as usize % alarm::DURATION_CHOICES.len()],
+                ring_minutes: alarm::DURATION_CHOICES
+                    [ring.selected() as usize % alarm::DURATION_CHOICES.len()],
+                snooze_minutes: alarm::DURATION_CHOICES
+                    [snooze.selected() as usize % alarm::DURATION_CHOICES.len()],
             };
             ui.dismiss_ringing(&edited.id);
             let entry = AlarmEntry::new(edited, ui.clock.now(), &ui.local);
@@ -1195,8 +1360,13 @@ impl Ui {
                 Event::Missed => {
                     let n = gio::Notification::new("Missed Alarm");
                     let t = NaiveTime::from_hms_opt(a.hour, a.minute, 0).unwrap_or_default();
-                    n.set_body(Some(&format!("{} ({})", a.name, tz::format_time(t, self.twelve.get()))));
-                    self.app.send_notification(Some(&format!("alarm-missed-{}", a.id)), &n);
+                    n.set_body(Some(&format!(
+                        "{} ({})",
+                        a.name,
+                        tz::format_time(t, self.twelve.get())
+                    )));
+                    self.app
+                        .send_notification(Some(&format!("alarm-missed-{}", a.id)), &n);
                 }
             }
         }
@@ -1205,7 +1375,10 @@ impl Ui {
     }
 
     fn show_ringing(self: &Rc<Self>, a: &Alarm) {
-        let t = tz::format_time(NaiveTime::from_hms_opt(a.hour, a.minute, 0).unwrap_or_default(), self.twelve.get());
+        let t = tz::format_time(
+            NaiveTime::from_hms_opt(a.hour, a.minute, 0).unwrap_or_default(),
+            self.twelve.get(),
+        );
         let n = gio::Notification::new(&a.name);
         n.set_body(Some(&t));
         n.set_priority(gio::NotificationPriority::Urgent);
@@ -1213,8 +1386,11 @@ impl Ui {
         n.add_button_with_target_value("Snooze", "app.alarm-snooze", Some(&a.id.to_variant()));
         n.add_button_with_target_value("Stop", "app.alarm-stop", Some(&a.id.to_variant()));
         n.set_default_action("app.activate");
-        self.app.send_notification(Some(&format!("alarm-{}", a.id)), &n);
-        if self.player.borrow().playing() != Some(Sound::Alarm) && !self.player.borrow_mut().play(Sound::Alarm) {
+        self.app
+            .send_notification(Some(&format!("alarm-{}", a.id)), &n);
+        if self.player.borrow().playing() != Some(Sound::Alarm)
+            && !self.player.borrow_mut().play(Sound::Alarm)
+        {
             beep();
         }
 
@@ -1236,7 +1412,9 @@ impl Ui {
                 }
             }
         });
-        self.ringing.borrow_mut().insert(a.id.clone(), dialog.clone());
+        self.ringing
+            .borrow_mut()
+            .insert(a.id.clone(), dialog.clone());
         dialog.present(Some(&self.window));
     }
 
@@ -1247,7 +1425,8 @@ impl Ui {
             d.force_close();
         }
         self.app.withdraw_notification(&format!("alarm-{id}"));
-        if self.ringing.borrow().is_empty() && self.player.borrow().playing() == Some(Sound::Alarm) {
+        if self.ringing.borrow().is_empty() && self.player.borrow().playing() == Some(Sound::Alarm)
+        {
             self.player.borrow_mut().stop();
         }
     }
@@ -1257,8 +1436,13 @@ impl Ui {
         let now = self.clock.now();
         {
             let mut alarms = self.alarms.borrow_mut();
-            let Some(e) = alarms.iter_mut().find(|e| e.alarm.id == id) else { return };
-            if !matches!(e.state, RingState::Ringing { .. } | RingState::Snoozed { .. }) {
+            let Some(e) = alarms.iter_mut().find(|e| e.alarm.id == id) else {
+                return;
+            };
+            if !matches!(
+                e.state,
+                RingState::Ringing { .. } | RingState::Snoozed { .. }
+            ) {
                 return;
             }
             if snooze {
@@ -1298,11 +1482,16 @@ impl Ui {
     fn update_stopwatch(&self) {
         let sw = self.stopwatch.borrow();
         let mono = self.clock.mono();
-        self.sw_time.set_text(&stopwatch::format_elapsed(sw.elapsed(mono), false));
+        self.sw_time
+            .set_text(&stopwatch::format_elapsed(sw.elapsed(mono), false));
         let laps = sw.laps().len();
         self.sw_split.set_visible(laps > 0);
         if laps > 0 {
-            self.sw_split.set_text(&format!("Lap {}  {}", laps + 1, stopwatch::format_elapsed(sw.current_split(mono), false)));
+            self.sw_split.set_text(&format!(
+                "Lap {}  {}",
+                laps + 1,
+                stopwatch::format_elapsed(sw.current_split(mono), false)
+            ));
         }
         let (primary, secondary, sec_sensitive) = match sw.state {
             stopwatch::State::Reset => ("Start", "Lap", false),
@@ -1319,7 +1508,8 @@ impl Ui {
         }
         self.sw_secondary.set_label(secondary);
         self.sw_secondary.set_sensitive(sec_sensitive);
-        self.sw_laps_box.set_visible(self.sw_laps.first_child().is_some());
+        self.sw_laps_box
+            .set_visible(self.sw_laps.first_child().is_some());
     }
 
     // ---------------------------------------------------------------- Timer
@@ -1358,7 +1548,10 @@ impl Ui {
         let h = time_spin(0.0, 99.0, 0.0);
         let m = time_spin(0.0, 59.0, 5.0);
         let s = time_spin(0.0, 59.0, 0.0);
-        for (i, (spin, name)) in [(&h, "Hours"), (&m, "Minutes"), (&s, "Seconds")].into_iter().enumerate() {
+        for (i, (spin, name)) in [(&h, "Hours"), (&m, "Minutes"), (&s, "Seconds")]
+            .into_iter()
+            .enumerate()
+        {
             spin.update_property(&[gtk::accessible::Property::Label(name)]);
             if i > 0 {
                 spins.append(&label(":", &["timer-time"]));
@@ -1386,8 +1579,10 @@ impl Ui {
         });
         setup.append(&start);
         setup.append(&self.timer_cancel);
-        self.timer_stack.add_named(&scrolled_clamped(&setup), Some("setup"));
-        self.timer_stack.add_named(&scrolled_clamped(&self.timer_list), Some("list"));
+        self.timer_stack
+            .add_named(&scrolled_clamped(&setup), Some("setup"));
+        self.timer_stack
+            .add_named(&scrolled_clamped(&self.timer_list), Some("list"));
     }
 
     fn add_timer(self: &Rc<Self>, mut t: Timer) {
@@ -1398,7 +1593,8 @@ impl Ui {
     }
 
     fn save_timers(&self) {
-        self.prefs.set_variant("timers", store::timers_to_variant(&self.timers.borrow()));
+        self.prefs
+            .set_variant("timers", store::timers_to_variant(&self.timers.borrow()));
         self.update_keep_alive();
     }
 
@@ -1485,11 +1681,17 @@ impl Ui {
                     }
                 });
             });
-            rows.push(TimerRow { time, progress, start, reset });
+            rows.push(TimerRow {
+                time,
+                progress,
+                start,
+                reset,
+            });
         }
         self.timer_rows.replace(rows);
         self.timer_cancel.set_visible(count > 0);
-        self.timer_stack.set_visible_child_name(if count == 0 { "setup" } else { "list" });
+        self.timer_stack
+            .set_visible_child_name(if count == 0 { "setup" } else { "list" });
         self.update_timers(self.clock.mono());
     }
 
@@ -1531,7 +1733,11 @@ impl Ui {
         }
         for (name, dur) in finished {
             let n = gio::Notification::new("Time is up!");
-            let body = if name.is_empty() { format!("{} timer", timer::describe_duration(dur.as_secs())) } else { name };
+            let body = if name.is_empty() {
+                format!("{} timer", timer::describe_duration(dur.as_secs()))
+            } else {
+                name
+            };
             n.set_body(Some(&body));
             n.set_priority(gio::NotificationPriority::High);
             n.set_icon(&gio::ThemedIcon::new("timer-symbolic"));
@@ -1572,7 +1778,11 @@ fn scrolled_clamped(child: &impl IsA<gtk::Widget>) -> gtk::ScrolledWindow {
     clamp.set_margin_bottom(12);
     clamp.set_margin_start(12);
     clamp.set_margin_end(12);
-    gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).child(&clamp).build()
+    gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .vexpand(true)
+        .child(&clamp)
+        .build()
 }
 
 fn time_spin(min: f64, max: f64, value: f64) -> gtk::SpinButton {
@@ -1591,12 +1801,17 @@ fn time_spin(min: f64, max: f64, value: f64) -> gtk::SpinButton {
 }
 
 fn lap_row(lap: &stopwatch::Lap) -> adw::ActionRow {
-    let row = adw::ActionRow::builder().title(format!("Lap {}", lap.number)).build();
+    let row = adw::ActionRow::builder()
+        .title(format!("Lap {}", lap.number))
+        .build();
     if let Some(d) = lap.delta_ms {
         row.set_subtitle(&stopwatch::format_delta(d));
     }
     let split = label(&stopwatch::format_elapsed(lap.split, true), &["clock-time"]);
-    let total = label(&stopwatch::format_elapsed(lap.total, true), &["clock-time", "dim-label"]);
+    let total = label(
+        &stopwatch::format_elapsed(lap.total, true),
+        &["clock-time", "dim-label"],
+    );
     split.set_width_chars(10);
     total.set_width_chars(10);
     row.add_suffix(&split);

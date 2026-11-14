@@ -21,7 +21,11 @@ pub struct Found {
 
 /// `help` directories in lookup order: user data dir first, then the
 /// system data dirs.
-pub fn help_dirs_from(data_home: Option<&str>, data_dirs: Option<&str>, home: Option<&str>) -> Vec<PathBuf> {
+pub fn help_dirs_from(
+    data_home: Option<&str>,
+    data_dirs: Option<&str>,
+    home: Option<&str>,
+) -> Vec<PathBuf> {
     let mut out = Vec::new();
     match data_home.filter(|s| !s.is_empty()) {
         Some(h) => out.push(PathBuf::from(h).join("help")),
@@ -31,7 +35,9 @@ pub fn help_dirs_from(data_home: Option<&str>, data_dirs: Option<&str>, home: Op
             }
         }
     }
-    let dirs = data_dirs.filter(|s| !s.is_empty()).unwrap_or("/usr/local/share:/usr/share");
+    let dirs = data_dirs
+        .filter(|s| !s.is_empty())
+        .unwrap_or("/usr/local/share:/usr/share");
     for d in dirs.split(':').filter(|d| !d.is_empty()) {
         let p = PathBuf::from(d).join("help");
         if !out.contains(&p) {
@@ -43,7 +49,11 @@ pub fn help_dirs_from(data_home: Option<&str>, data_dirs: Option<&str>, home: Op
 
 pub fn help_dirs() -> Vec<PathBuf> {
     let get = |k: &str| std::env::var(k).ok();
-    help_dirs_from(get("XDG_DATA_HOME").as_deref(), get("XDG_DATA_DIRS").as_deref(), get("HOME").as_deref())
+    help_dirs_from(
+        get("XDG_DATA_HOME").as_deref(),
+        get("XDG_DATA_DIRS").as_deref(),
+        get("HOME").as_deref(),
+    )
 }
 
 /// Detects a document's format in a directory. `id` is the document name
@@ -57,21 +67,32 @@ pub fn detect_dir(dir: &Path, id: &str) -> Option<Found> {
     ];
     candidates.into_iter().find_map(|(name, format)| {
         let entry = dir.join(name);
-        entry.is_file().then(|| Found { dir: dir.to_path_buf(), entry, format })
+        entry.is_file().then(|| Found {
+            dir: dir.to_path_buf(),
+            entry,
+            format,
+        })
     })
 }
 
 /// Detects a document from a user-supplied directory or file.
 pub fn detect_path(path: &Path) -> Option<Found> {
     if path.is_dir() {
-        let id = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+        let id = path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
         return detect_dir(path, &id).or_else(|| {
             // A Mallard directory without index.page is still browsable.
             let has_pages = std::fs::read_dir(path)
                 .ok()?
                 .flatten()
                 .any(|e| e.path().extension().is_some_and(|x| x == "page"));
-            has_pages.then(|| Found { dir: path.to_path_buf(), entry: path.join("index.page"), format: Format::Mallard })
+            has_pages.then(|| Found {
+                dir: path.to_path_buf(),
+                entry: path.join("index.page"),
+                format: Format::Mallard,
+            })
         });
     }
     if !path.is_file() {
@@ -84,7 +105,11 @@ pub fn detect_path(path: &Path) -> Option<Found> {
         "html" | "htm" => Format::Html,
         _ => return None,
     };
-    let entry = if format == Format::Mallard { dir.join("index.page") } else { path.to_path_buf() };
+    let entry = if format == Format::Mallard {
+        dir.join("index.page")
+    } else {
+        path.to_path_buf()
+    };
     Some(Found { dir, entry, format })
 }
 
@@ -119,7 +144,9 @@ pub fn list_ids(dirs: &[PathBuf], locales: &[String]) -> Vec<String> {
             }
         }
     }
-    ids.into_iter().filter(|id| find(id, dirs, locales).is_some()).collect()
+    ids.into_iter()
+        .filter(|id| find(id, dirs, locales).is_some())
+        .collect()
 }
 
 #[cfg(test)]
@@ -138,11 +165,19 @@ mod tests {
     fn dirs_from_env() {
         assert_eq!(
             help_dirs_from(Some("/h/.local/share"), Some("/a:/b/"), None),
-            [PathBuf::from("/h/.local/share/help"), "/a/help".into(), "/b/help".into()]
+            [
+                PathBuf::from("/h/.local/share/help"),
+                "/a/help".into(),
+                "/b/help".into()
+            ]
         );
         assert_eq!(
             help_dirs_from(None, None, Some("/home/u")),
-            [PathBuf::from("/home/u/.local/share/help"), "/usr/local/share/help".into(), "/usr/share/help".into()]
+            [
+                PathBuf::from("/home/u/.local/share/help"),
+                "/usr/local/share/help".into(),
+                "/usr/share/help".into()
+            ]
         );
     }
 
@@ -171,10 +206,17 @@ mod tests {
 
         let c = vec!["fr".to_string(), "C".to_string()];
         let f = find("app", &dirs, &c).unwrap();
-        assert_eq!(f.dir, user.join("C/app"), "user dir wins within the same locale");
+        assert_eq!(
+            f.dir,
+            user.join("C/app"),
+            "user dir wins within the same locale"
+        );
         assert_eq!(f.format, Format::DocBook);
 
-        assert_eq!(find("old", &dirs, &c).unwrap().entry, sys.join("C/old/old.xml"));
+        assert_eq!(
+            find("old", &dirs, &c).unwrap().entry,
+            sys.join("C/old/old.xml")
+        );
         assert_eq!(find("web", &dirs, &c).unwrap().format, Format::Html);
         assert!(find("empty", &dirs, &c).is_none());
         assert!(find("../C/app", &dirs, &c).is_none());
@@ -189,8 +231,14 @@ mod tests {
         fs::write(root.join("a.page"), "<page/>").unwrap();
         fs::write(root.join("manual.docbook"), "<book/>").unwrap();
         assert_eq!(detect_path(&root).unwrap().format, Format::Mallard);
-        assert_eq!(detect_path(&root.join("a.page")).unwrap().entry, root.join("index.page"));
-        assert_eq!(detect_path(&root.join("manual.docbook")).unwrap().entry, root.join("manual.docbook"));
+        assert_eq!(
+            detect_path(&root.join("a.page")).unwrap().entry,
+            root.join("index.page")
+        );
+        assert_eq!(
+            detect_path(&root.join("manual.docbook")).unwrap().entry,
+            root.join("manual.docbook")
+        );
         assert!(detect_path(&root.join("missing")).is_none());
         let _ = fs::remove_dir_all(root);
     }

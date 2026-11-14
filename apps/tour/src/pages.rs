@@ -88,7 +88,11 @@ mod tests {
     #[test]
     fn markup_is_valid() {
         for page in PAGES {
-            assert!(gtk::pango::parse_markup(page.body, '\0').is_ok(), "{}", page.title);
+            assert!(
+                gtk::pango::parse_markup(page.body, '\0').is_ok(),
+                "{}",
+                page.title
+            );
             assert!(!page.body.contains("  "), "double space in {}", page.title);
         }
     }

@@ -39,7 +39,14 @@ impl Stamp {
                 minute: d.minute() as u32,
                 second: d.second() as u32,
             },
-            Err(_) => Stamp { year: 1970, month: 1, day: 1, hour: 0, minute: 0, second: 0 },
+            Err(_) => Stamp {
+                year: 1970,
+                month: 1,
+                day: 1,
+                hour: 0,
+                minute: 0,
+                second: 0,
+            },
         }
     }
 }
@@ -129,13 +136,26 @@ mod tests {
     use std::collections::HashSet;
 
     fn stamp() -> Stamp {
-        Stamp { year: 2024, month: 3, day: 9, hour: 7, minute: 5, second: 1 }
+        Stamp {
+            year: 2024,
+            month: 3,
+            day: 9,
+            hour: 7,
+            minute: 5,
+            second: 1,
+        }
     }
 
     #[test]
     fn base_names_are_zero_padded() {
-        assert_eq!(base_name(CaptureKind::Photo, &stamp()), "Photo from 2024-03-09 07-05-01");
-        assert_eq!(base_name(CaptureKind::Video, &stamp()), "Video from 2024-03-09 07-05-01");
+        assert_eq!(
+            base_name(CaptureKind::Photo, &stamp()),
+            "Photo from 2024-03-09 07-05-01"
+        );
+        assert_eq!(
+            base_name(CaptureKind::Video, &stamp()),
+            "Video from 2024-03-09 07-05-01"
+        );
     }
 
     #[test]
@@ -148,17 +168,36 @@ mod tests {
         .iter()
         .map(PathBuf::from)
         .collect();
-        let p = unique_path(dir, CaptureKind::Photo, &stamp(), "jpg", |p| taken.contains(p));
-        assert_eq!(p, PathBuf::from("/x/Photo from 2024-03-09 07-05-01 (3).jpg"));
-        let free = unique_path(dir, CaptureKind::Video, &stamp(), "webm", |p| taken.contains(p));
-        assert_eq!(free, PathBuf::from("/x/Video from 2024-03-09 07-05-01.webm"));
+        let p = unique_path(dir, CaptureKind::Photo, &stamp(), "jpg", |p| {
+            taken.contains(p)
+        });
+        assert_eq!(
+            p,
+            PathBuf::from("/x/Photo from 2024-03-09 07-05-01 (3).jpg")
+        );
+        let free = unique_path(dir, CaptureKind::Video, &stamp(), "webm", |p| {
+            taken.contains(p)
+        });
+        assert_eq!(
+            free,
+            PathBuf::from("/x/Video from 2024-03-09 07-05-01.webm")
+        );
     }
 
     #[test]
     fn recognises_capture_names() {
-        assert_eq!(is_capture_name("Photo from 2024-01-01 00-00-00.jpg"), Some(CaptureKind::Photo));
-        assert_eq!(is_capture_name("Video from 2024-01-01 00-00-00 (2).webm"), Some(CaptureKind::Video));
-        assert_eq!(is_capture_name("Video from x.mp4"), Some(CaptureKind::Video));
+        assert_eq!(
+            is_capture_name("Photo from 2024-01-01 00-00-00.jpg"),
+            Some(CaptureKind::Photo)
+        );
+        assert_eq!(
+            is_capture_name("Video from 2024-01-01 00-00-00 (2).webm"),
+            Some(CaptureKind::Video)
+        );
+        assert_eq!(
+            is_capture_name("Video from x.mp4"),
+            Some(CaptureKind::Video)
+        );
         assert_eq!(is_capture_name("holiday.jpg"), None);
         assert_eq!(is_capture_name("Photo from x.txt"), None);
     }

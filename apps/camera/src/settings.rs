@@ -136,12 +136,17 @@ impl Settings {
             prefs.set_enum_nick("capture-mode", mode_to_nick(&self.capture_mode));
         }
         set_if("play-shutter-sound", self.play_shutter_sound.to_variant());
-        set_if("last-camera-id", self.last_camera.clone().unwrap_or_default().to_variant());
+        set_if(
+            "last-camera-id",
+            self.last_camera.clone().unwrap_or_default().to_variant(),
+        );
         set_if("window-width", self.window_width.to_variant());
         set_if("window-height", self.window_height.to_variant());
         set_if("is-maximized", self.is_maximized.to_variant());
-        let json = serde_json::to_string_pretty(&PrivateOnly { video_format: &self.video_format })
-            .map_err(std::io::Error::other)?;
+        let json = serde_json::to_string_pretty(&PrivateOnly {
+            video_format: &self.video_format,
+        })
+        .map_err(std::io::Error::other)?;
         std::fs::write(path, json)
     }
 
@@ -177,7 +182,11 @@ mod tests {
         };
         s.save_to(&path).unwrap();
         assert_eq!(Settings::load_from(&path), s);
-        std::fs::write(&path, r#"{"countdown": 7, "capture_mode": "x", "video_format": "avi"}"#).unwrap();
+        std::fs::write(
+            &path,
+            r#"{"countdown": 7, "capture_mode": "x", "video_format": "avi"}"#,
+        )
+        .unwrap();
         let s = Settings::load_from(&path);
         assert_eq!((s.countdown, s.capture_mode.as_str()), (0, "photo"));
         assert_eq!(s.video_format(), VideoFormat::WebmVp8);
@@ -199,7 +208,11 @@ mod tests {
         let path = dir.join("settings.json");
         let prefs = Prefs::new("org.helix.Camera.DoesNotExist");
         assert!(!prefs.is_persistent());
-        let s = Settings { countdown: 3, play_shutter_sound: false, ..Settings::default() };
+        let s = Settings {
+            countdown: 3,
+            play_shutter_sound: false,
+            ..Settings::default()
+        };
         s.save(&prefs, &path).unwrap();
         assert_eq!(Settings::load(&prefs, &path), s);
         std::fs::remove_dir_all(&dir).unwrap();

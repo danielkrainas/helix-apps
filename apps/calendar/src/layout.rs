@@ -10,14 +10,15 @@ pub fn columns(spans: &[(i64, i64)]) -> Vec<(usize, usize)> {
     let mut cluster: Vec<usize> = Vec::new();
     let mut col_ends: Vec<i64> = Vec::new();
     let mut cluster_end = i64::MIN;
-    let flush = |cluster: &mut Vec<usize>, col_ends: &mut Vec<i64>, out: &mut Vec<(usize, usize)>| {
-        let n = col_ends.len().max(1);
-        for &i in cluster.iter() {
-            out[i].1 = n;
-        }
-        cluster.clear();
-        col_ends.clear();
-    };
+    let flush =
+        |cluster: &mut Vec<usize>, col_ends: &mut Vec<i64>, out: &mut Vec<(usize, usize)>| {
+            let n = col_ends.len().max(1);
+            for &i in cluster.iter() {
+                out[i].1 = n;
+            }
+            cluster.clear();
+            col_ends.clear();
+        };
     for i in order {
         let (s, e) = spans[i];
         // Zero-length events still occupy a sliver.
@@ -37,7 +38,11 @@ pub fn columns(spans: &[(i64, i64)]) -> Vec<(usize, usize)> {
         };
         out[i].0 = col;
         cluster.push(i);
-        cluster_end = if cluster.len() == 1 { e } else { cluster_end.max(e) };
+        cluster_end = if cluster.len() == 1 {
+            e
+        } else {
+            cluster_end.max(e)
+        };
     }
     if !cluster.is_empty() {
         flush(&mut cluster, &mut col_ends, &mut out);

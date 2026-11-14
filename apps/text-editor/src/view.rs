@@ -37,10 +37,16 @@ mod imp {
                     let buffer = view.buffer();
                     let iter = buffer.iter_at_mark(&buffer.get_insert());
                     let (y, h) = view.line_yrange(&iter);
-                    let color = gtk::gdk::RGBA::new(shade, shade, shade, if dark { 0.07 } else { 0.06 });
+                    let color =
+                        gtk::gdk::RGBA::new(shade, shade, shade, if dark { 0.07 } else { 0.06 });
                     snapshot.append_color(
                         &color,
-                        &gtk::graphene::Rect::new(visible.x() as f32, y as f32, visible.width() as f32, h as f32),
+                        &gtk::graphene::Rect::new(
+                            visible.x() as f32,
+                            y as f32,
+                            visible.width() as f32,
+                            h as f32,
+                        ),
                     );
                 }
                 let col = self.right_margin.get();
@@ -54,7 +60,8 @@ mod imp {
                     let h = visible.height() as f32;
                     let right = (visible.x() + visible.width()) as f32;
                     if right > x {
-                        snapshot.append_color(&fill, &gtk::graphene::Rect::new(x, top, right - x, h));
+                        snapshot
+                            .append_color(&fill, &gtk::graphene::Rect::new(x, top, right - x, h));
                     }
                     snapshot.append_color(&line, &gtk::graphene::Rect::new(x, top, 1.0, h));
                 }
@@ -87,7 +94,9 @@ mod imp {
             if orientation == gtk::Orientation::Vertical {
                 return (0, 0, -1, -1);
             }
-            let Some(view) = self.view.upgrade() else { return (0, 0, -1, -1) };
+            let Some(view) = self.view.upgrade() else {
+                return (0, 0, -1, -1);
+            };
             let digits = self.digits.get().max(2) as usize;
             let layout = view.create_pango_layout(Some(&"0".repeat(digits)));
             let w = layout.pixel_size().0 + 20;
@@ -95,7 +104,9 @@ mod imp {
         }
 
         fn snapshot(&self, snapshot: &gtk::Snapshot) {
-            let Some(view) = self.view.upgrade() else { return };
+            let Some(view) = self.view.upgrade() else {
+                return;
+            };
             let gutter = self.obj();
             let width = gutter.width() as f32;
             let height = gutter.height();
@@ -104,7 +115,9 @@ mod imp {
             let fg = gutter.color();
             let dim = gtk::gdk::RGBA::new(fg.red(), fg.green(), fg.blue(), fg.alpha() * 0.45);
             let visible = view.visible_rect();
-            let Some(mut iter) = view.iter_at_location(visible.x(), visible.y()) else { return };
+            let Some(mut iter) = view.iter_at_location(visible.x(), visible.y()) else {
+                return;
+            };
             iter.set_line_offset(0);
             loop {
                 let (y, h) = view.line_yrange(&iter);
@@ -124,7 +137,10 @@ mod imp {
                 // Align with the first display line of the paragraph.
                 let first_h = lh.min(h);
                 snapshot.save();
-                snapshot.translate(&gtk::graphene::Point::new(width - 10.0 - lw as f32, wy as f32 + (first_h - lh) as f32 / 2.0));
+                snapshot.translate(&gtk::graphene::Point::new(
+                    width - 10.0 - lw as f32,
+                    wy as f32 + (first_h - lh) as f32 / 2.0,
+                ));
                 snapshot.append_layout(&layout, if current { &fg } else { &dim });
                 snapshot.restore();
                 if !iter.forward_line() {
@@ -173,7 +189,9 @@ impl LineGutter {
 
     /// Recomputes the width from the buffer's line count.
     pub fn update_width(&self) {
-        let Some(view) = self.imp().view.upgrade() else { return };
+        let Some(view) = self.imp().view.upgrade() else {
+            return;
+        };
         let digits = view.buffer().line_count().max(1).to_string().len() as u32;
         if digits != self.imp().digits.get() {
             self.imp().digits.set(digits);

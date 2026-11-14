@@ -23,12 +23,21 @@ pub struct EntryInfo {
     pub title: String,
 }
 
-pub fn to_m3u(name: &str, entries: &[PathBuf], info: impl Fn(&Path) -> Option<EntryInfo>) -> String {
+pub fn to_m3u(
+    name: &str,
+    entries: &[PathBuf],
+    info: impl Fn(&Path) -> Option<EntryInfo>,
+) -> String {
     let mut out = String::from("#EXTM3U\n");
     out.push_str(&format!("#PLAYLIST:{}\n", one_line(name)));
     for p in entries {
         if let Some(i) = info(p) {
-            out.push_str(&format!("#EXTINF:{},{} - {}\n", i.seconds, one_line(&i.artist), one_line(&i.title)));
+            out.push_str(&format!(
+                "#EXTINF:{},{} - {}\n",
+                i.seconds,
+                one_line(&i.artist),
+                one_line(&i.title)
+            ));
         }
         out.push_str(&p.to_string_lossy());
         out.push('\n');
@@ -110,16 +119,32 @@ fn xml_escape(s: &str) -> String {
 }
 
 /// Writes an XSPF playlist (`file://` locations, title/creator/duration).
-pub fn to_xspf(name: &str, entries: &[PathBuf], info: impl Fn(&Path) -> Option<EntryInfo>) -> String {
+pub fn to_xspf(
+    name: &str,
+    entries: &[PathBuf],
+    info: impl Fn(&Path) -> Option<EntryInfo>,
+) -> String {
     let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">\n");
-    out.push_str(&format!("  <title>{}</title>\n  <trackList>\n", xml_escape(name)));
+    out.push_str(&format!(
+        "  <title>{}</title>\n  <trackList>\n",
+        xml_escape(name)
+    ));
     for p in entries {
         out.push_str("    <track>\n");
-        out.push_str(&format!("      <location>{}</location>\n", xml_escape(&crate::model::path_to_uri(p))));
+        out.push_str(&format!(
+            "      <location>{}</location>\n",
+            xml_escape(&crate::model::path_to_uri(p))
+        ));
         if let Some(i) = info(p) {
             out.push_str(&format!("      <title>{}</title>\n", xml_escape(&i.title)));
-            out.push_str(&format!("      <creator>{}</creator>\n", xml_escape(&i.artist)));
-            out.push_str(&format!("      <duration>{}</duration>\n", i.seconds * 1000));
+            out.push_str(&format!(
+                "      <creator>{}</creator>\n",
+                xml_escape(&i.artist)
+            ));
+            out.push_str(&format!(
+                "      <duration>{}</duration>\n",
+                i.seconds * 1000
+            ));
         }
         out.push_str("    </track>\n");
     }
@@ -128,7 +153,8 @@ pub fn to_xspf(name: &str, entries: &[PathBuf], info: impl Fn(&Path) -> Option<E
 }
 
 fn xml_child<'a, 'i>(n: roxmltree::Node<'a, 'i>, name: &str) -> Option<roxmltree::Node<'a, 'i>> {
-    n.children().find(|c| c.is_element() && c.tag_name().name() == name)
+    n.children()
+        .find(|c| c.is_element() && c.tag_name().name() == name)
 }
 
 /// Parses XSPF. Relative locations resolve against `base`; non-file
@@ -139,12 +165,21 @@ pub fn parse_xspf(text: &str, base: &Path) -> Result<(Option<String>, Vec<PathBu
     if root.tag_name().name() != "playlist" {
         return Err("not an XSPF playlist".into());
     }
-    let name = xml_child(root, "title").and_then(|t| t.text()).map(|t| t.trim().to_string()).filter(|t| !t.is_empty());
+    let name = xml_child(root, "title")
+        .and_then(|t| t.text())
+        .map(|t| t.trim().to_string())
+        .filter(|t| !t.is_empty());
     let mut entries = Vec::new();
     if let Some(list) = xml_child(root, "trackList") {
-        for track in list.children().filter(|c| c.is_element() && c.tag_name().name() == "track") {
+        for track in list
+            .children()
+            .filter(|c| c.is_element() && c.tag_name().name() == "track")
+        {
             // A track may list several alternative locations; use the first usable one.
-            for loc in track.children().filter(|c| c.is_element() && c.tag_name().name() == "location") {
+            for loc in track
+                .children()
+                .filter(|c| c.is_element() && c.tag_name().name() == "location")
+            {
                 if let Some(p) = location_to_path(loc.text().unwrap_or("").trim(), base) {
                     entries.push(p);
                     break;
@@ -167,7 +202,9 @@ fn location_to_path(loc: &str, base: &Path) -> Option<PathBuf> {
         return None;
     }
     // Relative URI references are percent-encoded.
-    let decoded = glib::Uri::unescape_string(loc, None::<&str>).map(|s| s.to_string()).unwrap_or_else(|| loc.to_string());
+    let decoded = glib::Uri::unescape_string(loc, None::<&str>)
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| loc.to_string());
     let p = PathBuf::from(decoded);
     Some(if p.is_absolute() { p } else { base.join(p) })
 }
@@ -177,8 +214,16 @@ pub fn parse_pls(text: &str, base: &Path) -> Vec<PathBuf> {
     let mut entries: Vec<(u32, PathBuf)> = Vec::new();
     for line in text.lines() {
         let line = line.trim_start_matches('\u{feff}').trim();
-        let Some((key, value)) = line.split_once('=') else { continue };
-        let Some(n) = key.trim().strip_prefix("File").and_then(|n| n.parse::<u32>().ok()) else { continue };
+        let Some((key, value)) = line.split_once('=') else {
+            continue;
+        };
+        let Some(n) = key
+            .trim()
+            .strip_prefix("File")
+            .and_then(|n| n.parse::<u32>().ok())
+        else {
+            continue;
+        };
         let value = value.trim();
         let path = if value.starts_with("file:") || value.contains("://") {
             location_to_path(value, base)
@@ -206,7 +251,9 @@ pub fn read_any(file: &Path) -> std::io::Result<(Option<String>, Vec<PathBuf>)> 
 }
 
 fn stem_name(file: &Path) -> String {
-    file.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default()
+    file.file_stem()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_default()
 }
 
 /// Copies a foreign playlist into `dir` as a new M3U playlist, keeping only
@@ -223,12 +270,20 @@ pub fn import(
         return None;
     }
     let name = name.unwrap_or_else(|| stem_name(source));
-    Some(Playlist { file: new_file_for(dir, &name), name, entries })
+    Some(Playlist {
+        file: new_file_for(dir, &name),
+        name,
+        entries,
+    })
 }
 
 /// Writes `pl`'s entries to `dest` in the format its extension names
 /// (XSPF for `.xspf`, M3U otherwise).
-pub fn export(pl: &Playlist, dest: &Path, info: impl Fn(&Path) -> Option<EntryInfo>) -> std::io::Result<()> {
+pub fn export(
+    pl: &Playlist,
+    dest: &Path,
+    info: impl Fn(&Path) -> Option<EntryInfo>,
+) -> std::io::Result<()> {
     let data = match Format::of(dest) {
         Some(Format::Xspf) => to_xspf(&pl.name, &pl.entries, info),
         _ => to_m3u(&pl.name, &pl.entries, info),
@@ -239,7 +294,13 @@ pub fn export(pl: &Playlist, dest: &Path, info: impl Fn(&Path) -> Option<EntryIn
 fn sanitize(name: &str) -> String {
     let s: String = name
         .chars()
-        .map(|c| if c == '/' || c == '\\' || c.is_control() { '_' } else { c })
+        .map(|c| {
+            if c == '/' || c == '\\' || c.is_control() {
+                '_'
+            } else {
+                c
+            }
+        })
         .collect::<String>()
         .trim()
         .trim_start_matches('.')
@@ -268,7 +329,11 @@ pub fn new_file_for(dir: &Path, name: &str) -> PathBuf {
 pub fn load(file: &Path) -> std::io::Result<Playlist> {
     let (name, entries) = read_any(file)?;
     let name = name.unwrap_or_else(|| stem_name(file));
-    Ok(Playlist { name, entries, file: file.to_path_buf() })
+    Ok(Playlist {
+        name,
+        entries,
+        file: file.to_path_buf(),
+    })
 }
 
 pub fn load_all(dir: &Path) -> Vec<Playlist> {
@@ -293,7 +358,10 @@ pub fn write_atomic(path: &Path, data: &[u8]) -> std::io::Result<()> {
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir)?;
     }
-    let tmp = path.with_extension(format!("{}.tmp", path.extension().and_then(|e| e.to_str()).unwrap_or("")));
+    let tmp = path.with_extension(format!(
+        "{}.tmp",
+        path.extension().and_then(|e| e.to_str()).unwrap_or("")
+    ));
     std::fs::write(&tmp, data)?;
     std::fs::rename(&tmp, path)
 }
@@ -317,7 +385,10 @@ pub struct Stats {
 
 impl Stats {
     pub fn load(file: &Path) -> Self {
-        std::fs::read(file).ok().and_then(|d| serde_json::from_slice(&d).ok()).unwrap_or_default()
+        std::fs::read(file)
+            .ok()
+            .and_then(|d| serde_json::from_slice(&d).ok())
+            .unwrap_or_default()
     }
 
     pub fn save(&self, file: &Path) -> std::io::Result<()> {
@@ -367,7 +438,12 @@ pub enum Smart {
 }
 
 impl Smart {
-    pub const ALL: [Smart; 4] = [Smart::Favorites, Smart::MostPlayed, Smart::RecentlyPlayed, Smart::RecentlyAdded];
+    pub const ALL: [Smart; 4] = [
+        Smart::Favorites,
+        Smart::MostPlayed,
+        Smart::RecentlyPlayed,
+        Smart::RecentlyAdded,
+    ];
 
     pub fn title(self) -> &'static str {
         match self {
@@ -391,15 +467,28 @@ impl Smart {
     pub fn tracks(self, lib: &Library, stats: &Stats) -> Vec<usize> {
         let stat = |i: usize| stats.get(&lib.tracks[i].path);
         match self {
-            Smart::Favorites => lib.all_tracks_by_album().into_iter().filter(|&i| stat(i).is_some_and(|s| s.favorite)).collect(),
+            Smart::Favorites => lib
+                .all_tracks_by_album()
+                .into_iter()
+                .filter(|&i| stat(i).is_some_and(|s| s.favorite))
+                .collect(),
             Smart::MostPlayed => {
-                let mut v: Vec<usize> = (0..lib.tracks.len()).filter(|&i| stat(i).is_some_and(|s| s.plays > 0)).collect();
-                v.sort_by_key(|&i| (std::cmp::Reverse(stat(i).map_or(0, |s| s.plays)), std::cmp::Reverse(stat(i).and_then(|s| s.last_played))));
+                let mut v: Vec<usize> = (0..lib.tracks.len())
+                    .filter(|&i| stat(i).is_some_and(|s| s.plays > 0))
+                    .collect();
+                v.sort_by_key(|&i| {
+                    (
+                        std::cmp::Reverse(stat(i).map_or(0, |s| s.plays)),
+                        std::cmp::Reverse(stat(i).and_then(|s| s.last_played)),
+                    )
+                });
                 v.truncate(SMART_LIMIT);
                 v
             }
             Smart::RecentlyPlayed => {
-                let mut v: Vec<usize> = (0..lib.tracks.len()).filter(|&i| stat(i).and_then(|s| s.last_played).is_some()).collect();
+                let mut v: Vec<usize> = (0..lib.tracks.len())
+                    .filter(|&i| stat(i).and_then(|s| s.last_played).is_some())
+                    .collect();
                 v.sort_by_key(|&i| std::cmp::Reverse(stat(i).and_then(|s| s.last_played)));
                 v.truncate(SMART_LIMIT);
                 v
@@ -423,10 +512,24 @@ mod tests {
     #[test]
     fn m3u_round_trip() {
         let dir = tempfile::tempdir().unwrap();
-        let entries = vec![PathBuf::from("/music/a b/01 – Ünïcode.flac"), PathBuf::from("/music/x.mp3")];
-        let pl = Playlist { name: "Road\ntrip".into(), entries: entries.clone(), file: new_file_for(dir.path(), "Road/trip") };
+        let entries = vec![
+            PathBuf::from("/music/a b/01 – Ünïcode.flac"),
+            PathBuf::from("/music/x.mp3"),
+        ];
+        let pl = Playlist {
+            name: "Road\ntrip".into(),
+            entries: entries.clone(),
+            file: new_file_for(dir.path(), "Road/trip"),
+        };
         assert_eq!(pl.file.file_name().unwrap(), "Road_trip.m3u");
-        save(&pl, |p| Some(EntryInfo { seconds: 61, artist: "A".into(), title: p.to_string_lossy().into_owned() })).unwrap();
+        save(&pl, |p| {
+            Some(EntryInfo {
+                seconds: 61,
+                artist: "A".into(),
+                title: p.to_string_lossy().into_owned(),
+            })
+        })
+        .unwrap();
         let text = std::fs::read_to_string(&pl.file).unwrap();
         assert!(text.starts_with("#EXTM3U\n#PLAYLIST:Road trip\n#EXTINF:61,A - /music/a b/01"));
         let back = load(&pl.file).unwrap();
@@ -434,7 +537,10 @@ mod tests {
         assert_eq!(back.entries, entries);
         assert_eq!(load_all(dir.path()), vec![back]);
         // A second playlist with the same name gets a distinct file.
-        assert_eq!(new_file_for(dir.path(), "Road/trip").file_name().unwrap(), "Road_trip 2.m3u");
+        assert_eq!(
+            new_file_for(dir.path(), "Road/trip").file_name().unwrap(),
+            "Road_trip 2.m3u"
+        );
     }
 
     #[test]
@@ -442,7 +548,14 @@ mod tests {
         let text = "\u{feff}#EXTM3U\r\n#EXTINF:10,x\r\nsub/song.ogg\r\nfile:///abs/s%20p.mp3\r\nhttp://radio/stream\r\n\r\n/abs/b.flac\r\n";
         let (name, entries) = parse_m3u(text, Path::new("/lists"));
         assert_eq!(name, None);
-        assert_eq!(entries, [PathBuf::from("/lists/sub/song.ogg"), PathBuf::from("/abs/s p.mp3"), PathBuf::from("/abs/b.flac")]);
+        assert_eq!(
+            entries,
+            [
+                PathBuf::from("/lists/sub/song.ogg"),
+                PathBuf::from("/abs/s p.mp3"),
+                PathBuf::from("/abs/b.flac")
+            ]
+        );
     }
 
     #[test]
@@ -451,12 +564,21 @@ mod tests {
         let entries = vec![PathBuf::from("/m/a.ogg")];
         let text = to_m3u("Mix", &entries, |_| None);
         assert_eq!(text, "#EXTM3U\n#PLAYLIST:Mix\n/m/a.ogg\n");
-        let text = to_m3u("Mix", &entries, |_| Some(EntryInfo { seconds: 5, artist: "A\r\nB".into(), title: "T".into() }));
+        let text = to_m3u("Mix", &entries, |_| {
+            Some(EntryInfo {
+                seconds: 5,
+                artist: "A\r\nB".into(),
+                title: "T".into(),
+            })
+        });
         assert!(text.contains("#EXTINF:5,A  B - T\n"));
         // A plain (non-extended) M3U with relative paths.
         let (name, e) = parse_m3u("a.mp3\n../b.mp3\n", Path::new("/x/y"));
         assert_eq!(name, None);
-        assert_eq!(e, [PathBuf::from("/x/y/a.mp3"), PathBuf::from("/x/y/../b.mp3")]);
+        assert_eq!(
+            e,
+            [PathBuf::from("/x/y/a.mp3"), PathBuf::from("/x/y/../b.mp3")]
+        );
         assert_eq!(Format::of(Path::new("a.M3U8")), Some(Format::M3u));
         assert_eq!(Format::of(Path::new("a.txt")), None);
     }
@@ -464,14 +586,31 @@ mod tests {
     #[test]
     fn xspf_round_trip() {
         let dir = tempfile::tempdir().unwrap();
-        let entries = vec![PathBuf::from("/music/R&B <live>/01 \"x\".flac"), PathBuf::from("/music/ü.mp3")];
-        let pl = Playlist { name: "Rock & Roll".into(), entries: entries.clone(), file: dir.path().join("rr.xspf") };
-        save(&pl, |_| Some(EntryInfo { seconds: 2, artist: "A<B".into(), title: "T".into() })).unwrap();
+        let entries = vec![
+            PathBuf::from("/music/R&B <live>/01 \"x\".flac"),
+            PathBuf::from("/music/ü.mp3"),
+        ];
+        let pl = Playlist {
+            name: "Rock & Roll".into(),
+            entries: entries.clone(),
+            file: dir.path().join("rr.xspf"),
+        };
+        save(&pl, |_| {
+            Some(EntryInfo {
+                seconds: 2,
+                artist: "A<B".into(),
+                title: "T".into(),
+            })
+        })
+        .unwrap();
         let text = std::fs::read_to_string(&pl.file).unwrap();
         assert!(text.contains("<title>Rock &amp; Roll</title>"));
         assert!(text.contains("<duration>2000</duration>"));
         let back = load(&pl.file).unwrap();
-        assert_eq!((back.name.as_str(), back.entries.clone()), ("Rock & Roll", entries));
+        assert_eq!(
+            (back.name.as_str(), back.entries.clone()),
+            ("Rock & Roll", entries)
+        );
         assert_eq!(load_all(dir.path()).len(), 1);
     }
 
@@ -487,11 +626,20 @@ mod tests {
 </playlist>"#;
         let (name, e) = parse_xspf(xspf, Path::new("/lists")).unwrap();
         assert_eq!(name, None);
-        assert_eq!(e, [PathBuf::from("/abs/a b.ogg"), PathBuf::from("/lists/sub/c d.mp3")]);
+        assert_eq!(
+            e,
+            [
+                PathBuf::from("/abs/a b.ogg"),
+                PathBuf::from("/lists/sub/c d.mp3")
+            ]
+        );
         assert!(parse_xspf("<html/>", Path::new("/")).is_err());
 
         let pls = "[playlist]\nFile2=/m/two.mp3\nTitle2=Two\nFile1=one.mp3\nFile3=http://radio\nNumberOfEntries=3\nVersion=2\n";
-        assert_eq!(parse_pls(pls, Path::new("/m")), [PathBuf::from("/m/one.mp3"), PathBuf::from("/m/two.mp3")]);
+        assert_eq!(
+            parse_pls(pls, Path::new("/m")),
+            [PathBuf::from("/m/one.mp3"), PathBuf::from("/m/two.mp3")]
+        );
     }
 
     #[test]
@@ -502,17 +650,26 @@ mod tests {
         std::fs::write(&f, "[playlist]\nFile1=/m/a.mp3\nFile2=/elsewhere/z.mp4\n").unwrap();
         let (name, entries) = read_any(&f).unwrap();
         let pl = import(name, &f, entries, lib.path(), |p| p.starts_with("/m")).unwrap();
-        assert_eq!((pl.name.as_str(), pl.entries.clone()), ("Party", vec![PathBuf::from("/m/a.mp3")]));
+        assert_eq!(
+            (pl.name.as_str(), pl.entries.clone()),
+            ("Party", vec![PathBuf::from("/m/a.mp3")])
+        );
         assert_eq!(pl.file, lib.path().join("Party.m3u"));
         save(&pl, |_| None).unwrap();
         assert!(import(None, &f, vec![PathBuf::from("/x")], lib.path(), |_| false).is_none());
 
         let out = src.path().join("out.xspf");
         export(&pl, &out, |_| None).unwrap();
-        assert_eq!(read_any(&out).unwrap(), (Some("Party".into()), vec![PathBuf::from("/m/a.mp3")]));
+        assert_eq!(
+            read_any(&out).unwrap(),
+            (Some("Party".into()), vec![PathBuf::from("/m/a.mp3")])
+        );
         let out = src.path().join("out.m3u8");
         export(&pl, &out, |_| None).unwrap();
-        assert_eq!(read_any(&out).unwrap(), (Some("Party".into()), vec![PathBuf::from("/m/a.mp3")]));
+        assert_eq!(
+            read_any(&out).unwrap(),
+            (Some("Party".into()), vec![PathBuf::from("/m/a.mp3")])
+        );
     }
 
     #[test]
@@ -531,11 +688,24 @@ mod tests {
         st.record_play(Path::new("/m/2"), 200);
         st.record_play(Path::new("/m/3"), 300);
         st.set_favorite(Path::new("/m/1"), true);
-        let titles = |v: Vec<usize>| v.into_iter().map(|i| lib.tracks[i].title.clone()).collect::<Vec<_>>();
-        assert_eq!(titles(Smart::MostPlayed.tracks(&lib, &st)), ["two", "three"]);
-        assert_eq!(titles(Smart::RecentlyPlayed.tracks(&lib, &st)), ["three", "two"]);
+        let titles = |v: Vec<usize>| {
+            v.into_iter()
+                .map(|i| lib.tracks[i].title.clone())
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            titles(Smart::MostPlayed.tracks(&lib, &st)),
+            ["two", "three"]
+        );
+        assert_eq!(
+            titles(Smart::RecentlyPlayed.tracks(&lib, &st)),
+            ["three", "two"]
+        );
         assert_eq!(titles(Smart::Favorites.tracks(&lib, &st)), ["one"]);
-        assert_eq!(titles(Smart::RecentlyAdded.tracks(&lib, &st)), ["two", "three", "one"]);
+        assert_eq!(
+            titles(Smart::RecentlyAdded.tracks(&lib, &st)),
+            ["two", "three", "one"]
+        );
 
         let dir = tempfile::tempdir().unwrap();
         let f = dir.path().join("stats.json");
@@ -544,7 +714,10 @@ mod tests {
         assert_eq!(back.plays(Path::new("/m/2")), 2);
         assert!(back.is_favorite(Path::new("/m/1")));
         st.set_favorite(Path::new("/m/1"), false);
-        assert!(st.get(Path::new("/m/1")).is_none(), "empty stats are pruned");
+        assert!(
+            st.get(Path::new("/m/1")).is_none(),
+            "empty stats are pruned"
+        );
     }
 
     #[test]

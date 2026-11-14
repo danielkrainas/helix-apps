@@ -51,7 +51,10 @@ impl Category {
             Category::Important => q.max_priority = Some(3),
             Category::All | Category::System => {}
             Category::Applications => {
-                q.any_of = vec![("_UID".into(), uid.to_string()), ("_SYSTEMD_OWNER_UID".into(), uid.to_string())];
+                q.any_of = vec![
+                    ("_UID".into(), uid.to_string()),
+                    ("_SYSTEMD_OWNER_UID".into(), uid.to_string()),
+                ];
             }
             Category::Security => {
                 q.any_of = vec![
@@ -66,7 +69,10 @@ impl Category {
 }
 
 fn is_security(entry: &Entry) -> bool {
-    entry.transport() == "audit" || entry.get_all("SYSLOG_FACILITY").any(|f| f == "4" || f == "10")
+    entry.transport() == "audit"
+        || entry
+            .get_all("SYSLOG_FACILITY")
+            .any(|f| f == "4" || f == "10")
 }
 
 fn is_application(entry: &Entry, uid: u32) -> bool {
@@ -74,7 +80,8 @@ fn is_application(entry: &Entry, uid: u32) -> bool {
         return false;
     }
     let uid_s = uid.to_string();
-    let owned = entry.get("_UID") == Some(uid_s.as_str()) || entry.get("_SYSTEMD_OWNER_UID") == Some(uid_s.as_str());
+    let owned = entry.get("_UID") == Some(uid_s.as_str())
+        || entry.get("_SYSTEMD_OWNER_UID") == Some(uid_s.as_str());
     if !owned {
         return false;
     }
@@ -94,7 +101,12 @@ mod tests {
     }
 
     fn members(c: Category, uid: u32) -> Vec<usize> {
-        fixture().iter().enumerate().filter(|(_, e)| c.matches(e, uid)).map(|(i, _)| i).collect()
+        fixture()
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| c.matches(e, uid))
+            .map(|(i, _)| i)
+            .collect()
     }
 
     #[test]
@@ -115,9 +127,17 @@ mod tests {
 
     #[test]
     fn root_applications_need_user_unit() {
-        let e = Entry::from_fields([("_UID", "0"), ("SYSLOG_IDENTIFIER", "sshd"), ("_TRANSPORT", "syslog")]);
+        let e = Entry::from_fields([
+            ("_UID", "0"),
+            ("SYSLOG_IDENTIFIER", "sshd"),
+            ("_TRANSPORT", "syslog"),
+        ]);
         assert!(!Category::Applications.matches(&e, 0));
-        let e = Entry::from_fields([("_UID", "0"), ("_SYSTEMD_USER_UNIT", "x.service"), ("_TRANSPORT", "journal")]);
+        let e = Entry::from_fields([
+            ("_UID", "0"),
+            ("_SYSTEMD_USER_UNIT", "x.service"),
+            ("_TRANSPORT", "journal"),
+        ]);
         assert!(Category::Applications.matches(&e, 0));
     }
 
@@ -139,7 +159,10 @@ mod tests {
         assert_eq!(q.max_priority, Some(3));
         let mut q = QueryArgs::default();
         Category::Applications.prefilter(&mut q, 1000);
-        assert_eq!(q.to_args()[4..], ["_UID=1000", "+", "_SYSTEMD_OWNER_UID=1000"]);
+        assert_eq!(
+            q.to_args()[4..],
+            ["_UID=1000", "+", "_SYSTEMD_OWNER_UID=1000"]
+        );
         // Every fixture entry the client-side rule accepts must survive the
         // pre-filter.
         for c in Category::ALL {
@@ -147,7 +170,8 @@ mod tests {
             c.prefilter(&mut q, 1000);
             for e in fixture().iter().filter(|e| c.matches(e, 1000)) {
                 let ok_prio = q.max_priority.is_none_or(|p| e.priority() <= p);
-                let ok_match = q.any_of.is_empty() || q.any_of.iter().any(|(k, v)| e.get_all(k).any(|x| x == v));
+                let ok_match = q.any_of.is_empty()
+                    || q.any_of.iter().any(|(k, v)| e.get_all(k).any(|x| x == v));
                 assert!(ok_prio && ok_match, "{c:?} pre-filter drops {e:?}");
             }
         }

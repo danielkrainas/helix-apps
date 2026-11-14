@@ -87,7 +87,11 @@ pub fn mode_string(mode: u32) -> String {
     let mut s = String::with_capacity(9);
     for who in [Who::Owner, Who::Group, Who::Others] {
         for (perm, c) in [(Perm::Read, 'r'), (Perm::Write, 'w'), (Perm::Execute, 'x')] {
-            s.push(if mode & mode_bit(who, perm) != 0 { c } else { '-' });
+            s.push(if mode & mode_bit(who, perm) != 0 {
+                c
+            } else {
+                '-'
+            });
         }
     }
     s

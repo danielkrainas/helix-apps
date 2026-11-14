@@ -45,7 +45,9 @@ impl Family {
             }
             s
         };
-        query.split_whitespace().all(|t| hay.contains(&t.to_lowercase()))
+        query
+            .split_whitespace()
+            .all(|t| hay.contains(&t.to_lowercase()))
     }
 }
 
@@ -53,7 +55,10 @@ impl Family {
 /// integer/float.
 fn parse_num(s: &str) -> f64 {
     let s = s.trim().trim_start_matches('[');
-    s.split(|c: char| c.is_whitespace() || c == ']').next().and_then(|x| x.parse().ok()).unwrap_or(80.0)
+    s.split(|c: char| c.is_whitespace() || c == ']')
+        .next()
+        .and_then(|x| x.parse().ok())
+        .unwrap_or(80.0)
 }
 
 /// Parses `fc-list -f FC_FORMAT` output. Named instances of variable fonts
@@ -66,7 +71,9 @@ pub fn parse_fc_list(output: &str) -> Vec<FaceEntry> {
             if f.len() < 4 || f[0].is_empty() || f[2].trim().is_empty() {
                 return None;
             }
-            if f.get(7).is_some_and(|s| s.trim().eq_ignore_ascii_case("true")) {
+            if f.get(7)
+                .is_some_and(|s| s.trim().eq_ignore_ascii_case("true"))
+            {
                 return None;
             }
             let index: u32 = f[1].trim().parse().unwrap_or(0);
@@ -74,7 +81,11 @@ pub fn parse_fc_list(output: &str) -> Vec<FaceEntry> {
                 file: PathBuf::from(f[0]),
                 index: index & 0xFFFF,
                 family: unescape(f[2].trim()),
-                style: f.get(3).map(|s| unescape(s.trim())).filter(|s| !s.is_empty()).unwrap_or_else(|| "Regular".into()),
+                style: f
+                    .get(3)
+                    .map(|s| unescape(s.trim()))
+                    .filter(|s| !s.is_empty())
+                    .unwrap_or_else(|| "Regular".into()),
                 format: f.get(4).map(|s| s.trim().to_string()).unwrap_or_default(),
                 weight: f.get(5).map(|s| parse_num(s)).unwrap_or(80.0),
                 slant: f.get(6).map(|s| parse_num(s)).unwrap_or(0.0),
@@ -105,8 +116,15 @@ pub fn group_families(faces: Vec<FaceEntry>) -> Vec<Family> {
     let mut map: BTreeMap<String, Family> = BTreeMap::new();
     for face in faces {
         let key = face.family.to_lowercase();
-        let fam = map.entry(key).or_insert_with(|| Family { name: face.family.clone(), faces: vec![] });
-        if !fam.faces.iter().any(|f| f.file == face.file && f.index == face.index) {
+        let fam = map.entry(key).or_insert_with(|| Family {
+            name: face.family.clone(),
+            faces: vec![],
+        });
+        if !fam
+            .faces
+            .iter()
+            .any(|f| f.file == face.file && f.index == face.index)
+        {
             fam.faces.push(face);
         }
     }
@@ -138,7 +156,11 @@ pub fn default_face(fam: &Family) -> usize {
 
 /// Runs `fc-list`; `None` if it is unavailable or fails.
 pub fn run_fc_list() -> Option<Vec<FaceEntry>> {
-    let out = Command::new("fc-list").arg("-f").arg(FC_FORMAT).output().ok()?;
+    let out = Command::new("fc-list")
+        .arg("-f")
+        .arg(FC_FORMAT)
+        .output()
+        .ok()?;
     if !out.status.success() {
         return None;
     }
@@ -162,9 +184,12 @@ pub fn user_fonts_dir() -> PathBuf {
 }
 
 pub fn is_font_file(p: &Path) -> bool {
-    p.extension()
-        .and_then(|e| e.to_str())
-        .is_some_and(|e| matches!(e.to_ascii_lowercase().as_str(), "ttf" | "otf" | "ttc" | "otc"))
+    p.extension().and_then(|e| e.to_str()).is_some_and(|e| {
+        matches!(
+            e.to_ascii_lowercase().as_str(),
+            "ttf" | "otf" | "ttc" | "otc"
+        )
+    })
 }
 
 /// Recursively scans `dirs` and reads faces with ttf-parser.
@@ -172,7 +197,9 @@ pub fn scan_dirs(dirs: &[PathBuf]) -> Vec<FaceEntry> {
     let mut out = Vec::new();
     let mut stack: Vec<(PathBuf, u32)> = dirs.iter().map(|d| (d.clone(), 0)).collect();
     while let Some((dir, depth)) = stack.pop() {
-        let Ok(rd) = std::fs::read_dir(&dir) else { continue };
+        let Ok(rd) = std::fs::read_dir(&dir) else {
+            continue;
+        };
         for e in rd.flatten() {
             let p = e.path();
             if p.is_dir() {
@@ -186,7 +213,13 @@ pub fn scan_dirs(dirs: &[PathBuf]) -> Vec<FaceEntry> {
                             file: p.clone(),
                             index: f.index,
                             weight: style_weight(&f.style),
-                            slant: if f.style.to_lowercase().contains("italic") || f.style.to_lowercase().contains("oblique") { 100.0 } else { 0.0 },
+                            slant: if f.style.to_lowercase().contains("italic")
+                                || f.style.to_lowercase().contains("oblique")
+                            {
+                                100.0
+                            } else {
+                                0.0
+                            },
                             family: f.family,
                             style: f.style,
                             format: f.format,
@@ -220,7 +253,9 @@ fn style_weight(style: &str) -> f64 {
 
 /// Lists installed families, preferring fontconfig.
 pub fn list_families() -> Vec<Family> {
-    let faces = run_fc_list().filter(|f| !f.is_empty()).unwrap_or_else(|| scan_dirs(&fallback_dirs()));
+    let faces = run_fc_list()
+        .filter(|f| !f.is_empty())
+        .unwrap_or_else(|| scan_dirs(&fallback_dirs()));
     group_families(faces)
 }
 
@@ -261,7 +296,16 @@ garbage line
     fn groups_and_sorts_families() {
         let fams = group_families(parse_fc_list(SAMPLE));
         let names: Vec<&str> = fams.iter().map(|f| f.name.as_str()).collect();
-        assert_eq!(names, ["Foo", "Lato", "LMMono10", "Noto Serif CJK SC", "Noto Serif CJK TC"]);
+        assert_eq!(
+            names,
+            [
+                "Foo",
+                "Lato",
+                "LMMono10",
+                "Noto Serif CJK SC",
+                "Noto Serif CJK TC"
+            ]
+        );
         let lato = &fams[1];
         // Duplicate (case-different family, same file+index) removed.
         assert_eq!(lato.faces.len(), 3);
@@ -320,7 +364,9 @@ garbage line
         if faces.is_empty() {
             return;
         }
-        assert!(faces.iter().all(|f| !f.family.is_empty() && f.file.is_absolute()));
+        assert!(faces
+            .iter()
+            .all(|f| !f.family.is_empty() && f.file.is_absolute()));
         let fams = group_families(faces);
         assert!(!fams.is_empty());
         assert!(fams.iter().all(|f| !f.faces.is_empty()));

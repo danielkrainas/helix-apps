@@ -46,7 +46,10 @@ impl LineEnding {
     }
 
     pub fn from_nick(s: &str) -> Self {
-        Self::ALL.into_iter().find(|l| l.nick() == s).unwrap_or_default()
+        Self::ALL
+            .into_iter()
+            .find(|l| l.nick() == s)
+            .unwrap_or_default()
     }
 }
 
@@ -60,7 +63,11 @@ pub struct TextFormat {
 
 impl Default for TextFormat {
     fn default() -> Self {
-        TextFormat { encoding: UTF_8, bom: false, line_ending: LineEnding::Lf }
+        TextFormat {
+            encoding: UTF_8,
+            bom: false,
+            line_ending: LineEnding::Lf,
+        }
     }
 }
 
@@ -140,7 +147,14 @@ pub fn decode(bytes: &[u8]) -> (String, TextFormat) {
     let (text, _had_errors) = encoding.decode_without_bom_handling(&bytes[bom_len..]);
     let line_ending = detect_line_ending(&text);
     let text = normalize_newlines(&text);
-    (text, TextFormat { encoding, bom: bom_len > 0, line_ending })
+    (
+        text,
+        TextFormat {
+            encoding,
+            bom: bom_len > 0,
+            line_ending,
+        },
+    )
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -212,7 +226,11 @@ mod tests {
     #[test]
     fn utf16_roundtrip() {
         for enc in [UTF_16LE, UTF_16BE] {
-            let f = TextFormat { encoding: enc, bom: true, line_ending: LineEnding::Lf };
+            let f = TextFormat {
+                encoding: enc,
+                bom: true,
+                line_ending: LineEnding::Lf,
+            };
             let bytes = encode("ünï\ncode ✓", &f).unwrap();
             let (t, g) = decode(&bytes);
             assert_eq!(t, "ünï\ncode ✓");
@@ -223,7 +241,10 @@ mod tests {
     #[test]
     fn legacy_fallback() {
         // "café crème brûlée" in windows-1252 is not valid UTF-8.
-        let bytes = WINDOWS_1252.encode("Le café crème brûlée était délicieux à Paris.").0.into_owned();
+        let bytes = WINDOWS_1252
+            .encode("Le café crème brûlée était délicieux à Paris.")
+            .0
+            .into_owned();
         assert!(std::str::from_utf8(&bytes).is_err());
         let (t, f) = decode(&bytes);
         assert_eq!(t, "Le café crème brûlée était délicieux à Paris.");
@@ -242,7 +263,11 @@ mod tests {
 
     #[test]
     fn unrepresentable() {
-        let f = TextFormat { encoding: WINDOWS_1252, bom: false, line_ending: LineEnding::Lf };
+        let f = TextFormat {
+            encoding: WINDOWS_1252,
+            bom: false,
+            line_ending: LineEnding::Lf,
+        };
         assert_eq!(encode("snowman ☃", &f), Err(Unrepresentable));
     }
 
@@ -254,7 +279,10 @@ mod tests {
         assert_eq!(detect_line_ending("no breaks"), LineEnding::Lf);
         assert_eq!(detect_line_ending("a\r\nb\r\nc\n"), LineEnding::CrLf);
         assert_eq!(normalize_newlines("a\r\nb\rc\nd"), "a\nb\nc\nd");
-        let f = TextFormat { line_ending: LineEnding::Cr, ..Default::default() };
+        let f = TextFormat {
+            line_ending: LineEnding::Cr,
+            ..Default::default()
+        };
         assert_eq!(encode("x\ny\n", &f).unwrap(), b"x\ry\r");
         let (t, g) = decode(b"one\rtwo\r");
         assert_eq!(t, "one\ntwo\n");

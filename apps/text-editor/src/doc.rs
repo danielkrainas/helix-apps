@@ -84,10 +84,17 @@ impl Doc {
         view.set_bottom_margin(6);
         view.set_vexpand(true);
         let gutter = LineGutter::new(&view);
-        let scroller = gtk::ScrolledWindow::builder().child(&view).vexpand(true).build();
+        let scroller = gtk::ScrolledWindow::builder()
+            .child(&view)
+            .vexpand(true)
+            .build();
 
         // Reload banner.
-        let banner_label = gtk::Label::builder().xalign(0.0).hexpand(true).wrap(true).build();
+        let banner_label = gtk::Label::builder()
+            .xalign(0.0)
+            .hexpand(true)
+            .wrap(true)
+            .build();
         let banner_reload = gtk::Button::with_label("_Reload");
         banner_reload.set_use_underline(true);
         banner_reload.add_css_class("suggested-action");
@@ -101,7 +108,10 @@ impl Doc {
         let banner = gtk::Revealer::builder().child(&banner_box).build();
 
         // Find bar.
-        let entry = gtk::SearchEntry::builder().placeholder_text("Find").hexpand(true).build();
+        let entry = gtk::SearchEntry::builder()
+            .placeholder_text("Find")
+            .hexpand(true)
+            .build();
         let count = gtk::Label::new(None);
         count.add_css_class("dim-label");
         count.add_css_class("numeric");
@@ -129,7 +139,10 @@ impl Doc {
         ] {
             find_row.append(w);
         }
-        let replace_entry = gtk::Entry::builder().placeholder_text("Replace").hexpand(true).build();
+        let replace_entry = gtk::Entry::builder()
+            .placeholder_text("Replace")
+            .hexpand(true)
+            .build();
         let replace_btn = gtk::Button::with_label("_Replace");
         replace_btn.set_use_underline(true);
         let replace_all_btn = gtk::Button::with_label("Replace _All");
@@ -188,7 +201,15 @@ impl Doc {
             auto_indent: Cell::new(settings.auto_indent),
         });
         doc.apply_settings(&settings);
-        doc.connect_signals(&scroller, &banner_ignore, &prev, &next, &close, &replace_btn, &replace_all_btn);
+        doc.connect_signals(
+            &scroller,
+            &banner_ignore,
+            &prev,
+            &next,
+            &close,
+            &replace_btn,
+            &replace_all_btn,
+        );
         doc
     }
 
@@ -294,8 +315,12 @@ impl Doc {
         shift_enter.connect_key_pressed({
             let w = w.clone();
             move |_, key, _, state| {
-                let Some(d) = w.upgrade() else { return glib::Propagation::Proceed };
-                if matches!(key, gdk::Key::Return | gdk::Key::KP_Enter) && state.contains(gdk::ModifierType::SHIFT_MASK) {
+                let Some(d) = w.upgrade() else {
+                    return glib::Propagation::Proceed;
+                };
+                if matches!(key, gdk::Key::Return | gdk::Key::KP_Enter)
+                    && state.contains(gdk::ModifierType::SHIFT_MASK)
+                {
                     d.find_next(true);
                     return glib::Propagation::Stop;
                 }
@@ -364,8 +389,12 @@ impl Doc {
 
     pub fn subtitle(&self) -> String {
         let file = self.file.borrow();
-        let Some(f) = file.as_ref() else { return "Draft".into() };
-        let Some(parent) = f.parent() else { return String::new() };
+        let Some(f) = file.as_ref() else {
+            return "Draft".into();
+        };
+        let Some(parent) = f.parent() else {
+            return String::new();
+        };
         match parent.path() {
             Some(p) => {
                 let home = glib::home_dir();
@@ -385,7 +414,10 @@ impl Doc {
 
     /// An untouched, empty new document (can be replaced when opening).
     pub fn is_blank(&self) -> bool {
-        self.file.borrow().is_none() && !self.is_modified() && self.buffer.char_count() == 0 && !self.loading.get()
+        self.file.borrow().is_none()
+            && !self.is_modified()
+            && self.buffer.char_count() == 0
+            && !self.loading.get()
     }
 
     pub fn text(&self) -> String {
@@ -409,7 +441,10 @@ impl Doc {
         let mut start = it;
         start.set_line_offset(0);
         let prefix = self.buffer.text(&start, &it, true);
-        (it.line() as u32 + 1, textops::visual_column(&prefix, self.indent.get().tab_width) + 1)
+        (
+            it.line() as u32 + 1,
+            textops::visual_column(&prefix, self.indent.get().tab_width) + 1,
+        )
     }
 
     fn notify_state(self: &Rc<Self>) {
@@ -444,10 +479,16 @@ impl Doc {
     pub fn apply_settings(&self, s: &Settings) {
         self.indent.set(s.indent());
         self.auto_indent.set(s.auto_indent);
-        self.view.set_wrap_mode(if s.wrap_text { gtk::WrapMode::WordChar } else { gtk::WrapMode::None });
+        self.view.set_wrap_mode(if s.wrap_text {
+            gtk::WrapMode::WordChar
+        } else {
+            gtk::WrapMode::None
+        });
         self.gutter.set_visible(s.show_line_numbers);
-        self.view.set_highlight_current_line(s.highlight_current_line);
-        self.view.set_right_margin_column(s.show_right_margin.then_some(s.right_margin_position));
+        self.view
+            .set_highlight_current_line(s.highlight_current_line);
+        self.view
+            .set_right_margin_column(s.show_right_margin.then_some(s.right_margin_position));
         self.gutter.queue_resize();
         self.update_tabs();
         // Font changes apply on the next style update; recompute tab stops then.
@@ -477,7 +518,9 @@ impl Doc {
     pub fn goto(&self, line: u32, col: Option<u32>) {
         let last = self.buffer.line_count().max(1) - 1;
         let line = (line.saturating_sub(1) as i32).min(last);
-        let Some(mut it) = self.buffer.iter_at_line(line) else { return };
+        let Some(mut it) = self.buffer.iter_at_line(line) else {
+            return;
+        };
         if let Some(c) = col {
             let mut end = it;
             if !end.ends_line() {
@@ -486,7 +529,8 @@ impl Doc {
             it.set_line_offset((c.saturating_sub(1) as i32).min(end.line_offset()));
         }
         self.buffer.place_cursor(&it);
-        self.view.scroll_to_mark(&self.buffer.get_insert(), 0.1, true, 0.0, 0.3);
+        self.view
+            .scroll_to_mark(&self.buffer.get_insert(), 0.1, true, 0.0, 0.3);
     }
 
     pub fn grab_focus(&self) {
@@ -496,7 +540,10 @@ impl Doc {
     // ---------------------------------------------------------------- keys
 
     fn on_key(self: &Rc<Self>, key: gdk::Key, state: gdk::ModifierType) -> glib::Propagation {
-        let mods = state & (gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::ALT_MASK | gdk::ModifierType::SUPER_MASK);
+        let mods = state
+            & (gdk::ModifierType::CONTROL_MASK
+                | gdk::ModifierType::ALT_MASK
+                | gdk::ModifierType::SUPER_MASK);
         if !mods.is_empty() || !self.view.is_editable() {
             return glib::Propagation::Proceed;
         }
@@ -520,8 +567,11 @@ impl Doc {
                 glib::Propagation::Stop
             }
             gdk::Key::Tab | gdk::Key::KP_Tab | gdk::Key::ISO_Left_Tab => {
-                let shift = key == gdk::Key::ISO_Left_Tab || state.contains(gdk::ModifierType::SHIFT_MASK);
-                let multi = buf.selection_bounds().is_some_and(|(s, e)| s.line() != e.line());
+                let shift =
+                    key == gdk::Key::ISO_Left_Tab || state.contains(gdk::ModifierType::SHIFT_MASK);
+                let multi = buf
+                    .selection_bounds()
+                    .is_some_and(|(s, e)| s.line() != e.line());
                 if shift || multi {
                     self.indent_selection(!shift);
                     return glib::Propagation::Stop;
@@ -532,7 +582,8 @@ impl Doc {
                     let it = buf.iter_at_mark(&buf.get_insert());
                     let mut start = it;
                     start.set_line_offset(0);
-                    let col = textops::visual_column(&buf.text(&start, &it, true), indent.tab_width);
+                    let col =
+                        textops::visual_column(&buf.text(&start, &it, true), indent.tab_width);
                     buf.insert_at_cursor(&indent.unit_at(col));
                     buf.end_user_action();
                     return glib::Propagation::Stop;
@@ -558,13 +609,19 @@ impl Doc {
         }
         buf.begin_user_action();
         for line in first..=last {
-            let Some(mut ls) = buf.iter_at_line(line) else { continue };
+            let Some(mut ls) = buf.iter_at_line(line) else {
+                continue;
+            };
             let mut le = ls;
             if !le.ends_line() {
                 le.forward_to_line_end();
             }
             let old = buf.text(&ls, &le, true).to_string();
-            let new = if increase { textops::indent_line(&old, &indent) } else { textops::unindent_line(&old, &indent) };
+            let new = if increase {
+                textops::indent_line(&old, &indent)
+            } else {
+                textops::unindent_line(&old, &indent)
+            };
             if new != old {
                 // Only rewrite the leading whitespace to keep marks stable.
                 let old_ws = textops::leading_whitespace(&old).chars().count() as i32;
@@ -666,8 +723,16 @@ impl Doc {
         }
         *self.matches.borrow_mut() = matches;
         if jump {
-            let start = self.buffer.selection_bounds().map(|(s, _)| s).unwrap_or_else(|| self.buffer.iter_at_mark(&self.buffer.get_insert()));
-            self.select_match(search::pick(&self.matches.borrow(), start.offset() as usize, false));
+            let start = self
+                .buffer
+                .selection_bounds()
+                .map(|(s, _)| s)
+                .unwrap_or_else(|| self.buffer.iter_at_mark(&self.buffer.get_insert()));
+            self.select_match(search::pick(
+                &self.matches.borrow(),
+                start.offset() as usize,
+                false,
+            ));
         }
         self.update_count();
     }
@@ -691,11 +756,14 @@ impl Doc {
 
     fn select_match(&self, idx: Option<usize>) {
         let Some(i) = idx else { return };
-        let Some(r) = self.matches.borrow().get(i).cloned() else { return };
+        let Some(r) = self.matches.borrow().get(i).cloned() else {
+            return;
+        };
         let a = self.buffer.iter_at_offset(r.start as i32);
         let b = self.buffer.iter_at_offset(r.end as i32);
         self.buffer.select_range(&a, &b);
-        self.view.scroll_to_mark(&self.buffer.get_insert(), 0.1, false, 0.0, 0.0);
+        self.view
+            .scroll_to_mark(&self.buffer.get_insert(), 0.1, false, 0.0, 0.0);
         self.update_count();
     }
 
@@ -706,13 +774,10 @@ impl Doc {
             }
             self.refresh_search(false);
         }
-        let (s, e) = self
-            .buffer
-            .selection_bounds()
-            .unwrap_or_else(|| {
-                let it = self.buffer.iter_at_mark(&self.buffer.get_insert());
-                (it, it)
-            });
+        let (s, e) = self.buffer.selection_bounds().unwrap_or_else(|| {
+            let it = self.buffer.iter_at_mark(&self.buffer.get_insert());
+            (it, it)
+        });
         let offset = if backward { s.offset() } else { e.offset() } as usize;
         let idx = search::pick(&self.matches.borrow(), offset, backward);
         self.select_match(idx);
@@ -726,8 +791,17 @@ impl Doc {
         };
         let r = self.matches.borrow()[i].clone();
         let text = self.text();
-        let byte = |c: usize| text.char_indices().nth(c).map(|(b, _)| b).unwrap_or(text.len());
-        let replacement = m.replacement_for(&text, byte(r.start)..byte(r.end), &self.find.replace_entry.text());
+        let byte = |c: usize| {
+            text.char_indices()
+                .nth(c)
+                .map(|(b, _)| b)
+                .unwrap_or(text.len())
+        };
+        let replacement = m.replacement_for(
+            &text,
+            byte(r.start)..byte(r.end),
+            &self.find.replace_entry.text(),
+        );
         let buf = &self.buffer;
         buf.begin_user_action();
         let mut a = buf.iter_at_offset(r.start as i32);
@@ -759,7 +833,10 @@ impl Doc {
         self.refresh_search(false);
         if let Some(app) = self.app.upgrade() {
             let n = bytes.len();
-            app.toast_for(self, &format!("Replaced {n} occurrence{}", if n == 1 { "" } else { "s" }));
+            app.toast_for(
+                self,
+                &format!("Replaced {n} occurrence{}", if n == 1 { "" } else { "s" }),
+            );
         }
     }
 
@@ -773,7 +850,9 @@ impl Doc {
         let result = match res {
             Ok((bytes, etag)) => {
                 let bytes = bytes.to_vec();
-                let (text, fmt) = gio::spawn_blocking(move || encoding::decode(&bytes)).await.unwrap_or_default();
+                let (text, fmt) = gio::spawn_blocking(move || encoding::decode(&bytes))
+                    .await
+                    .unwrap_or_default();
                 self.set_text(&text);
                 self.format.set(fmt);
                 *self.file.borrow_mut() = Some(file);
@@ -803,8 +882,17 @@ impl Doc {
             let w = self.weak();
             glib::spawn_future_local(async move {
                 let Some(d) = w.upgrade() else { return };
-                let Some(f) = d.file.borrow().clone() else { return };
-                if let Ok(info) = f.query_info_future("etag::value", gio::FileQueryInfoFlags::NONE, glib::Priority::DEFAULT).await {
+                let Some(f) = d.file.borrow().clone() else {
+                    return;
+                };
+                if let Ok(info) = f
+                    .query_info_future(
+                        "etag::value",
+                        gio::FileQueryInfoFlags::NONE,
+                        glib::Priority::DEFAULT,
+                    )
+                    .await
+                {
                     *d.etag.borrow_mut() = info.etag().map(|e| e.to_string());
                 }
                 d.watch();
@@ -824,12 +912,18 @@ impl Doc {
             Ok(b) => b,
             Err(_) => {
                 fell_back = true;
-                fmt = TextFormat { encoding: encoding_rs::UTF_8, bom: false, ..fmt };
+                fmt = TextFormat {
+                    encoding: encoding_rs::UTF_8,
+                    bom: false,
+                    ..fmt
+                };
                 encoding::encode(&text, &fmt).unwrap_or_else(|_| text.into_bytes())
             }
         };
         self.saving.set(true);
-        let res = file.replace_contents_future(bytes, None, false, gio::FileCreateFlags::NONE).await;
+        let res = file
+            .replace_contents_future(bytes, None, false, gio::FileCreateFlags::NONE)
+            .await;
         self.saving.set(false);
         let (_, etag) = res.map_err(|(_, e)| e)?;
         let changed_file = self.file.borrow().as_ref().is_none_or(|f| !f.equal(&file));
@@ -851,12 +945,26 @@ impl Doc {
         if let Some(m) = self.monitor.take() {
             m.cancel();
         }
-        let Some(file) = self.file.borrow().clone() else { return };
-        let Ok(monitor) = file.monitor_file(gio::FileMonitorFlags::WATCH_MOVES, gio::Cancellable::NONE) else { return };
+        let Some(file) = self.file.borrow().clone() else {
+            return;
+        };
+        let Ok(monitor) =
+            file.monitor_file(gio::FileMonitorFlags::WATCH_MOVES, gio::Cancellable::NONE)
+        else {
+            return;
+        };
         let w = self.weak();
         monitor.connect_changed(move |_, _, _, event| {
             use gio::FileMonitorEvent as E;
-            if matches!(event, E::ChangesDoneHint | E::Created | E::Deleted | E::Renamed | E::MovedOut | E::MovedIn) {
+            if matches!(
+                event,
+                E::ChangesDoneHint
+                    | E::Created
+                    | E::Deleted
+                    | E::Renamed
+                    | E::MovedOut
+                    | E::MovedIn
+            ) {
                 if let Some(d) = w.upgrade() {
                     d.check_disk();
                 }
@@ -873,8 +981,16 @@ impl Doc {
         let w = self.weak();
         glib::spawn_future_local(async move {
             let Some(d) = w.upgrade() else { return };
-            let Some(f) = d.file.borrow().clone() else { return };
-            let res = f.query_info_future("etag::value", gio::FileQueryInfoFlags::NONE, glib::Priority::DEFAULT).await;
+            let Some(f) = d.file.borrow().clone() else {
+                return;
+            };
+            let res = f
+                .query_info_future(
+                    "etag::value",
+                    gio::FileQueryInfoFlags::NONE,
+                    glib::Priority::DEFAULT,
+                )
+                .await;
             if d.saving.get() {
                 return;
             }
@@ -902,7 +1018,9 @@ impl Doc {
     }
 
     pub fn reload(self: &Rc<Self>) {
-        let Some(file) = self.file.borrow().clone() else { return };
+        let Some(file) = self.file.borrow().clone() else {
+            return;
+        };
         let (line, col) = self.cursor();
         let w = self.weak();
         glib::spawn_future_local(async move {

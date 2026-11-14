@@ -9,24 +9,91 @@ pub const XI_NS: &str = "http://www.w3.org/2001/XInclude";
 /// Named character entities commonly used in DocBook documents that rely on
 /// the (unavailable) DocBook DTD.
 const ENTITIES: &[(&str, u32)] = &[
-    ("nbsp", 0xA0), ("copy", 0xA9), ("reg", 0xAE), ("trade", 0x2122), ("mdash", 0x2014),
-    ("ndash", 0x2013), ("hellip", 0x2026), ("lsquo", 0x2018), ("rsquo", 0x2019), ("ldquo", 0x201C),
-    ("rdquo", 0x201D), ("laquo", 0xAB), ("raquo", 0xBB), ("bull", 0x2022), ("middot", 0xB7),
-    ("times", 0xD7), ("divide", 0xF7), ("deg", 0xB0), ("plusmn", 0xB1), ("micro", 0xB5),
-    ("para", 0xB6), ("sect", 0xA7), ("euro", 0x20AC), ("pound", 0xA3), ("yen", 0xA5),
-    ("cent", 0xA2), ("larr", 0x2190), ("rarr", 0x2192), ("uarr", 0x2191), ("darr", 0x2193),
-    ("harr", 0x2194), ("rArr", 0x21D2), ("lArr", 0x21D0), ("le", 0x2264), ("ge", 0x2265),
-    ("ne", 0x2260), ("minus", 0x2212), ("percnt", 0x25), ("num", 0x23), ("dollar", 0x24),
-    ("ast", 0x2A), ("commat", 0x40), ("lsqb", 0x5B), ("rsqb", 0x5D), ("lcub", 0x7B),
-    ("rcub", 0x7D), ("verbar", 0x7C), ("sol", 0x2F), ("bsol", 0x5C), ("excl", 0x21),
-    ("quest", 0x3F), ("iexcl", 0xA1), ("iquest", 0xBF), ("shy", 0xAD), ("zwsp", 0x200B),
-    ("thinsp", 0x2009), ("ensp", 0x2002), ("emsp", 0x2003), ("dagger", 0x2020),
-    ("Dagger", 0x2021), ("prime", 0x2032), ("Prime", 0x2033), ("frac12", 0xBD),
-    ("frac14", 0xBC), ("frac34", 0xBE), ("sup2", 0xB2), ("sup3", 0xB3), ("aacute", 0xE1),
-    ("eacute", 0xE9), ("iacute", 0xED), ("oacute", 0xF3), ("uacute", 0xFA), ("agrave", 0xE0),
-    ("egrave", 0xE8), ("auml", 0xE4), ("ouml", 0xF6), ("uuml", 0xFC), ("Auml", 0xC4),
-    ("Ouml", 0xD6), ("Uuml", 0xDC), ("szlig", 0xDF), ("ntilde", 0xF1), ("ccedil", 0xE7),
-    ("check", 0x2713), ("cross", 0x2717),
+    ("nbsp", 0xA0),
+    ("copy", 0xA9),
+    ("reg", 0xAE),
+    ("trade", 0x2122),
+    ("mdash", 0x2014),
+    ("ndash", 0x2013),
+    ("hellip", 0x2026),
+    ("lsquo", 0x2018),
+    ("rsquo", 0x2019),
+    ("ldquo", 0x201C),
+    ("rdquo", 0x201D),
+    ("laquo", 0xAB),
+    ("raquo", 0xBB),
+    ("bull", 0x2022),
+    ("middot", 0xB7),
+    ("times", 0xD7),
+    ("divide", 0xF7),
+    ("deg", 0xB0),
+    ("plusmn", 0xB1),
+    ("micro", 0xB5),
+    ("para", 0xB6),
+    ("sect", 0xA7),
+    ("euro", 0x20AC),
+    ("pound", 0xA3),
+    ("yen", 0xA5),
+    ("cent", 0xA2),
+    ("larr", 0x2190),
+    ("rarr", 0x2192),
+    ("uarr", 0x2191),
+    ("darr", 0x2193),
+    ("harr", 0x2194),
+    ("rArr", 0x21D2),
+    ("lArr", 0x21D0),
+    ("le", 0x2264),
+    ("ge", 0x2265),
+    ("ne", 0x2260),
+    ("minus", 0x2212),
+    ("percnt", 0x25),
+    ("num", 0x23),
+    ("dollar", 0x24),
+    ("ast", 0x2A),
+    ("commat", 0x40),
+    ("lsqb", 0x5B),
+    ("rsqb", 0x5D),
+    ("lcub", 0x7B),
+    ("rcub", 0x7D),
+    ("verbar", 0x7C),
+    ("sol", 0x2F),
+    ("bsol", 0x5C),
+    ("excl", 0x21),
+    ("quest", 0x3F),
+    ("iexcl", 0xA1),
+    ("iquest", 0xBF),
+    ("shy", 0xAD),
+    ("zwsp", 0x200B),
+    ("thinsp", 0x2009),
+    ("ensp", 0x2002),
+    ("emsp", 0x2003),
+    ("dagger", 0x2020),
+    ("Dagger", 0x2021),
+    ("prime", 0x2032),
+    ("Prime", 0x2033),
+    ("frac12", 0xBD),
+    ("frac14", 0xBC),
+    ("frac34", 0xBE),
+    ("sup2", 0xB2),
+    ("sup3", 0xB3),
+    ("aacute", 0xE1),
+    ("eacute", 0xE9),
+    ("iacute", 0xED),
+    ("oacute", 0xF3),
+    ("uacute", 0xFA),
+    ("agrave", 0xE0),
+    ("egrave", 0xE8),
+    ("auml", 0xE4),
+    ("ouml", 0xF6),
+    ("uuml", 0xFC),
+    ("Auml", 0xC4),
+    ("Ouml", 0xD6),
+    ("Uuml", 0xDC),
+    ("szlig", 0xDF),
+    ("ntilde", 0xF1),
+    ("ccedil", 0xE7),
+    ("check", 0x2713),
+    ("cross", 0x2717),
 ];
 
 /// Rewrites a document so that roxmltree (which has no DTD loading) can
@@ -34,21 +101,30 @@ const ENTITIES: &[(&str, u32)] = &[
 /// references (or vanish when unknown); references to external `SYSTEM`
 /// entities become `xi:include`s of the referenced file.
 pub fn preprocess(src: &str) -> String {
-    let mut declared: HashSet<String> = ["lt", "gt", "amp", "apos", "quot"].iter().map(|s| s.to_string()).collect();
+    let mut declared: HashSet<String> = ["lt", "gt", "amp", "apos", "quot"]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
     let mut external: Vec<(String, String)> = Vec::new();
     let mut out_src = src.to_string();
     if let Some(dtd_start) = src.find("<!DOCTYPE") {
         let mut search = dtd_start;
         while let Some(off) = src[search..].find("<!ENTITY") {
             let start = search + off;
-            let Some(end_off) = src[start..].find('>') else { break };
+            let Some(end_off) = src[start..].find('>') else {
+                break;
+            };
             let decl = &src[start..start + end_off + 1];
             let mut words = decl["<!ENTITY".len()..].split_whitespace();
             if let Some(name) = words.next().filter(|n| *n != "%") {
                 if matches!(words.next(), Some("SYSTEM") | Some("PUBLIC")) {
                     let quoted: Vec<&str> = decl.split(['"', '\'']).collect();
                     // SYSTEM "file" → index 1; PUBLIC "id" "file" → index 3.
-                    let file = if decl.contains("PUBLIC") { quoted.get(3) } else { quoted.get(1) };
+                    let file = if decl.contains("PUBLIC") {
+                        quoted.get(3)
+                    } else {
+                        quoted.get(1)
+                    };
                     if let Some(f) = file {
                         external.push((name.to_string(), f.to_string()));
                     }
@@ -75,7 +151,9 @@ pub fn preprocess(src: &str) -> String {
         let after = &rest[i + 1..];
         let end = after.find(';').filter(|&e| e > 0 && e < 40);
         let name = end.map(|e| &after[..e]).filter(|n| {
-            !n.starts_with('#') && n.chars().all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-' || c == '_')
+            !n.starts_with('#')
+                && n.chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-' || c == '_')
         });
         match name {
             Some(n) if declared.contains(n) => {
@@ -85,7 +163,10 @@ pub fn preprocess(src: &str) -> String {
             }
             Some(n) => {
                 if let Some((_, file)) = external.iter().find(|(e, _)| e == n) {
-                    out.push_str(&format!("<xi:include xmlns:xi=\"{XI_NS}\" href=\"{}\"/>", escape_attr(file)));
+                    out.push_str(&format!(
+                        "<xi:include xmlns:xi=\"{XI_NS}\" href=\"{}\"/>",
+                        escape_attr(file)
+                    ));
                 } else if let Some((_, cp)) = ENTITIES.iter().find(|(e, _)| *e == n) {
                     out.push_str(&format!("&#{cp};"));
                 }
@@ -107,7 +188,10 @@ fn n_len(name: Option<&str>) -> usize {
 }
 
 pub fn options() -> ParsingOptions {
-    ParsingOptions { allow_dtd: true, ..ParsingOptions::default() }
+    ParsingOptions {
+        allow_dtd: true,
+        ..ParsingOptions::default()
+    }
 }
 
 /// Parses already-preprocessed text.
@@ -139,11 +223,13 @@ pub fn collapse_ws(s: &str) -> String {
 }
 
 pub fn child<'a, 'i>(n: Node<'a, 'i>, name: &str) -> Option<Node<'a, 'i>> {
-    n.children().find(|c| c.is_element() && c.tag_name().name() == name)
+    n.children()
+        .find(|c| c.is_element() && c.tag_name().name() == name)
 }
 
 pub fn children<'a, 'i>(n: Node<'a, 'i>, name: &'static str) -> impl Iterator<Item = Node<'a, 'i>> {
-    n.children().filter(move |c| c.is_element() && c.tag_name().name() == name)
+    n.children()
+        .filter(move |c| c.is_element() && c.tag_name().name() == name)
 }
 
 pub fn escape(s: &str) -> String {
@@ -266,7 +352,11 @@ mod tests {
     fn xinclude_flattening() {
         let d = std::env::temp_dir().join(format!("helix-help-xi-{}", std::process::id()));
         std::fs::create_dir_all(&d).unwrap();
-        std::fs::write(d.join("legal.xml"), "<?xml version=\"1.0\"?>\n<!-- c -->\n<license><p>CC &mdash; BY</p></license>").unwrap();
+        std::fs::write(
+            d.join("legal.xml"),
+            "<?xml version=\"1.0\"?>\n<!-- c -->\n<license><p>CC &mdash; BY</p></license>",
+        )
+        .unwrap();
         std::fs::write(
             d.join("main.xml"),
             format!(

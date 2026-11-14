@@ -17,7 +17,10 @@ pub struct Hit {
 
 pub fn terms(query: &str) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
-    for t in query.split(|c: char| !c.is_alphanumeric() && c != '\'' && c != '-').map(str::to_lowercase) {
+    for t in query
+        .split(|c: char| !c.is_alphanumeric() && c != '\'' && c != '-')
+        .map(str::to_lowercase)
+    {
         let t = t.trim_matches(|c| c == '\'' || c == '-').to_string();
         if !t.is_empty() && !out.contains(&t) {
             out.push(t);
@@ -63,9 +66,12 @@ pub fn rank(entries: &[Entry], query: &str) -> Vec<Hit> {
         })
         .collect();
     hits.sort_by(|a, b| {
-        b.score
-            .cmp(&a.score)
-            .then_with(|| entries[a.index].title.to_lowercase().cmp(&entries[b.index].title.to_lowercase()))
+        b.score.cmp(&a.score).then_with(|| {
+            entries[a.index]
+                .title
+                .to_lowercase()
+                .cmp(&entries[b.index].title.to_lowercase())
+        })
     });
     hits
 }
@@ -76,7 +82,11 @@ pub fn snippet(body: &str, query: &str, max_chars: usize) -> String {
     let lower = body.to_lowercase();
     // Lower-casing can change byte lengths; only trust positions when it doesn't.
     let pos = if lower.len() == body.len() {
-        terms.iter().filter_map(|t| lower.find(t.as_str())).min().unwrap_or(0)
+        terms
+            .iter()
+            .filter_map(|t| lower.find(t.as_str()))
+            .min()
+            .unwrap_or(0)
     } else {
         0
     };
@@ -99,7 +109,12 @@ mod tests {
     use super::*;
 
     fn e(title: &str, desc: &str, body: &str) -> Entry {
-        Entry { page: Some(title.into()), title: title.into(), desc: desc.into(), body: body.into() }
+        Entry {
+            page: Some(title.into()),
+            title: title.into(),
+            desc: desc.into(),
+            body: body.into(),
+        }
     }
 
     #[test]
@@ -111,11 +126,27 @@ mod tests {
     #[test]
     fn ranking() {
         let entries = vec![
-            e("Printing", "Send documents to a printer", "Use the print dialog. password"),
-            e("Wireless password", "Change the Wi-Fi password", "Enter the password, then the password again"),
-            e("Passwords overview", "", "password password password password password password password"),
+            e(
+                "Printing",
+                "Send documents to a printer",
+                "Use the print dialog. password",
+            ),
+            e(
+                "Wireless password",
+                "Change the Wi-Fi password",
+                "Enter the password, then the password again",
+            ),
+            e(
+                "Passwords overview",
+                "",
+                "password password password password password password password",
+            ),
             e("Unrelated", "nothing", "here"),
-            e("Networking", "Connect to wireless networks", "No pass word here"),
+            e(
+                "Networking",
+                "Connect to wireless networks",
+                "No pass word here",
+            ),
         ];
         let hits = rank(&entries, "password");
         let order: Vec<usize> = hits.iter().map(|h| h.index).collect();
@@ -134,7 +165,13 @@ mod tests {
     #[test]
     fn ties_sort_by_title() {
         let entries = vec![e("b", "", "x"), e("A", "", "x")];
-        assert_eq!(rank(&entries, "x").iter().map(|h| h.index).collect::<Vec<_>>(), [1, 0]);
+        assert_eq!(
+            rank(&entries, "x")
+                .iter()
+                .map(|h| h.index)
+                .collect::<Vec<_>>(),
+            [1, 0]
+        );
     }
 
     #[test]

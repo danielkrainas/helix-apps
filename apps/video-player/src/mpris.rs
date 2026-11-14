@@ -161,9 +161,18 @@ impl Root {
     #[zbus(property)]
     fn supported_mime_types(&self) -> Vec<String> {
         [
-            "video/mp4", "video/x-matroska", "video/webm", "video/ogg", "video/quicktime",
-            "video/x-msvideo", "video/mpeg", "video/x-flv", "video/3gpp", "video/x-ms-wmv",
-            "video/mp2t", "application/ogg",
+            "video/mp4",
+            "video/x-matroska",
+            "video/webm",
+            "video/ogg",
+            "video/quicktime",
+            "video/x-msvideo",
+            "video/mpeg",
+            "video/x-flv",
+            "video/3gpp",
+            "video/x-ms-wmv",
+            "video/mp2t",
+            "application/ogg",
         ]
         .iter()
         .map(|s| s.to_string())
@@ -321,12 +330,31 @@ impl Mpris {
     }
 }
 
-fn serve(commands: async_channel::Sender<Command>, state: Shared, rx: mpsc::Receiver<Update>) -> zbus::Result<()> {
-    let name = format!("org.mpris.MediaPlayer2.HelixVideoPlayer.instance{}", std::process::id());
+fn serve(
+    commands: async_channel::Sender<Command>,
+    state: Shared,
+    rx: mpsc::Receiver<Update>,
+) -> zbus::Result<()> {
+    let name = format!(
+        "org.mpris.MediaPlayer2.HelixVideoPlayer.instance{}",
+        std::process::id()
+    );
     let conn = zbus::blocking::connection::Builder::session()?
         .name(name)?
-        .serve_at(PATH, Root { tx: commands.clone(), state: state.clone() })?
-        .serve_at(PATH, PlayerIface { tx: commands, state })?
+        .serve_at(
+            PATH,
+            Root {
+                tx: commands.clone(),
+                state: state.clone(),
+            },
+        )?
+        .serve_at(
+            PATH,
+            PlayerIface {
+                tx: commands,
+                state,
+            },
+        )?
         .build()?;
     let server = conn.object_server();
     let root = server.interface::<_, Root>(PATH)?;
@@ -348,7 +376,9 @@ fn serve(commands: async_channel::Sender<Command>, state: Shared, rx: mpsc::Rece
                         Prop::Volume => pi.volume_changed(em).await,
                         Prop::Rate => pi.rate_changed(em).await,
                         Prop::CanSeek => pi.can_seek_changed(em).await,
-                        Prop::Fullscreen => root.get().fullscreen_changed(root.signal_emitter()).await,
+                        Prop::Fullscreen => {
+                            root.get().fullscreen_changed(root.signal_emitter()).await
+                        }
                     }
                 })
             }),

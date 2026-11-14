@@ -52,7 +52,11 @@ pub fn split_arguments(args: &str) -> Result<Vec<String>, String> {
         return Ok(Vec::new());
     }
     gtk::glib::shell_parse_argv(args)
-        .map(|v| v.into_iter().map(|s| s.to_string_lossy().into_owned()).collect())
+        .map(|v| {
+            v.into_iter()
+                .map(|s| s.to_string_lossy().into_owned())
+                .collect()
+        })
         .map_err(|e| format!("Invalid post-processing arguments: {e}"))
 }
 
@@ -70,14 +74,21 @@ impl PostProc {
             (if self.keep_original { "true" } else { "false" }).into(),
             file.as_os_str().to_owned(),
         ];
-        args.extend(split_arguments(&self.arguments)?.into_iter().map(OsString::from));
+        args.extend(
+            split_arguments(&self.arguments)?
+                .into_iter()
+                .map(OsString::from),
+        );
         Ok(Invocation { program, args })
     }
 }
 
 /// `dir/name_orig.ext` for `dir/name.ext`.
 pub fn original_path(file: &Path) -> PathBuf {
-    let stem = file.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+    let stem = file
+        .file_stem()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_default();
     match file.extension() {
         Some(ext) => file.with_file_name(format!("{stem}_orig.{}", ext.to_string_lossy())),
         None => file.with_file_name(format!("{stem}_orig")),
@@ -110,7 +121,12 @@ mod tests {
     use super::*;
 
     fn pp(script: &str, args: &str, keep: bool) -> PostProc {
-        PostProc { enabled: true, script: script.into(), arguments: args.into(), keep_original: keep }
+        PostProc {
+            enabled: true,
+            script: script.into(),
+            arguments: args.into(),
+            keep_original: keep,
+        }
     }
 
     fn strs(v: &[OsString]) -> Vec<&str> {
@@ -120,36 +136,77 @@ mod tests {
     #[test]
     fn argument_order() {
         let inv = pp("/usr/bin/ocr", "", false)
-            .invocation("application/pdf", Path::new("/d/Scanned Document.pdf"), Path::new("/h"))
+            .invocation(
+                "application/pdf",
+                Path::new("/d/Scanned Document.pdf"),
+                Path::new("/h"),
+            )
             .unwrap();
         assert_eq!(inv.program, PathBuf::from("/usr/bin/ocr"));
-        assert_eq!(strs(&inv.args), ["application/pdf", "false", "/d/Scanned Document.pdf"]);
+        assert_eq!(
+            strs(&inv.args),
+            ["application/pdf", "false", "/d/Scanned Document.pdf"]
+        );
 
-        let inv = pp("~/bin/post.sh", "-l eng 'two words' \"$HOME\" a\\ b ; rm", true)
-            .invocation("image/jpeg", Path::new("/d/x.jpg"), Path::new("/h"))
-            .unwrap();
+        let inv = pp(
+            "~/bin/post.sh",
+            "-l eng 'two words' \"$HOME\" a\\ b ; rm",
+            true,
+        )
+        .invocation("image/jpeg", Path::new("/d/x.jpg"), Path::new("/h"))
+        .unwrap();
         assert_eq!(inv.program, PathBuf::from("/h/bin/post.sh"));
         // No expansion, no command separation: `$HOME` and `;` stay literal.
         assert_eq!(
             strs(&inv.args),
-            ["image/jpeg", "true", "/d/x.jpg", "-l", "eng", "two words", "$HOME", "a b", ";", "rm"]
+            [
+                "image/jpeg",
+                "true",
+                "/d/x.jpg",
+                "-l",
+                "eng",
+                "two words",
+                "$HOME",
+                "a b",
+                ";",
+                "rm"
+            ]
         );
     }
 
     #[test]
     fn bad_arguments_and_activity() {
-        assert!(pp("s", "'unterminated", false).invocation("a", Path::new("f"), Path::new("/h")).is_err());
+        assert!(pp("s", "'unterminated", false)
+            .invocation("a", Path::new("f"), Path::new("/h"))
+            .is_err());
         assert!(split_arguments("   ").unwrap().is_empty());
-        assert!(!PostProc { enabled: true, ..Default::default() }.active());
-        assert!(!PostProc { script: "x".into(), ..Default::default() }.active());
+        assert!(!PostProc {
+            enabled: true,
+            ..Default::default()
+        }
+        .active());
+        assert!(!PostProc {
+            script: "x".into(),
+            ..Default::default()
+        }
+        .active());
         assert!(pp("x", "", false).active());
     }
 
     #[test]
     fn original_names() {
-        assert_eq!(original_path(Path::new("/d/Scan.pdf")), PathBuf::from("/d/Scan_orig.pdf"));
-        assert_eq!(original_path(Path::new("/d/a.b.jpg")), PathBuf::from("/d/a.b_orig.jpg"));
-        assert_eq!(original_path(Path::new("/d/noext")), PathBuf::from("/d/noext_orig"));
+        assert_eq!(
+            original_path(Path::new("/d/Scan.pdf")),
+            PathBuf::from("/d/Scan_orig.pdf")
+        );
+        assert_eq!(
+            original_path(Path::new("/d/a.b.jpg")),
+            PathBuf::from("/d/a.b_orig.jpg")
+        );
+        assert_eq!(
+            original_path(Path::new("/d/noext")),
+            PathBuf::from("/d/noext_orig")
+        );
     }
 
     #[test]
@@ -161,17 +218,32 @@ mod tests {
         let script = dir.path().join("post.sh");
         std::fs::write(
             &script,
-            format!("#!/bin/sh\nprintf '%s\\n' \"$@\" > '{}'\necho processed > \"$3\"\n", log.display()),
+            format!(
+                "#!/bin/sh\nprintf '%s\\n' \"$@\" > '{}'\necho processed > \"$3\"\n",
+                log.display()
+            ),
         )
         .unwrap();
         use std::os::unix::fs::PermissionsExt;
         std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
         let p = pp(script.to_str().unwrap(), "--x 'y z'", true);
-        run(&p, "application/pdf", std::slice::from_ref(&file), dir.path()).unwrap();
+        run(
+            &p,
+            "application/pdf",
+            std::slice::from_ref(&file),
+            dir.path(),
+        )
+        .unwrap();
         let logged = std::fs::read_to_string(&log).unwrap();
-        assert_eq!(logged, format!("application/pdf\ntrue\n{}\n--x\ny z\n", file.display()));
+        assert_eq!(
+            logged,
+            format!("application/pdf\ntrue\n{}\n--x\ny z\n", file.display())
+        );
         assert_eq!(std::fs::read(&file).unwrap(), b"processed\n");
-        assert_eq!(std::fs::read(dir.path().join("doc_orig.pdf")).unwrap(), b"%PDF-original");
+        assert_eq!(
+            std::fs::read(dir.path().join("doc_orig.pdf")).unwrap(),
+            b"%PDF-original"
+        );
 
         let failing = pp("/bin/false", "", false);
         assert!(run(&failing, "application/pdf", &[file], dir.path()).is_err());

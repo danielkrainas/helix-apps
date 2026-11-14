@@ -51,7 +51,8 @@ impl Live {
         // Live entries still pending may now arrive through the query.
         if !self.pending.is_empty() {
             let cursors: HashSet<&str> = entries.iter().filter_map(cursor).collect();
-            self.pending.retain(|p| cursor(p).is_none_or(|c| !cursors.contains(c)));
+            self.pending
+                .retain(|p| cursor(p).is_none_or(|c| !cursors.contains(c)));
         }
         self.fresh(entries)
     }
@@ -59,7 +60,12 @@ impl Live {
     /// Places followed entries (oldest first, as journalctl emits them).
     /// Newest-first views get them on top immediately; oldest-first views
     /// can only append once every older entry is loaded (`query_done`).
-    pub fn followed(&mut self, entries: Vec<Entry>, descending: bool, query_done: bool) -> Placement {
+    pub fn followed(
+        &mut self,
+        entries: Vec<Entry>,
+        descending: bool,
+        query_done: bool,
+    ) -> Placement {
         if descending {
             let mut v = self.fresh(entries);
             v.reverse();
@@ -122,7 +128,10 @@ mod tests {
     fn oldest_first_defers_until_done() {
         let mut l = Live::default();
         l.loaded(vec![e("a"), e("b")]);
-        assert_eq!(l.followed(vec![e("c"), e("d")], false, false), Placement::Deferred);
+        assert_eq!(
+            l.followed(vec![e("c"), e("d")], false, false),
+            Placement::Deferred
+        );
         // The paged query reaches "c" itself.
         assert_eq!(msgs(&l.loaded(vec![e("c")])), ["c"]);
         assert_eq!(msgs(&l.finish()), ["d"]);
@@ -137,7 +146,10 @@ mod tests {
     fn entries_without_cursor_are_kept() {
         let mut l = Live::default();
         let no_cursor = Entry::from_fields([("MESSAGE", "x")]);
-        assert_eq!(l.loaded(vec![no_cursor.clone(), no_cursor.clone()]).len(), 2);
+        assert_eq!(
+            l.loaded(vec![no_cursor.clone(), no_cursor.clone()]).len(),
+            2
+        );
         l.clear();
         assert_eq!(msgs(&l.loaded(vec![e("a")])), ["a"]);
     }

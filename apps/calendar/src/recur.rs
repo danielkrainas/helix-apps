@@ -31,7 +31,13 @@ pub enum Ends {
     Until(NaiveDate),
 }
 
-const WEEKDAYS: [Weekday; 5] = [Weekday::Mon, Weekday::Tue, Weekday::Wed, Weekday::Thu, Weekday::Fri];
+const WEEKDAYS: [Weekday; 5] = [
+    Weekday::Mon,
+    Weekday::Tue,
+    Weekday::Wed,
+    Weekday::Thu,
+    Weekday::Fri,
+];
 
 /// Classifies an existing rule.
 pub fn classify(rule: Option<&RRule>) -> Preset {
@@ -48,7 +54,12 @@ pub fn classify(rule: Option<&RRule>) -> Preset {
         Freq::Daily if r.by_day.is_empty() => Preset::Daily,
         Freq::Weekly if r.by_day.is_empty() => Preset::Weekly,
         Freq::Weekly => {
-            let mut days: Vec<Weekday> = r.by_day.iter().filter(|(o, _)| *o == 0).map(|(_, w)| *w).collect();
+            let mut days: Vec<Weekday> = r
+                .by_day
+                .iter()
+                .filter(|(o, _)| *o == 0)
+                .map(|(_, w)| *w)
+                .collect();
             days.sort_by_key(|w| w.num_days_from_monday());
             days.dedup();
             if days.len() == r.by_day.len() && days == WEEKDAYS {
@@ -68,8 +79,14 @@ pub fn classify(rule: Option<&RRule>) -> Preset {
 pub fn ends_of(rule: Option<&RRule>) -> Ends {
     match rule {
         Some(RRule { count: Some(c), .. }) => Ends::Count(*c),
-        Some(RRule { until: Some(Until::Date(d)), .. }) => Ends::Until(*d),
-        Some(RRule { until: Some(Until::DateTime { value, .. }), .. }) => Ends::Until(value.date()),
+        Some(RRule {
+            until: Some(Until::Date(d)),
+            ..
+        }) => Ends::Until(*d),
+        Some(RRule {
+            until: Some(Until::DateTime { value, .. }),
+            ..
+        }) => Ends::Until(value.date()),
         _ => Ends::Forever,
     }
 }
@@ -106,7 +123,10 @@ pub fn build(preset: Preset, ends: Ends, existing: Option<&RRule>, all_day: bool
             r.until = Some(if all_day {
                 Until::Date(d)
             } else {
-                Until::DateTime { value: d.and_hms_opt(23, 59, 59).unwrap(), utc: true }
+                Until::DateTime {
+                    value: d.and_hms_opt(23, 59, 59).unwrap(),
+                    utc: true,
+                }
             })
         }
     }
@@ -127,12 +147,18 @@ pub const REMINDERS: [(i64, &str); 8] = [
 
 /// Human description of a reminder offset (time before start).
 pub fn describe_reminder(before: Option<Duration>) -> String {
-    let Some(d) = before else { return "Custom reminder".into() };
+    let Some(d) = before else {
+        return "Custom reminder".into();
+    };
     let mins = d.num_minutes();
     if mins == 0 {
         return "At the start".into();
     }
-    let (n, after) = if mins < 0 { (-mins, true) } else { (mins, false) };
+    let (n, after) = if mins < 0 {
+        (-mins, true)
+    } else {
+        (mins, false)
+    };
     let unit = |v: i64, s: &str| format!("{v} {s}{}", if v == 1 { "" } else { "s" });
     let text = if n % 10080 == 0 {
         unit(n / 10080, "week")
@@ -158,39 +184,82 @@ mod tests {
     fn classify_rules() {
         assert_eq!(classify(None), Preset::None);
         assert_eq!(classify(Some(&r("FREQ=DAILY"))), Preset::Daily);
-        assert_eq!(classify(Some(&r("FREQ=WEEKLY;BYDAY=FR,MO,TU,WE,TH"))), Preset::Weekdays);
+        assert_eq!(
+            classify(Some(&r("FREQ=WEEKLY;BYDAY=FR,MO,TU,WE,TH"))),
+            Preset::Weekdays
+        );
         assert_eq!(classify(Some(&r("FREQ=WEEKLY;BYDAY=TU"))), Preset::Weekly);
-        assert_eq!(classify(Some(&r("FREQ=WEEKLY;BYDAY=TU,TH"))), Preset::Custom);
+        assert_eq!(
+            classify(Some(&r("FREQ=WEEKLY;BYDAY=TU,TH"))),
+            Preset::Custom
+        );
         assert_eq!(classify(Some(&r("FREQ=MONTHLY;COUNT=3"))), Preset::Monthly);
-        assert_eq!(classify(Some(&r("FREQ=MONTHLY;BYDAY=-1FR"))), Preset::Custom);
+        assert_eq!(
+            classify(Some(&r("FREQ=MONTHLY;BYDAY=-1FR"))),
+            Preset::Custom
+        );
         assert_eq!(classify(Some(&r("FREQ=YEARLY;INTERVAL=2"))), Preset::Custom);
     }
 
     #[test]
     fn build_rules() {
         assert_eq!(build(Preset::None, Ends::Forever, None, false), None);
-        assert_eq!(build(Preset::Weekdays, Ends::Count(10), None, false).unwrap().to_string(), "FREQ=WEEKLY;COUNT=10;BYDAY=MO,TU,WE,TH,FR");
-        let d = NaiveDate::from_ymd_opt(2026, 12, 31).unwrap();
-        assert_eq!(build(Preset::Daily, Ends::Until(d), None, true).unwrap().to_string(), "FREQ=DAILY;UNTIL=20261231");
         assert_eq!(
-            build(Preset::Daily, Ends::Until(d), None, false).unwrap().to_string(),
+            build(Preset::Weekdays, Ends::Count(10), None, false)
+                .unwrap()
+                .to_string(),
+            "FREQ=WEEKLY;COUNT=10;BYDAY=MO,TU,WE,TH,FR"
+        );
+        let d = NaiveDate::from_ymd_opt(2026, 12, 31).unwrap();
+        assert_eq!(
+            build(Preset::Daily, Ends::Until(d), None, true)
+                .unwrap()
+                .to_string(),
+            "FREQ=DAILY;UNTIL=20261231"
+        );
+        assert_eq!(
+            build(Preset::Daily, Ends::Until(d), None, false)
+                .unwrap()
+                .to_string(),
             "FREQ=DAILY;UNTIL=20261231T235959Z"
         );
         let custom = r("FREQ=MONTHLY;BYDAY=-1FR;COUNT=4");
-        assert_eq!(build(Preset::Custom, Ends::Forever, Some(&custom), false).unwrap().to_string(), "FREQ=MONTHLY;BYDAY=-1FR");
+        assert_eq!(
+            build(Preset::Custom, Ends::Forever, Some(&custom), false)
+                .unwrap()
+                .to_string(),
+            "FREQ=MONTHLY;BYDAY=-1FR"
+        );
         let weekly = r("FREQ=WEEKLY;BYDAY=TU");
-        assert_eq!(build(Preset::Weekly, Ends::Forever, Some(&weekly), false).unwrap().to_string(), "FREQ=WEEKLY;BYDAY=TU");
+        assert_eq!(
+            build(Preset::Weekly, Ends::Forever, Some(&weekly), false)
+                .unwrap()
+                .to_string(),
+            "FREQ=WEEKLY;BYDAY=TU"
+        );
         assert_eq!(ends_of(Some(&custom)), Ends::Count(4));
-        assert_eq!(ends_of(Some(&r("FREQ=DAILY;UNTIL=20261231T235959Z"))), Ends::Until(d));
+        assert_eq!(
+            ends_of(Some(&r("FREQ=DAILY;UNTIL=20261231T235959Z"))),
+            Ends::Until(d)
+        );
     }
 
     #[test]
     fn reminder_text() {
-        assert_eq!(describe_reminder(Some(Duration::minutes(15))), "15 minutes before");
-        assert_eq!(describe_reminder(Some(Duration::minutes(60))), "1 hour before");
+        assert_eq!(
+            describe_reminder(Some(Duration::minutes(15))),
+            "15 minutes before"
+        );
+        assert_eq!(
+            describe_reminder(Some(Duration::minutes(60))),
+            "1 hour before"
+        );
         assert_eq!(describe_reminder(Some(Duration::days(2))), "2 days before");
         assert_eq!(describe_reminder(Some(Duration::weeks(1))), "1 week before");
-        assert_eq!(describe_reminder(Some(Duration::minutes(-5))), "5 minutes after");
+        assert_eq!(
+            describe_reminder(Some(Duration::minutes(-5))),
+            "5 minutes after"
+        );
         assert_eq!(describe_reminder(Some(Duration::zero())), "At the start");
         assert_eq!(describe_reminder(None), "Custom reminder");
     }

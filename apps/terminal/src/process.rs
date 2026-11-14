@@ -35,7 +35,11 @@ fn passwd_shell() -> Option<String> {
         if pw.is_null() || (*pw).pw_shell.is_null() {
             return None;
         }
-        Some(CStr::from_ptr((*pw).pw_shell).to_string_lossy().into_owned())
+        Some(
+            CStr::from_ptr((*pw).pw_shell)
+                .to_string_lossy()
+                .into_owned(),
+        )
     }
 }
 
@@ -111,15 +115,24 @@ mod tests {
 
     #[test]
     fn shell_choice() {
-        assert_eq!(pick_shell(Some("/bin/zsh".into()), Some("/bin/bash".into())), "/bin/zsh");
-        assert_eq!(pick_shell(Some(" ".into()), Some("/bin/bash".into())), "/bin/bash");
+        assert_eq!(
+            pick_shell(Some("/bin/zsh".into()), Some("/bin/bash".into())),
+            "/bin/zsh"
+        );
+        assert_eq!(
+            pick_shell(Some(" ".into()), Some("/bin/bash".into())),
+            "/bin/bash"
+        );
         assert_eq!(pick_shell(None, None), "/bin/sh");
         assert!(!user_shell().is_empty());
     }
 
     #[test]
     fn shell_setting() {
-        assert_eq!(shell_argv(vec!["/bin/fish".into(), "-l".into()]), ["/bin/fish", "-l"]);
+        assert_eq!(
+            shell_argv(vec!["/bin/fish".into(), "-l".into()]),
+            ["/bin/fish", "-l"]
+        );
         assert_eq!(shell_argv(vec![]), [user_shell()]);
         assert_eq!(shell_argv(vec!["".into()]), [user_shell()]);
     }
@@ -155,11 +168,20 @@ mod tests {
         let mut master = -1;
         let mut slave = -1;
         let rc = unsafe {
-            libc::openpty(&mut master, &mut slave, std::ptr::null_mut(), std::ptr::null(), std::ptr::null())
+            libc::openpty(
+                &mut master,
+                &mut slave,
+                std::ptr::null_mut(),
+                std::ptr::null(),
+                std::ptr::null(),
+            )
         };
         assert_eq!(rc, 0);
         let mut cmd = Command::new("/bin/sh");
-        cmd.arg("-c").arg(script).stdout(Stdio::null()).stderr(Stdio::null());
+        cmd.arg("-c")
+            .arg(script)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
         unsafe {
             cmd.pre_exec(move || {
                 if libc::setsid() < 0 || libc::ioctl(slave, libc::TIOCSCTTY as _, 0) < 0 {

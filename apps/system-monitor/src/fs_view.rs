@@ -14,7 +14,8 @@ pub struct FsView {
 }
 
 fn entry(obj: &glib::Object) -> Option<FsEntry> {
-    obj.downcast_ref::<glib::BoxedAnyObject>().map(|b| b.borrow::<FsEntry>().clone())
+    obj.downcast_ref::<glib::BoxedAnyObject>()
+        .map(|b| b.borrow::<FsEntry>().clone())
 }
 
 const COLUMNS: [(&str, FsColumn, bool); 7] = [
@@ -35,7 +36,11 @@ fn cell_text(e: &FsEntry, col: FsColumn) -> String {
         FsColumn::Total => format::size(e.total, false),
         FsColumn::Free => format::size(e.free, false),
         FsColumn::Available => format::size(e.available, false),
-        FsColumn::Used => format!("{} ({:.0} %)", format::size(e.used(), false), e.used_fraction() * 100.0),
+        FsColumn::Used => format!(
+            "{} ({:.0} %)",
+            format::size(e.used(), false),
+            e.used_fraction() * 100.0
+        ),
     }
 }
 
@@ -43,7 +48,11 @@ impl FsView {
     pub fn new() -> Rc<Self> {
         let store = gio::ListStore::new::<glib::BoxedAnyObject>();
         let sorted = gtk::SortListModel::new(Some(store.clone()), None::<gtk::Sorter>);
-        let selection = gtk::SingleSelection::builder().model(&sorted).autoselect(false).can_unselect(true).build();
+        let selection = gtk::SingleSelection::builder()
+            .model(&sorted)
+            .autoselect(false)
+            .can_unselect(true)
+            .build();
         let view = gtk::ColumnView::new(Some(selection));
         view.add_css_class("data-table");
         sorted.set_sorter(view.sorter().as_ref());
@@ -61,7 +70,12 @@ impl FsView {
                     .build();
                 if col == FsColumn::Used {
                     let b = gtk::Box::new(gtk::Orientation::Horizontal, 8);
-                    let bar = gtk::LevelBar::builder().min_value(0.0).max_value(1.0).hexpand(true).valign(gtk::Align::Center).build();
+                    let bar = gtk::LevelBar::builder()
+                        .min_value(0.0)
+                        .max_value(1.0)
+                        .hexpand(true)
+                        .valign(gtk::Align::Center)
+                        .build();
                     // Turn red only when nearly full.
                     bar.add_offset_value(gtk::LEVEL_BAR_OFFSET_LOW, 0.9);
                     bar.add_offset_value(gtk::LEVEL_BAR_OFFSET_HIGH, 0.95);
@@ -78,9 +92,14 @@ impl FsView {
             });
             factory.connect_bind(move |_, item| {
                 let item = item.downcast_ref::<gtk::ListItem>().expect("ListItem");
-                let Some(e) = item.item().as_ref().and_then(entry) else { return };
+                let Some(e) = item.item().as_ref().and_then(entry) else {
+                    return;
+                };
                 let child = item.child();
-                let label = match child.as_ref().and_then(|c| c.downcast_ref::<gtk::Box>().cloned()) {
+                let label = match child
+                    .as_ref()
+                    .and_then(|c| c.downcast_ref::<gtk::Box>().cloned())
+                {
                     Some(b) => {
                         if let Some(bar) = b.first_child().and_downcast::<gtk::LevelBar>() {
                             bar.set_value(e.used_fraction());
@@ -114,23 +133,38 @@ impl FsView {
         }
         view.sort_by_column(dir_column.as_ref(), gtk::SortType::Ascending);
         view.connect_activate(|view, pos| {
-            let Some(e) = view.model().and_then(|m| m.item(pos)).as_ref().and_then(entry) else { return };
+            let Some(e) = view
+                .model()
+                .and_then(|m| m.item(pos))
+                .as_ref()
+                .and_then(entry)
+            else {
+                return;
+            };
             let uri = gio::File::for_path(&e.dir).uri();
-            if let Err(err) = gio::AppInfo::launch_default_for_uri(&uri, None::<&gio::AppLaunchContext>) {
+            if let Err(err) =
+                gio::AppInfo::launch_default_for_uri(&uri, None::<&gio::AppLaunchContext>)
+            {
                 eprintln!("helix-system-monitor: cannot open {}: {err}", e.dir);
             }
         });
 
-        let page = gtk::ScrolledWindow::builder().child(&view).vexpand(true).build();
+        let page = gtk::ScrolledWindow::builder()
+            .child(&view)
+            .vexpand(true)
+            .build();
         Rc::new(FsView { page, store })
     }
 
     pub fn update(&self, entries: Vec<FsEntry>) {
-        let current: Vec<FsEntry> = (0..self.store.n_items()).filter_map(|i| self.store.item(i).as_ref().and_then(entry)).collect();
+        let current: Vec<FsEntry> = (0..self.store.n_items())
+            .filter_map(|i| self.store.item(i).as_ref().and_then(entry))
+            .collect();
         if current == entries {
             return;
         }
-        let objs: Vec<glib::BoxedAnyObject> = entries.into_iter().map(glib::BoxedAnyObject::new).collect();
+        let objs: Vec<glib::BoxedAnyObject> =
+            entries.into_iter().map(glib::BoxedAnyObject::new).collect();
         self.store.splice(0, self.store.n_items(), &objs);
     }
 }

@@ -44,11 +44,40 @@ pub struct Location {
 
 /// File system types that are virtual / not interesting for disk usage.
 const PSEUDO_FS: &[&str] = &[
-    "proc", "sysfs", "devtmpfs", "devpts", "tmpfs", "ramfs", "securityfs", "cgroup", "cgroup2",
-    "pstore", "bpf", "debugfs", "tracefs", "configfs", "fusectl", "mqueue", "hugetlbfs",
-    "autofs", "binfmt_misc", "efivarfs", "rpc_pipefs", "nsfs", "overlay", "squashfs",
-    "selinuxfs", "fuse.portal", "fuse.gvfsd-fuse", "fuse.snapfuse", "nfsd", "devfs", "none",
-    "ecryptfs", "zram", "rootfs",
+    "proc",
+    "sysfs",
+    "devtmpfs",
+    "devpts",
+    "tmpfs",
+    "ramfs",
+    "securityfs",
+    "cgroup",
+    "cgroup2",
+    "pstore",
+    "bpf",
+    "debugfs",
+    "tracefs",
+    "configfs",
+    "fusectl",
+    "mqueue",
+    "hugetlbfs",
+    "autofs",
+    "binfmt_misc",
+    "efivarfs",
+    "rpc_pipefs",
+    "nsfs",
+    "overlay",
+    "squashfs",
+    "selinuxfs",
+    "fuse.portal",
+    "fuse.gvfsd-fuse",
+    "fuse.snapfuse",
+    "nfsd",
+    "devfs",
+    "none",
+    "ecryptfs",
+    "zram",
+    "rootfs",
 ];
 
 pub fn is_pseudo(fs_type: &str) -> bool {
@@ -61,8 +90,13 @@ pub fn unescape(s: &str) -> String {
     let mut out = Vec::with_capacity(b.len());
     let mut i = 0;
     while i < b.len() {
-        if b[i] == b'\\' && i + 3 < b.len() && b[i + 1..i + 4].iter().all(|c| (b'0'..=b'7').contains(c)) {
-            let v = (b[i + 1] - b'0') as u32 * 64 + (b[i + 2] - b'0') as u32 * 8 + (b[i + 3] - b'0') as u32;
+        if b[i] == b'\\'
+            && i + 3 < b.len()
+            && b[i + 1..i + 4].iter().all(|c| (b'0'..=b'7').contains(c))
+        {
+            let v = (b[i + 1] - b'0') as u32 * 64
+                + (b[i + 2] - b'0') as u32 * 8
+                + (b[i + 3] - b'0') as u32;
             out.push(v as u8);
             i += 4;
         } else {
@@ -79,13 +113,19 @@ pub fn parse_mounts(text: &str) -> Vec<MountEntry> {
     let mut entries: Vec<MountEntry> = Vec::new();
     for line in text.lines() {
         let mut f = line.split_whitespace();
-        let (Some(dev), Some(mp), Some(ty)) = (f.next(), f.next(), f.next()) else { continue };
+        let (Some(dev), Some(mp), Some(ty)) = (f.next(), f.next(), f.next()) else {
+            continue;
+        };
         if is_pseudo(ty) {
             continue;
         }
         let mount_point = PathBuf::from(unescape(mp));
         entries.retain(|e| e.mount_point != mount_point);
-        entries.push(MountEntry { device: unescape(dev), mount_point, fs_type: ty.to_string() });
+        entries.push(MountEntry {
+            device: unescape(dev),
+            mount_point,
+            fs_type: ty.to_string(),
+        });
     }
     entries
 }
@@ -97,7 +137,11 @@ pub fn statvfs(path: &Path) -> Option<Usage> {
     if unsafe { libc::statvfs(c.as_ptr(), &mut st) } != 0 {
         return None;
     }
-    let frsize = if st.f_frsize > 0 { st.f_frsize } else { st.f_bsize } as u64;
+    let frsize = if st.f_frsize > 0 {
+        st.f_frsize
+    } else {
+        st.f_bsize
+    } as u64;
     Some(Usage {
         total: st.f_blocks as u64 * frsize,
         free: st.f_bfree as u64 * frsize,
@@ -109,7 +153,9 @@ fn mount_name(mp: &Path) -> String {
     if mp == Path::new("/") {
         "Computer".into()
     } else {
-        mp.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| mp.display().to_string())
+        mp.file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| mp.display().to_string())
     }
 }
 
@@ -126,7 +172,9 @@ pub fn locations(home: &Path) -> Vec<Location> {
     let text = std::fs::read_to_string("/proc/self/mounts").unwrap_or_default();
     let mut seen_devices = HashSet::new();
     for m in parse_mounts(&text) {
-        let Some(usage) = statvfs(&m.mount_point) else { continue };
+        let Some(usage) = statvfs(&m.mount_point) else {
+            continue;
+        };
         if usage.total == 0 {
             continue;
         }
@@ -171,14 +219,21 @@ cgroup2 /sys/fs/cgroup cgroup2 rw 0 0
 /dev/sdd1 /mnt xfs rw 0 0
 ";
         let m = parse_mounts(text);
-        let points: Vec<_> = m.iter().map(|e| e.mount_point.to_string_lossy().into_owned()).collect();
+        let points: Vec<_> = m
+            .iter()
+            .map(|e| e.mount_point.to_string_lossy().into_owned())
+            .collect();
         assert_eq!(points, ["/", "/boot/efi", "/media/My Disk", "/mnt"]);
         assert_eq!(m[3].fs_type, "xfs");
     }
 
     #[test]
     fn usage_math() {
-        let u = Usage { total: 1000, free: 250, available: 200 };
+        let u = Usage {
+            total: 1000,
+            free: 250,
+            available: 200,
+        };
         assert_eq!(u.used(), 750);
         assert!((u.fraction() - 0.75).abs() < 1e-9);
         assert_eq!(Usage::default().fraction(), 0.0);

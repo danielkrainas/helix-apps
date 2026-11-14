@@ -109,7 +109,9 @@ fn decode_luma(w: usize, h: usize, luma: &[u8], mirrored: bool) -> Option<String
         let x = if mirrored { w - 1 - x } else { x };
         luma[y * w + x]
     });
-    img.detect_grids().into_iter().find_map(|g| g.decode().ok().map(|(_, text)| text))
+    img.detect_grids()
+        .into_iter()
+        .find_map(|g| g.decode().ok().map(|(_, text)| text))
 }
 
 /// Decodes the first QR code in an RGBA image. The preview of front cameras
@@ -128,7 +130,12 @@ pub fn decode_rgba(width: usize, height: usize, stride: usize, rgba: &[u8]) -> O
 }
 
 pub fn decode_frame(frame: &Frame) -> Option<String> {
-    decode_rgba(frame.width.max(0) as usize, frame.height.max(0) as usize, frame.stride, &frame.data)
+    decode_rgba(
+        frame.width.max(0) as usize,
+        frame.height.max(0) as usize,
+        frame.stride,
+        &frame.data,
+    )
 }
 
 /// URI schemes the "Open" action is offered for. Anything else (file:,
@@ -176,7 +183,10 @@ impl Scanner {
                 }
             })
             .expect("spawn qr scanner thread");
-        Scanner { requests: req_tx, results: res_rx }
+        Scanner {
+            requests: req_tx,
+            results: res_rx,
+        }
     }
 
     /// Offers a frame; dropped if a scan is still running.
@@ -200,7 +210,10 @@ mod tests {
         let mut buf = vec![255u8; side * side * 4];
         for y in 0..side {
             for x in 0..side {
-                let (mx, my) = ((x / scale) as isize - quiet as isize, (y / scale) as isize - quiet as isize);
+                let (mx, my) = (
+                    (x / scale) as isize - quiet as isize,
+                    (y / scale) as isize - quiet as isize,
+                );
                 let dark = mx >= 0
                     && my >= 0
                     && (mx as usize) < n
@@ -219,13 +232,19 @@ mod tests {
     #[test]
     fn decodes_generated_code() {
         let (w, h, buf) = qr_rgba("https://example.org/helix?q=1", 6, false);
-        assert_eq!(decode_rgba(w, h, w * 4, &buf).as_deref(), Some("https://example.org/helix?q=1"));
+        assert_eq!(
+            decode_rgba(w, h, w * 4, &buf).as_deref(),
+            Some("https://example.org/helix?q=1")
+        );
     }
 
     #[test]
     fn decodes_mirrored_code() {
         let (w, h, buf) = qr_rgba("hello helix", 5, true);
-        assert_eq!(decode_rgba(w, h, w * 4, &buf).as_deref(), Some("hello helix"));
+        assert_eq!(
+            decode_rgba(w, h, w * 4, &buf).as_deref(),
+            Some("hello helix")
+        );
     }
 
     #[test]
@@ -254,10 +273,22 @@ mod tests {
 
     #[test]
     fn uri_detection() {
-        assert_eq!(openable_uri("https://gnome.org").as_deref(), Some("https://gnome.org"));
-        assert_eq!(openable_uri("  HTTP://x.y/z ").as_deref(), Some("HTTP://x.y/z"));
-        assert_eq!(openable_uri("www.example.com").as_deref(), Some("https://www.example.com"));
-        assert_eq!(openable_uri("mailto:a@b.c").as_deref(), Some("mailto:a@b.c"));
+        assert_eq!(
+            openable_uri("https://gnome.org").as_deref(),
+            Some("https://gnome.org")
+        );
+        assert_eq!(
+            openable_uri("  HTTP://x.y/z ").as_deref(),
+            Some("HTTP://x.y/z")
+        );
+        assert_eq!(
+            openable_uri("www.example.com").as_deref(),
+            Some("https://www.example.com")
+        );
+        assert_eq!(
+            openable_uri("mailto:a@b.c").as_deref(),
+            Some("mailto:a@b.c")
+        );
         assert_eq!(openable_uri("tel:+123").as_deref(), Some("tel:+123"));
         assert_eq!(openable_uri("file:///etc/passwd"), None);
         assert_eq!(openable_uri("javascript:alert(1)"), None);

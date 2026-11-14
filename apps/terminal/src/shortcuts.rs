@@ -30,26 +30,41 @@ const GROUPS: &[Group] = &[
     ),
     (
         "View",
-        &[("Zoom In", "<Control>plus"), ("Zoom Out", "<Control>minus"), ("Reset Zoom", "<Control>0")],
+        &[
+            ("Zoom In", "<Control>plus"),
+            ("Zoom Out", "<Control>minus"),
+            ("Reset Zoom", "<Control>0"),
+        ],
     ),
     (
         "General",
-        &[("Preferences", "<Control>comma"), ("Keyboard Shortcuts", "<Control>question")],
+        &[
+            ("Preferences", "<Control>comma"),
+            ("Keyboard Shortcuts", "<Control>question"),
+        ],
     ),
 ];
 
 pub fn show(parent: &impl IsA<gtk::Window>) {
-    let section = gtk::ShortcutsSection::builder().section_name("main").build();
+    let section = gtk::ShortcutsSection::builder()
+        .section_name("main")
+        .build();
     for (title, items) in GROUPS {
         let group = gtk::ShortcutsGroup::builder().title(*title).build();
         for (name, accel) in *items {
             group.add_shortcut(
-                &gtk::ShortcutsShortcut::builder().title(*name).accelerator(*accel).build(),
+                &gtk::ShortcutsShortcut::builder()
+                    .title(*name)
+                    .accelerator(*accel)
+                    .build(),
             );
         }
         section.add_group(&group);
     }
-    let win = gtk::ShortcutsWindow::builder().transient_for(parent).modal(true).build();
+    let win = gtk::ShortcutsWindow::builder()
+        .transient_for(parent)
+        .modal(true)
+        .build();
     win.add_section(&section);
     win.present();
 }

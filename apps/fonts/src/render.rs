@@ -42,7 +42,11 @@ pub fn shape(face: &rustybuzz::Face, text: &str) -> (Vec<Placed>, i32) {
     let mut pen = 0;
     let mut placed = Vec::with_capacity(out.len());
     for (info, pos) in out.glyph_infos().iter().zip(out.glyph_positions()) {
-        placed.push(Placed { glyph: GlyphId(info.glyph_id as u16), x: pen + pos.x_offset, y: pos.y_offset });
+        placed.push(Placed {
+            glyph: GlyphId(info.glyph_id as u16),
+            x: pen + pos.x_offset,
+            y: pos.y_offset,
+        });
         pen += pos.x_advance;
     }
     (placed, pen)
@@ -70,7 +74,10 @@ struct CairoPath<'a> {
 
 impl CairoPath<'_> {
     fn pt(&self, x: f32, y: f32) -> (f64, f64) {
-        (self.ox + x as f64 * self.scale, self.oy - y as f64 * self.scale)
+        (
+            self.ox + x as f64 * self.scale,
+            self.oy - y as f64 * self.scale,
+        )
     }
 }
 
@@ -106,21 +113,48 @@ impl OutlineBuilder for CairoPath<'_> {
 /// Appends the outline of `glyph` to the current path with its origin at
 /// (`x`, `baseline`) and `px` pixels per em. Returns false if the glyph
 /// has no outline.
-pub fn glyph_path(cr: &cairo::Context, face: &ttf_parser::Face, glyph: GlyphId, x: f64, baseline: f64, px: f64) -> bool {
+pub fn glyph_path(
+    cr: &cairo::Context,
+    face: &ttf_parser::Face,
+    glyph: GlyphId,
+    x: f64,
+    baseline: f64,
+    px: f64,
+) -> bool {
     let (_, _, upem) = metrics(face);
-    let mut b = CairoPath { cr, ox: x, oy: baseline, scale: px / upem, last: (x, baseline) };
+    let mut b = CairoPath {
+        cr,
+        ox: x,
+        oy: baseline,
+        scale: px / upem,
+        last: (x, baseline),
+    };
     face.outline_glyph(glyph, &mut b).is_some()
 }
 
 /// Draws `text` at `px` pixels per em with the baseline at `baseline`.
 /// Returns the width drawn in pixels.
-pub fn draw_text(cr: &cairo::Context, face: &rustybuzz::Face, text: &str, x: f64, baseline: f64, px: f64) -> f64 {
+pub fn draw_text(
+    cr: &cairo::Context,
+    face: &rustybuzz::Face,
+    text: &str,
+    x: f64,
+    baseline: f64,
+    px: f64,
+) -> f64 {
     let (_, _, upem) = metrics(face);
     let scale = px / upem;
     let (glyphs, advance) = shape(face, text);
     cr.new_path();
     for g in &glyphs {
-        glyph_path(cr, face, g.glyph, x + g.x as f64 * scale, baseline - g.y as f64 * scale, px);
+        glyph_path(
+            cr,
+            face,
+            g.glyph,
+            x + g.x as f64 * scale,
+            baseline - g.y as f64 * scale,
+            px,
+        );
     }
     cr.set_fill_rule(cairo::FillRule::Winding);
     let _ = cr.fill();
@@ -136,8 +170,17 @@ pub fn measure(face: &rustybuzz::Face, text: &str, px: f64) -> (f64, f64) {
 
 /// Draws the glyph for `c` centred in a `w`×`h` cell. Returns false if the
 /// face has no glyph for it.
-pub fn draw_char_centered(cr: &cairo::Context, face: &ttf_parser::Face, c: char, w: f64, h: f64, px: f64) -> bool {
-    let Some(gid) = face.glyph_index(c) else { return false };
+pub fn draw_char_centered(
+    cr: &cairo::Context,
+    face: &ttf_parser::Face,
+    c: char,
+    w: f64,
+    h: f64,
+    px: f64,
+) -> bool {
+    let Some(gid) = face.glyph_index(c) else {
+        return false;
+    };
     let (asc, desc, upem) = metrics(face);
     let scale = px / upem;
     let adv = face.glyph_hor_advance(gid).unwrap_or(0) as f64 * scale;
@@ -155,7 +198,10 @@ mod tests {
 
     fn load() -> Option<FontData> {
         let p = crate::fontinfo::tests::any_ttf()?;
-        Some(FontData { data: Arc::new(std::fs::read(p).ok()?), index: 0 })
+        Some(FontData {
+            data: Arc::new(std::fs::read(p).ok()?),
+            index: 0,
+        })
     }
 
     fn inked(surface: &mut cairo::ImageSurface) -> usize {
@@ -193,8 +239,22 @@ mod tests {
         let mut cell = cairo::ImageSurface::create(cairo::Format::ARgb32, 40, 40).unwrap();
         {
             let cr = cairo::Context::new(&cell).unwrap();
-            assert!(draw_char_centered(&cr, &fd.raw_face().unwrap(), 'g', 40.0, 40.0, 24.0));
-            assert!(!draw_char_centered(&cr, &fd.raw_face().unwrap(), '\u{10FFFD}', 40.0, 40.0, 24.0));
+            assert!(draw_char_centered(
+                &cr,
+                &fd.raw_face().unwrap(),
+                'g',
+                40.0,
+                40.0,
+                24.0
+            ));
+            assert!(!draw_char_centered(
+                &cr,
+                &fd.raw_face().unwrap(),
+                '\u{10FFFD}',
+                40.0,
+                40.0,
+                24.0
+            ));
         }
         assert!(inked(&mut cell) > 20);
     }

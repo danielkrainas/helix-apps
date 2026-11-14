@@ -43,12 +43,18 @@ fn install_css() {
         ",
     );
     for (nick, _, hex) in ACCENT_COLORS {
-        css.push_str(&format!(".accent-swatch.accent-{nick} {{ background: {hex}; }}\n"));
+        css.push_str(&format!(
+            ".accent-swatch.accent-{nick} {{ background: {hex}; }}\n"
+        ));
     }
     let provider = gtk::CssProvider::new();
     provider.load_from_string(&css);
     if let Some(display) = gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(&display, &provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 }
 
@@ -67,7 +73,11 @@ impl Panel for AppearancePanel {
 fn style_card(style: Style, label: &str) -> gtk::ToggleButton {
     let preview = gtk::Box::new(gtk::Orientation::Vertical, 0);
     preview.add_css_class("style-preview");
-    preview.add_css_class(if style == Style::Dark { "dark" } else { "light" });
+    preview.add_css_class(if style == Style::Dark {
+        "dark"
+    } else {
+        "light"
+    });
     let win = gtk::Box::new(gtk::Orientation::Vertical, 0);
     win.add_css_class("style-window");
     win.set_vexpand(true);
@@ -78,7 +88,10 @@ fn style_card(style: Style, label: &str) -> gtk::ToggleButton {
     let bx = gtk::Box::new(gtk::Orientation::Vertical, 6);
     bx.append(&preview);
     bx.append(&gtk::Label::new(Some(label)));
-    let button = gtk::ToggleButton::builder().child(&bx).css_classes(["flat", "style-card"]).build();
+    let button = gtk::ToggleButton::builder()
+        .child(&bx)
+        .css_classes(["flat", "style-card"])
+        .build();
     button.update_property(&[gtk::accessible::Property::Label(label)]);
     button
 }
@@ -91,7 +104,9 @@ fn style_group(prefs: &Prefs) -> adw::PreferencesGroup {
     let sync = {
         let (d, k, p) = (default.downgrade(), dark.downgrade(), prefs.clone());
         move || {
-            let (Some(d), Some(k)) = (d.upgrade(), k.upgrade()) else { return };
+            let (Some(d), Some(k)) = (d.upgrade(), k.upgrade()) else {
+                return;
+            };
             match values::style_from_scheme(&p.get_enum_nick("color-scheme", "default")) {
                 Style::Default => d.set_active(true),
                 Style::Dark => k.set_active(true),
@@ -109,7 +124,10 @@ fn style_group(prefs: &Prefs) -> adw::PreferencesGroup {
         });
     }
     watch(prefs, "color-scheme", sync);
-    let bx = gtk::Box::builder().spacing(24).halign(gtk::Align::Center).build();
+    let bx = gtk::Box::builder()
+        .spacing(24)
+        .halign(gtk::Align::Center)
+        .build();
     bx.append(&default);
     bx.append(&dark);
     group.add(&bx);
@@ -121,7 +139,12 @@ fn accent_group(prefs: &Prefs) -> adw::PreferencesGroup {
     if !has_key(prefs, "accent-color") {
         group.set_description(Some(widgets::UNSUPPORTED));
     }
-    let bx = gtk::Box::builder().spacing(10).halign(gtk::Align::Center).margin_top(6).margin_bottom(6).build();
+    let bx = gtk::Box::builder()
+        .spacing(10)
+        .halign(gtk::Align::Center)
+        .margin_top(6)
+        .margin_bottom(6)
+        .build();
     let mut buttons: Vec<(gtk::ToggleButton, &'static str)> = Vec::new();
     for (nick, label, _) in ACCENT_COLORS {
         let b = gtk::ToggleButton::builder()
@@ -170,7 +193,9 @@ fn uri_path(uri: &str) -> Option<PathBuf> {
 }
 
 fn path_uri(path: &Path) -> String {
-    glib::filename_to_uri(path, None).map(|s| s.to_string()).unwrap_or_default()
+    glib::filename_to_uri(path, None)
+        .map(|s| s.to_string())
+        .unwrap_or_default()
 }
 
 struct Background {
@@ -195,7 +220,8 @@ impl Background {
 
     fn apply(&self, wp: &Wallpaper) {
         self.prefs.set("picture-uri", path_uri(&wp.light));
-        self.prefs.set("picture-uri-dark", path_uri(wp.dark_or_light()));
+        self.prefs
+            .set("picture-uri-dark", path_uri(wp.dark_or_light()));
         self.refresh_current();
     }
 
@@ -206,7 +232,12 @@ impl Background {
             .height_request(THUMB_H)
             .can_shrink(true)
             .build();
-        let name = wp.light.file_stem().and_then(|s| s.to_str()).unwrap_or("Wallpaper").replace('_', " ");
+        let name = wp
+            .light
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("Wallpaper")
+            .replace('_', " ");
         let button = gtk::Button::builder()
             .child(&picture)
             .css_classes(["flat", "wallpaper-button"])
@@ -237,14 +268,24 @@ impl Background {
 type Thumb = (PathBuf, Option<(i32, i32, bool, usize, glib::Bytes)>);
 
 fn load_thumbnail(path: &Path) -> Option<(i32, i32, bool, usize, glib::Bytes)> {
-    let pb = gtk::gdk_pixbuf::Pixbuf::from_file_at_scale(path, THUMB_W * 2, THUMB_H * 2, true).ok()?;
-    Some((pb.width(), pb.height(), pb.has_alpha(), pb.rowstride() as usize, pb.read_pixel_bytes()))
+    let pb =
+        gtk::gdk_pixbuf::Pixbuf::from_file_at_scale(path, THUMB_W * 2, THUMB_H * 2, true).ok()?;
+    Some((
+        pb.width(),
+        pb.height(),
+        pb.has_alpha(),
+        pb.rowstride() as usize,
+        pb.read_pixel_bytes(),
+    ))
 }
 
 fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
     let prefs = ctx.prefs(BACKGROUND);
     let group = widgets::group("Background");
-    let add_button = gtk::Button::builder().label("Add Picture…").css_classes(["flat"]).build();
+    let add_button = gtk::Button::builder()
+        .label("Add Picture…")
+        .css_classes(["flat"])
+        .build();
     group.set_header_suffix(Some(&add_button));
     let flow = gtk::FlowBox::builder()
         .selection_mode(gtk::SelectionMode::None)
@@ -267,13 +308,22 @@ fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
             }
         }
     });
-    let bg = Rc::new(Background { prefs: prefs.clone(), flow, items: RefCell::default(), thumbs: path_tx });
+    let bg = Rc::new(Background {
+        prefs: prefs.clone(),
+        flow,
+        items: RefCell::default(),
+        thumbs: path_tx,
+    });
     let weak = Rc::downgrade(&bg);
     glib::spawn_future_local(async move {
         while let Ok((path, data)) = thumb_rx.recv().await {
             let Some(bg) = weak.upgrade() else { break };
             if let Some((w, h, alpha, stride, bytes)) = data {
-                let format = if alpha { gdk::MemoryFormat::R8g8b8a8 } else { gdk::MemoryFormat::R8g8b8 };
+                let format = if alpha {
+                    gdk::MemoryFormat::R8g8b8a8
+                } else {
+                    gdk::MemoryFormat::R8g8b8
+                };
                 let texture = gdk::MemoryTexture::new(w, h, format, &bytes, stride);
                 bg.set_thumbnail(&path, texture.upcast_ref());
             }
@@ -315,7 +365,11 @@ fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
         filter.add_pixbuf_formats();
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&filter);
-        let dialog = gtk::FileDialog::builder().title("Add Picture").modal(true).filters(&filters).build();
+        let dialog = gtk::FileDialog::builder()
+            .title("Add Picture")
+            .modal(true)
+            .filters(&filters)
+            .build();
         let bg = bg.clone();
         let user_dir = user_dir.clone();
         let ctx_weak = ctx_weak.clone();
@@ -325,14 +379,21 @@ fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
             spawn_worker(
                 move || -> Result<PathBuf, String> {
                     std::fs::create_dir_all(&user_dir).map_err(|e| e.to_string())?;
-                    let name = src.file_name().and_then(|n| n.to_str()).unwrap_or("picture").to_string();
+                    let name = src
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("picture")
+                        .to_string();
                     let dest = wallpaper::unique_destination(&user_dir, &name, |p| p.exists());
                     std::fs::copy(&src, &dest).map_err(|e| e.to_string())?;
                     Ok(dest)
                 },
                 move |res| match res {
                     Ok(dest) => {
-                        let wp = Wallpaper { light: dest, dark: None };
+                        let wp = Wallpaper {
+                            light: dest,
+                            dark: None,
+                        };
                         bg.add(wp.clone());
                         bg.apply(&wp);
                     }

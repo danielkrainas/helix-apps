@@ -70,9 +70,15 @@ pub fn run() -> glib::ExitCode {
     gtk_app.connect_command_line({
         let holder = holder.clone();
         move |_, cmdline| {
-            let Some(app) = holder.borrow().clone() else { return 1 };
-            let args: Vec<String> =
-                cmdline.arguments().iter().skip(1).map(|a| a.to_string_lossy().into_owned()).collect();
+            let Some(app) = holder.borrow().clone() else {
+                return 1;
+            };
+            let args: Vec<String> = cmdline
+                .arguments()
+                .iter()
+                .skip(1)
+                .map(|a| a.to_string_lossy().into_owned())
+                .collect();
             let cwd = cmdline.cwd().unwrap_or_else(glib::home_dir);
             // --help, --version and invalid options were already handled by
             // the invoking process in main().
@@ -149,14 +155,11 @@ impl App {
     }
 
     fn install_actions(&self) {
-        helix_app_common::install_standard_actions(
-            &self.gtk,
-            "Terminal",
-            "Use the command line",
-        );
+        helix_app_common::install_standard_actions(&self.gtk, "Terminal", "Use the command line");
         // Ctrl+W / Ctrl+Q belong to programs running in the terminal.
         self.gtk.set_accels_for_action("app.quit", &[]);
-        self.gtk.set_accels_for_action("window.close", &["<Control><Shift>q"]);
+        self.gtk
+            .set_accels_for_action("window.close", &["<Control><Shift>q"]);
 
         let wk = self.this.clone();
         let prefs = gio::ActionEntry::builder("preferences")
@@ -180,7 +183,10 @@ impl App {
             ("win.select-all", &["<Control><Shift>a"]),
             ("win.find", &["<Control><Shift>f"]),
             ("win.find-next", &["<Control><Shift>g"]),
-            ("win.zoom-in", &["<Control>plus", "<Control>equal", "<Control>KP_Add"]),
+            (
+                "win.zoom-in",
+                &["<Control>plus", "<Control>equal", "<Control>KP_Add"],
+            ),
             ("win.zoom-out", &["<Control>minus", "<Control>KP_Subtract"]),
             ("win.zoom-reset", &["<Control>0", "<Control>KP_0"]),
             ("win.tab-overview", &["<Control><Shift>o"]),
@@ -196,7 +202,12 @@ impl App {
         let active = self.gtk.active_window();
         let windows = self.windows.borrow();
         active
-            .and_then(|a| windows.iter().find(|w| w.win.upcast_ref::<gtk::Window>() == &a).cloned())
+            .and_then(|a| {
+                windows
+                    .iter()
+                    .find(|w| w.win.upcast_ref::<gtk::Window>() == &a)
+                    .cloned()
+            })
             .or_else(|| windows.last().cloned())
     }
 
@@ -236,7 +247,8 @@ impl App {
             if !w.win.is_maximized() && width > 0 && height > 0 {
                 self.prefs.set("last-window-size", (width, height));
             }
-            self.prefs.set("last-window-maximised", w.win.is_maximized());
+            self.prefs
+                .set("last-window-maximised", w.win.is_maximized());
         }
         self.windows.borrow_mut().retain(|x| !Rc::ptr_eq(x, w));
     }

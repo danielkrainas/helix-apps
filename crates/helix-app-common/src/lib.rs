@@ -45,7 +45,11 @@ pub fn lookup_schema(schema_id: &str) -> Option<gio::SettingsSchema> {
 /// bundled with Helix).
 pub fn settings(schema_id: &str) -> Option<gio::Settings> {
     let schema = lookup_schema(schema_id)?;
-    Some(gio::Settings::new_full(&schema, None::<&gio::SettingsBackend>, None))
+    Some(gio::Settings::new_full(
+        &schema,
+        None::<&gio::SettingsBackend>,
+        None,
+    ))
 }
 
 /// GSettings-backed preferences with an in-memory fallback.
@@ -68,7 +72,11 @@ impl Prefs {
             .and_then(|s| s.settings_schema())
             .map(|schema| schema.list_keys().iter().map(|k| k.to_string()).collect())
             .unwrap_or_default();
-        Prefs { settings, keys: Rc::new(keys), memory: Rc::default() }
+        Prefs {
+            settings,
+            keys: Rc::new(keys),
+            memory: Rc::default(),
+        }
     }
 
     /// Whether the GSettings schema is installed.
@@ -81,7 +89,9 @@ impl Prefs {
     }
 
     fn backed(&self, key: &str) -> Option<&gio::Settings> {
-        self.settings.as_ref().filter(|_| self.keys.iter().any(|k| k == key))
+        self.settings
+            .as_ref()
+            .filter(|_| self.keys.iter().any(|k| k == key))
     }
 
     pub fn get_variant(&self, key: &str) -> Option<glib::Variant> {
@@ -106,7 +116,9 @@ impl Prefs {
     }
 
     pub fn get<T: glib::variant::FromVariant>(&self, key: &str, default: T) -> T {
-        self.get_variant(key).and_then(|v| v.get::<T>()).unwrap_or(default)
+        self.get_variant(key)
+            .and_then(|v| v.get::<T>())
+            .unwrap_or(default)
     }
 
     pub fn set<T: glib::variant::ToVariant>(&self, key: &str, value: T) {
@@ -147,12 +159,7 @@ pub fn config_dir(app: &str) -> std::path::PathBuf {
 }
 
 /// Shows a standard About dialog.
-pub fn show_about(
-    parent: &impl IsA<gtk::Widget>,
-    app_name: &str,
-    app_id: &str,
-    comments: &str,
-) {
+pub fn show_about(parent: &impl IsA<gtk::Widget>, app_name: &str, app_id: &str, comments: &str) {
     use adw::prelude::*;
     let about = adw::AboutDialog::builder()
         .application_name(app_name)
@@ -180,7 +187,10 @@ pub fn install_standard_actions(
     let about = gio::ActionEntry::builder("about")
         .activate(move |app: &adw::Application, _, _| {
             if let Some(win) = app.active_window() {
-                let id = app.application_id().map(|s| s.to_string()).unwrap_or_default();
+                let id = app
+                    .application_id()
+                    .map(|s| s.to_string())
+                    .unwrap_or_default();
                 show_about(&win, app_name, &id, comments);
             }
         })
@@ -198,7 +208,8 @@ mod tests {
     /// system's schemas still win for ids they define.
     #[test]
     fn bundled_schema_fallback() {
-        let dir = std::env::temp_dir().join(format!("helix-app-common-schemas-{}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("helix-app-common-schemas-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(
             dir.join("org.helix.Test.gschema.xml"),
@@ -207,7 +218,9 @@ mod tests {
                </schema></schemalist>"#,
         )
         .unwrap();
-        let compiled = std::process::Command::new("glib-compile-schemas").arg(&dir).status();
+        let compiled = std::process::Command::new("glib-compile-schemas")
+            .arg(&dir)
+            .status();
         if !matches!(compiled, Ok(s) if s.success()) {
             eprintln!("glib-compile-schemas unavailable; skipping");
             return;

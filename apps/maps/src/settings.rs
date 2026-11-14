@@ -106,7 +106,10 @@ pub struct Overrides {
 impl Overrides {
     /// Reads the known keys through typed getters; keys with the wrong type
     /// are skipped individually instead of rejecting the whole layer.
-    fn from_getters(s: impl Fn(&str) -> Option<String>, i: impl Fn(&str) -> Option<i64>) -> Overrides {
+    fn from_getters(
+        s: impl Fn(&str) -> Option<String>,
+        i: impl Fn(&str) -> Option<i64>,
+    ) -> Overrides {
         Overrides {
             tile_url_template: s("tile_url_template"),
             tile_attribution: s("tile_attribution"),
@@ -119,7 +122,9 @@ impl Overrides {
 
     /// Parses a system-wide `endpoints.toml`.
     pub fn from_toml(text: &str) -> Result<Overrides, String> {
-        let table: toml::Table = text.parse().map_err(|e: toml::de::Error| e.message().to_string())?;
+        let table: toml::Table = text
+            .parse()
+            .map_err(|e: toml::de::Error| e.message().to_string())?;
         Ok(Overrides::from_getters(
             |k| table.get(k).and_then(|v| v.as_str()).map(str::to_string),
             |k| table.get(k).and_then(|v| v.as_integer()),
@@ -152,10 +157,22 @@ impl Overrides {
         drop_eq(&mut self.tile_attribution, &d.tile_attribution);
         drop_eq(&mut self.tile_attribution_url, &d.tile_attribution_url);
         drop_eq(&mut self.tile_max_zoom, &d.tile_max_zoom);
-        if self.geocoder_url.as_deref().and_then(normalize_base_url).as_deref() == Some(DEFAULT_GEOCODER) {
+        if self
+            .geocoder_url
+            .as_deref()
+            .and_then(normalize_base_url)
+            .as_deref()
+            == Some(DEFAULT_GEOCODER)
+        {
             self.geocoder_url = None;
         }
-        if self.router_url.as_deref().and_then(normalize_base_url).as_deref() == Some(DEFAULT_ROUTER) {
+        if self
+            .router_url
+            .as_deref()
+            .and_then(normalize_base_url)
+            .as_deref()
+            == Some(DEFAULT_ROUTER)
+        {
             self.router_url = None;
         }
         self
@@ -170,7 +187,10 @@ impl Overrides {
         }
         self.tile_url_template = pick(&wanted.tile_url_template, &inherited.tile_url_template);
         self.tile_attribution = pick(&wanted.tile_attribution, &inherited.tile_attribution);
-        self.tile_attribution_url = pick(&wanted.tile_attribution_url, &inherited.tile_attribution_url);
+        self.tile_attribution_url = pick(
+            &wanted.tile_attribution_url,
+            &inherited.tile_attribution_url,
+        );
         self.tile_max_zoom = pick(&wanted.tile_max_zoom, &inherited.tile_max_zoom);
         self.geocoder_url = pick(&wanted.geocoder_url, &inherited.geocoder_url);
         self.router_url = pick(&wanted.router_url, &inherited.router_url);
@@ -215,7 +235,9 @@ impl SystemConfig {
         let mut layers = Vec::new();
         for dir in dirs.iter().rev() {
             let path = dir.join(SYSTEM_FILE);
-            let Ok(text) = std::fs::read_to_string(&path) else { continue };
+            let Ok(text) = std::fs::read_to_string(&path) else {
+                continue;
+            };
             match Overrides::from_toml(&text) {
                 Ok(o) => layers.push((path, o)),
                 Err(e) => eprintln!("helix-maps: ignoring {}: {e}", path.display()),
@@ -225,7 +247,9 @@ impl SystemConfig {
     }
 
     pub fn from_env() -> SystemConfig {
-        SystemConfig::load(&config_dirs(std::env::var("XDG_CONFIG_DIRS").ok().as_deref()))
+        SystemConfig::load(&config_dirs(
+            std::env::var("XDG_CONFIG_DIRS").ok().as_deref(),
+        ))
     }
 
     /// Defaults plus the system layers (what a user without overrides gets).
@@ -248,7 +272,10 @@ pub struct UserSettings {
 
 impl Default for UserSettings {
     fn default() -> Self {
-        UserSettings { endpoints: Overrides::default(), units: "metric".into() }
+        UserSettings {
+            endpoints: Overrides::default(),
+            units: "metric".into(),
+        }
     }
 }
 
@@ -264,7 +291,9 @@ impl UserSettings {
     /// Parses `settings.json`; malformed input yields defaults and invalid
     /// individual values are ignored.
     pub fn from_json(text: &str) -> UserSettings {
-        let Ok(v) = serde_json::from_str::<serde_json::Value>(text) else { return UserSettings::default() };
+        let Ok(v) = serde_json::from_str::<serde_json::Value>(text) else {
+            return UserSettings::default();
+        };
         let mut endpoints = Overrides::from_json(&v);
         if v.get("version").is_none() {
             endpoints = endpoints.without_builtin_defaults();
@@ -277,12 +306,18 @@ impl UserSettings {
     }
 
     pub fn to_json(&self) -> String {
-        let file = UserFile { version: USER_FILE_VERSION, endpoints: &self.endpoints, units: &self.units };
+        let file = UserFile {
+            version: USER_FILE_VERSION,
+            endpoints: &self.endpoints,
+            units: &self.units,
+        };
         serde_json::to_string_pretty(&file).unwrap_or_default()
     }
 
     pub fn load(path: &Path) -> UserSettings {
-        std::fs::read_to_string(path).map(|t| UserSettings::from_json(&t)).unwrap_or_default()
+        std::fs::read_to_string(path)
+            .map(|t| UserSettings::from_json(&t))
+            .unwrap_or_default()
     }
 
     pub fn save(&self, path: &Path) -> std::io::Result<()> {
@@ -293,7 +328,13 @@ impl UserSettings {
 
     /// Effective services: defaults, then `system`, then this user's overrides.
     pub fn services(&self, system: &SystemConfig) -> Services {
-        resolve(system.layers.iter().map(|(_, o)| o).chain(std::iter::once(&self.endpoints)))
+        resolve(
+            system
+                .layers
+                .iter()
+                .map(|(_, o)| o)
+                .chain(std::iter::once(&self.endpoints)),
+        )
     }
 }
 
@@ -395,8 +436,12 @@ mod tests {
     struct TempDir(PathBuf);
     impl TempDir {
         fn new(tag: &str) -> TempDir {
-            let n = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-            let d = std::env::temp_dir().join(format!("helix-maps-{tag}-{}-{n}", std::process::id()));
+            let n = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let d =
+                std::env::temp_dir().join(format!("helix-maps-{tag}-{}-{n}", std::process::id()));
             std::fs::create_dir_all(&d).unwrap();
             TempDir(d)
         }
@@ -456,9 +501,19 @@ mod tests {
             "#,
         );
         // $XDG_CONFIG_DIRS lists the most important directory first.
-        let dirs = vec![high.0.clone(), PathBuf::from("/nonexistent-helix-test"), low.0.clone()];
+        let dirs = vec![
+            high.0.clone(),
+            PathBuf::from("/nonexistent-helix-test"),
+            low.0.clone(),
+        ];
         let system = SystemConfig::load(&dirs);
-        assert_eq!(system.files(), vec![low.0.join(SYSTEM_FILE).as_path(), high.0.join(SYSTEM_FILE).as_path()]);
+        assert_eq!(
+            system.files(),
+            vec![
+                low.0.join(SYSTEM_FILE).as_path(),
+                high.0.join(SYSTEM_FILE).as_path()
+            ]
+        );
 
         // Built-in defaults only where no layer sets a value.
         let sys = system.services();
@@ -502,14 +557,26 @@ mod tests {
 
     #[test]
     fn user_overrides_track_system_values() {
-        let system = Services { geocoder_url: "https://geo.site".into(), ..Services::default() };
+        let system = Services {
+            geocoder_url: "https://geo.site".into(),
+            ..Services::default()
+        };
         let mut o = Overrides::default();
         // Choosing exactly the inherited value stores nothing.
         o.set_from(&system, &system);
         assert!(o.is_empty());
-        let wanted = Services { router_url: "https://r.example".into(), ..system.clone() };
+        let wanted = Services {
+            router_url: "https://r.example".into(),
+            ..system.clone()
+        };
         o.set_from(&wanted, &system);
-        assert_eq!(o, Overrides { router_url: Some("https://r.example".into()), ..Default::default() });
+        assert_eq!(
+            o,
+            Overrides {
+                router_url: Some("https://r.example".into()),
+                ..Default::default()
+            }
+        );
         // Reset = clear overrides.
         o = Overrides::default();
         assert_eq!(resolve([&o]), Services::default());
@@ -518,7 +585,10 @@ mod tests {
     #[test]
     fn user_file_roundtrip_and_legacy_migration() {
         let u = UserSettings {
-            endpoints: Overrides { geocoder_url: Some("https://g.example".into()), ..Default::default() },
+            endpoints: Overrides {
+                geocoder_url: Some("https://g.example".into()),
+                ..Default::default()
+            },
             units: "imperial".into(),
         };
         let json = u.to_json();
@@ -526,7 +596,10 @@ mod tests {
         assert!(!json.contains("router_url"));
         assert_eq!(UserSettings::from_json(&json), u);
         assert_eq!(UserSettings::from_json("not json"), UserSettings::default());
-        assert_eq!(UserSettings::from_json(r#"{"version":2,"units":"furlongs"}"#).units, "metric");
+        assert_eq!(
+            UserSettings::from_json(r#"{"version":2,"units":"furlongs"}"#).units,
+            "metric"
+        );
 
         // The pre-layering file stored every endpoint; unchanged defaults
         // must not shadow the system configuration.
@@ -538,7 +611,10 @@ mod tests {
         );
         assert_eq!(
             legacy.endpoints,
-            Overrides { router_url: Some("https://osrm.mine/".into()), ..Default::default() }
+            Overrides {
+                router_url: Some("https://osrm.mine/".into()),
+                ..Default::default()
+            }
         );
         assert_eq!(legacy.units, "imperial");
 
@@ -546,15 +622,27 @@ mod tests {
         let path = d.0.join("settings.json");
         u.save(&path).unwrap();
         assert_eq!(UserSettings::load(&path), u);
-        assert_eq!(UserSettings::load(&d.0.join("missing.json")), UserSettings::default());
+        assert_eq!(
+            UserSettings::load(&d.0.join("missing.json")),
+            UserSettings::default()
+        );
     }
 
     #[test]
     fn gnome_key_values() {
         use crate::geo::LatLon;
         assert_eq!(gnome::location(&[0.0, 0.0]), LatLon { lat: 0.0, lon: 0.0 });
-        assert_eq!(gnome::location(&[52.5, 13.4]), LatLon { lat: 52.5, lon: 13.4 });
-        assert_eq!(gnome::location(&[200.0, 0.0]), LatLon { lat: 0.0, lon: 0.0 });
+        assert_eq!(
+            gnome::location(&[52.5, 13.4]),
+            LatLon {
+                lat: 52.5,
+                lon: 13.4
+            }
+        );
+        assert_eq!(
+            gnome::location(&[200.0, 0.0]),
+            LatLon { lat: 0.0, lon: 0.0 }
+        );
         assert_eq!(gnome::location(&[1.0]), LatLon { lat: 0.0, lon: 0.0 });
         assert_eq!(gnome::zoom(0, 19), 2.0);
         assert_eq!(gnome::zoom(12, 19), 12.0);
@@ -578,8 +666,14 @@ mod tests {
             expand_tile_url("https://{s}.t/{z}/{x}/{y}.png", 3, 1, 1),
             "https://c.t/3/1/1.png"
         );
-        assert_eq!(expand_tile_url(DEFAULT_TILE_URL, 0, 0, 0), "https://tile.openstreetmap.org/0/0/0.png");
-        assert_eq!(normalize_base_url(" https://x.example// ").as_deref(), Some("https://x.example"));
+        assert_eq!(
+            expand_tile_url(DEFAULT_TILE_URL, 0, 0, 0),
+            "https://tile.openstreetmap.org/0/0/0.png"
+        );
+        assert_eq!(
+            normalize_base_url(" https://x.example// ").as_deref(),
+            Some("https://x.example")
+        );
         assert_eq!(normalize_base_url("ftp://x"), None);
     }
 

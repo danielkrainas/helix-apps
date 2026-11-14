@@ -25,7 +25,13 @@ pub struct WorldClock {
 
 impl WorldClock {
     pub fn from_location(l: &Location) -> Self {
-        WorldClock { name: l.city.clone(), zone: l.zone, coords: l.coords, country: l.country.clone(), station: None }
+        WorldClock {
+            name: l.city.clone(),
+            zone: l.zone,
+            coords: l.coords,
+            country: l.country.clone(),
+            station: None,
+        }
     }
 }
 
@@ -37,7 +43,9 @@ fn dicts(v: &Variant) -> Vec<VariantDict> {
     if !v.is_container() || v.type_().as_str() != "aa{sv}" {
         return Vec::new();
     }
-    (0..v.n_children()).map(|i| VariantDict::new(Some(&v.child_value(i)))).collect()
+    (0..v.n_children())
+        .map(|i| VariantDict::new(Some(&v.child_value(i))))
+        .collect()
 }
 
 fn array(items: Vec<Variant>) -> Variant {
@@ -45,7 +53,8 @@ fn array(items: Vec<Variant>) -> Variant {
 }
 
 fn radians(c: Option<(f64, f64)>) -> Vec<(f64, f64)> {
-    c.map(|(la, lo)| vec![(la.to_radians(), lo.to_radians())]).unwrap_or_default()
+    c.map(|(la, lo)| vec![(la.to_radians(), lo.to_radians())])
+        .unwrap_or_default()
 }
 
 /// Serializes like GNOME Clocks: `{'location': <(uint32 2, <(name, code,
@@ -60,7 +69,13 @@ pub fn world_clock_to_variant(c: &WorldClock, gw: Option<&gwdb::Db>) -> Variant 
         Some((code, co)) => (code, Some(co)),
         None => (String::new(), None),
     };
-    let ser: SerializedLocation = (c.name.clone(), code, true, radians(c.coords), radians(st_coords));
+    let ser: SerializedLocation = (
+        c.name.clone(),
+        code,
+        true,
+        radians(c.coords),
+        radians(st_coords),
+    );
     let location = ToVariant::to_variant(&(GWEATHER_FORMAT_VERSION, ToVariant::to_variant(&ser)));
     let d = VariantDict::new(None);
     d.insert_value("location", &location);
@@ -75,9 +90,23 @@ pub fn world_clocks_to_variant(cs: &[WorldClock], gw: Option<&gwdb::Db>) -> Vari
 /// Reads one world-clock dictionary. The zone comes from `helix-timezone`,
 /// else the GWeather station's zone (`gw`), else the `zone1970.tab` city
 /// nearest to the coordinates (`db`).
-pub fn world_clock_from_dict(d: &VariantDict, db: &[Location], gw: Option<&gwdb::Db>) -> Option<WorldClock> {
-    let explicit = d.lookup::<String>("helix-timezone").ok().flatten().and_then(|z| tz::zone_by_id(&z));
-    let loc = d.lookup_value("location", None).map(|v| if v.type_() == glib::VariantTy::VARIANT { v.as_variant().unwrap_or(v) } else { v });
+pub fn world_clock_from_dict(
+    d: &VariantDict,
+    db: &[Location],
+    gw: Option<&gwdb::Db>,
+) -> Option<WorldClock> {
+    let explicit = d
+        .lookup::<String>("helix-timezone")
+        .ok()
+        .flatten()
+        .and_then(|z| tz::zone_by_id(&z));
+    let loc = d.lookup_value("location", None).map(|v| {
+        if v.type_() == glib::VariantTy::VARIANT {
+            v.as_variant().unwrap_or(v)
+        } else {
+            v
+        }
+    });
     let mut name = None;
     let mut coords = None;
     let mut station = None;
@@ -85,7 +114,9 @@ pub fn world_clock_from_dict(d: &VariantDict, db: &[Location], gw: Option<&gwdb:
         if let Some((_version, inner)) = loc.get::<(u32, Variant)>() {
             if let Some((n, code, _is_city, city, st)) = inner.get::<SerializedLocation>() {
                 name = Some(n);
-                let deg = |v: &Vec<(f64, f64)>| v.first().map(|(la, lo)| (la.to_degrees(), lo.to_degrees()));
+                let deg = |v: &Vec<(f64, f64)>| {
+                    v.first().map(|(la, lo)| (la.to_degrees(), lo.to_degrees()))
+                };
                 coords = deg(&city).or(deg(&st));
                 if !code.is_empty() {
                     station = deg(&st).map(|c| (code, c));
@@ -94,19 +125,35 @@ pub fn world_clock_from_dict(d: &VariantDict, db: &[Location], gw: Option<&gwdb:
         }
     }
     let gw_station = station.as_ref().and_then(|(code, _)| gw?.station(code));
-    let gw_zone = gw_station.and_then(|s| s.tz.as_deref()).and_then(tz::zone_by_id);
+    let gw_zone = gw_station
+        .and_then(|s| s.tz.as_deref())
+        .and_then(tz::zone_by_id);
     let nearest = coords.and_then(|c| tz::nearest(db, c));
     let zone = explicit.or(gw_zone).or(nearest.map(|l| l.zone))?;
     let known = db.iter().find(|l| l.zone == zone);
-    let name = name.filter(|n| !n.is_empty()).unwrap_or_else(|| tz::city_from_zone(zone.name()));
+    let name = name
+        .filter(|n| !n.is_empty())
+        .unwrap_or_else(|| tz::city_from_zone(zone.name()));
     // The country is known for the zone's own principal city or from the
     // station; a coordinate-resolved place may lie in a neighbouring country.
-    let country =
-        known.filter(|l| l.city == name).and_then(|l| l.country.clone()).or_else(|| gw_station.and_then(|s| s.country.clone()));
-    Some(WorldClock { name, zone, coords: coords.or(known.and_then(|l| l.coords)), country, station })
+    let country = known
+        .filter(|l| l.city == name)
+        .and_then(|l| l.country.clone())
+        .or_else(|| gw_station.and_then(|s| s.country.clone()));
+    Some(WorldClock {
+        name,
+        zone,
+        coords: coords.or(known.and_then(|l| l.coords)),
+        country,
+        station,
+    })
 }
 
-pub fn world_clocks_from_variant(v: &Variant, db: &[Location], gw: Option<&gwdb::Db>) -> Vec<WorldClock> {
+pub fn world_clocks_from_variant(
+    v: &Variant,
+    db: &[Location],
+    gw: Option<&gwdb::Db>,
+) -> Vec<WorldClock> {
     let mut out: Vec<WorldClock> = Vec::new();
     for d in dicts(v) {
         if let Some(c) = world_clock_from_dict(&d, db, gw) {
@@ -144,24 +191,50 @@ pub fn alarm_from_dict(d: &VariantDict, index: usize) -> Option<Alarm> {
     }
     let def = Alarm::default();
     Some(Alarm {
-        id: d.lookup::<String>("id").ok().flatten().unwrap_or_else(|| format!("imported-{index}")),
-        name: d.lookup::<String>("name").ok().flatten().unwrap_or(def.name),
+        id: d
+            .lookup::<String>("id")
+            .ok()
+            .flatten()
+            .unwrap_or_else(|| format!("imported-{index}")),
+        name: d
+            .lookup::<String>("name")
+            .ok()
+            .flatten()
+            .unwrap_or(def.name),
         active: d.lookup::<bool>("active").ok().flatten().unwrap_or(true),
         hour: hour as u32,
         minute: minute as u32,
-        days: Weekdays::from_numbers(&d.lookup::<Vec<i32>>("days").ok().flatten().unwrap_or_default()),
-        ring_minutes: int("ring_minutes").filter(|m| *m > 0).map(|m| m as u32).unwrap_or(def.ring_minutes),
-        snooze_minutes: int("snooze_minutes").filter(|m| *m > 0).map(|m| m as u32).unwrap_or(def.snooze_minutes),
+        days: Weekdays::from_numbers(
+            &d.lookup::<Vec<i32>>("days")
+                .ok()
+                .flatten()
+                .unwrap_or_default(),
+        ),
+        ring_minutes: int("ring_minutes")
+            .filter(|m| *m > 0)
+            .map(|m| m as u32)
+            .unwrap_or(def.ring_minutes),
+        snooze_minutes: int("snooze_minutes")
+            .filter(|m| *m > 0)
+            .map(|m| m as u32)
+            .unwrap_or(def.snooze_minutes),
     })
 }
 
 pub fn alarms_from_variant(v: &Variant) -> Vec<Alarm> {
-    dicts(v).iter().enumerate().filter_map(|(i, d)| alarm_from_dict(d, i)).collect()
+    dicts(v)
+        .iter()
+        .enumerate()
+        .filter_map(|(i, d)| alarm_from_dict(d, i))
+        .collect()
 }
 
 pub fn timer_to_variant(t: &Timer) -> Variant {
     let d = VariantDict::new(None);
-    d.insert_value("duration", &(t.duration.as_secs().min(i32::MAX as u64) as i32).to_variant());
+    d.insert_value(
+        "duration",
+        &(t.duration.as_secs().min(i32::MAX as u64) as i32).to_variant(),
+    );
     d.insert_value("name", &t.name.to_variant());
     d.end()
 }
@@ -174,8 +247,16 @@ pub fn timers_from_variant(v: &Variant) -> Vec<Timer> {
     dicts(v)
         .iter()
         .filter_map(|d| {
-            let secs = d.lookup::<i32>("duration").ok().flatten().filter(|s| *s > 0)?;
-            let name = d.lookup::<String>("name").ok().flatten().unwrap_or_default();
+            let secs = d
+                .lookup::<i32>("duration")
+                .ok()
+                .flatten()
+                .filter(|s| *s > 0)?;
+            let name = d
+                .lookup::<String>("name")
+                .ok()
+                .flatten()
+                .unwrap_or_default();
             Some(Timer::new(name, Duration::from_secs(secs as u64)))
         })
         .collect()
@@ -206,7 +287,10 @@ mod tests {
 
     #[test]
     fn world_clocks_roundtrip() {
-        let cs = vec![WorldClock::from_location(&db()[1]), WorldClock::from_location(&db()[0])];
+        let cs = vec![
+            WorldClock::from_location(&db()[1]),
+            WorldClock::from_location(&db()[0]),
+        ];
         let v = world_clocks_to_variant(&cs, None);
         assert_eq!(v.type_().as_str(), "aa{sv}");
         let back = world_clocks_from_variant(&v, &db(), None);
@@ -219,7 +303,10 @@ mod tests {
         let d = VariantDict::new(Some(&v.child_value(0)));
         let loc = d.lookup_value("location", None).unwrap();
         assert_eq!(loc.type_().as_str(), "(uv)");
-        assert_eq!(loc.child_value(1).as_variant().unwrap().type_().as_str(), "(ssba(dd)a(dd))");
+        assert_eq!(
+            loc.child_value(1).as_variant().unwrap().type_().as_str(),
+            "(ssba(dd)a(dd))"
+        );
     }
 
     #[test]
@@ -240,7 +327,10 @@ mod tests {
         assert_eq!(back.len(), 1);
         assert_eq!(back[0].name, "Munich");
         assert_eq!(back[0].zone, chrono_tz::Europe::Berlin);
-        assert_eq!(back[0].country, None, "country is not guessed from coordinates");
+        assert_eq!(
+            back[0].country, None,
+            "country is not guessed from coordinates"
+        );
         // With the GWeather database the station gives zone and country, and
         // the entry is written back unchanged.
         let gw = gwdb::Db::parse(gwdb::FIXTURE).unwrap();
@@ -248,9 +338,19 @@ mod tests {
         assert_eq!(back[0].zone, chrono_tz::Europe::Berlin);
         assert_eq!(back[0].country.as_deref(), Some("Germany"));
         let again = world_clocks_to_variant(&back, Some(&gw));
-        let inner = VariantDict::new(Some(&again.child_value(0))).lookup_value("location", None).unwrap();
-        let got = inner.child_value(1).as_variant().unwrap().get::<SerializedLocation>().unwrap();
-        assert_eq!((got.0.as_str(), got.1.as_str(), got.2), ("Munich", "EDDM", true));
+        let inner = VariantDict::new(Some(&again.child_value(0)))
+            .lookup_value("location", None)
+            .unwrap();
+        let got = inner
+            .child_value(1)
+            .as_variant()
+            .unwrap()
+            .get::<SerializedLocation>()
+            .unwrap();
+        assert_eq!(
+            (got.0.as_str(), got.1.as_str(), got.2),
+            ("Munich", "EDDM", true)
+        );
         assert!((got.3[0].0 - ser.3[0].0).abs() < 1e-12 && (got.4[0].1 - ser.4[0].1).abs() < 1e-12);
     }
 
@@ -261,8 +361,15 @@ mod tests {
         c.name = "Munich".into();
         c.coords = Some((48.15, 11.583333));
         let v = world_clocks_to_variant(&[c], Some(&gw));
-        let loc = VariantDict::new(Some(&v.child_value(0))).lookup_value("location", None).unwrap();
-        let (_, code, is_city, city, st) = loc.child_value(1).as_variant().unwrap().get::<SerializedLocation>().unwrap();
+        let loc = VariantDict::new(Some(&v.child_value(0)))
+            .lookup_value("location", None)
+            .unwrap();
+        let (_, code, is_city, city, st) = loc
+            .child_value(1)
+            .as_variant()
+            .unwrap()
+            .get::<SerializedLocation>()
+            .unwrap();
         assert_eq!(code, "EDDM");
         assert!(is_city);
         assert!((city[0].0.to_degrees() - 48.15).abs() < 1e-9);
@@ -317,7 +424,10 @@ mod tests {
 
     #[test]
     fn timers_roundtrip() {
-        let ts = vec![Timer::new("Tea", Duration::from_secs(180)), Timer::new("", Duration::from_secs(3600))];
+        let ts = vec![
+            Timer::new("Tea", Duration::from_secs(180)),
+            Timer::new("", Duration::from_secs(3600)),
+        ];
         let v = timers_to_variant(&ts);
         assert_eq!(v.type_().as_str(), "aa{sv}");
         assert_eq!(timers_from_variant(&v), ts);

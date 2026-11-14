@@ -34,8 +34,13 @@ impl ChartKind {
 
 pub enum Layout {
     Empty,
-    Rings { segs: Vec<Segment>, geom: RingGeometry },
-    Treemap { tiles: Vec<Tile> },
+    Rings {
+        segs: Vec<Segment>,
+        geom: RingGeometry,
+    },
+    Treemap {
+        tiles: Vec<Tile>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -51,10 +56,19 @@ pub fn compute(tree: &ScanTree, root: NodeId, kind: ChartKind, w: f64, h: f64) -
             let segs = layout::rings(tree, root, MAX_RINGS, MIN_RING_ANGLE);
             // Size the rings to the depth actually present (at least 2).
             let depth = segs.iter().map(|s| s.depth).max().unwrap_or(1).max(2);
-            Layout::Rings { segs, geom: RingGeometry::new(w, h, depth) }
+            Layout::Rings {
+                segs,
+                geom: RingGeometry::new(w, h, depth),
+            }
         }
         ChartKind::Treemap => Layout::Treemap {
-            tiles: layout::treemap(tree, root, Rect::new(0.0, 0.0, w, h), TREEMAP_DEPTH, TREEMAP_MIN_PX),
+            tiles: layout::treemap(
+                tree,
+                root,
+                Rect::new(0.0, 0.0, w, h),
+                TREEMAP_DEPTH,
+                TREEMAP_MIN_PX,
+            ),
         },
     }
 }
@@ -68,7 +82,11 @@ pub fn hit(l: &Layout, x: f64, y: f64) -> Option<Hit> {
         },
         Layout::Treemap { tiles } => {
             let t = layout::treemap_hit(tiles, x, y)?;
-            Some(if t.depth == 0 { Hit::Root } else { Hit::Node(t.node) })
+            Some(if t.depth == 0 {
+                Hit::Root
+            } else {
+                Hit::Node(t.node)
+            })
         }
     }
 }
@@ -87,12 +105,20 @@ const PALETTE: [Rgb; 8] = [
 ];
 
 fn mix(a: Rgb, b: Rgb, t: f64) -> Rgb {
-    (a.0 + (b.0 - a.0) * t, a.1 + (b.1 - a.1) * t, a.2 + (b.2 - a.2) * t)
+    (
+        a.0 + (b.0 - a.0) * t,
+        a.1 + (b.1 - a.1) * t,
+        a.2 + (b.2 - a.2) * t,
+    )
 }
 
 pub fn color(branch: usize, depth: usize, kind: Kind, hovered: bool) -> Rgb {
     let base = PALETTE[branch % PALETTE.len()];
-    let mut c = mix(base, (1.0, 1.0, 1.0), (0.13 * depth.saturating_sub(1) as f64).min(0.6));
+    let mut c = mix(
+        base,
+        (1.0, 1.0, 1.0),
+        (0.13 * depth.saturating_sub(1) as f64).min(0.6),
+    );
     if kind != Kind::Dir {
         c = mix(c, (0.6, 0.6, 0.6), 0.45);
     }
@@ -108,7 +134,11 @@ fn set(cr: &cairo::Context, c: Rgb) {
 
 /// Truncates `text` with an ellipsis so it fits in `max_w`.
 fn fit_text(cr: &cairo::Context, text: &str, max_w: f64) -> Option<String> {
-    let width = |s: &str| cr.text_extents(s).map(|e| e.x_advance()).unwrap_or(f64::MAX);
+    let width = |s: &str| {
+        cr.text_extents(s)
+            .map(|e| e.x_advance())
+            .unwrap_or(f64::MAX)
+    };
     if width(text) <= max_w {
         return Some(text.to_string());
     }
@@ -131,7 +161,15 @@ fn text_color(bg: Rgb) -> Rgb {
     }
 }
 
-pub fn draw(cr: &cairo::Context, tree: &ScanTree, root: NodeId, l: &Layout, hover: Option<NodeId>, fg: Rgb, size_text: &dyn Fn(u64) -> String) {
+pub fn draw(
+    cr: &cairo::Context,
+    tree: &ScanTree,
+    root: NodeId,
+    l: &Layout,
+    hover: Option<NodeId>,
+    fg: Rgb,
+    size_text: &dyn Fn(u64) -> String,
+) {
     cr.select_font_face("Sans", cairo::FontSlant::Normal, cairo::FontWeight::Normal);
     cr.set_font_size(11.0);
     match l {
@@ -140,19 +178,29 @@ pub fn draw(cr: &cairo::Context, tree: &ScanTree, root: NodeId, l: &Layout, hove
             let g = geom;
             // Centre disc.
             cr.arc(g.cx, g.cy, g.center_radius, 0.0, std::f64::consts::TAU);
-            let center = if hover == Some(root) { (0.55, 0.55, 0.6) } else { (0.68, 0.68, 0.72) };
+            let center = if hover == Some(root) {
+                (0.55, 0.55, 0.6)
+            } else {
+                (0.68, 0.68, 0.72)
+            };
             set(cr, center);
             let _ = cr.fill();
             for s in segs {
                 let node = tree.node(s.node);
                 let r_in = g.inner_radius(s.depth);
                 let r_out = r_in + g.ring_width;
-                let (a0, a1) = (RingGeometry::to_cairo(s.start), RingGeometry::to_cairo(s.end));
+                let (a0, a1) = (
+                    RingGeometry::to_cairo(s.start),
+                    RingGeometry::to_cairo(s.end),
+                );
                 cr.new_path();
                 cr.arc(g.cx, g.cy, r_out, a0, a1);
                 cr.arc_negative(g.cx, g.cy, r_in, a1, a0);
                 cr.close_path();
-                set(cr, color(s.branch, s.depth, node.kind, hover == Some(s.node)));
+                set(
+                    cr,
+                    color(s.branch, s.depth, node.kind, hover == Some(s.node)),
+                );
                 let _ = cr.fill_preserve();
                 cr.set_source_rgba(1.0, 1.0, 1.0, 0.7);
                 cr.set_line_width(1.0);
@@ -180,7 +228,12 @@ pub fn draw(cr: &cairo::Context, tree: &ScanTree, root: NodeId, l: &Layout, hove
                 } else {
                     color(t.branch, t.depth, node.kind, hover == Some(t.node))
                 };
-                cr.rectangle(r.x + 0.5, r.y + 0.5, (r.w - 1.0).max(0.0), (r.h - 1.0).max(0.0));
+                cr.rectangle(
+                    r.x + 0.5,
+                    r.y + 0.5,
+                    (r.w - 1.0).max(0.0),
+                    (r.h - 1.0).max(0.0),
+                );
                 set(cr, bg);
                 let _ = cr.fill_preserve();
                 cr.set_source_rgba(0.0, 0.0, 0.0, 0.25);
@@ -193,7 +246,11 @@ pub fn draw(cr: &cairo::Context, tree: &ScanTree, root: NodeId, l: &Layout, hove
                 let label = format!("{} ({})", node.name, size_text(node.size));
                 if let Some(text) = fit_text(cr, &label, r.w - 6.0) {
                     set(cr, text_color(bg));
-                    let y = if has_header || node.kind == Kind::Dir { r.y + 12.0 } else { r.y + r.h / 2.0 + 4.0 };
+                    let y = if has_header || node.kind == Kind::Dir {
+                        r.y + 12.0
+                    } else {
+                        r.y + r.h / 2.0 + 4.0
+                    };
                     cr.move_to(r.x + 3.0, y);
                     let _ = cr.show_text(&text);
                 }
@@ -221,7 +278,9 @@ mod tests {
         let a = t.add_synthetic(ROOT, "a", Kind::File, 10);
         let l = compute(&t, ROOT, ChartKind::Rings, 200.0, 200.0);
         assert_eq!(hit(&l, 100.0, 100.0), Some(Hit::Root));
-        let Layout::Rings { geom, .. } = &l else { panic!() };
+        let Layout::Rings { geom, .. } = &l else {
+            panic!()
+        };
         let x = 100.0 + geom.inner_radius(1) + 1.0;
         assert_eq!(hit(&l, x, 100.0), Some(Hit::Node(a)));
         let l = compute(&t, ROOT, ChartKind::Treemap, 200.0, 200.0);
@@ -247,7 +306,9 @@ mod tests {
                 cr.set_source_rgb(1.0, 1.0, 1.0);
                 cr.paint().unwrap();
                 let l = compute(&t, ROOT, kind, 400.0, 300.0);
-                draw(&cr, &t, ROOT, &l, Some(1), (0.0, 0.0, 0.0), &|b| format!("{b} B"));
+                draw(&cr, &t, ROOT, &l, Some(1), (0.0, 0.0, 0.0), &|b| {
+                    format!("{b} B")
+                });
             }
             surf.flush();
             let stride = surf.stride() as usize;
@@ -263,11 +324,17 @@ mod tests {
                 }
                 std::fs::write(format!("{dir}/{}.ppm", kind.nick()), ppm).unwrap();
             }
-            let non_white = (0..300).flat_map(|y| (0..400).map(move |x| (x, y))).filter(|&(x, y)| {
-                let i = y * stride + x * 4;
-                data[i] != 255 || data[i + 1] != 255 || data[i + 2] != 255
-            }).count();
-            assert!(non_white > 400 * 300 / 4, "{kind:?} drew too little: {non_white}");
+            let non_white = (0..300)
+                .flat_map(|y| (0..400).map(move |x| (x, y)))
+                .filter(|&(x, y)| {
+                    let i = y * stride + x * 4;
+                    data[i] != 255 || data[i + 1] != 255 || data[i + 2] != 255
+                })
+                .count();
+            assert!(
+                non_white > 400 * 300 / 4,
+                "{kind:?} drew too little: {non_white}"
+            );
         }
     }
 

@@ -60,7 +60,9 @@ pub fn candidates(language: Option<&str>, locale: Option<&str>) -> Vec<String> {
 /// Locale candidates from the process environment.
 pub fn from_env() -> Vec<String> {
     let get = |k: &str| std::env::var(k).ok().filter(|v| !v.is_empty());
-    let locale = get("LC_ALL").or_else(|| get("LC_MESSAGES")).or_else(|| get("LANG"));
+    let locale = get("LC_ALL")
+        .or_else(|| get("LC_MESSAGES"))
+        .or_else(|| get("LANG"));
     candidates(get("LANGUAGE").as_deref(), locale.as_deref())
 }
 
@@ -70,7 +72,10 @@ mod tests {
 
     #[test]
     fn full_locale() {
-        assert_eq!(variants("pt_BR.UTF-8@euro"), ["pt_BR@euro", "pt_BR", "pt@euro", "pt"]);
+        assert_eq!(
+            variants("pt_BR.UTF-8@euro"),
+            ["pt_BR@euro", "pt_BR", "pt@euro", "pt"]
+        );
         assert_eq!(variants("de_DE.UTF-8"), ["de_DE", "de"]);
         assert_eq!(variants("fr"), ["fr"]);
         assert!(variants("C.UTF-8").is_empty());
@@ -82,6 +87,9 @@ mod tests {
         assert_eq!(candidates(None, Some("en_GB.UTF-8")), ["en_GB", "en", "C"]);
         assert_eq!(candidates(None, None), ["C"]);
         assert_eq!(candidates(Some("de"), Some("C")), ["C"]);
-        assert_eq!(candidates(Some("sv:fi_FI"), Some("fi_FI.UTF-8")), ["sv", "fi_FI", "fi", "C"]);
+        assert_eq!(
+            candidates(Some("sv:fi_FI"), Some("fi_FI.UTF-8")),
+            ["sv", "fi_FI", "fi", "C"]
+        );
     }
 }

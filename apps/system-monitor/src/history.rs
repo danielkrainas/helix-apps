@@ -11,7 +11,10 @@ pub struct History {
 
 impl History {
     pub fn new(capacity: usize) -> Self {
-        History { capacity: capacity.max(2), series: Vec::new() }
+        History {
+            capacity: capacity.max(2),
+            series: Vec::new(),
+        }
     }
 
     pub fn capacity(&self) -> usize {
@@ -69,9 +72,15 @@ mod tests {
             h.push(&[i as f64, 10.0 * i as f64]);
         }
         assert_eq!(h.series().len(), 2);
-        assert_eq!(h.series()[0].iter().copied().collect::<Vec<_>>(), vec![2.0, 3.0, 4.0]);
+        assert_eq!(
+            h.series()[0].iter().copied().collect::<Vec<_>>(),
+            vec![2.0, 3.0, 4.0]
+        );
         assert_eq!(h.max(), 40.0);
-        assert_eq!(h.series()[1].iter().copied().collect::<Vec<_>>(), vec![20.0, 30.0, 40.0]);
+        assert_eq!(
+            h.series()[1].iter().copied().collect::<Vec<_>>(),
+            vec![20.0, 30.0, 40.0]
+        );
         h.push(&[1.0]);
         assert_eq!(h.series().len(), 1);
         assert_eq!(h.series()[0].len(), 1);

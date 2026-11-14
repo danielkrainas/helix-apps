@@ -22,7 +22,8 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<ui::Options, Str
         match a.as_str() {
             "-d" | "--date" => {
                 let v = value(&a)?;
-                opts.date = Some(dates::parse_date(&v).ok_or_else(|| format!("invalid date “{v}”"))?);
+                opts.date =
+                    Some(dates::parse_date(&v).ok_or_else(|| format!("invalid date “{v}”"))?);
             }
             "-u" | "--uuid" => opts.uuid = Some(value(&a)?),
             "-h" | "--help" => return Err(String::new()),

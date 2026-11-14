@@ -11,7 +11,12 @@ pub enum SortKey {
 }
 
 impl SortKey {
-    pub const ALL: [SortKey; 4] = [SortKey::Name, SortKey::Size, SortKey::Type, SortKey::Modified];
+    pub const ALL: [SortKey; 4] = [
+        SortKey::Name,
+        SortKey::Size,
+        SortKey::Type,
+        SortKey::Modified,
+    ];
 
     /// Nick used by `org.gnome.nautilus.preferences default-sort-order`.
     pub fn nick(self) -> &'static str {
@@ -99,7 +104,11 @@ pub fn natural_cmp(a: &str, b: &str) -> Ordering {
 /// Full comparison. `reversed` flips the key order but folders stay first.
 pub fn compare(a: &Entry, b: &Entry, key: SortKey, reversed: bool, dirs_first: bool) -> Ordering {
     if dirs_first && a.is_dir != b.is_dir {
-        return if a.is_dir { Ordering::Less } else { Ordering::Greater };
+        return if a.is_dir {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        };
     }
     let by_name = || natural_cmp(a.name, b.name);
     let ord = match key {
@@ -130,7 +139,12 @@ mod tests {
         }
     }
 
-    fn sorted(mut v: Vec<Entry<'static>>, key: SortKey, rev: bool, dirs: bool) -> Vec<&'static str> {
+    fn sorted(
+        mut v: Vec<Entry<'static>>,
+        key: SortKey,
+        rev: bool,
+        dirs: bool,
+    ) -> Vec<&'static str> {
         v.sort_by(|a, b| compare(a, b, key, rev, dirs));
         v.into_iter().map(|e| e.name).collect()
     }
@@ -176,10 +190,22 @@ mod tests {
             e("small", false, 1, "Audio", 9),
             e("mid", false, 50, "Audio", 1),
         ];
-        assert_eq!(sorted(v.clone(), SortKey::Size, false, true), ["small", "mid", "big"]);
-        assert_eq!(sorted(v.clone(), SortKey::Size, true, true), ["big", "mid", "small"]);
-        assert_eq!(sorted(v.clone(), SortKey::Type, false, true), ["mid", "small", "big"]);
-        assert_eq!(sorted(v, SortKey::Modified, false, true), ["small", "big", "mid"]);
+        assert_eq!(
+            sorted(v.clone(), SortKey::Size, false, true),
+            ["small", "mid", "big"]
+        );
+        assert_eq!(
+            sorted(v.clone(), SortKey::Size, true, true),
+            ["big", "mid", "small"]
+        );
+        assert_eq!(
+            sorted(v.clone(), SortKey::Type, false, true),
+            ["mid", "small", "big"]
+        );
+        assert_eq!(
+            sorted(v, SortKey::Modified, false, true),
+            ["small", "big", "mid"]
+        );
     }
 
     #[test]

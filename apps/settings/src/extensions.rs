@@ -29,7 +29,10 @@ pub fn permission_text(name: &str) -> &str {
         ("session-bus", "talk to your other programs"),
         ("system-bus", "talk to system services"),
     ];
-    TEXTS.iter().find(|(n, _)| *n == name).map_or(name, |(_, t)| t)
+    TEXTS
+        .iter()
+        .find(|(n, _)| *n == name)
+        .map_or(name, |(_, t)| t)
 }
 
 /// One extension, as `ListExtensions` describes it.
@@ -77,8 +80,16 @@ impl Ext {
 
     /// The *Access* row: title and the lines below it.
     pub fn access(&self) -> (String, String) {
-        let can: Vec<&str> = self.permissions.iter().map(|p| permission_text(p)).collect();
-        let below = if can.is_empty() { String::new() } else { format!("Can: {}", can.join(", ")) };
+        let can: Vec<&str> = self
+            .permissions
+            .iter()
+            .map(|p| permission_text(p))
+            .collect();
+        let below = if can.is_empty() {
+            String::new()
+        } else {
+            format!("Can: {}", can.join(", "))
+        };
         if self.sandboxed {
             ("Sandboxed".into(), below)
         } else {
@@ -117,7 +128,9 @@ pub fn parse_list(list: HashMap<String, HashMap<String, OwnedValue>>) -> Vec<Ext
     let mut out: Vec<Ext> = list
         .into_iter()
         .map(|(id, e)| Ext {
-            name: get::<String>(&e, "name").filter(|n| !n.is_empty()).unwrap_or_else(|| id.clone()),
+            name: get::<String>(&e, "name")
+                .filter(|n| !n.is_empty())
+                .unwrap_or_else(|| id.clone()),
             id,
             description: get(&e, "description").unwrap_or_default(),
             version: get(&e, "version").unwrap_or_default(),
@@ -184,7 +197,10 @@ impl Setting {
     /// Spin-row range.
     pub fn range(&self) -> (f64, f64) {
         match self.kind {
-            Kind::Int => (self.min.unwrap_or(i32::MIN as f64), self.max.unwrap_or(i32::MAX as f64)),
+            Kind::Int => (
+                self.min.unwrap_or(i32::MIN as f64),
+                self.max.unwrap_or(i32::MAX as f64),
+            ),
             _ => (self.min.unwrap_or(-1e9), self.max.unwrap_or(1e9)),
         }
     }
@@ -215,7 +231,9 @@ pub fn parse_settings(entries: Vec<SettingEntry>) -> Vec<Setting> {
                 _ => return None,
             };
             Some(Setting {
-                label: get::<String>(&details, "label").filter(|l| !l.is_empty()).unwrap_or_else(|| key.clone()),
+                label: get::<String>(&details, "label")
+                    .filter(|l| !l.is_empty())
+                    .unwrap_or_else(|| key.clone()),
                 help: get(&details, "help").unwrap_or_default(),
                 min: get(&details, "min"),
                 max: get(&details, "max"),
@@ -230,13 +248,27 @@ pub fn parse_settings(entries: Vec<SettingEntry>) -> Vec<Setting> {
 
 /// A string-list typed as comma-separated text.
 pub fn split_list(text: &str) -> Vec<String> {
-    text.split(',').map(str::trim).filter(|s| !s.is_empty()).map(str::to_owned).collect()
+    text.split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_owned)
+        .collect()
 }
 
 /// Whether a key combination may become a command's key: with Ctrl, Alt or
 /// Super, or a function key alone (`key` is the key's name, as GDK names it).
 pub fn shortcut_allowed(key: &str, ctrl_alt_super: bool) -> bool {
-    const MODIFIERS: [&str; 9] = ["Shift", "Control", "Alt", "Super", "Meta", "Hyper", "ISO_Level3", "Caps_Lock", "Num_Lock"];
+    const MODIFIERS: [&str; 9] = [
+        "Shift",
+        "Control",
+        "Alt",
+        "Super",
+        "Meta",
+        "Hyper",
+        "ISO_Level3",
+        "Caps_Lock",
+        "Num_Lock",
+    ];
     if key.is_empty() || MODIFIERS.iter().any(|m| key.starts_with(m)) {
         return false;
     }
@@ -255,7 +287,11 @@ pub enum Failure {
 
 fn failure(e: zbus::Error) -> Failure {
     match e {
-        zbus::Error::MethodError(name, _, _) if name.as_str() == "org.freedesktop.DBus.Error.AccessDenied" => Failure::Denied,
+        zbus::Error::MethodError(name, _, _)
+            if name.as_str() == "org.freedesktop.DBus.Error.AccessDenied" =>
+        {
+            Failure::Denied
+        }
         zbus::Error::MethodError(_, Some(msg), _) => Failure::Other(msg),
         other => Failure::Other(other.to_string()),
     }
@@ -271,17 +307,26 @@ where
     R: for<'d> zbus::zvariant::DynamicDeserialize<'d>,
 {
     let conn = session()?;
-    let reply = conn.call_method(Some(BUS), PATH, Some(IFACE), method, body).map_err(failure)?;
-    reply.body().deserialize().map_err(|e| Failure::Other(e.to_string()))
+    let reply = conn
+        .call_method(Some(BUS), PATH, Some(IFACE), method, body)
+        .map_err(failure)?;
+    reply
+        .body()
+        .deserialize()
+        .map_err(|e| Failure::Other(e.to_string()))
 }
 
 /// The extensions; `None` when the shell does not serve them.
 pub fn list() -> Option<Vec<Ext>> {
-    call::<_, HashMap<String, HashMap<String, OwnedValue>>>("ListExtensions", &()).ok().map(parse_list)
+    call::<_, HashMap<String, HashMap<String, OwnedValue>>>("ListExtensions", &())
+        .ok()
+        .map(parse_list)
 }
 
 pub fn settings(id: &str) -> Vec<Setting> {
-    call::<_, Vec<SettingEntry>>("GetSettings", &(id,)).map(parse_settings).unwrap_or_default()
+    call::<_, Vec<SettingEntry>>("GetSettings", &(id,))
+        .map(parse_settings)
+        .unwrap_or_default()
 }
 
 /// Turn it on, approving what it asks for: the shell may ask the user
@@ -314,9 +359,15 @@ pub fn bind(command: &str, accelerator: &str) -> Result<(), Failure> {
 /// Calls `changed` (from this thread) whenever the extensions change or the
 /// shell comes or goes; returns when the session bus goes away.
 pub fn watch(mut changed: impl FnMut() -> bool) {
-    let Ok(conn) = Connection::session() else { return };
+    let Ok(conn) = Connection::session() else {
+        return;
+    };
     let rules = [
-        zbus::MatchRule::builder().msg_type(zbus::message::Type::Signal).interface(IFACE).and_then(|b| b.member("Changed")).map(|b| b.build()),
+        zbus::MatchRule::builder()
+            .msg_type(zbus::message::Type::Signal)
+            .interface(IFACE)
+            .and_then(|b| b.member("Changed"))
+            .map(|b| b.build()),
         zbus::MatchRule::builder()
             .msg_type(zbus::message::Type::Signal)
             .interface("org.freedesktop.DBus")
@@ -324,7 +375,9 @@ pub fn watch(mut changed: impl FnMut() -> bool) {
             .and_then(|b| b.arg(0, BUS))
             .map(|b| b.build()),
     ];
-    let Ok(dbus) = zbus::blocking::fdo::DBusProxy::new(&conn) else { return };
+    let Ok(dbus) = zbus::blocking::fdo::DBusProxy::new(&conn) else {
+        return;
+    };
     for rule in rules.into_iter().flatten() {
         let _ = dbus.add_match_rule(rule);
     }
@@ -332,7 +385,10 @@ pub fn watch(mut changed: impl FnMut() -> bool) {
         let Ok(message) = message else { continue };
         let header = message.header();
         let interesting = header.message_type() == zbus::message::Type::Signal
-            && matches!(header.member().map(|m| m.as_str()), Some("Changed" | "NameOwnerChanged"));
+            && matches!(
+                header.member().map(|m| m.as_str()),
+                Some("Changed" | "NameOwnerChanged")
+            );
         if interesting && !changed() {
             return;
         }
@@ -358,13 +414,25 @@ mod tests {
                 ("version".to_owned(), v("1.0")),
                 ("enabled".to_owned(), v(true)),
                 ("approved".to_owned(), v(true)),
-                ("permissions".to_owned(), v(vec!["inhibit-idle".to_owned(), "odd".to_owned()])),
+                (
+                    "permissions".to_owned(),
+                    v(vec!["inhibit-idle".to_owned(), "odd".to_owned()]),
+                ),
             ])
         };
         let list = parse_list(HashMap::from([
-            ("org.x.Dev".to_owned(), entry("Alpha", "development", "running", "")),
-            ("org.x.Zed".to_owned(), entry("zed", "user", "crashed", "boom")),
-            ("org.x.Cup".to_owned(), entry("Caffeine", "system", "disabled", "Off for this session")),
+            (
+                "org.x.Dev".to_owned(),
+                entry("Alpha", "development", "running", ""),
+            ),
+            (
+                "org.x.Zed".to_owned(),
+                entry("zed", "user", "crashed", "boom"),
+            ),
+            (
+                "org.x.Cup".to_owned(),
+                entry("Caffeine", "system", "disabled", "Off for this session"),
+            ),
         ]));
         let names: Vec<&str> = list.iter().map(|e| e.name.as_str()).collect();
         assert_eq!(names, ["Caffeine", "zed", "Alpha"], "development ones last");
@@ -372,28 +440,79 @@ mod tests {
         assert_eq!(list[1].subtitle(), "1.0 — Stopped working: boom");
         assert!(list[1].troubled());
         assert_eq!(list[2].subtitle(), "1.0 — Development — Running");
-        assert_eq!(list[0].access(), ("Full access: it can do anything you can".to_owned(), "Can: keep the screen on, odd".to_owned()));
-        let sandboxed = Ext { sandboxed: true, ..Default::default() };
+        assert_eq!(
+            list[0].access(),
+            (
+                "Full access: it can do anything you can".to_owned(),
+                "Can: keep the screen on, odd".to_owned()
+            )
+        );
+        let sandboxed = Ext {
+            sandboxed: true,
+            ..Default::default()
+        };
         assert_eq!(sandboxed.access(), ("Sandboxed".to_owned(), String::new()));
-        assert_eq!(state_text(&Ext { state: "needs-approval".into(), ..Default::default() }), "Needs approval");
+        assert_eq!(
+            state_text(&Ext {
+                state: "needs-approval".into(),
+                ..Default::default()
+            }),
+            "Needs approval"
+        );
     }
 
     #[test]
     fn settings_parsed() {
-        let details = |pairs: Vec<(&str, OwnedValue)>| pairs.into_iter().map(|(k, x)| (k.to_owned(), x)).collect::<HashMap<_, _>>();
+        let details = |pairs: Vec<(&str, OwnedValue)>| {
+            pairs
+                .into_iter()
+                .map(|(k, x)| (k.to_owned(), x))
+                .collect::<HashMap<_, _>>()
+        };
         let s = parse_settings(vec![
-            ("mode".into(), "enum".into(), v("slow"), details(vec![("label", v("Mode")), ("choices", v(vec!["fast".to_owned(), "slow".to_owned()]))])),
-            ("step".into(), "int".into(), v(2i64), details(vec![("label", v("Step")), ("min", v(1.0)), ("max", v(9.0))])),
-            ("level".into(), "double".into(), v(0.5), details(vec![("min", v(0.0)), ("max", v(2.0))])),
-            ("names".into(), "string-list".into(), v(vec!["a".to_owned()]), details(vec![("label", v("Names")), ("help", v("Who"))])),
+            (
+                "mode".into(),
+                "enum".into(),
+                v("slow"),
+                details(vec![
+                    ("label", v("Mode")),
+                    ("choices", v(vec!["fast".to_owned(), "slow".to_owned()])),
+                ]),
+            ),
+            (
+                "step".into(),
+                "int".into(),
+                v(2i64),
+                details(vec![("label", v("Step")), ("min", v(1.0)), ("max", v(9.0))]),
+            ),
+            (
+                "level".into(),
+                "double".into(),
+                v(0.5),
+                details(vec![("min", v(0.0)), ("max", v(2.0))]),
+            ),
+            (
+                "names".into(),
+                "string-list".into(),
+                v(vec!["a".to_owned()]),
+                details(vec![("label", v("Names")), ("help", v("Who"))]),
+            ),
             ("odd".into(), "colour".into(), v(1i64), details(vec![])),
         ]);
         assert_eq!(s.len(), 4, "unknown types left out");
-        assert_eq!((s[0].kind, &s[0].choices[..]), (Kind::Enum, &["fast".to_owned(), "slow".to_owned()][..]));
+        assert_eq!(
+            (s[0].kind, &s[0].choices[..]),
+            (Kind::Enum, &["fast".to_owned(), "slow".to_owned()][..])
+        );
         assert_eq!((s[1].range(), s[1].step()), ((1.0, 9.0), 1.0));
         assert_eq!((s[2].label.as_str(), s[2].step()), ("level", 0.1));
         assert_eq!(s[3].help, "Who");
-        let wide = Setting { kind: Kind::Int, min: None, max: None, ..s[1].clone() };
+        let wide = Setting {
+            kind: Kind::Int,
+            min: None,
+            max: None,
+            ..s[1].clone()
+        };
         assert_eq!(wide.range(), (-2147483648.0, 2147483647.0));
         assert_eq!(split_list(" a, b ,, c "), ["a", "b", "c"]);
         assert!(split_list(" , ").is_empty());
@@ -410,7 +529,10 @@ mod tests {
 
     #[test]
     fn permission_texts() {
-        assert_eq!(permission_text("files:home"), "read and change all your files");
+        assert_eq!(
+            permission_text("files:home"),
+            "read and change all your files"
+        );
         assert_eq!(permission_text("something-new"), "something-new");
     }
 }

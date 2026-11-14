@@ -256,9 +256,8 @@ pub fn engines_from_variant(v: &glib::Variant) -> Vec<SearchEngine> {
             let get = |k: &str| d.get(k).and_then(|v| v.get::<String>());
             let name = get("name")?;
             let url = get("url")?;
-            (!name.trim().is_empty() && crate::urlinput::valid_template(&url)).then(|| {
-                SearchEngine::new(&name, &url).with_bang(&get("bang").unwrap_or_default())
-            })
+            (!name.trim().is_empty() && crate::urlinput::valid_template(&url))
+                .then(|| SearchEngine::new(&name, &url).with_bang(&get("bang").unwrap_or_default()))
         })
         .collect()
 }
@@ -329,7 +328,11 @@ impl Store {
     pub fn save(&self, s: &Settings) {
         crate::store::write_in_background(self.path.clone(), crate::store::to_json(s));
         // Epiphany's default (empty) means the start page.
-        let home = if s.home_url().is_none() { "" } else { s.homepage.as_str() };
+        let home = if s.home_url().is_none() {
+            ""
+        } else {
+            s.homepage.as_str()
+        };
         self.main.set("homepage-url", home.to_string());
         if s.restore_session != "never" {
             self.main
@@ -416,7 +419,10 @@ mod tests {
             ..Default::default()
         };
         s.sanitize();
-        assert_eq!((s.reader_font.as_str(), s.reader_colors.as_str()), ("sans", "light"));
+        assert_eq!(
+            (s.reader_font.as_str(), s.reader_colors.as_str()),
+            ("sans", "light")
+        );
         assert!(s.remember_passwords);
     }
 

@@ -107,14 +107,22 @@ pub fn check() -> Option<Cause> {
 
 /// Standard locations the packaged profile attaches to.
 pub fn default_attachments(binary: &str) -> Vec<String> {
-    vec![format!("/usr/bin/{binary}"), format!("/usr/local/bin/{binary}")]
+    vec![
+        format!("/usr/bin/{binary}"),
+        format!("/usr/local/bin/{binary}"),
+    ]
 }
 
 fn safe_profile_path(p: &str) -> bool {
     p.starts_with('/')
-        && !p
-            .chars()
-            .any(|c| c.is_control() || c.is_whitespace() || matches!(c, '"' | '{' | '}' | '[' | ']' | '*' | '?' | ',' | '^' | '\\' | '#'))
+        && !p.chars().any(|c| {
+            c.is_control()
+                || c.is_whitespace()
+                || matches!(
+                    c,
+                    '"' | '{' | '}' | '[' | ']' | '*' | '?' | ',' | '^' | '\\' | '#'
+                )
+        })
 }
 
 /// AppArmor profile text granting `userns` to `binary` at `paths`.
@@ -224,7 +232,12 @@ fn copy_button(label: &str, text: String) -> gtk::Button {
 }
 
 /// A window explaining why web content cannot be shown and how to fix it.
-pub fn failure_window(app: &adw::Application, app_name: &str, binary: &str, cause: Cause) -> adw::ApplicationWindow {
+pub fn failure_window(
+    app: &adw::Application,
+    app_name: &str,
+    binary: &str,
+    cause: Cause,
+) -> adw::ApplicationWindow {
     let exe = std::env::current_exe()
         .map(|p| p.to_string_lossy().into_owned())
         .unwrap_or_else(|_| format!("/usr/bin/{binary}"));
@@ -232,7 +245,9 @@ pub fn failure_window(app: &adw::Application, app_name: &str, binary: &str, caus
     let page = adw::StatusPage::builder()
         .icon_name("computer-fail-symbolic")
         .title("Web Content Sandbox Unavailable")
-        .description(glib::markup_escape_text(&explanation(app_name, cause, &exe, installed)).as_str())
+        .description(
+            glib::markup_escape_text(&explanation(app_name, cause, &exe, installed)).as_str(),
+        )
         .build();
 
     let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
@@ -282,7 +297,10 @@ pub fn failure_window(app: &adw::Application, app_name: &str, binary: &str, caus
     let a = app.clone();
     quit.connect_clicked(move |_| a.quit());
     content.append(&quit);
-    let clamp = adw::Clamp::builder().maximum_size(560).child(&content).build();
+    let clamp = adw::Clamp::builder()
+        .maximum_size(560)
+        .child(&content)
+        .build();
     page.set_child(Some(&clamp));
 
     let scroller = gtk::ScrolledWindow::builder()
@@ -316,7 +334,6 @@ pub fn crashed_page(reason: webkit6::WebProcessTerminationReason) -> adw::Status
         .build()
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -324,17 +341,29 @@ mod tests {
     #[test]
     fn diagnoses() {
         assert_eq!(diagnose(true, Some(1), None, None), None);
-        assert_eq!(diagnose(false, Some(1), None, Some(1000)), Some(Cause::AppArmor));
-        assert_eq!(diagnose(false, Some(1), Some(0), None), Some(Cause::Disabled));
+        assert_eq!(
+            diagnose(false, Some(1), None, Some(1000)),
+            Some(Cause::AppArmor)
+        );
+        assert_eq!(
+            diagnose(false, Some(1), Some(0), None),
+            Some(Cause::Disabled)
+        );
         assert_eq!(diagnose(false, None, None, Some(0)), Some(Cause::Disabled));
-        assert_eq!(diagnose(false, Some(0), Some(1), Some(10)), Some(Cause::Unknown));
+        assert_eq!(
+            diagnose(false, Some(0), Some(1), Some(10)),
+            Some(Cause::Unknown)
+        );
         assert_eq!(diagnose(false, None, None, None), Some(Cause::Unknown));
     }
 
     #[test]
     fn shipped_profile_matches_generator() {
         let shipped = include_str!("../data/apparmor.d/helix-web");
-        assert_eq!(shipped, profile_text("helix-web", &default_attachments("helix-web")));
+        assert_eq!(
+            shipped,
+            profile_text("helix-web", &default_attachments("helix-web"))
+        );
     }
 
     #[test]
@@ -344,7 +373,11 @@ mod tests {
         assert!(p.contains("  userns,"));
         let p = profile_text(
             "helix-web",
-            &["/usr/bin/helix-web".into(), "/tmp/a*b/helix-web".into(), "/home/u/t/helix-web".into()],
+            &[
+                "/usr/bin/helix-web".into(),
+                "/tmp/a*b/helix-web".into(),
+                "/home/u/t/helix-web".into(),
+            ],
         );
         assert!(p.contains(" /{usr/bin/helix-web,home/u/t/helix-web} "));
         assert!(!p.contains("a*b"));
@@ -352,7 +385,8 @@ mod tests {
 
     #[test]
     fn texts() {
-        assert!(fix_commands("helix-web", true).starts_with("sudo apparmor_parser -r /etc/apparmor.d/helix-web"));
+        assert!(fix_commands("helix-web", true)
+            .starts_with("sudo apparmor_parser -r /etc/apparmor.d/helix-web"));
         assert!(fix_commands("helix-web", false).contains("sudo tee /etc/apparmor.d/helix-web"));
         let t = explanation("Web", Cause::AppArmor, "/x", false);
         assert!(t.contains("apparmor_restrict_unprivileged_userns"));

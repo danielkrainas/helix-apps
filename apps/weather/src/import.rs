@@ -17,7 +17,11 @@ type V1 = (String, String, bool, Option<(f64, f64)>, Option<(f64, f64)>);
 
 /// One serialized location (`v` holding `(uv)`, or `(uv)` itself).
 pub fn place_from_serialized(v: &Variant, gw: Option<&gwdb::Db>) -> Option<Place> {
-    let v = if v.type_() == glib::VariantTy::VARIANT { v.as_variant()? } else { v.clone() };
+    let v = if v.type_() == glib::VariantTy::VARIANT {
+        v.as_variant()?
+    } else {
+        v.clone()
+    };
     let (version, inner) = v.get::<(u32, Variant)>()?;
     let (name, code, city, station) = match version {
         2 => {
@@ -30,12 +34,22 @@ pub fn place_from_serialized(v: &Variant, gw: Option<&gwdb::Db>) -> Option<Place
         }
         _ => return None,
     };
-    let (lat, lon) = city.or(station).map(|(a, b)| (a.to_degrees(), b.to_degrees()))?;
-    if !(lat.is_finite() && lon.is_finite() && (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&lon)) {
+    let (lat, lon) = city
+        .or(station)
+        .map(|(a, b)| (a.to_degrees(), b.to_degrees()))?;
+    if !(lat.is_finite()
+        && lon.is_finite()
+        && (-90.0..=90.0).contains(&lat)
+        && (-180.0..=180.0).contains(&lon))
+    {
         return None;
     }
     let st = gw.and_then(|g| g.station(&code));
-    let name = if name.trim().is_empty() { st.map(|s| s.name.clone())? } else { name };
+    let name = if name.trim().is_empty() {
+        st.map(|s| s.name.clone())?
+    } else {
+        name
+    };
     Some(Place {
         admin1: st.and_then(|s| s.state.clone()),
         country: st.and_then(|s| s.country.clone()),
@@ -74,11 +88,16 @@ pub fn from_keyfile(path: &Path, group: &str) -> Option<Variant> {
 
 fn from_schema(id: &str) -> Option<Variant> {
     let s = helix_app_common::settings(id)?;
-    s.settings_schema()?.has_key("locations").then(|| s.value("locations"))
+    s.settings_schema()?
+        .has_key("locations")
+        .then(|| s.value("locations"))
 }
 
 fn from_dconf() -> Option<Variant> {
-    let out = std::process::Command::new("dconf").args(["read", "/org/gnome/Weather/locations"]).output().ok()?;
+    let out = std::process::Command::new("dconf")
+        .args(["read", "/org/gnome/Weather/locations"])
+        .output()
+        .ok()?;
     out.status.success().then_some(())?;
     parse_text(&String::from_utf8_lossy(&out.stdout))
 }
@@ -113,7 +132,8 @@ pub fn import(gw: Option<&gwdb::Db>) -> Vec<Place> {
 mod tests {
     use super::*;
 
-    const GNOME: &str = "[<(uint32 2, <('Munich', 'EDDM', true, [(0.8403, 0.2021)], [(0.8438, 0.2056)])>)>, \
+    const GNOME: &str =
+        "[<(uint32 2, <('Munich', 'EDDM', true, [(0.8403, 0.2021)], [(0.8438, 0.2056)])>)>, \
         <(uint32 2, <('', 'EDDM', false, @a(dd) [], [(0.8438, 0.2056)])>)>, \
         <(uint32 1, <('Old', 'KORD', true, @m(dd) nothing, just (0.7327, -1.5344))>)>, \
         <(uint32 9, <'future'>)>, <'junk'>]";
@@ -131,7 +151,10 @@ mod tests {
         assert_eq!(m.country.as_deref(), Some("Germany"));
         assert_eq!(m.admin1.as_deref(), Some("Bavaria"));
         assert_eq!(m.timezone.as_deref(), Some("Europe/Berlin"));
-        assert_eq!(places[1].name, "Munich", "empty name falls back to the station");
+        assert_eq!(
+            places[1].name, "Munich",
+            "empty name falls back to the station"
+        );
         assert_eq!(places[2].name, "Old");
         assert_eq!(places[2].timezone.as_deref(), Some("America/Chicago"));
         assert!(!places.iter().any(|p| p.automatic));

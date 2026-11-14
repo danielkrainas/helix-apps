@@ -10,10 +10,10 @@ use crate::qr;
 use crate::settings::{self, Settings};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::Prefs;
 use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
 use std::rc::Rc;
-use helix_app_common::Prefs;
 use std::time::Instant;
 
 pub const APP_ID: &str = "org.helix.Camera";
@@ -154,7 +154,10 @@ fn menu_model(formats: &[(VideoFormat, bool)]) -> gio::Menu {
     let timer = gio::Menu::new();
     timer.append(Some("Off"), Some("win.countdown::0"));
     for d in countdown::DELAYS.iter().skip(1) {
-        timer.append(Some(&format!("{d} Seconds")), Some(&format!("win.countdown::{d}")));
+        timer.append(
+            Some(&format!("{d} Seconds")),
+            Some(&format!("win.countdown::{d}")),
+        );
     }
     let prefs = gio::Menu::new();
     prefs.append_submenu(Some("_Countdown"), &timer);
@@ -194,8 +197,12 @@ fn build(app: &adw::Application) -> Rc<State> {
         .hexpand(true)
         .vexpand(true)
         .build();
-    let status_page = adw::StatusPage::builder().icon_name("camera-web-symbolic").build();
-    let stack = gtk::Stack::builder().transition_type(gtk::StackTransitionType::Crossfade).build();
+    let status_page = adw::StatusPage::builder()
+        .icon_name("camera-web-symbolic")
+        .build();
+    let stack = gtk::Stack::builder()
+        .transition_type(gtk::StackTransitionType::Crossfade)
+        .build();
     stack.add_named(&viewfinder, Some("viewfinder"));
     stack.add_named(&status_page, Some("status"));
     stack.add_css_class("viewfinder");
@@ -207,7 +214,11 @@ fn build(app: &adw::Application) -> Rc<State> {
         .visible(false)
         .css_classes(["countdown"])
         .build();
-    let flash = gtk::Box::builder().css_classes(["flash"]).opacity(0.0).can_target(false).build();
+    let flash = gtk::Box::builder()
+        .css_classes(["flash"])
+        .opacity(0.0)
+        .can_target(false)
+        .build();
     let rec_label = gtk::Label::builder()
         .halign(gtk::Align::Center)
         .valign(gtk::Align::Start)
@@ -229,7 +240,10 @@ fn build(app: &adw::Application) -> Rc<State> {
         .xalign(0.0)
         .selectable(true)
         .build();
-    let qr_icon = gtk::Image::from_gicon(&gio::ThemedIcon::from_names(&["qr-code-symbolic", "insert-link-symbolic"]));
+    let qr_icon = gtk::Image::from_gicon(&gio::ThemedIcon::from_names(&[
+        "qr-code-symbolic",
+        "insert-link-symbolic",
+    ]));
     let qr_copy = gtk::Button::builder()
         .icon_name("edit-copy-symbolic")
         .tooltip_text("Copy")
@@ -247,7 +261,10 @@ fn build(app: &adw::Application) -> Rc<State> {
         .action_name("win.qr-dismiss")
         .css_classes(["flat", "circular"])
         .build();
-    let qr_box = gtk::Box::builder().spacing(8).css_classes(["qr-banner"]).build();
+    let qr_box = gtk::Box::builder()
+        .spacing(8)
+        .css_classes(["qr-banner"])
+        .build();
     qr_box.append(&qr_icon);
     qr_box.append(&qr_label);
     qr_box.append(&qr_copy);
@@ -480,7 +497,10 @@ fn smoke_script(state: &Rc<State>) {
             let Some(s) = weak.upgrade() else { return };
             eprintln!("smoke: {action} {target:?}");
             if action == "smoke:qr" {
-                let change = s.qr_tracker.borrow_mut().update(Some("https://example.org/helix".into()));
+                let change = s
+                    .qr_tracker
+                    .borrow_mut()
+                    .update(Some("https://example.org/helix".into()));
                 apply_qr(&s, change);
                 return;
             }
@@ -533,7 +553,9 @@ fn install_actions(state: &Rc<State>) {
     let weak = Rc::downgrade(state);
     qr_copy.connect_activate(move |_, _| {
         let Some(s) = weak.upgrade() else { return };
-        let Some(text) = s.qr_text.borrow().clone() else { return };
+        let Some(text) = s.qr_text.borrow().clone() else {
+            return;
+        };
         WidgetExt::display(&s.ui.window).clipboard().set_text(&text);
         s.toast("Copied to clipboard");
     });
@@ -543,7 +565,9 @@ fn install_actions(state: &Rc<State>) {
     let weak = Rc::downgrade(state);
     qr_open.connect_activate(move |_, _| {
         let Some(s) = weak.upgrade() else { return };
-        let Some(uri) = s.qr_text.borrow().as_deref().and_then(qr::openable_uri) else { return };
+        let Some(uri) = s.qr_text.borrow().as_deref().and_then(qr::openable_uri) else {
+            return;
+        };
         let launcher = gtk::UriLauncher::new(&uri);
         let weak = Rc::downgrade(&s);
         launcher.launch(Some(&s.ui.window), None::<&gio::Cancellable>, move |res| {
@@ -588,11 +612,17 @@ fn install_actions(state: &Rc<State>) {
     win.add_action(&cancel);
 
     let initial_mode = state.settings.borrow().capture_mode.clone();
-    let mode = gio::SimpleAction::new_stateful("mode", Some(glib::VariantTy::STRING), &initial_mode.to_variant());
+    let mode = gio::SimpleAction::new_stateful(
+        "mode",
+        Some(glib::VariantTy::STRING),
+        &initial_mode.to_variant(),
+    );
     let weak = Rc::downgrade(state);
     mode.connect_change_state(move |a, v| {
         let Some(s) = weak.upgrade() else { return };
-        let Some(m) = v.and_then(|v| v.get::<String>()) else { return };
+        let Some(m) = v.and_then(|v| v.get::<String>()) else {
+            return;
+        };
         if s.recording.get() || (m == "video" && !s.formats.iter().any(|(_, ok)| *ok)) {
             return;
         }
@@ -627,7 +657,9 @@ fn install_actions(state: &Rc<State>) {
     let weak = Rc::downgrade(state);
     gallery.connect_activate(move |_, _| {
         let Some(s) = weak.upgrade() else { return };
-        let Some(path) = s.last_capture.borrow().clone() else { return };
+        let Some(path) = s.last_capture.borrow().clone() else {
+            return;
+        };
         let launcher = gtk::FileLauncher::new(Some(&gio::File::for_path(&path)));
         let weak = Rc::downgrade(&s);
         launcher.launch(Some(&s.ui.window), None::<&gio::Cancellable>, move |res| {
@@ -641,11 +673,17 @@ fn install_actions(state: &Rc<State>) {
     win.add_action(&gallery);
 
     let delay = state.settings.borrow().countdown.to_string();
-    let countdown = gio::SimpleAction::new_stateful("countdown", Some(glib::VariantTy::STRING), &delay.to_variant());
+    let countdown = gio::SimpleAction::new_stateful(
+        "countdown",
+        Some(glib::VariantTy::STRING),
+        &delay.to_variant(),
+    );
     let weak = Rc::downgrade(state);
     countdown.connect_change_state(move |a, v| {
         let Some(s) = weak.upgrade() else { return };
-        let Some(d) = v.and_then(|v| v.get::<String>()) else { return };
+        let Some(d) = v.and_then(|v| v.get::<String>()) else {
+            return;
+        };
         let secs = countdown::normalize_delay(d.parse().unwrap_or(0));
         a.set_state(&secs.to_string().to_variant());
         s.settings.borrow_mut().countdown = secs;
@@ -661,7 +699,9 @@ fn install_actions(state: &Rc<State>) {
     let weak = Rc::downgrade(state);
     sound.connect_change_state(move |a, v| {
         let Some(s) = weak.upgrade() else { return };
-        let Some(on) = v.and_then(|v| v.get::<bool>()) else { return };
+        let Some(on) = v.and_then(|v| v.get::<bool>()) else {
+            return;
+        };
         a.set_state(&on.to_variant());
         s.settings.borrow_mut().play_shutter_sound = on;
         s.save_settings();
@@ -671,7 +711,11 @@ fn install_actions(state: &Rc<State>) {
     let current = state.settings.borrow().video_format();
     let mut format_actions = Vec::new();
     for (f, ok) in state.formats.iter().copied() {
-        let a = gio::SimpleAction::new_stateful(&format!("format-{}", f.id()), None, &(f == current).to_variant());
+        let a = gio::SimpleAction::new_stateful(
+            &format!("format-{}", f.id()),
+            None,
+            &(f == current).to_variant(),
+        );
         a.set_enabled(ok);
         win.add_action(&a);
         format_actions.push((f, a));
@@ -682,7 +726,9 @@ fn install_actions(state: &Rc<State>) {
         let all = Rc::downgrade(&format_actions);
         let weak = Rc::downgrade(state);
         a.connect_change_state(move |_, _| {
-            let (Some(s), Some(all)) = (weak.upgrade(), all.upgrade()) else { return };
+            let (Some(s), Some(all)) = (weak.upgrade(), all.upgrade()) else {
+                return;
+            };
             for (g, b) in all.iter() {
                 b.set_state(&(*g == f).to_variant());
             }
@@ -702,7 +748,9 @@ fn on_shutter(state: &Rc<State>) {
             state.send(Command::StopRecording);
         } else {
             state.busy.set(true);
-            state.send(Command::StartRecording(state.settings.borrow().video_format()));
+            state.send(Command::StartRecording(
+                state.settings.borrow().video_format(),
+            ));
         }
         update_controls(state);
         return;
@@ -732,7 +780,9 @@ fn apply_countdown(state: &Rc<State>, action: Action) {
             if state.countdown_timer.borrow().is_none() {
                 let weak = Rc::downgrade(state);
                 let id = glib::timeout_add_seconds_local(1, move || {
-                    let Some(s) = weak.upgrade() else { return glib::ControlFlow::Break };
+                    let Some(s) = weak.upgrade() else {
+                        return glib::ControlFlow::Break;
+                    };
                     let mut c = s.countdown.get();
                     let action = c.tick();
                     s.countdown.set(c);
@@ -785,7 +835,10 @@ fn handle_event(state: &Rc<State>, ev: Event) {
                     state.settings.borrow_mut().last_camera = Some(name.clone());
                     state.save_settings();
                 }
-                state.ui.switcher.set_tooltip_text(Some(&format!("Switch Camera (current: {name})")));
+                state
+                    .ui
+                    .switcher
+                    .set_tooltip_text(Some(&format!("Switch Camera (current: {name})")));
             }
         }
         Event::Status(st) => show_status(state, &st),
@@ -794,16 +847,22 @@ fn handle_event(state: &Rc<State>, ev: Event) {
         }
         Event::RecordingStarted(path) => {
             state.busy.set(false);
-            state.ui.rec_label.set_tooltip_text(path.file_name().and_then(|n| n.to_str()));
+            state
+                .ui
+                .rec_label
+                .set_tooltip_text(path.file_name().and_then(|n| n.to_str()));
             state.recording.set(true);
             state.rec_started.set(Some(Instant::now()));
             state.ui.rec_label.set_label(&format_elapsed(0));
             state.ui.rec_label.set_visible(true);
             let weak = Rc::downgrade(state);
             let id = glib::timeout_add_local(std::time::Duration::from_millis(500), move || {
-                let Some(s) = weak.upgrade() else { return glib::ControlFlow::Break };
+                let Some(s) = weak.upgrade() else {
+                    return glib::ControlFlow::Break;
+                };
                 if let Some(t) = s.rec_started.get() {
-                    s.ui.rec_label.set_label(&format_elapsed(t.elapsed().as_secs()));
+                    s.ui.rec_label
+                        .set_label(&format_elapsed(t.elapsed().as_secs()));
                 }
                 glib::ControlFlow::Continue
             });
@@ -894,10 +953,12 @@ fn update_controls(state: &State) {
     };
     ui.shutter.set_icon_name(icon);
     ui.shutter.set_tooltip_text(Some(tip));
-    ui.video_toggle.set_sensitive(!recording && state.formats.iter().any(|(_, ok)| *ok));
+    ui.video_toggle
+        .set_sensitive(!recording && state.formats.iter().any(|(_, ok)| *ok));
     ui.photo_toggle.set_sensitive(!recording);
     ui.switcher.set_sensitive(!recording && !state.busy.get());
-    ui.gallery.set_sensitive(state.last_capture.borrow().is_some());
+    ui.gallery
+        .set_sensitive(state.last_capture.borrow().is_some());
 }
 
 fn set_gallery(state: &State, path: PathBuf, tex: Option<gdk::Texture>, kind: CaptureKind) {
@@ -909,14 +970,22 @@ fn set_gallery(state: &State, path: PathBuf, tex: Option<gdk::Texture>, kind: Ca
                 CaptureKind::Video => "video-x-generic-symbolic",
             };
             let theme = gtk::IconTheme::for_display(&WidgetExt::display(&state.ui.window));
-            let paintable =
-                theme.lookup_icon(icon, &[], 32, 1, gtk::TextDirection::None, gtk::IconLookupFlags::empty());
+            let paintable = theme.lookup_icon(
+                icon,
+                &[],
+                32,
+                1,
+                gtk::TextDirection::None,
+                gtk::IconLookupFlags::empty(),
+            );
             state.ui.gallery_image.set_paintable(Some(&paintable));
         }
     }
     state.ui.gallery.set_tooltip_text(Some(&format!(
         "Open {}",
-        path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()
+        path.file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default()
     )));
     *state.last_capture.borrow_mut() = Some(path);
 }
@@ -931,9 +1000,19 @@ fn load_latest_capture(state: &Rc<State>) {
             let (path, kind) = naming::latest_capture(&dir)?;
             // Pixbufs are not Send: hand back the raw pixels.
             let pixels = match kind {
-                CaptureKind::Photo => gtk::gdk_pixbuf::Pixbuf::from_file_at_scale(&path, THUMB_SIZE, THUMB_SIZE, true)
-                    .ok()
-                    .map(|p| (p.width(), p.height(), p.rowstride() as usize, p.has_alpha(), p.read_pixel_bytes())),
+                CaptureKind::Photo => {
+                    gtk::gdk_pixbuf::Pixbuf::from_file_at_scale(&path, THUMB_SIZE, THUMB_SIZE, true)
+                        .ok()
+                        .map(|p| {
+                            (
+                                p.width(),
+                                p.height(),
+                                p.rowstride() as usize,
+                                p.has_alpha(),
+                                p.read_pixel_bytes(),
+                            )
+                        })
+                }
                 CaptureKind::Video => None,
             };
             Some((path, kind, pixels))
@@ -941,12 +1020,18 @@ fn load_latest_capture(state: &Rc<State>) {
         .await
         .ok()
         .flatten();
-        let (Some(state), Some((path, kind, pixels))) = (weak.upgrade(), found) else { return };
+        let (Some(state), Some((path, kind, pixels))) = (weak.upgrade(), found) else {
+            return;
+        };
         if state.last_capture.borrow().is_some() {
             return;
         }
         let tex = pixels.map(|(w, h, stride, alpha, bytes)| {
-            let format = if alpha { gdk::MemoryFormat::R8g8b8a8 } else { gdk::MemoryFormat::R8g8b8 };
+            let format = if alpha {
+                gdk::MemoryFormat::R8g8b8a8
+            } else {
+                gdk::MemoryFormat::R8g8b8
+            };
             gdk::MemoryTexture::new(w, h, format, &bytes, stride).upcast::<gdk::Texture>()
         });
         set_gallery(&state, path, tex, kind);

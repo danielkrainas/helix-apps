@@ -8,13 +8,21 @@ const UNITS: [&str; 6] = ["kB", "MB", "GB", "TB", "PB", "EB"];
 /// has two or three significant digits.
 pub fn size(bytes: u64) -> String {
     if bytes < 1000 {
-        return if bytes == 1 { "1 byte".into() } else { format!("{bytes} bytes") };
+        return if bytes == 1 {
+            "1 byte".into()
+        } else {
+            format!("{bytes} bytes")
+        };
     }
     let mut value = bytes as f64 / 1000.0;
     let mut unit = 0;
     loop {
         // Round the way it will be printed, then decide whether it still fits.
-        let rounded = if value < 9.95 { (value * 10.0).round() / 10.0 } else { value.round() };
+        let rounded = if value < 9.95 {
+            (value * 10.0).round() / 10.0
+        } else {
+            value.round()
+        };
         if rounded < 1000.0 || unit == UNITS.len() - 1 {
             return if rounded < 10.0 {
                 format!("{rounded:.1} {}", UNITS[unit])
@@ -144,7 +152,10 @@ mod tests {
 
     #[test]
     fn long_form() {
-        assert_eq!(size_long(2_000_398_934_016), "2.0 TB (2,000,398,934,016 bytes)");
+        assert_eq!(
+            size_long(2_000_398_934_016),
+            "2.0 TB (2,000,398,934,016 bytes)"
+        );
         assert_eq!(size_long(512), "512 bytes");
         assert_eq!(group_thousands(0), "0");
         assert_eq!(group_thousands(999), "999");

@@ -96,7 +96,9 @@ pub fn name_dialog(
     let v = validate.clone();
     entry.connect_changed(move |e| v(&e.text()));
     let e = entry.clone();
-    dialog.connect_response(Some("accept"), move |_, _| on_accept(e.text().trim_end().to_string()));
+    dialog.connect_response(Some("accept"), move |_, _| {
+        on_accept(e.text().trim_end().to_string())
+    });
     dialog.present(Some(parent));
     // Select the stem (not the extension) for renames.
     let (start, end) = naming::rename_selection(&initial, is_dir);
@@ -216,7 +218,10 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
     let desc = gio::content_type_get_description(&ct);
 
     let mut apps: Vec<gio::AppInfo> = gio::AppInfo::recommended_for_type(&ct);
-    for a in gio::AppInfo::all_for_type(&ct).into_iter().chain(gio::AppInfo::all()) {
+    for a in gio::AppInfo::all_for_type(&ct)
+        .into_iter()
+        .chain(gio::AppInfo::all())
+    {
         if a.should_show() && !apps.iter().any(|x| x.id() == a.id()) {
             apps.push(a);
         }
@@ -283,7 +288,9 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
         let win = Rc::downgrade(win);
         let apps = apps.clone();
         move || {
-            let Some(row) = list.selected_row() else { return };
+            let Some(row) = list.selected_row() else {
+                return;
+            };
             let Some(app) = apps.get(row.index() as usize) else {
                 return;
             };
@@ -342,7 +349,10 @@ pub fn preferences(win: &Rc<Window>) {
         row
     };
     let switch = |title: &str, subtitle: &str, active: bool, apply: Box<dyn Fn(bool)>| {
-        let row = adw::SwitchRow::builder().title(title).active(active).build();
+        let row = adw::SwitchRow::builder()
+            .title(title)
+            .active(active)
+            .build();
         if !subtitle.is_empty() {
             row.set_subtitle(subtitle);
         }
@@ -421,7 +431,9 @@ pub fn preferences(win: &Rc<Window>) {
     ));
     page.add(&views);
 
-    let menu = adw::PreferencesGroup::builder().title("Context Menu").build();
+    let menu = adw::PreferencesGroup::builder()
+        .title("Context Menu")
+        .build();
     menu.add(&switch(
         "Create Link",
         "Show an action to create symbolic links",

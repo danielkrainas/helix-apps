@@ -7,12 +7,14 @@
 use std::path::{Path, PathBuf};
 
 use gtk::gio;
-use gtk::prelude::*;
 use gtk::glib;
+use gtk::prelude::*;
 
 /// Moves `path` to the trash (blocking; call from a worker thread).
 pub fn trash(path: &Path) -> Result<(), String> {
-    gio::File::for_path(path).trash(gio::Cancellable::NONE).map_err(|e| e.message().to_string())
+    gio::File::for_path(path)
+        .trash(gio::Cancellable::NONE)
+        .map_err(|e| e.message().to_string())
 }
 
 /// Percent-decodes a trashinfo `Path=` value.
@@ -84,18 +86,26 @@ pub struct Trashed {
 pub fn find_trashed(original: &Path, dirs: &[(PathBuf, PathBuf)]) -> Option<Trashed> {
     let mut best: Option<(String, Trashed)> = None;
     for (trash, top) in dirs {
-        let Ok(rd) = std::fs::read_dir(trash.join("info")) else { continue };
+        let Ok(rd) = std::fs::read_dir(trash.join("info")) else {
+            continue;
+        };
         for entry in rd.filter_map(Result::ok) {
             let info = entry.path();
             if info.extension().and_then(|e| e.to_str()) != Some("trashinfo") {
                 continue;
             }
-            let Ok(contents) = std::fs::read_to_string(&info) else { continue };
-            let Some((orig, date)) = parse_trashinfo(&contents, top) else { continue };
+            let Ok(contents) = std::fs::read_to_string(&info) else {
+                continue;
+            };
+            let Some((orig, date)) = parse_trashinfo(&contents, top) else {
+                continue;
+            };
             if orig != original {
                 continue;
             }
-            let Some(stem) = info.file_stem() else { continue };
+            let Some(stem) = info.file_stem() else {
+                continue;
+            };
             let file = trash.join("files").join(stem);
             if !file.exists() {
                 continue;
@@ -115,12 +125,18 @@ pub fn restore(original: &Path, dirs: &[(PathBuf, PathBuf)]) -> Result<(), Strin
     if original.exists() {
         return Err("A file with the same name already exists".into());
     }
-    let t = find_trashed(original, dirs).ok_or_else(|| "The file was not found in the trash".to_string())?;
+    let t = find_trashed(original, dirs)
+        .ok_or_else(|| "The file was not found in the trash".to_string())?;
     if std::fs::rename(&t.file, original).is_err() {
         // Different file system (e.g. home trash for a file elsewhere).
         let src = gio::File::for_path(&t.file);
-        src.move_(&gio::File::for_path(original), gio::FileCopyFlags::NONE, gio::Cancellable::NONE, None)
-            .map_err(|e| e.message().to_string())?;
+        src.move_(
+            &gio::File::for_path(original),
+            gio::FileCopyFlags::NONE,
+            gio::Cancellable::NONE,
+            None,
+        )
+        .map_err(|e| e.message().to_string())?;
     }
     let _ = std::fs::remove_file(&t.info);
     Ok(())
@@ -152,7 +168,8 @@ mod tests {
         .unwrap();
         assert_eq!(p, Path::new("/home/u/My Pictures/café.png"));
         assert_eq!(d, "2024-05-01T10:00:00");
-        let (p, _) = parse_trashinfo("[Trash Info]\nPath=photos/a.png\n", Path::new("/media/usb")).unwrap();
+        let (p, _) =
+            parse_trashinfo("[Trash Info]\nPath=photos/a.png\n", Path::new("/media/usb")).unwrap();
         assert_eq!(p, Path::new("/media/usb/photos/a.png"));
         assert!(parse_trashinfo("[Other]\nPath=/x\n", Path::new("/")).is_none());
         assert_eq!(percent_decode("100%"), b"100%");
@@ -168,7 +185,12 @@ mod tests {
         let orig_s = orig.to_str().unwrap().replace(' ', "%20");
         fake_trash(&trash, "a b.png", &orig_s, "2024-01-01T00:00:00");
         fake_trash(&trash, "a b.2.png", &orig_s, "2024-06-01T00:00:00");
-        fake_trash(&trash, "other.png", "/elsewhere/other.png", "2025-01-01T00:00:00");
+        fake_trash(
+            &trash,
+            "other.png",
+            "/elsewhere/other.png",
+            "2025-01-01T00:00:00",
+        );
         let dirs = vec![(trash.clone(), PathBuf::from("/"))];
 
         let t = find_trashed(&orig, &dirs).unwrap();
@@ -201,6 +223,9 @@ mod tests {
     fn candidates_cover_home_and_topdirs() {
         let d = candidate_trash_dirs(Path::new("/media/usb/pics/a.png"));
         assert_eq!(d[0].0, glib::user_data_dir().join("Trash"));
-        assert!(d.iter().any(|(t, top)| t.to_string_lossy().starts_with("/media/usb/.Trash-") && top == Path::new("/media/usb")));
+        assert!(d.iter().any(
+            |(t, top)| t.to_string_lossy().starts_with("/media/usb/.Trash-")
+                && top == Path::new("/media/usb")
+        ));
     }
 }

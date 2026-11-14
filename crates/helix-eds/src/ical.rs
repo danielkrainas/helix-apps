@@ -17,11 +17,16 @@ pub struct Component {
 
 impl Component {
     pub fn new(name: &str) -> Component {
-        Component { name: name.to_ascii_uppercase(), ..Default::default() }
+        Component {
+            name: name.to_ascii_uppercase(),
+            ..Default::default()
+        }
     }
 
     pub fn get(&self, name: &str) -> Option<&Property> {
-        self.props.iter().find(|p| p.name.eq_ignore_ascii_case(name))
+        self.props
+            .iter()
+            .find(|p| p.name.eq_ignore_ascii_case(name))
     }
 
     pub fn get_text(&self, name: &str) -> Option<String> {
@@ -29,7 +34,9 @@ impl Component {
     }
 
     pub fn all<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a Property> + 'a {
-        self.props.iter().filter(move |p| p.name.eq_ignore_ascii_case(name))
+        self.props
+            .iter()
+            .filter(move |p| p.name.eq_ignore_ascii_case(name))
     }
 
     pub fn remove_all(&mut self, name: &str) {
@@ -88,7 +95,9 @@ pub fn parse(text: &str) -> Vec<Component> {
     let mut stack: Vec<Component> = Vec::new();
     let mut out = Vec::new();
     for line in contentline::unfold(text) {
-        let Some(p) = contentline::parse_line(&line) else { continue };
+        let Some(p) = contentline::parse_line(&line) else {
+            continue;
+        };
         if p.name == "BEGIN" {
             stack.push(Component::new(p.value.trim()));
         } else if p.name == "END" {
@@ -128,11 +137,15 @@ impl Time {
     pub fn from_property(p: &Property) -> Option<Time> {
         let v = p.value.trim();
         let v = v.split(',').next()?;
-        if p.param("VALUE").is_some_and(|x| x.eq_ignore_ascii_case("DATE")) || v.len() == 8 {
+        if p.param("VALUE")
+            .is_some_and(|x| x.eq_ignore_ascii_case("DATE"))
+            || v.len() == 8
+        {
             return NaiveDate::parse_from_str(v, "%Y%m%d").ok().map(Time::Date);
         }
         let utc = v.ends_with('Z') || v.ends_with('z');
-        let ndt = NaiveDateTime::parse_from_str(v.trim_end_matches(['Z', 'z']), "%Y%m%dT%H%M%S").ok()?;
+        let ndt =
+            NaiveDateTime::parse_from_str(v.trim_end_matches(['Z', 'z']), "%Y%m%dT%H%M%S").ok()?;
         Some(if utc {
             Time::Utc(ndt)
         } else if let Some(tz) = p.param("TZID") {
@@ -156,10 +169,14 @@ impl Time {
 
     pub fn to_property(&self, name: &str) -> Property {
         match self {
-            Time::Date(d) => Property::new(name, d.format("%Y%m%d").to_string()).with_param("VALUE", "DATE"),
+            Time::Date(d) => {
+                Property::new(name, d.format("%Y%m%d").to_string()).with_param("VALUE", "DATE")
+            }
             Time::Floating(t) => Property::new(name, t.format("%Y%m%dT%H%M%S").to_string()),
             Time::Utc(t) => Property::new(name, t.format("%Y%m%dT%H%M%SZ").to_string()),
-            Time::Zoned(t, tz) => Property::new(name, t.format("%Y%m%dT%H%M%S").to_string()).with_param("TZID", tz),
+            Time::Zoned(t, tz) => {
+                Property::new(name, t.format("%Y%m%dT%H%M%S").to_string()).with_param("TZID", tz)
+            }
         }
     }
 
@@ -203,7 +220,10 @@ impl Time {
     pub fn local(&self, zones: &Zones) -> NaiveDateTime {
         match self {
             Time::Date(_) | Time::Floating(_) => self.naive(),
-            _ => self.instant(zones).with_timezone(&zones.local).naive_local(),
+            _ => self
+                .instant(zones)
+                .with_timezone(&zones.local)
+                .naive_local(),
         }
     }
 }
@@ -234,7 +254,11 @@ pub struct Zones {
 
 impl Zones {
     pub fn new(local: Tz) -> Zones {
-        Zones { local, cache: Default::default(), hints: HashMap::new() }
+        Zones {
+            local,
+            cache: Default::default(),
+            hints: HashMap::new(),
+        }
     }
 
     /// Uses the system zone (`TZ`, then `/etc/localtime`), falling back to UTC.
@@ -281,7 +305,10 @@ pub fn system_zone() -> Tz {
             return z;
         }
     }
-    iana_time_zone::get_timezone().ok().and_then(|n| Tz::from_str(&n).ok()).unwrap_or(Tz::UTC)
+    iana_time_zone::get_timezone()
+        .ok()
+        .and_then(|n| Tz::from_str(&n).ok())
+        .unwrap_or(Tz::UTC)
 }
 
 /// Maps TZID strings to IANA zones. Handles plain names and libical-style
@@ -381,20 +408,30 @@ pub struct Alarm {
 
 impl Alarm {
     pub fn before(d: Duration) -> Alarm {
-        Alarm { before_start: Some(d), raw: None }
+        Alarm {
+            before_start: Some(d),
+            raw: None,
+        }
     }
 
     fn from_component(c: &Component) -> Alarm {
         let before_start = c.get("TRIGGER").and_then(|t| {
-            let related_end = t.param("RELATED").is_some_and(|r| r.eq_ignore_ascii_case("END"));
-            let is_dt = t.param("VALUE").is_some_and(|v| v.eq_ignore_ascii_case("DATE-TIME"));
+            let related_end = t
+                .param("RELATED")
+                .is_some_and(|r| r.eq_ignore_ascii_case("END"));
+            let is_dt = t
+                .param("VALUE")
+                .is_some_and(|v| v.eq_ignore_ascii_case("DATE-TIME"));
             if related_end || is_dt {
                 None
             } else {
                 parse_duration(&t.value).map(|d| -d)
             }
         });
-        Alarm { before_start, raw: Some(c.clone()) }
+        Alarm {
+            before_start,
+            raw: Some(c.clone()),
+        }
     }
 
     fn to_component(&self, summary: &str) -> Component {
@@ -404,8 +441,16 @@ impl Alarm {
         let mut c = Component::new("VALARM");
         c.props.push(Property::new("ACTION", "DISPLAY"));
         let d = self.before_start.unwrap_or_else(Duration::zero);
-        c.props.push(Property::new("TRIGGER", format_duration(-d)).with_param("RELATED", "START"));
-        c.props.push(Property::text("DESCRIPTION", if summary.is_empty() { "Reminder" } else { summary }));
+        c.props
+            .push(Property::new("TRIGGER", format_duration(-d)).with_param("RELATED", "START"));
+        c.props.push(Property::text(
+            "DESCRIPTION",
+            if summary.is_empty() {
+                "Reminder"
+            } else {
+                summary
+            },
+        ));
         c
     }
 }
@@ -435,8 +480,23 @@ pub struct Event {
 }
 
 const MANAGED: &[&str] = &[
-    "UID", "RECURRENCE-ID", "SUMMARY", "DESCRIPTION", "LOCATION", "URL", "DTSTART", "DTEND", "DURATION", "RRULE",
-    "EXDATE", "RDATE", "STATUS", "SEQUENCE", "COLOR", "DTSTAMP", "LAST-MODIFIED",
+    "UID",
+    "RECURRENCE-ID",
+    "SUMMARY",
+    "DESCRIPTION",
+    "LOCATION",
+    "URL",
+    "DTSTART",
+    "DTEND",
+    "DURATION",
+    "RRULE",
+    "EXDATE",
+    "RDATE",
+    "STATUS",
+    "SEQUENCE",
+    "COLOR",
+    "DTSTAMP",
+    "LAST-MODIFIED",
 ];
 
 impl Event {
@@ -489,12 +549,29 @@ impl Event {
             rrule: c.get("RRULE").and_then(|p| RRule::parse(&p.value)),
             exdates: c.all("EXDATE").flat_map(Time::list_from_property).collect(),
             rdates: c.all("RDATE").flat_map(Time::list_from_property).collect(),
-            alarms: c.children.iter().filter(|a| a.name == "VALARM").map(Alarm::from_component).collect(),
-            status: c.get("STATUS").map(|p| p.value.to_ascii_uppercase()).unwrap_or_default(),
-            sequence: c.get("SEQUENCE").and_then(|p| p.value.trim().parse().ok()).unwrap_or(0),
+            alarms: c
+                .children
+                .iter()
+                .filter(|a| a.name == "VALARM")
+                .map(Alarm::from_component)
+                .collect(),
+            status: c
+                .get("STATUS")
+                .map(|p| p.value.to_ascii_uppercase())
+                .unwrap_or_default(),
+            sequence: c
+                .get("SEQUENCE")
+                .and_then(|p| p.value.trim().parse().ok())
+                .unwrap_or(0),
             color: c.get("COLOR").map(|p| p.value.clone()).unwrap_or_default(),
-            organizer: c.get("ORGANIZER").map(|p| p.param("CN").unwrap_or(&p.value).to_string()).unwrap_or_default(),
-            attendees: c.all("ATTENDEE").map(|p| p.param("CN").unwrap_or(&p.value).to_string()).collect(),
+            organizer: c
+                .get("ORGANIZER")
+                .map(|p| p.param("CN").unwrap_or(&p.value).to_string())
+                .unwrap_or_default(),
+            attendees: c
+                .all("ATTENDEE")
+                .map(|p| p.param("CN").unwrap_or(&p.value).to_string())
+                .collect(),
             raw: c.clone(),
         })
     }
@@ -518,7 +595,11 @@ impl Event {
         }
         c.props.push(self.start.to_property("DTSTART"));
         c.props.push(self.end.to_property("DTEND"));
-        for (name, v) in [("SUMMARY", &self.summary), ("DESCRIPTION", &self.description), ("LOCATION", &self.location)] {
+        for (name, v) in [
+            ("SUMMARY", &self.summary),
+            ("DESCRIPTION", &self.description),
+            ("LOCATION", &self.location),
+        ] {
             if !v.is_empty() {
                 c.props.push(Property::text(name, v));
             }
@@ -539,15 +620,29 @@ impl Event {
             c.props.push(Property::new("STATUS", self.status.clone()));
         }
         if self.sequence > 0 {
-            c.props.push(Property::new("SEQUENCE", self.sequence.to_string()));
+            c.props
+                .push(Property::new("SEQUENCE", self.sequence.to_string()));
         }
         if !self.color.is_empty() {
             c.props.push(Property::new("COLOR", self.color.clone()));
         }
         c.props.push(Property::new("LAST-MODIFIED", stamp));
-        c.props.extend(self.raw.props.iter().filter(|p| !MANAGED.contains(&p.name.as_str())).cloned());
-        c.children.extend(self.raw.children.iter().filter(|x| x.name != "VALARM").cloned());
-        c.children.extend(self.alarms.iter().map(|a| a.to_component(&self.summary)));
+        c.props.extend(
+            self.raw
+                .props
+                .iter()
+                .filter(|p| !MANAGED.contains(&p.name.as_str()))
+                .cloned(),
+        );
+        c.children.extend(
+            self.raw
+                .children
+                .iter()
+                .filter(|x| x.name != "VALARM")
+                .cloned(),
+        );
+        c.children
+            .extend(self.alarms.iter().map(|a| a.to_component(&self.summary)));
         c
     }
 
@@ -570,7 +665,13 @@ impl Event {
 
     /// Unique key for a component: UID plus recurrence-id value.
     pub fn key(&self) -> (String, String) {
-        (self.uid.clone(), self.recurrence_id.as_ref().map(Time::value_string).unwrap_or_default())
+        (
+            self.uid.clone(),
+            self.recurrence_id
+                .as_ref()
+                .map(Time::value_string)
+                .unwrap_or_default(),
+        )
     }
 }
 
@@ -607,7 +708,12 @@ impl Instance {
 
 /// Expands events (masters plus detached recurrence overrides) into
 /// instances overlapping `[from, to)` (display-zone wall clock).
-pub fn expand(events: &[Event], from: NaiveDateTime, to: NaiveDateTime, zones: &Zones) -> Vec<Instance> {
+pub fn expand(
+    events: &[Event],
+    from: NaiveDateTime,
+    to: NaiveDateTime,
+    zones: &Zones,
+) -> Vec<Instance> {
     let mut out = Vec::new();
     // Overrides keyed by (uid, instant of recurrence id).
     let mut overrides: HashMap<(String, i64), usize> = HashMap::new();
@@ -616,13 +722,25 @@ pub fn expand(events: &[Event], from: NaiveDateTime, to: NaiveDateTime, zones: &
             overrides.insert((e.uid.clone(), r.instant(zones).timestamp()), i);
         }
     }
-    let masters: std::collections::HashSet<&str> =
-        events.iter().filter(|e| e.recurrence_id.is_none()).map(|e| e.uid.as_str()).collect();
+    let masters: std::collections::HashSet<&str> = events
+        .iter()
+        .filter(|e| e.recurrence_id.is_none())
+        .map(|e| e.uid.as_str())
+        .collect();
     for (i, e) in events.iter().enumerate() {
         if e.recurrence_id.is_some() {
             // Overrides are placed via their master; orphans stand alone.
             if !masters.contains(e.uid.as_str()) {
-                push_instance(&mut out, e, i, &e.start, e.recurrence_id.as_ref(), from, to, zones);
+                push_instance(
+                    &mut out,
+                    e,
+                    i,
+                    &e.start,
+                    e.recurrence_id.as_ref(),
+                    from,
+                    to,
+                    zones,
+                );
             }
             continue;
         }
@@ -650,9 +768,10 @@ pub fn expand(events: &[Event], from: NaiveDateTime, to: NaiveDateTime, zones: &
             let local = e.start.with_naive(rd.naive());
             starts.push(match rd {
                 Time::Utc(_) | Time::Zoned(..) => match &e.start {
-                    Time::Zoned(_, tz) => {
-                        rd.instant(zones).with_timezone(&zones.resolve(tz)).naive_local()
-                    }
+                    Time::Zoned(_, tz) => rd
+                        .instant(zones)
+                        .with_timezone(&zones.resolve(tz))
+                        .naive_local(),
                     _ => local.naive(),
                 },
                 _ => rd.naive(),
@@ -665,7 +784,11 @@ pub fn expand(events: &[Event], from: NaiveDateTime, to: NaiveDateTime, zones: &
             .iter()
             .map(|x| match (x, &e.start) {
                 // Date exclusions apply to the whole day of an occurrence.
-                (Time::Date(d), _) => e.start.with_naive(d.and_time(e.start.naive().time())).instant(zones).timestamp(),
+                (Time::Date(d), _) => e
+                    .start
+                    .with_naive(d.and_time(e.start.naive().time()))
+                    .instant(zones)
+                    .timestamp(),
                 _ => x.instant(zones).timestamp(),
             })
             .collect();
@@ -735,7 +858,8 @@ fn overlaps(s: NaiveDateTime, e: NaiveDateTime, from: NaiveDateTime, to: NaiveDa
 pub fn wrap_calendar(components: &[Component]) -> String {
     let mut cal = Component::new("VCALENDAR");
     cal.props.push(Property::new("VERSION", "2.0"));
-    cal.props.push(Property::new("PRODID", "-//Helix//Calendar//EN"));
+    cal.props
+        .push(Property::new("PRODID", "-//Helix//Calendar//EN"));
     cal.children.extend(components.iter().cloned());
     cal.to_ics()
 }
@@ -760,7 +884,10 @@ mod tests {
         assert_eq!(e.uid, "abc");
         assert_eq!(e.summary, "Stand-up, daily");
         assert_eq!(e.location, "Room 1");
-        assert_eq!(e.start, Time::Zoned(dt("2026-11-02 09:00"), "America/New_York".into()));
+        assert_eq!(
+            e.start,
+            Time::Zoned(dt("2026-11-02 09:00"), "America/New_York".into())
+        );
         assert_eq!(e.duration(), Duration::hours(1));
         assert_eq!(e.alarms[0].before_start, Some(Duration::minutes(15)));
         assert_eq!(e.exdates.len(), 1);
@@ -786,15 +913,26 @@ mod tests {
     #[test]
     fn expand_with_exdate_and_zone_conversion() {
         let e = Event::parse(EV).unwrap();
-        let inst = expand(&[e], dt("2026-11-01 00:00"), dt("2026-11-30 00:00"), &zones());
+        let inst = expand(
+            &[e],
+            dt("2026-11-01 00:00"),
+            dt("2026-11-30 00:00"),
+            &zones(),
+        );
         // 5 occurrences minus the excluded one.
         assert_eq!(inst.len(), 4);
         // 09:00 New York = 15:00 Berlin (both on standard time on Nov 2).
         assert_eq!(inst[0].start, dt("2026-11-02 15:00"));
         assert_eq!(inst[0].end, dt("2026-11-02 16:00"));
         assert_eq!(inst[0].rid, "20261102T090000");
-        assert_eq!(inst[1].start.date(), NaiveDate::from_ymd_opt(2026, 11, 3).unwrap());
-        assert_eq!(inst[2].start.date(), NaiveDate::from_ymd_opt(2026, 11, 5).unwrap());
+        assert_eq!(
+            inst[1].start.date(),
+            NaiveDate::from_ymd_opt(2026, 11, 3).unwrap()
+        );
+        assert_eq!(
+            inst[2].start.date(),
+            NaiveDate::from_ymd_opt(2026, 11, 5).unwrap()
+        );
     }
 
     #[test]
@@ -808,7 +946,12 @@ mod tests {
         )
         .unwrap();
         let z = Zones::new(Tz::UTC);
-        let inst = expand(&[master, moved], dt("2026-11-01 00:00"), dt("2026-12-01 00:00"), &z);
+        let inst = expand(
+            &[master, moved],
+            dt("2026-11-01 00:00"),
+            dt("2026-12-01 00:00"),
+            &z,
+        );
         assert_eq!(inst.len(), 3);
         assert_eq!(inst[1].start, dt("2026-11-10 12:00"));
         assert_eq!(inst[1].event, 1);
@@ -819,20 +962,34 @@ mod tests {
     fn all_day_events() {
         let e = Event::parse("BEGIN:VEVENT\nUID:b\nDTSTART;VALUE=DATE:20261224\nDTEND;VALUE=DATE:20261227\nEND:VEVENT\n").unwrap();
         assert!(e.all_day());
-        let inst = expand(&[e], dt("2026-12-01 00:00"), dt("2027-01-01 00:00"), &zones());
+        let inst = expand(
+            &[e],
+            dt("2026-12-01 00:00"),
+            dt("2027-01-01 00:00"),
+            &zones(),
+        );
         assert_eq!(inst.len(), 1);
         assert!(inst[0].spans_days());
         assert!(inst[0].on_day(NaiveDate::from_ymd_opt(2026, 12, 26).unwrap()));
         assert!(!inst[0].on_day(NaiveDate::from_ymd_opt(2026, 12, 27).unwrap()));
         // Missing DTEND on a date event lasts one day.
-        let e = Event::parse("BEGIN:VEVENT\nUID:c\nDTSTART;VALUE=DATE:20261224\nEND:VEVENT\n").unwrap();
-        assert_eq!(e.end, Time::Date(NaiveDate::from_ymd_opt(2026, 12, 25).unwrap()));
+        let e =
+            Event::parse("BEGIN:VEVENT\nUID:c\nDTSTART;VALUE=DATE:20261224\nEND:VEVENT\n").unwrap();
+        assert_eq!(
+            e.end,
+            Time::Date(NaiveDate::from_ymd_opt(2026, 12, 25).unwrap())
+        );
     }
 
     #[test]
     fn yearly_birthday_outside_window_is_skipped() {
         let e = Event::parse("BEGIN:VEVENT\nUID:y\nDTSTART;VALUE=DATE:19900517\nDTEND;VALUE=DATE:19900518\nRRULE:FREQ=YEARLY\nEND:VEVENT\n").unwrap();
-        let inst = expand(&[e], dt("2026-05-01 00:00"), dt("2026-06-01 00:00"), &zones());
+        let inst = expand(
+            &[e],
+            dt("2026-05-01 00:00"),
+            dt("2026-06-01 00:00"),
+            &zones(),
+        );
         assert_eq!(inst.len(), 1);
         assert_eq!(inst[0].start, dt("2026-05-17 00:00"));
         assert_eq!(inst[0].rid, "19900517".replace("1990", "2026"));
@@ -848,24 +1005,39 @@ mod tests {
         assert_eq!(format_duration(Duration::minutes(-15)), "-PT15M");
         assert_eq!(format_duration(Duration::hours(26)), "P1DT2H");
         assert_eq!(format_duration(Duration::weeks(1)), "P1W");
-        let ev = Event::parse("BEGIN:VEVENT\nUID:d\nDTSTART:20260101T100000Z\nDURATION:PT90M\nEND:VEVENT\n").unwrap();
+        let ev = Event::parse(
+            "BEGIN:VEVENT\nUID:d\nDTSTART:20260101T100000Z\nDURATION:PT90M\nEND:VEVENT\n",
+        )
+        .unwrap();
         assert_eq!(ev.end, Time::Utc(dt("2026-01-01 11:30")));
     }
 
     #[test]
     fn tzid_resolution() {
-        assert_eq!(resolve_tzid("/freeassociation.sourceforge.net/Tzfile/Europe/Paris"), Some(chrono_tz::Europe::Paris));
-        assert_eq!(resolve_tzid("/softwarestudio.org/Olson_20011030_5/America/Chicago"), Some(chrono_tz::America::Chicago));
+        assert_eq!(
+            resolve_tzid("/freeassociation.sourceforge.net/Tzfile/Europe/Paris"),
+            Some(chrono_tz::Europe::Paris)
+        );
+        assert_eq!(
+            resolve_tzid("/softwarestudio.org/Olson_20011030_5/America/Chicago"),
+            Some(chrono_tz::America::Chicago)
+        );
         assert_eq!(resolve_tzid("Nowhere/Special"), None);
         let mut z = zones();
         z.add_vtimezones(&parse(EV));
-        assert_eq!(z.resolve("/freeassociation.sourceforge.net/Tzfile/America/New_York"), chrono_tz::America::New_York);
+        assert_eq!(
+            z.resolve("/freeassociation.sourceforge.net/Tzfile/America/New_York"),
+            chrono_tz::America::New_York
+        );
         assert_eq!(z.resolve("Weird Zone"), chrono_tz::Europe::Berlin);
     }
 
     #[test]
     fn new_alarm_serializes() {
-        let mut e = Event::new(Time::Utc(dt("2026-01-01 10:00")), Time::Utc(dt("2026-01-01 11:00")));
+        let mut e = Event::new(
+            Time::Utc(dt("2026-01-01 10:00")),
+            Time::Utc(dt("2026-01-01 11:00")),
+        );
         e.summary = "Dentist".into();
         e.alarms.push(Alarm::before(Duration::minutes(30)));
         let text = e.to_ics(Utc::now());

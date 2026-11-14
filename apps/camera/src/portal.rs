@@ -30,7 +30,11 @@ pub fn should_use_portal() -> bool {
 /// A fresh, valid `handle_token` (letters, digits and `_` only).
 pub fn handle_token() -> String {
     static COUNTER: AtomicU32 = AtomicU32::new(0);
-    format!("helix_camera_{}_{}", std::process::id(), COUNTER.fetch_add(1, Ordering::Relaxed))
+    format!(
+        "helix_camera_{}_{}",
+        std::process::id(),
+        COUNTER.fetch_add(1, Ordering::Relaxed)
+    )
 }
 
 /// Options for `AccessCamera`.
@@ -66,7 +70,10 @@ pub fn access_camera() -> zbus::Result<Access> {
         return Ok(Access::NoCamera);
     }
     let token = handle_token();
-    let unique = conn.unique_name().map(|n| n.to_string()).unwrap_or_default();
+    let unique = conn
+        .unique_name()
+        .map(|n| n.to_string())
+        .unwrap_or_default();
     let predicted = request_path(&unique, &token);
     let request = zbus::blocking::Proxy::new(&conn, BUS_NAME, predicted.clone(), REQUEST_IFACE)?;
     let mut responses = request.receive_signal("Response")?;

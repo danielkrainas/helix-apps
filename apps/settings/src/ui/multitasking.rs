@@ -23,17 +23,39 @@ impl Panel for MultitaskingPanel {
         let page = widgets::page();
 
         let general = widgets::group("General");
-        general.add(&switch(&iface, "enable-hot-corners", true, false, "Hot Corner", "Touch the top-left corner to open the Activities Overview"));
-        general.add(&switch(&mutter, "edge-tiling", true, false, "Active Screen Edges", "Drag windows against the top, left, and right screen edges to resize them"));
+        general.add(&switch(
+            &iface,
+            "enable-hot-corners",
+            true,
+            false,
+            "Hot Corner",
+            "Touch the top-left corner to open the Activities Overview",
+        ));
+        general.add(&switch(
+            &mutter,
+            "edge-tiling",
+            true,
+            false,
+            "Active Screen Edges",
+            "Drag windows against the top, left, and right screen edges to resize them",
+        ));
         page.add(&general);
 
         let ws = widgets::group("Workspaces");
         let dynamic = gtk::CheckButton::new();
         let fixed = gtk::CheckButton::new();
         fixed.set_group(Some(&dynamic));
-        let dyn_row = adw::ActionRow::builder().title("Dynamic Workspaces").subtitle("Automatically removes empty workspaces").activatable_widget(&dynamic).build();
+        let dyn_row = adw::ActionRow::builder()
+            .title("Dynamic Workspaces")
+            .subtitle("Automatically removes empty workspaces")
+            .activatable_widget(&dynamic)
+            .build();
         dyn_row.add_prefix(&dynamic);
-        let fixed_row = adw::ActionRow::builder().title("Fixed Number of Workspaces").subtitle("Specify a number of permanent workspaces").activatable_widget(&fixed).build();
+        let fixed_row = adw::ActionRow::builder()
+            .title("Fixed Number of Workspaces")
+            .subtitle("Specify a number of permanent workspaces")
+            .activatable_widget(&fixed)
+            .build();
         fixed_row.add_prefix(&fixed);
         let count = adw::SpinRow::with_range(1.0, 36.0, 1.0);
         count.set_title("Number of Workspaces");
@@ -56,11 +78,16 @@ impl Panel for MultitaskingPanel {
                 }
             });
         }
-        fixed.bind_property("active", &count, "sensitive").sync_create().build();
+        fixed
+            .bind_property("active", &count, "sensitive")
+            .sync_create()
+            .build();
         let sync = {
             let (d, f, p) = (dynamic.downgrade(), fixed.downgrade(), mutter.clone());
             move || {
-                let (Some(d), Some(f)) = (d.upgrade(), f.upgrade()) else { return };
+                let (Some(d), Some(f)) = (d.upgrade(), f.upgrade()) else {
+                    return;
+                };
                 if p.get::<bool>("dynamic-workspaces", true) {
                     d.set_active(true);
                 } else {
@@ -85,11 +112,25 @@ impl Panel for MultitaskingPanel {
         page.add(&ws);
 
         let multi = widgets::group("Multi-Monitor");
-        multi.add(&switch(&mutter, "workspaces-only-on-primary", true, false, "Workspaces on Primary Display Only", "Other displays show the same windows on every workspace"));
+        multi.add(&switch(
+            &mutter,
+            "workspaces-only-on-primary",
+            true,
+            false,
+            "Workspaces on Primary Display Only",
+            "Other displays show the same windows on every workspace",
+        ));
         page.add(&multi);
 
         let apps = widgets::group("App Switching");
-        apps.add(&switch(&switcher, "current-workspace-only", false, false, "Include Apps From the Current Workspace Only", "Otherwise apps from all workspaces are included"));
+        apps.add(&switch(
+            &switcher,
+            "current-workspace-only",
+            false,
+            false,
+            "Include Apps From the Current Workspace Only",
+            "Otherwise apps from all workspaces are included",
+        ));
         page.add(&apps);
         page.upcast()
     }

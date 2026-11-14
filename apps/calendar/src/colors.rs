@@ -1,8 +1,9 @@
 //! Calendar colours.
 
 /// Palette offered for new calendars (GNOME HIG palette, "3" shades).
-pub const PALETTE: [&str; 8] =
-    ["#3584e4", "#33d17a", "#f6d32d", "#ff7800", "#e01b24", "#9141ac", "#986a44", "#77767b"];
+pub const PALETTE: [&str; 8] = [
+    "#3584e4", "#33d17a", "#f6d32d", "#ff7800", "#e01b24", "#9141ac", "#986a44", "#77767b",
+];
 
 pub const DEFAULT: &str = "#3584e4";
 
@@ -14,9 +15,17 @@ pub fn parse_hex(s: &str) -> Option<(u8, u8, u8)> {
     }
     let ch = |i: usize, w: usize| u32::from_str_radix(&h[i * w..i * w + w], 16).ok();
     match h.len() {
-        3 => Some(((ch(0, 1)? * 17) as u8, (ch(1, 1)? * 17) as u8, (ch(2, 1)? * 17) as u8)),
+        3 => Some((
+            (ch(0, 1)? * 17) as u8,
+            (ch(1, 1)? * 17) as u8,
+            (ch(2, 1)? * 17) as u8,
+        )),
         6 => Some((ch(0, 2)? as u8, ch(1, 2)? as u8, ch(2, 2)? as u8)),
-        12 => Some(((ch(0, 4)? >> 8) as u8, (ch(1, 4)? >> 8) as u8, (ch(2, 4)? >> 8) as u8)),
+        12 => Some((
+            (ch(0, 4)? >> 8) as u8,
+            (ch(1, 4)? >> 8) as u8,
+            (ch(2, 4)? >> 8) as u8,
+        )),
         _ => None,
     }
 }
@@ -27,7 +36,9 @@ pub fn to_hex((r, g, b): (u8, u8, u8)) -> String {
 
 /// Normalized `#rrggbb`, or the default colour.
 pub fn normalize(s: Option<&str>) -> String {
-    s.and_then(parse_hex).map(to_hex).unwrap_or_else(|| DEFAULT.to_string())
+    s.and_then(parse_hex)
+        .map(to_hex)
+        .unwrap_or_else(|| DEFAULT.to_string())
 }
 
 /// Readable text colour (black or white) on `bg`.
@@ -51,7 +62,11 @@ pub fn contrast_fg(bg: &str) -> &'static str {
 
 /// A palette colour not yet used by `existing`, else the first.
 pub fn next_free(existing: &[String]) -> &'static str {
-    PALETTE.iter().find(|c| !existing.iter().any(|e| e.eq_ignore_ascii_case(c))).copied().unwrap_or(PALETTE[0])
+    PALETTE
+        .iter()
+        .find(|c| !existing.iter().any(|e| e.eq_ignore_ascii_case(c)))
+        .copied()
+        .unwrap_or(PALETTE[0])
 }
 
 #[cfg(test)]

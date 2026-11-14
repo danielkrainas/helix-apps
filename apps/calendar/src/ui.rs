@@ -77,7 +77,11 @@ fn load_css() {
          .agenda-time { font-feature-settings: \"tnum\"; font-size: smaller; opacity: 0.7; }",
     );
     if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &css,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 }
 
@@ -185,14 +189,26 @@ impl Ui {
 
         // Header.
         let header = adw::HeaderBar::new();
-        let new_button = gtk::Button::builder().icon_name("list-add-symbolic").tooltip_text("New Event").build();
+        let new_button = gtk::Button::builder()
+            .icon_name("list-add-symbolic")
+            .tooltip_text("New Event")
+            .build();
         new_button.set_action_name(Some("win.new-event"));
-        let sidebar_button = gtk::ToggleButton::builder().icon_name("sidebar-show-symbolic").tooltip_text("Toggle Sidebar").build();
+        let sidebar_button = gtk::ToggleButton::builder()
+            .icon_name("sidebar-show-symbolic")
+            .tooltip_text("Toggle Sidebar")
+            .build();
         let today_button = gtk::Button::with_label("Today");
         today_button.set_action_name(Some("win.today"));
-        let prev = gtk::Button::builder().icon_name("go-previous-symbolic").tooltip_text("Previous").build();
+        let prev = gtk::Button::builder()
+            .icon_name("go-previous-symbolic")
+            .tooltip_text("Previous")
+            .build();
         prev.set_action_name(Some("win.previous"));
-        let next = gtk::Button::builder().icon_name("go-next-symbolic").tooltip_text("Next").build();
+        let next = gtk::Button::builder()
+            .icon_name("go-next-symbolic")
+            .tooltip_text("Next")
+            .build();
         next.set_action_name(Some("win.next"));
         let nav = gtk::Box::builder().css_classes(["linked"]).build();
         nav.append(&prev);
@@ -201,7 +217,10 @@ impl Ui {
         header.pack_start(&new_button);
         header.pack_start(&today_button);
         header.pack_start(&nav);
-        let title = gtk::Label::builder().css_classes(["title"]).ellipsize(gtk::pango::EllipsizeMode::End).build();
+        let title = gtk::Label::builder()
+            .css_classes(["title"])
+            .ellipsize(gtk::pango::EllipsizeMode::End)
+            .build();
         header.set_title_widget(Some(&title));
         let week_toggle = gtk::ToggleButton::with_label("Week");
         let month_toggle = gtk::ToggleButton::with_label("Month");
@@ -218,28 +237,57 @@ impl Ui {
         s2.append(Some("_Keyboard Shortcuts"), Some("win.shortcuts"));
         s2.append(Some("_About Calendar"), Some("app.about"));
         menu.append_section(None, &s2);
-        let menu_button = gtk::MenuButton::builder().icon_name("open-menu-symbolic").menu_model(&menu).tooltip_text("Main Menu").build();
+        let menu_button = gtk::MenuButton::builder()
+            .icon_name("open-menu-symbolic")
+            .menu_model(&menu)
+            .tooltip_text("Main Menu")
+            .build();
         menu_button.set_primary(true);
-        let search_button = gtk::ToggleButton::builder().icon_name("system-search-symbolic").tooltip_text("Search").build();
+        let search_button = gtk::ToggleButton::builder()
+            .icon_name("system-search-symbolic")
+            .tooltip_text("Search")
+            .build();
         header.pack_end(&menu_button);
         header.pack_end(&search_button);
         header.pack_end(&switcher);
 
-        let search = gtk::SearchEntry::builder().placeholder_text("Search events").hexpand(true).build();
-        let search_bar = gtk::SearchBar::builder().child(&adw::Clamp::builder().maximum_size(400).child(&search).build()).build();
+        let search = gtk::SearchEntry::builder()
+            .placeholder_text("Search events")
+            .hexpand(true)
+            .build();
+        let search_bar = gtk::SearchBar::builder()
+            .child(
+                &adw::Clamp::builder()
+                    .maximum_size(400)
+                    .child(&search)
+                    .build(),
+            )
+            .build();
         search_bar.connect_entry(&search);
-        search_button.bind_property("active", &search_bar, "search-mode-enabled").bidirectional().build();
+        search_button
+            .bind_property("active", &search_bar, "search-mode-enabled")
+            .bidirectional()
+            .build();
 
         // Sidebar.
-        let picker = gtk::Calendar::builder().margin_start(6).margin_end(6).margin_top(6).build();
+        let picker = gtk::Calendar::builder()
+            .margin_start(6)
+            .margin_end(6)
+            .margin_top(6)
+            .build();
         picker.set_show_week_numbers(false);
-        let cal_list = gtk::ListBox::builder().css_classes(["navigation-sidebar"]).selection_mode(gtk::SelectionMode::None).build();
+        let cal_list = gtk::ListBox::builder()
+            .css_classes(["navigation-sidebar"])
+            .selection_mode(gtk::SelectionMode::None)
+            .build();
         let agenda_title = label("", &["heading"]);
         agenda_title.set_xalign(0.0);
         agenda_title.set_margin_start(12);
         agenda_title.set_margin_top(12);
         agenda_title.set_wrap(true);
-        let agenda = gtk::ListBox::builder().css_classes(["navigation-sidebar"]).build();
+        let agenda = gtk::ListBox::builder()
+            .css_classes(["navigation-sidebar"])
+            .build();
         let side_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
         side_box.append(&picker);
         let cal_header = label("Calendars", &["heading"]);
@@ -250,7 +298,11 @@ impl Ui {
         side_box.append(&cal_list);
         side_box.append(&agenda_title);
         side_box.append(&agenda);
-        let side_scroll = gtk::ScrolledWindow::builder().child(&side_box).hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).build();
+        let side_scroll = gtk::ScrolledWindow::builder()
+            .child(&side_box)
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vexpand(true)
+            .build();
 
         // Month view.
         let month_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -263,24 +315,44 @@ impl Ui {
         let overlay = gtk::Overlay::new();
         overlay.set_child(Some(&week_area));
         overlay.add_overlay(&week_fixed);
-        let week_scroll = gtk::ScrolledWindow::builder().child(&overlay).hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).build();
+        let week_scroll = gtk::ScrolledWindow::builder()
+            .child(&overlay)
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vexpand(true)
+            .build();
         let week_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         week_box.add_css_class("month-grid");
         week_box.append(&week_header);
         week_box.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
         week_box.append(&week_scroll);
 
-        let view_stack = gtk::Stack::builder().transition_type(gtk::StackTransitionType::Crossfade).build();
+        let view_stack = gtk::Stack::builder()
+            .transition_type(gtk::StackTransitionType::Crossfade)
+            .build();
         view_stack.add_named(&month_box, Some("month"));
         view_stack.add_named(&week_box, Some("week"));
 
-        let split = adw::OverlaySplitView::builder().sidebar(&side_scroll).content(&view_stack).build();
+        let split = adw::OverlaySplitView::builder()
+            .sidebar(&side_scroll)
+            .content(&view_stack)
+            .build();
         split.set_min_sidebar_width(250.0);
         split.set_max_sidebar_width(300.0);
-        split.bind_property("show-sidebar", &sidebar_button, "active").bidirectional().sync_create().build();
+        split
+            .bind_property("show-sidebar", &sidebar_button, "active")
+            .bidirectional()
+            .sync_create()
+            .build();
 
-        let unavailable_page = adw::StatusPage::builder().icon_name("dialog-warning-symbolic").title("Calendar Service Unavailable").build();
-        let retry = gtk::Button::builder().label("Retry").css_classes(["pill"]).halign(gtk::Align::Center).build();
+        let unavailable_page = adw::StatusPage::builder()
+            .icon_name("dialog-warning-symbolic")
+            .title("Calendar Service Unavailable")
+            .build();
+        let retry = gtk::Button::builder()
+            .label("Retry")
+            .css_classes(["pill"])
+            .halign(gtk::Align::Center)
+            .build();
         unavailable_page.set_child(Some(&retry));
 
         let main_stack = gtk::Stack::new();
@@ -301,13 +373,21 @@ impl Ui {
 
         let color_css = gtk::CssProvider::new();
         if let Some(display) = gtk::gdk::Display::default() {
-            gtk::style_context_add_provider_for_display(&display, &color_css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &color_css,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
+            );
         }
 
         let (tx, rx) = async_channel::unbounded();
         let backend = backend::start(tx);
         let start = opts.date.unwrap_or_else(today);
-        let view = if prefs.get_enum_nick("active-view", "month") == "week" { ViewKind::Week } else { ViewKind::Month };
+        let view = if prefs.get_enum_nick("active-view", "month") == "week" {
+            ViewKind::Week
+        } else {
+            ViewKind::Month
+        };
         let zoom = prefs.get("week-view-zoom-level", 1.0f64).clamp(0.5, 3.0);
 
         let ui = Rc::new(Ui {
@@ -318,7 +398,10 @@ impl Ui {
             defaults,
             backend,
             zones: RefCell::new(Zones::system()),
-            state: RefCell::new(State { startup: Some(opts.clone()), ..Default::default() }),
+            state: RefCell::new(State {
+                startup: Some(opts.clone()),
+                ..Default::default()
+            }),
             first_weekday: dates::first_weekday(),
             date: Cell::new(start),
             selected: Cell::new(start),
@@ -339,7 +422,11 @@ impl Ui {
             week_scroll,
             week_area,
             week_fixed,
-            week_layout: RefCell::new(WeekLayout { days: vec![], events: vec![], labels: vec![] }),
+            week_layout: RefCell::new(WeekLayout {
+                days: vec![],
+                events: vec![],
+                labels: vec![],
+            }),
             week_scrolled_once: Cell::new(false),
             picker,
             cal_list,
@@ -404,7 +491,9 @@ impl Ui {
         self.picker.connect_day_selected(move |c| {
             let Some(ui) = weak.upgrade() else { return };
             let g = c.date();
-            if let Some(d) = NaiveDate::from_ymd_opt(g.year(), g.month() as u32, g.day_of_month() as u32) {
+            if let Some(d) =
+                NaiveDate::from_ymd_opt(g.year(), g.month() as u32, g.day_of_month() as u32)
+            {
                 if d != ui.selected.get() {
                     ui.navigate_to(d);
                 }
@@ -433,11 +522,12 @@ impl Ui {
             ui.backend.send(Cmd::Search { query: q, tag });
         });
         let weak = Rc::downgrade(self);
-        self.search_bar.connect_search_mode_enabled_notify(move |b| {
-            if let (Some(ui), false) = (weak.upgrade(), b.is_search_mode()) {
-                ui.search.set_text("");
-            }
-        });
+        self.search_bar
+            .connect_search_mode_enabled_notify(move |b| {
+                if let (Some(ui), false) = (weak.upgrade(), b.is_search_mode()) {
+                    ui.search.set_text("");
+                }
+            });
 
         // Week grid drawing and input.
         let weak = Rc::downgrade(self);
@@ -457,12 +547,21 @@ impl Ui {
         click.connect_pressed(move |g, n, x, y| {
             let Some(ui) = weak.upgrade() else { return };
             let w = g.widget().map(|w| w.width()).unwrap_or(0);
-            let Some((day, minutes)) = ui.week_hit(w, x, y) else { return };
+            let Some((day, minutes)) = ui.week_hit(w, x, y) else {
+                return;
+            };
             ui.selected.set(day);
             ui.render_agenda();
             if n == 2 {
                 let start = day.and_time(NaiveTime::MIN) + Duration::minutes(minutes / 30 * 30);
-                editor::open(&ui, Target::New { start, end: start + Duration::hours(1), all_day: false });
+                editor::open(
+                    &ui,
+                    Target::New {
+                        start,
+                        end: start + Duration::hours(1),
+                        all_day: false,
+                    },
+                );
             }
         });
         self.week_fixed.parent().unwrap().add_controller(click);
@@ -470,8 +569,12 @@ impl Ui {
         scroll.set_propagation_phase(gtk::PropagationPhase::Capture);
         let weak = Rc::downgrade(self);
         scroll.connect_scroll(move |c, _, dy| {
-            let Some(ui) = weak.upgrade() else { return glib::Propagation::Proceed };
-            if c.current_event_state().contains(gtk::gdk::ModifierType::CONTROL_MASK) {
+            let Some(ui) = weak.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
+            if c.current_event_state()
+                .contains(gtk::gdk::ModifierType::CONTROL_MASK)
+            {
                 ui.set_zoom(ui.zoom.get() * if dy < 0.0 { 1.1 } else { 1.0 / 1.1 });
                 return glib::Propagation::Stop;
             }
@@ -510,23 +613,63 @@ impl Ui {
                 app.set_accels_for_action(&format!("win.{name}"), accels);
             }
         };
-        add("new-event", &["<Control>n"], Box::new(|ui| ui.new_event_on(ui.selected.get(), false)));
-        add("today", &["<Control>t"], Box::new(|ui| ui.navigate_to(today())));
+        add(
+            "new-event",
+            &["<Control>n"],
+            Box::new(|ui| ui.new_event_on(ui.selected.get(), false)),
+        );
+        add(
+            "today",
+            &["<Control>t"],
+            Box::new(|ui| ui.navigate_to(today())),
+        );
         add("previous", &["<Alt>Left"], Box::new(|ui| ui.step(-1)));
         add("next", &["<Alt>Right"], Box::new(|ui| ui.step(1)));
-        add("week-view", &["<Control>1"], Box::new(|ui| ui.week_toggle.set_active(true)));
-        add("month-view", &["<Control>2"], Box::new(|ui| ui.month_toggle.set_active(true)));
-        add("search", &["<Control>f"], Box::new(|ui| {
-            ui.search_bar.set_search_mode(true);
-            ui.search.grab_focus();
-        }));
-        add("sidebar", &["F9"], Box::new(|ui| ui.split.set_show_sidebar(!ui.split.shows_sidebar())));
-        add("zoom-in", &["<Control>plus", "<Control>equal"], Box::new(|ui| ui.set_zoom(ui.zoom.get() * 1.25)));
-        add("zoom-out", &["<Control>minus"], Box::new(|ui| ui.set_zoom(ui.zoom.get() / 1.25)));
-        add("zoom-reset", &["<Control>0"], Box::new(|ui| ui.set_zoom(1.0)));
+        add(
+            "week-view",
+            &["<Control>1"],
+            Box::new(|ui| ui.week_toggle.set_active(true)),
+        );
+        add(
+            "month-view",
+            &["<Control>2"],
+            Box::new(|ui| ui.month_toggle.set_active(true)),
+        );
+        add(
+            "search",
+            &["<Control>f"],
+            Box::new(|ui| {
+                ui.search_bar.set_search_mode(true);
+                ui.search.grab_focus();
+            }),
+        );
+        add(
+            "sidebar",
+            &["F9"],
+            Box::new(|ui| ui.split.set_show_sidebar(!ui.split.shows_sidebar())),
+        );
+        add(
+            "zoom-in",
+            &["<Control>plus", "<Control>equal"],
+            Box::new(|ui| ui.set_zoom(ui.zoom.get() * 1.25)),
+        );
+        add(
+            "zoom-out",
+            &["<Control>minus"],
+            Box::new(|ui| ui.set_zoom(ui.zoom.get() / 1.25)),
+        );
+        add(
+            "zoom-reset",
+            &["<Control>0"],
+            Box::new(|ui| ui.set_zoom(1.0)),
+        );
         add("manage", &[], Box::new(crate::manage::open));
         add("import", &["<Control>i"], Box::new(|ui| ui.choose_import()));
-        add("shortcuts", &["<Control>question"], Box::new(|ui| show_shortcuts(&ui.window)));
+        add(
+            "shortcuts",
+            &["<Control>question"],
+            Box::new(|ui| show_shortcuts(&ui.window)),
+        );
     }
 
     // ----- helpers used by the editor and dialogs -----
@@ -554,14 +697,22 @@ impl Ui {
             .sources
             .iter()
             .filter(|s| s.is(SourceKind::Calendar) && s.enabled())
-            .map(|s| (s.uid.clone(), s.display_name(), st.writable.get(&s.uid).copied().unwrap_or(false)))
+            .map(|s| {
+                (
+                    s.uid.clone(),
+                    s.display_name(),
+                    st.writable.get(&s.uid).copied().unwrap_or(false),
+                )
+            })
             .collect();
         v.sort_by_key(|(_, n, _)| n.to_lowercase());
         v
     }
 
     pub fn default_calendar(&self) -> String {
-        let configured = self.defaults.get("default-calendar", "system-calendar".to_string());
+        let configured = self
+            .defaults
+            .get("default-calendar", "system-calendar".to_string());
         let st = self.state.borrow();
         if st.writable.get(&configured).copied().unwrap_or(false) {
             return configured;
@@ -569,7 +720,12 @@ impl Ui {
         if st.writable.get("system-calendar").copied().unwrap_or(false) {
             return "system-calendar".into();
         }
-        let mut w: Vec<&String> = st.writable.iter().filter(|(_, w)| **w).map(|(k, _)| k).collect();
+        let mut w: Vec<&String> = st
+            .writable
+            .iter()
+            .filter(|(_, w)| **w)
+            .map(|(k, _)| k)
+            .collect();
         w.sort();
         w.first().map(|s| s.to_string()).unwrap_or(configured)
     }
@@ -584,8 +740,16 @@ impl Ui {
         let key = (cal.to_string(), uid.to_string());
         self.state.borrow_mut().pending_delete.insert(key.clone());
         self.schedule_render();
-        let title = if summary.trim().is_empty() { "Event deleted".to_string() } else { format!("“{}” deleted", summary.trim()) };
-        let toast = adw::Toast::builder().title(glib::markup_escape_text(&title).as_str()).button_label("Undo").timeout(5).build();
+        let title = if summary.trim().is_empty() {
+            "Event deleted".to_string()
+        } else {
+            format!("“{}” deleted", summary.trim())
+        };
+        let toast = adw::Toast::builder()
+            .title(glib::markup_escape_text(&title).as_str())
+            .button_label("Undo")
+            .timeout(5)
+            .build();
         let undone = Rc::new(Cell::new(false));
         let (weak, u, k) = (Rc::downgrade(self), undone.clone(), key.clone());
         toast.connect_button_clicked(move |_| {
@@ -617,7 +781,8 @@ impl Ui {
     }
 
     fn flush_deletes(&self) {
-        let keys: Vec<(String, String)> = self.state.borrow().pending_delete.iter().cloned().collect();
+        let keys: Vec<(String, String)> =
+            self.state.borrow().pending_delete.iter().cloned().collect();
         for k in &keys {
             self.commit_delete(k);
         }
@@ -627,13 +792,24 @@ impl Ui {
     }
 
     fn cal_class(&self, uid: &str) -> String {
-        self.cal_classes.borrow().get(uid).cloned().unwrap_or_else(|| "cal-default".into())
+        self.cal_classes
+            .borrow()
+            .get(uid)
+            .cloned()
+            .unwrap_or_else(|| "cal-default".into())
     }
 
     fn update_color_css(&self) {
         let mut css = String::from(".cal-default { background-color: #3584e4; color: #ffffff; }\n");
         let mut map = HashMap::new();
-        for (i, s) in self.state.borrow().sources.iter().filter(|s| s.is(SourceKind::Calendar)).enumerate() {
+        for (i, s) in self
+            .state
+            .borrow()
+            .sources
+            .iter()
+            .filter(|s| s.is(SourceKind::Calendar))
+            .enumerate()
+        {
             let class = format!("cal-{i}");
             let bg = colors::normalize(s.color());
             css.push_str(&format!(
@@ -702,8 +878,17 @@ impl Ui {
             }
             Msg::Loaded { cal, gen } => {
                 if self.state.borrow().gens.get(&cal) == Some(&gen) {
-                    let n = self.state.borrow().store.calendars.get(&cal).map_or(0, |m| m.len());
-                    glib::g_debug!("helix-calendar", "calendar {cal} loaded with {n} components");
+                    let n = self
+                        .state
+                        .borrow()
+                        .store
+                        .calendars
+                        .get(&cal)
+                        .map_or(0, |m| m.len());
+                    glib::g_debug!(
+                        "helix-calendar",
+                        "calendar {cal} loaded with {n} components"
+                    );
                     self.state.borrow_mut().loaded.insert(cal);
                     self.apply_startup();
                 }
@@ -725,12 +910,29 @@ impl Ui {
                     let (s, en) = (e.start.local(&zones), e.end.local(&zones));
                     drop(zones);
                     self.navigate_to(s.date());
-                    let rid = if e.is_recurring() { e.start.value_string() } else { String::new() };
-                    editor::open(self, Target::Existing { cal, component: e.key(), rid, start: s, end: en, all_day: e.all_day() });
+                    let rid = if e.is_recurring() {
+                        e.start.value_string()
+                    } else {
+                        String::new()
+                    };
+                    editor::open(
+                        self,
+                        Target::Existing {
+                            cal,
+                            component: e.key(),
+                            rid,
+                            start: s,
+                            end: en,
+                            all_day: e.all_day(),
+                        },
+                    );
                 }
                 None => self.toast("Event not found"),
             },
-            Msg::Imported(n) => self.toast(&format!("Imported {n} event{}", if n == 1 { "" } else { "s" })),
+            Msg::Imported(n) => self.toast(&format!(
+                "Imported {n} event{}",
+                if n == 1 { "" } else { "s" }
+            )),
             Msg::Error(e) => self.toast(&e),
         }
     }
@@ -743,7 +945,9 @@ impl Ui {
         if !ready {
             return;
         }
-        let Some(opts) = self.state.borrow_mut().startup.take() else { return };
+        let Some(opts) = self.state.borrow_mut().startup.take() else {
+            return;
+        };
         if let Some(uid) = opts.uuid {
             self.backend.send(Cmd::Find(uid));
         }
@@ -753,8 +957,12 @@ impl Ui {
 
     fn set_view(self: &Rc<Self>, v: ViewKind) {
         self.view.set(v);
-        self.prefs.set_enum_nick("active-view", if v == ViewKind::Week { "week" } else { "month" });
-        self.view_stack.set_visible_child_name(if v == ViewKind::Week { "week" } else { "month" });
+        self.prefs.set_enum_nick(
+            "active-view",
+            if v == ViewKind::Week { "week" } else { "month" },
+        );
+        self.view_stack
+            .set_visible_child_name(if v == ViewKind::Week { "week" } else { "month" });
         self.update_range();
         self.render();
     }
@@ -770,7 +978,9 @@ impl Ui {
     fn navigate_to(self: &Rc<Self>, d: NaiveDate) {
         self.date.set(d);
         self.selected.set(d);
-        if let Ok(g) = glib::DateTime::from_local(d.year(), d.month() as i32, d.day() as i32, 0, 0, 0.0) {
+        if let Ok(g) =
+            glib::DateTime::from_local(d.year(), d.month() as i32, d.day() as i32, 0, 0, 0.0)
+        {
             self.picker.select_day(&g);
         }
         self.update_range();
@@ -787,7 +997,11 @@ impl Ui {
         let local = self.zones.borrow().local;
         let f = ical::to_utc(local, from.and_time(NaiveTime::MIN));
         let t = ical::to_utc(local, to.and_time(NaiveTime::MIN));
-        let changed = self.state.borrow().range.is_none_or(|(a, b)| a > f || b < t);
+        let changed = self
+            .state
+            .borrow()
+            .range
+            .is_none_or(|(a, b)| a > f || b < t);
         if changed {
             // Request a little more than needed so small moves need no new views.
             let f = f - Duration::days(14);
@@ -827,8 +1041,16 @@ impl Ui {
     fn items(&self, from: NaiveDate, to: NaiveDate) -> Vec<Item> {
         let st = self.state.borrow();
         let zones = self.zones.borrow();
-        let mut items = st.store.items(from.and_time(NaiveTime::MIN), to.and_time(NaiveTime::MIN), &zones, |_| true);
-        items.retain(|i| !st.pending_delete.contains(&(i.calendar.clone(), i.uid.clone())));
+        let mut items = st.store.items(
+            from.and_time(NaiveTime::MIN),
+            to.and_time(NaiveTime::MIN),
+            &zones,
+            |_| true,
+        );
+        items.retain(|i| {
+            !st.pending_delete
+                .contains(&(i.calendar.clone(), i.uid.clone()))
+        });
         items
     }
 
@@ -841,7 +1063,8 @@ impl Ui {
             }
             ViewKind::Week => {
                 let ws = dates::week_start(d, self.first_weekday);
-                self.title.set_label(&dates::range_title(ws, ws + Duration::days(6)));
+                self.title
+                    .set_label(&dates::range_title(ws, ws + Duration::days(6)));
                 self.render_week();
             }
         }
@@ -851,12 +1074,23 @@ impl Ui {
     fn chip(self: &Rc<Self>, item: &Item, show_time: bool) -> gtk::Button {
         let twelve = self.twelve();
         let text = if show_time && !item.spans_days() {
-            format!("{} {}", dates::format_time(item.start.time(), twelve), item.title())
+            format!(
+                "{} {}",
+                dates::format_time(item.start.time(), twelve),
+                item.title()
+            )
         } else {
             item.title().to_string()
         };
-        let l = gtk::Label::builder().label(&text).xalign(0.0).ellipsize(gtk::pango::EllipsizeMode::End).build();
-        let b = gtk::Button::builder().child(&l).css_classes(["event-chip", &self.cal_class(&item.calendar)]).build();
+        let l = gtk::Label::builder()
+            .label(&text)
+            .xalign(0.0)
+            .ellipsize(gtk::pango::EllipsizeMode::End)
+            .build();
+        let b = gtk::Button::builder()
+            .child(&l)
+            .css_classes(["event-chip", &self.cal_class(&item.calendar)])
+            .build();
         b.set_tooltip_text(Some(&self.describe(item)));
         let weak = Rc::downgrade(self);
         let it = item.clone();
@@ -875,10 +1109,18 @@ impl Ui {
             if last == item.start.date() {
                 "All day".to_string()
             } else {
-                format!("{} – {}", dates::short_date(item.start.date()), dates::short_date(last))
+                format!(
+                    "{} – {}",
+                    dates::short_date(item.start.date()),
+                    dates::short_date(last)
+                )
             }
         } else if item.start.date() == item.end.date() || item.end == item.start {
-            format!("{} – {}", dates::format_time(item.start.time(), twelve), dates::format_time(item.end.time(), twelve))
+            format!(
+                "{} – {}",
+                dates::format_time(item.start.time(), twelve),
+                dates::format_time(item.end.time(), twelve)
+            )
         } else {
             format!(
                 "{} {} – {} {}",
@@ -916,10 +1158,24 @@ impl Ui {
         }
         if all_day {
             let s = day.and_time(NaiveTime::MIN);
-            editor::open(self, Target::New { start: s, end: s + Duration::days(1), all_day: true });
+            editor::open(
+                self,
+                Target::New {
+                    start: s,
+                    end: s + Duration::days(1),
+                    all_day: true,
+                },
+            );
         } else {
             let (s, e) = editor::default_slot(day, Local::now().naive_local());
-            editor::open(self, Target::New { start: s, end: e, all_day: false });
+            editor::open(
+                self,
+                Target::New {
+                    start: s,
+                    end: e,
+                    all_day: false,
+                },
+            );
         }
     }
 
@@ -932,10 +1188,18 @@ impl Ui {
         let weeks = days.len() / 7;
         let items = self.items(days[0], *days.last().unwrap() + Duration::days(1));
         let show_weeks = self.desk_cal.get("show-weekdate", false);
-        let grid = gtk::Grid::builder().column_homogeneous(true).row_homogeneous(false).vexpand(true).hexpand(true).build();
+        let grid = gtk::Grid::builder()
+            .column_homogeneous(true)
+            .row_homogeneous(false)
+            .vexpand(true)
+            .hexpand(true)
+            .build();
         let col0 = if show_weeks { 1 } else { 0 };
         for (i, day) in days.iter().take(7).enumerate() {
-            let l = label(dates::weekday_short(day.weekday()), &["weekday-header", "dim-label"]);
+            let l = label(
+                dates::weekday_short(day.weekday()),
+                &["weekday-header", "dim-label"],
+            );
             grid.attach(&l, i as i32 + col0, 0, 1, 1);
         }
         let today = today();
@@ -966,7 +1230,11 @@ impl Ui {
                 num.set_halign(gtk::Align::End);
                 cell.append(&num);
                 let on_day: Vec<&Item> = items.iter().filter(|it| it.on_day(day)).collect();
-                let limit = if on_day.len() > MONTH_CHIPS + 1 { MONTH_CHIPS } else { on_day.len() };
+                let limit = if on_day.len() > MONTH_CHIPS + 1 {
+                    MONTH_CHIPS
+                } else {
+                    on_day.len()
+                };
                 for it in &on_day[..limit] {
                     cell.append(&self.chip(it, true));
                 }
@@ -1029,12 +1297,21 @@ impl Ui {
         let gutter = gtk::Box::new(gtk::Orientation::Vertical, 0);
         gutter.set_width_request(GUTTER);
         if self.desk_cal.get("show-weekdate", false) {
-            gutter.append(&label(&format!("W{}", dates::iso_week(ws)), &["week-number"]));
+            gutter.append(&label(
+                &format!("W{}", dates::iso_week(ws)),
+                &["week-number"],
+            ));
         }
         row.append(&gutter);
-        let grid = gtk::Grid::builder().column_homogeneous(true).hexpand(true).build();
+        let grid = gtk::Grid::builder()
+            .column_homogeneous(true)
+            .hexpand(true)
+            .build();
         for (i, day) in days.iter().enumerate() {
-            let l = label(&format!("{} {}", dates::weekday_short(day.weekday()), day.day()), &["week-day-header"]);
+            let l = label(
+                &format!("{} {}", dates::weekday_short(day.weekday()), day.day()),
+                &["week-day-header"],
+            );
             if *day == today {
                 l.add_css_class("today");
             }
@@ -1057,7 +1334,11 @@ impl Ui {
         let mut rows_end: Vec<usize> = Vec::new();
         for it in items.iter().filter(|i| i.spans_days()) {
             let first = (it.start.date() - ws).num_days().max(0) as usize;
-            let last_day = if it.end > it.start { (it.end - Duration::seconds(1)).date() } else { it.start.date() };
+            let last_day = if it.end > it.start {
+                (it.end - Duration::seconds(1)).date()
+            } else {
+                it.start.date()
+            };
             let last = ((last_day - ws).num_days().min(6)).max(first as i64) as usize;
             let r = match rows_end.iter().position(|&e| e < first) {
                 Some(r) => {
@@ -1069,7 +1350,13 @@ impl Ui {
                     rows_end.len() - 1
                 }
             };
-            grid.attach(&self.chip(it, false), first as i32, r as i32 + 1, (last - first + 1) as i32, 1);
+            grid.attach(
+                &self.chip(it, false),
+                first as i32,
+                r as i32 + 1,
+                (last - first + 1) as i32,
+                1,
+            );
         }
         row.append(&grid);
         self.week_header.append(&row);
@@ -1084,7 +1371,10 @@ impl Ui {
         self.week_area.set_height_request(total);
         let mut labels = Vec::new();
         for h in 1..24 {
-            let l = label(&dates::format_time(NaiveTime::from_hms_opt(h, 0, 0).unwrap(), twelve), &["hour-label"]);
+            let l = label(
+                &dates::format_time(NaiveTime::from_hms_opt(h, 0, 0).unwrap(), twelve),
+                &["hour-label"],
+            );
             self.week_fixed.put(&l, 4.0, h as f64 * hh - 8.0);
             labels.push((l, h as i32));
         }
@@ -1092,7 +1382,10 @@ impl Ui {
         for (di, day) in days.iter().enumerate() {
             let ds = day.and_time(NaiveTime::MIN);
             let de = ds + Duration::days(1);
-            let todays: Vec<&Item> = items.iter().filter(|i| !i.spans_days() && i.on_day(*day)).collect();
+            let todays: Vec<&Item> = items
+                .iter()
+                .filter(|i| !i.spans_days() && i.on_day(*day))
+                .collect();
             let spans: Vec<(i64, i64)> = todays
                 .iter()
                 .map(|i| {
@@ -1103,8 +1396,14 @@ impl Ui {
                 .collect();
             let cols = layout::columns(&spans);
             for ((it, (s, e)), (c, n)) in todays.iter().zip(spans).zip(cols) {
-                let b = gtk::Button::builder().css_classes(["week-event", &self.cal_class(&it.calendar)]).build();
-                let text = format!("{}\n{}", it.title(), dates::format_time(it.start.time(), twelve));
+                let b = gtk::Button::builder()
+                    .css_classes(["week-event", &self.cal_class(&it.calendar)])
+                    .build();
+                let text = format!(
+                    "{}\n{}",
+                    it.title(),
+                    dates::format_time(it.start.time(), twelve)
+                );
                 let l = gtk::Label::builder()
                     .label(&text)
                     .xalign(0.0)
@@ -1127,7 +1426,11 @@ impl Ui {
                 events.push((b, di, s, e, c, n));
             }
         }
-        *self.week_layout.borrow_mut() = WeekLayout { days, events, labels };
+        *self.week_layout.borrow_mut() = WeekLayout {
+            days,
+            events,
+            labels,
+        };
         let width = self.week_area.width();
         if width > 0 {
             self.place_week_children(width);
@@ -1138,7 +1441,8 @@ impl Ui {
             glib::idle_add_local_once(move || {
                 if let Some(ui) = weak.upgrade() {
                     let now = Local::now().time();
-                    let target = (now.hour() as f64 - 1.0).max(7.0f64.min(now.hour() as f64)) * ui.hour_height();
+                    let target = (now.hour() as f64 - 1.0).max(7.0f64.min(now.hour() as f64))
+                        * ui.hour_height();
                     ui.week_scroll.vadjustment().set_value(target);
                 }
             });
@@ -1158,7 +1462,8 @@ impl Ui {
             self.week_fixed.move_(b, x, y);
         }
         for (l, h) in &lay.labels {
-            self.week_fixed.move_(l, 4.0, (*h as f64 * hh - 8.0).max(0.0));
+            self.week_fixed
+                .move_(l, 4.0, (*h as f64 * hh - 8.0).max(0.0));
         }
     }
 
@@ -1226,14 +1531,33 @@ impl Ui {
             self.cal_list.remove(&c);
         }
         let sources = self.sources();
-        let mut cals: Vec<&Source> = sources.iter().filter(|s| s.is(SourceKind::Calendar) && s.enabled()).collect();
-        cals.sort_by_key(|s| (helix_eds::source::account_label(s, &sources).to_lowercase(), s.display_name().to_lowercase()));
+        let mut cals: Vec<&Source> = sources
+            .iter()
+            .filter(|s| s.is(SourceKind::Calendar) && s.enabled())
+            .collect();
+        cals.sort_by_key(|s| {
+            (
+                helix_eds::source::account_label(s, &sources).to_lowercase(),
+                s.display_name().to_lowercase(),
+            )
+        });
         for s in cals {
             let row = gtk::Box::new(gtk::Orientation::Horizontal, 8);
             row.set_margin_start(4);
-            let check = gtk::CheckButton::builder().active(s.selected()).sensitive(s.writable).build();
-            let dot = gtk::Box::builder().css_classes(["cal-dot", &format!("{}-dot", self.cal_class(&s.uid))]).valign(gtk::Align::Center).build();
-            let name = gtk::Label::builder().label(s.display_name()).xalign(0.0).hexpand(true).ellipsize(gtk::pango::EllipsizeMode::End).build();
+            let check = gtk::CheckButton::builder()
+                .active(s.selected())
+                .sensitive(s.writable)
+                .build();
+            let dot = gtk::Box::builder()
+                .css_classes(["cal-dot", &format!("{}-dot", self.cal_class(&s.uid))])
+                .valign(gtk::Align::Center)
+                .build();
+            let name = gtk::Label::builder()
+                .label(s.display_name())
+                .xalign(0.0)
+                .hexpand(true)
+                .ellipsize(gtk::pango::EllipsizeMode::End)
+                .build();
             name.set_tooltip_text(Some(&helix_eds::source::account_label(s, &sources)));
             row.append(&check);
             row.append(&dot);
@@ -1258,16 +1582,25 @@ impl Ui {
         let twelve = self.twelve();
         let results = self.state.borrow().search_results.clone();
         if let Some(results) = results {
-            self.agenda_title.set_label(&format!("{} Search Results", results.len()));
+            self.agenda_title
+                .set_label(&format!("{} Search Results", results.len()));
             let zones = self.zones.borrow();
             for (i, (cal, e)) in results.iter().enumerate() {
                 let s = e.start.local(&zones);
                 let when = if e.all_day() {
                     dates::short_date(s.date())
                 } else {
-                    format!("{} {}", dates::short_date(s.date()), dates::format_time(s.time(), twelve))
+                    format!(
+                        "{} {}",
+                        dates::short_date(s.date()),
+                        dates::format_time(s.time(), twelve)
+                    )
                 };
-                let title = if e.summary.trim().is_empty() { "(No title)" } else { e.summary.as_str() };
+                let title = if e.summary.trim().is_empty() {
+                    "(No title)"
+                } else {
+                    e.summary.as_str()
+                };
                 let row = self.agenda_row(cal, title, &when);
                 row.set_widget_name(&format!("search:{i}"));
                 self.agenda.append(&row);
@@ -1276,19 +1609,31 @@ impl Ui {
         }
         let day = self.selected.get();
         self.agenda_title.set_label(&dates::long_date(day));
-        let items: Vec<Item> = self.items(day, day + Duration::days(1)).into_iter().filter(|i| i.on_day(day)).collect();
+        let items: Vec<Item> = self
+            .items(day, day + Duration::days(1))
+            .into_iter()
+            .filter(|i| i.on_day(day))
+            .collect();
         if items.is_empty() {
             let l = label("No events", &["dim-label"]);
             l.set_margin_top(6);
             l.set_margin_bottom(6);
-            let row = gtk::ListBoxRow::builder().child(&l).activatable(false).selectable(false).build();
+            let row = gtk::ListBoxRow::builder()
+                .child(&l)
+                .activatable(false)
+                .selectable(false)
+                .build();
             self.agenda.append(&row);
         }
         for (i, it) in items.iter().enumerate() {
             let when = if it.spans_days() {
                 "All day".to_string()
             } else {
-                format!("{} – {}", dates::format_time(it.start.time(), twelve), dates::format_time(it.end.time(), twelve))
+                format!(
+                    "{} – {}",
+                    dates::format_time(it.start.time(), twelve),
+                    dates::format_time(it.end.time(), twelve)
+                )
             };
             let row = self.agenda_row(&it.calendar, it.title(), &when);
             row.set_widget_name(&format!("item:{i}"));
@@ -1301,24 +1646,48 @@ impl Ui {
         let b = gtk::Box::new(gtk::Orientation::Horizontal, 8);
         b.set_margin_top(4);
         b.set_margin_bottom(4);
-        let dot = gtk::Box::builder().css_classes(["cal-dot", &format!("{}-dot", self.cal_class(cal))]).valign(gtk::Align::Center).build();
+        let dot = gtk::Box::builder()
+            .css_classes(["cal-dot", &format!("{}-dot", self.cal_class(cal))])
+            .valign(gtk::Align::Center)
+            .build();
         let v = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        let t = gtk::Label::builder().label(title).xalign(0.0).ellipsize(gtk::pango::EllipsizeMode::End).build();
+        let t = gtk::Label::builder()
+            .label(title)
+            .xalign(0.0)
+            .ellipsize(gtk::pango::EllipsizeMode::End)
+            .build();
         v.append(&t);
-        v.append(&gtk::Label::builder().label(when).xalign(0.0).css_classes(["agenda-time"]).build());
+        v.append(
+            &gtk::Label::builder()
+                .label(when)
+                .xalign(0.0)
+                .css_classes(["agenda-time"])
+                .build(),
+        );
         b.append(&dot);
         b.append(&v);
         gtk::ListBoxRow::builder().child(&b).build()
     }
 
     fn activate_agenda_row(self: &Rc<Self>, name: &str) {
-        if let Some(i) = name.strip_prefix("item:").and_then(|i| i.parse::<usize>().ok()) {
+        if let Some(i) = name
+            .strip_prefix("item:")
+            .and_then(|i| i.parse::<usize>().ok())
+        {
             let item = self.agenda_items.borrow().get(i).cloned();
             if let Some(item) = item {
                 self.open_item(&item);
             }
-        } else if let Some(i) = name.strip_prefix("search:").and_then(|i| i.parse::<usize>().ok()) {
-            let found = self.state.borrow().search_results.as_ref().and_then(|r| r.get(i).cloned());
+        } else if let Some(i) = name
+            .strip_prefix("search:")
+            .and_then(|i| i.parse::<usize>().ok())
+        {
+            let found = self
+                .state
+                .borrow()
+                .search_results
+                .as_ref()
+                .and_then(|r| r.get(i).cloned());
             if let Some((cal, e)) = found {
                 self.handle(Msg::Found(Some(Box::new((cal, e)))));
             }
@@ -1334,7 +1703,10 @@ impl Ui {
         filter.add_suffix("ics");
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&filter);
-        let dialog = gtk::FileDialog::builder().title("Import Events").filters(&filters).build();
+        let dialog = gtk::FileDialog::builder()
+            .title("Import Events")
+            .filters(&filters)
+            .build();
         let weak = Rc::downgrade(self);
         dialog.open(Some(&self.window), None::<&gio::Cancellable>, move |res| {
             if let (Some(ui), Ok(file)) = (weak.upgrade(), res) {
@@ -1369,16 +1741,28 @@ impl Ui {
             return;
         }
         let ui = self.clone();
-        let file = path.file_name().map(|f| f.to_string_lossy().to_string()).unwrap_or_default();
+        let file = path
+            .file_name()
+            .map(|f| f.to_string_lossy().to_string())
+            .unwrap_or_default();
         // Wait until calendars are known before asking where to import.
         glib::timeout_add_local(std::time::Duration::from_millis(200), move || {
-            let cals: Vec<(String, String, bool)> = ui.calendar_choices().into_iter().filter(|c| c.2).collect();
+            let cals: Vec<(String, String, bool)> =
+                ui.calendar_choices().into_iter().filter(|c| c.2).collect();
             if cals.is_empty() {
-                return if ui.state.borrow().unavailable { glib::ControlFlow::Break } else { glib::ControlFlow::Continue };
+                return if ui.state.borrow().unavailable {
+                    glib::ControlFlow::Break
+                } else {
+                    glib::ControlFlow::Continue
+                };
             }
             let dialog = adw::AlertDialog::new(
                 Some("Import Events"),
-                Some(&format!("Add {} event{} from “{file}” to:", events.len(), if events.len() == 1 { "" } else { "s" })),
+                Some(&format!(
+                    "Add {} event{} from “{file}” to:",
+                    events.len(),
+                    if events.len() == 1 { "" } else { "s" }
+                )),
             );
             let names: Vec<&str> = cals.iter().map(|(_, n, _)| n.as_str()).collect();
             let dd = gtk::DropDown::from_strings(&names);
@@ -1393,7 +1777,11 @@ impl Ui {
             let (u2, ev, tz) = (ui.clone(), events.clone(), tzs.clone());
             dialog.connect_response(Some("import"), move |_, _| {
                 if let Some((cal, _, _)) = cals.get(dd.selected() as usize) {
-                    u2.backend.send(Cmd::Import { cal: cal.clone(), events: ev.clone(), timezones: tz.clone() });
+                    u2.backend.send(Cmd::Import {
+                        cal: cal.clone(),
+                        events: ev.clone(),
+                        timezones: tz.clone(),
+                    });
                 }
             });
             dialog.present(Some(&ui.window));
@@ -1420,12 +1808,19 @@ fn show_shortcuts(win: &adw::ApplicationWindow) {
     let group = adw::PreferencesGroup::new();
     for (title, keys) in rows {
         let row = adw::ActionRow::builder().title(title).build();
-        row.add_suffix(&gtk::Label::builder().label(keys).css_classes(["dim-label"]).build());
+        row.add_suffix(
+            &gtk::Label::builder()
+                .label(keys)
+                .css_classes(["dim-label"])
+                .build(),
+        );
         group.add(&row);
     }
     let page = adw::PreferencesPage::new();
     page.add(&group);
-    let dialog = adw::PreferencesDialog::builder().title("Keyboard Shortcuts").build();
+    let dialog = adw::PreferencesDialog::builder()
+        .title("Keyboard Shortcuts")
+        .build();
     dialog.add(&page);
     dialog.present(Some(win));
 }

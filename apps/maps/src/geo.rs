@@ -22,7 +22,11 @@ impl LatLon {
 /// What the app should do on startup, from the command line.
 #[derive(Debug, Clone, PartialEq)]
 pub enum LaunchTarget {
-    Point { at: LatLon, zoom: Option<f64>, label: Option<String> },
+    Point {
+        at: LatLon,
+        zoom: Option<f64>,
+        label: Option<String>,
+    },
     Search(String),
 }
 
@@ -83,7 +87,9 @@ pub fn parse_coordinates(text: &str) -> Option<LatLon> {
 /// Parses a `geo:` URI (RFC 5870 plus the widespread `?q=` extension).
 pub fn parse_geo_uri(uri: &str) -> Option<LaunchTarget> {
     let rest = uri.strip_prefix("geo:").or_else(|| {
-        uri.get(..4).filter(|p| p.eq_ignore_ascii_case("geo:")).map(|_| &uri[4..])
+        uri.get(..4)
+            .filter(|p| p.eq_ignore_ascii_case("geo:"))
+            .map(|_| &uri[4..])
     })?;
     let (path, query) = match rest.split_once('?') {
         Some((p, q)) => (p, Some(q)),
@@ -110,17 +116,26 @@ pub fn parse_geo_uri(uri: &str) -> Option<LaunchTarget> {
     if let Some(q) = q.filter(|q| !q.trim().is_empty()) {
         // `q=lat,lon(Label)` names a point; anything else is a search.
         let (coord_part, label) = match q.find('(') {
-            Some(i) if q.ends_with(')') => {
-                (q[..i].to_string(), Some(q[i + 1..q.len() - 1].trim().to_string()))
-            }
+            Some(i) if q.ends_with(')') => (
+                q[..i].to_string(),
+                Some(q[i + 1..q.len() - 1].trim().to_string()),
+            ),
             _ => (q.clone(), None),
         };
         if let Some(at) = parse_coordinates(&coord_part) {
-            return Some(LaunchTarget::Point { at, zoom, label: label.filter(|l| !l.is_empty()) });
+            return Some(LaunchTarget::Point {
+                at,
+                zoom,
+                label: label.filter(|l| !l.is_empty()),
+            });
         }
         return Some(LaunchTarget::Search(q.trim().to_string()));
     }
-    Some(LaunchTarget::Point { at: point, zoom, label: None })
+    Some(LaunchTarget::Point {
+        at: point,
+        zoom,
+        label: None,
+    })
 }
 
 /// Parses a `maps:q=…` URI.
@@ -151,7 +166,14 @@ pub fn parse_launch_arg(arg: &str) -> Option<LaunchTarget> {
 
 /// Zoom level at which a bounding box (south, north, west, east) fits in a
 /// viewport of `width`×`height` pixels with 256-px tiles.
-pub fn zoom_for_bounds(south: f64, north: f64, west: f64, east: f64, width: f64, height: f64) -> f64 {
+pub fn zoom_for_bounds(
+    south: f64,
+    north: f64,
+    west: f64,
+    east: f64,
+    width: f64,
+    height: f64,
+) -> f64 {
     fn merc_y(lat: f64) -> f64 {
         let lat = lat.clamp(-85.0511, 85.0511).to_radians();
         (PI / 4.0 + lat / 2.0).tan().ln() / (2.0 * PI)
@@ -201,7 +223,10 @@ pub fn format_distance(m: f64, units: Units) -> String {
     match units {
         Units::Metric => {
             if m < 1000.0 {
-                format!("{} m", round_to(m, if m < 100.0 { 5.0 } else { 10.0 }) as i64)
+                format!(
+                    "{} m",
+                    round_to(m, if m < 100.0 { 5.0 } else { 10.0 }) as i64
+                )
             } else if m < 10_000.0 {
                 format!("{:.1} km", m / 1000.0)
             } else {
@@ -256,7 +281,13 @@ pub fn format_dms(p: LatLon) -> String {
     fn part(v: f64, pos: char, neg: char) -> String {
         let hemi = if v < 0.0 { neg } else { pos };
         let total = (v.abs() * 3600.0).round() as i64;
-        format!("{}°{:02}′{:02}″ {}", total / 3600, (total / 60) % 60, total % 60, hemi)
+        format!(
+            "{}°{:02}′{:02}″ {}",
+            total / 3600,
+            (total / 60) % 60,
+            total % 60,
+            hemi
+        )
     }
     format!("{}, {}", part(p.lat, 'N', 'S'), part(p.lon, 'E', 'W'))
 }
@@ -283,11 +314,19 @@ mod tests {
     fn geo_uris() {
         assert_eq!(
             parse_geo_uri("geo:48.2010,16.3695,183;crs=wgs84;u=40"),
-            Some(LaunchTarget::Point { at: pt(48.201, 16.3695), zoom: None, label: None })
+            Some(LaunchTarget::Point {
+                at: pt(48.201, 16.3695),
+                zoom: None,
+                label: None
+            })
         );
         assert_eq!(
             parse_geo_uri("geo:1,2?z=12"),
-            Some(LaunchTarget::Point { at: pt(1.0, 2.0), zoom: Some(12.0), label: None })
+            Some(LaunchTarget::Point {
+                at: pt(1.0, 2.0),
+                zoom: Some(12.0),
+                label: None
+            })
         );
         assert_eq!(
             parse_geo_uri("geo:0,0?q=34.99,-106.61(Treasure)"),
@@ -308,8 +347,14 @@ mod tests {
 
     #[test]
     fn maps_uris() {
-        assert_eq!(parse_maps_uri("maps:q=Caf%C3%A9"), Some(LaunchTarget::Search("Café".into())));
-        assert_eq!(parse_maps_uri("maps:?q=x&z=1"), Some(LaunchTarget::Search("x".into())));
+        assert_eq!(
+            parse_maps_uri("maps:q=Caf%C3%A9"),
+            Some(LaunchTarget::Search("Café".into()))
+        );
+        assert_eq!(
+            parse_maps_uri("maps:?q=x&z=1"),
+            Some(LaunchTarget::Search("x".into()))
+        );
         assert_eq!(parse_maps_uri("maps:z=1"), None);
         assert_eq!(parse_launch_arg("http://x"), None);
     }
@@ -353,7 +398,10 @@ mod tests {
         let z = zoom_for_bounds(52.4, 52.6, 13.2, 13.5, 1000.0, 700.0);
         assert!((10.0..13.0).contains(&z), "{z}");
         // Whole world clamps to the minimum.
-        assert_eq!(zoom_for_bounds(-85.0, 85.0, -180.0, 180.0, 500.0, 500.0), 2.0);
+        assert_eq!(
+            zoom_for_bounds(-85.0, 85.0, -180.0, 180.0, 500.0, 500.0),
+            2.0
+        );
         // A point clamps to the maximum.
         assert_eq!(zoom_for_bounds(1.0, 1.0, 1.0, 1.0, 500.0, 500.0), 18.0);
         assert_eq!(zoom_for_accuracy(20.0), 17.0);

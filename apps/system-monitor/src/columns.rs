@@ -121,7 +121,10 @@ pub fn sort_to_settings(col: ProcColumn, descending: bool) -> (i32, i32) {
 /// (duplicates ignored), then any remaining ones in default order.
 pub fn order_from_setting(stored: &[i32]) -> Vec<ProcColumn> {
     let mut out: Vec<ProcColumn> = Vec::with_capacity(ALL.len());
-    for c in stored.iter().filter_map(|&i| ProcColumn::from_gnome_index(i)) {
+    for c in stored
+        .iter()
+        .filter_map(|&i| ProcColumn::from_gnome_index(i))
+    {
         if !out.contains(&c) {
             out.push(c);
         }
@@ -171,7 +174,9 @@ mod tests {
             assert!((0..=26).contains(&c.gnome_index()));
             assert_eq!(ProcColumn::from_gnome_index(c.gnome_index()), Some(c));
         }
-        for unused in [3, 4, 5, 6, 7, 9, 10, 11, 13, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, -1] {
+        for unused in [
+            3, 4, 5, 6, 7, 9, 10, 11, 13, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, -1,
+        ] {
             assert_eq!(ProcColumn::from_gnome_index(unused), None);
         }
     }
@@ -197,7 +202,17 @@ mod tests {
     #[test]
     fn schema_defaults() {
         let visible: Vec<_> = ALL.into_iter().filter(|c| c.default_visible()).collect();
-        assert_eq!(visible, [ProcColumn::Name, ProcColumn::User, ProcColumn::Cpu, ProcColumn::Memory, ProcColumn::Pid, ProcColumn::Priority]);
+        assert_eq!(
+            visible,
+            [
+                ProcColumn::Name,
+                ProcColumn::User,
+                ProcColumn::Cpu,
+                ProcColumn::Memory,
+                ProcColumn::Pid,
+                ProcColumn::Priority
+            ]
+        );
         assert_eq!(ProcColumn::Name.default_width(), 225);
         assert_eq!(ProcColumn::Priority.default_width(), 100);
     }
@@ -207,10 +222,20 @@ mod tests {
     #[test]
     fn shipped_schema_matches() {
         let xml = include_str!("../data/org.gnome.gnome-system-monitor.gschema.xml");
-        let tree = &xml[xml.find(&format!("id=\"{PROCTREE_SCHEMA}\"")).expect("proctree schema")..];
+        let tree = &xml[xml
+            .find(&format!("id=\"{PROCTREE_SCHEMA}\""))
+            .expect("proctree schema")..];
         for c in ALL {
-            let w = format!("<key name=\"{}\" type=\"i\"><default>{}</default>", c.width_key(), c.default_width());
-            let v = format!("<key name=\"{}\" type=\"b\"><default>{}</default>", c.visible_key(), c.default_visible());
+            let w = format!(
+                "<key name=\"{}\" type=\"i\"><default>{}</default>",
+                c.width_key(),
+                c.default_width()
+            );
+            let v = format!(
+                "<key name=\"{}\" type=\"b\"><default>{}</default>",
+                c.visible_key(),
+                c.default_visible()
+            );
             assert!(tree.contains(&w), "missing {w}");
             assert!(tree.contains(&v), "missing {v}");
         }
@@ -230,7 +255,10 @@ mod tests {
 
     #[test]
     fn sort_mapping() {
-        assert_eq!(sort_from_settings(DEFAULT_SORT_COL, DEFAULT_SORT_ORDER), (ProcColumn::Name, false));
+        assert_eq!(
+            sort_from_settings(DEFAULT_SORT_COL, DEFAULT_SORT_ORDER),
+            (ProcColumn::Name, false)
+        );
         assert_eq!(sort_from_settings(8, 1), (ProcColumn::Cpu, true));
         assert_eq!(sort_from_settings(15, 0), (ProcColumn::Memory, false));
         // “CPU Time” (9) is not shown by Helix.
@@ -248,7 +276,10 @@ mod tests {
         assert_eq!(order_from_setting(&[0]), ALL.to_vec());
         assert_eq!(order_from_setting(&[]), ALL.to_vec());
         let o = order_from_setting(&[12, 9, 0, 12, 26]);
-        assert_eq!(&o[..3], &[ProcColumn::Pid, ProcColumn::Name, ProcColumn::Priority]);
+        assert_eq!(
+            &o[..3],
+            &[ProcColumn::Pid, ProcColumn::Name, ProcColumn::Priority]
+        );
         assert_eq!(o.len(), ALL.len());
     }
 
@@ -260,10 +291,19 @@ mod tests {
         assert_eq!(merge_order(&[0], &cur), vec![12, 0, 1, 8, 15, 26, 2, 14]);
         // GNOME-style full order: unknown 9 (CPU Time) and 11 (Nice) stay put.
         let stored = [0, 1, 9, 8, 11, 15, 12, 26, 2, 14];
-        assert_eq!(merge_order(&stored, &ALL), vec![0, 1, 9, 8, 11, 15, 12, 26, 2, 14]);
+        assert_eq!(
+            merge_order(&stored, &ALL),
+            vec![0, 1, 9, 8, 11, 15, 12, 26, 2, 14]
+        );
         let cur = [User, Name, Cpu, Memory, Pid, Priority, State, Command];
-        assert_eq!(merge_order(&stored, &cur), vec![1, 0, 9, 8, 11, 15, 12, 26, 2, 14]);
+        assert_eq!(
+            merge_order(&stored, &cur),
+            vec![1, 0, 9, 8, 11, 15, 12, 26, 2, 14]
+        );
         // Round trip.
-        assert_eq!(order_from_setting(&merge_order(&stored, &cur)), cur.to_vec());
+        assert_eq!(
+            order_from_setting(&merge_order(&stored, &cur)),
+            cur.to_vec()
+        );
     }
 }

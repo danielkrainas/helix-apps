@@ -95,13 +95,25 @@ fn text(s: &str) -> String {
 /// Builds a complete PDF file. `date` is a PDF date string body such as
 /// `20240131120000Z` (or `None`).
 pub fn build(images: &[PdfImage], producer: &str, date: Option<&str>) -> Vec<u8> {
-    let mut w = Writer { buf: Vec::new(), offsets: Vec::new() };
+    let mut w = Writer {
+        buf: Vec::new(),
+        offsets: Vec::new(),
+    };
     w.buf.extend_from_slice(b"%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
     // 1: catalog, 2: pages, 3: info, then 3 objects per page.
     let page_id = |i: usize| 4 + i * 3;
     w.object(1, "<< /Type /Catalog /Pages 2 0 R >>");
-    let kids: Vec<String> = (0..images.len()).map(|i| format!("{} 0 R", page_id(i))).collect();
-    w.object(2, &format!("<< /Type /Pages /Kids [{}] /Count {} >>", kids.join(" "), images.len()));
+    let kids: Vec<String> = (0..images.len())
+        .map(|i| format!("{} 0 R", page_id(i)))
+        .collect();
+    w.object(
+        2,
+        &format!(
+            "<< /Type /Pages /Kids [{}] /Count {} >>",
+            kids.join(" "),
+            images.len()
+        ),
+    );
     let mut info = format!("<< /Producer {}", text(producer));
     if let Some(d) = date {
         info.push_str(&format!(" /CreationDate {}", text(&format!("D:{d}"))));
@@ -120,7 +132,11 @@ pub fn build(images: &[PdfImage], producer: &str, date: Option<&str>) -> Vec<u8>
         );
         let content = format!("q\n{pw} 0 0 {ph} 0 0 cm\n/Im0 Do\nQ\n");
         w.stream(cid, "", content.as_bytes());
-        let cs = if img.color { "/DeviceRGB" } else { "/DeviceGray" };
+        let cs = if img.color {
+            "/DeviceRGB"
+        } else {
+            "/DeviceGray"
+        };
         w.stream(
             iid,
             &format!(
@@ -139,7 +155,10 @@ pub fn build(images: &[PdfImage], producer: &str, date: Option<&str>) -> Vec<u8>
     for off in &w.offsets {
         let _ = writeln!(w.buf, "{off:010} 00000 n ");
     }
-    let _ = write!(w.buf, "trailer\n<< /Size {n} /Root 1 0 R /Info 3 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+    let _ = write!(
+        w.buf,
+        "trailer\n<< /Size {n} /Root 1 0 R /Info 3 0 R >>\nstartxref\n{xref}\n%%EOF\n"
+    );
     w.buf
 }
 
@@ -179,7 +198,10 @@ mod tests {
         assert!(find(&pdf, b"/CreationDate (D:20240101000000Z)").is_some());
         // startxref points at the xref table, and every entry at its object.
         // One char per byte so string offsets equal byte offsets.
-        let s: String = pdf.iter().map(|&b| if b.is_ascii() { b as char } else { '?' }).collect();
+        let s: String = pdf
+            .iter()
+            .map(|&b| if b.is_ascii() { b as char } else { '?' })
+            .collect();
         let sx = s.rfind("startxref\n").unwrap();
         let xref: usize = s[sx + 10..].lines().next().unwrap().parse().unwrap();
         assert!(s[xref..].starts_with("xref\n0 10\n"));
@@ -190,7 +212,11 @@ mod tests {
             .map(|l| l[..10].parse().unwrap())
             .collect();
         for (i, off) in entries.iter().enumerate() {
-            assert!(s[*off..].starts_with(&format!("{} 0 obj", i + 1)), "object {}", i + 1);
+            assert!(
+                s[*off..].starts_with(&format!("{} 0 obj", i + 1)),
+                "object {}",
+                i + 1
+            );
         }
     }
 }

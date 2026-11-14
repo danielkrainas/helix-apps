@@ -28,11 +28,39 @@ macro_rules! u {
 
 pub const UNITS: &[Unit] = &[
     // Length (metre)
-    u!(Length, 1e3, ["km", "kilometer", "kilometers", "kilometre", "kilometres"]),
+    u!(
+        Length,
+        1e3,
+        ["km", "kilometer", "kilometers", "kilometre", "kilometres"]
+    ),
     u!(Length, 1.0, ["m", "meter", "meters", "metre", "metres"]),
-    u!(Length, 1e-2, ["cm", "centimeter", "centimeters", "centimetre", "centimetres"]),
-    u!(Length, 1e-3, ["mm", "millimeter", "millimeters", "millimetre", "millimetres"]),
-    u!(Length, 1e-6, ["um", "µm", "micrometer", "micrometers", "micron", "microns"]),
+    u!(
+        Length,
+        1e-2,
+        [
+            "cm",
+            "centimeter",
+            "centimeters",
+            "centimetre",
+            "centimetres"
+        ]
+    ),
+    u!(
+        Length,
+        1e-3,
+        [
+            "mm",
+            "millimeter",
+            "millimeters",
+            "millimetre",
+            "millimetres"
+        ]
+    ),
+    u!(
+        Length,
+        1e-6,
+        ["um", "µm", "micrometer", "micrometers", "micron", "microns"]
+    ),
     u!(Length, 1e-9, ["nm", "nanometer", "nanometers"]),
     u!(Length, 0.0254, ["in", "inch", "inches"]),
     u!(Length, 0.3048, ["ft", "foot", "feet"]),
@@ -50,15 +78,31 @@ pub const UNITS: &[Unit] = &[
     u!(Area, 2_589_988.110_336, ["mi²", "mi2", "sqmi"]),
     // Volume (litre)
     u!(Volume, 1000.0, ["m³", "m3"]),
-    u!(Volume, 1.0, ["l", "L", "litre", "litres", "liter", "liters"]),
-    u!(Volume, 1e-3, ["ml", "mL", "millilitre", "milliliter", "cm³", "cm3"]),
+    u!(
+        Volume,
+        1.0,
+        ["l", "L", "litre", "litres", "liter", "liters"]
+    ),
+    u!(
+        Volume,
+        1e-3,
+        ["ml", "mL", "millilitre", "milliliter", "cm³", "cm3"]
+    ),
     u!(Volume, 3.785_411_784, ["gal", "gallon", "gallons"]),
     u!(Volume, 0.946_352_946, ["qt", "quart", "quarts"]),
     u!(Volume, 0.473_176_473, ["pt", "pint", "pints"]),
     u!(Volume, 0.236_588_236_5, ["cup", "cups"]),
     u!(Volume, 0.029_573_529_562_5, ["floz"]),
-    u!(Volume, 0.014_786_764_781_25, ["tbsp", "tablespoon", "tablespoons"]),
-    u!(Volume, 0.004_928_921_593_75, ["tsp", "teaspoon", "teaspoons"]),
+    u!(
+        Volume,
+        0.014_786_764_781_25,
+        ["tbsp", "tablespoon", "tablespoons"]
+    ),
+    u!(
+        Volume,
+        0.004_928_921_593_75,
+        ["tsp", "teaspoon", "teaspoons"]
+    ),
     // Mass (kilogram)
     u!(Mass, 1000.0, ["t", "tonne", "tonnes"]),
     u!(Mass, 1.0, ["kg", "kilogram", "kilograms"]),
@@ -92,9 +136,17 @@ pub const UNITS: &[Unit] = &[
     u!(Data, 1_073_741_824.0, ["GiB", "gibibyte", "gibibytes"]),
     u!(Data, 1_099_511_627_776.0, ["TiB", "tebibyte", "tebibytes"]),
     // Angle (radian)
-    u!(Angle, std::f64::consts::PI / 180.0, ["deg", "degree", "degrees", "°"]),
+    u!(
+        Angle,
+        std::f64::consts::PI / 180.0,
+        ["deg", "degree", "degrees", "°"]
+    ),
     u!(Angle, 1.0, ["rad", "radian", "radians"]),
-    u!(Angle, std::f64::consts::PI / 200.0, ["grad", "gradian", "gradians"]),
+    u!(
+        Angle,
+        std::f64::consts::PI / 200.0,
+        ["grad", "gradian", "gradians"]
+    ),
     // Temperature (handled specially)
     u!(Temperature, 0.0, ["degC", "°C", "celsius", "C"]),
     u!(Temperature, 0.0, ["degF", "°F", "fahrenheit", "F"]),
@@ -102,10 +154,13 @@ pub const UNITS: &[Unit] = &[
 ];
 
 pub fn find(name: &str) -> Option<&'static Unit> {
-    UNITS
-        .iter()
-        .find(|u| u.names.contains(&name))
-        .or_else(|| UNITS.iter().find(|u| u.names.iter().any(|n| n.eq_ignore_ascii_case(name) && n.len() > 2)))
+    UNITS.iter().find(|u| u.names.contains(&name)).or_else(|| {
+        UNITS.iter().find(|u| {
+            u.names
+                .iter()
+                .any(|n| n.eq_ignore_ascii_case(name) && n.len() > 2)
+        })
+    })
 }
 
 fn to_kelvin(name: &str, v: f64) -> f64 {
@@ -147,7 +202,9 @@ pub fn split_conversion(input: &str) -> Option<((&str, &str), &str)> {
                 Some(sp) => (&lhs[..sp], lhs[sp..].trim()),
                 None => {
                     // "5km in m": split trailing unit off a number.
-                    let split = lhs.find(|c: char| !(c.is_ascii_digit() || c == '.')).unwrap_or(lhs.len());
+                    let split = lhs
+                        .find(|c: char| !(c.is_ascii_digit() || c == '.'))
+                        .unwrap_or(lhs.len());
                     (&lhs[..split], &lhs[split..])
                 }
             };

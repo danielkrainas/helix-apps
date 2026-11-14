@@ -8,10 +8,23 @@ use std::sync::mpsc;
 
 #[derive(Debug)]
 pub enum Cmd {
-    Create { book: String, contact: Box<Contact>, tag: u64 },
-    Modify { book: String, contact: Box<Contact> },
-    Remove { book: String, uids: Vec<String> },
-    Import { book: String, contacts: Vec<Contact> },
+    Create {
+        book: String,
+        contact: Box<Contact>,
+        tag: u64,
+    },
+    Modify {
+        book: String,
+        contact: Box<Contact>,
+    },
+    Remove {
+        book: String,
+        uids: Vec<String>,
+    },
+    Import {
+        book: String,
+        contacts: Vec<Contact>,
+    },
     /// Reconnect (after failure) or re-read the source list.
     Resync,
 }
@@ -20,13 +33,29 @@ pub enum Cmd {
 pub enum Msg {
     Unavailable(String),
     Sources(Vec<Source>),
-    BookOpened { uid: String, writable: bool },
+    BookOpened {
+        uid: String,
+        writable: bool,
+    },
     BookClosed(String),
-    Added { book: String, contacts: Vec<Contact> },
-    Modified { book: String, contacts: Vec<Contact> },
-    Removed { book: String, uids: Vec<String> },
+    Added {
+        book: String,
+        contacts: Vec<Contact>,
+    },
+    Modified {
+        book: String,
+        contacts: Vec<Contact>,
+    },
+    Removed {
+        book: String,
+        uids: Vec<String>,
+    },
     Loaded(String),
-    Created { book: String, uids: Vec<String>, tag: u64 },
+    Created {
+        book: String,
+        uids: Vec<String>,
+        tag: u64,
+    },
     Imported(usize),
     Error(String),
 }
@@ -127,12 +156,14 @@ fn worker(rx: mpsc::Receiver<Cmd>, self_tx: mpsc::Sender<Cmd>, out: async_channe
             Cmd::Import { book, contacts } => match books.get(&book) {
                 Some(b) => {
                     let n = contacts.len();
-                    let contacts: Vec<Contact> =
-                        contacts.into_iter().map(|mut c| {
+                    let contacts: Vec<Contact> = contacts
+                        .into_iter()
+                        .map(|mut c| {
                             c.uid.clear();
                             c.rev.clear();
                             c
-                        }).collect();
+                        })
+                        .collect();
                     match b.book.create(&contacts) {
                         Ok(_) => send(Msg::Imported(n)),
                         Err(err) => send(Msg::Error(format!("Import failed: {err}"))),
@@ -155,14 +186,24 @@ fn sync(eds: &Eds, books: &mut HashMap<String, OpenBook>, out: &async_channel::S
             return;
         }
     };
-    let wanted: Vec<&Source> = sources.iter().filter(|s| s.is(SourceKind::AddressBook) && s.enabled()).collect();
+    let wanted: Vec<&Source> = sources
+        .iter()
+        .filter(|s| s.is(SourceKind::AddressBook) && s.enabled())
+        .collect();
     // Parent collections can be disabled as a whole (e.g. a GOA account).
     let parent_enabled = |s: &Source| {
-        s.parent().and_then(|p| sources.iter().find(|x| x.uid == p)).map(|p| p.enabled()).unwrap_or(true)
+        s.parent()
+            .and_then(|p| sources.iter().find(|x| x.uid == p))
+            .map(|p| p.enabled())
+            .unwrap_or(true)
     };
     let wanted: Vec<&Source> = wanted.into_iter().filter(|s| parent_enabled(s)).collect();
     send(Msg::Sources(sources.clone()));
-    let stale: Vec<String> = books.keys().filter(|k| !wanted.iter().any(|s| &s.uid == *k)).cloned().collect();
+    let stale: Vec<String> = books
+        .keys()
+        .filter(|k| !wanted.iter().any(|s| &s.uid == *k))
+        .cloned()
+        .collect();
     for uid in stale {
         books.remove(&uid);
         send(Msg::BookClosed(uid));
@@ -174,19 +215,38 @@ fn sync(eds: &Eds, books: &mut HashMap<String, OpenBook>, out: &async_channel::S
         let book = match eds.open_book(&s.uid) {
             Ok(b) => b,
             Err(e) => {
-                send(Msg::Error(format!("Could not open “{}”: {e}", s.display_name())));
+                send(Msg::Error(format!(
+                    "Could not open “{}”: {e}",
+                    s.display_name()
+                )));
                 continue;
             }
         };
-        send(Msg::BookOpened { uid: s.uid.clone(), writable: book.writable });
+        send(Msg::BookOpened {
+            uid: s.uid.clone(),
+            writable: book.writable,
+        });
         let tx = out.clone();
         let uid = s.uid.clone();
         let view = book.view(&sexp::all_contacts(), move |ev| {
-            let parse = |v: Vec<String>| v.iter().filter_map(|c| Contact::parse(c)).collect::<Vec<_>>();
+            let parse = |v: Vec<String>| {
+                v.iter()
+                    .filter_map(|c| Contact::parse(c))
+                    .collect::<Vec<_>>()
+            };
             let m = match ev {
-                ViewEvent::Added(v) => Msg::Added { book: uid.clone(), contacts: parse(v) },
-                ViewEvent::Modified(v) => Msg::Modified { book: uid.clone(), contacts: parse(v) },
-                ViewEvent::Removed(v) => Msg::Removed { book: uid.clone(), uids: v },
+                ViewEvent::Added(v) => Msg::Added {
+                    book: uid.clone(),
+                    contacts: parse(v),
+                },
+                ViewEvent::Modified(v) => Msg::Modified {
+                    book: uid.clone(),
+                    contacts: parse(v),
+                },
+                ViewEvent::Removed(v) => Msg::Removed {
+                    book: uid.clone(),
+                    uids: v,
+                },
                 ViewEvent::Complete(_) => Msg::Loaded(uid.clone()),
                 ViewEvent::Progress(..) => return,
             };
@@ -196,7 +256,10 @@ fn sync(eds: &Eds, books: &mut HashMap<String, OpenBook>, out: &async_channel::S
             Ok(v) => {
                 books.insert(s.uid.clone(), OpenBook { _view: v, book });
             }
-            Err(e) => send(Msg::Error(format!("Could not read “{}”: {e}", s.display_name()))),
+            Err(e) => send(Msg::Error(format!(
+                "Could not read “{}”: {e}",
+                s.display_name()
+            ))),
         }
     }
 }

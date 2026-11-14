@@ -64,16 +64,24 @@ pub struct Ctx {
 impl Ctx {
     /// Settings for `schema`, shared by every panel (so change handlers stay alive).
     pub fn prefs(&self, schema: &'static str) -> Prefs {
-        self.prefs.borrow_mut().entry(schema).or_insert_with(|| Prefs::new(schema)).clone()
+        self.prefs
+            .borrow_mut()
+            .entry(schema)
+            .or_insert_with(|| Prefs::new(schema))
+            .clone()
     }
 
     pub fn toast(&self, message: &str) {
-        self.toasts.add_toast(adw::Toast::new(&glib::markup_escape_text(message)));
+        self.toasts
+            .add_toast(adw::Toast::new(&glib::markup_escape_text(message)));
     }
 }
 
 /// Runs `work` on a worker thread and `done` with its result on the GTK thread.
-pub fn spawn_worker<T: Send + 'static>(work: impl FnOnce() -> T + Send + 'static, done: impl FnOnce(T) + 'static) {
+pub fn spawn_worker<T: Send + 'static>(
+    work: impl FnOnce() -> T + Send + 'static,
+    done: impl FnOnce(T) + 'static,
+) {
     let (tx, rx) = async_channel::bounded(1);
     std::thread::spawn(move || {
         let _ = tx.send_blocking(work());
@@ -105,14 +113,29 @@ impl Window {
             .height_request(294)
             .build();
         let toasts = adw::ToastOverlay::new();
-        let split = adw::NavigationSplitView::builder().min_sidebar_width(220.0).max_sidebar_width(280.0).build();
+        let split = adw::NavigationSplitView::builder()
+            .min_sidebar_width(220.0)
+            .max_sidebar_width(280.0)
+            .build();
 
         // Sidebar.
-        let search_entry = gtk::SearchEntry::builder().placeholder_text("Search settings").hexpand(true).build();
-        let search_bar = gtk::SearchBar::builder().child(&search_entry).show_close_button(false).build();
+        let search_entry = gtk::SearchEntry::builder()
+            .placeholder_text("Search settings")
+            .hexpand(true)
+            .build();
+        let search_bar = gtk::SearchBar::builder()
+            .child(&search_entry)
+            .show_close_button(false)
+            .build();
         search_bar.connect_entry(&search_entry);
-        let search_button = gtk::ToggleButton::builder().icon_name("system-search-symbolic").tooltip_text("Search").build();
-        search_button.bind_property("active", &search_bar, "search-mode-enabled").bidirectional().build();
+        let search_button = gtk::ToggleButton::builder()
+            .icon_name("system-search-symbolic")
+            .tooltip_text("Search")
+            .build();
+        search_button
+            .bind_property("active", &search_bar, "search-mode-enabled")
+            .bidirectional()
+            .build();
 
         let menu = gio::Menu::new();
         menu.append(Some("_About Settings"), Some("app.about"));
@@ -126,7 +149,9 @@ impl Window {
         header.pack_start(&search_button);
         header.pack_end(&menu_button);
 
-        let list = gtk::ListBox::builder().css_classes(["navigation-sidebar"]).build();
+        let list = gtk::ListBox::builder()
+            .css_classes(["navigation-sidebar"])
+            .build();
         let mut rows = Vec::new();
         for p in panels::PANELS {
             let row = Self::make_row(p);
@@ -155,7 +180,11 @@ impl Window {
         bp.add_setter(&split, "collapsed", Some(&true.to_value()));
         window.add_breakpoint(bp);
 
-        let ctx = Rc::new(Ctx { window: window.clone(), toasts, prefs: RefCell::default() });
+        let ctx = Rc::new(Ctx {
+            window: window.clone(),
+            toasts,
+            prefs: RefCell::default(),
+        });
         let this = Rc::new(Window {
             ctx,
             split,
@@ -223,13 +252,25 @@ impl Window {
     }
 
     fn make_row(p: &panels::PanelInfo) -> gtk::ListBoxRow {
-        let bx = gtk::Box::builder().spacing(12).margin_top(6).margin_bottom(6).margin_start(6).margin_end(6).build();
+        let bx = gtk::Box::builder()
+            .spacing(12)
+            .margin_top(6)
+            .margin_bottom(6)
+            .margin_start(6)
+            .margin_end(6)
+            .build();
         bx.append(&gtk::Image::from_icon_name(p.icon));
         let labels = gtk::Box::new(gtk::Orientation::Vertical, 0);
         labels.set_valign(gtk::Align::Center);
         labels.append(&gtk::Label::builder().label(p.title).xalign(0.0).build());
         if !p.available {
-            labels.append(&gtk::Label::builder().label("Not yet available").xalign(0.0).css_classes(["caption"]).build());
+            labels.append(
+                &gtk::Label::builder()
+                    .label("Not yet available")
+                    .xalign(0.0)
+                    .css_classes(["caption"])
+                    .build(),
+            );
             bx.add_css_class("dim-label");
         }
         bx.append(&labels);
@@ -301,7 +342,11 @@ impl Window {
                 .upcast(),
         };
         view.set_content(Some(&content));
-        adw::NavigationPage::builder().title(info.title).tag(info.name).child(&view).build()
+        adw::NavigationPage::builder()
+            .title(info.title)
+            .tag(info.name)
+            .child(&view)
+            .build()
     }
 }
 

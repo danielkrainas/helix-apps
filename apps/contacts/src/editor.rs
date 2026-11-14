@@ -3,8 +3,8 @@
 use adw::prelude::*;
 use gtk::{gio, glib};
 use helix_eds::vcard::{
-    self, generic_type_index, phone_type_index, Address, Contact, Photo, StructuredName, Typed, GENERIC_TYPES,
-    PHONE_TYPES,
+    self, generic_type_index, phone_type_index, Address, Contact, Photo, StructuredName, Typed,
+    GENERIC_TYPES, PHONE_TYPES,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -28,9 +28,20 @@ struct TypedList {
 }
 
 impl TypedList {
-    fn new(title: &'static str, add_label: &'static str, choices: Choices, phone: bool) -> Rc<TypedList> {
+    fn new(
+        title: &'static str,
+        add_label: &'static str,
+        choices: Choices,
+        phone: bool,
+    ) -> Rc<TypedList> {
         let group = adw::PreferencesGroup::builder().title(title).build();
-        let list = Rc::new(TypedList { group, rows: RefCell::default(), choices, title, phone });
+        let list = Rc::new(TypedList {
+            group,
+            rows: RefCell::default(),
+            choices,
+            title,
+            phone,
+        });
         let add = gtk::Button::builder()
             .icon_name("list-add-symbolic")
             .tooltip_text(add_label)
@@ -52,7 +63,11 @@ impl TypedList {
         if t.value.is_empty() && t.types.is_empty() {
             return 0;
         }
-        (if self.phone { phone_type_index(t) } else { generic_type_index(&t.types) }) as u32
+        (if self.phone {
+            phone_type_index(t)
+        } else {
+            generic_type_index(&t.types)
+        }) as u32
     }
 
     fn add(self: &Rc<Self>, t: &Typed) -> adw::EntryRow {
@@ -62,7 +77,10 @@ impl TypedList {
         types.add_css_class("flat");
         let idx = self.index_for(t);
         types.set_selected(idx);
-        let row = adw::EntryRow::builder().title(self.choices[idx as usize].0).text(&t.value).build();
+        let row = adw::EntryRow::builder()
+            .title(self.choices[idx as usize].0)
+            .text(&t.value)
+            .build();
         let r = row.clone();
         let choices = self.choices;
         types.connect_selected_notify(move |d| {
@@ -87,7 +105,12 @@ impl TypedList {
             }
         });
         self.group.add(&row);
-        self.rows.borrow_mut().push(TypedRow { row: row.clone(), types, orig_index: idx, orig: t.clone() });
+        self.rows.borrow_mut().push(TypedRow {
+            row: row.clone(),
+            types,
+            orig_index: idx,
+            orig: t.clone(),
+        });
         row
     }
 
@@ -101,9 +124,17 @@ impl TypedList {
                 let types = if sel == r.orig_index && !r.orig.types.is_empty() {
                     r.orig.types.clone()
                 } else {
-                    self.choices[sel as usize].1.iter().map(|s| s.to_string()).collect()
+                    self.choices[sel as usize]
+                        .1
+                        .iter()
+                        .map(|s| s.to_string())
+                        .collect()
                 };
-                Typed { types, value: r.row.text().trim().to_string(), pref: r.orig.pref }
+                Typed {
+                    types,
+                    value: r.row.text().trim().to_string(),
+                    pref: r.orig.pref,
+                }
             })
             .collect()
     }
@@ -181,7 +212,10 @@ impl Editor {
             let names: Vec<&str> = books.iter().map(|(_, n)| n.as_str()).collect();
             let dd = gtk::DropDown::from_strings(&names);
             dd.set_valign(gtk::Align::Center);
-            let idx = books.iter().position(|(u, _)| u == default_book).unwrap_or(0);
+            let idx = books
+                .iter()
+                .position(|(u, _)| u == default_book)
+                .unwrap_or(0);
             dd.set_selected(idx as u32);
             let row = adw::ActionRow::builder().title("Address Book").build();
             row.add_suffix(&dd);
@@ -190,7 +224,10 @@ impl Editor {
             page.append(&g);
             Some((dd, books.iter().map(|(u, _)| u.clone()).collect()))
         } else if books.len() == 1 {
-            Some((gtk::DropDown::from_strings(&[books[0].1.as_str()]), vec![books[0].0.clone()]))
+            Some((
+                gtk::DropDown::from_strings(&[books[0].1.as_str()]),
+                vec![books[0].0.clone()],
+            ))
         } else {
             None
         };
@@ -215,7 +252,9 @@ impl Editor {
         }
         page.append(&name_group);
 
-        let org_group = adw::PreferencesGroup::builder().title("Organization").build();
+        let org_group = adw::PreferencesGroup::builder()
+            .title("Organization")
+            .build();
         let org = entry("Organization", &contact.org);
         let org_unit = entry("Department", &contact.org_unit);
         let title = entry("Job Title", &contact.title);
@@ -262,7 +301,9 @@ impl Editor {
             .build();
         let calendar = gtk::Calendar::new();
         if let Some((y, m, d)) = vcard::parse_date(&contact.birthday) {
-            if let Ok(dt) = glib::DateTime::from_local(y.unwrap_or(2000), m as i32, d as i32, 0, 0, 0.0) {
+            if let Ok(dt) =
+                glib::DateTime::from_local(y.unwrap_or(2000), m as i32, d as i32, 0, 0, 0.0)
+            {
                 calendar.select_day(&dt);
             }
         }
@@ -272,7 +313,11 @@ impl Editor {
         let p = pop.clone();
         calendar.connect_day_selected(move |c| {
             let d = c.date();
-            b.set_text(&vcard::format_date(d.year(), d.month() as u32, d.day_of_month() as u32));
+            b.set_text(&vcard::format_date(
+                d.year(),
+                d.month() as u32,
+                d.day_of_month() as u32,
+            ));
             p.popdown();
         });
         birthday.add_suffix(&cal_button);
@@ -289,12 +334,19 @@ impl Editor {
             .height_request(96)
             .build();
         note.buffer().set_text(&contact.note);
-        let frame = gtk::Frame::builder().child(&note).css_classes(["view"]).build();
+        let frame = gtk::Frame::builder()
+            .child(&note)
+            .css_classes(["view"])
+            .build();
         notes_group.add(&frame);
         page.append(&notes_group);
 
         let clamp = adw::Clamp::builder().maximum_size(600).child(&page).build();
-        let widget = gtk::ScrolledWindow::builder().child(&clamp).hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).build();
+        let widget = gtk::ScrolledWindow::builder()
+            .child(&clamp)
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vexpand(true)
+            .build();
 
         let ed = Rc::new(Editor {
             widget,
@@ -343,11 +395,16 @@ impl Editor {
             filter.add_mime_type("image/*");
             let filters = gio::ListStore::new::<gtk::FileFilter>();
             filters.append(&filter);
-            let dialog = gtk::FileDialog::builder().title("Choose a Picture").filters(&filters).build();
+            let dialog = gtk::FileDialog::builder()
+                .title("Choose a Picture")
+                .filters(&filters)
+                .build();
             let win = b.root().and_downcast::<gtk::Window>();
             let weak = Rc::downgrade(&e);
             dialog.open(win.as_ref(), None::<&gio::Cancellable>, move |res| {
-                let (Some(e), Ok(file)) = (weak.upgrade(), res) else { return };
+                let (Some(e), Ok(file)) = (weak.upgrade(), res) else {
+                    return;
+                };
                 if let Some(path) = file.path() {
                     if let Ok(bytes) = std::fs::read(&path) {
                         if set_avatar_bytes(&e.avatar, &bytes) {
@@ -365,7 +422,11 @@ impl Editor {
         let labels: Vec<&str> = GENERIC_TYPES.iter().map(|(l, _)| *l).collect();
         let types = gtk::DropDown::from_strings(&labels);
         types.set_valign(gtk::Align::Center);
-        let idx = if a.is_empty() && a.types.is_empty() { 0 } else { generic_type_index(&a.types) as u32 };
+        let idx = if a.is_empty() && a.types.is_empty() {
+            0
+        } else {
+            generic_type_index(&a.types) as u32
+        };
         types.set_selected(idx);
         let remove = gtk::Button::builder()
             .icon_name("user-trash-symbolic")
@@ -391,7 +452,15 @@ impl Editor {
             postal_code: entry("Postal Code", &a.postal_code),
             country: entry("Country", &a.country),
         };
-        for e in [&row.street, &row.extended, &row.po_box, &row.locality, &row.region, &row.postal_code, &row.country] {
+        for e in [
+            &row.street,
+            &row.extended,
+            &row.po_box,
+            &row.locality,
+            &row.region,
+            &row.postal_code,
+            &row.country,
+        ] {
             group.add(e);
         }
         self.address_box.append(&group);
@@ -435,7 +504,11 @@ impl Editor {
                 let types = if sel == r.orig_index && !r.orig.types.is_empty() {
                     r.orig.types.clone()
                 } else {
-                    GENERIC_TYPES[sel as usize].1.iter().map(|s| s.to_string()).collect()
+                    GENERIC_TYPES[sel as usize]
+                        .1
+                        .iter()
+                        .map(|s| s.to_string())
+                        .collect()
                 };
                 Address {
                     types,
@@ -456,9 +529,15 @@ impl Editor {
         }
         c.birthday = bday;
         let buf = self.note.buffer();
-        c.note = buf.text(&buf.start_iter(), &buf.end_iter(), false).trim_end().to_string();
+        c.note = buf
+            .text(&buf.start_iter(), &buf.end_iter(), false)
+            .trim_end()
+            .to_string();
         c.photo = self.photo.borrow().clone();
-        let empty = c.display_name().is_empty() && c.note.is_empty() && c.addresses.is_empty() && c.urls.is_empty();
+        let empty = c.display_name().is_empty()
+            && c.note.is_empty()
+            && c.addresses.is_empty()
+            && c.urls.is_empty();
         if empty {
             return Err("Enter a name or some details first".into());
         }
@@ -466,7 +545,9 @@ impl Editor {
     }
 
     pub fn chosen_book(&self) -> Option<String> {
-        self.book_choice.as_ref().and_then(|(dd, uids)| uids.get(dd.selected() as usize).cloned())
+        self.book_choice
+            .as_ref()
+            .and_then(|(dd, uids)| uids.get(dd.selected() as usize).cloned())
     }
 
     pub fn focus_first(&self) {

@@ -4,7 +4,10 @@ use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SunTimes {
-    Normal { rise: DateTime<Utc>, set: DateTime<Utc> },
+    Normal {
+        rise: DateTime<Utc>,
+        set: DateTime<Utc>,
+    },
     /// The sun stays above the horizon all day.
     PolarDay,
     /// The sun stays below the horizon all day.
@@ -42,7 +45,10 @@ pub fn sun_times(date: NaiveDate, lat: f64, lon: f64) -> SunTimes {
         return SunTimes::PolarDay;
     }
     let w = cos_w.acos().to_degrees();
-    SunTimes::Normal { rise: jd_to_utc(transit - w / 360.0), set: jd_to_utc(transit + w / 360.0) }
+    SunTimes::Normal {
+        rise: jd_to_utc(transit - w / 360.0),
+        set: jd_to_utc(transit + w / 360.0),
+    }
 }
 
 /// Whether the sun is up at `now` for a place whose local date is
@@ -71,21 +77,63 @@ mod tests {
     #[test]
     fn london_midsummer() {
         let d = NaiveDate::from_ymd_opt(2024, 6, 21).unwrap();
-        let SunTimes::Normal { rise, set } = sun_times(d, 51.5074, -0.1278) else { panic!() };
+        let SunTimes::Normal { rise, set } = sun_times(d, 51.5074, -0.1278) else {
+            panic!()
+        };
         // Published: sunrise 04:43 BST (03:43 UTC), sunset 21:21 BST (20:21 UTC).
-        assert!(close(rise, Utc.with_ymd_and_hms(2024, 6, 21, 3, 43, 0).unwrap(), 3), "{rise}");
-        assert!(close(set, Utc.with_ymd_and_hms(2024, 6, 21, 20, 21, 0).unwrap(), 3), "{set}");
+        assert!(
+            close(
+                rise,
+                Utc.with_ymd_and_hms(2024, 6, 21, 3, 43, 0).unwrap(),
+                3
+            ),
+            "{rise}"
+        );
+        assert!(
+            close(
+                set,
+                Utc.with_ymd_and_hms(2024, 6, 21, 20, 21, 0).unwrap(),
+                3
+            ),
+            "{set}"
+        );
     }
 
     #[test]
     fn tokyo_winter() {
         let d = NaiveDate::from_ymd_opt(2024, 12, 21).unwrap();
-        let SunTimes::Normal { rise, set } = sun_times(d, 35.6895, 139.6917) else { panic!() };
+        let SunTimes::Normal { rise, set } = sun_times(d, 35.6895, 139.6917) else {
+            panic!()
+        };
         // Published: sunrise 06:47 JST (21:47 UTC prev day), sunset 16:32 JST (07:32 UTC).
-        assert!(close(rise, Utc.with_ymd_and_hms(2024, 12, 20, 21, 47, 0).unwrap(), 3), "{rise}");
-        assert!(close(set, Utc.with_ymd_and_hms(2024, 12, 21, 7, 32, 0).unwrap(), 3), "{set}");
-        assert!(is_day(Utc.with_ymd_and_hms(2024, 12, 21, 3, 0, 0).unwrap(), d, 35.6895, 139.6917));
-        assert!(!is_day(Utc.with_ymd_and_hms(2024, 12, 21, 12, 0, 0).unwrap(), d, 35.6895, 139.6917));
+        assert!(
+            close(
+                rise,
+                Utc.with_ymd_and_hms(2024, 12, 20, 21, 47, 0).unwrap(),
+                3
+            ),
+            "{rise}"
+        );
+        assert!(
+            close(
+                set,
+                Utc.with_ymd_and_hms(2024, 12, 21, 7, 32, 0).unwrap(),
+                3
+            ),
+            "{set}"
+        );
+        assert!(is_day(
+            Utc.with_ymd_and_hms(2024, 12, 21, 3, 0, 0).unwrap(),
+            d,
+            35.6895,
+            139.6917
+        ));
+        assert!(!is_day(
+            Utc.with_ymd_and_hms(2024, 12, 21, 12, 0, 0).unwrap(),
+            d,
+            35.6895,
+            139.6917
+        ));
     }
 
     #[test]

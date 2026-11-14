@@ -36,7 +36,10 @@ struct Ui {
 }
 
 pub fn run(initial: Option<String>) -> glib::ExitCode {
-    let app = adw::Application::builder().application_id(APP_ID).flags(gio::ApplicationFlags::NON_UNIQUE).build();
+    let app = adw::Application::builder()
+        .application_id(APP_ID)
+        .flags(gio::ApplicationFlags::NON_UNIQUE)
+        .build();
     helix_app_common::install_standard_actions(&app, "Help", "View help documentation");
     let library = Arc::new(Library::from_env());
     let initial = RefCell::new(initial);
@@ -96,14 +99,22 @@ fn make_context(library: Arc<Library>) -> webkit6::WebContext {
                 match response {
                     Ok(r) => {
                         let len = r.body.len() as i64;
-                        let stream = gio::MemoryInputStream::from_bytes(&glib::Bytes::from_owned(r.body));
-                        let mime = if r.mime.starts_with("text/") { format!("{}; charset=utf-8", r.mime) } else { r.mime };
+                        let stream =
+                            gio::MemoryInputStream::from_bytes(&glib::Bytes::from_owned(r.body));
+                        let mime = if r.mime.starts_with("text/") {
+                            format!("{}; charset=utf-8", r.mime)
+                        } else {
+                            r.mime
+                        };
                         let resp = webkit6::URISchemeResponse::new(&stream, len);
                         resp.set_content_type(&mime);
                         request.finish_with_response(&resp);
                     }
                     Err(_) => {
-                        let mut err = glib::Error::new(gio::IOErrorEnum::Failed, "help page rendering failed");
+                        let mut err = glib::Error::new(
+                            gio::IOErrorEnum::Failed,
+                            "help page rendering failed",
+                        );
                         request.finish_error(&mut err);
                     }
                 }
@@ -114,7 +125,10 @@ fn make_context(library: Arc<Library>) -> webkit6::WebContext {
 }
 
 fn is_help_uri(u: &str) -> bool {
-    let scheme = u.split_once(':').map(|(s, _)| s.to_ascii_lowercase()).unwrap_or_default();
+    let scheme = u
+        .split_once(':')
+        .map(|(s, _)| s.to_ascii_lowercase())
+        .unwrap_or_default();
     SCHEMES.contains(&scheme.as_str())
 }
 
@@ -126,7 +140,12 @@ fn resolve_target(ui: &Ui, target: &str) -> Result<String, String> {
         Location::External(u) => Err(u),
         Location::Home { search: None } => Ok("help:".into()),
         Location::Home { search: Some(q) } => Ok(uri::home_search_uri(&q)),
-        Location::Doc { doc, page, search, fragment } => {
+        Location::Doc {
+            doc,
+            page,
+            search,
+            fragment,
+        } => {
             if let Some(file) = ui.library.html_entry(&doc) {
                 return Ok(file);
             }
@@ -177,12 +196,19 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     settings.set_enable_caret_browsing(prefs.get("show-cursor", false));
     settings.set_javascript_can_open_windows_automatically(false);
     apply_text_size(&settings, prefs.get("font-adjustment", 0i32));
-    let view = webkit6::WebView::builder().web_context(context).settings(&settings).build();
+    let view = webkit6::WebView::builder()
+        .web_context(context)
+        .settings(&settings)
+        .build();
     view.set_vexpand(true);
     view.set_hexpand(true);
 
     // Shown over the view if its web process dies.
-    let crash_reload = gtk::Button::builder().label("_Reload").use_underline(true).halign(gtk::Align::Center).build();
+    let crash_reload = gtk::Button::builder()
+        .label("_Reload")
+        .use_underline(true)
+        .halign(gtk::Align::Center)
+        .build();
     crash_reload.add_css_class("pill");
     crash_reload.add_css_class("suggested-action");
     let crash_page = crate::sandbox::crashed_page(webkit6::WebProcessTerminationReason::Crashed);
@@ -213,16 +239,30 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
         }
     ));
 
-    let back = gtk::Button::builder().icon_name("go-previous-symbolic").tooltip_text("Back").action_name("win.back").build();
-    let forward =
-        gtk::Button::builder().icon_name("go-next-symbolic").tooltip_text("Forward").action_name("win.forward").build();
-    let home = gtk::Button::builder().icon_name("go-home-symbolic").tooltip_text("All Help").action_name("win.home").build();
+    let back = gtk::Button::builder()
+        .icon_name("go-previous-symbolic")
+        .tooltip_text("Back")
+        .action_name("win.back")
+        .build();
+    let forward = gtk::Button::builder()
+        .icon_name("go-next-symbolic")
+        .tooltip_text("Forward")
+        .action_name("win.forward")
+        .build();
+    let home = gtk::Button::builder()
+        .icon_name("go-home-symbolic")
+        .tooltip_text("All Help")
+        .action_name("win.home")
+        .build();
     let sidebar_btn = gtk::ToggleButton::builder()
         .icon_name("sidebar-show-symbolic")
         .tooltip_text("Show Sidebar")
         .action_name("win.sidebar")
         .build();
-    let search_btn = gtk::ToggleButton::builder().icon_name("system-search-symbolic").tooltip_text("Search").build();
+    let search_btn = gtk::ToggleButton::builder()
+        .icon_name("system-search-symbolic")
+        .tooltip_text("Search")
+        .build();
 
     let menu = gio::Menu::new();
     let sec1 = gio::Menu::new();
@@ -238,7 +278,11 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     sec3.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
     sec3.append(Some("_About Help"), Some("app.about"));
     menu.append_section(None, &sec3);
-    let menu_btn = gtk::MenuButton::builder().icon_name("open-menu-symbolic").menu_model(&menu).tooltip_text("Main Menu").build();
+    let menu_btn = gtk::MenuButton::builder()
+        .icon_name("open-menu-symbolic")
+        .menu_model(&menu)
+        .tooltip_text("Main Menu")
+        .build();
 
     let header = adw::HeaderBar::new();
     header.pack_start(&back);
@@ -250,11 +294,21 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     let title = adw::WindowTitle::new("Help", "");
     header.set_title_widget(Some(&title));
 
-    let search_entry = gtk::SearchEntry::builder().placeholder_text("Search help").hexpand(true).build();
-    let clamp = adw::Clamp::builder().maximum_size(560).child(&search_entry).build();
+    let search_entry = gtk::SearchEntry::builder()
+        .placeholder_text("Search help")
+        .hexpand(true)
+        .build();
+    let clamp = adw::Clamp::builder()
+        .maximum_size(560)
+        .child(&search_entry)
+        .build();
     let search_bar = gtk::SearchBar::builder().child(&clamp).build();
     search_bar.connect_entry(&search_entry);
-    search_btn.bind_property("active", &search_bar, "search-mode-enabled").bidirectional().sync_create().build();
+    search_btn
+        .bind_property("active", &search_bar, "search-mode-enabled")
+        .bidirectional()
+        .sync_create()
+        .build();
 
     let sidebar_list = gtk::ListBox::new();
     sidebar_list.add_css_class("navigation-sidebar");
@@ -263,7 +317,9 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
         .child(&sidebar_list)
         .vexpand(true)
         .build();
-    let sidebar_header = adw::HeaderBar::builder().show_end_title_buttons(false).build();
+    let sidebar_header = adw::HeaderBar::builder()
+        .show_end_title_buttons(false)
+        .build();
     sidebar_header.set_title_widget(Some(&adw::WindowTitle::new("Contents", "")));
     let sidebar_view = adw::ToolbarView::new();
     sidebar_view.add_top_bar(&sidebar_header);
@@ -323,7 +379,11 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
         #[weak]
         window,
         move |v| {
-            let t = v.title().map(|t| t.to_string()).filter(|t| !t.is_empty()).unwrap_or_else(|| "Help".into());
+            let t = v
+                .title()
+                .map(|t| t.to_string())
+                .filter(|t| !t.is_empty())
+                .unwrap_or_else(|| "Help".into());
             title.set_title(&t);
             window.set_title(Some(&t));
         }
@@ -348,7 +408,9 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     {
         let ui2 = Rc::downgrade(&ui);
         view.connect_decide_policy(move |_, decision, ty| {
-            let Some(ui) = ui2.upgrade() else { return false };
+            let Some(ui) = ui2.upgrade() else {
+                return false;
+            };
             decide_policy(&ui, decision, ty)
         });
     }
@@ -386,15 +448,32 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     ui
 }
 
-fn decide_policy(ui: &Ui, decision: &webkit6::PolicyDecision, ty: webkit6::PolicyDecisionType) -> bool {
+fn decide_policy(
+    ui: &Ui,
+    decision: &webkit6::PolicyDecision,
+    ty: webkit6::PolicyDecisionType,
+) -> bool {
     use webkit6::PolicyDecisionType as T;
     if !matches!(ty, T::NavigationAction | T::NewWindowAction) {
         return false;
     }
-    let Some(nav) = decision.downcast_ref::<webkit6::NavigationPolicyDecision>() else { return false };
-    let Some(mut action) = nav.navigation_action() else { return false };
-    let Some(target) = action.request().and_then(|r| r.uri()).map(|u| u.to_string()) else { return false };
-    let scheme = target.split_once(':').map(|(s, _)| s.to_ascii_lowercase()).unwrap_or_default();
+    let Some(nav) = decision.downcast_ref::<webkit6::NavigationPolicyDecision>() else {
+        return false;
+    };
+    let Some(mut action) = nav.navigation_action() else {
+        return false;
+    };
+    let Some(target) = action
+        .request()
+        .and_then(|r| r.uri())
+        .map(|u| u.to_string())
+    else {
+        return false;
+    };
+    let scheme = target
+        .split_once(':')
+        .map(|(s, _)| s.to_ascii_lowercase())
+        .unwrap_or_default();
     match scheme.as_str() {
         "about" | "data" | "blob" => false,
         _ if is_help_uri(&target) => {
@@ -440,10 +519,18 @@ fn decide_policy(ui: &Ui, decision: &webkit6::PolicyDecision, ty: webkit6::Polic
 fn update_nav(ui: &Ui) {
     ui.back.set_sensitive(ui.view.can_go_back());
     ui.forward.set_sensitive(ui.view.can_go_forward());
-    if let Some(a) = ui.window.lookup_action("back").and_downcast::<gio::SimpleAction>() {
+    if let Some(a) = ui
+        .window
+        .lookup_action("back")
+        .and_downcast::<gio::SimpleAction>()
+    {
         a.set_enabled(ui.view.can_go_back());
     }
-    if let Some(a) = ui.window.lookup_action("forward").and_downcast::<gio::SimpleAction>() {
+    if let Some(a) = ui
+        .window
+        .lookup_action("forward")
+        .and_downcast::<gio::SimpleAction>()
+    {
         a.set_enabled(ui.view.can_go_forward());
     }
 }
@@ -463,9 +550,10 @@ fn update_sidebar(ui: &Rc<Ui>) {
         let weak = Rc::downgrade(ui);
         glib::spawn_future_local(async move {
             let d2 = doc.clone();
-            let toc = gio::spawn_blocking(move || library.load(&d2).map(|d| d.toc()).unwrap_or_default())
-                .await
-                .unwrap_or_default();
+            let toc =
+                gio::spawn_blocking(move || library.load(&d2).map(|d| d.toc()).unwrap_or_default())
+                    .await
+                    .unwrap_or_default();
             let Some(ui) = weak.upgrade() else { return };
             if ui.sidebar_doc.borrow().as_ref() != Some(&doc) {
                 return;
@@ -473,7 +561,11 @@ fn update_sidebar(ui: &Rc<Ui>) {
             let mut uris = Vec::new();
             for (depth, page, title) in toc {
                 let label = gtk::Label::builder()
-                    .label(if title.is_empty() { page.clone().unwrap_or_default() } else { title })
+                    .label(if title.is_empty() {
+                        page.clone().unwrap_or_default()
+                    } else {
+                        title
+                    })
                     .xalign(0.0)
                     .ellipsize(gtk::pango::EllipsizeMode::End)
                     .margin_start(6 + 14 * depth.min(6) as i32)
@@ -525,9 +617,21 @@ fn install_actions(ui: &Rc<Ui>) {
             app.set_accels_for_action(&format!("win.{name}"), accels);
         }
     };
-    add("back", &["<Alt>Left", "Back"], Box::new(|ui| ui.view.go_back()));
-    add("forward", &["<Alt>Right", "Forward"], Box::new(|ui| ui.view.go_forward()));
-    add("home", &["<Alt>Home"], Box::new(|ui| ui.view.load_uri("help:")));
+    add(
+        "back",
+        &["<Alt>Left", "Back"],
+        Box::new(|ui| ui.view.go_back()),
+    );
+    add(
+        "forward",
+        &["<Alt>Right", "Forward"],
+        Box::new(|ui| ui.view.go_forward()),
+    );
+    add(
+        "home",
+        &["<Alt>Home"],
+        Box::new(|ui| ui.view.load_uri("help:")),
+    );
     add(
         "search",
         &["<Control>f"],
@@ -554,7 +658,11 @@ fn install_actions(ui: &Rc<Ui>) {
         &["<Control>minus", "<Control>KP_Subtract"],
         Box::new(|ui| set_text_size(ui, ui.prefs.get("font-adjustment", 0i32) - 1)),
     );
-    add("zoom-reset", &["<Control>0", "<Control>KP_0"], Box::new(|ui| set_text_size(ui, 0)));
+    add(
+        "zoom-reset",
+        &["<Control>0", "<Control>KP_0"],
+        Box::new(|ui| set_text_size(ui, 0)),
+    );
     add("close", &["<Control>w"], Box::new(|ui| ui.window.close()));
 
     let sidebar = gio::SimpleAction::new_stateful("sidebar", None, &false.to_variant());
@@ -569,11 +677,16 @@ fn install_actions(ui: &Rc<Ui>) {
     }
     {
         let s = sidebar.clone();
-        ui.split.connect_show_sidebar_notify(move |sp| s.set_state(&sp.shows_sidebar().to_variant()));
+        ui.split
+            .connect_show_sidebar_notify(move |sp| s.set_state(&sp.shows_sidebar().to_variant()));
     }
     win.add_action(&sidebar);
 
-    let caret = gio::SimpleAction::new_stateful("caret", None, &ui.prefs.get("show-cursor", false).to_variant());
+    let caret = gio::SimpleAction::new_stateful(
+        "caret",
+        None,
+        &ui.prefs.get("show-cursor", false).to_variant(),
+    );
     {
         let weak = Rc::downgrade(ui);
         caret.connect_activate(move |a, _| {

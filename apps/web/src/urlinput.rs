@@ -229,7 +229,10 @@ pub fn resolve_with_bangs(
     let trimmed = text.trim();
     if let Some((first, rest)) = trimmed.split_once(char::is_whitespace) {
         if first.starts_with('!') {
-            if let Some(e) = engines.iter().find(|e| !e.bang.is_empty() && e.bang == first) {
+            if let Some(e) = engines
+                .iter()
+                .find(|e| !e.bang.is_empty() && e.bang == first)
+            {
                 let q = rest.trim();
                 if !q.is_empty() {
                     return Some(e.search_url(q));

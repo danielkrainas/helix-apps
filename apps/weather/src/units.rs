@@ -135,7 +135,9 @@ impl Speed {
 
 /// Beaufort force number for a wind speed in km/h.
 pub fn beaufort(kph: f64) -> u8 {
-    const LIMITS: [f64; 12] = [1.0, 6.0, 12.0, 20.0, 29.0, 39.0, 50.0, 62.0, 75.0, 89.0, 103.0, 118.0];
+    const LIMITS: [f64; 12] = [
+        1.0, 6.0, 12.0, 20.0, 29.0, 39.0, 50.0, 62.0, 75.0, 89.0, 103.0, 118.0,
+    ];
     LIMITS.iter().position(|&l| kph < l).unwrap_or(12) as u8
 }
 
@@ -179,7 +181,10 @@ impl Pressure {
 /// 16-point compass abbreviation for a direction in degrees (where the wind
 /// comes from).
 pub fn compass(degrees: f64) -> &'static str {
-    const POINTS: [&str; 16] = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+    const POINTS: [&str; 16] = [
+        "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW",
+        "NW", "NNW",
+    ];
     let d = degrees.rem_euclid(360.0);
     POINTS[((d / 22.5).round() as usize) % 16]
 }
@@ -196,9 +201,18 @@ mod tests {
         assert!(!locale_is_imperial("de_DE.UTF-8@euro"));
         assert!(!locale_is_imperial("C"));
         assert!(!locale_is_imperial(""));
-        assert_eq!(Temperature::from_nick("default", true), Temperature::Fahrenheit);
-        assert_eq!(Temperature::from_nick("default", false), Temperature::Celsius);
-        assert_eq!(Temperature::from_nick("fahrenheit", false), Temperature::Fahrenheit);
+        assert_eq!(
+            Temperature::from_nick("default", true),
+            Temperature::Fahrenheit
+        );
+        assert_eq!(
+            Temperature::from_nick("default", false),
+            Temperature::Celsius
+        );
+        assert_eq!(
+            Temperature::from_nick("fahrenheit", false),
+            Temperature::Fahrenheit
+        );
         assert_eq!(Temperature::from_nick("kelvin", true), Temperature::Celsius);
         assert_eq!(Speed::from_nick("default", true), Speed::Mph);
         assert_eq!(Speed::from_nick("default", false), Speed::Kph);

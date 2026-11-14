@@ -40,7 +40,9 @@ pub fn crumbs_for_path(path: &Path, roots: &[Root]) -> Vec<Crumb> {
                 target: Target::Path(r.path.clone()),
             }],
             r.path.clone(),
-            path.strip_prefix(&r.path).unwrap_or(Path::new("")).to_path_buf(),
+            path.strip_prefix(&r.path)
+                .unwrap_or(Path::new(""))
+                .to_path_buf(),
         ),
         None => (
             vec![Crumb {
@@ -131,7 +133,11 @@ pub fn scheme_root_icon(scheme: &str) -> &'static str {
 pub fn crumbs_for_uri(uri: &str) -> Option<Vec<Crumb>> {
     let colon = uri.find(':')?;
     let scheme = &uri[..colon];
-    if scheme.is_empty() || !scheme.chars().all(|c| c.is_ascii_alphanumeric() || "+-.".contains(c)) {
+    if scheme.is_empty()
+        || !scheme
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || "+-.".contains(c))
+    {
         return None;
     }
     let rest = &uri[colon + 1..];
@@ -226,8 +232,14 @@ mod tests {
     fn remote_uris() {
         let c = crumbs_for_uri("sftp://me@example.org:2222/srv/my%20dir").unwrap();
         assert_eq!(labels(&c), ["example.org", "srv", "my dir"]);
-        assert_eq!(c[0].target, Target::Uri("sftp://me@example.org:2222/".into()));
-        assert_eq!(c[1].target, Target::Uri("sftp://me@example.org:2222/srv".into()));
+        assert_eq!(
+            c[0].target,
+            Target::Uri("sftp://me@example.org:2222/".into())
+        );
+        assert_eq!(
+            c[1].target,
+            Target::Uri("sftp://me@example.org:2222/srv".into())
+        );
         assert_eq!(
             c[2].target,
             Target::Uri("sftp://me@example.org:2222/srv/my%20dir".into())

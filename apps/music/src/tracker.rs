@@ -105,7 +105,11 @@ pub fn parse_datetime(s: &str) -> Option<i64> {
     let s = s.trim();
     let num = |a: usize, b: usize| -> Option<i64> { s.get(a..b)?.parse().ok() };
     let (y, mo, d) = (num(0, 4)?, num(5, 7)?, num(8, 10)?);
-    if s.as_bytes().get(4) != Some(&b'-') || s.as_bytes().get(7) != Some(&b'-') || !(1..=12).contains(&mo) || !(1..=31).contains(&d) {
+    if s.as_bytes().get(4) != Some(&b'-')
+        || s.as_bytes().get(7) != Some(&b'-')
+        || !(1..=12).contains(&mo)
+        || !(1..=31).contains(&d)
+    {
         return None;
     }
     // Days from civil (proleptic Gregorian).
@@ -124,7 +128,11 @@ pub fn parse_datetime(s: &str) -> Option<i64> {
         if let Some(sign) = tail.chars().next().filter(|c| *c == '+' || *c == '-') {
             let t = &tail[1..];
             let oh: i64 = t.get(0..2)?.parse().ok()?;
-            let om: i64 = t.get(3..5).or_else(|| t.get(2..4)).and_then(|m| m.parse().ok()).unwrap_or(0);
+            let om: i64 = t
+                .get(3..5)
+                .or_else(|| t.get(2..4))
+                .and_then(|m| m.parse().ok())
+                .unwrap_or(0);
             let off = oh * 3600 + om * 60;
             secs -= if sign == '+' { off } else { -off };
         }
@@ -160,7 +168,8 @@ impl Endpoint {
 
     /// Runs a read-only SPARQL query.
     pub fn query(&self, sparql: &str) -> Result<Vec<Row>, String> {
-        let (mut reader, writer) = std::os::unix::net::UnixStream::pair().map_err(|e| e.to_string())?;
+        let (mut reader, writer) =
+            std::os::unix::net::UnixStream::pair().map_err(|e| e.to_string())?;
         reader.set_read_timeout(Some(Duration::from_secs(60))).ok();
         // Read concurrently: large results would otherwise fill the socket
         // buffer and stall the writer.
@@ -178,7 +187,10 @@ impl Endpoint {
             &(sparql, Fd::from(writer.as_fd()), args),
         );
         drop(writer);
-        let data = handle.join().map_err(|_| "reader panicked")?.map_err(|e| e.to_string());
+        let data = handle
+            .join()
+            .map_err(|_| "reader panicked")?
+            .map_err(|e| e.to_string());
         res.map_err(|e| e.to_string())?;
         parse_cursor(&data?)
     }
@@ -193,7 +205,8 @@ pub struct TrackerLibrary {
     pub tracks: Vec<Track>,
 }
 
-const TRACK_COLUMNS: &str = "?url ?title ?artist ?album ?albumArtist ?genre ?date ?track ?disc ?duration ?added";
+const TRACK_COLUMNS: &str =
+    "?url ?title ?artist ?album ?albumArtist ?genre ?date ?track ?disc ?duration ?added";
 
 fn tracks_query(prefix: &str) -> String {
     format!(
@@ -218,20 +231,38 @@ fn tracks_query(prefix: &str) -> String {
 
 /// Converts a row of [`TRACK_COLUMNS`] into a track.
 pub fn row_to_track(row: &Row) -> Option<Track> {
-    let col = |i: usize| row.get(i).cloned().flatten().map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
-    let num = |i: usize| col(i).and_then(|s| s.parse::<u32>().ok()).filter(|n| *n > 0);
+    let col = |i: usize| {
+        row.get(i)
+            .cloned()
+            .flatten()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+    };
+    let num = |i: usize| {
+        col(i)
+            .and_then(|s| s.parse::<u32>().ok())
+            .filter(|n| *n > 0)
+    };
     let path = glib::filename_from_uri(&col(0)?).ok()?.0;
-    let title = col(1).unwrap_or_else(|| path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default());
+    let title = col(1).unwrap_or_else(|| {
+        path.file_stem()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_default()
+    });
     Some(Track {
         title,
         artist: col(2),
         album: col(3),
         album_artist: col(4),
         genre: col(5),
-        year: col(6).and_then(|d| d.get(..4).and_then(|y| y.parse().ok())).filter(|y: &u32| *y > 0),
+        year: col(6)
+            .and_then(|d| d.get(..4).and_then(|y| y.parse().ok()))
+            .filter(|y: &u32| *y > 0),
         track: num(7),
         disc: num(8),
-        duration_ms: col(9).and_then(|s| s.parse::<f64>().ok()).map_or(0, |s| (s.max(0.0) * 1000.0) as u64),
+        duration_ms: col(9)
+            .and_then(|s| s.parse::<f64>().ok())
+            .map_or(0, |s| (s.max(0.0) * 1000.0) as u64),
         added: col(10).and_then(|s| parse_datetime(&s)).unwrap_or(0),
         path,
         ..Default::default()
@@ -241,7 +272,10 @@ pub fn row_to_track(row: &Row) -> Option<Track> {
 /// Queries the music below `roots`. Roots Tracker knows no files under are
 /// left out of `covered` so the caller can scan them itself.
 pub fn library(ep: &Endpoint, roots: &[PathBuf]) -> Result<TrackerLibrary, String> {
-    let mut out = TrackerLibrary { covered: Vec::new(), tracks: Vec::new() };
+    let mut out = TrackerLibrary {
+        covered: Vec::new(),
+        tracks: Vec::new(),
+    };
     let mut seen = std::collections::HashSet::new();
     for root in roots {
         if out.covered.iter().any(|c| root.starts_with(c)) {
@@ -252,7 +286,11 @@ pub fn library(ep: &Endpoint, roots: &[PathBuf]) -> Result<TrackerLibrary, Strin
             "ASK {{ ?f a nfo:FileDataObject ; nie:url ?u . FILTER (STRSTARTS(?u, \"{}\")) }}",
             sparql_escape(&prefix)
         );
-        let known = ep.query(&ask)?.first().and_then(|r| r.first().cloned().flatten()).is_some_and(|v| v == "true");
+        let known = ep
+            .query(&ask)?
+            .first()
+            .and_then(|r| r.first().cloned().flatten())
+            .is_some_and(|v| v == "true");
         if !known {
             continue;
         }
@@ -267,7 +305,8 @@ pub fn library(ep: &Endpoint, roots: &[PathBuf]) -> Result<TrackerLibrary, Strin
             }
         }
     }
-    out.tracks.retain(|t| out.covered.iter().any(|c| t.path.starts_with(c)));
+    out.tracks
+        .retain(|t| out.covered.iter().any(|c| t.path.starts_with(c)));
     Ok(out)
 }
 
@@ -300,12 +339,31 @@ pub fn group_playlist_rows(rows: &[Row]) -> Vec<IndexedPlaylist> {
     let mut out: Vec<(IndexedPlaylist, Positioned)> = Vec::new();
     for (n, row) in rows.iter().enumerate() {
         let col = |i: usize| row.get(i).cloned().flatten();
-        let Some(file) = col(0).and_then(|u| glib::filename_from_uri(&u).ok()).map(|p| p.0) else { continue };
-        let Some(entry) = col(3).and_then(|u| glib::filename_from_uri(&u).ok()).map(|p| p.0) else { continue };
-        let pos = col(2).and_then(|p| p.parse::<f64>().ok()).unwrap_or(f64::MAX);
+        let Some(file) = col(0)
+            .and_then(|u| glib::filename_from_uri(&u).ok())
+            .map(|p| p.0)
+        else {
+            continue;
+        };
+        let Some(entry) = col(3)
+            .and_then(|u| glib::filename_from_uri(&u).ok())
+            .map(|p| p.0)
+        else {
+            continue;
+        };
+        let pos = col(2)
+            .and_then(|p| p.parse::<f64>().ok())
+            .unwrap_or(f64::MAX);
         if out.last().is_none_or(|(p, _)| p.file != file) {
             let title = col(1).filter(|t| !t.trim().is_empty());
-            out.push((IndexedPlaylist { file, title, entries: Vec::new() }, Vec::new()));
+            out.push((
+                IndexedPlaylist {
+                    file,
+                    title,
+                    entries: Vec::new(),
+                },
+                Vec::new(),
+            ));
         }
         out.last_mut().unwrap().1.push((pos, n, entry));
     }
@@ -321,26 +379,39 @@ pub fn group_playlist_rows(rows: &[Row]) -> Vec<IndexedPlaylist> {
 /// Waits for `GraphUpdated` signals from the miner on a worker thread and
 /// calls `on_change` for each one touching music or playlists.
 pub fn watch(ep: Endpoint, on_change: impl Fn() + Send + 'static) {
-    let _ = std::thread::Builder::new().name("tracker-watch".into()).spawn(move || {
-        let Ok(rule) = zbus::MatchRule::builder()
-            .msg_type(zbus::message::Type::Signal)
-            .sender(BUS_NAME)
-            .and_then(|b| b.path(OBJECT_PATH))
-            .and_then(|b| b.interface(INTERFACE))
-            .and_then(|b| b.member("GraphUpdated"))
-            .map(|b| b.build())
-        else {
-            return;
-        };
-        let Ok(iter) = zbus::blocking::MessageIterator::for_match_rule(rule, ep.connection(), Some(16)) else { return };
-        for msg in iter.flatten() {
-            let body = msg.body();
-            let class: String = body.deserialize::<(String, Vec<(i32, i32)>)>().map(|(c, _)| c).unwrap_or_default();
-            if class.is_empty() || class.contains("MusicPiece") || class.contains("Playlist") || class.contains("Audio") {
-                on_change();
+    let _ = std::thread::Builder::new()
+        .name("tracker-watch".into())
+        .spawn(move || {
+            let Ok(rule) = zbus::MatchRule::builder()
+                .msg_type(zbus::message::Type::Signal)
+                .sender(BUS_NAME)
+                .and_then(|b| b.path(OBJECT_PATH))
+                .and_then(|b| b.interface(INTERFACE))
+                .and_then(|b| b.member("GraphUpdated"))
+                .map(|b| b.build())
+            else {
+                return;
+            };
+            let Ok(iter) =
+                zbus::blocking::MessageIterator::for_match_rule(rule, ep.connection(), Some(16))
+            else {
+                return;
+            };
+            for msg in iter.flatten() {
+                let body = msg.body();
+                let class: String = body
+                    .deserialize::<(String, Vec<(i32, i32)>)>()
+                    .map(|(c, _)| c)
+                    .unwrap_or_default();
+                if class.is_empty()
+                    || class.contains("MusicPiece")
+                    || class.contains("Playlist")
+                    || class.contains("Audio")
+                {
+                    on_change();
+                }
             }
-        }
-    });
+        });
 }
 
 #[cfg(test)]
@@ -375,7 +446,14 @@ mod tests {
         ]);
         let rows = parse_cursor(&data).unwrap();
         assert_eq!(rows.len(), 2);
-        assert_eq!(rows[0], [Some("file:///m/a%20b.flac".into()), None, Some("152".into())]);
+        assert_eq!(
+            rows[0],
+            [
+                Some("file:///m/a%20b.flac".into()),
+                None,
+                Some("152".into())
+            ]
+        );
         assert_eq!(rows[1][1].as_deref(), Some("Ünïcode"));
         assert!(parse_cursor(&data[..data.len() - 3]).is_err());
         assert_eq!(parse_cursor(&[]).unwrap(), Vec::<Row>::new());
@@ -409,8 +487,18 @@ mod tests {
         let t = row_to_track(&row).unwrap();
         assert_eq!(t.path, PathBuf::from("/music/x/01 Song.flac"));
         assert_eq!(t.title, "01 Song");
-        assert_eq!((t.artist.as_deref(), t.album.as_deref(), t.album_artist.as_deref()), (Some("Artist"), Some("Album"), None));
-        assert_eq!((t.year, t.track, t.disc, t.duration_ms), (Some(2001), Some(3), Some(2), 152_000));
+        assert_eq!(
+            (
+                t.artist.as_deref(),
+                t.album.as_deref(),
+                t.album_artist.as_deref()
+            ),
+            (Some("Artist"), Some("Album"), None)
+        );
+        assert_eq!(
+            (t.year, t.track, t.disc, t.duration_ms),
+            (Some(2001), Some(3), Some(2), 152_000)
+        );
         assert_eq!(t.added, 1_683_479_873);
         assert!(row_to_track(&vec![s("http://x/y.mp3")]).is_none());
     }
@@ -419,30 +507,52 @@ mod tests {
     fn datetimes() {
         assert_eq!(parse_datetime("1970-01-01T00:00:00Z"), Some(0));
         assert_eq!(parse_datetime("2000-03-01"), Some(951_868_800));
-        assert_eq!(parse_datetime("2023-05-07T19:17:53.25+02:00"), Some(1_683_479_873));
-        assert_eq!(parse_datetime("2023-05-07T12:17:53-0500"), Some(1_683_479_873));
+        assert_eq!(
+            parse_datetime("2023-05-07T19:17:53.25+02:00"),
+            Some(1_683_479_873)
+        );
+        assert_eq!(
+            parse_datetime("2023-05-07T12:17:53-0500"),
+            Some(1_683_479_873)
+        );
         assert_eq!(parse_datetime("garbage"), None);
     }
 
     #[test]
     fn escaping_and_prefixes() {
         assert_eq!(sparql_escape(r#"a"b\c"#), r#"a\"b\\c"#);
-        assert_eq!(folder_uri_prefix(Path::new("/home/u/My Music")), "file:///home/u/My%20Music/");
+        assert_eq!(
+            folder_uri_prefix(Path::new("/home/u/My Music")),
+            "file:///home/u/My%20Music/"
+        );
     }
 
     #[test]
     fn playlist_rows() {
         let s = |v: &str| Some(v.to_string());
         let rows = vec![
-            vec![s("file:///p/a.m3u"), s("Mix"), s("2.0"), s("file:///m/2.mp3")],
-            vec![s("file:///p/a.m3u"), s("Mix"), s("1.0"), s("file:///m/1.mp3")],
+            vec![
+                s("file:///p/a.m3u"),
+                s("Mix"),
+                s("2.0"),
+                s("file:///m/2.mp3"),
+            ],
+            vec![
+                s("file:///p/a.m3u"),
+                s("Mix"),
+                s("1.0"),
+                s("file:///m/1.mp3"),
+            ],
             vec![s("file:///p/b.pls"), None, None, s("file:///m/3.mp3")],
             vec![s("file:///p/b.pls"), None, None, s("http://radio")],
         ];
         let pls = group_playlist_rows(&rows);
         assert_eq!(pls.len(), 2);
         assert_eq!(pls[0].title.as_deref(), Some("Mix"));
-        assert_eq!(pls[0].entries, [PathBuf::from("/m/1.mp3"), PathBuf::from("/m/2.mp3")]);
+        assert_eq!(
+            pls[0].entries,
+            [PathBuf::from("/m/1.mp3"), PathBuf::from("/m/2.mp3")]
+        );
         assert_eq!(pls[1].entries, [PathBuf::from("/m/3.mp3")]);
     }
 }

@@ -49,7 +49,14 @@ pub fn rotation_orientation(degrees: u32) -> Orientation {
 
 /// Rotates a pixel buffer clockwise by `degrees` (multiple of 90). Returns
 /// the packed buffer and its size.
-pub fn rotate_pixels(data: &[u8], w: u32, h: u32, stride: usize, bpp: usize, degrees: u32) -> (Vec<u8>, u32, u32) {
+pub fn rotate_pixels(
+    data: &[u8],
+    w: u32,
+    h: u32,
+    stride: usize,
+    bpp: usize,
+    degrees: u32,
+) -> (Vec<u8>, u32, u32) {
     orientation::apply(data, w, h, stride, bpp, rotation_orientation(degrees))
 }
 
@@ -106,7 +113,9 @@ pub fn exif_segment(jpeg: &[u8]) -> Option<Vec<u8>> {
 /// Returns whether a tag was found and changed.
 pub fn reset_orientation(app1: &mut [u8]) -> bool {
     const TIFF: usize = 10; // FF E1 len(2) "Exif\0\0"
-    let Some(tiff) = app1.get(TIFF..) else { return false };
+    let Some(tiff) = app1.get(TIFF..) else {
+        return false;
+    };
     if tiff.len() < 8 {
         return false;
     }
@@ -117,24 +126,42 @@ pub fn reset_orientation(app1: &mut [u8]) -> bool {
     };
     let u16_at = |b: &[u8], i: usize| -> Option<u16> {
         let v = [*b.get(i)?, *b.get(i + 1)?];
-        Some(if le { u16::from_le_bytes(v) } else { u16::from_be_bytes(v) })
+        Some(if le {
+            u16::from_le_bytes(v)
+        } else {
+            u16::from_be_bytes(v)
+        })
     };
     let u32_at = |b: &[u8], i: usize| -> Option<u32> {
         let v = [*b.get(i)?, *b.get(i + 1)?, *b.get(i + 2)?, *b.get(i + 3)?];
-        Some(if le { u32::from_le_bytes(v) } else { u32::from_be_bytes(v) })
+        Some(if le {
+            u32::from_le_bytes(v)
+        } else {
+            u32::from_be_bytes(v)
+        })
     };
-    let Some(ifd) = u32_at(tiff, 4).map(|v| v as usize) else { return false };
-    let Some(count) = u16_at(tiff, ifd) else { return false };
+    let Some(ifd) = u32_at(tiff, 4).map(|v| v as usize) else {
+        return false;
+    };
+    let Some(count) = u16_at(tiff, ifd) else {
+        return false;
+    };
     for n in 0..count as usize {
         let entry = ifd + 2 + n * 12;
-        let (Some(tag), Some(ty)) = (u16_at(tiff, entry), u16_at(tiff, entry + 2)) else { return false };
+        let (Some(tag), Some(ty)) = (u16_at(tiff, entry), u16_at(tiff, entry + 2)) else {
+            return false;
+        };
         // SHORT (3), inline value.
         if tag == 0x0112 && ty == 3 {
             let pos = TIFF + entry + 8;
             if pos + 2 > app1.len() {
                 return false;
             }
-            let one = if le { 1u16.to_le_bytes() } else { 1u16.to_be_bytes() };
+            let one = if le {
+                1u16.to_le_bytes()
+            } else {
+                1u16.to_be_bytes()
+            };
             app1[pos..pos + 2].copy_from_slice(&one);
             return true;
         }
@@ -192,7 +219,12 @@ pub fn save_rotated(path: &Path, degrees: u32) -> Result<(), String> {
         "png" => "PNG",
         "tiff" => "TIFF",
         "bmp" => "BMP",
-        other => return Err(format!("Saving {} images is not supported", other.to_uppercase())),
+        other => {
+            return Err(format!(
+                "Saving {} images is not supported",
+                other.to_uppercase()
+            ))
+        }
     };
     let saver = pixbuf_format(label).expect("savable");
     let original = std::fs::read(path).map_err(|e| e.to_string())?;
@@ -201,7 +233,9 @@ pub fn save_rotated(path: &Path, degrees: u32) -> Result<(), String> {
     if pb.bits_per_sample() != 8 || bpp != if pb.has_alpha() { 4 } else { 3 } {
         return Err("Unsupported pixel layout".into());
     }
-    let exif_o = metadata::read_exif(path).map(|e| e.orientation).unwrap_or_default();
+    let exif_o = metadata::read_exif(path)
+        .map(|e| e.orientation)
+        .unwrap_or_default();
     let (pixels, w, h) = transform(
         &pb.read_pixel_bytes(),
         pb.width() as u32,
@@ -238,7 +272,9 @@ pub fn save_rotated(path: &Path, degrees: u32) -> Result<(), String> {
         opts.push(("icc-profile".into(), icc));
     }
     let opt_refs: Vec<(&str, &str)> = opts.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
-    let mut bytes = out.save_to_bufferv(saver, &opt_refs).map_err(|e| e.message().to_string())?;
+    let mut bytes = out
+        .save_to_bufferv(saver, &opt_refs)
+        .map_err(|e| e.message().to_string())?;
     if saver == "jpeg" {
         if let Some(mut seg) = exif_segment(&original) {
             reset_orientation(&mut seg);
@@ -286,9 +322,18 @@ mod tests {
         assert_eq!(rotate_pixels(&IMG, 3, 2, 3, 1, 0), (IMG.to_vec(), 3, 2));
         assert_eq!(rotate_pixels(&IMG, 3, 2, 3, 1, 360), (IMG.to_vec(), 3, 2));
         // Clockwise: left column (4, 1 bottom-up) becomes the top row.
-        assert_eq!(rotate_pixels(&IMG, 3, 2, 3, 1, 90), (vec![4, 1, 5, 2, 6, 3], 2, 3));
-        assert_eq!(rotate_pixels(&IMG, 3, 2, 3, 1, 180), (vec![6, 5, 4, 3, 2, 1], 3, 2));
-        assert_eq!(rotate_pixels(&IMG, 3, 2, 3, 1, 270), (vec![3, 6, 2, 5, 1, 4], 2, 3));
+        assert_eq!(
+            rotate_pixels(&IMG, 3, 2, 3, 1, 90),
+            (vec![4, 1, 5, 2, 6, 3], 2, 3)
+        );
+        assert_eq!(
+            rotate_pixels(&IMG, 3, 2, 3, 1, 180),
+            (vec![6, 5, 4, 3, 2, 1], 3, 2)
+        );
+        assert_eq!(
+            rotate_pixels(&IMG, 3, 2, 3, 1, 270),
+            (vec![3, 6, 2, 5, 1, 4], 2, 3)
+        );
         // Four quarter turns are the identity.
         let (mut d, mut w, mut h) = (IMG.to_vec(), 3, 2);
         for _ in 0..4 {
@@ -340,14 +385,20 @@ mod tests {
         assert_eq!(&seg[10 + 18..10 + 20], &[1, 0]);
 
         // No orientation tag.
-        let mut seg = app1(&exif_block(&[field(Tag::Make, Value::Ascii(vec![b"X".to_vec()]))]));
+        let mut seg = app1(&exif_block(&[field(
+            Tag::Make,
+            Value::Ascii(vec![b"X".to_vec()]),
+        )]));
         assert!(!reset_orientation(&mut seg));
         assert!(!reset_orientation(&mut [0xFF, 0xE1]));
     }
 
     #[test]
     fn segment_insertion() {
-        let jfif = [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x04, 0xAA, 0xBB, 0xFF, 0xDA, 0x00, 0x02, 0x11, 0xFF, 0xD9];
+        let jfif = [
+            0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x04, 0xAA, 0xBB, 0xFF, 0xDA, 0x00, 0x02, 0x11, 0xFF,
+            0xD9,
+        ];
         let seg = app1(b"MM\x00\x2a\x00\x00\x00\x08\x00\x00");
         let out = insert_segment(&jfif, &seg);
         assert_eq!(&out[..8], &jfif[..8]);
@@ -379,7 +430,10 @@ mod tests {
             &path,
             16,
             8,
-            &[field(Tag::Make, Value::Ascii(vec![b"Helix".to_vec()])), orientation_field(6)],
+            &[
+                field(Tag::Make, Value::Ascii(vec![b"Helix".to_vec()])),
+                orientation_field(6),
+            ],
         );
         // Rotating the display 90° CW puts red on the right: 16×8.
         save_rotated(&path, 90).unwrap();
@@ -389,8 +443,16 @@ mod tests {
         assert!(is_red(&pixel(&d.frames[0], 13, 4)));
         assert!(!is_red(&pixel(&d.frames[0], 2, 4)));
         let raw = std::fs::read(&path).unwrap();
-        let exif = exif::Reader::new().read_from_container(&mut std::io::Cursor::new(&raw)).unwrap();
-        assert_eq!(exif.get_field(Tag::Orientation, exif::In::PRIMARY).unwrap().value.get_uint(0), Some(1));
+        let exif = exif::Reader::new()
+            .read_from_container(&mut std::io::Cursor::new(&raw))
+            .unwrap();
+        assert_eq!(
+            exif.get_field(Tag::Orientation, exif::In::PRIMARY)
+                .unwrap()
+                .value
+                .get_uint(0),
+            Some(1)
+        );
         let make = exif.get_field(Tag::Make, exif::In::PRIMARY).unwrap();
         assert_eq!(make.display_value().to_string(), "\"Helix\"");
         // No leftover temporary file.
@@ -404,7 +466,8 @@ mod tests {
         let pb = Pixbuf::new(Colorspace::Rgb, true, 8, 4, 2).unwrap();
         pb.fill(0x0000_ffff);
         pb.new_subpixbuf(0, 0, 1, 1).fill(0xff00_00ff); // red top-left
-        pb.savev(&path, "png", &[("tEXt::Comment", "kept")]).unwrap();
+        pb.savev(&path, "png", &[("tEXt::Comment", "kept")])
+            .unwrap();
         save_rotated(&path, 270).unwrap();
         // 270° CW: top-left goes to bottom-left, size 2×4.
         let back = Pixbuf::from_file(&path).unwrap();

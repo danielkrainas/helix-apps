@@ -106,7 +106,10 @@ impl Category {
     /// category.
     fn contains_char(self, c: char) -> bool {
         let gc = get_general_category(c);
-        let is_symbol = matches!(gc, Gc::MathSymbol | Gc::CurrencySymbol | Gc::ModifierSymbol | Gc::OtherSymbol);
+        let is_symbol = matches!(
+            gc,
+            Gc::MathSymbol | Gc::CurrencySymbol | Gc::ModifierSymbol | Gc::OtherSymbol
+        );
         let name_has = |w: &str| unicode_name(c).is_some_and(|n| n.contains(w));
         match self {
             Category::Punctuation => matches!(
@@ -126,14 +129,22 @@ impl Category {
                 let s = &*c.encode_utf8(&mut buf);
                 // Exclude emoji-presentation code points (shown under Emoji);
                 // text-default ones like ♠ (emoji only with U+FE0F) stay.
-                gc == Gc::OtherSymbol && !name_has("ARROW") && !emojis::get(s).is_some_and(|e| e.as_str() == s)
+                gc == Gc::OtherSymbol
+                    && !name_has("ARROW")
+                    && !emojis::get(s).is_some_and(|e| e.as_str() == s)
             }
             Category::Currency => gc == Gc::CurrencySymbol,
             Category::Math => gc == Gc::MathSymbol,
-            Category::Numbers => matches!(gc, Gc::DecimalNumber | Gc::LetterNumber | Gc::OtherNumber),
+            Category::Numbers => {
+                matches!(gc, Gc::DecimalNumber | Gc::LetterNumber | Gc::OtherNumber)
+            }
             Category::Letters => matches!(
                 gc,
-                Gc::UppercaseLetter | Gc::LowercaseLetter | Gc::TitlecaseLetter | Gc::ModifierLetter | Gc::OtherLetter
+                Gc::UppercaseLetter
+                    | Gc::LowercaseLetter
+                    | Gc::TitlecaseLetter
+                    | Gc::ModifierLetter
+                    | Gc::OtherLetter
             ),
             _ => false,
         }
@@ -144,19 +155,29 @@ impl Category {
     pub fn characters(self) -> Vec<String> {
         let groups = self.emoji_groups();
         if !groups.is_empty() {
-            return groups.iter().flat_map(|g| g.emojis()).map(|e| e.as_str().to_string()).collect();
+            return groups
+                .iter()
+                .flat_map(|g| g.emojis())
+                .map(|e| e.as_str().to_string())
+                .collect();
         }
         if self == Category::Recent {
             return Vec::new();
         }
-        all_code_points().filter(|&c| self.contains_char(c)).map(String::from).collect()
+        all_code_points()
+            .filter(|&c| self.contains_char(c))
+            .map(String::from)
+            .collect()
     }
 }
 
 /// All displayable code points. Planes 4–13 are unassigned and 15–16 are
 /// private use, so only planes 0–3 and 14 are scanned.
 pub fn all_code_points() -> impl Iterator<Item = char> {
-    (0u32..0x40000).chain(0xE0000..0xE1000).filter_map(char::from_u32).filter(|&c| is_displayable(c))
+    (0u32..0x40000)
+        .chain(0xE0000..0xE1000)
+        .filter_map(char::from_u32)
+        .filter(|&c| is_displayable(c))
 }
 
 #[cfg(test)]
@@ -170,8 +191,14 @@ mod tests {
     #[test]
     fn emoji_groups() {
         assert!(has(Category::Smileys, "😀"));
-        assert!(has(Category::Smileys, "👍"), "people & body merged into smileys");
-        assert!(!has(Category::Smileys, "👍🏽"), "skin tone variants are not listed");
+        assert!(
+            has(Category::Smileys, "👍"),
+            "people & body merged into smileys"
+        );
+        assert!(
+            !has(Category::Smileys, "👍🏽"),
+            "skin tone variants are not listed"
+        );
         assert!(has(Category::Animals, "🐶"));
         assert!(has(Category::Food, "🍎"));
         assert!(has(Category::Travel, "🚀"));

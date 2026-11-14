@@ -25,7 +25,10 @@ pub fn trail(items: &[(String, String)]) -> String {
         .iter()
         .map(|(uri, title)| format!("<a href=\"{}\">{}</a>", escape_attr(uri), escape(title)))
         .collect();
-    format!("<nav class=\"trail\">{}<span class=\"sep\">\u{203A}</span></nav>", parts.join("<span class=\"sep\">\u{203A}</span>"))
+    format!(
+        "<nav class=\"trail\">{}<span class=\"sep\">\u{203A}</span></nav>",
+        parts.join("<span class=\"sep\">\u{203A}</span>")
+    )
 }
 
 pub fn error_page(title: &str, message: &str) -> String {
@@ -56,7 +59,11 @@ pub fn link_list(class: &str, heading: Option<&str>, items: &[LinkItem]) -> Stri
     }
     s.push_str("<ul>");
     for it in items {
-        s.push_str(&format!("<li><a href=\"{}\">{}</a>", escape_attr(&it.uri), escape(&it.title)));
+        s.push_str(&format!(
+            "<li><a href=\"{}\">{}</a>",
+            escape_attr(&it.uri),
+            escape(&it.title)
+        ));
         if let Some(d) = it.desc.as_deref().filter(|d| !d.is_empty()) {
             s.push_str(&format!("<span class=\"link-desc\">{}</span>", escape(d)));
         }
@@ -67,7 +74,10 @@ pub fn link_list(class: &str, heading: Option<&str>, items: &[LinkItem]) -> Stri
 }
 
 pub fn guess_mime(path: &str) -> &'static str {
-    let ext = path.rsplit_once('.').map(|(_, e)| e.to_ascii_lowercase()).unwrap_or_default();
+    let ext = path
+        .rsplit_once('.')
+        .map(|(_, e)| e.to_ascii_lowercase())
+        .unwrap_or_default();
     match ext.as_str() {
         "png" => "image/png",
         "jpg" | "jpeg" => "image/jpeg",

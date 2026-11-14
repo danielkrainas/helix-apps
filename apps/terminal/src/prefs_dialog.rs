@@ -9,7 +9,9 @@ use crate::palette::Theme;
 
 pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     let prefs = &app.prefs;
-    let dialog = adw::PreferencesDialog::builder().title("Preferences").build();
+    let dialog = adw::PreferencesDialog::builder()
+        .title("Preferences")
+        .build();
     let page = adw::PreferencesPage::builder()
         .title("General")
         .icon_name("preferences-system-symbolic")
@@ -84,7 +86,11 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     let a = app.clone();
     let lr = lines.clone();
     unlimited.connect_active_notify(move |row| {
-        let v = if row.is_active() { -1 } else { lr.value() as i64 };
+        let v = if row.is_active() {
+            -1
+        } else {
+            lr.value() as i64
+        };
         a.prefs.set("scrollback-lines", v);
         lr.set_sensitive(!row.is_active());
         a.refresh_all();
@@ -105,7 +111,10 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
         ("visual-bell", "Visual Bell", true),
         ("restore-window-size", "Restore Window Size", true),
     ] {
-        let row = adw::SwitchRow::builder().title(title).active(prefs.get(key, default)).build();
+        let row = adw::SwitchRow::builder()
+            .title(title)
+            .active(prefs.get(key, default))
+            .build();
         let a = app.clone();
         row.connect_active_notify(move |row| {
             a.prefs.set(key, row.is_active());

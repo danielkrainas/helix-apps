@@ -164,8 +164,22 @@ mod tests {
 
     #[test]
     fn fs_ordering() {
-        let a = FsEntry { device: "/dev/a".into(), dir: "/".into(), fstype: "ext4".into(), total: 100, free: 50, available: 50 };
-        let b = FsEntry { device: "/dev/b".into(), dir: "/home".into(), fstype: "btrfs".into(), total: 10, free: 1, available: 1 };
+        let a = FsEntry {
+            device: "/dev/a".into(),
+            dir: "/".into(),
+            fstype: "ext4".into(),
+            total: 100,
+            free: 50,
+            available: 50,
+        };
+        let b = FsEntry {
+            device: "/dev/b".into(),
+            dir: "/home".into(),
+            fstype: "btrfs".into(),
+            total: 10,
+            free: 1,
+            available: 1,
+        };
         assert_eq!(compare_fs(&a, &b, FsColumn::Directory), Ordering::Less);
         assert_eq!(compare_fs(&a, &b, FsColumn::Type), Ordering::Greater);
         assert_eq!(compare_fs(&a, &b, FsColumn::Used), Ordering::Less);

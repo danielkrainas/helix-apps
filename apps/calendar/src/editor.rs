@@ -16,8 +16,19 @@ use crate::ui::Ui;
 
 #[derive(Debug, Clone)]
 pub enum Target {
-    New { start: NaiveDateTime, end: NaiveDateTime, all_day: bool },
-    Existing { cal: String, component: CompKey, rid: String, start: NaiveDateTime, end: NaiveDateTime, all_day: bool },
+    New {
+        start: NaiveDateTime,
+        end: NaiveDateTime,
+        all_day: bool,
+    },
+    Existing {
+        cal: String,
+        component: CompKey,
+        rid: String,
+        start: NaiveDateTime,
+        end: NaiveDateTime,
+        all_day: bool,
+    },
 }
 
 type DateCallback = Box<dyn Fn(NaiveDate)>;
@@ -34,14 +45,24 @@ impl DateButton {
     fn new(d: NaiveDate) -> Rc<DateButton> {
         let calendar = gtk::Calendar::new();
         let pop = gtk::Popover::builder().child(&calendar).build();
-        let button = gtk::MenuButton::builder().popover(&pop).valign(gtk::Align::Center).build();
-        let b = Rc::new(DateButton { button, calendar, date: Cell::new(d), changed: RefCell::default() });
+        let button = gtk::MenuButton::builder()
+            .popover(&pop)
+            .valign(gtk::Align::Center)
+            .build();
+        let b = Rc::new(DateButton {
+            button,
+            calendar,
+            date: Cell::new(d),
+            changed: RefCell::default(),
+        });
         b.set(d);
         let weak = Rc::downgrade(&b);
         b.calendar.connect_day_selected(move |c| {
             let Some(b) = weak.upgrade() else { return };
             let g = c.date();
-            if let Some(d) = NaiveDate::from_ymd_opt(g.year(), g.month() as u32, g.day_of_month() as u32) {
+            if let Some(d) =
+                NaiveDate::from_ymd_opt(g.year(), g.month() as u32, g.day_of_month() as u32)
+            {
                 if d != b.date.get() {
                     b.date.set(d);
                     b.button.set_label(&dates::short_date(d));
@@ -57,8 +78,19 @@ impl DateButton {
 
     fn set(&self, d: NaiveDate) {
         self.date.set(d);
-        self.button.set_label(&format!("{} {}", dates::short_date(d), chrono::Datelike::year(&d)));
-        if let Ok(g) = glib::DateTime::from_local(chrono::Datelike::year(&d), chrono::Datelike::month(&d) as i32, chrono::Datelike::day(&d) as i32, 0, 0, 0.0) {
+        self.button.set_label(&format!(
+            "{} {}",
+            dates::short_date(d),
+            chrono::Datelike::year(&d)
+        ));
+        if let Ok(g) = glib::DateTime::from_local(
+            chrono::Datelike::year(&d),
+            chrono::Datelike::month(&d) as i32,
+            chrono::Datelike::day(&d) as i32,
+            0,
+            0,
+            0.0,
+        ) {
             self.calendar.select_day(&g);
         }
     }
@@ -112,7 +144,8 @@ fn time_entry(t: NaiveTime, twelve: bool) -> gtk::Entry {
 
 impl Form {
     fn read_time(&self, e: &gtk::Entry) -> Result<NaiveTime, String> {
-        dates::parse_time_input(&e.text()).ok_or_else(|| format!("“{}” is not a valid time", e.text()))
+        dates::parse_time_input(&e.text())
+            .ok_or_else(|| format!("“{}” is not a valid time", e.text()))
     }
 
     fn values(&self) -> Result<Values, String> {
@@ -122,7 +155,10 @@ impl Form {
             if ed < sd {
                 return Err("The event ends before it starts".into());
             }
-            (sd.and_time(NaiveTime::MIN), (ed + Duration::days(1)).and_time(NaiveTime::MIN))
+            (
+                sd.and_time(NaiveTime::MIN),
+                (ed + Duration::days(1)).and_time(NaiveTime::MIN),
+            )
         } else {
             let s = sd.and_time(self.read_time(&self.start_time)?);
             let e = ed.and_time(self.read_time(&self.end_time)?);
@@ -131,7 +167,11 @@ impl Form {
             }
             (s, e)
         };
-        let preset = self.presets.get(self.repeat.selected() as usize).copied().unwrap_or(Preset::None);
+        let preset = self
+            .presets
+            .get(self.repeat.selected() as usize)
+            .copied()
+            .unwrap_or(Preset::None);
         let ends = match self.ends.selected() {
             1 => Ends::Count(self.count.value() as u32),
             2 => Ends::Until(self.until.date.get()),
@@ -140,14 +180,21 @@ impl Form {
         let buf = self.notes.buffer();
         Ok(Values {
             title: self.title.text().trim().to_string(),
-            cal: self.cal_uids.get(self.cal.selected() as usize).cloned().unwrap_or_default(),
+            cal: self
+                .cal_uids
+                .get(self.cal.selected() as usize)
+                .cloned()
+                .unwrap_or_default(),
             location: self.location.text().trim().to_string(),
             all_day,
             start,
             end,
             preset,
             ends,
-            notes: buf.text(&buf.start_iter(), &buf.end_iter(), false).trim_end().to_string(),
+            notes: buf
+                .text(&buf.start_iter(), &buf.end_iter(), false)
+                .trim_end()
+                .to_string(),
         })
     }
 
@@ -155,14 +202,21 @@ impl Form {
         let all_day = self.all_day.is_active();
         self.start_time.set_visible(!all_day);
         self.end_time.set_visible(!all_day);
-        let repeating = self.presets.get(self.repeat.selected() as usize).is_some_and(|p| *p != Preset::None);
+        let repeating = self
+            .presets
+            .get(self.repeat.selected() as usize)
+            .is_some_and(|p| *p != Preset::None);
         self.ends.set_visible(repeating);
-        self.count.set_visible(repeating && self.ends.selected() == 1);
-        self.until_row.set_visible(repeating && self.ends.selected() == 2);
+        self.count
+            .set_visible(repeating && self.ends.selected() == 1);
+        self.until_row
+            .set_visible(repeating && self.ends.selected() == 2);
     }
 
     fn add_alarm_row(self: &Rc<Self>, alarm: Alarm) {
-        let row = adw::ActionRow::builder().title(recur::describe_reminder(alarm.before_start)).build();
+        let row = adw::ActionRow::builder()
+            .title(recur::describe_reminder(alarm.before_start))
+            .build();
         let remove = gtk::Button::builder()
             .icon_name("window-close-symbolic")
             .tooltip_text("Remove Reminder")
@@ -199,17 +253,32 @@ fn make_time(t: NaiveDateTime, all_day: bool, zone: &str) -> Time {
 /// Parses a recurrence-id string in the frame of `like`.
 fn rid_time(rid: &str, like: &Time) -> Option<Time> {
     if rid.len() == 8 {
-        return NaiveDate::parse_from_str(rid, "%Y%m%d").ok().map(Time::Date);
+        return NaiveDate::parse_from_str(rid, "%Y%m%d")
+            .ok()
+            .map(Time::Date);
     }
     let utc = rid.ends_with('Z');
     let n = NaiveDateTime::parse_from_str(rid.trim_end_matches('Z'), "%Y%m%dT%H%M%S").ok()?;
-    Some(if utc { Time::Utc(n) } else { like.with_naive(n) })
+    Some(if utc {
+        Time::Utc(n)
+    } else {
+        like.with_naive(n)
+    })
 }
 
 pub fn open(ui: &Rc<Ui>, target: Target) {
     let (start, end, all_day) = match &target {
-        Target::New { start, end, all_day } => (*start, *end, *all_day),
-        Target::Existing { start, end, all_day, .. } => (*start, *end, *all_day),
+        Target::New {
+            start,
+            end,
+            all_day,
+        } => (*start, *end, *all_day),
+        Target::Existing {
+            start,
+            end,
+            all_day,
+            ..
+        } => (*start, *end, *all_day),
     };
     let existing: Option<(String, Event, Option<Event>)> = match &target {
         Target::Existing { cal, component, .. } => {
@@ -227,11 +296,20 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     glib::g_debug!(
         "helix-calendar",
         "editor for {}",
-        existing.as_ref().map(|(c, e, _)| format!("{c}/{} “{}”", e.uid, e.summary)).unwrap_or_else(|| "new event".into())
+        existing
+            .as_ref()
+            .map(|(c, e, _)| format!("{c}/{} “{}”", e.uid, e.summary))
+            .unwrap_or_else(|| "new event".into())
     );
     let cals = ui.calendar_choices();
     let writable = match &existing {
-        Some((cal, ..)) => ui.state.borrow().writable.get(cal).copied().unwrap_or(false),
+        Some((cal, ..)) => ui
+            .state
+            .borrow()
+            .writable
+            .get(cal)
+            .copied()
+            .unwrap_or(false),
         None => true,
     };
     let selectable: Vec<(String, String)> = cals
@@ -245,39 +323,76 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     }
     let event = existing.as_ref().map(|(_, e, _)| e.clone());
     let master = existing.as_ref().and_then(|(_, _, m)| m.clone());
-    let series_rule = master.as_ref().and_then(|m| m.rrule.clone()).or_else(|| event.as_ref().and_then(|e| e.rrule.clone()));
-    let recurring = master.as_ref().is_some_and(|m| m.is_recurring()) || event.as_ref().is_some_and(|e| e.recurrence_id.is_some());
+    let series_rule = master
+        .as_ref()
+        .and_then(|m| m.rrule.clone())
+        .or_else(|| event.as_ref().and_then(|e| e.rrule.clone()));
+    let recurring = master.as_ref().is_some_and(|m| m.is_recurring())
+        || event.as_ref().is_some_and(|e| e.recurrence_id.is_some());
     let twelve = ui.twelve();
 
     let dialog = adw::Dialog::builder()
-        .title(if existing.is_some() { "Edit Event" } else { "New Event" })
+        .title(if existing.is_some() {
+            "Edit Event"
+        } else {
+            "New Event"
+        })
         .content_width(460)
         .content_height(640)
         .build();
-    let header = adw::HeaderBar::builder().show_end_title_buttons(false).show_start_title_buttons(false).build();
+    let header = adw::HeaderBar::builder()
+        .show_end_title_buttons(false)
+        .show_start_title_buttons(false)
+        .build();
     let cancel = gtk::Button::with_label("Cancel");
-    let save = gtk::Button::builder().label(if existing.is_some() { "Save" } else { "Add" }).css_classes(["suggested-action"]).build();
+    let save = gtk::Button::builder()
+        .label(if existing.is_some() { "Save" } else { "Add" })
+        .css_classes(["suggested-action"])
+        .build();
     save.set_sensitive(writable);
     header.pack_start(&cancel);
     header.pack_end(&save);
     let page = adw::PreferencesPage::new();
 
     let main = adw::PreferencesGroup::new();
-    let title = adw::EntryRow::builder().title("Title").text(event.as_ref().map(|e| e.summary.as_str()).unwrap_or("")).build();
+    let title = adw::EntryRow::builder()
+        .title("Title")
+        .text(event.as_ref().map(|e| e.summary.as_str()).unwrap_or(""))
+        .build();
     let names: Vec<&str> = selectable.iter().map(|(_, n)| n.as_str()).collect();
-    let cal = adw::ComboRow::builder().title("Calendar").model(&gtk::StringList::new(&names)).build();
-    let cur_cal = existing.as_ref().map(|(c, ..)| c.clone()).unwrap_or_else(|| ui.default_calendar());
-    cal.set_selected(selectable.iter().position(|(u, _)| *u == cur_cal).unwrap_or(0) as u32);
-    let location =
-        adw::EntryRow::builder().title("Location").text(event.as_ref().map(|e| e.location.as_str()).unwrap_or("")).build();
+    let cal = adw::ComboRow::builder()
+        .title("Calendar")
+        .model(&gtk::StringList::new(&names))
+        .build();
+    let cur_cal = existing
+        .as_ref()
+        .map(|(c, ..)| c.clone())
+        .unwrap_or_else(|| ui.default_calendar());
+    cal.set_selected(
+        selectable
+            .iter()
+            .position(|(u, _)| *u == cur_cal)
+            .unwrap_or(0) as u32,
+    );
+    let location = adw::EntryRow::builder()
+        .title("Location")
+        .text(event.as_ref().map(|e| e.location.as_str()).unwrap_or(""))
+        .build();
     main.add(&title);
     main.add(&cal);
     main.add(&location);
     page.add(&main);
 
     let sched = adw::PreferencesGroup::builder().title("Schedule").build();
-    let all_day_row = adw::SwitchRow::builder().title("All Day").active(all_day).build();
-    let end_display = if all_day { (end - Duration::days(1)).date().max(start.date()) } else { end.date() };
+    let all_day_row = adw::SwitchRow::builder()
+        .title("All Day")
+        .active(all_day)
+        .build();
+    let end_display = if all_day {
+        (end - Duration::days(1)).date().max(start.date())
+    } else {
+        end.date()
+    };
     let start_date = DateButton::new(start.date());
     let end_date = DateButton::new(end_display);
     let start_time = time_entry(start.time(), twelve);
@@ -293,15 +408,28 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     sched.add(&end_row);
 
     let preset = recur::classify(series_rule.as_ref());
-    let presets: Vec<Preset> =
-        recur::PRESETS.iter().map(|(p, _)| *p).filter(|p| *p != Preset::Custom || preset == Preset::Custom).collect();
-    let preset_names: Vec<&str> =
-        recur::PRESETS.iter().filter(|(p, _)| presets.contains(p)).map(|(_, n)| *n).collect();
-    let repeat = adw::ComboRow::builder().title("Repeat").model(&gtk::StringList::new(&preset_names)).build();
+    let presets: Vec<Preset> = recur::PRESETS
+        .iter()
+        .map(|(p, _)| *p)
+        .filter(|p| *p != Preset::Custom || preset == Preset::Custom)
+        .collect();
+    let preset_names: Vec<&str> = recur::PRESETS
+        .iter()
+        .filter(|(p, _)| presets.contains(p))
+        .map(|(_, n)| *n)
+        .collect();
+    let repeat = adw::ComboRow::builder()
+        .title("Repeat")
+        .model(&gtk::StringList::new(&preset_names))
+        .build();
     repeat.set_selected(presets.iter().position(|p| *p == preset).unwrap_or(0) as u32);
     let ends = adw::ComboRow::builder()
         .title("Ends")
-        .model(&gtk::StringList::new(&["Never", "After a Number of Times", "On a Date"]))
+        .model(&gtk::StringList::new(&[
+            "Never",
+            "After a Number of Times",
+            "On a Date",
+        ]))
         .build();
     let cur_ends = recur::ends_of(series_rule.as_ref());
     let count = adw::SpinRow::with_range(1.0, 999.0, 1.0);
@@ -346,8 +474,15 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         .right_margin(8)
         .height_request(96)
         .build();
-    notes.buffer().set_text(event.as_ref().map(|e| e.description.as_str()).unwrap_or(""));
-    notes_group.add(&gtk::Frame::builder().child(&notes).css_classes(["view"]).build());
+    notes
+        .buffer()
+        .set_text(event.as_ref().map(|e| e.description.as_str()).unwrap_or(""));
+    notes_group.add(
+        &gtk::Frame::builder()
+            .child(&notes)
+            .css_classes(["view"])
+            .build(),
+    );
     page.add(&notes_group);
 
     let delete = gtk::Button::builder()
@@ -362,7 +497,14 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         page.add(&g);
     }
     if !writable {
-        for w in [title.upcast_ref::<gtk::Widget>(), cal.upcast_ref(), location.upcast_ref(), sched.upcast_ref(), add_alarm.upcast_ref(), notes.upcast_ref()] {
+        for w in [
+            title.upcast_ref::<gtk::Widget>(),
+            cal.upcast_ref(),
+            location.upcast_ref(),
+            sched.upcast_ref(),
+            add_alarm.upcast_ref(),
+            notes.upcast_ref(),
+        ] {
             w.set_sensitive(false);
         }
     }
@@ -407,7 +549,10 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     let pop = gtk::Popover::builder().child(&menu_box).build();
     add_alarm.set_popover(Some(&pop));
     for (mins, label) in recur::REMINDERS {
-        let b = gtk::Button::builder().label(label).css_classes(["flat"]).build();
+        let b = gtk::Button::builder()
+            .label(label)
+            .css_classes(["flat"])
+            .build();
         let weak = Rc::downgrade(&form);
         let p = pop.clone();
         b.connect_clicked(move |_| {
@@ -437,7 +582,8 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
             if !f.all_day.is_active() {
                 let new_end = s + duration.max(Duration::minutes(0));
                 f.end_date.set(new_end.date());
-                f.end_time.set_text(&dates::format_time(new_end.time(), f.twelve));
+                f.end_time
+                    .set_text(&dates::format_time(new_end.time(), f.twelve));
             }
         }
     });
@@ -447,9 +593,17 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
             e.set_text(&dates::format_time(t, f.twelve));
         }
     });
-    for row in [form.all_day.upcast_ref::<glib::Object>(), form.repeat.upcast_ref(), form.ends.upcast_ref()] {
+    for row in [
+        form.all_day.upcast_ref::<glib::Object>(),
+        form.repeat.upcast_ref(),
+        form.ends.upcast_ref(),
+    ] {
         let weak = Rc::downgrade(&form);
-        let prop = if row.is::<adw::SwitchRow>() { "active" } else { "selected" };
+        let prop = if row.is::<adw::SwitchRow>() {
+            "active"
+        } else {
+            "selected"
+        };
         row.connect_notify_local(Some(prop), move |_, _| {
             if let Some(f) = weak.upgrade() {
                 f.update_visibility();
@@ -494,15 +648,22 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         };
         match (&ev2, &cal_orig) {
             (None, _) => {
-                let mut e = Event::new(make_time(v.start, v.all_day, &zone), make_time(v.end, v.all_day, &zone));
+                let mut e = Event::new(
+                    make_time(v.start, v.all_day, &zone),
+                    make_time(v.end, v.all_day, &zone),
+                );
                 apply_fields(&mut e);
                 e.rrule = recur::build(v.preset, v.ends, None, v.all_day);
                 ui.remember_calendar(&v.cal);
-                ui.backend.send(Cmd::Create { cal: v.cal.clone(), ics: vec![e.to_ics(Utc::now())] });
+                ui.backend.send(Cmd::Create {
+                    cal: v.cal.clone(),
+                    ics: vec![e.to_ics(Utc::now())],
+                });
                 f.dialog.close();
             }
             (Some(comp), Some(cal)) => {
-                let rule_changed = recur::build(v.preset, v.ends, series_rule.as_ref(), v.all_day) != series_rule;
+                let rule_changed =
+                    recur::build(v.preset, v.ends, series_rule.as_ref(), v.all_day) != series_rule;
                 if !recurring {
                     let mut e = comp.clone();
                     apply_fields(&mut e);
@@ -514,9 +675,18 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
                     e.sequence += 1;
                     let ics = vec![e.to_ics(Utc::now())];
                     if v.cal != *cal {
-                        ui.backend.send(Cmd::Move { from: cal.clone(), to: v.cal.clone(), ics, uid: e.uid.clone() });
+                        ui.backend.send(Cmd::Move {
+                            from: cal.clone(),
+                            to: v.cal.clone(),
+                            ics,
+                            uid: e.uid.clone(),
+                        });
                     } else {
-                        ui.backend.send(Cmd::Modify { cal: cal.clone(), ics, mod_type: ModType::All });
+                        ui.backend.send(Cmd::Modify {
+                            cal: cal.clone(),
+                            ics,
+                            mod_type: ModType::All,
+                        });
                     }
                     f.dialog.close();
                     return;
@@ -527,7 +697,12 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
                     let cal = cal.clone();
                     let v_cal = v.cal.clone();
                     let (vs, ve, vad, vp, vends) = (v.start, v.end, v.all_day, v.preset, v.ends);
-                    let fields = (v.title.clone(), v.location.clone(), v.notes.clone(), alarms.clone());
+                    let fields = (
+                        v.title.clone(),
+                        v.location.clone(),
+                        v.notes.clone(),
+                        alarms.clone(),
+                    );
                     let zone = zone.clone();
                     let series_rule = series_rule.clone();
                     move || {
@@ -550,9 +725,18 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
                         m.sequence += 1;
                         let ics = vec![m.to_ics(Utc::now())];
                         if v_cal != cal {
-                            ui.backend.send(Cmd::Move { from: cal.clone(), to: v_cal.clone(), ics, uid: m.uid.clone() });
+                            ui.backend.send(Cmd::Move {
+                                from: cal.clone(),
+                                to: v_cal.clone(),
+                                ics,
+                                uid: m.uid.clone(),
+                            });
                         } else {
-                            ui.backend.send(Cmd::Modify { cal: cal.clone(), ics, mod_type: ModType::All });
+                            ui.backend.send(Cmd::Modify {
+                                cal: cal.clone(),
+                                ics,
+                                mod_type: ModType::All,
+                            });
                         }
                     }
                 };
@@ -567,7 +751,12 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
                     let cal = cal.clone();
                     let rid = rid2.clone();
                     let (vs, ve, vad) = (v.start, v.end, v.all_day);
-                    let fields = (v.title.clone(), v.location.clone(), v.notes.clone(), alarms.clone());
+                    let fields = (
+                        v.title.clone(),
+                        v.location.clone(),
+                        v.notes.clone(),
+                        alarms.clone(),
+                    );
                     let zone = zone.clone();
                     move || {
                         let mut e = comp.clone();
@@ -594,18 +783,27 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
                             e.end = make_time(ve, vad, &zone);
                         }
                         e.sequence += 1;
-                        ui.backend.send(Cmd::Modify { cal: cal.clone(), ics: vec![e.to_ics(Utc::now())], mod_type: ModType::This });
+                        ui.backend.send(Cmd::Modify {
+                            cal: cal.clone(),
+                            ics: vec![e.to_ics(Utc::now())],
+                            mod_type: ModType::This,
+                        });
                     }
                 };
                 let dialog = f.dialog.clone();
-                ask_scope(&f.dialog, "Save Changes to Recurring Event?", "Save", move |this| {
-                    if this {
-                        save_this();
-                    } else {
-                        save_all();
-                    }
-                    dialog.close();
-                });
+                ask_scope(
+                    &f.dialog,
+                    "Save Changes to Recurring Event?",
+                    "Save",
+                    move |this| {
+                        if this {
+                            save_this();
+                        } else {
+                            save_all();
+                        }
+                        dialog.close();
+                    },
+                );
             }
             _ => {}
         }
@@ -627,9 +825,17 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
             ask_scope(&dialog2, "Delete Recurring Event?", "Delete", move |this| {
                 if this {
                     let r = own_rid.clone().unwrap_or_else(|| rid3.clone());
-                    ui2.backend.send(Cmd::Remove { cal: cal2.clone(), ids: vec![(uid.clone(), r)], mod_type: ModType::This });
+                    ui2.backend.send(Cmd::Remove {
+                        cal: cal2.clone(),
+                        ids: vec![(uid.clone(), r)],
+                        mod_type: ModType::This,
+                    });
                 } else {
-                    ui2.backend.send(Cmd::Remove { cal: cal2.clone(), ids: vec![(uid.clone(), String::new())], mod_type: ModType::All });
+                    ui2.backend.send(Cmd::Remove {
+                        cal: cal2.clone(),
+                        ids: vec![(uid.clone(), String::new())],
+                        mod_type: ModType::All,
+                    });
                 }
                 d3.close();
             });
@@ -682,16 +888,31 @@ mod tests {
     #[test]
     fn rid_parsing() {
         let like = Time::Zoned(dt("2026-01-01 09:00"), "Europe/Berlin".into());
-        assert_eq!(rid_time("20261113T090000", &like), Some(Time::Zoned(dt("2026-11-13 09:00"), "Europe/Berlin".into())));
-        assert_eq!(rid_time("20261113T090000Z", &like), Some(Time::Utc(dt("2026-11-13 09:00"))));
-        assert_eq!(rid_time("20261113", &like), Some(Time::Date(NaiveDate::from_ymd_opt(2026, 11, 13).unwrap())));
+        assert_eq!(
+            rid_time("20261113T090000", &like),
+            Some(Time::Zoned(dt("2026-11-13 09:00"), "Europe/Berlin".into()))
+        );
+        assert_eq!(
+            rid_time("20261113T090000Z", &like),
+            Some(Time::Utc(dt("2026-11-13 09:00")))
+        );
+        assert_eq!(
+            rid_time("20261113", &like),
+            Some(Time::Date(NaiveDate::from_ymd_opt(2026, 11, 13).unwrap()))
+        );
         assert_eq!(rid_time("bogus", &like), None);
     }
 
     #[test]
     fn times() {
-        assert_eq!(make_time(dt("2026-11-13 09:00"), true, "UTC"), Time::Date(NaiveDate::from_ymd_opt(2026, 11, 13).unwrap()));
-        assert_eq!(make_time(dt("2026-11-13 09:00"), false, "UTC"), Time::Utc(dt("2026-11-13 09:00")));
+        assert_eq!(
+            make_time(dt("2026-11-13 09:00"), true, "UTC"),
+            Time::Date(NaiveDate::from_ymd_opt(2026, 11, 13).unwrap())
+        );
+        assert_eq!(
+            make_time(dt("2026-11-13 09:00"), false, "UTC"),
+            Time::Utc(dt("2026-11-13 09:00"))
+        );
         assert_eq!(
             make_time(dt("2026-11-13 09:00"), false, "Europe/Paris"),
             Time::Zoned(dt("2026-11-13 09:00"), "Europe/Paris".into())
@@ -701,8 +922,17 @@ mod tests {
     #[test]
     fn slots() {
         let today = NaiveDate::from_ymd_opt(2026, 11, 13).unwrap();
-        assert_eq!(default_slot(today, dt("2026-11-13 14:20")).0, dt("2026-11-13 15:00"));
-        assert_eq!(default_slot(today + Duration::days(1), dt("2026-11-13 14:20")).0, dt("2026-11-14 09:00"));
-        assert_eq!(default_slot(today, dt("2026-11-13 23:30")).0, dt("2026-11-13 23:00"));
+        assert_eq!(
+            default_slot(today, dt("2026-11-13 14:20")).0,
+            dt("2026-11-13 15:00")
+        );
+        assert_eq!(
+            default_slot(today + Duration::days(1), dt("2026-11-13 14:20")).0,
+            dt("2026-11-14 09:00")
+        );
+        assert_eq!(
+            default_slot(today, dt("2026-11-13 23:30")).0,
+            dt("2026-11-13 23:00")
+        );
     }
 }

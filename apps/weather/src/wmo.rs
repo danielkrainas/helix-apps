@@ -104,7 +104,10 @@ mod tests {
 
     #[test]
     fn every_known_code_has_description_and_icon() {
-        for code in [0, 1, 2, 3, 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99] {
+        for code in [
+            0, 1, 2, 3, 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82,
+            85, 86, 95, 96, 99,
+        ] {
             assert_ne!(description(code), "Unknown", "code {code}");
             assert_ne!(icon_base(code, true), "weather-severe-alert", "code {code}");
         }

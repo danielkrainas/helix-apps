@@ -29,13 +29,20 @@ impl XkbInfo {
             if line.is_empty() {
                 continue;
             }
-            let Some((name, rest)) = line.split_once(char::is_whitespace) else { continue };
+            let Some((name, rest)) = line.split_once(char::is_whitespace) else {
+                continue;
+            };
             let rest = rest.trim();
             let (id, desc) = match section {
                 "layout" => (name.to_string(), rest.to_string()),
                 "variant" => {
-                    let Some((layout, desc)) = rest.split_once(':') else { continue };
-                    (format!("{}+{}", layout.trim(), name), desc.trim().to_string())
+                    let Some((layout, desc)) = rest.split_once(':') else {
+                        continue;
+                    };
+                    (
+                        format!("{}+{}", layout.trim(), name),
+                        desc.trim().to_string(),
+                    )
                 }
                 _ => continue,
             };
@@ -63,7 +70,8 @@ pub fn source_name(info: &XkbInfo, kind: &str, id: &str) -> String {
             .or_else(|| {
                 // Unknown variant: fall back to the layout's name.
                 let layout = id.split('+').next()?;
-                info.description(layout).map(|d| format!("{d} ({})", id.split('+').nth(1).unwrap_or("")))
+                info.description(layout)
+                    .map(|d| format!("{d} ({})", id.split('+').nth(1).unwrap_or("")))
             })
             .unwrap_or_else(|| id.to_string()),
         "ibus" => format!("{id} (IBus)"),
@@ -86,7 +94,9 @@ pub fn filter<'a>(info: &'a XkbInfo, query: &str) -> Vec<&'a (String, String)> {
     let q = query.trim().to_lowercase();
     info.entries
         .iter()
-        .filter(|(id, desc)| q.is_empty() || desc.to_lowercase().contains(&q) || id.to_lowercase().contains(&q))
+        .filter(|(id, desc)| {
+            q.is_empty() || desc.to_lowercase().contains(&q) || id.to_lowercase().contains(&q)
+        })
         .collect()
 }
 
@@ -102,7 +112,10 @@ mod tests {
         assert_eq!(info.entries.len(), 4);
         assert_eq!(info.description("us"), Some("English (US)"));
         assert_eq!(info.description("us+dvorak"), Some("English (Dvorak)"));
-        assert_eq!(info.description("de+nodeadkeys"), Some("German (no dead keys)"));
+        assert_eq!(
+            info.description("de+nodeadkeys"),
+            Some("German (no dead keys)")
+        );
         assert_eq!(info.description("pc105"), None);
         assert_eq!(info.description("grp"), None);
     }
@@ -112,7 +125,10 @@ mod tests {
         let info = XkbInfo::parse(SAMPLE);
         assert_eq!(source_name(&info, "xkb", "de"), "German");
         assert_eq!(source_name(&info, "xkb", "us+dvorak"), "English (Dvorak)");
-        assert_eq!(source_name(&info, "xkb", "us+weird"), "English (US) (weird)");
+        assert_eq!(
+            source_name(&info, "xkb", "us+weird"),
+            "English (US) (weird)"
+        );
         assert_eq!(source_name(&info, "xkb", "zz"), "zz");
         assert_eq!(source_name(&info, "ibus", "anthy"), "anthy (IBus)");
     }

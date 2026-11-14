@@ -40,8 +40,12 @@ impl Job {
         let n = |v: &Vec<gio::File>| crate::fmt::item_count(v.len() as u64);
         let dest_name = |d: &gio::File| display_name(d);
         match self {
-            Job::Copy { sources, dest } => format!("Copying {} to “{}”", n(sources), dest_name(dest)),
-            Job::Move { sources, dest } => format!("Moving {} to “{}”", n(sources), dest_name(dest)),
+            Job::Copy { sources, dest } => {
+                format!("Copying {} to “{}”", n(sources), dest_name(dest))
+            }
+            Job::Move { sources, dest } => {
+                format!("Moving {} to “{}”", n(sources), dest_name(dest))
+            }
             Job::Link { sources, .. } => format!("Creating links to {}", n(sources)),
             Job::Trash(v) => format!("Moving {} to Trash", n(v)),
             Job::Delete(v) => format!("Deleting {}", n(v)),
@@ -157,7 +161,11 @@ fn exists(f: &gio::File, cancel: &gio::Cancellable) -> bool {
 
 /// Counts items and bytes under `f` (not following symlinks). `tick` is
 /// called periodically with running totals and may return false to stop.
-pub fn measure(f: &gio::File, cancel: &gio::Cancellable, tick: &mut dyn FnMut(u64, u64) -> bool) -> (u64, u64) {
+pub fn measure(
+    f: &gio::File,
+    cancel: &gio::Cancellable,
+    tick: &mut dyn FnMut(u64, u64) -> bool,
+) -> (u64, u64) {
     let mut items = 0u64;
     let mut bytes = 0u64;
     let mut stack = vec![f.clone()];
@@ -165,7 +173,8 @@ pub fn measure(f: &gio::File, cancel: &gio::Cancellable, tick: &mut dyn FnMut(u6
         if cancel.is_cancelled() {
             break;
         }
-        let Ok(info) = cur.query_info("standard::type,standard::size", NOFOLLOW, Some(cancel)) else {
+        let Ok(info) = cur.query_info("standard::type,standard::size", NOFOLLOW, Some(cancel))
+        else {
             continue;
         };
         items += 1;
@@ -198,9 +207,11 @@ impl Runner<'_> {
         if is_cancelled(e) {
             self.out.cancelled = true;
         } else {
-            self.out
-                .errors
-                .push(format!("Could not {verb} “{}”: {}", display_name(f), e.message()));
+            self.out.errors.push(format!(
+                "Could not {verb} “{}”: {}",
+                display_name(f),
+                e.message()
+            ));
         }
     }
 
@@ -323,7 +334,12 @@ impl Runner<'_> {
         }
 
         if is_move && !merge {
-            match src.move_(&target, gio::FileCopyFlags::NOFOLLOW_SYMLINKS, Some(self.cancel), None) {
+            match src.move_(
+                &target,
+                gio::FileCopyFlags::NOFOLLOW_SYMLINKS,
+                Some(self.cancel),
+                None,
+            ) {
                 Ok(()) => {
                     // Account for the whole subtree at once.
                     let (i, b) = measure(&target, self.cancel, &mut |_, _| true);
@@ -333,7 +349,9 @@ impl Runner<'_> {
                     self.report(false);
                     return Some(target);
                 }
-                Err(e) if e.matches(gio::IOErrorEnum::WouldRecurse) || e.matches(gio::IOErrorEnum::NotSupported) => {}
+                Err(e)
+                    if e.matches(gio::IOErrorEnum::WouldRecurse)
+                        || e.matches(gio::IOErrorEnum::NotSupported) => {}
                 Err(e) => {
                     self.error("move", src, &e);
                     return None;
@@ -349,24 +367,27 @@ impl Runner<'_> {
                     return None;
                 }
                 // Keep permissions/timestamps where supported.
-                if let Ok(info) = src.query_info("unix::mode,time::modified", NOFOLLOW, Some(self.cancel)) {
+                if let Ok(info) =
+                    src.query_info("unix::mode,time::modified", NOFOLLOW, Some(self.cancel))
+                {
                     let _ = target.set_attributes_from_info(&info, NOFOLLOW, Some(self.cancel));
                 }
             }
             self.progress.done_items += 1;
-            let children = match src.enumerate_children("standard::name", NOFOLLOW, Some(self.cancel)) {
-                Ok(en) => {
-                    let mut v = Vec::new();
-                    while let Ok(Some(info)) = en.next_file(Some(self.cancel)) {
-                        v.push(info.name());
+            let children =
+                match src.enumerate_children("standard::name", NOFOLLOW, Some(self.cancel)) {
+                    Ok(en) => {
+                        let mut v = Vec::new();
+                        while let Ok(Some(info)) = en.next_file(Some(self.cancel)) {
+                            v.push(info.name());
+                        }
+                        v
                     }
-                    v
-                }
-                Err(e) => {
-                    self.error("read", src, &e);
-                    return Some(target);
-                }
-            };
+                    Err(e) => {
+                        self.error("read", src, &e);
+                        return Some(target);
+                    }
+                };
             let mut all_ok = true;
             for name in children {
                 if self.stopped() {
@@ -399,7 +420,8 @@ impl Runner<'_> {
                         handler.progress(progress);
                     }
                 };
-                let flags = gio::FileCopyFlags::NOFOLLOW_SYMLINKS | gio::FileCopyFlags::ALL_METADATA;
+                let flags =
+                    gio::FileCopyFlags::NOFOLLOW_SYMLINKS | gio::FileCopyFlags::ALL_METADATA;
                 if is_move {
                     src.move_(&target, flags, Some(self.cancel), Some(&mut cb))
                 } else {
@@ -506,7 +528,8 @@ impl Runner<'_> {
             }
             self.progress.current = display_name(f);
             let r = if f.uri_scheme().as_deref() == Some("trash") {
-                f.delete(Some(self.cancel)).inspect(|_| self.progress.done_items += 1)
+                f.delete(Some(self.cancel))
+                    .inspect(|_| self.progress.done_items += 1)
             } else {
                 self.delete_recursive(f)
             };
@@ -597,7 +620,11 @@ impl Runner<'_> {
 
     fn empty_trash(&mut self) {
         let trash = gio::File::for_uri("trash:///");
-        let en = match trash.enumerate_children("standard::name", gio::FileQueryInfoFlags::NONE, Some(self.cancel)) {
+        let en = match trash.enumerate_children(
+            "standard::name",
+            gio::FileQueryInfoFlags::NONE,
+            Some(self.cancel),
+        ) {
             Ok(en) => en,
             Err(e) => return self.error("empty", &trash, &e),
         };
@@ -659,7 +686,8 @@ pub(crate) mod tests {
         pub fn new(tag: &str) -> Self {
             static N: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
             let n = N.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-            let p = std::env::temp_dir().join(format!("helix-files-test-{}-{tag}-{n}", std::process::id()));
+            let p = std::env::temp_dir()
+                .join(format!("helix-files-test-{}-{tag}-{n}", std::process::id()));
             let _ = fs::remove_dir_all(&p);
             fs::create_dir_all(&p).unwrap();
             TempDir(p)
@@ -923,7 +951,10 @@ pub(crate) mod tests {
             },
             &mut h,
         );
-        assert_eq!(fs::read_link(t.path("Link to f.txt")).unwrap(), t.path("f.txt"));
+        assert_eq!(
+            fs::read_link(t.path("Link to f.txt")).unwrap(),
+            t.path("f.txt")
+        );
         assert!(t.path("Link to f (2).txt").exists());
     }
 

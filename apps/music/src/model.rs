@@ -61,7 +61,9 @@ impl Track {
 }
 
 pub fn path_to_uri(path: &Path) -> String {
-    glib::filename_to_uri(path, None).map(|s| s.to_string()).unwrap_or_else(|_| format!("file://{}", path.display()))
+    glib::filename_to_uri(path, None)
+        .map(|s| s.to_string())
+        .unwrap_or_else(|_| format!("file://{}", path.display()))
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -99,7 +101,10 @@ pub struct Library {
 
 /// Lower-cases and strips diacritics for searching and comparisons.
 pub fn fold(s: &str) -> String {
-    s.nfd().filter(|c| !unicode_normalization::char::is_combining_mark(*c)).flat_map(char::to_lowercase).collect()
+    s.nfd()
+        .filter(|c| !unicode_normalization::char::is_combining_mark(*c))
+        .flat_map(char::to_lowercase)
+        .collect()
 }
 
 /// Sort key for titles and names: folded, leading "the " removed.
@@ -115,7 +120,11 @@ fn track_order(a: &Track, b: &Track) -> std::cmp::Ordering {
     a.disc
         .unwrap_or(1)
         .cmp(&b.disc.unwrap_or(1))
-        .then(a.track.unwrap_or(u32::MAX).cmp(&b.track.unwrap_or(u32::MAX)))
+        .then(
+            a.track
+                .unwrap_or(u32::MAX)
+                .cmp(&b.track.unwrap_or(u32::MAX)),
+        )
         .then_with(|| sort_key(&a.title).cmp(&sort_key(&b.title)))
         .then_with(|| a.path.cmp(&b.path))
 }
@@ -141,7 +150,10 @@ impl Library {
                     // Untitled albums: group per artist so unrelated loose files stay apart.
                     GroupKey::AlbumArtist(fold(t.artist_name()), String::new())
                 }
-                None => GroupKey::Folder(album, t.path.parent().map(Path::to_path_buf).unwrap_or_default()),
+                None => GroupKey::Folder(
+                    album,
+                    t.path.parent().map(Path::to_path_buf).unwrap_or_default(),
+                ),
             };
             groups.entry(key).or_default().push(i);
         }
@@ -152,13 +164,16 @@ impl Library {
                 idx.sort_by(|&a, &b| track_order(&tracks[a], &tracks[b]));
                 let first = &tracks[idx[0]];
                 let album_artist = idx.iter().find_map(|&i| nonempty(&tracks[i].album_artist));
-                let mut artists: Vec<String> = idx.iter().map(|&i| fold(tracks[i].artist_name())).collect();
+                let mut artists: Vec<String> =
+                    idx.iter().map(|&i| fold(tracks[i].artist_name())).collect();
                 artists.sort();
                 artists.dedup();
                 let compilation = idx.iter().any(|&i| tracks[i].compilation);
                 let (artist, various, has_aa) = match album_artist {
                     Some(aa) => (aa.to_string(), fold(aa) == fold(VARIOUS_ARTISTS), true),
-                    None if artists.len() > 1 || compilation => (VARIOUS_ARTISTS.to_string(), true, false),
+                    None if artists.len() > 1 || compilation => {
+                        (VARIOUS_ARTISTS.to_string(), true, false)
+                    }
                     None => (first.artist_name().to_string(), false, false),
                 };
                 let mut years: HashMap<u32, usize> = HashMap::new();
@@ -167,7 +182,10 @@ impl Library {
                         *years.entry(y).or_default() += 1;
                     }
                 }
-                let year = years.into_iter().max_by(|a, b| a.1.cmp(&b.1).then(b.0.cmp(&a.0))).map(|(y, _)| y);
+                let year = years
+                    .into_iter()
+                    .max_by(|a, b| a.1.cmp(&b.1).then(b.0.cmp(&a.0)))
+                    .map(|(y, _)| y);
                 Album {
                     title: nonempty(&first.album).unwrap_or(UNKNOWN_ALBUM).to_string(),
                     artist,
@@ -181,7 +199,9 @@ impl Library {
             })
             .collect();
         albums.sort_by(|a, b| {
-            sort_key(&a.title).cmp(&sort_key(&b.title)).then_with(|| sort_key(&a.artist).cmp(&sort_key(&b.artist)))
+            sort_key(&a.title)
+                .cmp(&sort_key(&b.title))
+                .then_with(|| sort_key(&a.artist).cmp(&sort_key(&b.artist)))
         });
 
         let mut track_album = vec![0; tracks.len()];
@@ -202,7 +222,9 @@ impl Library {
                 names.push(tracks[t].artist_name());
             }
             for name in names {
-                let entry = artist_map.entry(fold(name)).or_insert_with(|| (name.to_string(), Vec::new()));
+                let entry = artist_map
+                    .entry(fold(name))
+                    .or_insert_with(|| (name.to_string(), Vec::new()));
                 if entry.1.last() != Some(&ai) && !entry.1.contains(&ai) {
                     entry.1.push(ai);
                 }
@@ -224,14 +246,24 @@ impl Library {
             .collect();
         artists.sort_by_key(|a| sort_key(&a.name));
 
-        let by_path = tracks.iter().enumerate().map(|(i, t)| (t.path.clone(), i)).collect();
+        let by_path = tracks
+            .iter()
+            .enumerate()
+            .map(|(i, t)| (t.path.clone(), i))
+            .collect();
         let folded = tracks
             .iter()
             .map(|t| {
                 let mut s = String::new();
-                for part in [Some(t.title.as_str()), t.artist.as_deref(), t.album_artist.as_deref(), t.album.as_deref(), t.genre.as_deref()]
-                    .into_iter()
-                    .flatten()
+                for part in [
+                    Some(t.title.as_str()),
+                    t.artist.as_deref(),
+                    t.album_artist.as_deref(),
+                    t.album.as_deref(),
+                    t.genre.as_deref(),
+                ]
+                .into_iter()
+                .flatten()
                 {
                     s.push_str(&fold(part));
                     s.push('\u{1}');
@@ -239,7 +271,14 @@ impl Library {
                 s
             })
             .collect();
-        Library { tracks, albums, artists, by_path, track_album, folded }
+        Library {
+            tracks,
+            albums,
+            artists,
+            by_path,
+            track_album,
+            folded,
+        }
     }
 
     pub fn index_of(&self, path: &Path) -> Option<usize> {
@@ -251,7 +290,10 @@ impl Library {
     }
 
     pub fn album_of(&self, track: usize) -> Option<usize> {
-        self.track_album.get(track).copied().filter(|_| !self.albums.is_empty())
+        self.track_album
+            .get(track)
+            .copied()
+            .filter(|_| !self.albums.is_empty())
     }
 
     #[cfg_attr(not(test), allow(dead_code))]
@@ -268,12 +310,19 @@ impl Library {
         if !a.various && fold(&a.artist) == f {
             return a.tracks.clone();
         }
-        a.tracks.iter().copied().filter(|&t| fold(self.tracks[t].artist_name()) == f).collect()
+        a.tracks
+            .iter()
+            .copied()
+            .filter(|&t| fold(self.tracks[t].artist_name()) == f)
+            .collect()
     }
 
     /// All track indices in album order (album title, then disc/track).
     pub fn all_tracks_by_album(&self) -> Vec<usize> {
-        self.albums.iter().flat_map(|a| a.tracks.iter().copied()).collect()
+        self.albums
+            .iter()
+            .flat_map(|a| a.tracks.iter().copied())
+            .collect()
     }
 
     pub fn search(&self, query: &str) -> SearchResults {
@@ -282,16 +331,25 @@ impl Library {
             return SearchResults::default();
         }
         let matches = |hay: &str| terms.iter().all(|t| hay.contains(t.as_str()));
-        let tracks: Vec<usize> =
-            self.all_tracks_by_album().into_iter().filter(|&i| matches(&self.folded[i])).collect();
+        let tracks: Vec<usize> = self
+            .all_tracks_by_album()
+            .into_iter()
+            .filter(|&i| matches(&self.folded[i]))
+            .collect();
         let albums = (0..self.albums.len())
             .filter(|&ai| {
                 let a = &self.albums[ai];
                 matches(&format!("{}\u{1}{}", fold(&a.title), fold(&a.artist)))
             })
             .collect();
-        let artists = (0..self.artists.len()).filter(|&i| matches(&fold(&self.artists[i].name))).collect();
-        SearchResults { albums, artists, tracks }
+        let artists = (0..self.artists.len())
+            .filter(|&i| matches(&fold(&self.artists[i].name)))
+            .collect();
+        SearchResults {
+            albums,
+            artists,
+            tracks,
+        }
     }
 }
 
@@ -322,7 +380,13 @@ pub fn format_duration(ms: u64) -> String {
 pub fn format_total(ms: u64) -> String {
     let mins = ms.div_ceil(60_000);
     let (h, m) = (mins / 60, mins % 60);
-    let plural = |n: u64, w: &str| if n == 1 { format!("1 {w}") } else { format!("{n} {w}s") };
+    let plural = |n: u64, w: &str| {
+        if n == 1 {
+            format!("1 {w}")
+        } else {
+            format!("{n} {w}s")
+        }
+    };
     match (h, m) {
         (0, m) => plural(m, "minute"),
         (h, 0) => plural(h, "hour"),
@@ -353,10 +417,19 @@ mod tests {
     #[test]
     fn groups_by_album_artist() {
         let lib = Library::new(vec![
-            with(track("/m/a/1.flac", "One", Some("X feat. Y"), Some("Album")), |t| t.album_artist = Some("X".into())),
-            with(track("/m/b/2.flac", "Two", Some("X"), Some("album")), |t| t.album_artist = Some("x".into())),
+            with(
+                track("/m/a/1.flac", "One", Some("X feat. Y"), Some("Album")),
+                |t| t.album_artist = Some("X".into()),
+            ),
+            with(track("/m/b/2.flac", "Two", Some("X"), Some("album")), |t| {
+                t.album_artist = Some("x".into())
+            }),
         ]);
-        assert_eq!(lib.albums.len(), 1, "album artist + title (case-insensitive) groups across folders");
+        assert_eq!(
+            lib.albums.len(),
+            1,
+            "album artist + title (case-insensitive) groups across folders"
+        );
         assert_eq!(lib.albums[0].artist, "X");
         assert!(!lib.albums[0].various);
         let names: Vec<_> = lib.artists.iter().map(|a| a.name.as_str()).collect();
@@ -386,7 +459,10 @@ mod tests {
 
     #[test]
     fn compilation_flag_makes_various() {
-        let lib = Library::new(vec![with(track("/m/c/1.mp3", "A", Some("Alice"), Some("Mix")), |t| t.compilation = true)]);
+        let lib = Library::new(vec![with(
+            track("/m/c/1.mp3", "A", Some("Alice"), Some("Mix")),
+            |t| t.compilation = true,
+        )]);
         assert_eq!(lib.albums[0].artist, VARIOUS_ARTISTS);
     }
 
@@ -405,13 +481,29 @@ mod tests {
             mk("/m/x/nodisc-t1", None, Some(1)),
             mk("/m/x/d1t10", Some(1), Some(10)),
         ]);
-        let order: Vec<_> = lib.albums[0].tracks.iter().map(|&i| lib.tracks[i].title.as_str()).collect();
-        assert_eq!(order, ["/m/x/nodisc-t1", "/m/x/d1t2", "/m/x/d1t10", "/m/x/none", "/m/x/d2t1"]);
+        let order: Vec<_> = lib.albums[0]
+            .tracks
+            .iter()
+            .map(|&i| lib.tracks[i].title.as_str())
+            .collect();
+        assert_eq!(
+            order,
+            [
+                "/m/x/nodisc-t1",
+                "/m/x/d1t2",
+                "/m/x/d1t10",
+                "/m/x/none",
+                "/m/x/d2t1"
+            ]
+        );
     }
 
     #[test]
     fn unknown_album_and_artist() {
-        let lib = Library::new(vec![track("/m/1.ogg", "Loose", None, None), track("/n/2.ogg", "Loose 2", None, None)]);
+        let lib = Library::new(vec![
+            track("/m/1.ogg", "Loose", None, None),
+            track("/n/2.ogg", "Loose 2", None, None),
+        ]);
         assert_eq!(lib.albums.len(), 1);
         assert_eq!(lib.albums[0].title, UNKNOWN_ALBUM);
         assert_eq!(lib.albums[0].artist, UNKNOWN_ARTIST);
@@ -420,9 +512,15 @@ mod tests {
     #[test]
     fn album_year_and_sorting() {
         let lib = Library::new(vec![
-            with(track("/m/z/1", "a", Some("A"), Some("The Zoo")), |t| t.year = Some(1999)),
-            with(track("/m/z/2", "b", Some("A"), Some("The Zoo")), |t| t.year = Some(2001)),
-            with(track("/m/z/3", "c", Some("A"), Some("The Zoo")), |t| t.year = Some(2001)),
+            with(track("/m/z/1", "a", Some("A"), Some("The Zoo")), |t| {
+                t.year = Some(1999)
+            }),
+            with(track("/m/z/2", "b", Some("A"), Some("The Zoo")), |t| {
+                t.year = Some(2001)
+            }),
+            with(track("/m/z/3", "c", Some("A"), Some("The Zoo")), |t| {
+                t.year = Some(2001)
+            }),
             track("/m/b/1", "x", Some("A"), Some("Beta")),
         ]);
         assert_eq!(lib.albums[0].title, "Beta");
@@ -435,7 +533,10 @@ mod tests {
     #[test]
     fn search_is_accent_and_case_insensitive() {
         let lib = Library::new(vec![
-            with(track("/m/1", "Café del Mar", Some("Björk"), Some("Post")), |t| t.genre = Some("Electronic".into())),
+            with(
+                track("/m/1", "Café del Mar", Some("Björk"), Some("Post")),
+                |t| t.genre = Some("Electronic".into()),
+            ),
             track("/m/2", "Other", Some("Someone"), Some("Else")),
         ]);
         let r = lib.search("bjork cafe");

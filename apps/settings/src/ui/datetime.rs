@@ -28,15 +28,25 @@ struct State {
 
 /// Formats `now` in `tz` per `clock-format` (`24h` / `12h`).
 pub fn format_time(now: &glib::DateTime, twelve_hour: bool) -> String {
-    let fmt = if twelve_hour { "%e %B %Y, %l:%M %p" } else { "%e %B %Y, %H:%M" };
-    now.format(fmt).map(|s| s.split_whitespace().collect::<Vec<_>>().join(" ")).unwrap_or_default()
+    let fmt = if twelve_hour {
+        "%e %B %Y, %l:%M %p"
+    } else {
+        "%e %B %Y, %H:%M"
+    };
+    now.format(fmt)
+        .map(|s| s.split_whitespace().collect::<Vec<_>>().join(" "))
+        .unwrap_or_default()
 }
 
 impl State {
     fn tick(&self) {
         let tz_name = self.timezone.borrow().clone();
         #[allow(deprecated)] // from_identifier needs GLib 2.68 bindings
-        let tz = if tz_name.is_empty() { glib::TimeZone::local() } else { glib::TimeZone::new(Some(&tz_name)) };
+        let tz = if tz_name.is_empty() {
+            glib::TimeZone::local()
+        } else {
+            glib::TimeZone::new(Some(&tz_name))
+        };
         if let Ok(now) = glib::DateTime::now(&tz) {
             let twelve = self.iface.get_enum_nick("clock-format", "24h") == "12h";
             self.time_row.set_subtitle(&format_time(&now, twelve));
@@ -52,7 +62,11 @@ impl State {
                     this.loading.set(true);
                     this.ntp.set_active(td.ntp);
                     this.ntp.set_sensitive(td.can_ntp);
-                    this.ntp.set_subtitle(if td.ntp_synchronized { "Synchronized with network time servers" } else { "Requires internet access" });
+                    this.ntp.set_subtitle(if td.ntp_synchronized {
+                        "Synchronized with network time servers"
+                    } else {
+                        "Requires internet access"
+                    });
                     this.loading.set(false);
                     this.tz_row.set_subtitle(&td.timezone);
                     *this.timezone.borrow_mut() = td.timezone;
@@ -86,23 +100,67 @@ impl Panel for DateTimePanel {
         let page = widgets::page();
 
         let group = widgets::group("");
-        let ntp = adw::SwitchRow::builder().title("Automatic Date &amp; Time").sensitive(false).build();
+        let ntp = adw::SwitchRow::builder()
+            .title("Automatic Date &amp; Time")
+            .sensitive(false)
+            .build();
         group.add(&ntp);
-        group.add(&switch(&datetime, "automatic-timezone", false, false, "Automatic Time Zone", "Requires location services"));
+        group.add(&switch(
+            &datetime,
+            "automatic-timezone",
+            false,
+            false,
+            "Automatic Time Zone",
+            "Requires location services",
+        ));
         let time_row = adw::ActionRow::builder().title("Date &amp; Time").build();
         group.add(&time_row);
-        let tz_row = adw::ActionRow::builder().title("Time Zone").subtitle("Loading…").activatable(true).sensitive(false).build();
+        let tz_row = adw::ActionRow::builder()
+            .title("Time Zone")
+            .subtitle("Loading…")
+            .activatable(true)
+            .sensitive(false)
+            .build();
         tz_row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
         group.add(&tz_row);
-        group.add(&widgets::nick_combo(&iface, "clock-format", "24h", &[("24h", "24-hour"), ("12h", "AM / PM")], "Time Format"));
+        group.add(&widgets::nick_combo(
+            &iface,
+            "clock-format",
+            "24h",
+            &[("24h", "24-hour"), ("12h", "AM / PM")],
+            "Time Format",
+        ));
         page.add(&group);
 
         let clock = widgets::group("Clock & Calendar");
-        clock.set_description(Some("Control how the time and date are shown in the top bar"));
-        clock.add(&switch(&iface, "clock-show-weekday", false, false, "Week Day", ""));
+        clock.set_description(Some(
+            "Control how the time and date are shown in the top bar",
+        ));
+        clock.add(&switch(
+            &iface,
+            "clock-show-weekday",
+            false,
+            false,
+            "Week Day",
+            "",
+        ));
         clock.add(&switch(&iface, "clock-show-date", true, false, "Date", ""));
-        clock.add(&switch(&iface, "clock-show-seconds", false, false, "Seconds", ""));
-        clock.add(&switch(&calendar, "show-weekdate", false, false, "Week Numbers", "Show week numbers in the calendar"));
+        clock.add(&switch(
+            &iface,
+            "clock-show-seconds",
+            false,
+            false,
+            "Seconds",
+            "",
+        ));
+        clock.add(&switch(
+            &calendar,
+            "show-weekdate",
+            false,
+            false,
+            "Week Numbers",
+            "Show week numbers in the calendar",
+        ));
         page.add(&clock);
 
         let state = Rc::new(State {
@@ -126,12 +184,15 @@ impl Panel for DateTimePanel {
             let enabled = r.is_active();
             let weak = Rc::downgrade(&st);
             // System change, only on user action.
-            spawn_worker(move || dbus::set_ntp(enabled), move |res| {
-                if let Some(st) = weak.upgrade() {
-                    st.report("automatic date & time", res);
-                    st.load();
-                }
-            });
+            spawn_worker(
+                move || dbus::set_ntp(enabled),
+                move |res| {
+                    if let Some(st) = weak.upgrade() {
+                        st.report("automatic date & time", res);
+                        st.load();
+                    }
+                },
+            );
         });
 
         let weak = Rc::downgrade(&state);
@@ -164,18 +225,42 @@ impl Panel for DateTimePanel {
 }
 
 fn timezone_dialog(parent: &adw::ApplicationWindow, state: &Rc<State>) {
-    let dialog = adw::Dialog::builder().title("Select Time Zone").content_width(420).content_height(560).build();
-    let search = gtk::SearchEntry::builder().placeholder_text("Search for a city or region").margin_start(12).margin_end(12).margin_top(6).margin_bottom(6).build();
-    let list = gtk::ListBox::builder().css_classes(["navigation-sidebar"]).build();
-    let scrolled = gtk::ScrolledWindow::builder().vexpand(true).hscrollbar_policy(gtk::PolicyType::Never).child(&list).build();
+    let dialog = adw::Dialog::builder()
+        .title("Select Time Zone")
+        .content_width(420)
+        .content_height(560)
+        .build();
+    let search = gtk::SearchEntry::builder()
+        .placeholder_text("Search for a city or region")
+        .margin_start(12)
+        .margin_end(12)
+        .margin_top(6)
+        .margin_bottom(6)
+        .build();
+    let list = gtk::ListBox::builder()
+        .css_classes(["navigation-sidebar"])
+        .build();
+    let scrolled = gtk::ScrolledWindow::builder()
+        .vexpand(true)
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .child(&list)
+        .build();
     let zones: Rc<RefCell<Vec<String>>> = Rc::default();
     let fill = {
         let (list, zones) = (list.clone(), zones.clone());
         move |q: &str| {
             list.remove_all();
             let q = q.trim().to_lowercase().replace(' ', "_");
-            for z in zones.borrow().iter().filter(|z| q.is_empty() || z.to_lowercase().contains(&q)) {
-                let row = adw::ActionRow::builder().use_markup(false).title(z.replace('_', " ").as_str()).activatable(true).build();
+            for z in zones
+                .borrow()
+                .iter()
+                .filter(|z| q.is_empty() || z.to_lowercase().contains(&q))
+            {
+                let row = adw::ActionRow::builder()
+                    .use_markup(false)
+                    .title(z.replace('_', " ").as_str())
+                    .activatable(true)
+                    .build();
                 row.set_widget_name(z);
                 list.append(&row);
             }
@@ -197,12 +282,15 @@ fn timezone_dialog(parent: &adw::ApplicationWindow, state: &Rc<State>) {
             if *st.timezone.borrow() != tz {
                 let weak = Rc::downgrade(&st);
                 // System change, only on user action.
-                spawn_worker(move || dbus::set_timezone(&tz), move |res| {
-                    if let Some(st) = weak.upgrade() {
-                        st.report("the time zone", res);
-                        st.load();
-                    }
-                });
+                spawn_worker(
+                    move || dbus::set_timezone(&tz),
+                    move |res| {
+                        if let Some(st) = weak.upgrade() {
+                            st.report("the time zone", res);
+                            st.load();
+                        }
+                    },
+                );
             }
         }
         if let Some(d) = dlg.upgrade() {

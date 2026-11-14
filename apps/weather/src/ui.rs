@@ -9,9 +9,9 @@ use std::rc::{Rc, Weak};
 
 use crate::api::{self, Forecast};
 use crate::autoloc;
+use crate::graph::{self, Rgba};
 use crate::gwdb;
 use crate::import;
-use crate::graph::{self, Rgba};
 use crate::store::{self, CachedForecast, Locations, Place};
 use crate::timefmt::{self, DateTime};
 use crate::units::{self, Pressure, Speed, Temperature};
@@ -27,12 +27,17 @@ const GRAPH_H: i32 = 110;
 const AUTO_REFRESH_SECS: i64 = 30 * 60;
 
 fn now_unix() -> i64 {
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0)
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0)
 }
 
 /// The viewer's (not the location's) current UTC offset in seconds.
 fn viewer_offset() -> i64 {
-    glib::DateTime::now_local().map(|d| d.utc_offset().as_seconds()).unwrap_or(0)
+    glib::DateTime::now_local()
+        .map(|d| d.utc_offset().as_seconds())
+        .unwrap_or(0)
 }
 
 fn locations_path() -> PathBuf {
@@ -55,9 +60,15 @@ impl Units {
     fn load(prefs: &Prefs) -> Units {
         let imperial = units::locale_is_imperial(&units::measurement_locale());
         Units {
-            temperature: Temperature::from_nick(&prefs.get_enum_nick("temperature-unit", "default"), imperial),
+            temperature: Temperature::from_nick(
+                &prefs.get_enum_nick("temperature-unit", "default"),
+                imperial,
+            ),
             speed: Speed::from_nick(&prefs.get_enum_nick("speed-unit", "default"), imperial),
-            pressure: Pressure::from_nick(&prefs.get_enum_nick("pressure-unit", "default"), imperial),
+            pressure: Pressure::from_nick(
+                &prefs.get_enum_nick("pressure-unit", "default"),
+                imperial,
+            ),
         }
     }
 }
@@ -137,14 +148,19 @@ fn load_css() {
          .weather-hour { font-size: 10pt; }",
     );
     if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &css,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 }
 
 fn build(app: &adw::Application) -> Ui {
     let prefs = Prefs::new(SCHEMA);
     let gweather = Prefs::new(GWEATHER_SCHEMA);
-    let use_12h = Prefs::new("org.gnome.desktop.interface").get_enum_nick("clock-format", "24h") == "12h";
+    let use_12h =
+        Prefs::new("org.gnome.desktop.interface").get_enum_nick("clock-format", "24h") == "12h";
 
     let w = prefs.get::<i32>("window-width", 0);
     let h = prefs.get::<i32>("window-height", 0);
@@ -163,9 +179,20 @@ fn build(app: &adw::Application) -> Ui {
     let header = adw::HeaderBar::new();
     header.set_title_widget(Some(&title));
 
-    let search_entry = gtk::SearchEntry::builder().placeholder_text("Search for a city").search_delay(300).build();
-    let search_status = gtk::Label::builder().css_classes(["dim-label"]).wrap(true).visible(false).margin_top(6).build();
-    let results_list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).build();
+    let search_entry = gtk::SearchEntry::builder()
+        .placeholder_text("Search for a city")
+        .search_delay(300)
+        .build();
+    let search_status = gtk::Label::builder()
+        .css_classes(["dim-label"])
+        .wrap(true)
+        .visible(false)
+        .margin_top(6)
+        .build();
+    let results_list = gtk::ListBox::builder()
+        .selection_mode(gtk::SelectionMode::None)
+        .css_classes(["boxed-list"])
+        .build();
     let results_scroller = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
         .propagate_natural_height(true)
@@ -173,17 +200,36 @@ fn build(app: &adw::Application) -> Ui {
         .child(&results_list)
         .visible(false)
         .build();
-    let saved_header = gtk::Label::builder().label("Saved Locations").xalign(0.0).css_classes(["heading"]).margin_top(6).build();
-    let saved_list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).build();
+    let saved_header = gtk::Label::builder()
+        .label("Saved Locations")
+        .xalign(0.0)
+        .css_classes(["heading"])
+        .margin_top(6)
+        .build();
+    let saved_list = gtk::ListBox::builder()
+        .selection_mode(gtk::SelectionMode::None)
+        .css_classes(["boxed-list"])
+        .build();
     let saved_scroller = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
         .propagate_natural_height(true)
         .max_content_height(280)
         .child(&saved_list)
         .build();
-    let pop_box = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(6).width_request(340).build();
-    let auto_row = adw::SwitchRow::builder().title("Automatic Location").subtitle("Show the weather where you are").build();
-    let auto_list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).margin_bottom(6).build();
+    let pop_box = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(6)
+        .width_request(340)
+        .build();
+    let auto_row = adw::SwitchRow::builder()
+        .title("Automatic Location")
+        .subtitle("Show the weather where you are")
+        .build();
+    let auto_list = gtk::ListBox::builder()
+        .selection_mode(gtk::SelectionMode::None)
+        .css_classes(["boxed-list"])
+        .margin_bottom(6)
+        .build();
     auto_list.append(&auto_row);
     pop_box.append(&auto_list);
     pop_box.append(&search_entry);
@@ -202,27 +248,53 @@ fn build(app: &adw::Application) -> Ui {
     let menu = gio::Menu::new();
     let units_section = gio::Menu::new();
     units_section.append(Some("_Celsius"), Some("app.temperature-unit::centigrade"));
-    units_section.append(Some("_Fahrenheit"), Some("app.temperature-unit::fahrenheit"));
+    units_section.append(
+        Some("_Fahrenheit"),
+        Some("app.temperature-unit::fahrenheit"),
+    );
     menu.append_section(Some("Temperature Unit"), &units_section);
     let misc = gio::Menu::new();
     misc.append(Some("_Refresh"), Some("app.refresh"));
     misc.append(Some("_About Weather"), Some("app.about"));
     misc.append(Some("_Quit"), Some("app.quit"));
     menu.append_section(None, &misc);
-    let menu_button = gtk::MenuButton::builder().icon_name("open-menu-symbolic").menu_model(&menu).tooltip_text("Main Menu").build();
+    let menu_button = gtk::MenuButton::builder()
+        .icon_name("open-menu-symbolic")
+        .menu_model(&menu)
+        .tooltip_text("Main Menu")
+        .build();
     menu_button.set_primary(true);
     header.pack_end(&menu_button);
-    let refresh_button = gtk::Button::builder().icon_name("view-refresh-symbolic").tooltip_text("Refresh (F5)").action_name("app.refresh").build();
+    let refresh_button = gtk::Button::builder()
+        .icon_name("view-refresh-symbolic")
+        .tooltip_text("Refresh (F5)")
+        .action_name("app.refresh")
+        .build();
     header.pack_end(&refresh_button);
     let header_spinner = gtk::Spinner::builder().visible(false).build();
     header.pack_end(&header_spinner);
 
     // ---- pages ----
-    let stack = gtk::Stack::builder().transition_type(gtk::StackTransitionType::Crossfade).vexpand(true).build();
+    let stack = gtk::Stack::builder()
+        .transition_type(gtk::StackTransitionType::Crossfade)
+        .vexpand(true)
+        .build();
 
-    let empty_button = gtk::Button::builder().label("Search Locations").css_classes(["pill", "suggested-action"]).halign(gtk::Align::Center).build();
-    let here_button = gtk::Button::builder().label("Use Current Location").css_classes(["pill"]).halign(gtk::Align::Center).build();
-    let empty_buttons = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(12).halign(gtk::Align::Center).build();
+    let empty_button = gtk::Button::builder()
+        .label("Search Locations")
+        .css_classes(["pill", "suggested-action"])
+        .halign(gtk::Align::Center)
+        .build();
+    let here_button = gtk::Button::builder()
+        .label("Use Current Location")
+        .css_classes(["pill"])
+        .halign(gtk::Align::Center)
+        .build();
+    let empty_buttons = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(12)
+        .halign(gtk::Align::Center)
+        .build();
     empty_buttons.append(&empty_button);
     empty_buttons.append(&here_button);
     let empty_page = adw::StatusPage::builder()
@@ -233,20 +305,51 @@ fn build(app: &adw::Application) -> Ui {
         .build();
     stack.add_named(&empty_page, Some("empty"));
 
-    let loading = gtk::Spinner::builder().spinning(true).width_request(32).height_request(32).halign(gtk::Align::Center).valign(gtk::Align::Center).build();
+    let loading = gtk::Spinner::builder()
+        .spinning(true)
+        .width_request(32)
+        .height_request(32)
+        .halign(gtk::Align::Center)
+        .valign(gtk::Align::Center)
+        .build();
     stack.add_named(&loading, Some("loading"));
 
-    let retry = gtk::Button::builder().label("Retry").css_classes(["pill", "suggested-action"]).halign(gtk::Align::Center).action_name("app.refresh").build();
+    let retry = gtk::Button::builder()
+        .label("Retry")
+        .css_classes(["pill", "suggested-action"])
+        .halign(gtk::Align::Center)
+        .action_name("app.refresh")
+        .build();
     // When the current location cannot be found: pick a place by hand.
-    let error_search = gtk::Button::builder().label("Search Locations").css_classes(["pill"]).halign(gtk::Align::Center).action_name("app.search").visible(false).build();
-    let error_buttons = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(12).halign(gtk::Align::Center).build();
+    let error_search = gtk::Button::builder()
+        .label("Search Locations")
+        .css_classes(["pill"])
+        .halign(gtk::Align::Center)
+        .action_name("app.search")
+        .visible(false)
+        .build();
+    let error_buttons = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(12)
+        .halign(gtk::Align::Center)
+        .build();
     error_buttons.append(&retry);
     error_buttons.append(&error_search);
-    let error_page = adw::StatusPage::builder().icon_name("network-offline-symbolic").title("Could Not Load the Forecast").child(&error_buttons).build();
+    let error_page = adw::StatusPage::builder()
+        .icon_name("network-offline-symbolic")
+        .title("Could Not Load the Forecast")
+        .child(&error_buttons)
+        .build();
     stack.add_named(&error_page, Some("error"));
 
-    let content = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(24).build();
-    let updated_label = gtk::Label::builder().css_classes(["dim-label", "caption"]).halign(gtk::Align::Center).build();
+    let content = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(24)
+        .build();
+    let updated_label = gtk::Label::builder()
+        .css_classes(["dim-label", "caption"])
+        .halign(gtk::Align::Center)
+        .build();
     let page_box = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
         .spacing(18)
@@ -264,8 +367,14 @@ fn build(app: &adw::Application) -> Ui {
         .halign(gtk::Align::Center)
         .build();
     page_box.append(&credit);
-    let clamp = adw::Clamp::builder().maximum_size(960).child(&page_box).build();
-    let scroller = gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).child(&clamp).build();
+    let clamp = adw::Clamp::builder()
+        .maximum_size(960)
+        .child(&page_box)
+        .build();
+    let scroller = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .child(&clamp)
+        .build();
     stack.add_named(&scroller, Some("weather"));
 
     let banner = adw::Banner::builder().button_label("Retry").build();
@@ -343,7 +452,10 @@ fn build(app: &adw::Application) -> Ui {
 
 /// Whether the installed `org.gnome.Weather` schema has `key`.
 fn schema_has(prefs: &Prefs, key: &str) -> bool {
-    prefs.gsettings().and_then(|g| g.settings_schema()).is_some_and(|s| s.has_key(key))
+    prefs
+        .gsettings()
+        .and_then(|g| g.settings_schema())
+        .is_some_and(|s| s.has_key(key))
 }
 
 /// Loads the saved locations. On first run (no file yet) GNOME Weather's
@@ -355,7 +467,10 @@ fn load_locations(prefs: &Prefs) -> Locations {
         let gw = gwdb::Db::load();
         let imported = import::import(gw.as_ref());
         if !imported.is_empty() {
-            eprintln!("helix-weather: imported {} location(s) from GNOME Weather", imported.len());
+            eprintln!(
+                "helix-weather: imported {} location(s) from GNOME Weather",
+                imported.len()
+            );
             locations.locations = imported;
             locations.selected = 0;
             if let Err(e) = locations.save(&path) {
@@ -408,7 +523,9 @@ impl Ui {
 
         let weak = self.weak();
         s.unit_action.connect_activate(move |action, param| {
-            let Some(nick) = param.and_then(|p| p.get::<String>()) else { return };
+            let Some(nick) = param.and_then(|p| p.get::<String>()) else {
+                return;
+            };
             action.set_state(&nick.to_variant());
             if let Some(ui) = Ui::upgrade(&weak) {
                 let t = Temperature::from_nick(&nick, false);
@@ -428,7 +545,8 @@ impl Ui {
                 }
                 if let Some(ui) = Ui::upgrade(&weak) {
                     let units = Units::load(&ui.0.gweather);
-                    ui.0.unit_action.set_state(&units.temperature.nick().to_variant());
+                    ui.0.unit_action
+                        .set_state(&units.temperature.nick().to_variant());
                     *ui.0.units.borrow_mut() = units;
                     ui.render();
                 }
@@ -470,7 +588,11 @@ impl Ui {
         let weak = self.weak();
         s.results_list.connect_row_activated(move |_, row| {
             if let Some(ui) = Ui::upgrade(&weak) {
-                let place = ui.0.search_results.borrow().get(row.index() as usize).cloned();
+                let place =
+                    ui.0.search_results
+                        .borrow()
+                        .get(row.index() as usize)
+                        .cloned();
                 if let Some(p) = place {
                     ui.add_place(p);
                 }
@@ -506,9 +628,15 @@ impl Ui {
         // Minute tick: update relative times and auto-refresh.
         let weak = self.weak();
         glib::timeout_add_seconds_local(60, move || {
-            let Some(ui) = Ui::upgrade(&weak) else { return glib::ControlFlow::Break };
+            let Some(ui) = Ui::upgrade(&weak) else {
+                return glib::ControlFlow::Break;
+            };
             ui.update_status_texts();
-            let stale = ui.0.forecast.borrow().as_ref().is_none_or(|(_, fetched)| now_unix() - fetched >= AUTO_REFRESH_SECS);
+            let stale =
+                ui.0.forecast
+                    .borrow()
+                    .as_ref()
+                    .is_none_or(|(_, fetched)| now_unix() - fetched >= AUTO_REFRESH_SECS);
             if stale && !ui.0.fetching.get() && ui.0.locations.borrow().selected_place().is_some() {
                 if ui.0.locations.borrow().automatic_location {
                     // The user may have moved; this also refreshes if the
@@ -586,9 +714,11 @@ impl Ui {
                     eprintln!("helix-weather: current location unavailable: {e}");
                     if ui.0.locations.borrow().selected_place().is_none() {
                         ui.0.error_page.set_title("Could Not Find Your Location");
-                        ui.0.error_page.set_icon_name(Some("find-location-symbolic"));
+                        ui.0.error_page
+                            .set_icon_name(Some("find-location-symbolic"));
                         ui.0.error_search.set_visible(true);
-                        ui.0.error_page.set_description(Some(&glib::markup_escape_text(&e)));
+                        ui.0.error_page
+                            .set_description(Some(&glib::markup_escape_text(&e)));
                         ui.0.stack.set_visible_child_name("error");
                     }
                 }
@@ -612,7 +742,14 @@ impl Ui {
     }
 
     fn remove_place(&self, index: usize) {
-        if self.0.locations.borrow().locations.get(index).is_some_and(|p| p.automatic) {
+        if self
+            .0
+            .locations
+            .borrow()
+            .locations
+            .get(index)
+            .is_some_and(|p| p.automatic)
+        {
             self.set_automatic(false);
             return;
         }
@@ -647,16 +784,30 @@ impl Ui {
                 (true, sub) => format!("Current location • {sub}"),
                 (false, sub) => sub,
             };
-            let row = adw::ActionRow::builder().title(glib::markup_escape_text(&p.name)).subtitle(glib::markup_escape_text(&subtitle)).activatable(true).build();
+            let row = adw::ActionRow::builder()
+                .title(glib::markup_escape_text(&p.name))
+                .subtitle(glib::markup_escape_text(&subtitle))
+                .activatable(true)
+                .build();
             if p.automatic {
                 row.add_suffix(&gtk::Image::from_icon_name("find-location-symbolic"));
             }
             if i == locs.selected {
                 row.add_prefix(&gtk::Image::from_icon_name("object-select-symbolic"));
             } else {
-                row.add_prefix(&gtk::Image::builder().icon_name("object-select-symbolic").opacity(0.0).build());
+                row.add_prefix(
+                    &gtk::Image::builder()
+                        .icon_name("object-select-symbolic")
+                        .opacity(0.0)
+                        .build(),
+                );
             }
-            let remove = gtk::Button::builder().icon_name("user-trash-symbolic").tooltip_text("Remove").valign(gtk::Align::Center).css_classes(["flat"]).build();
+            let remove = gtk::Button::builder()
+                .icon_name("user-trash-symbolic")
+                .tooltip_text("Remove")
+                .valign(gtk::Align::Center)
+                .css_classes(["flat"])
+                .build();
             let weak = self.weak();
             remove.connect_clicked(move |_| {
                 if let Some(ui) = Ui::upgrade(&weak) {
@@ -712,7 +863,11 @@ impl Ui {
         }
         let results = s.search_results.borrow();
         for p in results.iter() {
-            let row = adw::ActionRow::builder().title(glib::markup_escape_text(&p.name)).subtitle(glib::markup_escape_text(&p.subtitle())).activatable(true).build();
+            let row = adw::ActionRow::builder()
+                .title(glib::markup_escape_text(&p.name))
+                .subtitle(glib::markup_escape_text(&p.subtitle()))
+                .activatable(true)
+                .build();
             row.add_suffix(&gtk::Image::from_icon_name("list-add-symbolic"));
             s.results_list.append(&row);
         }
@@ -747,7 +902,8 @@ impl Ui {
         };
         s.title.set_title(&place.name);
         s.title.set_subtitle(&place.subtitle());
-        let cached = store::load_cache(&cache_dir(), &place).and_then(|c| api::parse_forecast(&c.body).ok().map(|f| (f, c.fetched)));
+        let cached = store::load_cache(&cache_dir(), &place)
+            .and_then(|c| api::parse_forecast(&c.body).ok().map(|f| (f, c.fetched)));
         let have_cache = cached.is_some();
         *s.forecast.borrow_mut() = cached;
         if have_cache {
@@ -790,11 +946,14 @@ impl Ui {
                 return;
             }
             ui.set_fetching(false);
-            let res = res.unwrap_or_else(|_| Err("The forecast request failed unexpectedly".into()));
+            let res =
+                res.unwrap_or_else(|_| Err("The forecast request failed unexpectedly".into()));
             match res.and_then(|body| api::parse_forecast(&body).map(|f| (f, body))) {
                 Ok((forecast, body)) => {
                     let fetched = now_unix();
-                    if let Err(e) = store::save_cache(&cache_dir(), &place, &CachedForecast { fetched, body }) {
+                    if let Err(e) =
+                        store::save_cache(&cache_dir(), &place, &CachedForecast { fetched, body })
+                    {
                         eprintln!("helix-weather: could not write cache: {e}");
                     }
                     *ui.0.forecast.borrow_mut() = Some((forecast, fetched));
@@ -808,9 +967,11 @@ impl Ui {
                         ui.update_status_texts();
                     } else {
                         ui.0.error_page.set_title("Could Not Load the Forecast");
-                        ui.0.error_page.set_icon_name(Some("network-offline-symbolic"));
+                        ui.0.error_page
+                            .set_icon_name(Some("network-offline-symbolic"));
                         ui.0.error_search.set_visible(false);
-                        ui.0.error_page.set_description(Some(&glib::markup_escape_text(&e)));
+                        ui.0.error_page
+                            .set_description(Some(&glib::markup_escape_text(&e)));
                         ui.0.stack.set_visible_child_name("error");
                     }
                 }
@@ -829,7 +990,10 @@ impl Ui {
         let text = timefmt::updated_text(*fetched, now_unix(), &local, s.use_12h);
         s.updated_label.set_label(&text);
         if s.offline.get() {
-            s.banner.set_title(&format!("Offline — showing the last forecast ({})", text.to_lowercase()));
+            s.banner.set_title(&format!(
+                "Offline — showing the last forecast ({})",
+                text.to_lowercase()
+            ));
             s.banner.set_revealed(true);
         } else {
             s.banner.set_revealed(false);
@@ -839,7 +1003,9 @@ impl Ui {
     fn render(&self) {
         let s = &self.0;
         let forecast = s.forecast.borrow();
-        let Some((f, _)) = forecast.as_ref() else { return };
+        let Some((f, _)) = forecast.as_ref() else {
+            return;
+        };
         while let Some(child) = s.content.first_child() {
             s.content.remove(&child);
         }
@@ -847,18 +1013,21 @@ impl Ui {
         let fg = fg_color(&s.window);
         let local_now = DateTime::from_unix(now_unix(), f.utc_offset);
 
-        s.content.append(&current_section(f, &local_now, &units, s.use_12h));
+        s.content
+            .append(&current_section(f, &local_now, &units, s.use_12h));
 
         let hours = f.hours_from(&local_now, HOURS);
         if !hours.is_empty() {
             s.content.append(&heading("Hourly Forecast"));
-            s.content.append(&hourly_section(hours, &units, s.use_12h, fg));
+            s.content
+                .append(&hourly_section(hours, &units, s.use_12h, fg));
         }
 
         let days = f.days_from(&local_now);
         if !days.is_empty() {
             s.content.append(&heading("Daily Forecast"));
-            s.content.append(&daily_section(days, &local_now, &units, fg));
+            s.content
+                .append(&daily_section(days, &local_now, &units, fg));
         }
         drop(units);
         drop(forecast);
@@ -880,20 +1049,45 @@ fn messages_locale() -> String {
 
 fn fg_color(widget: &impl IsA<gtk::Widget>) -> Rgba {
     let c = widget.as_ref().color();
-    Rgba { r: c.red() as f64, g: c.green() as f64, b: c.blue() as f64, a: c.alpha() as f64 }
+    Rgba {
+        r: c.red() as f64,
+        g: c.green() as f64,
+        b: c.blue() as f64,
+        a: c.alpha() as f64,
+    }
 }
 
 fn heading(text: &str) -> gtk::Label {
-    gtk::Label::builder().label(text).xalign(0.0).css_classes(["title-4"]).build()
+    gtk::Label::builder()
+        .label(text)
+        .xalign(0.0)
+        .css_classes(["title-4"])
+        .build()
 }
 
 fn detail_card(caption: &str, value: &str, icon: &str) -> gtk::Box {
-    let b = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(4).css_classes(["card", "weather-card"]).build();
+    let b = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(4)
+        .css_classes(["card", "weather-card"])
+        .build();
     let top = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     top.append(&gtk::Image::from_icon_name(icon));
-    top.append(&gtk::Label::builder().label(caption).css_classes(["dim-label", "caption-heading"]).xalign(0.0).build());
+    top.append(
+        &gtk::Label::builder()
+            .label(caption)
+            .css_classes(["dim-label", "caption-heading"])
+            .xalign(0.0)
+            .build(),
+    );
     b.append(&top);
-    b.append(&gtk::Label::builder().label(value).css_classes(["weather-card-value"]).xalign(0.0).build());
+    b.append(
+        &gtk::Label::builder()
+            .label(value)
+            .css_classes(["weather-card-value"])
+            .xalign(0.0)
+            .build(),
+    );
     b
 }
 
@@ -901,14 +1095,42 @@ fn current_section(f: &Forecast, local_now: &DateTime, units: &Units, use_12h: b
     let c = &f.current;
     let section = gtk::Box::new(gtk::Orientation::Vertical, 18);
 
-    let top = gtk::Box::builder().orientation(gtk::Orientation::Horizontal).spacing(24).halign(gtk::Align::Center).build();
-    let icon = gtk::Image::builder().icon_name(wmo::icon_name(c.code, c.is_day)).pixel_size(96).build();
+    let top = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .spacing(24)
+        .halign(gtk::Align::Center)
+        .build();
+    let icon = gtk::Image::builder()
+        .icon_name(wmo::icon_name(c.code, c.is_day))
+        .pixel_size(96)
+        .build();
     top.append(&icon);
-    let text = gtk::Box::builder().orientation(gtk::Orientation::Vertical).valign(gtk::Align::Center).build();
-    text.append(&gtk::Label::builder().label(units.temperature.format(c.temperature)).css_classes(["weather-temp"]).xalign(0.0).build());
-    text.append(&gtk::Label::builder().label(wmo::description(c.code)).css_classes(["title-3"]).xalign(0.0).build());
+    let text = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .valign(gtk::Align::Center)
+        .build();
+    text.append(
+        &gtk::Label::builder()
+            .label(units.temperature.format(c.temperature))
+            .css_classes(["weather-temp"])
+            .xalign(0.0)
+            .build(),
+    );
+    text.append(
+        &gtk::Label::builder()
+            .label(wmo::description(c.code))
+            .css_classes(["title-3"])
+            .xalign(0.0)
+            .build(),
+    );
     if let Some(a) = c.apparent {
-        text.append(&gtk::Label::builder().label(format!("Feels like {}", units.temperature.format_short(a))).css_classes(["dim-label"]).xalign(0.0).build());
+        text.append(
+            &gtk::Label::builder()
+                .label(format!("Feels like {}", units.temperature.format_short(a)))
+                .css_classes(["dim-label"])
+                .xalign(0.0)
+                .build(),
+        );
     }
     top.append(&text);
     section.append(&top);
@@ -927,14 +1149,35 @@ fn current_section(f: &Forecast, local_now: &DateTime, units: &Units, use_12h: b
         _ => "—".into(),
     };
     flow.append(&detail_card("Wind", &wind, "weather-windy-symbolic"));
-    let humidity = c.humidity.map(|h| format!("{}%", h.round() as i64)).unwrap_or_else(|| "—".into());
-    flow.append(&detail_card("Humidity", &humidity, "weather-showers-scattered-symbolic"));
-    let pressure = c.pressure.map(|p| units.pressure.format(p)).unwrap_or_else(|| "—".into());
+    let humidity = c
+        .humidity
+        .map(|h| format!("{}%", h.round() as i64))
+        .unwrap_or_else(|| "—".into());
+    flow.append(&detail_card(
+        "Humidity",
+        &humidity,
+        "weather-showers-scattered-symbolic",
+    ));
+    let pressure = c
+        .pressure
+        .map(|p| units.pressure.format(p))
+        .unwrap_or_else(|| "—".into());
     flow.append(&detail_card("Pressure", &pressure, "speedometer-symbolic"));
     let today = f.today(local_now).or_else(|| f.today(&c.time));
-    let fmt = |t: Option<DateTime>| t.map(|t| timefmt::format_time(&t, use_12h)).unwrap_or_else(|| "—".into());
-    flow.append(&detail_card("Sunrise", &fmt(today.and_then(|d| d.sunrise)), "daytime-sunrise-symbolic"));
-    flow.append(&detail_card("Sunset", &fmt(today.and_then(|d| d.sunset)), "daytime-sunset-symbolic"));
+    let fmt = |t: Option<DateTime>| {
+        t.map(|t| timefmt::format_time(&t, use_12h))
+            .unwrap_or_else(|| "—".into())
+    };
+    flow.append(&detail_card(
+        "Sunrise",
+        &fmt(today.and_then(|d| d.sunrise)),
+        "daytime-sunrise-symbolic",
+    ));
+    flow.append(&detail_card(
+        "Sunset",
+        &fmt(today.and_then(|d| d.sunset)),
+        "daytime-sunset-symbolic",
+    ));
     for child in std::iter::successors(flow.first_child(), |c| c.next_sibling()) {
         child.set_focusable(false);
     }
@@ -944,25 +1187,72 @@ fn current_section(f: &Forecast, local_now: &DateTime, units: &Units, use_12h: b
 
 fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool, fg: Rgba) -> gtk::Widget {
     let n = hours.len() as i32;
-    let strip = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(4).margin_top(12).margin_bottom(12).build();
+    let strip = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(4)
+        .margin_top(12)
+        .margin_bottom(12)
+        .build();
 
-    let top = gtk::Box::builder().orientation(gtk::Orientation::Horizontal).homogeneous(true).build();
-    let bottom = gtk::Box::builder().orientation(gtk::Orientation::Horizontal).homogeneous(true).build();
+    let top = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .homogeneous(true)
+        .build();
+    let bottom = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .homogeneous(true)
+        .build();
     for (i, h) in hours.iter().enumerate() {
-        let col = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(6).width_request(COL_W).build();
-        let label = if i == 0 { "Now".to_string() } else { timefmt::format_hour(&h.time, use_12h) };
-        col.append(&gtk::Label::builder().label(label).css_classes(["weather-hour", "dim-label"]).build());
-        let icon = gtk::Image::builder().icon_name(wmo::icon_name(h.code, h.is_day)).pixel_size(24).tooltip_text(wmo::description(h.code)).build();
+        let col = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(6)
+            .width_request(COL_W)
+            .build();
+        let label = if i == 0 {
+            "Now".to_string()
+        } else {
+            timefmt::format_hour(&h.time, use_12h)
+        };
+        col.append(
+            &gtk::Label::builder()
+                .label(label)
+                .css_classes(["weather-hour", "dim-label"])
+                .build(),
+        );
+        let icon = gtk::Image::builder()
+            .icon_name(wmo::icon_name(h.code, h.is_day))
+            .pixel_size(24)
+            .tooltip_text(wmo::description(h.code))
+            .build();
         col.append(&icon);
         top.append(&col);
 
-        let precip = h.precipitation.filter(|p| *p >= 10.0).map(|p| format!("{}%", p.round() as i64)).unwrap_or_default();
-        bottom.append(&gtk::Label::builder().label(precip).css_classes(["weather-hour", "accent"]).width_request(COL_W).build());
+        let precip = h
+            .precipitation
+            .filter(|p| *p >= 10.0)
+            .map(|p| format!("{}%", p.round() as i64))
+            .unwrap_or_default();
+        bottom.append(
+            &gtk::Label::builder()
+                .label(precip)
+                .css_classes(["weather-hour", "accent"])
+                .width_request(COL_W)
+                .build(),
+        );
     }
 
-    let values: Vec<f64> = hours.iter().map(|h| units.temperature.convert(h.temperature)).collect();
-    let labels: Vec<String> = hours.iter().map(|h| units.temperature.format_short(h.temperature)).collect();
-    let area = gtk::DrawingArea::builder().content_width(COL_W * n).content_height(GRAPH_H).build();
+    let values: Vec<f64> = hours
+        .iter()
+        .map(|h| units.temperature.convert(h.temperature))
+        .collect();
+    let labels: Vec<String> = hours
+        .iter()
+        .map(|h| units.temperature.format_short(h.temperature))
+        .collect();
+    let area = gtk::DrawingArea::builder()
+        .content_width(COL_W * n)
+        .content_height(GRAPH_H)
+        .build();
     area.set_draw_func(move |_, cr, _, h| {
         graph::draw_temperature(cr, &values, &labels, COL_W as f64, h as f64, fg);
     });
@@ -983,30 +1273,97 @@ fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool, fg: Rgba) -
 }
 
 fn daily_section(days: &[api::Day], local_now: &DateTime, units: &Units, fg: Rgba) -> gtk::ListBox {
-    let list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).build();
+    let list = gtk::ListBox::builder()
+        .selection_mode(gtk::SelectionMode::None)
+        .css_classes(["boxed-list"])
+        .build();
     let lows: Vec<f64> = days.iter().map(|d| d.min).collect();
     let highs: Vec<f64> = days.iter().map(|d| d.max).collect();
     let (min, _) = graph::min_max(&lows);
     let (_, max) = graph::min_max(&highs);
     for d in days {
-        let row = gtk::Box::builder().orientation(gtk::Orientation::Horizontal).spacing(12).css_classes(["weather-day"]).build();
-        let names = gtk::Box::builder().orientation(gtk::Orientation::Vertical).width_request(110).valign(gtk::Align::Center).build();
-        names.append(&gtk::Label::builder().label(timefmt::day_label(&d.date, local_now)).xalign(0.0).css_classes(["heading"]).build());
-        names.append(&gtk::Label::builder().label(format!("{} {}", d.date.day, d.date.month_short())).xalign(0.0).css_classes(["dim-label", "caption"]).build());
+        let row = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .spacing(12)
+            .css_classes(["weather-day"])
+            .build();
+        let names = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .width_request(110)
+            .valign(gtk::Align::Center)
+            .build();
+        names.append(
+            &gtk::Label::builder()
+                .label(timefmt::day_label(&d.date, local_now))
+                .xalign(0.0)
+                .css_classes(["heading"])
+                .build(),
+        );
+        names.append(
+            &gtk::Label::builder()
+                .label(format!("{} {}", d.date.day, d.date.month_short()))
+                .xalign(0.0)
+                .css_classes(["dim-label", "caption"])
+                .build(),
+        );
         row.append(&names);
-        row.append(&gtk::Image::builder().icon_name(wmo::icon_name(d.code, true)).pixel_size(24).build());
-        row.append(&gtk::Label::builder().label(wmo::description(d.code)).xalign(0.0).hexpand(true).ellipsize(gtk::pango::EllipsizeMode::End).build());
-        let precip = d.precipitation.filter(|p| *p >= 10.0).map(|p| format!("{}%", p.round() as i64)).unwrap_or_default();
-        row.append(&gtk::Label::builder().label(precip).width_chars(4).xalign(1.0).css_classes(["accent", "caption"]).build());
-        row.append(&gtk::Label::builder().label(units.temperature.format_short(d.min)).width_chars(4).xalign(1.0).css_classes(["dim-label"]).build());
+        row.append(
+            &gtk::Image::builder()
+                .icon_name(wmo::icon_name(d.code, true))
+                .pixel_size(24)
+                .build(),
+        );
+        row.append(
+            &gtk::Label::builder()
+                .label(wmo::description(d.code))
+                .xalign(0.0)
+                .hexpand(true)
+                .ellipsize(gtk::pango::EllipsizeMode::End)
+                .build(),
+        );
+        let precip = d
+            .precipitation
+            .filter(|p| *p >= 10.0)
+            .map(|p| format!("{}%", p.round() as i64))
+            .unwrap_or_default();
+        row.append(
+            &gtk::Label::builder()
+                .label(precip)
+                .width_chars(4)
+                .xalign(1.0)
+                .css_classes(["accent", "caption"])
+                .build(),
+        );
+        row.append(
+            &gtk::Label::builder()
+                .label(units.temperature.format_short(d.min))
+                .width_chars(4)
+                .xalign(1.0)
+                .css_classes(["dim-label"])
+                .build(),
+        );
         let (lo, hi) = (d.min, d.max);
-        let bar = gtk::DrawingArea::builder().content_width(110).content_height(20).valign(gtk::Align::Center).build();
+        let bar = gtk::DrawingArea::builder()
+            .content_width(110)
+            .content_height(20)
+            .valign(gtk::Align::Center)
+            .build();
         bar.set_draw_func(move |_, cr, w, h| {
             graph::draw_range_bar(cr, (lo, hi), (min, max), w as f64, h as f64, fg);
         });
         row.append(&bar);
-        row.append(&gtk::Label::builder().label(units.temperature.format_short(d.max)).width_chars(4).xalign(0.0).css_classes(["heading"]).build());
-        let lrow = gtk::ListBoxRow::builder().child(&row).activatable(false).build();
+        row.append(
+            &gtk::Label::builder()
+                .label(units.temperature.format_short(d.max))
+                .width_chars(4)
+                .xalign(0.0)
+                .css_classes(["heading"])
+                .build(),
+        );
+        let lrow = gtk::ListBoxRow::builder()
+            .child(&row)
+            .activatable(false)
+            .build();
         list.append(&lrow);
     }
     list

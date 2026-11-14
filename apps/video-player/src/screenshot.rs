@@ -17,7 +17,10 @@ pub fn base_name(video_name: &str, secs: f64) -> String {
         .filter(|s| !s.is_empty())
         .unwrap_or("Video");
     // Keep the name a single path component.
-    let stem: String = stem.chars().map(|c| if c == '/' || c == '\0' { '_' } else { c }).collect();
+    let stem: String = stem
+        .chars()
+        .map(|c| if c == '/' || c == '\0' { '_' } else { c })
+        .collect();
     format!("{stem} {}", crate::timefmt::file_stamp(secs))
 }
 
@@ -49,10 +52,21 @@ mod tests {
     #[test]
     fn uniquing() {
         let dir = Path::new("/pics");
-        let taken: HashSet<PathBuf> =
-            [dir.join("x.png"), dir.join("x (2).png"), dir.join("x (4).png")].into_iter().collect();
-        assert_eq!(unique_path(dir, "y", "png", |p| taken.contains(p)), dir.join("y.png"));
-        assert_eq!(unique_path(dir, "x", "png", |p| taken.contains(p)), dir.join("x (3).png"));
+        let taken: HashSet<PathBuf> = [
+            dir.join("x.png"),
+            dir.join("x (2).png"),
+            dir.join("x (4).png"),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(
+            unique_path(dir, "y", "png", |p| taken.contains(p)),
+            dir.join("y.png")
+        );
+        assert_eq!(
+            unique_path(dir, "x", "png", |p| taken.contains(p)),
+            dir.join("x (3).png")
+        );
     }
 
     #[test]

@@ -55,7 +55,11 @@ pub struct Session {
 
 impl Session {
     pub fn draft_ids(&self) -> impl Iterator<Item = &str> {
-        self.windows.iter().flat_map(|w| w.tabs.iter()).filter(|t| t.draft).map(|t| t.id.as_str())
+        self.windows
+            .iter()
+            .flat_map(|w| w.tabs.iter())
+            .filter(|t| t.draft)
+            .map(|t| t.id.as_str())
     }
 
     pub fn has_drafts(&self) -> bool {
@@ -117,7 +121,9 @@ impl Store {
     }
 
     pub fn write_draft(&self, id: &str, text: &str) -> io::Result<()> {
-        let path = self.draft_path(id).ok_or_else(|| io::Error::other("invalid draft id"))?;
+        let path = self
+            .draft_path(id)
+            .ok_or_else(|| io::Error::other("invalid draft id"))?;
         write_atomic(&path, text.as_bytes())
     }
 
@@ -128,7 +134,9 @@ impl Store {
     /// Deletes draft files that `session` does not reference.
     pub fn prune_drafts(&self, session: &Session) {
         let keep: Vec<&str> = session.draft_ids().collect();
-        let Ok(entries) = std::fs::read_dir(self.drafts_dir()) else { return };
+        let Ok(entries) = std::fs::read_dir(self.drafts_dir()) else {
+            return;
+        };
         for e in entries.flatten() {
             let path = e.path();
             let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
@@ -172,7 +180,12 @@ pub fn new_id() -> String {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or(0);
-    format!("{:x}-{:x}-{:x}", nanos, std::process::id(), COUNTER.fetch_add(1, Ordering::Relaxed))
+    format!(
+        "{:x}-{:x}-{:x}",
+        nanos,
+        std::process::id(),
+        COUNTER.fetch_add(1, Ordering::Relaxed)
+    )
 }
 
 #[cfg(test)]
@@ -198,7 +211,11 @@ mod tests {
                         line: 4,
                         column: 2,
                     },
-                    TabState { id: new_id(), draft: true, ..Default::default() },
+                    TabState {
+                        id: new_id(),
+                        draft: true,
+                        ..Default::default()
+                    },
                 ],
                 active: 1,
             }],

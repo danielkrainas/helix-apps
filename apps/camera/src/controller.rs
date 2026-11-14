@@ -42,9 +42,15 @@ pub enum Event {
         mirrored: bool,
     },
     Status(Status),
-    PhotoSaved { path: PathBuf, thumb: Option<Frame> },
+    PhotoSaved {
+        path: PathBuf,
+        thumb: Option<Frame>,
+    },
     RecordingStarted(PathBuf),
-    RecordingSaved { path: PathBuf, thumb: Option<Frame> },
+    RecordingSaved {
+        path: PathBuf,
+        thumb: Option<Frame>,
+    },
     Failed(String),
 }
 
@@ -85,14 +91,22 @@ pub fn spawn(config: Config) -> Handle {
         .name("camera".into())
         .spawn(move || Worker::new(config, etx, ftx).run(rx))
         .expect("spawn camera thread");
-    Handle { tx, events: erx, frames: frx, thread: Some(thread) }
+    Handle {
+        tx,
+        events: erx,
+        frames: frx,
+        thread: Some(thread),
+    }
 }
 
 /// Where camera devices come from.
 enum Watcher {
     Fixed(Vec<Camera>),
     Monitor(gst::DeviceMonitor),
-    Provider { provider: gst::DeviceProvider, fd: OwnedFd },
+    Provider {
+        provider: gst::DeviceProvider,
+        fd: OwnedFd,
+    },
 }
 
 impl Watcher {
@@ -140,9 +154,13 @@ fn to_cameras(devs: Vec<gst::Device>, fd: Option<i32>) -> Vec<Camera> {
     for device in devs {
         let props = device.properties();
         let loc = props.as_ref().and_then(|p| {
-            ["api.libcamera.location", "camera.location", "device.location"]
-                .iter()
-                .find_map(|k| p.get::<String>(*k).ok())
+            [
+                "api.libcamera.location",
+                "camera.location",
+                "device.location",
+            ]
+            .iter()
+            .find_map(|k| p.get::<String>(*k).ok())
         });
         let mut name = device.display_name().to_string();
         let base = name.clone();
@@ -166,12 +184,20 @@ pub fn test_cameras() -> Vec<Camera> {
         Camera {
             name: "Test Camera (Front)".into(),
             location: Location::Front,
-            spec: SourceSpec::Test { pattern: "ball", width: 640, height: 480 },
+            spec: SourceSpec::Test {
+                pattern: "ball",
+                width: 640,
+                height: 480,
+            },
         },
         Camera {
             name: "Test Camera (Back)".into(),
             location: Location::Back,
-            spec: SourceSpec::Test { pattern: "smpte", width: 640, height: 480 },
+            spec: SourceSpec::Test {
+                pattern: "smpte",
+                width: 640,
+                height: 480,
+            },
         },
     ]
 }
@@ -203,7 +229,11 @@ struct Worker {
 }
 
 impl Worker {
-    fn new(config: Config, events: async_channel::Sender<Event>, frames: async_channel::Sender<Frame>) -> Self {
+    fn new(
+        config: Config,
+        events: async_channel::Sender<Event>,
+        frames: async_channel::Sender<Frame>,
+    ) -> Self {
         Worker {
             config,
             events,
@@ -286,7 +316,11 @@ impl Worker {
             .active
             .and_then(|i| self.cameras.get(i))
             .is_some_and(|c| devices::should_mirror(c.location));
-        self.emit(Event::Cameras { names: self.names(), active: self.active, mirrored });
+        self.emit(Event::Cameras {
+            names: self.names(),
+            active: self.active,
+            mirrored,
+        });
     }
 
     fn frame_sink(&self) -> pipeline::FrameSink {
@@ -302,7 +336,12 @@ impl Worker {
         self.emit_cameras();
         self.emit(Event::Status(Status::Starting));
         let cam = &self.cameras[idx];
-        match Session::start(cam, devices::should_mirror(cam.location), self.frame_sink(), None) {
+        match Session::start(
+            cam,
+            devices::should_mirror(cam.location),
+            self.frame_sink(),
+            None,
+        ) {
             Ok(s) => {
                 self.session = Some(s);
                 self.emit(Event::Status(Status::Streaming));
@@ -357,19 +396,35 @@ impl Worker {
             return;
         };
         if let Err(e) = std::fs::create_dir_all(&self.config.output_dir) {
-            self.emit(Event::Failed(format!("{}: {e}", self.config.output_dir.display())));
+            self.emit(Event::Failed(format!(
+                "{}: {e}",
+                self.config.output_dir.display()
+            )));
             return;
         }
-        let path = naming::new_capture_path(&self.config.output_dir, CaptureKind::Video, plan.format.extension());
+        let path = naming::new_capture_path(
+            &self.config.output_dir,
+            CaptureKind::Video,
+            plan.format.extension(),
+        );
         self.record_thumb = self
             .session
             .as_ref()
             .and_then(|s| s.last_sample())
             .and_then(|s| pipeline::thumbnail(&s, THUMB_SIZE));
         self.session = None;
-        let spec = RecordSpec { path: path.clone(), plan, audio: self.audio_input() };
+        let spec = RecordSpec {
+            path: path.clone(),
+            plan,
+            audio: self.audio_input(),
+        };
         let cam = &self.cameras[idx];
-        match Session::start(cam, devices::should_mirror(cam.location), self.frame_sink(), Some(&spec)) {
+        match Session::start(
+            cam,
+            devices::should_mirror(cam.location),
+            self.frame_sink(),
+            Some(&spec),
+        ) {
             Ok(s) => {
                 self.session = Some(s);
                 self.emit(Event::RecordingStarted(path));
@@ -383,7 +438,9 @@ impl Worker {
     }
 
     fn stop_recording(&mut self) {
-        let Some(session) = self.session.take() else { return };
+        let Some(session) = self.session.take() else {
+            return;
+        };
         match session.finish(Duration::from_secs(5)) {
             Ok(Some(path)) => {
                 let thumb = self.record_thumb.take();
@@ -398,20 +455,34 @@ impl Worker {
     }
 
     fn poll_hotplug(&mut self) {
-        let Some(bus) = self.watcher.as_ref().and_then(|w| w.bus()) else { return };
+        let Some(bus) = self.watcher.as_ref().and_then(|w| w.bus()) else {
+            return;
+        };
         let mut changed = false;
         while let Some(msg) = bus.pop() {
-            if matches!(msg.view(), gst::MessageView::DeviceAdded(_) | gst::MessageView::DeviceRemoved(_)) {
+            if matches!(
+                msg.view(),
+                gst::MessageView::DeviceAdded(_) | gst::MessageView::DeviceRemoved(_)
+            ) {
                 changed = true;
             }
         }
         if !changed {
             return;
         }
-        let current = self.active.and_then(|i| self.cameras.get(i)).map(|c| c.name.clone());
+        let current = self
+            .active
+            .and_then(|i| self.cameras.get(i))
+            .map(|c| c.name.clone());
         let recording = self.session.as_ref().is_some_and(|s| s.is_recording());
-        self.cameras = self.watcher.as_ref().map(|w| w.cameras()).unwrap_or_default();
-        let still_there = current.as_ref().and_then(|n| self.cameras.iter().position(|c| &c.name == n));
+        self.cameras = self
+            .watcher
+            .as_ref()
+            .map(|w| w.cameras())
+            .unwrap_or_default();
+        let still_there = current
+            .as_ref()
+            .and_then(|n| self.cameras.iter().position(|c| &c.name == n));
         match still_there {
             Some(i) => {
                 self.active = Some(i);
@@ -452,7 +523,9 @@ impl Worker {
     }
 
     fn poll_errors(&mut self) {
-        let Some(err) = self.session.as_ref().and_then(|s| s.pop_error()) else { return };
+        let Some(err) = self.session.as_ref().and_then(|s| s.pop_error()) else {
+            return;
+        };
         let was_recording = self.session.as_ref().is_some_and(|s| s.is_recording());
         self.session = None;
         if was_recording {
@@ -469,7 +542,10 @@ mod tests {
     fn next_event(h: &Handle, pred: impl Fn(&Event) -> bool) -> Event {
         let deadline = std::time::Instant::now() + Duration::from_secs(20);
         loop {
-            assert!(std::time::Instant::now() < deadline, "timed out waiting for event");
+            assert!(
+                std::time::Instant::now() < deadline,
+                "timed out waiting for event"
+            );
             match h.events.try_recv() {
                 Ok(e) if pred(&e) => return e,
                 Ok(_) => {}
@@ -489,7 +565,11 @@ mod tests {
             remembered_camera: Some("Test Camera (Back)".into()),
         });
         match next_event(&h, |e| matches!(e, Event::Cameras { .. })) {
-            Event::Cameras { names, active, mirrored } => {
+            Event::Cameras {
+                names,
+                active,
+                mirrored,
+            } => {
                 assert_eq!(names.len(), 2);
                 assert_eq!(active, Some(1));
                 assert!(!mirrored);
@@ -502,10 +582,14 @@ mod tests {
         std::thread::sleep(Duration::from_millis(200));
 
         h.send(Command::TakePhoto);
-        match next_event(&h, |e| matches!(e, Event::PhotoSaved { .. } | Event::Failed(_))) {
+        match next_event(&h, |e| {
+            matches!(e, Event::PhotoSaved { .. } | Event::Failed(_))
+        }) {
             Event::PhotoSaved { path, thumb } => {
                 assert!(path.starts_with(&dir));
-                assert!(naming::is_capture_name(&path.file_name().unwrap().to_string_lossy()).is_some());
+                assert!(
+                    naming::is_capture_name(&path.file_name().unwrap().to_string_lossy()).is_some()
+                );
                 let bytes = std::fs::read(&path).unwrap();
                 assert_eq!(&bytes[..2], &[0xFF, 0xD8]);
                 assert_eq!(thumb.unwrap().width, THUMB_SIZE);
@@ -517,7 +601,9 @@ mod tests {
         next_event(&h, |e| matches!(e, Event::RecordingStarted(_)));
         std::thread::sleep(Duration::from_millis(1000));
         h.send(Command::StopRecording);
-        match next_event(&h, |e| matches!(e, Event::RecordingSaved { .. } | Event::Failed(_))) {
+        match next_event(&h, |e| {
+            matches!(e, Event::RecordingSaved { .. } | Event::Failed(_))
+        }) {
             Event::RecordingSaved { path, .. } => {
                 assert!(std::fs::metadata(&path).unwrap().len() > 1000);
             }
@@ -527,7 +613,9 @@ mod tests {
 
         h.send(Command::NextCamera);
         match next_event(&h, |e| matches!(e, Event::Cameras { .. })) {
-            Event::Cameras { active, mirrored, .. } => {
+            Event::Cameras {
+                active, mirrored, ..
+            } => {
                 assert_eq!(active, Some(0));
                 assert!(mirrored);
             }
@@ -541,10 +629,18 @@ mod tests {
     fn no_camera_and_denied_states() {
         gst::init().unwrap();
         let dir = std::env::temp_dir().join("helix-camera-none");
-        let h = spawn(Config { mode: SourceMode::None, output_dir: dir.clone(), remembered_camera: None });
+        let h = spawn(Config {
+            mode: SourceMode::None,
+            output_dir: dir.clone(),
+            remembered_camera: None,
+        });
         next_event(&h, |e| matches!(e, Event::Status(Status::NoCamera)));
         drop(h);
-        let h = spawn(Config { mode: SourceMode::Denied, output_dir: dir, remembered_camera: None });
+        let h = spawn(Config {
+            mode: SourceMode::Denied,
+            output_dir: dir,
+            remembered_camera: None,
+        });
         next_event(&h, |e| matches!(e, Event::Status(Status::Denied)));
     }
 }

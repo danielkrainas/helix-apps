@@ -84,8 +84,13 @@ pub fn priority(nice: i32) -> &'static str {
 }
 
 /// Preset priorities offered by the Change Priority dialog.
-pub const PRIORITY_PRESETS: [(&str, i32); 5] =
-    [("Very High", -20), ("High", -5), ("Normal", 0), ("Low", 5), ("Very Low", 19)];
+pub const PRIORITY_PRESETS: [(&str, i32); 5] = [
+    ("Very High", -20),
+    ("High", -5),
+    ("Normal", 0),
+    ("Low", 5),
+    ("Very Low", 19),
+];
 
 /// Formats a percentage with one decimal.
 pub fn percent(p: f64) -> String {

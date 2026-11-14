@@ -16,7 +16,9 @@ pub fn parse(content: &str) -> HashMap<String, String> {
         if line.is_empty() || line.starts_with('#') {
             continue;
         }
-        let Some((key, value)) = line.split_once('=') else { continue };
+        let Some((key, value)) = line.split_once('=') else {
+            continue;
+        };
         let key = key.trim();
         if key.is_empty() || !key.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
             continue;
@@ -30,7 +32,9 @@ fn unquote(value: &str) -> String {
     if let Some(inner) = value.strip_prefix('\'') {
         return inner.strip_suffix('\'').unwrap_or(inner).to_string();
     }
-    let Some(inner) = value.strip_prefix('"') else { return value.to_string() };
+    let Some(inner) = value.strip_prefix('"') else {
+        return value.to_string();
+    };
     let mut out = String::new();
     let mut escaped = false;
     for c in inner.chars() {
@@ -126,7 +130,10 @@ mod tests {
         let missing = dir.join("missing");
         let fallback = dir.join("os-release");
         std::fs::write(&fallback, "NAME=Helix\nVERSION_ID=1\n").unwrap();
-        assert_eq!(read_display_name_from(&[&missing, &fallback]).as_deref(), Some("Helix 1"));
+        assert_eq!(
+            read_display_name_from(&[&missing, &fallback]).as_deref(),
+            Some("Helix 1")
+        );
         assert_eq!(read_display_name_from(&[&missing]), None);
         std::fs::remove_dir_all(&dir).unwrap();
     }

@@ -15,7 +15,12 @@ pub struct Rect {
 
 impl Rect {
     pub fn new(x: u32, y: u32, width: u32, height: u32) -> Self {
-        Rect { x, y, width, height }
+        Rect {
+            x,
+            y,
+            width,
+            height,
+        }
     }
 }
 
@@ -38,7 +43,15 @@ impl Page {
     pub fn new(width: u32, height: u32, channels: u8, pixels: Vec<u8>, dpi: f64) -> Self {
         assert!(channels == 1 || channels == 3);
         assert_eq!(pixels.len(), (width * height) as usize * channels as usize);
-        Page { width, height, channels, pixels: pixels.into(), dpi, text: false, crop: None }
+        Page {
+            width,
+            height,
+            channels,
+            pixels: pixels.into(),
+            dpi,
+            text: false,
+            crop: None,
+        }
     }
 
     pub fn is_color(&self) -> bool {
@@ -51,19 +64,35 @@ impl Page {
 
     /// Rotates 90° clockwise (`clockwise = true`) or counter-clockwise.
     pub fn rotate(&self, clockwise: bool) -> Page {
-        let (w, h, c) = (self.width as usize, self.height as usize, self.channels as usize);
+        let (w, h, c) = (
+            self.width as usize,
+            self.height as usize,
+            self.channels as usize,
+        );
         let mut out = vec![0u8; self.pixels.len()];
         // New image is h wide and w tall.
         for y in 0..h {
             for x in 0..w {
-                let (nx, ny) = if clockwise { (h - 1 - y, x) } else { (y, w - 1 - x) };
+                let (nx, ny) = if clockwise {
+                    (h - 1 - y, x)
+                } else {
+                    (y, w - 1 - x)
+                };
                 let src = (y * w + x) * c;
                 let dst = (ny * h + nx) * c;
                 out[dst..dst + c].copy_from_slice(&self.pixels[src..src + c]);
             }
         }
-        let crop = self.crop.map(|r| rotate_rect(r, self.width, self.height, clockwise));
-        Page { width: self.height, height: self.width, pixels: out.into(), crop, ..self.clone() }
+        let crop = self
+            .crop
+            .map(|r| rotate_rect(r, self.width, self.height, clockwise));
+        Page {
+            width: self.height,
+            height: self.width,
+            pixels: out.into(),
+            crop,
+            ..self.clone()
+        }
     }
 
     /// Rotates 180°.
@@ -78,7 +107,11 @@ impl Page {
             y: self.height - r.y - r.height,
             ..r
         });
-        Page { pixels: out.into(), crop, ..self.clone() }
+        Page {
+            pixels: out.into(),
+            crop,
+            ..self.clone()
+        }
     }
 
     /// The page with its crop applied (or itself if uncropped).
@@ -104,7 +137,10 @@ impl Page {
     /// Physical size in PDF points (1/72 inch).
     pub fn size_points(&self) -> (f64, f64) {
         let dpi = if self.dpi > 0.0 { self.dpi } else { 72.0 };
-        (self.width as f64 * 72.0 / dpi, self.height as f64 * 72.0 / dpi)
+        (
+            self.width as f64 * 72.0 / dpi,
+            self.height as f64 * 72.0 / dpi,
+        )
     }
 
     /// Pixels as packed RGB (grey is expanded).
@@ -122,15 +158,30 @@ pub fn clamp_rect(r: Rect, w: u32, h: u32) -> Rect {
     let y = r.y.min(h.saturating_sub(1));
     let width = r.width.clamp(1, w - x);
     let height = r.height.clamp(1, h - y);
-    Rect { x, y, width, height }
+    Rect {
+        x,
+        y,
+        width,
+        height,
+    }
 }
 
 /// Maps a rectangle on a `w`×`h` page through a 90° rotation.
 pub fn rotate_rect(r: Rect, w: u32, h: u32, clockwise: bool) -> Rect {
     if clockwise {
-        Rect { x: h - r.y - r.height, y: r.x, width: r.height, height: r.width }
+        Rect {
+            x: h - r.y - r.height,
+            y: r.x,
+            width: r.height,
+            height: r.width,
+        }
     } else {
-        Rect { x: r.y, y: w - r.x - r.width, width: r.height, height: r.width }
+        Rect {
+            x: r.y,
+            y: w - r.x - r.width,
+            width: r.height,
+            height: r.width,
+        }
     }
 }
 
@@ -221,7 +272,11 @@ impl PageBuilder {
             return Err("Frames have different sizes".into());
         }
         self.width = p.pixels_per_line;
-        self.height = if self.height == 0 { lines } else { self.height.min(lines) };
+        self.height = if self.height == 0 {
+            lines
+        } else {
+            self.height.min(lines)
+        };
         match p.format {
             FrameFormat::Gray => self.gray = Some(out),
             FrameFormat::Rgb => self.rgb = Some(out),
@@ -339,7 +394,12 @@ mod tests {
         b.add_frame(&params, &[0b1010_0000]).unwrap();
         assert_eq!(&*b.finish(1.0).unwrap().pixels, &[0, 255, 0, 255]);
 
-        let params = FrameParams { depth: 16, bytes_per_line: 4, pixels_per_line: 2, ..params };
+        let params = FrameParams {
+            depth: 16,
+            bytes_per_line: 4,
+            pixels_per_line: 2,
+            ..params
+        };
         let mut raw = Vec::new();
         raw.extend_from_slice(&0xABCDu16.to_ne_bytes());
         raw.extend_from_slice(&0x0102u16.to_ne_bytes());
@@ -350,7 +410,12 @@ mod tests {
 
     #[test]
     fn builds_three_pass() {
-        let mk = |format| FrameParams { format, bytes_per_line: 2, pixels_per_line: 2, depth: 8 };
+        let mk = |format| FrameParams {
+            format,
+            bytes_per_line: 2,
+            pixels_per_line: 2,
+            depth: 8,
+        };
         let mut b = PageBuilder::new();
         b.add_frame(&mk(FrameFormat::Red), &[1, 2]).unwrap();
         b.add_frame(&mk(FrameFormat::Green), &[3, 4]).unwrap();
@@ -361,7 +426,12 @@ mod tests {
     #[test]
     fn incomplete_three_pass_is_error() {
         let mut b = PageBuilder::new();
-        let p = FrameParams { format: FrameFormat::Red, bytes_per_line: 1, pixels_per_line: 1, depth: 8 };
+        let p = FrameParams {
+            format: FrameFormat::Red,
+            bytes_per_line: 1,
+            pixels_per_line: 1,
+            depth: 8,
+        };
         b.add_frame(&p, &[1]).unwrap();
         assert!(b.finish(1.0).is_err());
         assert!(PageBuilder::new().add_frame(&p, &[]).is_err());

@@ -95,7 +95,14 @@ impl Panel for ExtensionsPanel {
         let page = widgets::page();
         let general = widgets::group("General");
         let prefs = ctx.prefs(SCHEMA);
-        general.add(&switch(&prefs, "disable-all", false, true, "Use Extensions", "Panel items, quick settings and more from extensions"));
+        general.add(&switch(
+            &prefs,
+            "disable-all",
+            false,
+            true,
+            "Use Extensions",
+            "Panel items, quick settings and more from extensions",
+        ));
         page.add(&general);
         let group = widgets::group("Installed");
         page.add(&group);
@@ -143,7 +150,16 @@ impl Panel for ExtensionsPanel {
 fn refresh(state: &Rc<State>) {
     let weak = Rc::downgrade(state);
     spawn_worker(
-        || ext::list().map(|list| list.into_iter().map(|e| { let s = ext::settings(&e.id); (e, s) }).collect::<Vec<_>>()),
+        || {
+            ext::list().map(|list| {
+                list.into_iter()
+                    .map(|e| {
+                        let s = ext::settings(&e.id);
+                        (e, s)
+                    })
+                    .collect::<Vec<_>>()
+            })
+        },
         move |found| {
             if let Some(state) = weak.upgrade() {
                 show(&state, found);
@@ -160,7 +176,15 @@ fn show(state: &Rc<State>, found: Option<Vec<(Ext, Vec<Setting>)>>) {
     state.stack.set_visible_child_name("list");
     let shape: Shape = found
         .iter()
-        .map(|(e, s)| (e.id.clone(), s.iter().map(|s| format!("{}:{:?}:{:?}", s.key, s.kind, s.choices)).collect(), e.commands.iter().map(|c| c.0.clone()).collect()))
+        .map(|(e, s)| {
+            (
+                e.id.clone(),
+                s.iter()
+                    .map(|s| format!("{}:{:?}:{:?}", s.key, s.kind, s.choices))
+                    .collect(),
+                e.commands.iter().map(|c| c.0.clone()).collect(),
+            )
+        })
         .collect();
     if *state.shape.borrow() != shape {
         for row in state.rows.borrow_mut().drain().map(|(_, r)| r) {
@@ -174,7 +198,9 @@ fn show(state: &Rc<State>, found: Option<Vec<(Ext, Vec<Setting>)>>) {
         *state.shape.borrow_mut() = shape;
     }
     if found.is_empty() {
-        state.group.set_description(Some("No extensions are installed."));
+        state
+            .group
+            .set_description(Some("No extensions are installed."));
     } else {
         state.group.set_description(None);
     }
@@ -207,18 +233,27 @@ fn update_row(row: &ExtRow, e: &Ext, settings: &[Setting]) {
     }
     row.problem.set_visible(e.troubled());
     row.problem.set_subtitle(&e.error);
-    row.restart.set_visible(matches!(e.state.as_str(), "running" | "crashed"));
+    row.restart
+        .set_visible(matches!(e.state.as_str(), "running" | "crashed"));
     for (row, setting) in row.settings.iter().zip(settings) {
         row.show(&setting.value);
     }
     for (id, label) in &row.commands {
-        let keys = e.commands.iter().find(|c| &c.0 == id).map(|c| c.2.clone()).unwrap_or_default();
+        let keys = e
+            .commands
+            .iter()
+            .find(|c| &c.0 == id)
+            .map(|c| c.2.clone())
+            .unwrap_or_default();
         label.set_accelerator(&keys);
     }
 }
 
 fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
-    let expander = adw::ExpanderRow::builder().use_markup(false).title(&e.name).build();
+    let expander = adw::ExpanderRow::builder()
+        .use_markup(false)
+        .title(&e.name)
+        .build();
     let id = e.id.clone();
     let switch = (!e.development()).then(|| {
         let sw = gtk::Switch::builder().valign(gtk::Align::Center).build();
@@ -235,13 +270,27 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
         sw
     });
 
-    let description = adw::ActionRow::builder().use_markup(false).title_lines(0).css_classes(["dim-label"]).build();
+    let description = adw::ActionRow::builder()
+        .use_markup(false)
+        .title_lines(0)
+        .css_classes(["dim-label"])
+        .build();
     expander.add_row(&description);
-    let access = adw::ActionRow::builder().use_markup(false).subtitle_lines(0).build();
+    let access = adw::ActionRow::builder()
+        .use_markup(false)
+        .subtitle_lines(0)
+        .build();
     expander.add_row(&access);
 
-    let problem = adw::ActionRow::builder().use_markup(false).title("Problem").subtitle_lines(0).build();
-    let log_button = gtk::Button::builder().label("Show Log").valign(gtk::Align::Center).build();
+    let problem = adw::ActionRow::builder()
+        .use_markup(false)
+        .title("Problem")
+        .subtitle_lines(0)
+        .build();
+    let log_button = gtk::Button::builder()
+        .label("Show Log")
+        .valign(gtk::Align::Center)
+        .build();
     {
         let weak = Rc::downgrade(state);
         let (id, name) = (id.clone(), e.name.clone());
@@ -255,7 +304,10 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
     expander.add_row(&problem);
 
     let restart = adw::ActionRow::builder().title("Restart").build();
-    let restart_button = gtk::Button::builder().label("Restart").valign(gtk::Align::Center).build();
+    let restart_button = gtk::Button::builder()
+        .label("Restart")
+        .valign(gtk::Align::Center)
+        .build();
     {
         let weak = Rc::downgrade(state);
         let id = id.clone();
@@ -269,16 +321,28 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
     restart.set_activatable_widget(Some(&restart_button));
     expander.add_row(&restart);
 
-    let settings: Vec<SettingRow> = settings.iter().map(|s| setting_row(state, &id, s)).collect();
+    let settings: Vec<SettingRow> = settings
+        .iter()
+        .map(|s| setting_row(state, &id, s))
+        .collect();
     for row in &settings {
         expander.add_row(&row.widget());
     }
 
     let mut commands = Vec::new();
     for (command, title, _) in &e.commands {
-        let row = adw::ActionRow::builder().use_markup(false).title(title).build();
-        let keys = gtk::ShortcutLabel::builder().disabled_text("None").valign(gtk::Align::Center).build();
-        let change = gtk::Button::builder().label("Change…").valign(gtk::Align::Center).build();
+        let row = adw::ActionRow::builder()
+            .use_markup(false)
+            .title(title)
+            .build();
+        let keys = gtk::ShortcutLabel::builder()
+            .disabled_text("None")
+            .valign(gtk::Align::Center)
+            .build();
+        let change = gtk::Button::builder()
+            .label("Change…")
+            .valign(gtk::Align::Center)
+            .build();
         let weak = Rc::downgrade(state);
         let (full, title) = (format!("{id}/{command}"), title.clone());
         change.connect_clicked(move |_| {
@@ -291,18 +355,38 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
         expander.add_row(&row);
         commands.push((command.clone(), keys));
     }
-    ExtRow { expander, switch, description, access, problem, restart, settings, commands }
+    ExtRow {
+        expander,
+        switch,
+        description,
+        access,
+        problem,
+        restart,
+        settings,
+        commands,
+    }
 }
 
 /// The switch was flipped by the user.
 fn turn(state: &Rc<State>, sw: &gtk::Switch, id: &str, on: bool) {
     sw.set_sensitive(false);
-    let name = state.exts.borrow().get(id).map(|e| e.name.clone()).unwrap_or_else(|| id.to_owned());
+    let name = state
+        .exts
+        .borrow()
+        .get(id)
+        .map(|e| e.name.clone())
+        .unwrap_or_else(|| id.to_owned());
     let weak = Rc::downgrade(state);
     let sw = sw.downgrade();
     let id = id.to_owned();
     spawn_worker(
-        move || if on { ext::enable(&id) } else { ext::disable(&id) },
+        move || {
+            if on {
+                ext::enable(&id)
+            } else {
+                ext::disable(&id)
+            }
+        },
         move |result| {
             let Some(state) = weak.upgrade() else { return };
             if let Some(sw) = sw.upgrade() {
@@ -339,7 +423,10 @@ fn write(state: &Rc<State>, id: &str, key: &str, value: Val) {
     }
     let (id, key) = (id.to_owned(), key.to_owned());
     let weak = Rc::downgrade(state);
-    spawn_worker(move || ext::set_setting(&id, &key, &value), move |r| report(&weak, r));
+    spawn_worker(
+        move || ext::set_setting(&id, &key, &value),
+        move |r| report(&weak, r),
+    );
 }
 
 fn setting_row(state: &Rc<State>, id: &str, s: &Setting) -> SettingRow {
@@ -352,7 +439,10 @@ fn setting_row(state: &Rc<State>, id: &str, s: &Setting) -> SettingRow {
     };
     let row = match s.kind {
         Kind::Bool => {
-            let r = adw::SwitchRow::builder().use_markup(false).title(&s.label).build();
+            let r = adw::SwitchRow::builder()
+                .use_markup(false)
+                .title(&s.label)
+                .build();
             r.connect_active_notify(move |r| send(Val::Bool(r.is_active())));
             SettingRow::Switch(r)
         }
@@ -363,12 +453,23 @@ fn setting_row(state: &Rc<State>, id: &str, s: &Setting) -> SettingRow {
             r.set_title(&s.label);
             let int = s.kind == Kind::Int;
             r.set_digits(if int { 0 } else { 2 });
-            r.connect_value_notify(move |r| send(if int { Val::Int(r.value().round() as i64) } else { Val::Double(r.value()) }));
+            r.connect_value_notify(move |r| {
+                send(if int {
+                    Val::Int(r.value().round() as i64)
+                } else {
+                    Val::Double(r.value())
+                })
+            });
             SettingRow::Spin(r)
         }
         Kind::Enum => {
-            let model = gtk::StringList::new(&s.choices.iter().map(String::as_str).collect::<Vec<_>>());
-            let r = adw::ComboRow::builder().use_markup(false).title(&s.label).model(&model).build();
+            let model =
+                gtk::StringList::new(&s.choices.iter().map(String::as_str).collect::<Vec<_>>());
+            let r = adw::ComboRow::builder()
+                .use_markup(false)
+                .title(&s.label)
+                .model(&model)
+                .build();
             let choices = s.choices.clone();
             r.connect_selected_notify(move |r| {
                 if let Some(c) = choices.get(r.selected() as usize) {
@@ -378,11 +479,19 @@ fn setting_row(state: &Rc<State>, id: &str, s: &Setting) -> SettingRow {
             SettingRow::Combo(r, s.choices.clone())
         }
         Kind::Text | Kind::List => {
-            let r = adw::EntryRow::builder().use_markup(false).title(&s.label).show_apply_button(true).build();
+            let r = adw::EntryRow::builder()
+                .use_markup(false)
+                .title(&s.label)
+                .show_apply_button(true)
+                .build();
             let list = s.kind == Kind::List;
             r.connect_apply(move |r| {
                 let text = r.text().to_string();
-                send(if list { Val::List(ext::split_list(&text)) } else { Val::Text(text) });
+                send(if list {
+                    Val::List(ext::split_list(&text))
+                } else {
+                    Val::Text(text)
+                });
             });
             if !s.help.is_empty() {
                 r.set_tooltip_text(Some(&s.help));
@@ -406,12 +515,28 @@ fn setting_row(state: &Rc<State>, id: &str, s: &Setting) -> SettingRow {
 
 /// "Show Log": the extension's last log lines.
 fn show_log(state: &Rc<State>, id: &str, name: &str) {
-    let view = gtk::TextView::builder().editable(false).monospace(true).wrap_mode(gtk::WrapMode::WordChar).top_margin(12).bottom_margin(12).left_margin(12).right_margin(12).build();
-    let scrolled = gtk::ScrolledWindow::builder().child(&view).vexpand(true).build();
+    let view = gtk::TextView::builder()
+        .editable(false)
+        .monospace(true)
+        .wrap_mode(gtk::WrapMode::WordChar)
+        .top_margin(12)
+        .bottom_margin(12)
+        .left_margin(12)
+        .right_margin(12)
+        .build();
+    let scrolled = gtk::ScrolledWindow::builder()
+        .child(&view)
+        .vexpand(true)
+        .build();
     let toolbar = adw::ToolbarView::new();
     toolbar.add_top_bar(&adw::HeaderBar::new());
     toolbar.set_content(Some(&scrolled));
-    let dialog = adw::Dialog::builder().title(format!("{name} Log")).content_width(640).content_height(420).child(&toolbar).build();
+    let dialog = adw::Dialog::builder()
+        .title(format!("{name} Log"))
+        .content_width(640)
+        .content_height(420)
+        .child(&toolbar)
+        .build();
     dialog.present(Some(&state.ctx.window));
     let id = id.to_owned();
     let view = view.downgrade();
@@ -419,7 +544,11 @@ fn show_log(state: &Rc<State>, id: &str, name: &str) {
         move || ext::log(&id),
         move |lines| {
             if let Some(view) = view.upgrade() {
-                let text = if lines.is_empty() { "Nothing was logged.".to_owned() } else { lines.join("\n") };
+                let text = if lines.is_empty() {
+                    "Nothing was logged.".to_owned()
+                } else {
+                    lines.join("\n")
+                };
                 view.buffer().set_text(&text);
                 let end = view.buffer().end_iter();
                 view.buffer().place_cursor(&end);
@@ -431,17 +560,39 @@ fn show_log(state: &Rc<State>, id: &str, name: &str) {
 
 /// "Change…": wait for a key combination for `command`.
 fn capture_shortcut(state: &Rc<State>, command: &str, title: &str) {
-    let heading = gtk::Label::builder().label(format!("Press the new keys for {title}")).wrap(true).css_classes(["title-4"]).build();
-    let hint = gtk::Label::builder().label("Escape cancels, Backspace removes the key.").css_classes(["dim-label"]).build();
-    let status = gtk::Label::builder().wrap(true).css_classes(["error"]).visible(false).build();
-    let content = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(12).margin_top(24).margin_bottom(24).margin_start(24).margin_end(24).build();
+    let heading = gtk::Label::builder()
+        .label(format!("Press the new keys for {title}"))
+        .wrap(true)
+        .css_classes(["title-4"])
+        .build();
+    let hint = gtk::Label::builder()
+        .label("Escape cancels, Backspace removes the key.")
+        .css_classes(["dim-label"])
+        .build();
+    let status = gtk::Label::builder()
+        .wrap(true)
+        .css_classes(["error"])
+        .visible(false)
+        .build();
+    let content = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(12)
+        .margin_top(24)
+        .margin_bottom(24)
+        .margin_start(24)
+        .margin_end(24)
+        .build();
     content.append(&heading);
     content.append(&hint);
     content.append(&status);
     let toolbar = adw::ToolbarView::new();
     toolbar.add_top_bar(&adw::HeaderBar::new());
     toolbar.set_content(Some(&content));
-    let dialog = adw::Dialog::builder().title("Change Key").content_width(420).child(&toolbar).build();
+    let dialog = adw::Dialog::builder()
+        .title("Change Key")
+        .content_width(420)
+        .child(&toolbar)
+        .build();
 
     let keys = gtk::EventControllerKey::new();
     keys.set_propagation_phase(gtk::PropagationPhase::Capture);
@@ -449,7 +600,11 @@ fn capture_shortcut(state: &Rc<State>, command: &str, title: &str) {
     let command = command.to_owned();
     let d = dialog.downgrade();
     keys.connect_key_pressed(move |_, keyval, _, mods| {
-        let wanted = mods & (gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::ALT_MASK | gdk::ModifierType::SUPER_MASK | gdk::ModifierType::SHIFT_MASK);
+        let wanted = mods
+            & (gdk::ModifierType::CONTROL_MASK
+                | gdk::ModifierType::ALT_MASK
+                | gdk::ModifierType::SUPER_MASK
+                | gdk::ModifierType::SHIFT_MASK);
         let accelerator = match keyval {
             gdk::Key::Escape if wanted.is_empty() => {
                 if let Some(d) = d.upgrade() {
@@ -460,14 +615,19 @@ fn capture_shortcut(state: &Rc<State>, command: &str, title: &str) {
             gdk::Key::BackSpace if wanted.is_empty() => String::new(),
             _ => {
                 let name = keyval.name().map(|n| n.to_string()).unwrap_or_default();
-                let ctrl_alt_super = wanted.intersects(gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::ALT_MASK | gdk::ModifierType::SUPER_MASK);
+                let ctrl_alt_super = wanted.intersects(
+                    gdk::ModifierType::CONTROL_MASK
+                        | gdk::ModifierType::ALT_MASK
+                        | gdk::ModifierType::SUPER_MASK,
+                );
                 if !ext::shortcut_allowed(&name, ctrl_alt_super) {
                     return glib::Propagation::Stop;
                 }
                 gtk::accelerator_name(keyval.to_lower(), wanted).to_string()
             }
         };
-        let (command, weak, d, status) = (command.clone(), weak.clone(), d.clone(), status.downgrade());
+        let (command, weak, d, status) =
+            (command.clone(), weak.clone(), d.clone(), status.downgrade());
         spawn_worker(
             move || ext::bind(&command, &accelerator),
             move |result| match result {

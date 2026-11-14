@@ -113,7 +113,11 @@ pub fn format_name(face: &Face, collection: bool) -> String {
 /// Returns the best string for `id`: English Unicode first, then any
 /// Unicode record, then Mac Roman.
 pub fn name_string(face: &Face, id: u16) -> Option<String> {
-    let names: Vec<_> = face.names().into_iter().filter(|n| n.name_id == id).collect();
+    let names: Vec<_> = face
+        .names()
+        .into_iter()
+        .filter(|n| n.name_id == id)
+        .collect();
     let rank = |n: &ttf_parser::name::Name| -> u8 {
         let english = match n.platform_id {
             PlatformId::Windows => n.language_id == 0x0409,
@@ -150,7 +154,13 @@ pub fn mac_roman(bytes: &[u8]) -> String {
     let high: Vec<char> = HIGH.chars().collect();
     bytes
         .iter()
-        .map(|&b| if b < 0x80 { b as char } else { high.get((b - 0x80) as usize).copied().unwrap_or('\u{FFFD}') })
+        .map(|&b| {
+            if b < 0x80 {
+                b as char
+            } else {
+                high.get((b - 0x80) as usize).copied().unwrap_or('\u{FFFD}')
+            }
+        })
         .collect()
 }
 
@@ -186,7 +196,10 @@ pub fn covers(face_chars: &[char], text: &str) -> bool {
     if chars.is_empty() {
         return true;
     }
-    let hit = chars.iter().filter(|c| face_chars.binary_search(c).is_ok()).count();
+    let hit = chars
+        .iter()
+        .filter(|c| face_chars.binary_search(c).is_ok())
+        .count();
     hit * 10 >= chars.len() * 9
 }
 
@@ -196,9 +209,16 @@ pub fn sample_text(face_chars: &[char]) -> String {
     if face_chars.is_empty() || covers(face_chars, PANGRAM) {
         return PANGRAM.to_string();
     }
-    let interesting: Vec<char> =
-        face_chars.iter().copied().filter(|c| c.is_alphanumeric() || (*c as u32) > 0x2000).collect();
-    let pool = if interesting.is_empty() { face_chars.to_vec() } else { interesting };
+    let interesting: Vec<char> = face_chars
+        .iter()
+        .copied()
+        .filter(|c| c.is_alphanumeric() || (*c as u32) > 0x2000)
+        .collect();
+    let pool = if interesting.is_empty() {
+        face_chars.to_vec()
+    } else {
+        interesting
+    };
     pool.iter().take(36).collect()
 }
 
@@ -213,7 +233,11 @@ pub struct FaceFacts<'a> {
 }
 
 /// Rows for the Info view, in display order, empty values omitted.
-pub fn info_rows(info: Option<&FaceInfo>, facts: &FaceFacts, chars: usize) -> Vec<(&'static str, String)> {
+pub fn info_rows(
+    info: Option<&FaceInfo>,
+    facts: &FaceFacts,
+    chars: usize,
+) -> Vec<(&'static str, String)> {
     let mut rows: Vec<(&'static str, String)> = Vec::new();
     match info {
         Some(i) => {
@@ -229,7 +253,14 @@ pub fn info_rows(info: Option<&FaceInfo>, facts: &FaceFacts, chars: usize) -> Ve
                 ("License", i.license.clone()),
                 ("License URL", i.license_url.clone()),
                 ("Glyphs", i.glyph_count.to_string()),
-                ("Characters", if chars > 0 { chars.to_string() } else { String::new() }),
+                (
+                    "Characters",
+                    if chars > 0 {
+                        chars.to_string()
+                    } else {
+                        String::new()
+                    },
+                ),
                 ("Format", i.format.clone()),
             ]);
         }
@@ -298,7 +329,12 @@ pub(crate) mod tests {
     }
 
     pub fn any_ttf() -> Option<PathBuf> {
-        system_font(&["DejaVuSans.ttf", "LiberationSans-Regular.ttf", "NotoSans-Regular.ttf", "Cantarell-Regular.otf"])
+        system_font(&[
+            "DejaVuSans.ttf",
+            "LiberationSans-Regular.ttf",
+            "NotoSans-Regular.ttf",
+            "Cantarell-Regular.otf",
+        ])
     }
 
     #[test]
@@ -337,7 +373,11 @@ pub(crate) mod tests {
 
     #[test]
     fn reads_collection_faces() {
-        let Some(path) = system_font(&["NotoSansCJK-Regular.ttc", "NotoSerifCJK-Regular.ttc", "NotoSansCJK.ttc"]) else {
+        let Some(path) = system_font(&[
+            "NotoSansCJK-Regular.ttc",
+            "NotoSerifCJK-Regular.ttc",
+            "NotoSansCJK.ttc",
+        ]) else {
             eprintln!("no TTC font present; skipping");
             return;
         };
@@ -352,7 +392,10 @@ pub(crate) mod tests {
     fn rejects_garbage() {
         assert!(face_count(b"definitely not a font").is_none());
         assert!(matches!(read_data(b"nope"), Err(Error::Parse)));
-        assert!(matches!(read_file(Path::new("/nonexistent/x.ttf")), Err(Error::Io(_))));
+        assert!(matches!(
+            read_file(Path::new("/nonexistent/x.ttf")),
+            Err(Error::Io(_))
+        ));
     }
 
     #[test]
@@ -365,10 +408,28 @@ pub(crate) mod tests {
             glyph_count: 42,
             ..Default::default()
         };
-        let facts = FaceFacts { family: "x", style: "y", format: "Type 1", path: "/f.ttf", size: Some(1500) };
+        let facts = FaceFacts {
+            family: "x",
+            style: "y",
+            format: "Type 1",
+            path: "/f.ttf",
+            size: Some(1500),
+        };
         let rows = info_rows(Some(&info), &facts, 10);
         let keys: Vec<&str> = rows.iter().map(|r| r.0).collect();
-        assert_eq!(keys, ["Family", "Style", "Version", "Glyphs", "Characters", "Format", "File", "Size"]);
+        assert_eq!(
+            keys,
+            [
+                "Family",
+                "Style",
+                "Version",
+                "Glyphs",
+                "Characters",
+                "Format",
+                "File",
+                "Size"
+            ]
+        );
         assert_eq!(rows[0].1, "Foo");
         assert_eq!(rows[7].1, "1.5 kB");
         let rows = info_rows(None, &facts, 0);

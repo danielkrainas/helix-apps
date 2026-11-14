@@ -21,7 +21,11 @@ pub struct WindowState {
 
 impl Default for WindowState {
     fn default() -> Self {
-        WindowState { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, maximized: false }
+        WindowState {
+            width: DEFAULT_WIDTH,
+            height: DEFAULT_HEIGHT,
+            maximized: false,
+        }
     }
 }
 
@@ -39,7 +43,10 @@ impl WindowState {
         if ok(s.width) && ok(s.height) {
             s
         } else {
-            WindowState { maximized: s.maximized, ..WindowState::default() }
+            WindowState {
+                maximized: s.maximized,
+                ..WindowState::default()
+            }
         }
     }
 
@@ -49,7 +56,10 @@ impl WindowState {
             std::fs::create_dir_all(dir)?;
         }
         let tmp = path.with_extension("json.tmp");
-        std::fs::write(&tmp, serde_json::to_string(self).map_err(io::Error::other)? + "\n")?;
+        std::fs::write(
+            &tmp,
+            serde_json::to_string(self).map_err(io::Error::other)? + "\n",
+        )?;
         std::fs::rename(&tmp, path)
     }
 }
@@ -69,7 +79,11 @@ mod tests {
         let path = dir.join("window.json");
         assert_eq!(WindowState::load(&path), WindowState::default());
 
-        let s = WindowState { width: 1000, height: 700, maximized: true };
+        let s = WindowState {
+            width: 1000,
+            height: 700,
+            maximized: true,
+        };
         s.save(&path).unwrap();
         assert_eq!(WindowState::load(&path), s);
         assert!(!path.with_extension("json.tmp").exists());
@@ -80,11 +94,21 @@ mod tests {
         std::fs::write(&path, r#"{"width": 5, "height": 99999, "maximized": true}"#).unwrap();
         assert_eq!(
             WindowState::load(&path),
-            WindowState { maximized: true, ..WindowState::default() }
+            WindowState {
+                maximized: true,
+                ..WindowState::default()
+            }
         );
 
         std::fs::write(&path, r#"{"width": 900, "height": 640}"#).unwrap();
-        assert_eq!(WindowState::load(&path), WindowState { width: 900, height: 640, maximized: false });
+        assert_eq!(
+            WindowState::load(&path),
+            WindowState {
+                width: 900,
+                height: 640,
+                maximized: false
+            }
+        );
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }

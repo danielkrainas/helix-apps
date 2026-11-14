@@ -109,7 +109,9 @@ impl Sidebar {
         let weak = Rc::downgrade(self);
         click.connect_pressed(move |g, _, x, y| {
             let Some(s) = weak.upgrade() else { return };
-            let Some(row) = s.list.row_at_y(y as i32) else { return };
+            let Some(row) = s.list.row_at_y(y as i32) else {
+                return;
+            };
             let idx = row.index() as usize;
             match g.current_button() {
                 gdk::BUTTON_MIDDLE => {
@@ -196,8 +198,8 @@ impl Sidebar {
             });
             monitors.push(m);
         }
-        if let Ok(m) =
-            gio::File::for_uri("trash:///").monitor_directory(gio::FileMonitorFlags::NONE, None::<&gio::Cancellable>)
+        if let Ok(m) = gio::File::for_uri("trash:///")
+            .monitor_directory(gio::FileMonitorFlags::NONE, None::<&gio::Cancellable>)
         {
             let weak = Rc::downgrade(self);
             m.connect_changed(move |_, _, _, _| {
@@ -224,7 +226,11 @@ impl Sidebar {
         let weak = Rc::downgrade(self);
         glib::spawn_future_local(async move {
             let full = gio::File::for_uri("trash:///")
-                .query_info_future("trash::item-count", gio::FileQueryInfoFlags::NONE, glib::Priority::LOW)
+                .query_info_future(
+                    "trash::item-count",
+                    gio::FileQueryInfoFlags::NONE,
+                    glib::Priority::LOW,
+                )
                 .await
                 .map(|i| i.attribute_uint32("trash::item-count") > 0)
                 .unwrap_or(false);
@@ -245,7 +251,12 @@ impl Sidebar {
             label: label.into(),
             icon: themed(icon),
         };
-        v.push(loc("Home", "user-home-symbolic", gio::File::for_path(&home), 0));
+        v.push(loc(
+            "Home",
+            "user-home-symbolic",
+            gio::File::for_path(&home),
+            0,
+        ));
         v.push(loc(
             "Recent",
             "document-open-recent-symbolic",
@@ -440,7 +451,9 @@ impl Sidebar {
                 sec.append(Some("_Remove from Bookmarks"), Some("sidebar.remove"));
             }
             Kind::Mount(m) if m.can_eject() => sec.append(Some("_Eject"), Some("sidebar.eject")),
-            Kind::Mount(m) if m.can_unmount() => sec.append(Some("_Unmount"), Some("sidebar.eject")),
+            Kind::Mount(m) if m.can_unmount() => {
+                sec.append(Some("_Unmount"), Some("sidebar.eject"))
+            }
             Kind::Location(f) if f.uri_scheme().as_deref() == Some("trash") => {
                 sec.append(Some("_Empty Trash…"), Some("sidebar.empty-trash"))
             }
@@ -466,7 +479,8 @@ impl Sidebar {
     }
 
     fn remove_bookmark(&self, idx: usize) {
-        let Some(Kind::Bookmark(bi, _)) = self.places.borrow().get(idx).map(|p| p.kind.clone()) else {
+        let Some(Kind::Bookmark(bi, _)) = self.places.borrow().get(idx).map(|p| p.kind.clone())
+        else {
             return;
         };
         let mut list = bookmarks::load();
@@ -484,9 +498,14 @@ impl Sidebar {
         let Some(place) = self.places.borrow().get(idx).cloned() else {
             return;
         };
-        let Kind::Bookmark(bi, _) = place.kind else { return };
+        let Kind::Bookmark(bi, _) = place.kind else {
+            return;
+        };
         let Some(w) = self.win.upgrade() else { return };
-        let entry = gtk::Entry::builder().text(&place.label).activates_default(true).build();
+        let entry = gtk::Entry::builder()
+            .text(&place.label)
+            .activates_default(true)
+            .build();
         let dialog = adw::AlertDialog::builder()
             .heading("Rename Bookmark")
             .extra_child(&entry)

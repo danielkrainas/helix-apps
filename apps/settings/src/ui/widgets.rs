@@ -12,7 +12,10 @@ pub const UNSUPPORTED: &str = "Not supported by this system";
 
 /// Whether `key` is stored in an installed schema (vs. memory only).
 pub fn has_key(prefs: &Prefs, key: &str) -> bool {
-    prefs.gsettings().and_then(|s| s.settings_schema()).is_some_and(|s| s.has_key(key))
+    prefs
+        .gsettings()
+        .and_then(|s| s.settings_schema())
+        .is_some_and(|s| s.has_key(key))
 }
 
 /// Calls `f` whenever `key` changes in GSettings (no-op for memory keys).
@@ -31,12 +34,24 @@ fn mark(row: &impl IsA<adw::ActionRow>, prefs: &Prefs, key: &str) {
 }
 
 pub fn group(title: &str) -> adw::PreferencesGroup {
-    adw::PreferencesGroup::builder().title(glib::markup_escape_text(title)).build()
+    adw::PreferencesGroup::builder()
+        .title(glib::markup_escape_text(title))
+        .build()
 }
 
 /// Switch bound to a boolean key; `invert` shows the negated value.
-pub fn switch(prefs: &Prefs, key: &'static str, default: bool, invert: bool, title: &str, subtitle: &str) -> adw::SwitchRow {
-    let row = adw::SwitchRow::builder().use_markup(false).title(title).build();
+pub fn switch(
+    prefs: &Prefs,
+    key: &'static str,
+    default: bool,
+    invert: bool,
+    title: &str,
+    subtitle: &str,
+) -> adw::SwitchRow {
+    let row = adw::SwitchRow::builder()
+        .use_markup(false)
+        .title(title)
+        .build();
     if !subtitle.is_empty() {
         row.set_subtitle(subtitle);
     }
@@ -71,8 +86,17 @@ fn string_list(labels: impl IntoIterator<Item = String>) -> gtk::StringList {
 }
 
 /// Switch mapping a string/enum key to two nicks (`on`, `off`).
-pub fn nick_switch(prefs: &Prefs, key: &'static str, (on, off): (&'static str, &'static str), default: &'static str, title: &str) -> adw::SwitchRow {
-    let row = adw::SwitchRow::builder().use_markup(false).title(title).build();
+pub fn nick_switch(
+    prefs: &Prefs,
+    key: &'static str,
+    (on, off): (&'static str, &'static str),
+    default: &'static str,
+    title: &str,
+) -> adw::SwitchRow {
+    let row = adw::SwitchRow::builder()
+        .use_markup(false)
+        .title(title)
+        .build();
     row.set_active(prefs.get_enum_nick(key, default) != off);
     row.connect_active_notify(glib::clone!(
         #[strong]
@@ -94,7 +118,13 @@ pub fn nick_switch(prefs: &Prefs, key: &'static str, (on, off): (&'static str, &
 }
 
 /// Combo over enum/string nicks.
-pub fn nick_combo(prefs: &Prefs, key: &'static str, default: &'static str, choices: &'static [(&'static str, &'static str)], title: &str) -> adw::ComboRow {
+pub fn nick_combo(
+    prefs: &Prefs,
+    key: &'static str,
+    default: &'static str,
+    choices: &'static [(&'static str, &'static str)],
+    title: &str,
+) -> adw::ComboRow {
     let row = adw::ComboRow::builder()
         .title(title)
         .model(&string_list(choices.iter().map(|c| c.1.to_string())))
@@ -164,7 +194,10 @@ pub fn preset_combo(
     custom_label: fn(i64) -> String,
     title: &str,
 ) -> adw::ComboRow {
-    let row = adw::ComboRow::builder().use_markup(false).title(title).build();
+    let row = adw::ComboRow::builder()
+        .use_markup(false)
+        .title(title)
+        .build();
     mark(&row, prefs, key);
     let choices: Rc<std::cell::RefCell<Vec<Choice<i64>>>> = Rc::default();
     let updating = Rc::new(Cell::new(false));
@@ -233,7 +266,10 @@ pub fn scale_row(
     title: &str,
     marks: Option<(&str, &str)>,
 ) -> adw::ActionRow {
-    let row = adw::ActionRow::builder().use_markup(false).title(title).build();
+    let row = adw::ActionRow::builder()
+        .use_markup(false)
+        .title(title)
+        .build();
     mark(&row, prefs, key);
     let scale = gtk::Scale::with_range(gtk::Orientation::Horizontal, min, max, step);
     scale.set_hexpand(true);

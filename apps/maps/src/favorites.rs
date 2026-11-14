@@ -15,7 +15,10 @@ impl Favorites {
             .ok()
             .and_then(|t| serde_json::from_str::<Vec<Place>>(&t).ok())
             .unwrap_or_default();
-        Favorites { path: Some(path.to_path_buf()), places }
+        Favorites {
+            path: Some(path.to_path_buf()),
+            places,
+        }
     }
 
     fn save(&self) {

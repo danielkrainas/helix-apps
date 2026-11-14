@@ -37,7 +37,9 @@ struct Pool {
 
 impl Pool {
     fn new() -> Pool {
-        let pool = Pool { shared: Arc::new((Mutex::new(Vec::new()), Condvar::new())) };
+        let pool = Pool {
+            shared: Arc::new((Mutex::new(Vec::new()), Condvar::new())),
+        };
         for i in 0..WORKERS {
             let p = pool.clone();
             std::thread::Builder::new()
@@ -189,7 +191,16 @@ impl TileSource {
             return Err(err(gio::IOErrorEnum::Cancelled, "cancelled"));
         }
         let (tx, rx) = async_channel::bounded(1);
-        imp::pool().push(Job { url, z, x, y, cache, stale, cancel, reply: tx });
+        imp::pool().push(Job {
+            url,
+            z,
+            x,
+            y,
+            cache,
+            stale,
+            cancel,
+            reply: tx,
+        });
         match rx.recv().await {
             Ok(Ok(data)) => Ok(glib::Bytes::from_owned(data)),
             Ok(Err(msg)) => Err(err(gio::IOErrorEnum::Failed, &msg)),

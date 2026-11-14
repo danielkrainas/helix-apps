@@ -20,7 +20,13 @@ pub struct MousePanel;
 pub struct KeyboardPanel;
 
 /// Two-choice combo writing a boolean (`choices.1` = true).
-fn bool_combo(prefs: &Prefs, key: &'static str, default: bool, title: &str, choices: (&str, &str)) -> adw::ComboRow {
+fn bool_combo(
+    prefs: &Prefs,
+    key: &'static str,
+    default: bool,
+    title: &str,
+    choices: (&str, &str),
+) -> adw::ComboRow {
     let row = adw::ComboRow::builder()
         .title(title)
         .model(&gtk::StringList::new(&[choices.0, choices.1]))
@@ -52,32 +58,123 @@ impl Panel for MousePanel {
         let page = widgets::page();
 
         let general = widgets::group("General");
-        let primary = bool_combo(&mouse, "left-handed", false, "Primary Button", ("Left", "Right"));
+        let primary = bool_combo(
+            &mouse,
+            "left-handed",
+            false,
+            "Primary Button",
+            ("Left", "Right"),
+        );
         primary.set_subtitle("Order of physical buttons on mice and touchpads");
         general.add(&primary);
         page.add(&general);
 
         let m = widgets::group("Mouse");
-        m.add(&scale_row(&mouse, "speed", Num::F64, 0.0, (-1.0, 1.0, 0.05), identity, identity, "Pointer Speed", Some(("Slow", "Fast"))));
-        let accel = widgets::nick_switch(&mouse, "accel-profile", ("default", "flat"), "default", "Mouse Acceleration");
+        m.add(&scale_row(
+            &mouse,
+            "speed",
+            Num::F64,
+            0.0,
+            (-1.0, 1.0, 0.05),
+            identity,
+            identity,
+            "Pointer Speed",
+            Some(("Slow", "Fast")),
+        ));
+        let accel = widgets::nick_switch(
+            &mouse,
+            "accel-profile",
+            ("default", "flat"),
+            "default",
+            "Mouse Acceleration",
+        );
         accel.set_subtitle("Pointer speed increases with movement speed");
         m.add(&accel);
-        m.add(&switch(&mouse, "natural-scroll", false, false, "Natural Scrolling", "Scrolling moves the content, not the view"));
+        m.add(&switch(
+            &mouse,
+            "natural-scroll",
+            false,
+            false,
+            "Natural Scrolling",
+            "Scrolling moves the content, not the view",
+        ));
         page.add(&m);
 
         let t = widgets::group("Touchpad");
-        let enabled = widgets::nick_switch(&tp, "send-events", ("enabled", "disabled"), "enabled", "Touchpad");
+        let enabled = widgets::nick_switch(
+            &tp,
+            "send-events",
+            ("enabled", "disabled"),
+            "enabled",
+            "Touchpad",
+        );
         t.add(&enabled);
         let rows: Vec<gtk::Widget> = vec![
-            switch(&tp, "disable-while-typing", true, false, "Disable Touchpad While Typing", "").upcast(),
-            scale_row(&tp, "speed", Num::F64, 0.0, (-1.0, 1.0, 0.05), identity, identity, "Pointer Speed", Some(("Slow", "Fast"))).upcast(),
-            widgets::nick_combo(&tp, "click-method", "fingers", &[("fingers", "Two Finger Push"), ("areas", "Corner Push")], "Secondary Click").upcast(),
-            switch(&tp, "tap-to-click", true, false, "Tap to Click", "Tap the touchpad to click").upcast(),
-            switch(&tp, "natural-scroll", true, false, "Natural Scrolling", "Scrolling moves the content, not the view").upcast(),
+            switch(
+                &tp,
+                "disable-while-typing",
+                true,
+                false,
+                "Disable Touchpad While Typing",
+                "",
+            )
+            .upcast(),
+            scale_row(
+                &tp,
+                "speed",
+                Num::F64,
+                0.0,
+                (-1.0, 1.0, 0.05),
+                identity,
+                identity,
+                "Pointer Speed",
+                Some(("Slow", "Fast")),
+            )
+            .upcast(),
+            widgets::nick_combo(
+                &tp,
+                "click-method",
+                "fingers",
+                &[("fingers", "Two Finger Push"), ("areas", "Corner Push")],
+                "Secondary Click",
+            )
+            .upcast(),
+            switch(
+                &tp,
+                "tap-to-click",
+                true,
+                false,
+                "Tap to Click",
+                "Tap the touchpad to click",
+            )
+            .upcast(),
+            switch(
+                &tp,
+                "natural-scroll",
+                true,
+                false,
+                "Natural Scrolling",
+                "Scrolling moves the content, not the view",
+            )
+            .upcast(),
         ];
         // Two-finger and edge scrolling are mutually exclusive.
-        let two = switch(&tp, "two-finger-scrolling-enabled", true, false, "Two-Finger Scrolling", "");
-        let edge = switch(&tp, "edge-scrolling-enabled", false, false, "Edge Scrolling", "");
+        let two = switch(
+            &tp,
+            "two-finger-scrolling-enabled",
+            true,
+            false,
+            "Two-Finger Scrolling",
+            "",
+        );
+        let edge = switch(
+            &tp,
+            "edge-scrolling-enabled",
+            false,
+            false,
+            "Edge Scrolling",
+            "",
+        );
         two.connect_active_notify(glib::clone!(
             #[weak]
             edge,
@@ -101,7 +198,10 @@ impl Panel for MousePanel {
         all.insert(5, edge.upcast());
         for r in &all {
             t.add(r);
-            enabled.bind_property("active", r, "sensitive").sync_create().build();
+            enabled
+                .bind_property("active", r, "sensitive")
+                .sync_create()
+                .build();
         }
         page.add(&t);
         page.upcast()
@@ -114,14 +214,38 @@ impl Panel for KeyboardPanel {
         page.add(&input_sources_group(ctx));
         let switching = widgets::group("Input Source Switching");
         let sources = ctx.prefs(INPUT_SOURCES);
-        switching.add(&switch(&sources, "per-window", false, false, "Switch Input Sources Individually for Each Window", ""));
+        switching.add(&switch(
+            &sources,
+            "per-window",
+            false,
+            false,
+            "Switch Input Sources Individually for Each Window",
+            "",
+        ));
         page.add(&switching);
 
         let kb = ctx.prefs(KEYBOARD);
         let typing = widgets::group("Typing");
-        let repeat = switch(&kb, "repeat", true, false, "Repeat Keys", "Key presses repeat when a key is held down");
+        let repeat = switch(
+            &kb,
+            "repeat",
+            true,
+            false,
+            "Repeat Keys",
+            "Key presses repeat when a key is held down",
+        );
         typing.add(&repeat);
-        let delay = scale_row(&kb, "delay", Num::U32, 500.0, (100.0, 2000.0, 10.0), identity, identity, "Delay", Some(("Short", "Long")));
+        let delay = scale_row(
+            &kb,
+            "delay",
+            Num::U32,
+            500.0,
+            (100.0, 2000.0, 10.0),
+            identity,
+            identity,
+            "Delay",
+            Some(("Short", "Long")),
+        );
         let speed = scale_row(
             &kb,
             "repeat-interval",
@@ -134,7 +258,10 @@ impl Panel for KeyboardPanel {
             Some(("Slow", "Fast")),
         );
         for r in [&delay, &speed] {
-            repeat.bind_property("active", r, "sensitive").sync_create().build();
+            repeat
+                .bind_property("active", r, "sensitive")
+                .sync_create()
+                .build();
             typing.add(r);
         }
         page.add(&typing);
@@ -171,12 +298,18 @@ impl SourcesUi {
         let sources = read_sources(&self.prefs);
         let n = sources.len();
         if n == 0 {
-            let row = adw::ActionRow::builder().title("No input sources").subtitle("The keyboard uses the system default layout").build();
+            let row = adw::ActionRow::builder()
+                .title("No input sources")
+                .subtitle("The keyboard uses the system default layout")
+                .build();
             self.group.add(&row);
             self.rows.borrow_mut().push(row);
         }
         for (i, (kind, id)) in sources.iter().enumerate() {
-            let row = adw::ActionRow::builder().use_markup(false).title(xkb::source_name(&self.info, kind, id)).build();
+            let row = adw::ActionRow::builder()
+                .use_markup(false)
+                .title(xkb::source_name(&self.info, kind, id))
+                .build();
             if kind == "xkb" {
                 row.set_subtitle(id);
             }
@@ -184,7 +317,13 @@ impl SourcesUi {
                 ("go-up-symbolic", "Move Up", -1isize, i > 0),
                 ("go-down-symbolic", "Move Down", 1, i + 1 < n),
             ] {
-                let b = gtk::Button::builder().icon_name(icon).tooltip_text(tip).valign(gtk::Align::Center).css_classes(["flat"]).sensitive(enabled).build();
+                let b = gtk::Button::builder()
+                    .icon_name(icon)
+                    .tooltip_text(tip)
+                    .valign(gtk::Align::Center)
+                    .css_classes(["flat"])
+                    .sensitive(enabled)
+                    .build();
                 let weak = Rc::downgrade(self);
                 b.connect_clicked(move |_| {
                     if let Some(this) = weak.upgrade() {
@@ -196,7 +335,12 @@ impl SourcesUi {
                 });
                 row.add_suffix(&b);
             }
-            let rm = gtk::Button::builder().icon_name("user-trash-symbolic").tooltip_text("Remove").valign(gtk::Align::Center).css_classes(["flat"]).build();
+            let rm = gtk::Button::builder()
+                .icon_name("user-trash-symbolic")
+                .tooltip_text("Remove")
+                .valign(gtk::Align::Center)
+                .css_classes(["flat"])
+                .build();
             let weak = Rc::downgrade(self);
             rm.connect_clicked(move |_| {
                 if let Some(this) = weak.upgrade() {
@@ -218,7 +362,10 @@ fn input_sources_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
     let prefs = ctx.prefs(INPUT_SOURCES);
     let group = widgets::group("Input Sources");
     group.set_description(Some("Includes keyboard layouts and input methods"));
-    let add = gtk::Button::builder().label("Add Input Source…").css_classes(["flat"]).build();
+    let add = gtk::Button::builder()
+        .label("Add Input Source…")
+        .css_classes(["flat"])
+        .build();
     group.set_header_suffix(Some(&add));
     let ui = Rc::new(SourcesUi {
         prefs: prefs.clone(),
@@ -243,16 +390,37 @@ fn input_sources_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
 }
 
 fn add_source_dialog(parent: &adw::ApplicationWindow, ui: &Rc<SourcesUi>) {
-    let dialog = adw::Dialog::builder().title("Add Input Source").content_width(420).content_height(520).build();
-    let search = gtk::SearchEntry::builder().placeholder_text("Search languages and layouts").margin_start(12).margin_end(12).margin_top(6).margin_bottom(6).build();
-    let list = gtk::ListBox::builder().css_classes(["navigation-sidebar"]).build();
-    let scrolled = gtk::ScrolledWindow::builder().vexpand(true).hscrollbar_policy(gtk::PolicyType::Never).child(&list).build();
+    let dialog = adw::Dialog::builder()
+        .title("Add Input Source")
+        .content_width(420)
+        .content_height(520)
+        .build();
+    let search = gtk::SearchEntry::builder()
+        .placeholder_text("Search languages and layouts")
+        .margin_start(12)
+        .margin_end(12)
+        .margin_top(6)
+        .margin_bottom(6)
+        .build();
+    let list = gtk::ListBox::builder()
+        .css_classes(["navigation-sidebar"])
+        .build();
+    let scrolled = gtk::ScrolledWindow::builder()
+        .vexpand(true)
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .child(&list)
+        .build();
     let fill = {
         let (list, info) = (list.clone(), ui.info.clone());
         move |q: &str| {
             list.remove_all();
             for (id, desc) in xkb::filter(&info, q).into_iter().take(400) {
-                let row = adw::ActionRow::builder().use_markup(false).title(desc.as_str()).subtitle(id.as_str()).activatable(true).build();
+                let row = adw::ActionRow::builder()
+                    .use_markup(false)
+                    .title(desc.as_str())
+                    .subtitle(id.as_str())
+                    .activatable(true)
+                    .build();
                 row.set_widget_name(id);
                 list.append(&row);
             }

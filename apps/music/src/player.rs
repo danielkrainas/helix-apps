@@ -14,7 +14,9 @@ pub const SINK_ENV: &str = "HELIX_AUDIO_SINK";
 pub enum Event {
     /// A new stream started. `gapless` is true when it was queued from
     /// `about-to-finish` (the queue should advance).
-    StreamStart { gapless: bool },
+    StreamStart {
+        gapless: bool,
+    },
     Eos,
     Error(String),
     State(State),
@@ -86,11 +88,15 @@ pub struct Player {
 impl Player {
     pub fn new(sink: Option<&str>) -> Result<Self, String> {
         gst::init().map_err(|e| e.to_string())?;
-        let playbin = gst::ElementFactory::make("playbin").name("helix-music").build().map_err(|e| e.to_string())?;
+        let playbin = gst::ElementFactory::make("playbin")
+            .name("helix-music")
+            .build()
+            .map_err(|e| e.to_string())?;
         // Audio only: no video window for files with attached video streams.
         playbin.set_property_from_str("flags", "audio+soft-volume");
         if let Some(desc) = sink.map(str::trim).filter(|s| !s.is_empty()) {
-            let bin = gst::parse::bin_from_description(desc, true).map_err(|e| format!("{SINK_ENV}: {e}"))?;
+            let bin = gst::parse::bin_from_description(desc, true)
+                .map_err(|e| format!("{SINK_ENV}: {e}"))?;
             playbin.set_property("audio-sink", &bin);
         }
         let next_uri: Arc<Mutex<Option<String>>> = Arc::default();
@@ -142,14 +148,23 @@ impl Player {
         let Some(rg) = &self.rgvolume else { return };
         let want = self.replaygain.get() != ReplayGain::Off;
         if want != self.filter_on.get() {
-            self.playbin.set_property("audio-filter", if want { Some(rg) } else { None::<&gst::Element> });
+            self.playbin.set_property(
+                "audio-filter",
+                if want {
+                    Some(rg)
+                } else {
+                    None::<&gst::Element>
+                },
+            );
             self.filter_on.set(want);
         }
     }
 
     /// Delivers events on the main context.
     pub fn attach(&mut self, on_event: impl Fn(Event) + 'static) {
-        let Some(bus) = self.playbin.bus() else { return };
+        let Some(bus) = self.playbin.bus() else {
+            return;
+        };
         let playbin = self.playbin.clone();
         let gapless = self.gapless.clone();
         self.watch = bus
@@ -168,7 +183,11 @@ impl Player {
         let _ = self.playbin.set_state(gst::State::Ready);
         self.apply_filter();
         self.playbin.set_property("uri", uri);
-        let _ = self.playbin.set_state(if play { gst::State::Playing } else { gst::State::Paused });
+        let _ = self.playbin.set_state(if play {
+            gst::State::Playing
+        } else {
+            gst::State::Paused
+        });
     }
 
     /// The URI to continue with gaplessly when the current one ends.
@@ -193,20 +212,31 @@ impl Player {
 
     pub fn state(&self) -> State {
         let (_, cur, pending) = self.playbin.state(gst::ClockTime::ZERO);
-        let s = if pending != gst::State::VoidPending { pending } else { cur };
+        let s = if pending != gst::State::VoidPending {
+            pending
+        } else {
+            cur
+        };
         map_state(s)
     }
 
     pub fn position_ms(&self) -> Option<u64> {
-        self.playbin.query_position::<gst::ClockTime>().map(|t| t.mseconds())
+        self.playbin
+            .query_position::<gst::ClockTime>()
+            .map(|t| t.mseconds())
     }
 
     pub fn duration_ms(&self) -> Option<u64> {
-        self.playbin.query_duration::<gst::ClockTime>().map(|t| t.mseconds())
+        self.playbin
+            .query_duration::<gst::ClockTime>()
+            .map(|t| t.mseconds())
     }
 
     pub fn seek(&self, ms: u64) {
-        let _ = self.playbin.seek_simple(gst::SeekFlags::FLUSH | gst::SeekFlags::ACCURATE, gst::ClockTime::from_mseconds(ms));
+        let _ = self.playbin.seek_simple(
+            gst::SeekFlags::FLUSH | gst::SeekFlags::ACCURATE,
+            gst::ClockTime::from_mseconds(ms),
+        );
     }
 
     /// `level` is the slider position 0..=1; mapped cubically.
@@ -235,7 +265,6 @@ pub fn slider_to_linear(level: f64) -> f64 {
     level.clamp(0.0, 1.0).powi(3)
 }
 
-
 fn map_state(s: gst::State) -> State {
     match s {
         gst::State::Playing => State::Playing,
@@ -255,8 +284,12 @@ fn translate(playbin: &gst::Element, gapless: &AtomicBool, msg: &gst::Message) -
             }
             Some(Event::Error(text))
         }
-        MessageView::StreamStart(_) => Some(Event::StreamStart { gapless: gapless.swap(false, Ordering::SeqCst) }),
-        MessageView::StateChanged(s) if s.src().is_some_and(|src| src == playbin) => Some(Event::State(map_state(s.current()))),
+        MessageView::StreamStart(_) => Some(Event::StreamStart {
+            gapless: gapless.swap(false, Ordering::SeqCst),
+        }),
+        MessageView::StateChanged(s) if s.src().is_some_and(|src| src == playbin) => {
+            Some(Event::State(map_state(s.current())))
+        }
         MessageView::DurationChanged(_) => Some(Event::DurationChanged),
         _ => None,
     }
@@ -295,8 +328,13 @@ mod tests {
         let mut starts = Vec::new();
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
         loop {
-            assert!(std::time::Instant::now() < deadline, "timed out; starts = {starts:?}");
-            let Some(msg) = bus.timed_pop(gst::ClockTime::from_mseconds(100)) else { continue };
+            assert!(
+                std::time::Instant::now() < deadline,
+                "timed out; starts = {starts:?}"
+            );
+            let Some(msg) = bus.timed_pop(gst::ClockTime::from_mseconds(100)) else {
+                continue;
+            };
             match player.translate(&msg) {
                 Some(Event::StreamStart { gapless }) => starts.push(gapless),
                 Some(Event::Eos) => break,
@@ -344,7 +382,9 @@ mod tests {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
         loop {
             assert!(std::time::Instant::now() < deadline, "timed out");
-            let Some(msg) = bus.timed_pop(gst::ClockTime::from_mseconds(100)) else { continue };
+            let Some(msg) = bus.timed_pop(gst::ClockTime::from_mseconds(100)) else {
+                continue;
+            };
             match player.translate(&msg) {
                 Some(Event::Eos) => break,
                 Some(Event::Error(e)) => panic!("{e}"),

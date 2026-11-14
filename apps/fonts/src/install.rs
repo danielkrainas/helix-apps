@@ -49,7 +49,10 @@ pub fn find_installed_copy(src: &Path, fonts_dir: &Path) -> Option<PathBuf> {
     let stem = src.file_stem()?.to_string_lossy().to_string();
     rd.flatten()
         .map(|e| e.path())
-        .filter(|p| p.file_stem().is_some_and(|s| s.to_string_lossy().starts_with(&stem)))
+        .filter(|p| {
+            p.file_stem()
+                .is_some_and(|s| s.to_string_lossy().starts_with(&stem))
+        })
         .find(|p| same_contents(src, p))
 }
 
@@ -57,7 +60,11 @@ pub fn find_installed_copy(src: &Path, fonts_dir: &Path) -> Option<PathBuf> {
 /// `system_dirs`, or an identical copy in `user_dir`.
 pub fn installed_location(src: &Path, system_dirs: &[PathBuf], user_dir: &Path) -> Option<PathBuf> {
     let canon = src.canonicalize().ok()?;
-    if system_dirs.iter().filter_map(|d| d.canonicalize().ok()).any(|d| canon.starts_with(d)) {
+    if system_dirs
+        .iter()
+        .filter_map(|d| d.canonicalize().ok())
+        .any(|d| canon.starts_with(d))
+    {
         return Some(canon);
     }
     find_installed_copy(src, user_dir)
@@ -70,8 +77,14 @@ pub fn unique_target(dir: &Path, name: &Path) -> PathBuf {
     if !first.exists() {
         return first;
     }
-    let stem = name.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| "font".into());
-    let ext = name.extension().map(|e| format!(".{}", e.to_string_lossy())).unwrap_or_default();
+    let stem = name
+        .file_stem()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_else(|| "font".into());
+    let ext = name
+        .extension()
+        .map(|e| format!(".{}", e.to_string_lossy()))
+        .unwrap_or_default();
     (1..)
         .map(|i| dir.join(format!("{stem}-{i}{ext}")))
         .find(|p| !p.exists())
@@ -81,16 +94,22 @@ pub fn unique_target(dir: &Path, name: &Path) -> PathBuf {
 /// Copies `src` into `fonts_dir` (created if needed) without overwriting a
 /// different existing file.
 pub fn install_into(src: &Path, fonts_dir: &Path) -> io::Result<Installed> {
-    crate::fontinfo::read_file(src).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e.to_string()))?;
+    crate::fontinfo::read_file(src)
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e.to_string()))?;
     std::fs::create_dir_all(fonts_dir)?;
     if let Some(p) = find_installed_copy(src, fonts_dir) {
         return Ok(Installed::AlreadyPresent(p));
     }
-    let name = src.file_name().ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "no file name"))?;
+    let name = src
+        .file_name()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "no file name"))?;
     let target = unique_target(fonts_dir, Path::new(name));
     // Copy to a temporary name then rename, so a crash never leaves a
     // half-written font for fontconfig to choke on.
-    let tmp = fonts_dir.join(format!(".{}.part", target.file_name().unwrap().to_string_lossy()));
+    let tmp = fonts_dir.join(format!(
+        ".{}.part",
+        target.file_name().unwrap().to_string_lossy()
+    ));
     std::fs::copy(src, &tmp)?;
     if let Err(e) = std::fs::rename(&tmp, &target) {
         let _ = std::fs::remove_file(&tmp);
@@ -123,11 +142,16 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let fonts = tmp.path().join("data/fonts");
         let r = install_into(&src, &fonts).unwrap();
-        let Installed::Copied(p) = &r else { panic!("{r:?}") };
+        let Installed::Copied(p) = &r else {
+            panic!("{r:?}")
+        };
         assert_eq!(p.parent().unwrap(), fonts);
         assert_eq!(std::fs::read(p).unwrap(), std::fs::read(&src).unwrap());
         // Second install detects the identical copy.
-        assert_eq!(install_into(&src, &fonts).unwrap(), Installed::AlreadyPresent(p.clone()));
+        assert_eq!(
+            install_into(&src, &fonts).unwrap(),
+            Installed::AlreadyPresent(p.clone())
+        );
         // A different file with the same name is not overwritten.
         let other_dir = tmp.path().join("other");
         std::fs::create_dir_all(&other_dir).unwrap();
@@ -136,20 +160,31 @@ mod tests {
         let other = other_dir.join(src.file_name().unwrap());
         std::fs::write(&other, &data).unwrap();
         let r2 = install_into(&other, &fonts).unwrap();
-        let Installed::Copied(p2) = &r2 else { panic!("{r2:?}") };
+        let Installed::Copied(p2) = &r2 else {
+            panic!("{r2:?}")
+        };
         assert_ne!(p2, p);
         assert!(p2.file_name().unwrap().to_string_lossy().contains("-1."));
         assert_eq!(std::fs::read(p).unwrap(), std::fs::read(&src).unwrap());
         assert_eq!(find_installed_copy(&other, &fonts).as_ref(), Some(p2));
         // Installing a file that already lives in the dir is a no-op.
-        assert!(matches!(install_into(p, &fonts).unwrap(), Installed::AlreadyPresent(_)));
+        assert!(matches!(
+            install_into(p, &fonts).unwrap(),
+            Installed::AlreadyPresent(_)
+        ));
         // installed_location: system dirs and user copies.
         let empty = tmp.path().join("empty");
-        assert_eq!(installed_location(&other, std::slice::from_ref(&other_dir), &empty), Some(other.canonicalize().unwrap()));
+        assert_eq!(
+            installed_location(&other, std::slice::from_ref(&other_dir), &empty),
+            Some(other.canonicalize().unwrap())
+        );
         assert_eq!(installed_location(&other, &[], &fonts).as_ref(), Some(p2));
         assert_eq!(installed_location(&other, &[], &empty), None);
         // No stray temp files.
-        assert!(std::fs::read_dir(&fonts).unwrap().flatten().all(|e| !e.file_name().to_string_lossy().ends_with(".part")));
+        assert!(std::fs::read_dir(&fonts)
+            .unwrap()
+            .flatten()
+            .all(|e| !e.file_name().to_string_lossy().ends_with(".part")));
     }
 
     #[test]
@@ -164,9 +199,15 @@ mod tests {
     #[test]
     fn unique_names() {
         let tmp = tempfile::tempdir().unwrap();
-        assert_eq!(unique_target(tmp.path(), Path::new("a.ttf")), tmp.path().join("a.ttf"));
+        assert_eq!(
+            unique_target(tmp.path(), Path::new("a.ttf")),
+            tmp.path().join("a.ttf")
+        );
         std::fs::write(tmp.path().join("a.ttf"), b"").unwrap();
         std::fs::write(tmp.path().join("a-1.ttf"), b"").unwrap();
-        assert_eq!(unique_target(tmp.path(), Path::new("a.ttf")), tmp.path().join("a-2.ttf"));
+        assert_eq!(
+            unique_target(tmp.path(), Path::new("a.ttf")),
+            tmp.path().join("a-2.ttf")
+        );
     }
 }

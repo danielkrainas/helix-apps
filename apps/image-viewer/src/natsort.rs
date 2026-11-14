@@ -12,10 +12,16 @@ fn chunks(s: &str) -> impl Iterator<Item = Chunk<'_>> {
     std::iter::from_fn(move || {
         let first = rest.chars().next()?;
         let digit = first.is_ascii_digit();
-        let end = rest.find(|c: char| c.is_ascii_digit() != digit).unwrap_or(rest.len());
+        let end = rest
+            .find(|c: char| c.is_ascii_digit() != digit)
+            .unwrap_or(rest.len());
         let (head, tail) = rest.split_at(end);
         rest = tail;
-        Some(if digit { Chunk::Digits(head) } else { Chunk::Text(head) })
+        Some(if digit {
+            Chunk::Digits(head)
+        } else {
+            Chunk::Text(head)
+        })
     })
 }
 
@@ -70,32 +76,57 @@ mod tests {
 
     #[test]
     fn numbers_compare_numerically() {
-        assert_eq!(sorted(&["img10.png", "img2.png", "img1.png"]), ["img1.png", "img2.png", "img10.png"]);
+        assert_eq!(
+            sorted(&["img10.png", "img2.png", "img1.png"]),
+            ["img1.png", "img2.png", "img10.png"]
+        );
         assert_eq!(compare("a100", "a99"), Ordering::Greater);
     }
 
     #[test]
     fn case_insensitive_with_stable_tiebreak() {
-        assert_eq!(sorted(&["b.png", "A.png", "a.png"]), ["A.png", "a.png", "b.png"]);
+        assert_eq!(
+            sorted(&["b.png", "A.png", "a.png"]),
+            ["A.png", "a.png", "b.png"]
+        );
         assert_eq!(compare("Photo", "photo"), Ordering::Less);
     }
 
     #[test]
     fn leading_zeros() {
-        assert_eq!(sorted(&["x010", "x9", "x1", "x01"]), ["x1", "x01", "x9", "x010"]);
+        assert_eq!(
+            sorted(&["x010", "x9", "x1", "x01"]),
+            ["x1", "x01", "x9", "x010"]
+        );
         assert_eq!(compare("x001", "x1"), Ordering::Greater);
     }
 
     #[test]
     fn prefixes_and_mixed() {
-        assert_eq!(sorted(&["abc", "ab", "ab1", "1ab"]), ["1ab", "ab", "ab1", "abc"]);
-        assert_eq!(sorted(&["IMG_2024-01-10 (2).jpg", "IMG_2024-01-10 (10).jpg", "IMG_2024-01-09.jpg"]),
-            ["IMG_2024-01-09.jpg", "IMG_2024-01-10 (2).jpg", "IMG_2024-01-10 (10).jpg"]);
+        assert_eq!(
+            sorted(&["abc", "ab", "ab1", "1ab"]),
+            ["1ab", "ab", "ab1", "abc"]
+        );
+        assert_eq!(
+            sorted(&[
+                "IMG_2024-01-10 (2).jpg",
+                "IMG_2024-01-10 (10).jpg",
+                "IMG_2024-01-09.jpg"
+            ]),
+            [
+                "IMG_2024-01-09.jpg",
+                "IMG_2024-01-10 (2).jpg",
+                "IMG_2024-01-10 (10).jpg"
+            ]
+        );
     }
 
     #[test]
     fn huge_numbers_and_unicode() {
-        assert_eq!(compare("n123456789012345678901234567890", "n99"), Ordering::Greater);
+        assert_eq!(
+            compare("n123456789012345678901234567890", "n99"),
+            Ordering::Greater
+        );
         assert_eq!(sorted(&["Émile2", "émile10"]), ["Émile2", "émile10"]);
         assert_eq!(compare("", "a"), Ordering::Less);
         assert_eq!(compare("same", "same"), Ordering::Equal);

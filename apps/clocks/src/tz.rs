@@ -66,7 +66,11 @@ fn parse_angle(s: &str, deg_digits: usize) -> Option<f64> {
     }
     let d: f64 = digits[..deg_digits].parse().ok()?;
     let m: f64 = digits[deg_digits..deg_digits + 2].parse().ok()?;
-    let sec: f64 = if digits.len() >= deg_digits + 4 { digits[deg_digits + 2..deg_digits + 4].parse().ok()? } else { 0.0 };
+    let sec: f64 = if digits.len() >= deg_digits + 4 {
+        digits[deg_digits + 2..deg_digits + 4].parse().ok()?
+    } else {
+        0.0
+    };
     Some(sign * (d + m / 60.0 + sec / 3600.0))
 }
 
@@ -84,12 +88,17 @@ pub fn parse_iso3166(text: &str) -> HashMap<String, String> {
 /// Parses `zone1970.tab` / `zone.tab` (both have codes, coordinates, TZ).
 pub fn parse_zone_tab(text: &str, countries: &HashMap<String, String>) -> Vec<Location> {
     let mut out = Vec::new();
-    for line in text.lines().filter(|l| !l.starts_with('#') && !l.trim().is_empty()) {
+    for line in text
+        .lines()
+        .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
+    {
         let cols: Vec<&str> = line.split('\t').collect();
         if cols.len() < 3 {
             continue;
         }
-        let Ok(zone) = Tz::from_str(cols[2].trim()) else { continue };
+        let Ok(zone) = Tz::from_str(cols[2].trim()) else {
+            continue;
+        };
         let code = cols[0].split(',').next().map(|c| c.trim().to_string());
         out.push(Location {
             city: city_from_zone(cols[2].trim()),
@@ -120,11 +129,29 @@ pub fn load_locations() -> Vec<Location> {
         let fallback = !have_tab
             && matches!(
                 region_of(name),
-                "Africa" | "America" | "Antarctica" | "Asia" | "Atlantic" | "Australia" | "Europe" | "Indian" | "Pacific"
+                "Africa"
+                    | "America"
+                    | "Antarctica"
+                    | "Asia"
+                    | "Atlantic"
+                    | "Australia"
+                    | "Europe"
+                    | "Indian"
+                    | "Pacific"
             );
         if (extra || fallback) && !locs.iter().any(|l| l.zone == tz) {
-            let city = if name == "UTC" { "Coordinated Universal Time (UTC)".to_string() } else { city_from_zone(name) };
-            locs.push(Location { city, zone: tz, country: None, country_code: None, coords: None });
+            let city = if name == "UTC" {
+                "Coordinated Universal Time (UTC)".to_string()
+            } else {
+                city_from_zone(name)
+            };
+            locs.push(Location {
+                city,
+                zone: tz,
+                country: None,
+                country_code: None,
+                coords: None,
+            });
         }
     }
     locs.sort_by(|a, b| a.city.cmp(&b.city));
@@ -179,8 +206,14 @@ pub fn search(locs: &[Location], query: &str) -> Vec<usize> {
         let city = normalize(&l.city);
         let zone = normalize(l.zone.name());
         let country = l.country.as_deref().map(normalize).unwrap_or_default();
-        let code = l.country_code.as_deref().map(str::to_lowercase).unwrap_or_default();
-        let all = words.iter().all(|w| city.contains(w) || zone.contains(w) || country.contains(w) || code == *w);
+        let code = l
+            .country_code
+            .as_deref()
+            .map(str::to_lowercase)
+            .unwrap_or_default();
+        let all = words
+            .iter()
+            .all(|w| city.contains(w) || zone.contains(w) || country.contains(w) || code == *w);
         if !all {
             continue;
         }
@@ -197,14 +230,23 @@ pub fn search(locs: &[Location], query: &str) -> Vec<usize> {
         };
         hits.push((rank, i));
     }
-    hits.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| locs[a.1].city.cmp(&locs[b.1].city)));
+    hits.sort_by(|a, b| {
+        a.0.cmp(&b.0)
+            .then_with(|| locs[a.1].city.cmp(&locs[b.1].city))
+    });
     hits.into_iter().map(|(_, i)| i).collect()
 }
 
 /// Great-circle distance in kilometres between two (lat, lon) degree pairs.
 pub fn distance_km(a: (f64, f64), b: (f64, f64)) -> f64 {
-    let (la1, lo1, la2, lo2) = (a.0.to_radians(), a.1.to_radians(), b.0.to_radians(), b.1.to_radians());
-    let h = ((la2 - la1) / 2.0).sin().powi(2) + la1.cos() * la2.cos() * ((lo2 - lo1) / 2.0).sin().powi(2);
+    let (la1, lo1, la2, lo2) = (
+        a.0.to_radians(),
+        a.1.to_radians(),
+        b.0.to_radians(),
+        b.1.to_radians(),
+    );
+    let h = ((la2 - la1) / 2.0).sin().powi(2)
+        + la1.cos() * la2.cos() * ((lo2 - lo1) / 2.0).sin().powi(2);
     2.0 * 6371.0 * h.sqrt().asin()
 }
 
@@ -237,12 +279,16 @@ pub fn local_zone() -> Option<Tz> {
             }
         }
     }
-    std::fs::read_to_string("/etc/timezone").ok().and_then(|s| zone_by_id(s.trim()))
+    std::fs::read_to_string("/etc/timezone")
+        .ok()
+        .and_then(|s| zone_by_id(s.trim()))
 }
 
 /// UTC offset of `zone` at `now`, in seconds.
 pub fn utc_offset(zone: Tz, now: DateTime<Utc>) -> i32 {
-    zone.offset_from_utc_datetime(&now.naive_utc()).fix().local_minus_utc()
+    zone.offset_from_utc_datetime(&now.naive_utc())
+        .fix()
+        .local_minus_utc()
 }
 
 /// Abbreviation (e.g. "CET", "EDT") of `zone` at `now`.
@@ -278,7 +324,10 @@ pub fn relative_day(local_date: NaiveDate, remote_date: NaiveDate) -> RelativeDa
 
 /// Relative day of `zone` compared with `local` at `now`.
 pub fn relative_day_at(zone: Tz, local: Tz, now: DateTime<Utc>) -> RelativeDay {
-    relative_day(now.with_timezone(&local).date_naive(), now.with_timezone(&zone).date_naive())
+    relative_day(
+        now.with_timezone(&local).date_naive(),
+        now.with_timezone(&zone).date_naive(),
+    )
 }
 
 /// Describes an offset difference (`remote - local`, seconds):
@@ -292,7 +341,11 @@ pub fn describe_offset(diff: i32) -> String {
     let mins = diff.unsigned_abs() / 60;
     let (h, m) = (mins / 60, mins % 60);
     let hours = |n: u32, frac: &str| {
-        let plural = if n == 1 && frac.is_empty() { "hour" } else { "hours" };
+        let plural = if n == 1 && frac.is_empty() {
+            "hour"
+        } else {
+            "hours"
+        };
         format!("{n}{frac} {plural}")
     };
     let amount = match (h, m) {
@@ -330,7 +383,12 @@ pub fn format_time(t: NaiveTime, twelve_hour: bool) -> String {
 pub fn format_time_secs(t: NaiveTime, twelve_hour: bool) -> String {
     if twelve_hour {
         let (pm, h) = t.hour12();
-        format!("{h}:{:02}:{:02} {}", t.minute(), t.second(), if pm { "PM" } else { "AM" })
+        format!(
+            "{h}:{:02}:{:02} {}",
+            t.minute(),
+            t.second(),
+            if pm { "PM" } else { "AM" }
+        )
     } else {
         format!("{:02}:{:02}:{:02}", t.hour(), t.minute(), t.second())
     }
@@ -380,7 +438,12 @@ XX\t+0000+00000\tNot/AZone\n";
     #[test]
     fn search_ranks_and_normalizes() {
         let d = db();
-        let names = |q: &str| search(&d, q).into_iter().map(|i| d[i].city.clone()).collect::<Vec<_>>();
+        let names = |q: &str| {
+            search(&d, q)
+                .into_iter()
+                .map(|i| d[i].city.clone())
+                .collect::<Vec<_>>()
+        };
         assert_eq!(names("tok"), vec!["Tokyo"]);
         assert_eq!(names("BUENOS"), vec!["Buenos Aires"]);
         assert_eq!(names("aires"), vec!["Buenos Aires"]);
@@ -398,9 +461,15 @@ XX\t+0000+00000\tNot/AZone\n";
     fn nearest_zone() {
         let d = db();
         // Munich is nearest to Berlin among these.
-        assert_eq!(nearest(&d, (48.14, 11.58)).unwrap().zone, chrono_tz::Europe::Berlin);
+        assert_eq!(
+            nearest(&d, (48.14, 11.58)).unwrap().zone,
+            chrono_tz::Europe::Berlin
+        );
         // Yokohama → Tokyo.
-        assert_eq!(nearest(&d, (35.44, 139.64)).unwrap().zone, chrono_tz::Asia::Tokyo);
+        assert_eq!(
+            nearest(&d, (35.44, 139.64)).unwrap().zone,
+            chrono_tz::Asia::Tokyo
+        );
         let km = distance_km((51.5, -0.12), (48.85, 2.35));
         assert!((km - 343.0).abs() < 5.0, "{km}");
     }
@@ -411,8 +480,14 @@ XX\t+0000+00000\tNot/AZone\n";
         let summer = Utc.with_ymd_and_hms(2024, 7, 15, 12, 0, 0).unwrap();
         assert_eq!(utc_offset(chrono_tz::America::New_York, winter), -5 * 3600);
         assert_eq!(utc_offset(chrono_tz::America::New_York, summer), -4 * 3600);
-        assert_eq!(utc_offset(chrono_tz::Asia::Kolkata, summer), 5 * 3600 + 1800);
-        assert_eq!(utc_offset(chrono_tz::Asia::Kathmandu, summer), 5 * 3600 + 2700);
+        assert_eq!(
+            utc_offset(chrono_tz::Asia::Kolkata, summer),
+            5 * 3600 + 1800
+        );
+        assert_eq!(
+            utc_offset(chrono_tz::Asia::Kathmandu, summer),
+            5 * 3600 + 2700
+        );
         assert_eq!(abbreviation(chrono_tz::Europe::Berlin, summer), "CEST");
         assert_eq!(format_utc_offset(19800), "UTC+05:30");
         assert_eq!(format_utc_offset(-3 * 3600), "UTC−03:00");
@@ -421,21 +496,39 @@ XX\t+0000+00000\tNot/AZone\n";
 
     #[test]
     fn relative_days() {
-        use chrono_tz::{America::Los_Angeles, Asia::Tokyo, Europe::Berlin, Pacific::Kiritimati, Pacific::Pago_Pago};
+        use chrono_tz::{
+            America::Los_Angeles, Asia::Tokyo, Europe::Berlin, Pacific::Kiritimati,
+            Pacific::Pago_Pago,
+        };
         // 22:00 in Berlin (winter) = 06:00 next day in Tokyo, 13:00 same day in LA.
         let now = Utc.with_ymd_and_hms(2024, 1, 15, 21, 0, 0).unwrap();
         assert_eq!(relative_day_at(Tokyo, Berlin, now), RelativeDay::Tomorrow);
-        assert_eq!(relative_day_at(Los_Angeles, Berlin, now), RelativeDay::Today);
+        assert_eq!(
+            relative_day_at(Los_Angeles, Berlin, now),
+            RelativeDay::Today
+        );
         // 00:30 in Berlin = previous day in LA.
         let now = Utc.with_ymd_and_hms(2024, 1, 14, 23, 30, 0).unwrap();
-        assert_eq!(relative_day_at(Los_Angeles, Berlin, now), RelativeDay::Yesterday);
+        assert_eq!(
+            relative_day_at(Los_Angeles, Berlin, now),
+            RelativeDay::Yesterday
+        );
         // Across the date line: UTC+14 vs UTC-11 are 25 h apart.
         let now = Utc.with_ymd_and_hms(2024, 1, 15, 10, 30, 0).unwrap();
-        assert_eq!(relative_day_at(Kiritimati, Pago_Pago, now), RelativeDay::Tomorrow);
-        assert_eq!(relative_day_at(Pago_Pago, Kiritimati, now), RelativeDay::Yesterday);
+        assert_eq!(
+            relative_day_at(Kiritimati, Pago_Pago, now),
+            RelativeDay::Tomorrow
+        );
+        assert_eq!(
+            relative_day_at(Pago_Pago, Kiritimati, now),
+            RelativeDay::Yesterday
+        );
         // Year boundary.
         assert_eq!(
-            relative_day(NaiveDate::from_ymd_opt(2024, 12, 31).unwrap(), NaiveDate::from_ymd_opt(2025, 1, 1).unwrap()),
+            relative_day(
+                NaiveDate::from_ymd_opt(2024, 12, 31).unwrap(),
+                NaiveDate::from_ymd_opt(2025, 1, 1).unwrap()
+            ),
             RelativeDay::Tomorrow
         );
         let tokyo_date = now.with_timezone(&Tokyo).date_naive();
@@ -450,7 +543,10 @@ XX\t+0000+00000\tNot/AZone\n";
         assert_eq!(describe_offset(-(3 * 3600 + 1800)), "3½ hours behind");
         assert_eq!(describe_offset(1800), "30 minutes ahead");
         assert_eq!(describe_offset(5 * 3600 + 45 * 60), "5¾ hours ahead");
-        assert_eq!(describe_offset(5 * 3600 + 20 * 60), "5 hours 20 minutes ahead");
+        assert_eq!(
+            describe_offset(5 * 3600 + 20 * 60),
+            "5 hours 20 minutes ahead"
+        );
         assert_eq!(describe_offset(60), "1 minute ahead");
     }
 
@@ -459,7 +555,10 @@ XX\t+0000+00000\tNot/AZone\n";
         let t = NaiveTime::from_hms_opt(14, 5, 9).unwrap();
         assert_eq!(format_time(t, false), "14:05");
         assert_eq!(format_time(t, true), "2:05 PM");
-        assert_eq!(format_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap(), true), "12:00 AM");
+        assert_eq!(
+            format_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap(), true),
+            "12:00 AM"
+        );
         assert_eq!(format_time_secs(t, false), "14:05:09");
         assert_eq!(format_time_secs(t, true), "2:05:09 PM");
     }

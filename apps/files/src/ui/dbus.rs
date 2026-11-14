@@ -45,11 +45,17 @@ pub fn register(shared: &Rc<Shared>) {
                 return;
             };
             let Some((uris, startup)) = params.get::<(Vec<String>, String)>() else {
-                invocation.return_dbus_error("org.freedesktop.DBus.Error.InvalidArgs", "Expected (as, s)");
+                invocation.return_dbus_error(
+                    "org.freedesktop.DBus.Error.InvalidArgs",
+                    "Expected (as, s)",
+                );
                 return;
             };
             if !matches!(method, "ShowFolders" | "ShowItems" | "ShowItemProperties") {
-                invocation.return_dbus_error("org.freedesktop.DBus.Error.UnknownMethod", "Unknown method");
+                invocation.return_dbus_error(
+                    "org.freedesktop.DBus.Error.UnknownMethod",
+                    "Unknown method",
+                );
                 return;
             }
             // An empty list is a no-op (never an unasked-for home window).

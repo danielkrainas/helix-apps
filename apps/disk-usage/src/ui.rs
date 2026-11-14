@@ -36,7 +36,10 @@ struct LocalState {
 /// Initial window size from `window-size`, with a sane minimum.
 fn initial_size((w, h): (i32, i32)) -> (i32, i32) {
     let (dw, dh) = DEFAULT_WINDOW_SIZE;
-    (if w > 0 { w.max(360) } else { dw }, if h > 0 { h.max(300) } else { dh })
+    (
+        if w > 0 { w.max(360) } else { dw },
+        if h > 0 { h.max(300) } else { dh },
+    )
 }
 
 fn state_path() -> PathBuf {
@@ -45,7 +48,10 @@ fn state_path() -> PathBuf {
 
 impl LocalState {
     fn load() -> Self {
-        std::fs::read(state_path()).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default()
+        std::fs::read(state_path())
+            .ok()
+            .and_then(|b| serde_json::from_slice(&b).ok())
+            .unwrap_or_default()
     }
     fn save(&self) {
         if let Ok(json) = serde_json::to_vec_pretty(self) {
@@ -63,7 +69,8 @@ fn node_id(obj: &glib::Object) -> Option<NodeId> {
         Some(row) => row.item()?,
         None => obj.clone(),
     };
-    obj.downcast_ref::<glib::BoxedAnyObject>().map(|b| *b.borrow::<NodeId>())
+    obj.downcast_ref::<glib::BoxedAnyObject>()
+        .map(|b| *b.borrow::<NodeId>())
 }
 
 type CellRef = (Col, glib::WeakRef<gtk::Widget>);
@@ -116,7 +123,10 @@ struct App {
 }
 
 pub fn run(initial: Option<String>) -> glib::ExitCode {
-    let app = adw::Application::builder().application_id(APP_ID).flags(gio::ApplicationFlags::NON_UNIQUE).build();
+    let app = adw::Application::builder()
+        .application_id(APP_ID)
+        .flags(gio::ApplicationFlags::NON_UNIQUE)
+        .build();
     helix_app_common::install_standard_actions(&app, APP_NAME, COMMENTS);
     let initial = RefCell::new(initial);
     app.connect_startup(|_| load_css());
@@ -143,12 +153,20 @@ fn load_css() {
          .du-breadcrumbs button { padding: 2px 6px; min-height: 0; }",
     );
     if let Some(display) = gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &css,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 }
 
 fn clean_level_bar(bar: &gtk::LevelBar) {
-    for name in [gtk::LEVEL_BAR_OFFSET_LOW, gtk::LEVEL_BAR_OFFSET_HIGH, gtk::LEVEL_BAR_OFFSET_FULL] {
+    for name in [
+        gtk::LEVEL_BAR_OFFSET_LOW,
+        gtk::LEVEL_BAR_OFFSET_HIGH,
+        gtk::LEVEL_BAR_OFFSET_FULL,
+    ] {
         bar.remove_offset_value(Some(name));
     }
 }
@@ -171,7 +189,12 @@ fn primary_menu() -> gtk::MenuButton {
     s.append(Some("_Preferences"), Some("win.preferences"));
     s.append(Some("_About Disk Usage Analyzer"), Some("app.about"));
     menu.append_section(None, &s);
-    gtk::MenuButton::builder().icon_name("open-menu-symbolic").menu_model(&menu).tooltip_text("Main Menu").primary(true).build()
+    gtk::MenuButton::builder()
+        .icon_name("open-menu-symbolic")
+        .menu_model(&menu)
+        .tooltip_text("Main Menu")
+        .primary(true)
+        .build()
 }
 
 impl App {
@@ -196,15 +219,28 @@ impl App {
 
         // ---- Start page -------------------------------------------------
         let start_header = adw::HeaderBar::new();
-        let scan_btn = gtk::Button::builder().label("Scan Folder…").action_name("win.scan-folder").tooltip_text("Scan a folder (Ctrl+O)").build();
+        let scan_btn = gtk::Button::builder()
+            .label("Scan Folder…")
+            .action_name("win.scan-folder")
+            .tooltip_text("Scan a folder (Ctrl+O)")
+            .build();
         start_header.pack_start(&scan_btn);
         start_header.pack_end(&primary_menu());
-        let reload_btn = gtk::Button::builder().icon_name("view-refresh-symbolic").action_name("win.rescan").tooltip_text("Reload Locations").build();
+        let reload_btn = gtk::Button::builder()
+            .icon_name("view-refresh-symbolic")
+            .action_name("win.rescan")
+            .tooltip_text("Reload Locations")
+            .build();
         start_header.pack_end(&reload_btn);
         let locations_list = gtk::ListBox::new();
         locations_list.add_css_class("boxed-list");
         locations_list.set_selection_mode(gtk::SelectionMode::None);
-        let title = gtk::Label::builder().label("Devices &amp; Locations").use_markup(true).xalign(0.0).css_classes(["heading"]).build();
+        let title = gtk::Label::builder()
+            .label("Devices &amp; Locations")
+            .use_markup(true)
+            .xalign(0.0)
+            .css_classes(["heading"])
+            .build();
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 12);
         vbox.set_margin_top(24);
         vbox.set_margin_bottom(24);
@@ -213,11 +249,19 @@ impl App {
         vbox.append(&title);
         vbox.append(&locations_list);
         let clamp = adw::Clamp::builder().maximum_size(720).child(&vbox).build();
-        let scroller = gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).child(&clamp).vexpand(true).build();
+        let scroller = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .child(&clamp)
+            .vexpand(true)
+            .build();
         let start_tv = adw::ToolbarView::new();
         start_tv.add_top_bar(&start_header);
         start_tv.set_content(Some(&scroller));
-        let start_page = adw::NavigationPage::builder().title(APP_NAME).tag("start").child(&start_tv).build();
+        let start_page = adw::NavigationPage::builder()
+            .title(APP_NAME)
+            .tag("start")
+            .child(&start_tv)
+            .build();
         nav.add(&start_page);
 
         // ---- Results page -----------------------------------------------
@@ -225,21 +269,43 @@ impl App {
         let results_title = adw::WindowTitle::new("", "");
         results_header.set_title_widget(Some(&results_title));
         results_header.pack_end(&primary_menu());
-        let rescan_btn = gtk::Button::builder().icon_name("view-refresh-symbolic").action_name("win.rescan").tooltip_text("Rescan (Ctrl+R)").build();
+        let rescan_btn = gtk::Button::builder()
+            .icon_name("view-refresh-symbolic")
+            .action_name("win.rescan")
+            .tooltip_text("Rescan (Ctrl+R)")
+            .build();
         results_header.pack_end(&rescan_btn);
 
         // Progress view.
         let progress_bar = gtk::ProgressBar::new();
         let progress_label = gtk::Label::new(None);
         progress_label.add_css_class("title-4");
-        let progress_current = gtk::Label::builder().ellipsize(gtk::pango::EllipsizeMode::Middle).css_classes(["dim-label"]).build();
-        let cancel_btn = gtk::Button::builder().label("_Cancel").use_underline(true).action_name("win.cancel-scan").halign(gtk::Align::Center).css_classes(["pill"]).build();
+        let progress_current = gtk::Label::builder()
+            .ellipsize(gtk::pango::EllipsizeMode::Middle)
+            .css_classes(["dim-label"])
+            .build();
+        let cancel_btn = gtk::Button::builder()
+            .label("_Cancel")
+            .use_underline(true)
+            .action_name("win.cancel-scan")
+            .halign(gtk::Align::Center)
+            .css_classes(["pill"])
+            .build();
         let pbox = gtk::Box::new(gtk::Orientation::Vertical, 12);
         pbox.set_valign(gtk::Align::Center);
         pbox.set_margin_start(24);
         pbox.set_margin_end(24);
-        let scanning = gtk::Label::builder().label("Scanning…").css_classes(["title-1"]).build();
-        for w in [scanning.upcast_ref::<gtk::Widget>(), progress_bar.upcast_ref(), progress_label.upcast_ref(), progress_current.upcast_ref(), cancel_btn.upcast_ref()] {
+        let scanning = gtk::Label::builder()
+            .label("Scanning…")
+            .css_classes(["title-1"])
+            .build();
+        for w in [
+            scanning.upcast_ref::<gtk::Widget>(),
+            progress_bar.upcast_ref(),
+            progress_label.upcast_ref(),
+            progress_current.upcast_ref(),
+            cancel_btn.upcast_ref(),
+        ] {
             pbox.append(w);
         }
         let pclamp = adw::Clamp::builder().maximum_size(480).child(&pbox).build();
@@ -250,8 +316,20 @@ impl App {
         selection.set_can_unselect(true);
         let column_view = gtk::ColumnView::new(Some(selection.clone()));
         column_view.add_css_class("data-table");
-        let status = gtk::Label::builder().xalign(0.0).css_classes(["dim-label", "caption"]).margin_start(8).margin_end(8).margin_top(4).margin_bottom(4).ellipsize(gtk::pango::EllipsizeMode::End).build();
-        let tree_scroller = gtk::ScrolledWindow::builder().child(&column_view).vexpand(true).hexpand(true).build();
+        let status = gtk::Label::builder()
+            .xalign(0.0)
+            .css_classes(["dim-label", "caption"])
+            .margin_start(8)
+            .margin_end(8)
+            .margin_top(4)
+            .margin_bottom(4)
+            .ellipsize(gtk::pango::EllipsizeMode::End)
+            .build();
+        let tree_scroller = gtk::ScrolledWindow::builder()
+            .child(&column_view)
+            .vexpand(true)
+            .hexpand(true)
+            .build();
         let tree_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         tree_box.append(&tree_scroller);
         tree_box.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
@@ -260,10 +338,26 @@ impl App {
         // Chart.
         let breadcrumbs = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         breadcrumbs.add_css_class("du-breadcrumbs");
-        let crumb_scroller = gtk::ScrolledWindow::builder().child(&breadcrumbs).vscrollbar_policy(gtk::PolicyType::Never).hexpand(true).build();
-        let up_button = gtk::Button::builder().icon_name("go-up-symbolic").action_name("win.chart-up").tooltip_text("Up (Alt+Up)").css_classes(["flat"]).build();
-        let rings_btn = gtk::ToggleButton::builder().label("Rings").tooltip_text("Rings Chart").build();
-        let treemap_btn = gtk::ToggleButton::builder().label("Treemap").tooltip_text("Treemap Chart").group(&rings_btn).build();
+        let crumb_scroller = gtk::ScrolledWindow::builder()
+            .child(&breadcrumbs)
+            .vscrollbar_policy(gtk::PolicyType::Never)
+            .hexpand(true)
+            .build();
+        let up_button = gtk::Button::builder()
+            .icon_name("go-up-symbolic")
+            .action_name("win.chart-up")
+            .tooltip_text("Up (Alt+Up)")
+            .css_classes(["flat"])
+            .build();
+        let rings_btn = gtk::ToggleButton::builder()
+            .label("Rings")
+            .tooltip_text("Rings Chart")
+            .build();
+        let treemap_btn = gtk::ToggleButton::builder()
+            .label("Treemap")
+            .tooltip_text("Treemap Chart")
+            .group(&rings_btn)
+            .build();
         let switch = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         switch.add_css_class("linked");
         switch.append(&rings_btn);
@@ -275,7 +369,11 @@ impl App {
         chart_bar.append(&up_button);
         chart_bar.append(&crumb_scroller);
         chart_bar.append(&switch);
-        let chart_area = gtk::DrawingArea::builder().hexpand(true).vexpand(true).has_tooltip(true).build();
+        let chart_area = gtk::DrawingArea::builder()
+            .hexpand(true)
+            .vexpand(true)
+            .has_tooltip(true)
+            .build();
         chart_area.set_size_request(240, 240);
         let chart_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
         chart_box.append(&chart_bar);
@@ -284,7 +382,15 @@ impl App {
         chart_menu.set_has_arrow(false);
         chart_menu.set_parent(&chart_area);
 
-        let paned = gtk::Paned::builder().orientation(gtk::Orientation::Horizontal).start_child(&tree_box).end_child(&chart_box).position(520).resize_start_child(true).shrink_start_child(false).shrink_end_child(false).build();
+        let paned = gtk::Paned::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .start_child(&tree_box)
+            .end_child(&chart_box)
+            .position(520)
+            .resize_start_child(true)
+            .shrink_start_child(false)
+            .shrink_end_child(false)
+            .build();
 
         let results_stack = gtk::Stack::new();
         results_stack.add_named(&pclamp, Some("progress"));
@@ -292,7 +398,11 @@ impl App {
         let results_tv = adw::ToolbarView::new();
         results_tv.add_top_bar(&results_header);
         results_tv.set_content(Some(&results_stack));
-        let results_page = adw::NavigationPage::builder().title("Results").tag("results").child(&results_tv).build();
+        let results_page = adw::NavigationPage::builder()
+            .title("Results")
+            .tag("results")
+            .child(&results_tv)
+            .build();
 
         let chart_kind = ChartKind::from_nick(&ui_prefs.get_enum_nick("active-chart", "rings"));
         let app = Rc::new(App {
@@ -334,7 +444,10 @@ impl App {
             ChartKind::Rings => rings_btn.set_active(true),
             ChartKind::Treemap => treemap_btn.set_active(true),
         }
-        for (btn, kind) in [(rings_btn, ChartKind::Rings), (treemap_btn, ChartKind::Treemap)] {
+        for (btn, kind) in [
+            (rings_btn, ChartKind::Rings),
+            (treemap_btn, ChartKind::Treemap),
+        ] {
             let a = app.clone();
             btn.connect_toggled(move |b| {
                 if b.is_active() {
@@ -351,7 +464,11 @@ impl App {
 
         let a = app.clone();
         app.locations_list.connect_row_activated(move |_, row| {
-            let path = a.locations.borrow().get(row.index() as usize).map(|l| l.path.clone());
+            let path = a
+                .locations
+                .borrow()
+                .get(row.index() as usize)
+                .map(|l| l.path.clone());
             if let Some(p) = path {
                 a.start_scan(p);
             }
@@ -366,7 +483,11 @@ impl App {
                     let tree = a.tree.borrow();
                     let Some(t) = tree.as_ref() else { return };
                     let n = t.node(id);
-                    if n.kind == Kind::Dir { id } else { n.parent.unwrap_or(ROOT) }
+                    if n.kind == Kind::Dir {
+                        id
+                    } else {
+                        n.parent.unwrap_or(ROOT)
+                    }
                 };
                 a.set_chart_root(root);
             }
@@ -401,7 +522,9 @@ impl App {
         let home = glib::home_dir();
         let a = self.clone();
         glib::spawn_future_local(async move {
-            let Ok(locs) = gio::spawn_blocking(move || mounts::locations(&home)).await else { return };
+            let Ok(locs) = gio::spawn_blocking(move || mounts::locations(&home)).await else {
+                return;
+            };
             while let Some(row) = a.locations_list.row_at_index(0) {
                 a.locations_list.remove(&row);
             }
@@ -419,8 +542,15 @@ impl App {
     }
 
     fn scan_options(&self) -> ScanOptions {
-        let excluded = self.excluded_uris().iter().filter_map(|u| gio::File::for_uri(u).path()).collect();
-        ScanOptions { cross_filesystems: self.local.borrow().cross_filesystems, excluded }
+        let excluded = self
+            .excluded_uris()
+            .iter()
+            .filter_map(|u| gio::File::for_uri(u).path())
+            .collect();
+        ScanOptions {
+            cross_filesystems: self.local.borrow().cross_filesystems,
+            excluded,
+        }
     }
 
     fn start_scan(self: &Rc<Self>, path: PathBuf) {
@@ -432,7 +562,10 @@ impl App {
         *self.scan_progress.borrow_mut() = Some(progress.clone());
         *self.scan_path.borrow_mut() = Some(path.clone());
 
-        let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| path.display().to_string());
+        let name = path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| path.display().to_string());
         self.results_page.set_title(&name);
         self.results_title.set_title(&name);
         self.results_title.set_subtitle(&path.display().to_string());
@@ -447,12 +580,15 @@ impl App {
         let opts = self.scan_options();
         let result: Arc<Mutex<Option<Result<ScanTree, ScanError>>>> = Arc::default();
         let (r2, p2, path2) = (result.clone(), progress.clone(), path.clone());
-        let spawned = std::thread::Builder::new().name("scanner".into()).stack_size(64 << 20).spawn(move || {
-            let res = scanner::scan(&path2, &opts, &p2);
-            if let Ok(mut slot) = r2.lock() {
-                *slot = Some(res);
-            }
-        });
+        let spawned = std::thread::Builder::new()
+            .name("scanner".into())
+            .stack_size(64 << 20)
+            .spawn(move || {
+                let res = scanner::scan(&path2, &opts, &p2);
+                if let Ok(mut slot) = r2.lock() {
+                    *slot = Some(res);
+                }
+            });
         if let Err(e) = spawned {
             self.toast(&format!("Could not start scan: {e}"));
             return;
@@ -539,7 +675,9 @@ impl App {
         let root_store = gio::ListStore::new::<glib::BoxedAnyObject>();
         root_store.append(&glib::BoxedAnyObject::new(ROOT));
         let a = self.clone();
-        let tlm = gtk::TreeListModel::new(root_store, false, false, move |obj| node_id(obj).and_then(|id| a.children_store(id)));
+        let tlm = gtk::TreeListModel::new(root_store, false, false, move |obj| {
+            node_id(obj).and_then(|id| a.children_store(id))
+        });
         let sorter = gtk::TreeListRowSorter::new(self.column_view.sorter());
         let sorted = gtk::SortListModel::new(Some(tlm.clone()), Some(sorter));
         self.selection.set_model(Some(&sorted));
@@ -591,7 +729,10 @@ impl App {
             Col::Name => {
                 let bx = widget.downcast_ref::<gtk::Box>().expect("name cell");
                 let icon = bx.first_child().and_downcast::<gtk::Image>().expect("icon");
-                let label = icon.next_sibling().and_downcast::<gtk::Label>().expect("label");
+                let label = icon
+                    .next_sibling()
+                    .and_downcast::<gtk::Label>()
+                    .expect("label");
                 icon.set_icon_name(Some(match n.kind {
                     Kind::Dir if n.error => "dialog-warning-symbolic",
                     Kind::Dir => "folder-symbolic",
@@ -603,24 +744,47 @@ impl App {
             }
             Col::Size => {
                 let bx = widget.downcast_ref::<gtk::Box>().expect("size cell");
-                let label = bx.first_child().and_downcast::<gtk::Label>().expect("label");
-                let bar = label.next_sibling().and_downcast::<gtk::LevelBar>().expect("bar");
+                let label = bx
+                    .first_child()
+                    .and_downcast::<gtk::Label>()
+                    .expect("label");
+                let bar = label
+                    .next_sibling()
+                    .and_downcast::<gtk::LevelBar>()
+                    .expect("bar");
                 label.set_text(&size_text(n.size));
-                let share = n.parent.map(|p| t.node(p).size).filter(|&s| s > 0).map(|s| n.size as f64 / s as f64).unwrap_or(1.0);
+                let share = n
+                    .parent
+                    .map(|p| t.node(p).size)
+                    .filter(|&s| s > 0)
+                    .map(|s| n.size as f64 / s as f64)
+                    .unwrap_or(1.0);
                 bar.set_value(share.clamp(0.0, 1.0));
-                bx.set_tooltip_text(Some(&format!("{} on disk, {} apparent", size_text(n.size), size_text(n.apparent))));
+                bx.set_tooltip_text(Some(&format!(
+                    "{} on disk, {} apparent",
+                    size_text(n.size),
+                    size_text(n.apparent)
+                )));
             }
             Col::Contents => {
                 let label = widget.downcast_ref::<gtk::Label>().expect("label");
                 label.set_text(&if n.kind == Kind::Dir {
-                    if n.items == 1 { "1 item".to_string() } else { format!("{} items", n.items) }
+                    if n.items == 1 {
+                        "1 item".to_string()
+                    } else {
+                        format!("{} items", n.items)
+                    }
                 } else {
                     String::new()
                 });
             }
             Col::Modified => {
                 let label = widget.downcast_ref::<gtk::Label>().expect("label");
-                let text = glib::DateTime::from_unix_local(n.mtime).ok().and_then(|d| d.format("%x").ok()).map(|s| s.to_string()).unwrap_or_default();
+                let text = glib::DateTime::from_unix_local(n.mtime)
+                    .ok()
+                    .and_then(|d| d.format("%x").ok())
+                    .map(|s| s.to_string())
+                    .unwrap_or_default();
                 label.set_text(&text);
             }
         }
@@ -635,7 +799,12 @@ impl App {
                 Col::Name => {
                     let bx = gtk::Box::new(gtk::Orientation::Horizontal, 6);
                     bx.append(&gtk::Image::new());
-                    bx.append(&gtk::Label::builder().xalign(0.0).ellipsize(gtk::pango::EllipsizeMode::End).build());
+                    bx.append(
+                        &gtk::Label::builder()
+                            .xalign(0.0)
+                            .ellipsize(gtk::pango::EllipsizeMode::End)
+                            .build(),
+                    );
                     let exp = gtk::TreeExpander::new();
                     exp.set_child(Some(&bx));
                     exp.upcast()
@@ -643,18 +812,31 @@ impl App {
                 Col::Size => {
                     let bx = gtk::Box::new(gtk::Orientation::Horizontal, 6);
                     bx.append(&gtk::Label::builder().xalign(1.0).width_chars(9).build());
-                    let bar = gtk::LevelBar::builder().min_value(0.0).max_value(1.0).width_request(48).valign(gtk::Align::Center).css_classes(["du-share"]).build();
+                    let bar = gtk::LevelBar::builder()
+                        .min_value(0.0)
+                        .max_value(1.0)
+                        .width_request(48)
+                        .valign(gtk::Align::Center)
+                        .css_classes(["du-share"])
+                        .build();
                     clean_level_bar(&bar);
                     bx.append(&bar);
                     bx.upcast()
                 }
-                Col::Contents | Col::Modified => gtk::Label::builder().xalign(if col == Col::Contents { 1.0 } else { 0.0 }).build().upcast(),
+                Col::Contents | Col::Modified => gtk::Label::builder()
+                    .xalign(if col == Col::Contents { 1.0 } else { 0.0 })
+                    .build()
+                    .upcast(),
             };
             // Right-click: select the row and show the item menu.
-            let gesture = gtk::GestureClick::builder().button(gdk::BUTTON_SECONDARY).build();
+            let gesture = gtk::GestureClick::builder()
+                .button(gdk::BUTTON_SECONDARY)
+                .build();
             let (a2, weak_item) = (a.clone(), item.downgrade());
             gesture.connect_pressed(move |g, _, x, y| {
-                let Some(item) = weak_item.upgrade() else { return };
+                let Some(item) = weak_item.upgrade() else {
+                    return;
+                };
                 let Some(w) = g.widget() else { return };
                 a2.selection.set_selected(item.position());
                 let menu = gtk::PopoverMenu::from_model(Some(&item_menu()));
@@ -673,8 +855,12 @@ impl App {
         let a = self.clone();
         factory.connect_bind(move |_, obj| {
             let item = obj.downcast_ref::<gtk::ListItem>().expect("ListItem");
-            let Some(row) = item.item().and_downcast::<gtk::TreeListRow>() else { return };
-            let Some(id) = node_id(row.upcast_ref()) else { return };
+            let Some(row) = item.item().and_downcast::<gtk::TreeListRow>() else {
+                return;
+            };
+            let Some(id) = node_id(row.upcast_ref()) else {
+                return;
+            };
             let Some(child) = item.child() else { return };
             let target = if col == Col::Name {
                 let exp = child.downcast_ref::<gtk::TreeExpander>().expect("expander");
@@ -689,7 +875,13 @@ impl App {
         let a = self.clone();
         factory.connect_unbind(move |_, obj| {
             let item = obj.downcast_ref::<gtk::ListItem>().expect("ListItem");
-            let Some(id) = item.item().and_downcast::<gtk::TreeListRow>().and_then(|r| node_id(r.upcast_ref())) else { return };
+            let Some(id) = item
+                .item()
+                .and_downcast::<gtk::TreeListRow>()
+                .and_then(|r| node_id(r.upcast_ref()))
+            else {
+                return;
+            };
             let Some(child) = item.child() else { return };
             let target = match child.downcast_ref::<gtk::TreeExpander>() {
                 Some(exp) => {
@@ -710,7 +902,9 @@ impl App {
         let a = self.clone();
         gtk::CustomSorter::new(move |x, y| {
             let tree = a.tree.borrow();
-            let (Some(t), Some(i), Some(j)) = (tree.as_ref(), node_id(x), node_id(y)) else { return gtk::Ordering::Equal };
+            let (Some(t), Some(i), Some(j)) = (tree.as_ref(), node_id(x), node_id(y)) else {
+                return gtk::Ordering::Equal;
+            };
             let (n, m) = (t.node(i), t.node(j));
             let ord = match col {
                 Col::Name => n.name.to_lowercase().cmp(&m.name.to_lowercase()),
@@ -724,7 +918,12 @@ impl App {
 
     fn setup_columns(self: &Rc<Self>) {
         let mut size_col = None;
-        for (col, title) in [(Col::Name, "Name"), (Col::Size, "Size"), (Col::Contents, "Contents"), (Col::Modified, "Modified")] {
+        for (col, title) in [
+            (Col::Name, "Name"),
+            (Col::Size, "Size"),
+            (Col::Contents, "Contents"),
+            (Col::Modified, "Modified"),
+        ] {
             let c = gtk::ColumnViewColumn::new(Some(title), Some(self.make_factory(col)));
             c.set_sorter(Some(&self.node_sorter(col)));
             c.set_resizable(true);
@@ -736,10 +935,13 @@ impl App {
             }
             self.column_view.append_column(&c);
         }
-        self.column_view.sort_by_column(size_col.as_ref(), gtk::SortType::Descending);
+        self.column_view
+            .sort_by_column(size_col.as_ref(), gtk::SortType::Descending);
         let a = self.clone();
         self.column_view.connect_activate(move |_, pos| {
-            let Some(row) = a.selection.item(pos).and_downcast::<gtk::TreeListRow>() else { return };
+            let Some(row) = a.selection.item(pos).and_downcast::<gtk::TreeListRow>() else {
+                return;
+            };
             if row.is_expandable() {
                 row.set_expanded(!row.is_expanded());
             }
@@ -759,7 +961,15 @@ impl App {
             let root = a.chart_root.get();
             let layout = chart::compute(t, root, a.chart_kind.get(), w as f64, h as f64);
             let fg = area.color();
-            chart::draw(cr, t, root, &layout, a.hover.get(), (fg.red() as f64, fg.green() as f64, fg.blue() as f64), &size_text);
+            chart::draw(
+                cr,
+                t,
+                root,
+                &layout,
+                a.hover.get(),
+                (fg.red() as f64, fg.green() as f64, fg.blue() as f64),
+                &size_text,
+            );
             *a.chart_layout.borrow_mut() = layout;
         });
 
@@ -778,7 +988,10 @@ impl App {
                 a.hover.set(h);
                 a.chart.queue_draw();
                 let pointer = h.is_some_and(|id| {
-                    a.tree.borrow().as_ref().is_some_and(|t| t.node(id).kind == Kind::Dir)
+                    a.tree
+                        .borrow()
+                        .as_ref()
+                        .is_some_and(|t| t.node(id).kind == Kind::Dir)
                 });
                 a.chart.set_cursor_from_name(pointer.then_some("pointer"));
             }
@@ -792,26 +1005,29 @@ impl App {
         self.chart.add_controller(motion);
 
         let a = self.clone();
-        self.chart.connect_query_tooltip(move |_, x, y, _, tooltip| {
-            let Some(id) = hit_node(&a, x as f64, y as f64) else { return false };
-            let tree = a.tree.borrow();
-            let Some(t) = tree.as_ref() else { return false };
-            let n = t.node(id);
-            let mut text = format!(
-                "<b>{}</b>\n{} on disk ({} apparent)",
-                glib::markup_escape_text(&n.name),
-                size_text(n.size),
-                size_text(n.apparent)
-            );
-            if n.kind == Kind::Dir {
-                text.push_str(&format!("\n{} items", n.items));
-            }
-            if id == a.chart_root.get() && n.parent.is_some() {
-                text.push_str("\nClick to go up");
-            }
-            tooltip.set_markup(Some(&text));
-            true
-        });
+        self.chart
+            .connect_query_tooltip(move |_, x, y, _, tooltip| {
+                let Some(id) = hit_node(&a, x as f64, y as f64) else {
+                    return false;
+                };
+                let tree = a.tree.borrow();
+                let Some(t) = tree.as_ref() else { return false };
+                let n = t.node(id);
+                let mut text = format!(
+                    "<b>{}</b>\n{} on disk ({} apparent)",
+                    glib::markup_escape_text(&n.name),
+                    size_text(n.size),
+                    size_text(n.apparent)
+                );
+                if n.kind == Kind::Dir {
+                    text.push_str(&format!("\n{} items", n.items));
+                }
+                if id == a.chart_root.get() && n.parent.is_some() {
+                    text.push_str("\nClick to go up");
+                }
+                tooltip.set_markup(Some(&text));
+                true
+            });
 
         let click = gtk::GestureClick::builder().button(0).build();
         let a = self.clone();
@@ -821,7 +1037,9 @@ impl App {
                 gdk::BUTTON_PRIMARY => match hit {
                     Some(Hit::Root) => a.chart_up(),
                     Some(Hit::Node(id)) => {
-                        let is_dir = a.tree.borrow().as_ref().is_some_and(|t| t.node(id).kind == Kind::Dir && !t.node(id).children.is_empty());
+                        let is_dir = a.tree.borrow().as_ref().is_some_and(|t| {
+                            t.node(id).kind == Kind::Dir && !t.node(id).children.is_empty()
+                        });
                         if is_dir {
                             a.set_chart_root(id);
                         }
@@ -837,7 +1055,8 @@ impl App {
                     if let Some(id) = id {
                         a.target.set(Some(id));
                         a.update_action_state();
-                        a.chart_menu.set_pointing_to(Some(&gdk::Rectangle::new(x as i32, y as i32, 1, 1)));
+                        a.chart_menu
+                            .set_pointing_to(Some(&gdk::Rectangle::new(x as i32, y as i32, 1, 1)));
                         a.chart_menu.popup();
                     }
                 }
@@ -856,7 +1075,11 @@ impl App {
     }
 
     fn chart_up(self: &Rc<Self>) {
-        let parent = self.tree.borrow().as_ref().and_then(|t| t.node(self.chart_root.get()).parent);
+        let parent = self
+            .tree
+            .borrow()
+            .as_ref()
+            .and_then(|t| t.node(self.chart_root.get()).parent);
         if let Some(p) = parent {
             self.set_chart_root(p);
         }
@@ -875,7 +1098,10 @@ impl App {
                 sep.add_css_class("dim-label");
                 self.breadcrumbs.append(&sep);
             }
-            let btn = gtk::Button::builder().label(&t.node(id).name).css_classes(["flat"]).build();
+            let btn = gtk::Button::builder()
+                .label(&t.node(id).name)
+                .css_classes(["flat"])
+                .build();
             if i + 1 == chain.len() {
                 btn.add_css_class("heading");
             }
@@ -932,7 +1158,11 @@ impl App {
     }
 
     fn set_enabled(&self, name: &str, enabled: bool) {
-        if let Some(a) = self.window.lookup_action(name).and_downcast::<gio::SimpleAction>() {
+        if let Some(a) = self
+            .window
+            .lookup_action(name)
+            .and_downcast::<gio::SimpleAction>()
+        {
             a.set_enabled(enabled);
         }
     }
@@ -943,7 +1173,12 @@ impl App {
         self.set_enabled("open-item", target.is_some());
         self.set_enabled("copy-path", target.is_some());
         self.set_enabled("trash-item", target.is_some_and(|t| t != ROOT));
-        let can_up = has_tree && self.tree.borrow().as_ref().is_some_and(|t| t.node(self.chart_root.get()).parent.is_some());
+        let can_up = has_tree
+            && self
+                .tree
+                .borrow()
+                .as_ref()
+                .is_some_and(|t| t.node(self.chart_root.get()).parent.is_some());
         self.set_enabled("chart-up", can_up);
         self.up_button.set_sensitive(can_up);
         self.set_enabled("cancel-scan", self.scan_progress.borrow().is_some());
@@ -957,7 +1192,10 @@ impl App {
     }
 
     fn choose_folder(self: &Rc<Self>) {
-        let dialog = gtk::FileDialog::builder().title("Select Folder to Scan").modal(true).build();
+        let dialog = gtk::FileDialog::builder()
+            .title("Select Folder to Scan")
+            .modal(true)
+            .build();
         dialog.set_initial_folder(Some(&gio::File::for_path(glib::home_dir())));
         let a = self.clone();
         dialog.select_folder(Some(&self.window), None::<&gio::Cancellable>, move |res| {
@@ -971,12 +1209,16 @@ impl App {
     }
 
     fn open_target(self: &Rc<Self>) {
-        let Some((_, path, kind)) = self.target_path() else { return };
+        let Some((_, path, kind)) = self.target_path() else {
+            return;
+        };
         let launcher = gtk::FileLauncher::new(Some(&gio::File::for_path(&path)));
         let a = self.clone();
         let done = move |res: Result<(), glib::Error>| {
             if let Err(e) = res {
-                if !e.matches(gtk::DialogError::Dismissed) && !e.matches(gtk::DialogError::Cancelled) {
+                if !e.matches(gtk::DialogError::Dismissed)
+                    && !e.matches(gtk::DialogError::Cancelled)
+                {
                     a.toast(&format!("Could not open folder: {}", e.message()));
                 }
             }
@@ -996,18 +1238,26 @@ impl App {
     }
 
     fn trash_target(self: &Rc<Self>) {
-        let Some((id, path, _)) = self.target_path() else { return };
+        let Some((id, path, _)) = self.target_path() else {
+            return;
+        };
         if id == ROOT {
             return;
         }
         let (name, size) = {
             let tree = self.tree.borrow();
-            let Some(n) = tree.as_ref().map(|t| t.node(id)) else { return };
+            let Some(n) = tree.as_ref().map(|t| t.node(id)) else {
+                return;
+            };
             (n.name.clone(), n.size)
         };
         let dialog = adw::AlertDialog::new(
             Some(&format!("Move “{name}” to the Trash?")),
-            Some(&format!("{}\n\nThis frees up to {} once the trash is emptied.", path.display(), size_text(size))),
+            Some(&format!(
+                "{}\n\nThis frees up to {} once the trash is emptied.",
+                path.display(),
+                size_text(size)
+            )),
         );
         dialog.add_responses(&[("cancel", "_Cancel"), ("trash", "_Move to Trash")]);
         dialog.set_response_appearance("trash", adw::ResponseAppearance::Destructive);
@@ -1020,10 +1270,17 @@ impl App {
             }
             let (a, name) = (a.clone(), name.clone());
             let file = gio::File::for_path(&path);
-            file.trash_async(glib::Priority::DEFAULT, None::<&gio::Cancellable>, move |res| match res {
-                Ok(()) => a.remove_node(id),
-                Err(e) => a.toast(&format!("Could not move “{name}” to the trash: {}", e.message())),
-            });
+            file.trash_async(
+                glib::Priority::DEFAULT,
+                None::<&gio::Cancellable>,
+                move |res| match res {
+                    Ok(()) => a.remove_node(id),
+                    Err(e) => a.toast(&format!(
+                        "Could not move “{name}” to the trash: {}",
+                        e.message()
+                    )),
+                },
+            );
         });
         dialog.present(Some(&self.window));
     }
@@ -1041,7 +1298,8 @@ impl App {
         if let Some(p) = parent {
             let store = self.stores.borrow().get(&p).cloned();
             if let Some(store) = store {
-                let pos = (0..store.n_items()).find(|&i| store.item(i).and_then(|o| node_id(&o)) == Some(id));
+                let pos = (0..store.n_items())
+                    .find(|&i| store.item(i).and_then(|o| node_id(&o)) == Some(id));
                 if let Some(pos) = pos {
                     store.remove(pos);
                 }
@@ -1053,7 +1311,10 @@ impl App {
             ancestors
                 .iter()
                 .filter_map(|n| cells.get(n).map(|v| (n, v)))
-                .flat_map(|(n, v)| v.iter().filter_map(move |(c, w)| w.upgrade().map(|w| (*n, *c, w))))
+                .flat_map(|(n, v)| {
+                    v.iter()
+                        .filter_map(move |(c, w)| w.upgrade().map(|w| (*n, *c, w)))
+                })
                 .collect()
         };
         for (n, c, w) in refresh {
@@ -1061,7 +1322,11 @@ impl App {
         }
         // Keep the chart root valid.
         let root = self.chart_root.get();
-        let chart_ok = self.tree.borrow().as_ref().is_some_and(|t| t.ancestry(root).iter().all(|&n| !t.node(n).removed));
+        let chart_ok = self
+            .tree
+            .borrow()
+            .as_ref()
+            .is_some_and(|t| t.ancestry(root).iter().all(|&n| !t.node(n).removed));
         if !chart_ok {
             self.set_chart_root(parent.unwrap_or(ROOT));
         } else {
@@ -1098,7 +1363,11 @@ impl App {
             .title("Excluded Locations")
             .description("These locations are skipped when scanning")
             .build();
-        let add_btn = gtk::Button::builder().icon_name("list-add-symbolic").tooltip_text("Add Location…").css_classes(["flat"]).build();
+        let add_btn = gtk::Button::builder()
+            .icon_name("list-add-symbolic")
+            .tooltip_text("Add Location…")
+            .css_classes(["flat"])
+            .build();
         excl_group.set_header_suffix(Some(&add_btn));
         let list = gtk::ListBox::new();
         list.add_css_class("boxed-list");
@@ -1110,9 +1379,15 @@ impl App {
         fill_excluded(self, &list);
         let (a, l, dlg) = (self.clone(), list.clone(), dialog.downgrade());
         add_btn.connect_clicked(move |_| {
-            let fd = gtk::FileDialog::builder().title("Exclude Location").modal(true).build();
+            let fd = gtk::FileDialog::builder()
+                .title("Exclude Location")
+                .modal(true)
+                .build();
             let (a2, l2) = (a.clone(), l.clone());
-            let parent = dlg.upgrade().and_then(|d| d.root()).and_downcast::<gtk::Window>();
+            let parent = dlg
+                .upgrade()
+                .and_then(|d| d.root())
+                .and_downcast::<gtk::Window>();
             fd.select_folder(parent.as_ref(), None::<&gio::Cancellable>, move |res| {
                 if let Ok(file) = res {
                     let mut v = a2.excluded_uris();
@@ -1136,15 +1411,34 @@ fn fill_excluded(a: &Rc<App>, list: &gtk::ListBox) {
     }
     let uris = a.excluded_uris();
     if uris.is_empty() {
-        list.append(&adw::ActionRow::builder().title("No excluded locations").sensitive(false).build());
+        list.append(
+            &adw::ActionRow::builder()
+                .title("No excluded locations")
+                .sensitive(false)
+                .build(),
+        );
     }
     for uri in uris {
-        let title = gio::File::for_uri(&uri).path().map(|p| p.display().to_string()).unwrap_or_else(|| uri.clone());
-        let row = adw::ActionRow::builder().title(glib::markup_escape_text(&title).as_str()).build();
-        let rm = gtk::Button::builder().icon_name("user-trash-symbolic").tooltip_text("Remove").valign(gtk::Align::Center).css_classes(["flat"]).build();
+        let title = gio::File::for_uri(&uri)
+            .path()
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|| uri.clone());
+        let row = adw::ActionRow::builder()
+            .title(glib::markup_escape_text(&title).as_str())
+            .build();
+        let rm = gtk::Button::builder()
+            .icon_name("user-trash-symbolic")
+            .tooltip_text("Remove")
+            .valign(gtk::Align::Center)
+            .css_classes(["flat"])
+            .build();
         let (a2, l2) = (a.clone(), list.clone());
         rm.connect_clicked(move |_| {
-            let v: Vec<String> = a2.excluded_uris().into_iter().filter(|u| *u != uri).collect();
+            let v: Vec<String> = a2
+                .excluded_uris()
+                .into_iter()
+                .filter(|u| *u != uri)
+                .collect();
             a2.prefs.set("excluded-uris", v);
             fill_excluded(&a2, &l2);
         });
@@ -1154,19 +1448,42 @@ fn fill_excluded(a: &Rc<App>, list: &gtk::ListBox) {
 }
 
 fn location_row(loc: &Location) -> gtk::ListBoxRow {
-    let icon = gtk::Image::from_icon_name(if loc.is_home { "user-home-symbolic" } else { "drive-harddisk-symbolic" });
+    let icon = gtk::Image::from_icon_name(if loc.is_home {
+        "user-home-symbolic"
+    } else {
+        "drive-harddisk-symbolic"
+    });
     icon.set_pixel_size(32);
-    let name = gtk::Label::builder().label(&loc.name).xalign(0.0).css_classes(["heading"]).build();
-    let detail = gtk::Label::builder().label(&loc.detail).xalign(0.0).css_classes(["dim-label", "caption"]).ellipsize(gtk::pango::EllipsizeMode::Middle).build();
+    let name = gtk::Label::builder()
+        .label(&loc.name)
+        .xalign(0.0)
+        .css_classes(["heading"])
+        .build();
+    let detail = gtk::Label::builder()
+        .label(&loc.detail)
+        .xalign(0.0)
+        .css_classes(["dim-label", "caption"])
+        .ellipsize(gtk::pango::EllipsizeMode::Middle)
+        .build();
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 4);
     vbox.set_hexpand(true);
     vbox.append(&name);
     vbox.append(&detail);
     if let Some(u) = loc.usage {
-        let bar = gtk::LevelBar::builder().min_value(0.0).max_value(1.0).value(u.fraction()).css_classes(["du-capacity"]).build();
+        let bar = gtk::LevelBar::builder()
+            .min_value(0.0)
+            .max_value(1.0)
+            .value(u.fraction())
+            .css_classes(["du-capacity"])
+            .build();
         clean_level_bar(&bar);
         let text = gtk::Label::builder()
-            .label(format!("{} used of {} ({} available)", size_text(u.used()), size_text(u.total), size_text(u.available)))
+            .label(format!(
+                "{} used of {} ({} available)",
+                size_text(u.used()),
+                size_text(u.total),
+                size_text(u.available)
+            ))
             .xalign(0.0)
             .css_classes(["caption"])
             .build();
@@ -1182,7 +1499,10 @@ fn location_row(loc: &Location) -> gtk::ListBoxRow {
     hbox.append(&icon);
     hbox.append(&vbox);
     hbox.append(&arrow);
-    let row = gtk::ListBoxRow::builder().child(&hbox).activatable(true).build();
+    let row = gtk::ListBoxRow::builder()
+        .child(&hbox)
+        .activatable(true)
+        .build();
     row.set_tooltip_text(Some(&format!("Scan {}", loc.path.display())));
     row
 }
@@ -1203,15 +1523,29 @@ mod tests {
     fn local_state_ignores_old_window_fields() {
         let old = r#"{"width": 800, "height": 500, "maximized": true, "cross_filesystems": true}"#;
         let st: LocalState = serde_json::from_str(old).unwrap();
-        assert_eq!(st, LocalState { cross_filesystems: true });
-        assert_eq!(serde_json::from_str::<LocalState>("{}").unwrap(), LocalState::default());
+        assert_eq!(
+            st,
+            LocalState {
+                cross_filesystems: true
+            }
+        );
+        assert_eq!(
+            serde_json::from_str::<LocalState>("{}").unwrap(),
+            LocalState::default()
+        );
     }
 
     /// `(schema id, key name, type)` triples declared in a schema file.
     fn keys(xml: &str) -> Vec<(String, String, String)> {
         let attr = |tag: &str, name: &str| {
             let pat = format!("{name}=\"");
-            tag.find(&pat).map(|i| tag[i + pat.len()..].split('"').next().unwrap_or("").to_string())
+            tag.find(&pat).map(|i| {
+                tag[i + pat.len()..]
+                    .split('"')
+                    .next()
+                    .unwrap_or("")
+                    .to_string()
+            })
         };
         let mut out = Vec::new();
         let mut schema = String::new();
@@ -1219,7 +1553,11 @@ mod tests {
             if tag.starts_with("schema ") {
                 schema = attr(tag, "id").unwrap_or_default();
             } else if tag.starts_with("key ") {
-                out.push((schema.clone(), attr(tag, "name").unwrap_or_default(), attr(tag, "type").unwrap_or_default()));
+                out.push((
+                    schema.clone(),
+                    attr(tag, "name").unwrap_or_default(),
+                    attr(tag, "type").unwrap_or_default(),
+                ));
             }
         }
         out
@@ -1235,14 +1573,22 @@ mod tests {
             (SCHEMA_UI, "is-maximized", "b"),
         ];
         for (schema, key, ty) in used {
-            assert!(ours.contains(&(schema.into(), key.into(), ty.into())), "{schema} {key}");
+            assert!(
+                ours.contains(&(schema.into(), key.into(), ty.into())),
+                "{schema} {key}"
+            );
         }
         // When the real schema is installed, every key we ship must exist
         // there with the same type.
-        if let Ok(installed) = std::fs::read_to_string("/usr/share/glib-2.0/schemas/org.gnome.baobab.gschema.xml") {
+        if let Ok(installed) =
+            std::fs::read_to_string("/usr/share/glib-2.0/schemas/org.gnome.baobab.gschema.xml")
+        {
             let installed = keys(&installed);
             for k in &ours {
-                assert!(installed.contains(k), "{k:?} not in installed org.gnome.baobab schema");
+                assert!(
+                    installed.contains(k),
+                    "{k:?} not in installed org.gnome.baobab schema"
+                );
             }
         }
     }

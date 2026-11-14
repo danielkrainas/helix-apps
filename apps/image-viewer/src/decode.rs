@@ -58,7 +58,10 @@ pub struct Decoded {
 
 impl Decoded {
     pub fn size(&self) -> (u32, u32) {
-        self.frames.first().map(|f| (f.width, f.height)).unwrap_or((0, 0))
+        self.frames
+            .first()
+            .map(|f| (f.width, f.height))
+            .unwrap_or((0, 0))
     }
 
     pub fn is_animated(&self) -> bool {
@@ -199,9 +202,16 @@ fn decode_rust(path: &Path, kind: &str) -> Result<Vec<Frame>, String> {
 }
 
 fn decode_pixbuf(path: &Path) -> Result<(Frame, String), String> {
-    let name = Pixbuf::file_info(path).and_then(|(f, _, _)| f.name()).map(|n| n.to_string()).unwrap_or_default();
+    let name = Pixbuf::file_info(path)
+        .and_then(|(f, _, _)| f.name())
+        .map(|n| n.to_string())
+        .unwrap_or_default();
     let pb = Pixbuf::from_file(path).map_err(|e| e.message().to_string())?;
-    let format = if pb.has_alpha() { PixelFormat::Rgba8 } else { PixelFormat::Rgb8 };
+    let format = if pb.has_alpha() {
+        PixelFormat::Rgba8
+    } else {
+        PixelFormat::Rgb8
+    };
     if pb.bits_per_sample() != 8 || pb.n_channels() as usize != format.bpp() {
         return Err("Unsupported pixel layout".into());
     }
@@ -221,8 +231,21 @@ fn orient(frame: Frame, o: Orientation) -> Frame {
         return frame;
     }
     let bpp = frame.format.bpp();
-    let (data, width, height) = orientation::apply(&frame.bytes, frame.width, frame.height, frame.stride, bpp, o);
-    Frame { bytes: glib::Bytes::from_owned(data), width, height, stride: width as usize * bpp, ..frame }
+    let (data, width, height) = orientation::apply(
+        &frame.bytes,
+        frame.width,
+        frame.height,
+        frame.stride,
+        bpp,
+        o,
+    );
+    Frame {
+        bytes: glib::Bytes::from_owned(data),
+        width,
+        height,
+        stride: width as usize * bpp,
+        ..frame
+    }
 }
 
 /// Decodes `path`, applying its EXIF orientation.
@@ -252,7 +275,11 @@ pub fn decode(path: &Path) -> Result<Decoded, String> {
         _ => exif.as_ref().map(|e| e.orientation).unwrap_or_default(),
     };
     let frames = frames.into_iter().map(|f| orient(f, o)).collect();
-    Ok(Decoded { frames, format: format_label(&format), exif })
+    Ok(Decoded {
+        frames,
+        format: format_label(&format),
+        exif,
+    })
 }
 
 #[cfg(test)]

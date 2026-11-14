@@ -13,12 +13,42 @@ pub struct Paper {
 }
 
 pub const PAPERS: &[Paper] = &[
-    Paper { id: "a6", label: "A6", width: 1050, height: 1480 },
-    Paper { id: "a5", label: "A5", width: 1480, height: 2100 },
-    Paper { id: "a4", label: "A4", width: 2100, height: 2970 },
-    Paper { id: "letter", label: "US Letter", width: 2159, height: 2794 },
-    Paper { id: "legal", label: "US Legal", width: 2159, height: 3556 },
-    Paper { id: "4x6", label: "4×6", width: 1016, height: 1524 },
+    Paper {
+        id: "a6",
+        label: "A6",
+        width: 1050,
+        height: 1480,
+    },
+    Paper {
+        id: "a5",
+        label: "A5",
+        width: 1480,
+        height: 2100,
+    },
+    Paper {
+        id: "a4",
+        label: "A4",
+        width: 2100,
+        height: 2970,
+    },
+    Paper {
+        id: "letter",
+        label: "US Letter",
+        width: 2159,
+        height: 2794,
+    },
+    Paper {
+        id: "legal",
+        label: "US Legal",
+        width: 2159,
+        height: 3556,
+    },
+    Paper {
+        id: "4x6",
+        label: "4×6",
+        width: 1016,
+        height: 1524,
+    },
 ];
 
 pub fn paper(id: &str) -> Option<&'static Paper> {
@@ -28,9 +58,9 @@ pub fn paper(id: &str) -> Option<&'static Paper> {
 /// Index into [`PAPERS`] matching a GSettings width/height pair (either
 /// orientation); `None` means automatic or a custom size.
 pub fn paper_for_size(width: i32, height: i32) -> Option<usize> {
-    PAPERS
-        .iter()
-        .position(|p| (p.width, p.height) == (width, height) || (p.height, p.width) == (width, height))
+    PAPERS.iter().position(|p| {
+        (p.width, p.height) == (width, height) || (p.height, p.width) == (width, height)
+    })
 }
 
 /// Converts tenths of millimetres to pixels at `dpi`.
@@ -213,12 +243,27 @@ mod tests {
     #[test]
     fn dragging() {
         let r = Rect::new(10, 10, 50, 50);
-        assert_eq!(drag(r, Handle::Move, 100.0, -100.0, 100, 100, 5), Rect::new(50, 0, 50, 50));
-        assert_eq!(drag(r, Handle::BottomRight, 10.0, 5.0, 100, 100, 5), Rect::new(10, 10, 60, 55));
+        assert_eq!(
+            drag(r, Handle::Move, 100.0, -100.0, 100, 100, 5),
+            Rect::new(50, 0, 50, 50)
+        );
+        assert_eq!(
+            drag(r, Handle::BottomRight, 10.0, 5.0, 100, 100, 5),
+            Rect::new(10, 10, 60, 55)
+        );
         // Cannot shrink below the minimum or flip.
-        assert_eq!(drag(r, Handle::Left, 100.0, 0.0, 100, 100, 5), Rect::new(55, 10, 5, 50));
-        assert_eq!(drag(r, Handle::TopLeft, -50.0, -50.0, 100, 100, 5), Rect::new(0, 0, 60, 60));
-        assert_eq!(drag(r, Handle::Bottom, 0.0, 500.0, 100, 100, 5), Rect::new(10, 10, 50, 90));
+        assert_eq!(
+            drag(r, Handle::Left, 100.0, 0.0, 100, 100, 5),
+            Rect::new(55, 10, 5, 50)
+        );
+        assert_eq!(
+            drag(r, Handle::TopLeft, -50.0, -50.0, 100, 100, 5),
+            Rect::new(0, 0, 60, 60)
+        );
+        assert_eq!(
+            drag(r, Handle::Bottom, 0.0, 500.0, 100, 100, 5),
+            Rect::new(10, 10, 50, 90)
+        );
     }
 
     #[test]

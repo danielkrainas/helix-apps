@@ -12,7 +12,8 @@ use crate::proc_view::ProcessObject;
 use crate::sampler::{self, ProcessInfo};
 
 fn opt_size(v: Option<u64>, iec: bool) -> String {
-    v.map(|b| format::size(b, iec)).unwrap_or_else(|| "N/A".into())
+    v.map(|b| format::size(b, iec))
+        .unwrap_or_else(|| "N/A".into())
 }
 
 fn property_rows(p: &ProcessInfo, iec: bool) -> Vec<(&'static str, String)> {
@@ -30,7 +31,10 @@ fn property_rows(p: &ProcessInfo, iec: bool) -> Vec<(&'static str, String)> {
         ("Resident Memory", opt_size(p.vm_rss, iec)),
         ("Shared Memory", opt_size(p.shared, iec)),
         ("CPU", format::percent(p.cpu)),
-        ("CPU Time", format::cpu_time(p.cpu_ticks, sampler::clock_ticks())),
+        (
+            "CPU Time",
+            format::cpu_time(p.cpu_ticks, sampler::clock_ticks()),
+        ),
         ("Started", started),
         ("Nice", p.nice.to_string()),
         ("Priority", format::priority(p.nice).to_string()),
@@ -106,7 +110,9 @@ fn escalate_if_needed(
                 let _ = tx.send_blocking(control::run_privileged(command));
             });
             glib::MainContext::default().spawn_local(async move {
-                let res = rx.recv().await.unwrap_or_else(|_| Err(control::Error::Other("The privileged helper failed".into())));
+                let res = rx.recv().await.unwrap_or_else(|_| {
+                    Err(control::Error::Other("The privileged helper failed".into()))
+                });
                 on_done(res);
             });
         }
@@ -115,7 +121,11 @@ fn escalate_if_needed(
 }
 
 /// Asks for a new nice value and applies it; errors go to `on_error`.
-pub fn change_priority(parent: &impl IsA<gtk::Widget>, obj: &ProcessObject, on_error: Rc<dyn Fn(String)>) {
+pub fn change_priority(
+    parent: &impl IsA<gtk::Widget>,
+    obj: &ProcessObject,
+    on_error: Rc<dyn Fn(String)>,
+) {
     let (pid, name, nice) = {
         let i = obj.info();
         (i.pid, i.name.clone(), i.nice)
@@ -183,11 +193,18 @@ pub fn change_priority(parent: &impl IsA<gtk::Widget>, obj: &ProcessObject, on_e
         let v = scale.value().round() as i32;
         let name = name.clone();
         let on_error = on_error.clone();
-        escalate_if_needed(control::renice(pid, v), Command::Renice { nice: v.clamp(-20, 19), pid }, move |res| {
-            if let Err(e) = res {
-                on_error(format!("Cannot change priority of “{name}”: {e}"));
-            }
-        });
+        escalate_if_needed(
+            control::renice(pid, v),
+            Command::Renice {
+                nice: v.clamp(-20, 19),
+                pid,
+            },
+            move |res| {
+                if let Err(e) = res {
+                    on_error(format!("Cannot change priority of “{name}”: {e}"));
+                }
+            },
+        );
     });
     dialog.present(Some(parent));
 }
@@ -207,9 +224,14 @@ pub fn signal_process(
     let run = move || {
         let name = name.clone();
         let on_done = on_done.clone();
-        let command = Command::Signal { signal: action.helper_signal(), pid };
+        let command = Command::Signal {
+            signal: action.helper_signal(),
+            pid,
+        };
         escalate_if_needed(control::send(pid, action), command, move |res| {
-            on_done(res.map_err(|e| format!("Cannot {} “{name}”: {e}", action.verb().to_lowercase())));
+            on_done(
+                res.map_err(|e| format!("Cannot {} “{name}”: {e}", action.verb().to_lowercase())),
+            );
         });
     };
     if !(confirm && action.needs_confirmation()) {
@@ -228,7 +250,10 @@ pub fn signal_process(
             "_End Process",
         ),
     };
-    let dialog = adw::AlertDialog::builder().heading(heading).body(body).build();
+    let dialog = adw::AlertDialog::builder()
+        .heading(heading)
+        .body(body)
+        .build();
     dialog.add_responses(&[("cancel", "_Cancel"), ("ok", button)]);
     dialog.set_response_appearance("ok", adw::ResponseAppearance::Destructive);
     dialog.set_default_response(Some("cancel"));

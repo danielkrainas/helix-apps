@@ -1,7 +1,9 @@
 //! File name helpers: extension splitting, copy/link naming, validation.
 
 /// Compound extensions that are kept together ("x.tar.gz" → ".tar.gz").
-const COMPOUND: &[&str] = &["gz", "bz2", "xz", "zst", "lz", "lzma", "lz4", "z", "7z", "br"];
+const COMPOUND: &[&str] = &[
+    "gz", "bz2", "xz", "zst", "lz", "lzma", "lz4", "z", "7z", "br",
+];
 
 /// Splits a file name into stem and extension (including the dot).
 ///
@@ -9,7 +11,9 @@ const COMPOUND: &[&str] = &["gz", "bz2", "xz", "zst", "lz", "lzma", "lz4", "z", 
 /// extension containing spaces or longer than 10 characters is not treated
 /// as one, and `.tar.<compression>` stays together.
 pub fn split_extension(name: &str) -> (&str, &str) {
-    let Some(dot) = name.rfind('.') else { return (name, "") };
+    let Some(dot) = name.rfind('.') else {
+        return (name, "");
+    };
     if dot == 0 || dot + 1 == name.len() {
         return (name, "");
     }
@@ -132,7 +136,10 @@ mod tests {
         assert_eq!(split_extension(".config.json"), (".config", ".json"));
         assert_eq!(split_extension("README"), ("README", ""));
         assert_eq!(split_extension("trailing."), ("trailing.", ""));
-        assert_eq!(split_extension("My File.with space"), ("My File.with space", ""));
+        assert_eq!(
+            split_extension("My File.with space"),
+            ("My File.with space", "")
+        );
         assert_eq!(split_extension("a.b.c"), ("a.b", ".c"));
     }
 
@@ -146,16 +153,25 @@ mod tests {
         assert_eq!(copy_name("file (copy).txt", none), "file (copy 2).txt");
         assert_eq!(copy_name("file (copy 7).txt", none), "file (copy 8).txt");
         // "(copy 1)" is not something we generate; treated as part of the name.
-        assert_eq!(copy_name("file (copy 1).txt", none), "file (copy 1) (copy).txt");
+        assert_eq!(
+            copy_name("file (copy 1).txt", none),
+            "file (copy 1) (copy).txt"
+        );
         let taken = ["file (copy).txt", "file (copy 2).txt"];
-        assert_eq!(copy_name("file.txt", |n| taken.contains(&n)), "file (copy 3).txt");
+        assert_eq!(
+            copy_name("file.txt", |n| taken.contains(&n)),
+            "file (copy 3).txt"
+        );
     }
 
     #[test]
     fn link_names() {
         assert_eq!(link_name("a.txt", |_| false), "Link to a.txt");
         let taken = ["Link to a.txt"];
-        assert_eq!(link_name("a.txt", |n| taken.contains(&n)), "Link to a (2).txt");
+        assert_eq!(
+            link_name("a.txt", |n| taken.contains(&n)),
+            "Link to a (2).txt"
+        );
     }
 
     #[test]

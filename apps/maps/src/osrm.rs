@@ -94,7 +94,8 @@ fn lonlat(v: &Value) -> Option<LatLon> {
 }
 
 pub fn parse_route(json: &str) -> Result<Route, String> {
-    let v: Value = serde_json::from_str(json).map_err(|_| "Invalid response from the routing service".to_string())?;
+    let v: Value = serde_json::from_str(json)
+        .map_err(|_| "Invalid response from the routing service".to_string())?;
     let code = v.get("code").and_then(Value::as_str).unwrap_or("");
     if code != "Ok" {
         return Err(match code {
@@ -118,14 +119,26 @@ pub fn parse_route(json: &str) -> Result<Route, String> {
         .map(|c| c.iter().filter_map(lonlat).collect())
         .unwrap_or_default();
     let mut steps = Vec::new();
-    for leg in r.get("legs").and_then(Value::as_array).into_iter().flatten() {
-        for s in leg.get("steps").and_then(Value::as_array).into_iter().flatten() {
+    for leg in r
+        .get("legs")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        for s in leg
+            .get("steps")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
             let m = s.get("maneuver").cloned().unwrap_or(Value::Null);
             let kind = m.get("type").and_then(Value::as_str).unwrap_or("");
             let modifier = m.get("modifier").and_then(Value::as_str).unwrap_or("");
             let name = s.get("name").and_then(Value::as_str).unwrap_or("");
             let exit = m.get("exit").and_then(Value::as_u64);
-            let Some(location) = m.get("location").and_then(lonlat) else { continue };
+            let Some(location) = m.get("location").and_then(lonlat) else {
+                continue;
+            };
             steps.push(Step {
                 instruction: instruction(kind, modifier, name, exit),
                 distance: s.get("distance").and_then(Value::as_f64).unwrap_or(0.0),
@@ -156,8 +169,16 @@ fn direction(modifier: &str) -> &'static str {
 
 /// Builds an English instruction from an OSRM maneuver.
 pub fn instruction(kind: &str, modifier: &str, name: &str, exit: Option<u64>) -> String {
-    let onto = if name.is_empty() { String::new() } else { format!(" onto {name}") };
-    let on = if name.is_empty() { String::new() } else { format!(" on {name}") };
+    let onto = if name.is_empty() {
+        String::new()
+    } else {
+        format!(" onto {name}")
+    };
+    let on = if name.is_empty() {
+        String::new()
+    } else {
+        format!(" on {name}")
+    };
     let dir = direction(modifier);
     match kind {
         "depart" => {
@@ -177,7 +198,11 @@ pub fn instruction(kind: &str, modifier: &str, name: &str, exit: Option<u64>) ->
         "on ramp" => format!("Take the ramp{onto}"),
         "off ramp" => format!("Take the exit{onto}"),
         "fork" => {
-            let side = if modifier.contains("left") { "left" } else { "right" };
+            let side = if modifier.contains("left") {
+                "left"
+            } else {
+                "right"
+            };
             format!("Keep {side} at the fork{onto}")
         }
         "end of road" if !dir.is_empty() => format!("At the end of the road, turn {dir}{onto}"),
@@ -216,16 +241,35 @@ mod tests {
         let r = parse_route(ROUTE).unwrap();
         assert_eq!(r.distance, 1234.5);
         assert_eq!(r.path.len(), 3);
-        assert_eq!(r.path[0], LatLon { lat: 52.0, lon: 13.0 });
+        assert_eq!(
+            r.path[0],
+            LatLon {
+                lat: 52.0,
+                lon: 13.0
+            }
+        );
         let instr: Vec<&str> = r.steps.iter().map(|s| s.instruction.as_str()).collect();
-        assert_eq!(instr, ["Start on Main St", "Turn left onto Oak Ave", "Arrive at destination"]);
+        assert_eq!(
+            instr,
+            [
+                "Start on Main St",
+                "Turn left onto Oak Ave",
+                "Arrive at destination"
+            ]
+        );
         assert_eq!(r.bounds(), Some((52.0, 52.1, 13.0, 13.2)));
     }
 
     #[test]
     fn errors() {
-        assert_eq!(parse_route(r#"{"code":"NoRoute"}"#).unwrap_err(), "No route found");
-        assert_eq!(parse_route(r#"{"code":"InvalidUrl","message":"bad"}"#).unwrap_err(), "bad");
+        assert_eq!(
+            parse_route(r#"{"code":"NoRoute"}"#).unwrap_err(),
+            "No route found"
+        );
+        assert_eq!(
+            parse_route(r#"{"code":"InvalidUrl","message":"bad"}"#).unwrap_err(),
+            "bad"
+        );
         assert!(parse_route("garbage").is_err());
     }
 
@@ -245,11 +289,23 @@ mod tests {
 
     #[test]
     fn instructions() {
-        assert_eq!(instruction("turn", "slight right", "A", None), "Turn slightly right onto A");
+        assert_eq!(
+            instruction("turn", "slight right", "A", None),
+            "Turn slightly right onto A"
+        );
         assert_eq!(instruction("turn", "uturn", "", None), "Make a U-turn");
-        assert_eq!(instruction("roundabout", "", "B", Some(2)), "At the roundabout, take exit 2 onto B");
-        assert_eq!(instruction("new name", "straight", "C", None), "Continue on C");
-        assert_eq!(instruction("fork", "slight left", "", None), "Keep left at the fork");
+        assert_eq!(
+            instruction("roundabout", "", "B", Some(2)),
+            "At the roundabout, take exit 2 onto B"
+        );
+        assert_eq!(
+            instruction("new name", "straight", "C", None),
+            "Continue on C"
+        );
+        assert_eq!(
+            instruction("fork", "slight left", "", None),
+            "Keep left at the fork"
+        );
         assert_eq!(instruction("depart", "", "", None), "Start");
         assert_eq!(Mode::from_nick("pedestrian").profile(), "foot");
         assert_eq!(Mode::from_nick("transit"), Mode::Walk);

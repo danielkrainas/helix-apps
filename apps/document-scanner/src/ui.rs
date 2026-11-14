@@ -45,7 +45,11 @@ pub fn run(device: Option<String>) -> glib::ExitCode {
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::NON_UNIQUE)
         .build();
-    helix_app_common::install_standard_actions(&app, APP_NAME, "Make a digital copy of your photos and documents");
+    helix_app_common::install_standard_actions(
+        &app,
+        APP_NAME,
+        "Make a digital copy of your photos and documents",
+    );
     app.connect_startup(|app| {
         for (action, accels) in ACCELS {
             app.set_accels_for_action(action, accels);
@@ -55,7 +59,11 @@ pub fn run(device: Option<String>) -> glib::ExitCode {
             ".page-thumb { padding: 6px; } .page-view { background: alpha(@view_fg_color, 0.06); }",
         );
         if let Some(display) = gdk::Display::default() {
-            gtk::style_context_add_provider_for_display(&display, &css, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &css,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
         }
     });
     let device = RefCell::new(device);
@@ -68,9 +76,20 @@ pub fn run(device: Option<String>) -> glib::ExitCode {
 
 /// Creates a GDK texture showing `page`.
 fn texture(page: &Page) -> gdk::Texture {
-    let format = if page.is_color() { gdk::MemoryFormat::R8g8b8 } else { gdk::MemoryFormat::G8 };
+    let format = if page.is_color() {
+        gdk::MemoryFormat::R8g8b8
+    } else {
+        gdk::MemoryFormat::G8
+    };
     let bytes = glib::Bytes::from(&page.pixels[..]);
-    gdk::MemoryTexture::new(page.width as i32, page.height as i32, format, &bytes, page.stride()).upcast()
+    gdk::MemoryTexture::new(
+        page.width as i32,
+        page.height as i32,
+        format,
+        &bytes,
+        page.stride(),
+    )
+    .upcast()
 }
 
 /// Creates a cairo surface (for printing).
@@ -82,12 +101,16 @@ fn surface(page: &Page) -> Option<cairo::ImageSurface> {
     for y in 0..page.height as usize {
         for x in 0..page.width as usize {
             let s = (y * page.width as usize + x) * 3;
-            let v = 0xFF00_0000u32 | (rgb[s] as u32) << 16 | (rgb[s + 1] as u32) << 8 | rgb[s + 2] as u32;
+            let v = 0xFF00_0000u32
+                | (rgb[s] as u32) << 16
+                | (rgb[s + 1] as u32) << 8
+                | rgb[s + 2] as u32;
             let d = y * stride as usize + x * 4;
             data[d..d + 4].copy_from_slice(&v.to_ne_bytes());
         }
     }
-    cairo::ImageSurface::create_for_data(data, fmt, page.width as i32, page.height as i32, stride).ok()
+    cairo::ImageSurface::create_for_data(data, fmt, page.width as i32, page.height as i32, stride)
+        .ok()
 }
 
 #[derive(Default)]
@@ -197,7 +220,11 @@ fn page_menu() -> gio::Menu {
 }
 
 fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
-    gtk::Button::builder().icon_name(icon).tooltip_text(tooltip).action_name(action).build()
+    gtk::Button::builder()
+        .icon_name(icon)
+        .tooltip_text(tooltip)
+        .action_name(action)
+        .build()
 }
 
 impl Win {
@@ -222,7 +249,12 @@ impl Win {
             .dropdown_tooltip("Scan options")
             .build();
         scan_button.add_css_class("suggested-action");
-        let stop_button = gtk::Button::builder().label("_Stop").use_underline(true).action_name("win.stop").visible(false).build();
+        let stop_button = gtk::Button::builder()
+            .label("_Stop")
+            .use_underline(true)
+            .action_name("win.stop")
+            .visible(false)
+            .build();
         stop_button.add_css_class("destructive-action");
         header.pack_start(&scan_button);
         header.pack_start(&stop_button);
@@ -238,9 +270,16 @@ impl Win {
         // States.
         let stack = gtk::Stack::new();
         stack.set_transition_type(gtk::StackTransitionType::Crossfade);
-        let spinner = gtk::Spinner::builder().spinning(true).width_request(32).height_request(32).build();
+        let spinner = gtk::Spinner::builder()
+            .spinning(true)
+            .width_request(32)
+            .height_request(32)
+            .build();
         stack.add_named(
-            &adw::StatusPage::builder().title("Searching for Scanners…").child(&spinner).build(),
+            &adw::StatusPage::builder()
+                .title("Searching for Scanners…")
+                .child(&spinner)
+                .build(),
             Some("searching"),
         );
         let refresh = gtk::Button::builder()
@@ -259,7 +298,10 @@ impl Win {
         stack.add_named(&none_page, Some("none"));
 
         let device_list = gtk::StringList::new(&[]);
-        let device_drop = gtk::DropDown::builder().model(&device_list).halign(gtk::Align::Center).build();
+        let device_drop = gtk::DropDown::builder()
+            .model(&device_list)
+            .halign(gtk::Align::Center)
+            .build();
         device_drop.update_property(&[gtk::accessible::Property::Label("Scanner")]);
         let big_scan = gtk::Button::builder()
             .label("_Scan")
@@ -290,9 +332,21 @@ impl Win {
             .child(&page_list)
             .width_request(150)
             .build();
-        let picture = gtk::Picture::builder().content_fit(gtk::ContentFit::Contain).can_shrink(true).build();
-        let crop_area = gtk::DrawingArea::builder().hexpand(true).vexpand(true).build();
-        let overlay = gtk::Overlay::builder().child(&picture).margin_top(12).margin_bottom(12).margin_start(12).margin_end(12).build();
+        let picture = gtk::Picture::builder()
+            .content_fit(gtk::ContentFit::Contain)
+            .can_shrink(true)
+            .build();
+        let crop_area = gtk::DrawingArea::builder()
+            .hexpand(true)
+            .vexpand(true)
+            .build();
+        let overlay = gtk::Overlay::builder()
+            .child(&picture)
+            .margin_top(12)
+            .margin_bottom(12)
+            .margin_start(12)
+            .margin_end(12)
+            .build();
         overlay.add_overlay(&crop_area);
         let view = gtk::Box::new(gtk::Orientation::Vertical, 0);
         view.add_css_class("page-view");
@@ -307,7 +361,10 @@ impl Win {
             .build();
         stack.add_named(&paned, Some("document"));
 
-        let progress = gtk::ProgressBar::builder().valign(gtk::Align::Start).visible(false).build();
+        let progress = gtk::ProgressBar::builder()
+            .valign(gtk::Align::Start)
+            .visible(false)
+            .build();
         progress.add_css_class("osd");
         let content_overlay = gtk::Overlay::builder().child(&stack).build();
         content_overlay.add_overlay(&progress);
@@ -316,8 +373,16 @@ impl Win {
 
         // Page action bar.
         let action_bar = gtk::ActionBar::new();
-        action_bar.pack_start(&icon_button("object-rotate-left-symbolic", "Rotate Left", "win.rotate-left"));
-        action_bar.pack_start(&icon_button("object-rotate-right-symbolic", "Rotate Right", "win.rotate-right"));
+        action_bar.pack_start(&icon_button(
+            "object-rotate-left-symbolic",
+            "Rotate Left",
+            "win.rotate-left",
+        ));
+        action_bar.pack_start(&icon_button(
+            "object-rotate-right-symbolic",
+            "Rotate Right",
+            "win.rotate-right",
+        ));
         let crop_button = gtk::MenuButton::builder()
             .icon_name("crop-symbolic")
             .tooltip_text("Crop")
@@ -325,9 +390,21 @@ impl Win {
             .direction(gtk::ArrowType::Up)
             .build();
         action_bar.pack_start(&crop_button);
-        action_bar.pack_start(&icon_button("go-previous-symbolic", "Move Left", "win.move-left"));
-        action_bar.pack_start(&icon_button("go-next-symbolic", "Move Right", "win.move-right"));
-        action_bar.pack_end(&icon_button("user-trash-symbolic", "Delete Page", "win.delete"));
+        action_bar.pack_start(&icon_button(
+            "go-previous-symbolic",
+            "Move Left",
+            "win.move-left",
+        ));
+        action_bar.pack_start(&icon_button(
+            "go-next-symbolic",
+            "Move Right",
+            "win.move-right",
+        ));
+        action_bar.pack_end(&icon_button(
+            "user-trash-symbolic",
+            "Delete Page",
+            "win.delete",
+        ));
         action_bar.set_revealed(false);
 
         let toolbar = adw::ToolbarView::new();
@@ -429,10 +506,18 @@ impl Win {
         add("reorder", |w| w.reorder_dialog());
         add("preferences", |w| w.preferences());
         add("shortcuts", |w| w.shortcuts());
-        add("rotate-left", |w| w.page_op(|d, i| d.rotate(i, false).then_some(i)));
-        add("rotate-right", |w| w.page_op(|d, i| d.rotate(i, true).then_some(i)));
-        add("move-left", |w| w.page_op(|d, i| if i > 0 { d.move_page(i, i - 1) } else { None }));
-        add("move-right", |w| w.page_op(|d, i| d.move_page(i, i + 1).filter(|&n| n != i)));
+        add("rotate-left", |w| {
+            w.page_op(|d, i| d.rotate(i, false).then_some(i))
+        });
+        add("rotate-right", |w| {
+            w.page_op(|d, i| d.rotate(i, true).then_some(i))
+        });
+        add("move-left", |w| {
+            w.page_op(|d, i| if i > 0 { d.move_page(i, i - 1) } else { None })
+        });
+        add("move-right", |w| {
+            w.page_op(|d, i| d.move_page(i, i + 1).filter(|&n| n != i))
+        });
         add("delete", |w| {
             w.page_op(|d, i| {
                 d.remove(i)?;
@@ -447,10 +532,16 @@ impl Win {
             })
         });
 
-        let crop = gio::SimpleAction::new_stateful("crop", Some(glib::VariantTy::STRING), &"none".to_variant());
+        let crop = gio::SimpleAction::new_stateful(
+            "crop",
+            Some(glib::VariantTy::STRING),
+            &"none".to_variant(),
+        );
         let w = self.weak();
         crop.connect_activate(move |a, param| {
-            let (Some(w), Some(kind)) = (w.upgrade(), param.and_then(|p| p.get::<String>())) else { return };
+            let (Some(w), Some(kind)) = (w.upgrade(), param.and_then(|p| p.get::<String>())) else {
+                return;
+            };
             a.set_state(&kind.to_variant());
             w.set_crop(&kind);
         });
@@ -459,11 +550,18 @@ impl Win {
         let doc_type = gio::SimpleAction::new_stateful(
             "document-type",
             Some(glib::VariantTy::STRING),
-            &(if self.document_type_text() { "text" } else { "photo" }).to_variant(),
+            &(if self.document_type_text() {
+                "text"
+            } else {
+                "photo"
+            })
+            .to_variant(),
         );
         let w = self.weak();
         doc_type.connect_activate(move |a, param| {
-            let (Some(w), Some(kind)) = (w.upgrade(), param.and_then(|p| p.get::<String>())) else { return };
+            let (Some(w), Some(kind)) = (w.upgrade(), param.and_then(|p| p.get::<String>())) else {
+                return;
+            };
             a.set_state(&kind.to_variant());
             w.prefs.set("document-type", kind);
         });
@@ -471,7 +569,9 @@ impl Win {
     }
 
     fn action(&self, name: &str) -> Option<gio::SimpleAction> {
-        self.window.lookup_action(name).and_downcast::<gio::SimpleAction>()
+        self.window
+            .lookup_action(name)
+            .and_downcast::<gio::SimpleAction>()
     }
 
     fn set_enabled(&self, name: &str, on: bool) {
@@ -507,8 +607,13 @@ impl Win {
             let Some(p) = st.doc.page(i) else { return };
             let rect = match kind {
                 "none" => None,
-                "custom" => Some(p.crop.unwrap_or_else(|| crop::custom_rect(p.width, p.height))),
-                id => crop::paper(id).map(|paper| crop::preset_rect(paper, p.width, p.height, p.dpi)),
+                "custom" => Some(
+                    p.crop
+                        .unwrap_or_else(|| crop::custom_rect(p.width, p.height)),
+                ),
+                id => {
+                    crop::paper(id).map(|paper| crop::preset_rect(paper, p.width, p.height, p.dpi))
+                }
             };
             st.doc.set_crop(i, rect);
         }
@@ -545,8 +650,14 @@ impl Win {
 
     fn device_label(&self) -> String {
         let st = self.state.borrow();
-        let Some(name) = &st.device else { return String::new() };
-        st.devices.iter().find(|d| &d.name == name).map(|d| d.label()).unwrap_or_else(|| name.clone())
+        let Some(name) = &st.device else {
+            return String::new();
+        };
+        st.devices
+            .iter()
+            .find(|d| &d.name == name)
+            .map(|d| d.label())
+            .unwrap_or_else(|| name.clone())
     }
 
     fn handle_event(self: &Rc<Self>, ev: Event) {
@@ -564,11 +675,24 @@ impl Win {
                     st.device.clone()
                 };
                 self.updating.set(true);
-                let labels: Vec<String> = self.state.borrow().devices.iter().map(|d| d.label()).collect();
+                let labels: Vec<String> = self
+                    .state
+                    .borrow()
+                    .devices
+                    .iter()
+                    .map(|d| d.label())
+                    .collect();
                 let labels: Vec<&str> = labels.iter().map(|s| s.as_str()).collect();
-                self.device_list.splice(0, self.device_list.n_items(), &labels);
+                self.device_list
+                    .splice(0, self.device_list.n_items(), &labels);
                 self.updating.set(false);
-                let names: Vec<String> = self.state.borrow().devices.iter().map(|d| d.name.clone()).collect();
+                let names: Vec<String> = self
+                    .state
+                    .borrow()
+                    .devices
+                    .iter()
+                    .map(|d| d.name.clone())
+                    .collect();
                 let saved = self.prefs.get("selected-device", String::new());
                 let wanted = self.wanted_device.borrow_mut().take();
                 let pick = [wanted, current, Some(saved)]
@@ -638,8 +762,15 @@ impl Win {
     fn scan_request(&self, kind: ScanKind) -> Option<ScanRequest> {
         let device = self.state.borrow().device.clone()?;
         let text = self.document_type_text();
-        let dpi = if text { self.prefs.get("text-dpi", 150) } else { self.prefs.get("photo-dpi", 300) };
-        let (pw, ph) = (self.prefs.get("paper-width", 0), self.prefs.get("paper-height", 0));
+        let dpi = if text {
+            self.prefs.get("text-dpi", 150)
+        } else {
+            self.prefs.get("photo-dpi", 300)
+        };
+        let (pw, ph) = (
+            self.prefs.get("paper-width", 0),
+            self.prefs.get("paper-height", 0),
+        );
         let private = self.private.borrow();
         Some(ScanRequest {
             device,
@@ -702,7 +833,10 @@ impl Win {
             b.append(&label);
             self.page_list.append(&b);
         }
-        if let Some(row) = st.selected.and_then(|i| self.page_list.row_at_index(i as i32)) {
+        if let Some(row) = st
+            .selected
+            .and_then(|i| self.page_list.row_at_index(i as i32))
+        {
             self.page_list.select_row(Some(&row));
         }
         drop(st);
@@ -721,7 +855,11 @@ impl Win {
         };
         drop(st);
         if let Some(a) = self.action("crop") {
-            if a.state().and_then(|s| s.get::<String>()).as_deref().is_some_and(|s| (s == "none") != (kind == "none")) {
+            if a.state()
+                .and_then(|s| s.get::<String>())
+                .as_deref()
+                .is_some_and(|s| (s == "none") != (kind == "none"))
+            {
                 a.set_state(&kind.to_variant());
             }
         }
@@ -730,7 +868,10 @@ impl Win {
 
     /// Displayed image rectangle (x, y, scale) inside the crop area.
     fn view_geometry(&self, page: &Page) -> (f64, f64, f64) {
-        let (aw, ah) = (self.crop_area.width() as f64, self.crop_area.height() as f64);
+        let (aw, ah) = (
+            self.crop_area.width() as f64,
+            self.crop_area.height() as f64,
+        );
         let scale = (aw / page.width as f64).min(ah / page.height as f64);
         let (dw, dh) = (page.width as f64 * scale, page.height as f64 * scale);
         ((aw - dw) / 2.0, (ah - dh) / 2.0, scale)
@@ -742,10 +883,17 @@ impl Win {
     }
 
     fn draw_crop(&self, cr: &cairo::Context) {
-        let Some(page) = self.selected_page() else { return };
+        let Some(page) = self.selected_page() else {
+            return;
+        };
         let Some(r) = page.crop else { return };
         let (ox, oy, s) = self.view_geometry(&page);
-        let (x, y, w, h) = (ox + r.x as f64 * s, oy + r.y as f64 * s, r.width as f64 * s, r.height as f64 * s);
+        let (x, y, w, h) = (
+            ox + r.x as f64 * s,
+            oy + r.y as f64 * s,
+            r.width as f64 * s,
+            r.height as f64 * s,
+        );
         // Darken outside the crop.
         cr.set_source_rgba(0.0, 0.0, 0.0, 0.45);
         cr.rectangle(ox, oy, page.width as f64 * s, page.height as f64 * s);
@@ -793,12 +941,24 @@ impl Win {
         let w = self.weak();
         drag.connect_drag_update(move |_, dx, dy| {
             let Some(w) = w.upgrade() else { return };
-            let Some(page) = w.selected_page() else { return };
+            let Some(page) = w.selected_page() else {
+                return;
+            };
             let (_, _, s) = w.view_geometry(&page);
             let mut st = w.state.borrow_mut();
-            let (Some((start, handle)), Some(i)) = (st.drag, st.selected) else { return };
+            let (Some((start, handle)), Some(i)) = (st.drag, st.selected) else {
+                return;
+            };
             let min = (20.0 / s.max(0.01)).ceil() as u32;
-            let r = crop::drag(start, handle, dx / s, dy / s, page.width, page.height, min.max(1));
+            let r = crop::drag(
+                start,
+                handle,
+                dx / s,
+                dy / s,
+                page.width,
+                page.height,
+                min.max(1),
+            );
             st.doc.set_crop(i, Some(r));
             drop(st);
             w.crop_area.queue_draw();
@@ -825,7 +985,9 @@ impl Win {
         popover.set_parent(overlay);
         popover.set_has_arrow(false);
         popover.set_halign(gtk::Align::Start);
-        let click = gtk::GestureClick::builder().button(gdk::BUTTON_SECONDARY).build();
+        let click = gtk::GestureClick::builder()
+            .button(gdk::BUTTON_SECONDARY)
+            .build();
         let w = self.weak();
         click.connect_pressed(move |_, _, x, y| {
             let Some(w) = w.upgrade() else { return };
@@ -843,7 +1005,9 @@ impl Win {
             if w.updating.get() {
                 return;
             }
-            let Ok(mut st) = w.state.try_borrow_mut() else { return };
+            let Ok(mut st) = w.state.try_borrow_mut() else {
+                return;
+            };
             st.selected = row.map(|r| r.index() as usize);
             drop(st);
             w.show_selected();
@@ -856,7 +1020,12 @@ impl Win {
             if w.updating.get() {
                 return;
             }
-            let name = w.state.borrow().devices.get(d.selected() as usize).map(|d| d.name.clone());
+            let name = w
+                .state
+                .borrow()
+                .devices
+                .get(d.selected() as usize)
+                .map(|d| d.name.clone());
             if let Some(n) = name {
                 w.select_device(&n);
             }
@@ -864,7 +1033,9 @@ impl Win {
 
         let w = self.weak();
         self.window.connect_close_request(move |window| {
-            let Some(w) = w.upgrade() else { return glib::Propagation::Proceed };
+            let Some(w) = w.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
             if !w.state.borrow().doc.is_dirty() {
                 return glib::Propagation::Proceed;
             }
@@ -872,7 +1043,11 @@ impl Win {
                 Some("Save current document?"),
                 Some("Documents that are not saved will be permanently lost."),
             );
-            d.add_responses(&[("cancel", "_Cancel"), ("discard", "_Discard"), ("save", "_Save")]);
+            d.add_responses(&[
+                ("cancel", "_Cancel"),
+                ("discard", "_Discard"),
+                ("save", "_Save"),
+            ]);
             d.set_response_appearance("discard", adw::ResponseAppearance::Destructive);
             d.set_response_appearance("save", adw::ResponseAppearance::Suggested);
             d.set_default_response(Some("save"));
@@ -916,15 +1091,22 @@ impl Win {
         let unavailable = st.unavailable.clone();
         let sel = st.selected.unwrap_or(0);
         let len = st.doc.len();
-        let has_crop = st.selected.and_then(|i| st.doc.page(i)).is_some_and(|p| p.crop.is_some());
+        let has_crop = st
+            .selected
+            .and_then(|i| st.doc.page(i))
+            .is_some_and(|p| p.crop.is_some());
         let n_devices = st.devices.len();
-        let device_index = st.device.as_ref().and_then(|n| st.devices.iter().position(|d| &d.name == n));
+        let device_index = st
+            .device
+            .as_ref()
+            .and_then(|n| st.devices.iter().position(|d| &d.name == n));
         let dirty = st.doc.is_dirty();
         let subtitle = scanning.then(|| format!("Scanning page {}…", st.scan_page + 1));
         drop(st);
 
         if let Some(e) = unavailable {
-            self.none_page.set_description(Some(&format!("Scanning is unavailable: {e}")));
+            self.none_page
+                .set_description(Some(&format!("Scanning is unavailable: {e}")));
         }
         let idle = !scanning;
         for a in ["scan-single", "scan-feeder", "scan-batch"] {
@@ -953,8 +1135,10 @@ impl Win {
             }
         }
         self.updating.set(false);
-        self.title.set_subtitle(&subtitle.unwrap_or_else(|| self.device_label()));
-        self.window.set_title(Some(if dirty { "*Document Scanner" } else { APP_NAME }));
+        self.title
+            .set_subtitle(&subtitle.unwrap_or_else(|| self.device_label()));
+        self.window
+            .set_title(Some(if dirty { "*Document Scanner" } else { APP_NAME }));
     }
 
     // ---- document operations --------------------------------------------
@@ -1042,7 +1226,9 @@ impl Win {
         op.set_n_pages(pages.len() as i32);
         op.set_job_name("Scanned Document");
         op.connect_draw_page(move |_, ctx, n| {
-            let Some(page) = pages.get(n as usize).map(|p| p.cropped()) else { return };
+            let Some(page) = pages.get(n as usize).map(|p| p.cropped()) else {
+                return;
+            };
             let Some(surf) = surface(&page) else { return };
             let cr = ctx.cairo_context();
             let s = (ctx.width() / page.width as f64).min(ctx.height() / page.height as f64);
@@ -1059,7 +1245,11 @@ impl Win {
     fn save_folder(&self) -> Option<gio::File> {
         let dir = self.prefs.get("save-directory", String::new());
         if !dir.is_empty() {
-            let f = if dir.contains("://") { gio::File::for_uri(&dir) } else { gio::File::for_path(&dir) };
+            let f = if dir.contains("://") {
+                gio::File::for_uri(&dir)
+            } else {
+                gio::File::for_path(&dir)
+            };
             if f.query_exists(None::<&gio::Cancellable>) {
                 return Some(f);
             }
@@ -1074,11 +1264,15 @@ impl Win {
         if self.state.borrow().doc.is_empty() {
             return;
         }
-        let default = Format::from_mime(&self.prefs.get("save-format", "application/pdf".to_string()))
-            .unwrap_or(Format::Pdf);
+        let default =
+            Format::from_mime(&self.prefs.get("save-format", "application/pdf".to_string()))
+                .unwrap_or(Format::Pdf);
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         let mut default_filter = None;
-        for f in [default].into_iter().chain(Format::ALL.into_iter().filter(|f| *f != default)) {
+        for f in [default]
+            .into_iter()
+            .chain(Format::ALL.into_iter().filter(|f| *f != default))
+        {
             let filter = gtk::FileFilter::new();
             filter.set_name(Some(f.label()));
             filter.add_mime_type(f.mime());
@@ -1100,7 +1294,9 @@ impl Win {
         let w = self.weak();
         let window = self.window.clone();
         glib::spawn_future_local(async move {
-            let Ok(file) = dialog.save_future(Some(&window)).await else { return };
+            let Ok(file) = dialog.save_future(Some(&window)).await else {
+                return;
+            };
             let Some(path) = file.path() else { return };
             let Some(w) = w.upgrade() else { return };
             w.write_document(path, default, close_after).await;
@@ -1119,10 +1315,14 @@ impl Win {
             Ok(files) => {
                 self.state.borrow_mut().doc.mark_saved();
                 if let Some(dir) = path.parent() {
-                    self.prefs.set("save-directory", gio::File::for_path(dir).uri().to_string());
+                    self.prefs
+                        .set("save-directory", gio::File::for_path(dir).uri().to_string());
                 }
                 self.prefs.set("save-format", format.mime().to_string());
-                let name = files.first().and_then(|f| f.file_name()).map(|n| n.to_string_lossy().into_owned());
+                let name = files
+                    .first()
+                    .and_then(|f| f.file_name())
+                    .map(|n| n.to_string_lossy().into_owned());
                 self.toast(&match (files.len(), name) {
                     (1, Some(n)) => format!("Saved “{n}”"),
                     (n, _) => format!("Saved {n} files"),
@@ -1158,9 +1358,11 @@ impl Win {
         }
         let w = self.weak();
         glib::spawn_future_local(async move {
-            let res = gio::spawn_blocking(move || crate::postproc::run(&pp, format.mime(), &files, &glib::home_dir()))
-                .await
-                .unwrap_or_else(|_| Err("The post-processing script crashed".into()));
+            let res = gio::spawn_blocking(move || {
+                crate::postproc::run(&pp, format.mime(), &files, &glib::home_dir())
+            })
+            .await
+            .unwrap_or_else(|_| Err("The post-processing script crashed".into()));
             if let (Some(w), Err(e)) = (w.upgrade(), res) {
                 w.toast(&e);
             }
@@ -1174,7 +1376,9 @@ impl Win {
         if pages.is_empty() {
             return;
         }
-        let format = Format::from_mime(&self.prefs.get("save-format", "application/pdf".to_string())).unwrap_or(Format::Pdf);
+        let format =
+            Format::from_mime(&self.prefs.get("save-format", "application/pdf".to_string()))
+                .unwrap_or(Format::Pdf);
         let quality = self.prefs.get("jpeg-quality", 75).clamp(0, 100) as u8;
         let w = self.weak();
         glib::spawn_future_local(async move {
@@ -1198,14 +1402,26 @@ impl Win {
         let _ = self.private.borrow().save_to(&Private::path());
     }
 
-    fn resolution_row(self: &Rc<Self>, title: &str, key: &'static str, default: i32) -> adw::ComboRow {
+    fn resolution_row(
+        self: &Rc<Self>,
+        title: &str,
+        key: &'static str,
+        default: i32,
+    ) -> adw::ComboRow {
         let choices = {
             let st = self.state.borrow();
-            if st.caps.resolutions.is_empty() { DEFAULT_DPI.to_vec() } else { st.caps.resolutions.clone() }
+            if st.caps.resolutions.is_empty() {
+                DEFAULT_DPI.to_vec()
+            } else {
+                st.caps.resolutions.clone()
+            }
         };
         let labels: Vec<String> = choices.iter().map(|d| format!("{d} dpi")).collect();
         let labels: Vec<&str> = labels.iter().map(|s| s.as_str()).collect();
-        let row = adw::ComboRow::builder().title(title).model(&gtk::StringList::new(&labels)).build();
+        let row = adw::ComboRow::builder()
+            .title(title)
+            .model(&gtk::StringList::new(&labels))
+            .build();
         let current = self.prefs.get(key, default);
         let nearest = crate::options::nearest_resolution(&choices, current);
         if let Some(i) = choices.iter().position(|&d| d == nearest) {
@@ -1220,7 +1436,13 @@ impl Win {
         row
     }
 
-    fn slider_row(self: &Rc<Self>, title: &str, key: &'static str, min: f64, max: f64) -> adw::ActionRow {
+    fn slider_row(
+        self: &Rc<Self>,
+        title: &str,
+        key: &'static str,
+        min: f64,
+        max: f64,
+    ) -> adw::ActionRow {
         let scale = gtk::Scale::with_range(gtk::Orientation::Horizontal, min, max, 1.0);
         scale.set_value(self.prefs.get(key, 0) as f64);
         scale.set_width_request(200);
@@ -1248,7 +1470,10 @@ impl Win {
         let (names, labels, current, sources) = {
             let st = self.state.borrow();
             (
-                st.devices.iter().map(|d| d.name.clone()).collect::<Vec<_>>(),
+                st.devices
+                    .iter()
+                    .map(|d| d.name.clone())
+                    .collect::<Vec<_>>(),
                 st.devices.iter().map(|d| d.label()).collect::<Vec<_>>(),
                 st.device.clone(),
                 st.caps.sources.clone(),
@@ -1279,7 +1504,10 @@ impl Win {
             source_labels.push(saved.clone());
         }
         let refs: Vec<&str> = source_labels.iter().map(|s| s.as_str()).collect();
-        let source_row = adw::ComboRow::builder().title("Source").model(&gtk::StringList::new(&refs)).build();
+        let source_row = adw::ComboRow::builder()
+            .title("Source")
+            .model(&gtk::StringList::new(&refs))
+            .build();
         if let Some(i) = source_labels.iter().skip(1).position(|s| *s == saved) {
             source_row.set_selected(i as u32 + 1);
         }
@@ -1287,7 +1515,11 @@ impl Win {
         source_row.connect_selected_notify(move |r| {
             let Some(w) = w.upgrade() else { return };
             let i = r.selected() as usize;
-            w.private.borrow_mut().source = if i == 0 { String::new() } else { source_labels[i].clone() };
+            w.private.borrow_mut().source = if i == 0 {
+                String::new()
+            } else {
+                source_labels[i].clone()
+            };
             w.save_private();
         });
         scanning.add(&source_row);
@@ -1304,7 +1536,8 @@ impl Win {
         let w = self.weak();
         color_row.connect_selected_notify(move |r| {
             let Some(w) = w.upgrade() else { return };
-            w.private.borrow_mut().color_mode = ColorChoice::ALL[r.selected() as usize % ColorChoice::ALL.len()];
+            w.private.borrow_mut().color_mode =
+                ColorChoice::ALL[r.selected() as usize % ColorChoice::ALL.len()];
             w.save_private();
         });
         scanning.add(&color_row);
@@ -1333,7 +1566,10 @@ impl Win {
             .title("Page Size")
             .model(&gtk::StringList::new(&paper_labels))
             .build();
-        let cur = crop::paper_for_size(self.prefs.get("paper-width", 0), self.prefs.get("paper-height", 0));
+        let cur = crop::paper_for_size(
+            self.prefs.get("paper-width", 0),
+            self.prefs.get("paper-height", 0),
+        );
         paper_row.set_selected(cur.map_or(0, |i| i as u32 + 1));
         let w = self.weak();
         paper_row.connect_selected_notify(move |r| {
@@ -1360,7 +1596,8 @@ impl Win {
         let w = self.weak();
         delay.connect_value_notify(move |s| {
             if let Some(w) = w.upgrade() {
-                w.prefs.set("page-delay", (s.value() * 1000.0).round() as i32);
+                w.prefs
+                    .set("page-delay", (s.value() * 1000.0).round() as i32);
             }
         });
         scanning.add(&delay);
@@ -1385,7 +1622,10 @@ impl Win {
             )
             .build();
         let pp = self.postproc();
-        let enabled = adw::SwitchRow::builder().title("Enable Post-processing").active(pp.enabled).build();
+        let enabled = adw::SwitchRow::builder()
+            .title("Enable Post-processing")
+            .active(pp.enabled)
+            .build();
         let w = self.weak();
         enabled.connect_active_notify(move |r| {
             if let Some(w) = w.upgrade() {
@@ -1394,7 +1634,11 @@ impl Win {
         });
         group.add(&enabled);
 
-        let script = adw::EntryRow::builder().title("Script").text(&pp.script).show_apply_button(true).build();
+        let script = adw::EntryRow::builder()
+            .title("Script")
+            .text(&pp.script)
+            .show_apply_button(true)
+            .build();
         let pick = gtk::Button::builder()
             .icon_name("document-open-symbolic")
             .tooltip_text("Choose Script…")
@@ -1412,12 +1656,17 @@ impl Win {
         let entry = script.clone();
         pick.connect_clicked(move |b| {
             let Some(w) = w.upgrade() else { return };
-            let dialog = gtk::FileDialog::builder().title("Choose Script").modal(true).build();
+            let dialog = gtk::FileDialog::builder()
+                .title("Choose Script")
+                .modal(true)
+                .build();
             let parent = b.root().and_downcast::<gtk::Window>();
             let entry = entry.clone();
             let w = Rc::downgrade(&w);
             dialog.open(parent.as_ref(), gio::Cancellable::NONE, move |res| {
-                let (Some(w), Ok(file)) = (w.upgrade(), res) else { return };
+                let (Some(w), Ok(file)) = (w.upgrade(), res) else {
+                    return;
+                };
                 if let Some(path) = file.path() {
                     let s = path.to_string_lossy().into_owned();
                     entry.set_text(&s);
@@ -1458,8 +1707,15 @@ impl Win {
             }
         });
         group.add(&keep);
-        for r in [script.upcast_ref::<gtk::Widget>(), args.upcast_ref(), keep.upcast_ref()] {
-            enabled.bind_property("active", r, "sensitive").sync_create().build();
+        for r in [
+            script.upcast_ref::<gtk::Widget>(),
+            args.upcast_ref(),
+            keep.upcast_ref(),
+        ] {
+            enabled
+                .bind_property("active", r, "sensitive")
+                .sync_create()
+                .build();
         }
         group
     }

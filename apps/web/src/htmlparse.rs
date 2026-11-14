@@ -36,13 +36,41 @@ const VOID: &[&str] = &[
     "track", "wbr", "keygen",
 ];
 
-const RAW_TEXT: &[&str] = &["script", "style", "textarea", "title", "xmp", "noscript", "template"];
+const RAW_TEXT: &[&str] = &[
+    "script", "style", "textarea", "title", "xmp", "noscript", "template",
+];
 
 /// Start tags that close an open `p`.
 const CLOSES_P: &[&str] = &[
-    "address", "article", "aside", "blockquote", "details", "div", "dl", "fieldset", "figcaption",
-    "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hr", "main", "menu",
-    "nav", "ol", "p", "pre", "section", "table", "ul",
+    "address",
+    "article",
+    "aside",
+    "blockquote",
+    "details",
+    "div",
+    "dl",
+    "fieldset",
+    "figcaption",
+    "figure",
+    "footer",
+    "form",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "header",
+    "hr",
+    "main",
+    "menu",
+    "nav",
+    "ol",
+    "p",
+    "pre",
+    "section",
+    "table",
+    "ul",
 ];
 
 impl Document {
@@ -131,7 +159,8 @@ impl Document {
         }
         match &self.nodes[id].kind {
             NodeKind::Text(t) => out.push_str(t),
-            NodeKind::Element { tag, .. } if RAW_TEXT.contains(&tag.as_str()) && tag != "title" => {}
+            NodeKind::Element { tag, .. } if RAW_TEXT.contains(&tag.as_str()) && tag != "title" => {
+            }
             _ => {
                 for &c in &self.nodes[id].children {
                     self.collect_text(c, out, skip);
@@ -179,7 +208,13 @@ impl Builder {
     }
 
     fn open_index(&self, name: &str, stop_at: &[&str]) -> Option<usize> {
-        for (i, &n) in self.stack.iter().enumerate().rev().take(self.stack.len() - 1) {
+        for (i, &n) in self
+            .stack
+            .iter()
+            .enumerate()
+            .rev()
+            .take(self.stack.len() - 1)
+        {
             let tag = self.doc.tag(n).unwrap_or("");
             if tag == name {
                 return Some(i);
@@ -374,7 +409,10 @@ fn read_attrs(html: &str, start: usize) -> (Vec<(String, String)>, bool, usize) 
             match bytes.get(j) {
                 Some(&q) if q == b'"' || q == b'\'' => {
                     let vs = j + 1;
-                    let ve = html[vs..].find(q as char).map(|p| vs + p).unwrap_or(bytes.len());
+                    let ve = html[vs..]
+                        .find(q as char)
+                        .map(|p| vs + p)
+                        .unwrap_or(bytes.len());
                     value = decode_entities(&html[vs..ve]);
                     j = (ve + 1).min(bytes.len());
                 }
@@ -539,7 +577,10 @@ mod tests {
 
     #[test]
     fn entities() {
-        assert_eq!(decode_entities("a&nbsp;b &mdash; &#8212; &#x2014;"), "a\u{a0}b — — —");
+        assert_eq!(
+            decode_entities("a&nbsp;b &mdash; &#8212; &#x2014;"),
+            "a\u{a0}b — — —"
+        );
         assert_eq!(decode_entities("AT&T & co"), "AT&T & co");
         assert_eq!(decode_entities("&amp"), "&");
     }

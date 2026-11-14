@@ -14,7 +14,9 @@ pub struct Bookmark {
 impl Bookmark {
     /// The label to display: the custom one, else the last path segment.
     pub fn display_label(&self) -> String {
-        self.label.clone().unwrap_or_else(|| default_label(&self.uri))
+        self.label
+            .clone()
+            .unwrap_or_else(|| default_label(&self.uri))
     }
 }
 
@@ -67,7 +69,9 @@ pub fn serialize(bookmarks: &[Bookmark]) -> String {
 
 /// Path of the bookmarks file.
 pub fn file_path() -> std::path::PathBuf {
-    gtk::glib::user_config_dir().join("gtk-3.0").join("bookmarks")
+    gtk::glib::user_config_dir()
+        .join("gtk-3.0")
+        .join("bookmarks")
 }
 
 pub fn load() -> Vec<Bookmark> {

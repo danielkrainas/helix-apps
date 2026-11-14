@@ -23,13 +23,22 @@ pub struct ViewState {
 
 impl Default for ViewState {
     fn default() -> Self {
-        ViewState { image: (0.0, 0.0), viewport: (0.0, 0.0), rotation: 0, zoom: None, offset: (0.0, 0.0) }
+        ViewState {
+            image: (0.0, 0.0),
+            viewport: (0.0, 0.0),
+            rotation: 0,
+            zoom: None,
+            offset: (0.0, 0.0),
+        }
     }
 }
 
 impl ViewState {
     pub fn new(image_w: f64, image_h: f64) -> Self {
-        ViewState { image: (image_w, image_h), ..Default::default() }
+        ViewState {
+            image: (image_w, image_h),
+            ..Default::default()
+        }
     }
 
     /// Image size after rotation.
@@ -87,7 +96,10 @@ impl ViewState {
             let max = ((scaled - view) / 2.0).max(0.0);
             off.clamp(-max, max)
         };
-        self.offset = (clamp(self.offset.0, sw, self.viewport.0), clamp(self.offset.1, sh, self.viewport.1));
+        self.offset = (
+            clamp(self.offset.0, sw, self.viewport.0),
+            clamp(self.offset.1, sh, self.viewport.1),
+        );
     }
 
     pub fn pan_to(&mut self, offset: (f64, f64)) {
@@ -120,7 +132,11 @@ impl ViewState {
         // Anchor relative to the image centre, in unscaled image units.
         let px = (ax - cx - self.offset.0) / old;
         let py = (ay - cy - self.offset.1) / old;
-        self.zoom = if (new - fit).abs() < EPS { None } else { Some(new) };
+        self.zoom = if (new - fit).abs() < EPS {
+            None
+        } else {
+            Some(new)
+        };
         self.offset = (ax - cx - px * new, ay - cy - py * new);
         self.clamp_offset();
     }
@@ -130,13 +146,17 @@ impl ViewState {
     pub fn step_in(&self) -> f64 {
         let cur = self.zoom();
         let next = cur * ZOOM_STEP;
-        snap_levels(cur, next, &[self.fit_zoom(), 1.0]).fold(next, f64::min).min(MAX_ZOOM)
+        snap_levels(cur, next, &[self.fit_zoom(), 1.0])
+            .fold(next, f64::min)
+            .min(MAX_ZOOM)
     }
 
     pub fn step_out(&self) -> f64 {
         let cur = self.zoom();
         let next = cur / ZOOM_STEP;
-        snap_levels(next, cur, &[self.fit_zoom(), 1.0]).fold(next, f64::max).max(self.min_zoom())
+        snap_levels(next, cur, &[self.fit_zoom(), 1.0])
+            .fold(next, f64::max)
+            .max(self.min_zoom())
     }
 
     pub fn zoom_in(&mut self, anchor: Option<(f64, f64)>) {
@@ -160,14 +180,22 @@ impl ViewState {
     pub fn image_rect(&self) -> (f64, f64, f64, f64) {
         let (sw, sh) = self.scaled_size();
         let (cx, cy) = self.center();
-        (cx + self.offset.0 - sw / 2.0, cy + self.offset.1 - sh / 2.0, sw, sh)
+        (
+            cx + self.offset.0 - sw / 2.0,
+            cy + self.offset.1 - sh / 2.0,
+            sw,
+            sh,
+        )
     }
 }
 
 /// Snap levels strictly inside `(lo, hi)`. Zooming in takes the lowest of
 /// them (the first one crossed), zooming out the highest.
 fn snap_levels(lo: f64, hi: f64, levels: &[f64]) -> impl Iterator<Item = f64> + '_ {
-    levels.iter().copied().filter(move |l| *l > lo + EPS && *l < hi - EPS)
+    levels
+        .iter()
+        .copied()
+        .filter(move |l| *l > lo + EPS && *l < hi - EPS)
 }
 
 /// Zoom as a percentage label, e.g. `"150 %"`.
@@ -266,7 +294,7 @@ mod tests {
     #[test]
     fn zoom_keeps_anchor_fixed() {
         let mut v = view(1000.0, 1000.0, 500.0, 500.0); // fit 0.5
-        // Image point under (400, 100) at fit: image rect is (0,0,500,500).
+                                                        // Image point under (400, 100) at fit: image rect is (0,0,500,500).
         let anchor = (400.0, 100.0);
         v.zoom_to(2.0, Some(anchor));
         // That point was image pixel (800, 200); it must still be under the anchor.

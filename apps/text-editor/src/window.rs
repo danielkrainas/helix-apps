@@ -127,10 +127,19 @@ impl Window {
         }
 
         // Recent documents popover.
-        let recent_search = gtk::SearchEntry::builder().placeholder_text("Search documents").build();
+        let recent_search = gtk::SearchEntry::builder()
+            .placeholder_text("Search documents")
+            .build();
         let recent_list = gtk::ListBox::new();
         recent_list.add_css_class("navigation-sidebar");
-        recent_list.set_placeholder(Some(&gtk::Label::builder().label("No Recent Documents").margin_top(12).margin_bottom(12).css_classes(["dim-label"]).build()));
+        recent_list.set_placeholder(Some(
+            &gtk::Label::builder()
+                .label("No Recent Documents")
+                .margin_top(12)
+                .margin_bottom(12)
+                .css_classes(["dim-label"])
+                .build(),
+        ));
         let recent_scroll = gtk::ScrolledWindow::builder()
             .child(&recent_list)
             .hscrollbar_policy(gtk::PolicyType::Never)
@@ -175,14 +184,26 @@ impl Window {
         header.pack_end(&save_btn);
 
         let tab_view = adw::TabView::new();
-        let tab_bar = adw::TabBar::builder().view(&tab_view).autohide(true).build();
+        let tab_bar = adw::TabBar::builder()
+            .view(&tab_view)
+            .autohide(true)
+            .build();
         let toasts = adw::ToastOverlay::new();
         toasts.set_child(Some(&tab_view));
 
         // Status bar.
-        let goto_entry = gtk::Entry::builder().placeholder_text("Line or Line:Column").input_purpose(gtk::InputPurpose::Digits).build();
+        let goto_entry = gtk::Entry::builder()
+            .placeholder_text("Line or Line:Column")
+            .input_purpose(gtk::InputPurpose::Digits)
+            .build();
         let goto_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
-        goto_box.append(&gtk::Label::builder().label("Go to Line").css_classes(["heading"]).xalign(0.0).build());
+        goto_box.append(
+            &gtk::Label::builder()
+                .label("Go to Line")
+                .css_classes(["heading"])
+                .xalign(0.0)
+                .build(),
+        );
         goto_box.append(&goto_entry);
         let goto_popover = gtk::Popover::builder().child(&goto_box).build();
         let pos_btn = gtk::MenuButton::builder()
@@ -215,7 +236,11 @@ impl Window {
         toolbar.set_content(Some(&toasts));
         win.set_content(Some(&toolbar));
 
-        let line_ending = gio::SimpleAction::new_stateful("line-ending", Some(glib::VariantTy::STRING), &"lf".to_variant());
+        let line_ending = gio::SimpleAction::new_stateful(
+            "line-ending",
+            Some(glib::VariantTy::STRING),
+            &"lf".to_variant(),
+        );
 
         let w = Rc::new_cyclic(|this| Window {
             app: Rc::downgrade(app),
@@ -314,7 +339,9 @@ impl Window {
 
         let wk = self.this.clone();
         self.line_ending.connect_change_state(move |a, value| {
-            let (Some(w), Some(v)) = (wk.upgrade(), value) else { return };
+            let (Some(w), Some(v)) = (wk.upgrade(), value) else {
+                return;
+            };
             let Some(nick) = v.str() else { return };
             a.set_state(v);
             if let Some(d) = w.current_doc() {
@@ -334,7 +361,9 @@ impl Window {
     fn setup_signals(self: &Rc<Self>, goto_popover: &gtk::Popover) {
         let wk = self.this.clone();
         self.tab_view.connect_close_page(move |tv, page| {
-            let Some(w) = wk.upgrade() else { return glib::Propagation::Proceed };
+            let Some(w) = wk.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
             let app = w.app();
             let Some(doc) = app.doc_for_child(&page.child()) else {
                 tv.close_page_finish(page, true);
@@ -346,7 +375,10 @@ impl Window {
             }
             let page = page.clone();
             glib::spawn_future_local(async move {
-                let ok = match confirm_close(&w.win, std::slice::from_ref(&doc)).await.as_str() {
+                let ok = match confirm_close(&w.win, std::slice::from_ref(&doc))
+                    .await
+                    .as_str()
+                {
                     "save" => w.save_doc(&doc, false).await,
                     "discard" => true,
                     _ => false,
@@ -458,11 +490,15 @@ impl Window {
                 return true;
             }
             row.downcast_ref::<adw::ActionRow>()
-                .map(|r| r.title().to_lowercase().contains(&q) || r.subtitle().is_some_and(|s| s.to_lowercase().contains(&q)))
+                .map(|r| {
+                    r.title().to_lowercase().contains(&q)
+                        || r.subtitle().is_some_and(|s| s.to_lowercase().contains(&q))
+                })
                 .unwrap_or(true)
         });
         let list = self.recent_list.clone();
-        self.recent_search.connect_search_changed(move |_| list.invalidate_filter());
+        self.recent_search
+            .connect_search_changed(move |_| list.invalidate_filter());
         let wk = self.this.clone();
         self.recent_search.connect_activate(move |_| {
             let Some(w) = wk.upgrade() else { return };
@@ -490,17 +526,28 @@ impl Window {
         }
         for uri in self.app().recent.borrow().iter() {
             let file = gio::File::for_uri(uri);
-            let name = file.basename().map(|p| p.to_string_lossy().into_owned()).unwrap_or_else(|| uri.clone());
+            let name = file
+                .basename()
+                .map(|p| p.to_string_lossy().into_owned())
+                .unwrap_or_else(|| uri.clone());
             let dir = file
                 .parent()
-                .map(|p| p.path().map(|p| p.display().to_string()).unwrap_or_else(|| p.uri().to_string()))
+                .map(|p| {
+                    p.path()
+                        .map(|p| p.display().to_string())
+                        .unwrap_or_else(|| p.uri().to_string())
+                })
                 .unwrap_or_default();
             let home = glib::home_dir().display().to_string();
             let dir = match dir.strip_prefix(&home) {
                 Some(rest) => format!("~{rest}"),
                 None => dir,
             };
-            let row = adw::ActionRow::builder().title(glib::markup_escape_text(&name)).subtitle(glib::markup_escape_text(&dir)).activatable(true).build();
+            let row = adw::ActionRow::builder()
+                .title(glib::markup_escape_text(&name))
+                .subtitle(glib::markup_escape_text(&dir))
+                .activatable(true)
+                .build();
             row.set_widget_name(uri);
             self.recent_list.append(&row);
         }
@@ -515,7 +562,9 @@ impl Window {
 
     pub fn docs(&self) -> Vec<Rc<Doc>> {
         let app = self.app();
-        (0..self.tab_view.n_pages()).filter_map(|i| app.doc_for_child(&self.tab_view.nth_page(i).child())).collect()
+        (0..self.tab_view.n_pages())
+            .filter_map(|i| app.doc_for_child(&self.tab_view.nth_page(i).child()))
+            .collect()
     }
 
     pub fn add_doc(&self, id: Option<String>, select: bool) -> Rc<Doc> {
@@ -595,13 +644,21 @@ impl Window {
     }
 
     fn open_dialog(self: &Rc<Self>) {
-        let dialog = gtk::FileDialog::builder().title("Open Files").modal(true).build();
-        if let Some(dir) = self.current_doc().and_then(|d| d.file.borrow().as_ref().and_then(|f| f.parent())) {
+        let dialog = gtk::FileDialog::builder()
+            .title("Open Files")
+            .modal(true)
+            .build();
+        if let Some(dir) = self
+            .current_doc()
+            .and_then(|d| d.file.borrow().as_ref().and_then(|f| f.parent()))
+        {
             dialog.set_initial_folder(Some(&dir));
         }
         let w = self.clone();
         glib::spawn_future_local(async move {
-            let Ok(files) = dialog.open_multiple_future(Some(&w.win)).await else { return };
+            let Ok(files) = dialog.open_multiple_future(Some(&w.win)).await else {
+                return;
+            };
             for i in 0..files.n_items() {
                 if let Some(f) = files.item(i).and_downcast::<gio::File>() {
                     w.open_file(f);
@@ -611,7 +668,11 @@ impl Window {
     }
 
     async fn choose_save_file(&self, doc: &Doc) -> Option<gio::File> {
-        let dialog = gtk::FileDialog::builder().title("Save As").modal(true).initial_name(doc.title()).build();
+        let dialog = gtk::FileDialog::builder()
+            .title("Save As")
+            .modal(true)
+            .initial_name(doc.title())
+            .build();
         let current = doc.file.borrow().clone();
         match current {
             Some(f) => dialog.set_initial_file(Some(&f)),
@@ -644,7 +705,11 @@ impl Window {
                 true
             }
             Err(e) => {
-                self.toast(&format!("Could not save “{}”: {}", doc.title(), e.message()));
+                self.toast(&format!(
+                    "Could not save “{}”: {}",
+                    doc.title(),
+                    e.message()
+                ));
                 false
             }
         }
@@ -684,7 +749,8 @@ impl Window {
             Some(d) => {
                 self.title.set_title(&Self::display_title(&d));
                 self.title.set_subtitle(&d.subtitle());
-                self.win.set_title(Some(&format!("{} — Text Editor", d.title())));
+                self.win
+                    .set_title(Some(&format!("{} — Text Editor", d.title())));
             }
             None => {
                 self.title.set_title("Text Editor");
@@ -708,8 +774,13 @@ impl Window {
         self.pos_btn.set_label(&format!("Ln {l}, Col {c}"));
         let fmt = d.format.get();
         let bom = if fmt.bom { " (BOM)" } else { "" };
-        self.enc_btn.set_label(&format!("{}{bom} · {}", fmt.encoding_name(), fmt.line_ending.short_label()));
-        self.line_ending.set_state(&fmt.line_ending.nick().to_variant());
+        self.enc_btn.set_label(&format!(
+            "{}{bom} · {}",
+            fmt.encoding_name(),
+            fmt.line_ending.short_label()
+        ));
+        self.line_ending
+            .set_state(&fmt.line_ending.nick().to_variant());
     }
 
     // ------------------------------------------------------------ closing
@@ -742,7 +813,11 @@ impl Window {
             self.cleanup();
             return glib::Propagation::Proceed;
         }
-        let unsaved: Vec<Rc<Doc>> = self.docs().into_iter().filter(|d| d.is_modified()).collect();
+        let unsaved: Vec<Rc<Doc>> = self
+            .docs()
+            .into_iter()
+            .filter(|d| d.is_modified())
+            .collect();
         if unsaved.is_empty() {
             if last {
                 app.clear_session();
@@ -783,7 +858,10 @@ impl Window {
 /// `cancel`.
 async fn confirm_close(win: &adw::ApplicationWindow, docs: &[Rc<Doc>]) -> String {
     let (heading, body) = if docs.len() == 1 {
-        (format!("Save Changes to “{}”?", docs[0].title()), "Unsaved changes will be permanently lost.".to_string())
+        (
+            format!("Save Changes to “{}”?", docs[0].title()),
+            "Unsaved changes will be permanently lost.".to_string(),
+        )
     } else {
         let names: Vec<String> = docs.iter().map(|d| format!("• {}", d.title())).collect();
         (

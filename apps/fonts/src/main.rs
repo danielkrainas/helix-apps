@@ -29,7 +29,11 @@ fn main() -> glib::ExitCode {
                 }
             }
         } else if s.starts_with("file://") {
-            files.push(gtk::gio::File::for_uri(&s).path().unwrap_or_else(|| PathBuf::from(&arg)));
+            files.push(
+                gtk::gio::File::for_uri(&s)
+                    .path()
+                    .unwrap_or_else(|| PathBuf::from(&arg)),
+            );
         } else {
             files.push(PathBuf::from(arg));
         }

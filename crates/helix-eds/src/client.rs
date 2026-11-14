@@ -119,13 +119,20 @@ pub fn split_calendar_id(id: &str) -> (String, String) {
     }
 }
 
-fn proxy(conn: &Connection, dest: &str, path: &str, iface: &str) -> Result<zbus::blocking::Proxy<'static>> {
-    Ok(zbus::blocking::proxy::Builder::<zbus::blocking::Proxy<'static>>::new(conn)
-        .destination(dest.to_string())?
-        .path(path.to_string())?
-        .interface(iface.to_string())?
-        .cache_properties(zbus::proxy::CacheProperties::No)
-        .build()?)
+fn proxy(
+    conn: &Connection,
+    dest: &str,
+    path: &str,
+    iface: &str,
+) -> Result<zbus::blocking::Proxy<'static>> {
+    Ok(
+        zbus::blocking::proxy::Builder::<zbus::blocking::Proxy<'static>>::new(conn)
+            .destination(dest.to_string())?
+            .path(path.to_string())?
+            .interface(iface.to_string())?
+            .cache_properties(zbus::proxy::CacheProperties::No)
+            .build()?,
+    )
 }
 
 /// A running signal subscription; dropping it stops the listener thread.
@@ -162,11 +169,12 @@ fn watch_signals(
         .spawn(move || {
             zbus::block_on(async move {
                 loop {
-                    let next = futures_lite::future::or(async { stream.next().await.map(Some) }, async {
-                        let _ = rx.recv().await;
-                        None
-                    })
-                    .await;
+                    let next =
+                        futures_lite::future::or(async { stream.next().await.map(Some) }, async {
+                            let _ = rx.recv().await;
+                            None
+                        })
+                        .await;
                     match next {
                         Some(Some(Ok(msg))) => f(&msg),
                         Some(Some(Err(_))) => continue,
@@ -236,9 +244,17 @@ impl Eds {
     /// Saves a source's edited data.
     pub fn write_source(&self, source: &Source) -> Result<()> {
         if !source.writable {
-            return Err(Error::Invalid(format!("source {} is read-only", source.uid)));
+            return Err(Error::Invalid(format!(
+                "source {} is read-only",
+                source.uid
+            )));
         }
-        let p = proxy(&self.conn, SOURCES_BUS, &source.object_path, SOURCE_WRITABLE_IFACE)?;
+        let p = proxy(
+            &self.conn,
+            SOURCES_BUS,
+            &source.object_path,
+            SOURCE_WRITABLE_IFACE,
+        )?;
         p.call::<_, _, ()>("Write", &(source.data_string(),))?;
         Ok(())
     }
@@ -246,9 +262,17 @@ impl Eds {
     /// Deletes a source (and its data, for local sources).
     pub fn remove_source(&self, source: &Source) -> Result<()> {
         if !source.removable {
-            return Err(Error::Invalid(format!("source {} cannot be removed", source.uid)));
+            return Err(Error::Invalid(format!(
+                "source {} cannot be removed",
+                source.uid
+            )));
         }
-        let p = proxy(&self.conn, SOURCES_BUS, &source.object_path, SOURCE_REMOVABLE_IFACE)?;
+        let p = proxy(
+            &self.conn,
+            SOURCES_BUS,
+            &source.object_path,
+            SOURCE_REMOVABLE_IFACE,
+        )?;
         p.call::<_, _, ()>("Remove", &())?;
         Ok(())
     }
@@ -258,9 +282,15 @@ impl Eds {
         watch_signals(&self.conn, None, None, move |msg| {
             let h = msg.header();
             let path = h.path().map(|p| p.as_str().to_string()).unwrap_or_default();
-            let member = h.member().map(|m| m.as_str().to_string()).unwrap_or_default();
+            let member = h
+                .member()
+                .map(|m| m.as_str().to_string())
+                .unwrap_or_default();
             let relevant = path.starts_with(SOURCES_PATH)
-                && matches!(member.as_str(), "InterfacesAdded" | "InterfacesRemoved" | "PropertiesChanged");
+                && matches!(
+                    member.as_str(),
+                    "InterfacesAdded" | "InterfacesRemoved" | "PropertiesChanged"
+                );
             if relevant {
                 f();
             }
@@ -273,7 +303,13 @@ impl Eds {
         let p = proxy(&self.conn, &bus, &path, BOOK_IFACE)?;
         let _: Vec<String> = p.call("Open", &())?;
         let writable = p.get_property::<bool>("Writable").unwrap_or(false);
-        Ok(Book { conn: self.conn.clone(), proxy: p, bus, source_uid: source_uid.to_string(), writable })
+        Ok(Book {
+            conn: self.conn.clone(),
+            proxy: p,
+            bus,
+            source_uid: source_uid.to_string(),
+            writable,
+        })
     }
 
     pub fn open_calendar(&self, source_uid: &str) -> Result<Calendar> {
@@ -282,7 +318,13 @@ impl Eds {
         let p = proxy(&self.conn, &bus, &path, CAL_IFACE)?;
         let _: Vec<String> = p.call("Open", &())?;
         let writable = p.get_property::<bool>("Writable").unwrap_or(false);
-        Ok(Calendar { conn: self.conn.clone(), proxy: p, bus, source_uid: source_uid.to_string(), writable })
+        Ok(Calendar {
+            conn: self.conn.clone(),
+            proxy: p,
+            bus,
+            source_uid: source_uid.to_string(),
+            writable,
+        })
     }
 }
 
@@ -302,7 +344,12 @@ fn source_from_ifaces(
         }
     }
     let props = props?;
-    let get = |k: &str| props.get(k).and_then(|v| String::try_from(v.try_clone().ok()?).ok()).unwrap_or_default();
+    let get = |k: &str| {
+        props
+            .get(k)
+            .and_then(|v| String::try_from(v.try_clone().ok()?).ok())
+            .unwrap_or_default()
+    };
     let mut s = Source::from_data(&get("UID"), path.as_str(), &get("Data"));
     s.writable = writable;
     s.removable = removable;
@@ -333,13 +380,27 @@ fn start_view(
     let view = proxy(conn, bus, path, iface)?;
     let watch = watch_signals(conn, Some(path), Some(iface), move |msg| {
         let h = msg.header();
-        let Some(member) = h.member().map(|m| m.as_str().to_string()) else { return };
+        let Some(member) = h.member().map(|m| m.as_str().to_string()) else {
+            return;
+        };
         let body = msg.body();
         let ev = match member.as_str() {
-            "ObjectsAdded" => body.deserialize::<(Vec<String>,)>().ok().map(|(v,)| ViewEvent::Added(v)),
-            "ObjectsModified" => body.deserialize::<(Vec<String>,)>().ok().map(|(v,)| ViewEvent::Modified(v)),
-            "ObjectsRemoved" => body.deserialize::<(Vec<String>,)>().ok().map(|(v,)| ViewEvent::Removed(v)),
-            "Progress" => body.deserialize::<(u32, String)>().ok().map(|(p, m)| ViewEvent::Progress(p, m)),
+            "ObjectsAdded" => body
+                .deserialize::<(Vec<String>,)>()
+                .ok()
+                .map(|(v,)| ViewEvent::Added(v)),
+            "ObjectsModified" => body
+                .deserialize::<(Vec<String>,)>()
+                .ok()
+                .map(|(v,)| ViewEvent::Modified(v)),
+            "ObjectsRemoved" => body
+                .deserialize::<(Vec<String>,)>()
+                .ok()
+                .map(|(v,)| ViewEvent::Removed(v)),
+            "Progress" => body
+                .deserialize::<(u32, String)>()
+                .ok()
+                .map(|(p, m)| ViewEvent::Progress(p, m)),
             "Complete" => body
                 .deserialize::<(String, String)>()
                 .ok()
@@ -352,7 +413,10 @@ fn start_view(
     })?;
     view.call::<_, _, ()>("SetFlags", &(VIEW_FLAGS_NOTIFY_INITIAL,))?;
     view.call::<_, _, ()>("Start", &())?;
-    Ok(View { proxy: view, _watch: watch })
+    Ok(View {
+        proxy: view,
+        _watch: watch,
+    })
 }
 
 /// An opened address book.
@@ -370,7 +434,11 @@ impl Book {
     }
 
     pub fn contacts(&self, query: &str) -> Result<Vec<Contact>> {
-        Ok(self.vcards(query)?.iter().filter_map(|v| Contact::parse(v)).collect())
+        Ok(self
+            .vcards(query)?
+            .iter()
+            .filter_map(|v| Contact::parse(v))
+            .collect())
     }
 
     pub fn contact(&self, uid: &str) -> Result<Contact> {
@@ -386,12 +454,14 @@ impl Book {
 
     pub fn modify(&self, contacts: &[Contact]) -> Result<()> {
         let cards: Vec<String> = contacts.iter().map(Contact::to_vcard_string).collect();
-        self.proxy.call::<_, _, ()>("ModifyContacts", &(cards, 0u32))?;
+        self.proxy
+            .call::<_, _, ()>("ModifyContacts", &(cards, 0u32))?;
         Ok(())
     }
 
     pub fn remove(&self, uids: &[String]) -> Result<()> {
-        self.proxy.call::<_, _, ()>("RemoveContacts", &(uids.to_vec(), 0u32))?;
+        self.proxy
+            .call::<_, _, ()>("RemoveContacts", &(uids.to_vec(), 0u32))?;
         Ok(())
     }
 
@@ -442,14 +512,16 @@ impl Calendar {
     }
 
     pub fn modify(&self, ics: &[String], mod_type: ModType) -> Result<()> {
-        self.proxy.call::<_, _, ()>("ModifyObjects", &(ics.to_vec(), mod_type.nick(), 0u32))?;
+        self.proxy
+            .call::<_, _, ()>("ModifyObjects", &(ics.to_vec(), mod_type.nick(), 0u32))?;
         Ok(())
     }
 
     /// Removes (uid, rid) pairs; rid empty means the whole series with
     /// [`ModType::All`].
     pub fn remove(&self, ids: &[(String, String)], mod_type: ModType) -> Result<()> {
-        self.proxy.call::<_, _, ()>("RemoveObjects", &(ids.to_vec(), mod_type.nick(), 0u32))?;
+        self.proxy
+            .call::<_, _, ()>("RemoveObjects", &(ids.to_vec(), mod_type.nick(), 0u32))?;
         Ok(())
     }
 
@@ -482,7 +554,10 @@ mod tests {
 
     #[test]
     fn calendar_ids() {
-        assert_eq!(split_calendar_id("a\n20260101T000000Z"), ("a".into(), "20260101T000000Z".into()));
+        assert_eq!(
+            split_calendar_id("a\n20260101T000000Z"),
+            ("a".into(), "20260101T000000Z".into())
+        );
         assert_eq!(split_calendar_id("a"), ("a".into(), String::new()));
     }
 

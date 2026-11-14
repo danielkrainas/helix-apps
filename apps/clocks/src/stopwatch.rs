@@ -5,8 +5,13 @@ use std::time::Duration;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum State {
     Reset,
-    Running { started_at: Duration, base: Duration },
-    Paused { elapsed: Duration },
+    Running {
+        started_at: Duration,
+        base: Duration,
+    },
+    Paused {
+        elapsed: Duration,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,7 +33,10 @@ pub struct Stopwatch {
 
 impl Default for Stopwatch {
     fn default() -> Self {
-        Stopwatch { state: State::Reset, totals: Vec::new() }
+        Stopwatch {
+            state: State::Reset,
+            totals: Vec::new(),
+        }
     }
 }
 
@@ -52,12 +60,17 @@ impl Stopwatch {
             State::Reset => Duration::ZERO,
             State::Paused { elapsed } => elapsed,
         };
-        self.state = State::Running { started_at: mono, base };
+        self.state = State::Running {
+            started_at: mono,
+            base,
+        };
     }
 
     pub fn pause(&mut self, mono: Duration) {
         if self.is_running() {
-            self.state = State::Paused { elapsed: self.elapsed(mono) };
+            self.state = State::Paused {
+                elapsed: self.elapsed(mono),
+            };
         }
     }
 
@@ -86,7 +99,8 @@ impl Stopwatch {
 
     /// The current, still-open lap's split.
     pub fn current_split(&self, mono: Duration) -> Duration {
-        self.elapsed(mono).saturating_sub(self.totals.last().copied().unwrap_or_default())
+        self.elapsed(mono)
+            .saturating_sub(self.totals.last().copied().unwrap_or_default())
     }
 
     /// All laps, oldest first.
@@ -113,7 +127,11 @@ impl Stopwatch {
 pub fn format_elapsed(d: Duration, centis: bool) -> String {
     let cs = d.as_millis() / 10;
     let (h, m, s, c) = (cs / 360_000, (cs / 6000) % 60, (cs / 100) % 60, cs % 100);
-    let frac = if centis { format!("{c:02}") } else { format!("{}", c / 10) };
+    let frac = if centis {
+        format!("{c:02}")
+    } else {
+        format!("{}", c / 10)
+    };
     if h > 0 {
         format!("{h}:{m:02}:{s:02}.{frac}")
     } else {
@@ -149,7 +167,11 @@ mod tests {
         assert_eq!(sw.elapsed(c.mono()), secs(1.5));
         sw.pause(c.mono());
         c.advance(secs(10.0));
-        assert_eq!(sw.elapsed(c.mono()), secs(1.5), "paused time does not count");
+        assert_eq!(
+            sw.elapsed(c.mono()),
+            secs(1.5),
+            "paused time does not count"
+        );
         sw.toggle(c.mono());
         c.advance(secs(0.5));
         assert_eq!(sw.elapsed(c.mono()), secs(2.0));
@@ -168,10 +190,16 @@ mod tests {
         sw.start(c.mono());
         c.advance(secs(10.0));
         let l1 = sw.lap(c.mono()).unwrap();
-        assert_eq!((l1.number, l1.split, l1.total, l1.delta_ms), (1, secs(10.0), secs(10.0), None));
+        assert_eq!(
+            (l1.number, l1.split, l1.total, l1.delta_ms),
+            (1, secs(10.0), secs(10.0), None)
+        );
         c.advance(secs(8.5));
         let l2 = sw.lap(c.mono()).unwrap();
-        assert_eq!((l2.split, l2.total, l2.delta_ms), (secs(8.5), secs(18.5), Some(-1500)));
+        assert_eq!(
+            (l2.split, l2.total, l2.delta_ms),
+            (secs(8.5), secs(18.5), Some(-1500))
+        );
         c.advance(secs(9.0));
         assert_eq!(sw.current_split(c.mono()), secs(9.0));
         sw.pause(c.mono());

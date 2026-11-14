@@ -21,7 +21,10 @@ pub struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { volume: 1.0, rate: 1.0 }
+        Settings {
+            volume: 1.0,
+            rate: 1.0,
+        }
     }
 }
 
@@ -33,8 +36,16 @@ impl Settings {
     /// Clamps out-of-range values and replaces non-finite ones by defaults.
     pub fn sanitized(self) -> Settings {
         let d = Settings::default();
-        let volume = if self.volume.is_finite() { self.volume.clamp(0.0, 1.0) } else { d.volume };
-        let rate = if self.rate.is_finite() && self.rate > 0.0 { self.rate.clamp(MIN_RATE, MAX_RATE) } else { d.rate };
+        let volume = if self.volume.is_finite() {
+            self.volume.clamp(0.0, 1.0)
+        } else {
+            d.volume
+        };
+        let rate = if self.rate.is_finite() && self.rate > 0.0 {
+            self.rate.clamp(MIN_RATE, MAX_RATE)
+        } else {
+            d.rate
+        };
         Settings { volume, rate }
     }
 
@@ -63,7 +74,10 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("settings.json");
         assert_eq!(Settings::load_from(&path), Settings::default());
-        let s = Settings { volume: 0.42, rate: 1.5 };
+        let s = Settings {
+            volume: 0.42,
+            rate: 1.5,
+        };
         s.save_to(&path).unwrap();
         assert_eq!(Settings::load_from(&path), s);
         assert!(!dir.path().join("settings.json.tmp").exists());
@@ -74,13 +88,38 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("settings.json");
         std::fs::write(&path, r#"{"volume": 3.0, "rate": 9}"#).unwrap();
-        assert_eq!(Settings::load_from(&path), Settings { volume: 1.0, rate: MAX_RATE });
+        assert_eq!(
+            Settings::load_from(&path),
+            Settings {
+                volume: 1.0,
+                rate: MAX_RATE
+            }
+        );
         std::fs::write(&path, r#"{"volume": -1, "rate": 0}"#).unwrap();
-        assert_eq!(Settings::load_from(&path), Settings { volume: 0.0, rate: 1.0 });
+        assert_eq!(
+            Settings::load_from(&path),
+            Settings {
+                volume: 0.0,
+                rate: 1.0
+            }
+        );
         std::fs::write(&path, r#"{"rate": 0.75}"#).unwrap();
-        assert_eq!(Settings::load_from(&path), Settings { volume: 1.0, rate: 0.75 });
+        assert_eq!(
+            Settings::load_from(&path),
+            Settings {
+                volume: 1.0,
+                rate: 0.75
+            }
+        );
         std::fs::write(&path, "garbage").unwrap();
         assert_eq!(Settings::load_from(&path), Settings::default());
-        assert_eq!(Settings { volume: f64::NAN, rate: f64::INFINITY }.sanitized(), Settings::default());
+        assert_eq!(
+            Settings {
+                volume: f64::NAN,
+                rate: f64::INFINITY
+            }
+            .sanitized(),
+            Settings::default()
+        );
     }
 }

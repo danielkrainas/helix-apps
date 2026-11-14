@@ -13,7 +13,9 @@ pub struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { hide_snap_loops: true }
+        Settings {
+            hide_snap_loops: true,
+        }
     }
 }
 
@@ -24,14 +26,20 @@ pub fn path() -> PathBuf {
 impl Settings {
     /// Reads `path`; a missing or malformed file gives the defaults.
     pub fn load_from(path: &Path) -> Settings {
-        std::fs::read(path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default()
+        std::fs::read(path)
+            .ok()
+            .and_then(|b| serde_json::from_slice(&b).ok())
+            .unwrap_or_default()
     }
 
     pub fn save_to(&self, path: &Path) -> std::io::Result<()> {
         if let Some(dir) = path.parent() {
             std::fs::create_dir_all(dir)?;
         }
-        std::fs::write(path, serde_json::to_vec_pretty(self).map_err(std::io::Error::other)?)
+        std::fs::write(
+            path,
+            serde_json::to_vec_pretty(self).map_err(std::io::Error::other)?,
+        )
     }
 }
 
@@ -43,11 +51,20 @@ mod tests {
     fn defaults_and_round_trip() {
         let dir = std::env::temp_dir().join(format!("helix-disks-settings-{}", std::process::id()));
         let p = dir.join("sub").join("settings.json");
-        assert_eq!(Settings::load_from(&p), Settings { hide_snap_loops: true });
-        let s = Settings { hide_snap_loops: false };
+        assert_eq!(
+            Settings::load_from(&p),
+            Settings {
+                hide_snap_loops: true
+            }
+        );
+        let s = Settings {
+            hide_snap_loops: false,
+        };
         s.save_to(&p).unwrap();
         assert_eq!(Settings::load_from(&p), s);
-        assert!(std::fs::read_to_string(&p).unwrap().contains("\"hide-snap-loops\": false"));
+        assert!(std::fs::read_to_string(&p)
+            .unwrap()
+            .contains("\"hide-snap-loops\": false"));
         // Unknown/missing keys fall back to defaults; garbage too.
         std::fs::write(&p, "{\"other\": 1}").unwrap();
         assert!(Settings::load_from(&p).hide_snap_loops);

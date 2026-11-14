@@ -59,7 +59,9 @@ impl Source {
     }
 
     pub fn parent(&self) -> Option<&str> {
-        self.data.get(GROUP_SOURCE, "Parent").filter(|p| !p.is_empty())
+        self.data
+            .get(GROUP_SOURCE, "Parent")
+            .filter(|p| !p.is_empty())
     }
 
     pub fn enabled(&self) -> bool {
@@ -106,12 +108,16 @@ impl Source {
 
     /// Calendar colour (`#rrggbb`), if set.
     pub fn color(&self) -> Option<&str> {
-        self.data.get(GROUP_CALENDAR, "Color").filter(|c| !c.is_empty())
+        self.data
+            .get(GROUP_CALENDAR, "Color")
+            .filter(|c| !c.is_empty())
     }
 
     /// Whether the calendar is shown ("Selected" in the calendar extension).
     pub fn selected(&self) -> bool {
-        self.data.get_bool(GROUP_CALENDAR, "Selected").unwrap_or(true)
+        self.data
+            .get_bool(GROUP_CALENDAR, "Selected")
+            .unwrap_or(true)
     }
 
     pub fn set_selected(&mut self, selected: bool) {
@@ -174,10 +180,22 @@ impl WebcalUrl {
     /// The URL EDS will fetch (`webcal` is rewritten to `https`).
     pub fn http_url(&self) -> String {
         let scheme = if self.secure { "https" } else { "http" };
-        let host = if self.host.contains(':') { format!("[{}]", self.host) } else { self.host.clone() };
+        let host = if self.host.contains(':') {
+            format!("[{}]", self.host)
+        } else {
+            self.host.clone()
+        };
         let default_port = if self.secure { 443 } else { 80 };
-        let port = if self.port == default_port { String::new() } else { format!(":{}", self.port) };
-        let query = if self.query.is_empty() { String::new() } else { format!("?{}", self.query) };
+        let port = if self.port == default_port {
+            String::new()
+        } else {
+            format!(":{}", self.port)
+        };
+        let query = if self.query.is_empty() {
+            String::new()
+        } else {
+            format!("?{}", self.query)
+        };
         format!("{scheme}://{host}{port}{}{query}", self.path)
     }
 }
@@ -237,7 +255,11 @@ pub fn parse_webcal_url(input: &str) -> Result<WebcalUrl, UrlError> {
     }
     let (host, port) = if let Some(v6) = authority.strip_prefix('[') {
         let (h, after) = v6.split_once(']').ok_or(UrlError::BadHost)?;
-        if h.is_empty() || !h.chars().all(|c| c.is_ascii_hexdigit() || c == ':' || c == '.') {
+        if h.is_empty()
+            || !h
+                .chars()
+                .all(|c| c.is_ascii_hexdigit() || c == ':' || c == '.')
+        {
             return Err(UrlError::BadHost);
         }
         let port = match after {
@@ -257,7 +279,8 @@ pub fn parse_webcal_url(input: &str) -> Result<WebcalUrl, UrlError> {
             !l.is_empty()
                 && !l.starts_with('-')
                 && !l.ends_with('-')
-                && l.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+                && l.chars()
+                    .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
         };
         if h.len() > 253 || !h.trim_end_matches('.').split('.').all(label_ok) {
             return Err(UrlError::BadHost);
@@ -281,8 +304,18 @@ pub fn parse_webcal_url(input: &str) -> Result<WebcalUrl, UrlError> {
         Some((p, q)) => (p, q),
         None => (tail, ""),
     };
-    let path = if path.is_empty() { "/".to_string() } else { path.to_string() };
-    Ok(WebcalUrl { secure, host, port, path, query: query.to_string() })
+    let path = if path.is_empty() {
+        "/".to_string()
+    } else {
+        path.to_string()
+    };
+    Ok(WebcalUrl {
+        secure,
+        host,
+        port,
+        path,
+        query: query.to_string(),
+    })
 }
 
 /// Key-file data for a calendar subscribed from a URL (EDS `webcal`
@@ -292,7 +325,11 @@ pub fn new_webcal_calendar(display_name: &str, color: &str, url: &WebcalUrl) -> 
     kf.set(GROUP_SOURCE, "DisplayName", display_name);
     kf.set(GROUP_SOURCE, "Enabled", "true");
     kf.set(GROUP_SOURCE, "Parent", "webcal-stub");
-    kf.set(GROUP_SECURITY, "Method", if url.secure { "tls" } else { "none" });
+    kf.set(
+        GROUP_SECURITY,
+        "Method",
+        if url.secure { "tls" } else { "none" },
+    );
     kf.set(GROUP_AUTHENTICATION, "Host", &url.host);
     kf.set(GROUP_AUTHENTICATION, "Method", "none");
     kf.set(GROUP_AUTHENTICATION, "Port", &url.port.to_string());
@@ -313,11 +350,39 @@ pub fn new_webcal_calendar(display_name: &str, color: &str, url: &WebcalUrl) -> 
 pub fn webcal_url(source: &Source) -> Option<String> {
     let path = source.data.get(GROUP_WEBDAV, "ResourcePath")?;
     let host = source.data.get(GROUP_AUTHENTICATION, "Host")?;
-    let secure = source.data.get(GROUP_SECURITY, "Method").is_some_and(|m| m != "none");
-    let port = source.data.get(GROUP_AUTHENTICATION, "Port").and_then(|p| p.parse().ok()).unwrap_or(0);
-    let port = if port == 0 { if secure { 443 } else { 80 } } else { port };
-    let query = source.data.get(GROUP_WEBDAV, "ResourceQuery").unwrap_or("").to_string();
-    Some(WebcalUrl { secure, host: host.to_string(), port, path: path.to_string(), query }.http_url())
+    let secure = source
+        .data
+        .get(GROUP_SECURITY, "Method")
+        .is_some_and(|m| m != "none");
+    let port = source
+        .data
+        .get(GROUP_AUTHENTICATION, "Port")
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(0);
+    let port = if port == 0 {
+        if secure {
+            443
+        } else {
+            80
+        }
+    } else {
+        port
+    };
+    let query = source
+        .data
+        .get(GROUP_WEBDAV, "ResourceQuery")
+        .unwrap_or("")
+        .to_string();
+    Some(
+        WebcalUrl {
+            secure,
+            host: host.to_string(),
+            port,
+            path: path.to_string(),
+            query,
+        }
+        .http_url(),
+    )
 }
 
 /// A fresh source UID (40 hex chars, like EDS generates).
@@ -328,7 +393,10 @@ pub fn new_uid() -> String {
 /// Label for the account a source belongs to (its parent's display name, or
 /// its own when it has no parent).
 pub fn account_label(source: &Source, all: &[Source]) -> String {
-    match source.parent().and_then(|p| all.iter().find(|s| s.uid == p)) {
+    match source
+        .parent()
+        .and_then(|p| all.iter().find(|s| s.uid == p))
+    {
         Some(parent) => parent.display_name(),
         None => source.display_name(),
     }
@@ -389,17 +457,38 @@ mod tests {
         assert_eq!(u.http_url(), "https://[::1]:8443/a.ics");
         assert_eq!(parse_webcal_url(""), Err(UrlError::Empty));
         assert_eq!(parse_webcal_url("https://a b/"), Err(UrlError::Whitespace));
-        assert_eq!(parse_webcal_url("ftp://example.org/x.ics"), Err(UrlError::Scheme));
+        assert_eq!(
+            parse_webcal_url("ftp://example.org/x.ics"),
+            Err(UrlError::Scheme)
+        );
         assert_eq!(parse_webcal_url("example.org/x.ics"), Err(UrlError::Scheme));
         assert_eq!(parse_webcal_url("file:///tmp/x.ics"), Err(UrlError::Scheme));
         assert_eq!(parse_webcal_url("https:///x.ics"), Err(UrlError::NoHost));
         assert_eq!(parse_webcal_url("https://:80/x"), Err(UrlError::NoHost));
-        assert_eq!(parse_webcal_url("https://exa$mple.org/"), Err(UrlError::BadHost));
-        assert_eq!(parse_webcal_url("https://-bad.org/"), Err(UrlError::BadHost));
-        assert_eq!(parse_webcal_url("https://example.org:99999/"), Err(UrlError::BadPort));
-        assert_eq!(parse_webcal_url("https://example.org:0/"), Err(UrlError::BadPort));
-        assert_eq!(parse_webcal_url("https://example.org:+1/"), Err(UrlError::BadPort));
-        assert_eq!(parse_webcal_url("https://me:pw@example.org/"), Err(UrlError::Credentials));
+        assert_eq!(
+            parse_webcal_url("https://exa$mple.org/"),
+            Err(UrlError::BadHost)
+        );
+        assert_eq!(
+            parse_webcal_url("https://-bad.org/"),
+            Err(UrlError::BadHost)
+        );
+        assert_eq!(
+            parse_webcal_url("https://example.org:99999/"),
+            Err(UrlError::BadPort)
+        );
+        assert_eq!(
+            parse_webcal_url("https://example.org:0/"),
+            Err(UrlError::BadPort)
+        );
+        assert_eq!(
+            parse_webcal_url("https://example.org:+1/"),
+            Err(UrlError::BadPort)
+        );
+        assert_eq!(
+            parse_webcal_url("https://me:pw@example.org/"),
+            Err(UrlError::Credentials)
+        );
         assert!(!UrlError::Scheme.to_string().is_empty());
     }
 
@@ -417,16 +506,36 @@ mod tests {
         assert_eq!(s.data.get(GROUP_WEBDAV, "ResourcePath"), Some("/feed.ics"));
         assert_eq!(s.data.get(GROUP_WEBDAV, "ResourceQuery"), Some("x=1"));
         assert_eq!(s.data.get(GROUP_REFRESH, "Enabled"), Some("true"));
-        assert_eq!(webcal_url(&s).as_deref(), Some("http://localhost:8000/feed.ics?x=1"));
-        assert_eq!(webcal_url(&Source::from_data("l", "/l", &new_local_calendar("L", "#000000"))), None);
+        assert_eq!(
+            webcal_url(&s).as_deref(),
+            Some("http://localhost:8000/feed.ics?x=1")
+        );
+        assert_eq!(
+            webcal_url(&Source::from_data(
+                "l",
+                "/l",
+                &new_local_calendar("L", "#000000")
+            )),
+            None
+        );
     }
 
     #[test]
     fn account_label_uses_parent() {
-        let parent = Source::from_data("local-stub", "/a", "[Data Source]\nDisplayName=On This Computer\n");
+        let parent = Source::from_data(
+            "local-stub",
+            "/a",
+            "[Data Source]\nDisplayName=On This Computer\n",
+        );
         let child = Source::from_data("x", "/b", &new_local_address_book("Friends"));
         assert!(child.is(SourceKind::AddressBook));
-        assert_eq!(account_label(&child, &[parent.clone(), child.clone()]), "On This Computer");
-        assert_eq!(account_label(&parent, std::slice::from_ref(&parent)), "On This Computer");
+        assert_eq!(
+            account_label(&child, &[parent.clone(), child.clone()]),
+            "On This Computer"
+        );
+        assert_eq!(
+            account_label(&parent, std::slice::from_ref(&parent)),
+            "On This Computer"
+        );
     }
 }
