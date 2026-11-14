@@ -175,7 +175,8 @@ impl Window {
         let location_entry = gtk::Entry::builder()
             .hexpand(true)
             .placeholder_text("Enter a location")
-            .build();
+            .build()
+            .labelled("Location");
         location_entry.set_input_purpose(gtk::InputPurpose::Url);
         let path_stack = gtk::Stack::new();
         path_stack.set_hhomogeneous(false);
@@ -263,7 +264,8 @@ impl Window {
         let search_entry = gtk::SearchEntry::builder()
             .placeholder_text("Search current folder")
             .hexpand(true)
-            .build();
+            .build()
+            .labelled("Search Current Folder");
         search_entry.set_width_chars(40);
         let search_clamp = adw::Clamp::builder()
             .maximum_size(500)
@@ -767,7 +769,12 @@ impl Window {
         let n = crumbs.len();
         for (i, c) in crumbs.into_iter().enumerate() {
             if i > 0 {
-                let sep = gtk::Label::new(Some("/"));
+                // The crumbs themselves are the path; the slashes between
+                // them are only drawn.
+                let sep = gtk::Label::builder()
+                    .label("/")
+                    .accessible_role(gtk::AccessibleRole::Presentation)
+                    .build();
                 sep.add_css_class("crumb-sep");
                 self.crumbs.append(&sep);
             }
@@ -783,6 +790,9 @@ impl Window {
                 content.append(&l);
             }
             let btn = gtk::Button::builder().child(&content).build();
+            if c.label.is_empty() {
+                helix_app_common::set_accessible_label(&btn, &c.name());
+            }
             btn.add_css_class("flat");
             btn.add_css_class("crumb");
             let file = match &c.target {

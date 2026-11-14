@@ -296,12 +296,17 @@ impl App {
                 .is_some_and(|t| app.queue.borrow().current() == Some(&t.path));
             if let Some(img) = item.child().and_downcast::<gtk::Image>() {
                 img.set_icon_name(playing.then_some("media-playback-start-symbolic"));
+                if playing {
+                    img.update_property(&[gtk::accessible::Property::Label("Now Playing")]);
+                } else {
+                    img.reset_property(gtk::AccessibleProperty::Label);
+                }
             }
         });
         cv.append_column(
             &gtk::ColumnViewColumn::builder()
+                .title("Playing")
                 .factory(&f)
-                .fixed_width(32)
                 .build(),
         );
 
@@ -370,8 +375,8 @@ impl App {
         });
         cv.append_column(
             &gtk::ColumnViewColumn::builder()
+                .title("Favorite")
                 .factory(&f)
-                .fixed_width(48)
                 .build(),
         );
 
@@ -480,8 +485,12 @@ impl App {
             .build();
         let indicator = gtk::Stack::new();
         indicator.add_named(&num, Some("number"));
+        // The row's description also says it is playing.
         indicator.add_named(
-            &gtk::Image::from_icon_name("media-playback-start-symbolic"),
+            &gtk::Image::builder()
+                .icon_name("media-playback-start-symbolic")
+                .accessible_role(gtk::AccessibleRole::Presentation)
+                .build(),
             Some("playing"),
         );
         let text = gtk::Box::new(gtk::Orientation::Vertical, 2);
@@ -564,7 +573,7 @@ impl App {
             .activatable(true)
             .build();
         let playing = self.queue.borrow().current() == Some(&t.path);
-        indicator.set_visible_child_name(if playing { "playing" } else { "number" });
+        crate::ui::show_playing(&indicator, playing);
         self.register_row(RowHandle {
             path: t.path.clone(),
             indicator: indicator.downgrade(),
@@ -1441,7 +1450,8 @@ impl App {
             .placeholder_text("Playlist Name")
             .activates_default(true)
             .text(current.unwrap_or_default())
-            .build();
+            .build()
+            .labelled("Playlist Name");
         dialog.set_extra_child(Some(&entry));
         dialog.add_response("cancel", "_Cancel");
         let ok = if rename.is_some() {

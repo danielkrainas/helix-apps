@@ -36,6 +36,8 @@ type DateCallback = Box<dyn Fn(NaiveDate)>;
 
 /// A date button with a calendar popover.
 struct DateButton {
+    /// What the date is, for assistive technology: "Start Date".
+    role: &'static str,
     button: gtk::MenuButton,
     calendar: gtk::Calendar,
     date: Cell<NaiveDate>,
@@ -43,7 +45,7 @@ struct DateButton {
 }
 
 impl DateButton {
-    fn new(d: NaiveDate) -> Rc<DateButton> {
+    fn new(d: NaiveDate, role: &'static str) -> Rc<DateButton> {
         let calendar = gtk::Calendar::new();
         let pop = gtk::Popover::builder().child(&calendar).build();
         let button = gtk::MenuButton::builder()
@@ -51,6 +53,7 @@ impl DateButton {
             .valign(gtk::Align::Center)
             .build();
         let b = Rc::new(DateButton {
+            role,
             button,
             calendar,
             date: Cell::new(d),
@@ -65,8 +68,7 @@ impl DateButton {
                 NaiveDate::from_ymd_opt(g.year(), g.month() as u32, g.day_of_month() as u32)
             {
                 if d != b.date.get() {
-                    b.date.set(d);
-                    b.button.set_label(&dates::short_date(d));
+                    b.show(d);
                     if let Some(f) = b.changed.borrow().as_ref() {
                         f(d);
                     }
@@ -77,13 +79,15 @@ impl DateButton {
         b
     }
 
-    fn set(&self, d: NaiveDate) {
+    /// Shows `d` on the button (and in its accessible name).
+    fn show(&self, d: NaiveDate) {
         self.date.set(d);
-        self.button.set_label(&format!(
-            "{} {}",
-            dates::short_date(d),
-            chrono::Datelike::year(&d)
-        ));
+        self.button.set_label(&date_text(d));
+        helix_app_common::set_accessible_label(&self.button, &date_button_name(self.role, d));
+    }
+
+    fn set(&self, d: NaiveDate) {
+        self.show(d);
         if let Ok(g) = glib::DateTime::from_local(
             chrono::Datelike::year(&d),
             chrono::Datelike::month(&d) as i32,
@@ -134,13 +138,24 @@ struct Values {
     notes: String,
 }
 
-fn time_entry(t: NaiveTime, twelve: bool) -> gtk::Entry {
+/// A date as a date button shows it: "Sat 14 Nov 2026".
+fn date_text(d: NaiveDate) -> String {
+    format!("{} {}", dates::short_date(d), chrono::Datelike::year(&d))
+}
+
+/// Accessible name of a date button: "Start Date, Sat 14 Nov 2026".
+fn date_button_name(role: &str, d: NaiveDate) -> String {
+    format!("{role}, {}", date_text(d))
+}
+
+fn time_entry(t: NaiveTime, twelve: bool, name: &str) -> gtk::Entry {
     gtk::Entry::builder()
         .text(dates::format_time(t, twelve))
         .width_chars(8)
         .max_width_chars(8)
         .valign(gtk::Align::Center)
         .build()
+        .labelled(name)
 }
 
 impl Form {
@@ -224,7 +239,10 @@ impl Form {
             .css_classes(["flat", "circular"])
             .valign(gtk::Align::Center)
             .build()
-            .labelled("Remove Reminder");
+            .labelled(&format!(
+                "Remove Reminder “{}”",
+                recur::describe_reminder(alarm.before_start)
+            ));
         row.add_suffix(&remove);
         self.alarm_group.add(&row);
         self.alarms.borrow_mut().push(alarm);
@@ -395,10 +413,10 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     } else {
         end.date()
     };
-    let start_date = DateButton::new(start.date());
-    let end_date = DateButton::new(end_display);
-    let start_time = time_entry(start.time(), twelve);
-    let end_time = time_entry(end.time(), twelve);
+    let start_date = DateButton::new(start.date(), "Start Date");
+    let end_date = DateButton::new(end_display, "End Date");
+    let start_time = time_entry(start.time(), twelve, "Start Time");
+    let end_time = time_entry(end.time(), twelve, "End Time");
     let start_row = adw::ActionRow::builder().title("Starts").build();
     start_row.add_suffix(&start_date.button);
     start_row.add_suffix(&start_time);
@@ -437,7 +455,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     let count = adw::SpinRow::with_range(1.0, 999.0, 1.0);
     count.set_title("Occurrences");
     count.set_value(10.0);
-    let until = DateButton::new(start.date() + Duration::days(30));
+    let until = DateButton::new(start.date() + Duration::days(30), "Repeat Until");
     match cur_ends {
         Ends::Forever => ends.set_selected(0),
         Ends::Count(c) => {
@@ -477,6 +495,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         .right_margin(8)
         .height_request(96)
         .build();
+    helix_app_common::set_accessible_label(&notes, "Notes");
     notes
         .buffer()
         .set_text(event.as_ref().map(|e| e.description.as_str()).unwrap_or(""));
@@ -883,6 +902,15 @@ pub fn default_slot(day: NaiveDate, now: NaiveDateTime) -> (NaiveDateTime, Naive
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn date_buttons_say_which_date() {
+        let d = NaiveDate::from_ymd_opt(2026, 11, 14).unwrap();
+        assert_eq!(
+            date_button_name("Start Date", d),
+            "Start Date, Sat 14 Nov 2026"
+        );
+    }
 
     fn dt(s: &str) -> NaiveDateTime {
         NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M").unwrap()

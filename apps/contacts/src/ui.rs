@@ -199,7 +199,8 @@ impl Ui {
         let search = gtk::SearchEntry::builder()
             .placeholder_text("Search contacts")
             .hexpand(true)
-            .build();
+            .build()
+            .labelled("Search Contacts");
         let search_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         search_box.set_margin_start(6);
         search_box.set_margin_end(6);
@@ -978,10 +979,15 @@ impl Ui {
                 hbox.append(&label("Me", &["dim-label", "caption"]));
             }
             if ind.is_linked() {
-                let icon = gtk::Image::from_icon_name("insert-link-symbolic");
+                // The row says it is linked; the icon only shows it.
+                let icon = gtk::Image::builder()
+                    .icon_name("insert-link-symbolic")
+                    .accessible_role(gtk::AccessibleRole::Presentation)
+                    .build();
                 icon.set_tooltip_text(Some("Linked contact"));
                 icon.add_css_class("dim-label");
                 hbox.append(&icon);
+                row.update_property(&[gtk::accessible::Property::Description("Linked contact")]);
             }
             row.set_child(Some(&hbox));
             self.list.append(&row);
@@ -1304,7 +1310,7 @@ impl Ui {
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
             .build()
-            .labelled("Copy");
+            .labelled(&copy_name(value));
         let v = value.to_string();
         let w = self.window.clone();
         let toasts = self.toasts.clone();
@@ -1676,6 +1682,7 @@ impl Ui {
         );
         let names: Vec<&str> = books.iter().map(|(_, n)| n.as_str()).collect();
         let dd = gtk::DropDown::from_strings(&names);
+        helix_app_common::set_accessible_label(&dd, "Address Book for New Contacts");
         let current = self.default_book();
         dd.set_selected(books.iter().position(|(u, _)| *u == current).unwrap_or(0) as u32);
         dialog.set_extra_child(Some(&dd));
@@ -1805,8 +1812,31 @@ fn show_shortcuts(win: &adw::ApplicationWindow) {
     dialog.present(Some(win));
 }
 
+/// Accessible name of a detail row's Copy button, naming the value on one
+/// line: "Copy jane@example.org".
+fn copy_name(value: &str) -> String {
+    let one_line: Vec<&str> = value
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .collect();
+    format!("Copy {}", one_line.join(", "))
+}
+
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn copy_names_its_value() {
+        assert_eq!(
+            super::copy_name("jane@example.org"),
+            "Copy jane@example.org"
+        );
+        assert_eq!(
+            super::copy_name("1 Main St\nSpringfield\n"),
+            "Copy 1 Main St, Springfield"
+        );
+    }
+
     #[test]
     fn date_formatting() {
         assert_eq!(

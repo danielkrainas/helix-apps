@@ -315,9 +315,10 @@ impl SourcesUi {
             self.rows.borrow_mut().push(row);
         }
         for (i, (kind, id)) in sources.iter().enumerate() {
+            let name = xkb::source_name(&self.info, kind, id);
             let row = adw::ActionRow::builder()
                 .use_markup(false)
-                .title(xkb::source_name(&self.info, kind, id))
+                .title(&name)
                 .build();
             if kind == "xkb" {
                 row.set_subtitle(id);
@@ -334,7 +335,7 @@ impl SourcesUi {
                     .css_classes(["flat"])
                     .sensitive(enabled)
                     .build()
-                    .labelled(helix_app_common::a11y::name_from_tooltip(tip));
+                    .labelled(&row_button_name(tip, &name));
                 helix_app_common::focus::set_part(&b, tip);
                 let weak = Rc::downgrade(self);
                 b.connect_clicked(move |_| {
@@ -353,7 +354,7 @@ impl SourcesUi {
                 .valign(gtk::Align::Center)
                 .css_classes(["flat"])
                 .build()
-                .labelled("Remove");
+                .labelled(&row_button_name("Remove", &name));
             helix_app_common::focus::set_part(&rm, "remove");
             let weak = Rc::downgrade(self);
             rm.connect_clicked(move |_| {
@@ -467,4 +468,27 @@ fn add_source_dialog(parent: &adw::ApplicationWindow, ui: &Rc<SourcesUi>) {
     dialog.set_child(Some(&view));
     dialog.present(Some(parent));
     search.grab_focus();
+}
+/// Accessible name of an input source's row button, naming the source:
+/// "Move English (US) Up", "Remove English (US)".
+fn row_button_name(action: &str, source: &str) -> String {
+    match action.strip_prefix("Move ") {
+        Some(direction) => format!("Move {source} {direction}"),
+        None => format!("{action} {source}"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::row_button_name;
+
+    #[test]
+    fn row_buttons_name_their_source() {
+        assert_eq!(
+            row_button_name("Move Up", "English (US)"),
+            "Move English (US) Up"
+        );
+        assert_eq!(row_button_name("Move Down", "German"), "Move German Down");
+        assert_eq!(row_button_name("Remove", "German"), "Remove German");
+    }
 }

@@ -50,11 +50,15 @@ struct Graph {
 }
 
 impl Graph {
-    fn new(scale: Scale, points: usize) -> Rc<Self> {
+    /// `name` is the graph's accessible name ("CPU History"); its
+    /// description gives the current values (see [`Graph::describe`]).
+    fn new(scale: Scale, points: usize, name: &str) -> Rc<Self> {
         let area = gtk::DrawingArea::builder()
             .content_height(160)
             .hexpand(true)
+            .accessible_role(gtk::AccessibleRole::Img)
             .build();
+        area.update_property(&[gtk::accessible::Property::Label(name)]);
         let g = Rc::new(Graph {
             area,
             history: RefCell::new(History::new(points)),
@@ -70,6 +74,11 @@ impl Graph {
             }
         });
         g
+    }
+
+    fn describe(&self, description: &str) {
+        self.area
+            .update_property(&[gtk::accessible::Property::Description(description)]);
     }
 
     fn draw(&self, area: &gtk::DrawingArea, cr: &gtk::cairo::Context, w: f64, h: f64) {
@@ -146,11 +155,13 @@ impl Graph {
     }
 }
 
+/// A legend's colour sample; the entry's text says what it stands for.
 fn swatch(color: gdk::RGBA) -> gtk::DrawingArea {
     let a = gtk::DrawingArea::builder()
         .content_width(14)
         .content_height(14)
         .valign(gtk::Align::Center)
+        .accessible_role(gtk::AccessibleRole::Presentation)
         .build();
     a.set_draw_func(move |_, cr, w, h| {
         cr.set_source_rgba(
@@ -165,19 +176,69 @@ fn swatch(color: gdk::RGBA) -> gtk::DrawingArea {
     a
 }
 
+/// A legend entry: swatch, title and value. Assistive technology reads it
+/// as one text, "CPU1: 12.5 %" (see [`set_legend_value`]).
 fn legend_entry(color: gdk::RGBA, title: &str) -> (gtk::Box, gtk::Label) {
-    let b = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+    let b = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .spacing(8)
+        .accessible_role(gtk::AccessibleRole::Label)
+        .build();
+    b.update_property(&[gtk::accessible::Property::Label(title)]);
     b.append(&swatch(color));
     let v = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    let t = gtk::Label::builder().label(title).xalign(0.0).build();
+    let t = gtk::Label::builder()
+        .label(title)
+        .xalign(0.0)
+        .accessible_role(gtk::AccessibleRole::Presentation)
+        .build();
     t.add_css_class("caption-heading");
-    let value = gtk::Label::builder().xalign(0.0).build();
+    let value = gtk::Label::builder()
+        .xalign(0.0)
+        .accessible_role(gtk::AccessibleRole::Presentation)
+        .build();
     value.add_css_class("caption");
     value.add_css_class("numeric");
     v.append(&t);
     v.append(&value);
     b.append(&v);
     (b, value)
+}
+
+/// Shows `value` in a legend entry and reads the entry as "Title: value".
+fn set_legend_value(value_label: &gtk::Label, value: &str) {
+    value_label.set_label(value);
+    let entry = value_label.parent().and_then(|v| v.parent());
+    let title = entry
+        .as_ref()
+        .and_then(|e| e.last_child())
+        .and_then(|v| v.first_child())
+        .and_downcast::<gtk::Label>();
+    if let (Some(entry), Some(title)) = (entry, title) {
+        entry.update_property(&[gtk::accessible::Property::Label(&legend_text(
+            &title.label(),
+            value,
+        ))]);
+    }
+}
+
+/// One legend entry as text: "CPU1: 12.5 %".
+fn legend_text(title: &str, value: &str) -> String {
+    format!("{title}: {value}")
+}
+
+/// The CPU graph's description: the average, then each CPU.
+fn cpu_description(cpus: &[f64]) -> String {
+    if cpus.is_empty() {
+        return String::new();
+    }
+    let avg = cpus.iter().sum::<f64>() / cpus.len() as f64;
+    let each: Vec<String> = cpus
+        .iter()
+        .enumerate()
+        .map(|(i, v)| format!("CPU{} {:.1} %", i + 1, v * 100.0))
+        .collect();
+    format!("Average {:.1} %; {}", avg * 100.0, each.join(", "))
 }
 
 fn section(title: &str, graph: &gtk::DrawingArea, legend: &impl IsA<gtk::Widget>) -> gtk::Box {
@@ -207,9 +268,9 @@ pub struct ResView {
 
 impl ResView {
     pub fn new(points: usize, colors: Colors) -> Rc<Self> {
-        let cpu = Graph::new(Scale::Percent, points);
-        let mem = Graph::new(Scale::Percent, points);
-        let net = Graph::new(Scale::Rate, points);
+        let cpu = Graph::new(Scale::Percent, points, "CPU History");
+        let mem = Graph::new(Scale::Percent, points, "Memory and Swap History");
+        let net = Graph::new(Scale::Rate, points, "Network History");
         *mem.colors.borrow_mut() = vec![colors.mem, colors.swap];
         *net.colors.borrow_mut() = vec![colors.net_in, colors.net_out];
 
@@ -303,8 +364,9 @@ impl ResView {
     pub fn push(&self, r: &ResourceSample) {
         self.ensure_cpu_legend(r.cpus.len());
         for (l, v) in self.cpu_labels.borrow().iter().zip(&r.cpus) {
-            l.set_label(&format!("{:.1} %", v * 100.0));
+            set_legend_value(l, &format!("{:.1} %", v * 100.0));
         }
+        self.cpu.describe(&cpu_description(&r.cpus));
         self.cpu.history.borrow_mut().push(&r.cpus);
 
         let frac = |used: u64, total: u64| {
@@ -319,13 +381,13 @@ impl ResView {
         let swap_f = frac(m.swap_used(), m.swap_total);
         self.mem.history.borrow_mut().push(&[mem_f, swap_f]);
         let iec = self.iec.get();
-        self.mem_label.set_label(&format!(
+        let mem_text = format!(
             "{} ({:.1} %) of {}",
             format::size(m.mem_used(), iec),
             mem_f * 100.0,
             format::size(m.mem_total, iec)
-        ));
-        self.swap_label.set_label(&if m.swap_total == 0 {
+        );
+        let swap_text = if m.swap_total == 0 {
             "Not available".to_string()
         } else {
             format!(
@@ -334,23 +396,55 @@ impl ResView {
                 swap_f * 100.0,
                 format::size(m.swap_total, iec)
             )
-        });
+        };
+        set_legend_value(&self.mem_label, &mem_text);
+        set_legend_value(&self.swap_label, &swap_text);
+        self.mem.describe(&format!(
+            "{}, {}",
+            legend_text("Memory", &mem_text),
+            legend_text("Swap", &swap_text)
+        ));
 
         self.net.history.borrow_mut().push(&[r.rx_rate, r.tx_rate]);
         let bits = self.bits.get();
-        self.rx_label.set_label(&format!(
-            "{}   Total received {}",
+        set_legend_value(
+            &self.rx_label,
+            &format!(
+                "{}   Total received {}",
+                format::rate(r.rx_rate, bits),
+                format::size(r.rx_total, false)
+            ),
+        );
+        set_legend_value(
+            &self.tx_label,
+            &format!(
+                "{}   Total sent {}",
+                format::rate(r.tx_rate, bits),
+                format::size(r.tx_total, false)
+            ),
+        );
+        self.net.describe(&format!(
+            "Receiving {}, Sending {}",
             format::rate(r.rx_rate, bits),
-            format::size(r.rx_total, false)
-        ));
-        self.tx_label.set_label(&format!(
-            "{}   Total sent {}",
-            format::rate(r.tx_rate, bits),
-            format::size(r.tx_total, false)
+            format::rate(r.tx_rate, bits)
         ));
 
         for g in [&self.cpu, &self.mem, &self.net] {
             g.area.queue_draw();
         }
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn graphs_and_legends_as_text() {
+        assert_eq!(legend_text("CPU3", "12.5 %"), "CPU3: 12.5 %");
+        assert_eq!(
+            cpu_description(&[0.1, 0.3]),
+            "Average 20.0 %; CPU1 10.0 %, CPU2 30.0 %"
+        );
+        assert_eq!(cpu_description(&[]), "");
     }
 }

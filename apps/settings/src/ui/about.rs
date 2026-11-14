@@ -149,12 +149,17 @@ impl Panel for AboutPanel {
             ("Windowing System", windowing.clone()),
             ("Kernel Version", kernel.clone()),
         ];
+        let toast_ctx = Rc::downgrade(ctx);
         copy.connect_clicked(move |b| {
             let text: String = labels
                 .iter()
                 .map(|(t, l)| format!("{t}: {}\n", l.label()))
                 .collect();
             b.clipboard().set_text(&text);
+            // libadwaita speaks toasts, so this is also the announcement.
+            if let Some(ctx) = toast_ctx.upgrade() {
+                ctx.toast("System information copied");
+            }
         });
 
         // Local files and D-Bus on worker threads.

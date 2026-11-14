@@ -203,9 +203,42 @@ pub fn zoom_label(zoom: f64) -> String {
     format!("{:.0} %", zoom * 100.0)
 }
 
+/// The image canvas's accessible description: position in the folder,
+/// pixel size and zoom, as far as known — "3 of 4, 3840×2160, 100 %".
+pub fn canvas_description(
+    position: Option<(usize, usize)>,
+    size: Option<(i32, i32)>,
+    zoom: Option<f64>,
+) -> String {
+    let mut parts = Vec::new();
+    if let Some((i, n)) = position.filter(|(_, n)| *n > 1) {
+        parts.push(format!("{} of {n}", i + 1));
+    }
+    if let Some((w, h)) = size {
+        parts.push(format!("{w}×{h}"));
+    }
+    if let Some(z) = zoom {
+        parts.push(zoom_label(z));
+    }
+    parts.join(", ")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn canvas_is_described() {
+        assert_eq!(
+            canvas_description(Some((2, 4)), Some((3840, 2160)), Some(1.0)),
+            "3 of 4, 3840×2160, 100 %"
+        );
+        assert_eq!(
+            canvas_description(Some((0, 1)), Some((10, 20)), None),
+            "10×20"
+        );
+        assert_eq!(canvas_description(None, None, None), "");
+    }
 
     fn approx(a: f64, b: f64) -> bool {
         (a - b).abs() < 1e-6

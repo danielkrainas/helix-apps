@@ -464,7 +464,8 @@ impl Viewer {
             .orientation(gtk::Orientation::Horizontal)
             .single_click_activate(false)
             .css_classes(["iv-strip"])
-            .build();
+            .build()
+            .labelled("Images in Folder");
         let bar = gtk::ScrolledWindow::builder()
             .child(&view)
             .vscrollbar_policy(gtk::PolicyType::Never)
@@ -711,6 +712,7 @@ impl Viewer {
         self.canvas.connect_zoom_changed(move |zoom, _fit| {
             if let Some(v) = weak.upgrade() {
                 v.zoom_btn.set_label(&view::zoom_label(zoom));
+                v.update_canvas_a11y();
             }
         });
 
@@ -1085,6 +1087,30 @@ impl Viewer {
 
     // ---- UI state -------------------------------------------------------
 
+    /// Names the image canvas after the file and describes its position,
+    /// size and zoom.
+    fn update_canvas_a11y(&self) {
+        let Ok(st) = self.state.try_borrow() else {
+            return;
+        };
+        let name = st
+            .playlist
+            .current()
+            .and_then(Path::file_name)
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "No Image".into());
+        let size = st.textures.first().map(|t| (t.width(), t.height()));
+        let description = view::canvas_description(
+            st.playlist.index().map(|i| (i, st.playlist.len())),
+            size,
+            size.map(|_| self.canvas.view().zoom()),
+        );
+        self.canvas.update_property(&[
+            gtk::accessible::Property::Label(&name),
+            gtk::accessible::Property::Description(&description),
+        ]);
+    }
+
     fn update_ui(&self) {
         let st = self.state.borrow();
         let has_image = !st.textures.is_empty();
@@ -1149,6 +1175,7 @@ impl Viewer {
         self.next_btn.set_visible(has_next);
         drop(actions);
         self.sync_strip();
+        self.update_canvas_a11y();
     }
 
     fn show_controls(&self) {
@@ -1433,11 +1460,9 @@ impl Viewer {
             else {
                 return;
             };
-            pic.set_tooltip_text(
-                path.file_name()
-                    .map(|n| n.to_string_lossy().into_owned())
-                    .as_deref(),
-            );
+            let name = path.file_name().map(|n| n.to_string_lossy().into_owned());
+            pic.set_tooltip_text(name.as_deref());
+            pic.set_alternative_text(name.as_deref());
             v.strip
                 .bound
                 .borrow_mut()

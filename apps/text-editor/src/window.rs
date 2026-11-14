@@ -130,7 +130,8 @@ impl Window {
         // Recent documents popover.
         let recent_search = gtk::SearchEntry::builder()
             .placeholder_text("Search documents")
-            .build();
+            .build()
+            .labelled("Search Recent Documents");
         let recent_list = gtk::ListBox::new();
         recent_list.add_css_class("navigation-sidebar");
         recent_list.set_placeholder(Some(
@@ -200,14 +201,14 @@ impl Window {
             .input_purpose(gtk::InputPurpose::Digits)
             .build();
         let goto_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
-        goto_box.append(
-            &gtk::Label::builder()
-                .label("Go to Line")
-                .css_classes(["heading"])
-                .xalign(0.0)
-                .build(),
-        );
+        let goto_heading = gtk::Label::builder()
+            .label("Go to Line")
+            .css_classes(["heading"])
+            .xalign(0.0)
+            .build();
+        goto_box.append(&goto_heading);
         goto_box.append(&goto_entry);
+        helix_app_common::label_widget(&goto_entry, &goto_heading);
         let goto_popover = gtk::Popover::builder().child(&goto_box).build();
         let pos_btn = gtk::MenuButton::builder()
             .label("Ln 1, Col 1")

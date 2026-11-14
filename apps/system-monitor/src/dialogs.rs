@@ -140,7 +140,22 @@ pub fn change_priority(
     dialog.set_close_response("cancel");
 
     let content = gtk::Box::new(gtk::Orientation::Vertical, 6);
+    // The presets are a radio group labelled "Priority".
+    let heading = gtk::Label::builder()
+        .label("Priority")
+        .xalign(0.0)
+        .css_classes(["heading"])
+        .build();
+    let options = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(6)
+        .accessible_role(gtk::AccessibleRole::RadioGroup)
+        .build();
+    helix_app_common::label_widget(&options, &heading);
+    content.append(&heading);
+    content.append(&options);
     let scale = gtk::Scale::with_range(gtk::Orientation::Horizontal, -20.0, 19.0, 1.0);
+    helix_app_common::set_accessible_label(&scale, "Nice Value");
     scale.set_value(nice as f64);
     scale.set_digits(0);
     scale.set_draw_value(true);
@@ -165,13 +180,13 @@ pub fn change_priority(
                 s.set_value(value as f64);
             }
         });
-        content.append(&check);
+        options.append(&check);
         checks.push(check);
     }
     let custom = gtk::CheckButton::with_label("Custom");
     custom.set_group(first.as_ref());
     custom.set_active(custom_selected);
-    content.append(&custom);
+    options.append(&custom);
     content.append(&scale);
     {
         let custom = custom.clone();

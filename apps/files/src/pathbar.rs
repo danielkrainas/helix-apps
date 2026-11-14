@@ -16,6 +16,18 @@ pub struct Crumb {
     pub target: Target,
 }
 
+impl Crumb {
+    /// The crumb's name for assistive technology: its label, or
+    /// "Computer" for the file-system root, which shows only an icon.
+    pub fn name(&self) -> String {
+        if self.label.is_empty() {
+            "Computer".into()
+        } else {
+            self.label.clone()
+        }
+    }
+}
+
 /// A local directory that starts its own breadcrumb trail (home, mount
 /// points).
 #[derive(Debug, Clone)]
@@ -214,6 +226,7 @@ mod tests {
         let c = crumbs_for_path(Path::new("/usr/share"), &home_roots());
         assert_eq!(labels(&c), ["", "usr", "share"]);
         assert_eq!(c[0].target, Target::Path("/".into()));
+        assert_eq!(c[0].name(), "Computer");
         assert_eq!(c[2].target, Target::Path("/usr/share".into()));
         let c = crumbs_for_path(Path::new("/"), &home_roots());
         assert_eq!(c.len(), 1);

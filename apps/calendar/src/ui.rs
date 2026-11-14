@@ -290,6 +290,17 @@ impl Ui {
             .css_classes(["navigation-sidebar"])
             .selection_mode(gtk::SelectionMode::None)
             .build();
+        // Activating a row (click on the name, Enter or Space) toggles its
+        // calendar, like its check box.
+        cal_list.connect_row_activated(|_, row| {
+            let check = row
+                .child()
+                .and_then(|c| c.first_child())
+                .and_downcast::<gtk::CheckButton>();
+            if let Some(check) = check.filter(|c| c.is_sensitive()) {
+                check.set_active(!check.is_active());
+            }
+        });
         let agenda_title = label("", &["heading"]);
         agenda_title.set_xalign(0.0);
         agenda_title.set_margin_start(12);
@@ -2100,6 +2111,7 @@ impl Ui {
             );
             let names: Vec<&str> = cals.iter().map(|(_, n, _)| n.as_str()).collect();
             let dd = gtk::DropDown::from_strings(&names);
+            helix_app_common::set_accessible_label(&dd, "Import into Calendar");
             let def = ui.default_calendar();
             dd.set_selected(cals.iter().position(|(u, _, _)| *u == def).unwrap_or(0) as u32);
             dialog.set_extra_child(Some(&dd));

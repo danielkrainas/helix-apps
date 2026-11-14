@@ -113,8 +113,9 @@ Music library and player.
 - **Albums**: a grid of cover tiles (cover, album title, artist). Activating
   a tile opens the album page.
 - **Artists**: a list (name, album count); activating opens the artist page.
-- **Songs**: a `GtkColumnView` with sortable columns Title, Artist, Album,
-  Length, Plays and a favourite column. Activating a row plays the full song
+- **Songs**: a `GtkColumnView` with a *Playing* column (the playing
+  track's cell shows a play icon named "Now Playing"), sortable columns
+  Title, Artist, Album, Length, Plays and a *Favorite* column. Activating a row plays the full song
   list (in the current sort order) starting there.
 - **Playlists**: smart playlists first — *Favorite Songs*, *Most Played*
   (top 50 with ≥ 1 play), *Recently Played* (last 50 played),
@@ -328,3 +329,8 @@ closes the window the same way (saving window state).
 ### Accessibility
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): the track that starts playing ("Now playing: Title by Artist"), once per track; playback errors show a toast.
+- The seek slider ("Position") gives its value as text ("1:23 of 4:56")
+  and the volume slider as a percentage ("75%"). The playing track's row
+  in track lists has the accessible description "Now playing" (its play
+  icon is presentational). The playlist-name entry is labelled "Playlist
+  Name".

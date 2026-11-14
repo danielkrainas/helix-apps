@@ -56,6 +56,11 @@ fn details(p: &Progress) -> String {
     }
 }
 
+/// Accessible name of a job's Cancel button: "Cancel Copying 3 files".
+fn cancel_name(title: &str) -> String {
+    format!("Cancel {title}")
+}
+
 /// Starts `job` on a worker thread; `done` runs on the main thread after it
 /// finishes (also when cancelled).
 pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) {
@@ -73,12 +78,13 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
         .tooltip_text("Cancel")
         .valign(gtk::Align::Center)
         .build()
-        .labelled("Cancel");
+        .labelled(&cancel_name(&title));
     cancel_btn.add_css_class("flat");
     cancel_btn.add_css_class("circular");
     top.append(&label);
     top.append(&cancel_btn);
     let bar = gtk::ProgressBar::new();
+    helix_app_common::label_widget(&bar, &label);
     let info = gtk::Label::builder()
         .label("Preparing…")
         .xalign(0.0)
@@ -203,5 +209,13 @@ mod tests {
             "copying 2 items to “Docs”"
         );
         assert_eq!(super::lowercase_first(""), "");
+    }
+
+    #[test]
+    fn cancel_names_its_job() {
+        assert_eq!(
+            super::cancel_name("Copying 3 files"),
+            "Cancel Copying 3 files"
+        );
     }
 }

@@ -28,6 +28,12 @@ mod imp {
         const NAME: &'static str = "HelixImageCanvas";
         type Type = super::ImageCanvas;
         type ParentType = gtk::Widget;
+
+        fn class_init(klass: &mut Self::Class) {
+            // An image for assistive technology; the viewer sets its name
+            // (the file name) and description (position, size, zoom).
+            klass.set_accessible_role(gtk::AccessibleRole::Img);
+        }
     }
 
     impl ObjectImpl for ImageCanvas {

@@ -194,3 +194,8 @@ Without the schema installed, defaults are kept in memory.
 ### Accessibility
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): the search-bar match count ("3 of 12", "No results") once typing pauses.
+- Controls have specific accessible names: the find-bar options are named
+  "Case Sensitive", "Match Whole Words Only" and "Regular Expression"
+  (not their glyphs); the find and replace entries are named "Find" and
+  "Replace With", the recent-documents search "Search Recent Documents",
+  and the Go to Line entry is labelled by its "Go to Line" heading.

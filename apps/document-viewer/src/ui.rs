@@ -262,6 +262,11 @@ impl Win {
         page_entry.add_css_class("dv-page-entry");
         let page_of = gtk::Label::new(None);
         page_of.add_css_class("dim-label");
+        // "Current Page", described by the "of 12" next to it.
+        helix_app_common::set_accessible_label(&page_entry, "Current Page");
+        page_entry.update_relation(&[gtk::accessible::Relation::DescribedBy(&[
+            page_of.upcast_ref()
+        ])]);
         let page_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         page_box.append(&page_entry);
         page_box.append(&page_of);
@@ -331,7 +336,8 @@ impl Win {
             .width_chars(6)
             .xalign(1.0)
             .tooltip_text("Zoom (%)")
-            .build();
+            .build()
+            .labelled("Zoom Level");
         let zout = icon_button("zoom-out-symbolic", "Zoom Out", "win.zoom-out");
         let zin = icon_button("zoom-in-symbolic", "Zoom In", "win.zoom-in");
         zout.add_css_class("flat");
@@ -474,7 +480,8 @@ impl Win {
         let search_entry = gtk::SearchEntry::builder()
             .placeholder_text("Search document")
             .search_delay(300)
-            .build();
+            .build()
+            .labelled("Search Document");
         let case_btn = gtk::CheckButton::with_label("Match case");
         let words_btn = gtk::CheckButton::with_label("Whole words only");
         let search_status = gtk::Label::builder().xalign(0.0).build();

@@ -271,3 +271,10 @@ separate cache directory).
 ### Accessibility
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): search results ("5 places found", "No results found"), search failures (assertive) and a found route with its distance and time.
+- The header *Directions* button and the place page's favourite star are
+  exposed as toggle buttons with fixed names ("Directions", "Favorite")
+  whose pressed state follows the directions page being shown and the
+  place being a favourite. A place's link buttons say what they open
+  ("Open Website", "Open Wikipedia Article", "Call +49 30 1234"). The
+  search, From and To entries are labelled ("Search for Places", "From",
+  "To").

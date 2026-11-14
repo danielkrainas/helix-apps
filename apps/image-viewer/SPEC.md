@@ -156,6 +156,14 @@ View images.
   over the original. On success a toast “Image saved” is shown and the
   image is reloaded (rotation back to 0°); errors are shown as a toast.
 
+### Accessibility
+- The image canvas is focusable and exposed as an image named after the
+  file, described by its position in the folder, pixel size and zoom ("3
+  of 4, 3840×2160, 100 %"), updated as these change.
+- Each thumbnail's alternative text is its file name; the strip is named
+  "Images in Folder".
+- Icon-only buttons have explicit names without shortcut text.
+
 ### Actions (primary menu and shortcuts)
 | Action | Shortcut | Behaviour |
 |---|---|---|

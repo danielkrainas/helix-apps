@@ -111,11 +111,77 @@ pub fn describe_duration(secs: u64) -> String {
     parts.join(" ")
 }
 
+/// A duration in words, for speech: "1 hour 30 minutes", "45 seconds".
+pub fn spoken_duration(secs: u64) -> String {
+    let (h, m, s) = (secs / 3600, (secs / 60) % 60, secs % 60);
+    let unit = |n: u64, one: &str| {
+        if n == 1 {
+            format!("1 {one}")
+        } else {
+            format!("{n} {one}s")
+        }
+    };
+    let mut parts = Vec::new();
+    if h > 0 {
+        parts.push(unit(h, "hour"));
+    }
+    if m > 0 {
+        parts.push(unit(m, "minute"));
+    }
+    if s > 0 || parts.is_empty() {
+        parts.push(unit(s, "second"));
+    }
+    parts.join(" ")
+}
+
+/// Names that tell timers apart for assistive technology, from each
+/// timer's `(name, duration in seconds)`: its own name, or "5 minutes
+/// timer" for an unnamed one; repeated names are numbered ("5 minutes
+/// timer 2").
+pub fn timer_labels(timers: &[(&str, u64)]) -> Vec<String> {
+    let base: Vec<String> = timers
+        .iter()
+        .map(|(name, secs)| {
+            if name.trim().is_empty() {
+                format!("{} timer", spoken_duration(*secs))
+            } else {
+                name.trim().to_string()
+            }
+        })
+        .collect();
+    base.iter()
+        .enumerate()
+        .map(|(i, b)| {
+            if base.iter().filter(|x| *x == b).count() < 2 {
+                return b.clone();
+            }
+            let n = base[..=i].iter().filter(|x| *x == b).count();
+            format!("{b} {n}")
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::clock::{Clock, FakeClock};
     use chrono::{TimeZone, Utc};
+
+    #[test]
+    fn timers_are_told_apart() {
+        assert_eq!(spoken_duration(5400), "1 hour 30 minutes");
+        assert_eq!(spoken_duration(61), "1 minute 1 second");
+        assert_eq!(spoken_duration(0), "0 seconds");
+        assert_eq!(
+            timer_labels(&[("", 300), ("Tea", 180), ("", 600), ("", 300)]),
+            [
+                "5 minutes timer 1",
+                "Tea",
+                "10 minutes timer",
+                "5 minutes timer 2"
+            ]
+        );
+    }
 
     #[test]
     fn countdown_pause_and_finish() {

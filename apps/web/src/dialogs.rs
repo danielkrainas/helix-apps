@@ -181,7 +181,7 @@ pub fn show_preferences(app: &Rc<App>) {
                         .tooltip_text("Remove")
                         .valign(gtk::Align::Center)
                         .build()
-                        .labelled("Remove");
+                        .labelled(&format!("Remove {}", e.name));
                     del.add_css_class("flat");
                     let name = e.name.clone();
                     let weak = Rc::downgrade(&app);
@@ -887,7 +887,7 @@ fn load_passwords(
                 .tooltip_text("Remove")
                 .valign(gtk::Align::Center)
                 .build()
-                .labelled("Remove");
+                .labelled(&remove_password_name(&host, &l.username));
             del.add_css_class("flat");
             let (list, r2) = (list.clone(), row.clone());
             del.connect_clicked(move |b| {
@@ -997,6 +997,16 @@ pub fn uninstall_web_app(app: &Rc<App>) {
 
 // ---- web-app preferences ---------------------------------------------------
 
+/// Accessible name of a saved password's Remove button:
+/// "Remove password for jane on example.org".
+fn remove_password_name(host: &str, user: &str) -> String {
+    if user.is_empty() {
+        format!("Remove password for {host}")
+    } else {
+        format!("Remove password for {user} on {host}")
+    }
+}
+
 /// Refills the extra-allowed-sites list from the app's web-app prefs.
 fn fill_allowed_sites(list: &gtk::ListBox, app: &Rc<App>) {
     list.remove_all();
@@ -1019,7 +1029,7 @@ fn fill_allowed_sites(list: &gtk::ListBox, app: &Rc<App>) {
             .tooltip_text("Remove")
             .valign(gtk::Align::Center)
             .build()
-            .labelled("Remove");
+            .labelled(&format!("Remove {site}"));
         del.add_css_class("flat");
         let weak = Rc::downgrade(app);
         let list2 = list.clone();
@@ -1084,4 +1094,20 @@ pub fn show_web_app_preferences(app: &Rc<App>) {
         }
     });
     dialog.present(parent(app).as_ref());
+}
+#[cfg(test)]
+mod tests {
+    use super::remove_password_name;
+
+    #[test]
+    fn password_remove_names_its_login() {
+        assert_eq!(
+            remove_password_name("example.org", "jane"),
+            "Remove password for jane on example.org"
+        );
+        assert_eq!(
+            remove_password_name("example.org", ""),
+            "Remove password for example.org"
+        );
+    }
 }

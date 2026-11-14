@@ -74,7 +74,9 @@ VTE for GTK 4 (`vte-2.91-gtk4` 0.76, Rust `vte4` 0.8).
   Expression* toggles; plain text is escaped. VTE regex search with PCRE2
   flags (`UTF | NO_UTF_CHECK | UCP | MULTILINE`, plus `CASELESS` unless
   Match Case). Enter / Ctrl+G next (towards older output), Shift+Enter /
-  Ctrl+Shift+G previous; wrap around; Escape closes the bar.
+  Ctrl+Shift+G previous; wrap around; Escape closes the bar. The toggles
+  show "Aa" and ".*" but are named "Match Case" and "Regular Expression"
+  for assistive technology; the search entry is named "Find".
 - Clickable URLs: `http(s)`, `ftp`, `file`, `mailto` and `www.` URLs are
   highlighted (VTE match regex); Ctrl+click opens them with
   `GtkUriLauncher` (OpenURI portal when sandboxed); OSC 8 hyperlinks too.

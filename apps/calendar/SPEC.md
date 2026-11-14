@@ -63,7 +63,9 @@ View and edit events from local and online calendars.
   *About Calendar*).
 - **Sidebar** (`AdwOverlaySplitView`, toggled with `F9`, collapses below
   800sp): a month date picker (`gtk::Calendar`) to jump to any date, the
-  list of calendars with colour dots and visibility check boxes, and the
+  list of calendars with colour dots and visibility check boxes (each
+  check box is labelled by its calendar's name; activating a row toggles
+  its check box), and the
   agenda (events) of the selected day. During a search, the agenda lists
   search results instead. Each agenda row shows the calendar's colour dot,
   the title, and "time · Calendar name", so the calendar is never shown
@@ -246,3 +248,12 @@ header or hour grid, and are listed in the shortcuts window.)
 
 ### Accessibility
 - Focus is kept across list rebuilds (`helix_app_common::focus`): Rebuilding the calendar list keeps focus on the toggled check box; rebuilding the agenda keeps focus on the same event (or a neighbour) and the scroll position.
+- Form controls have specific accessible names: the event editor's date
+  buttons say which date and its value ("Start Date, Sat 14 Nov 2026",
+  "End Date, …", "Repeat Until, …"), the time entries are "Start Time" and
+  "End Time", the notes field is "Notes", and each reminder's remove
+  button names the reminder ("Remove Reminder “15 minutes before”"). In
+  Manage Calendars each calendar's colour button, visibility switch and
+  remove button name the calendar ("Colour of Work", "Show Work",
+  "Remove Calendar Work"); the import dialog's drop-down is "Import into
+  Calendar".

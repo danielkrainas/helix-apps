@@ -56,7 +56,8 @@ xfce4-screenshooter cannot do under Helix (area selection in particular).
   - under the heading "Take", a row of three linked toggle buttons (icon
     above label, with mnemonics) choosing the mode, exactly one active:
     **Screen** (the whole desktop, all monitors), **Window** (a window),
-    **Area** (a rectangle the user drags out);
+    **Area** (a rectangle the user drags out); for assistive technology
+    the row is a group named "Take";
   - under "Options", a boxed list with **Delay in Seconds** (`AdwSpinRow`,
     0–99, step 1) and **Show Pointer** (`AdwSwitchRow`), the latter
     insensitive in Area mode because the shell's area capture has no
@@ -122,7 +123,9 @@ xfce4-screenshooter cannot do under Helix (area selection in particular).
 - Header bar: a back button (*New Screenshot*, also `Escape`/`Alt+Left`)
   returns to the options page and drops the image; title "Screenshot".
 - The image, scaled down to fit (never up), inside a card frame; its pixel
-  size as the subtitle ("1920 × 1080").
+  size as the subtitle ("1920 × 1080"). Its alternative text says what was
+  captured and the size ("Screenshot of the whole screen, 1920 × 1080";
+  "… of a window", "… of a selected area").
 - Bottom: **Copy to Clipboard** (`Ctrl+C`) and **Save…** (suggested,
   `Ctrl+S`).
 - **Save…** opens a `GtkFileDialog` (save mode) in the last folder a

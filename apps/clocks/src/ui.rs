@@ -128,12 +128,26 @@ fn beep() {
 }
 
 struct WorldRow {
+    /// The accessible description last set on the row.
+    description: RefCell<String>,
     time: gtk::Label,
     icon: gtk::Image,
     row: adw::ActionRow,
     zone: Tz,
     coords: Option<(f64, f64)>,
     country: Option<String>,
+}
+
+/// A world clock row's accessible description: the time, day or night
+/// (shown only as an icon) and the subtitle — "10:30 PM, Night, Japan •
+/// Tomorrow • +8 hours".
+fn world_row_description(time: &str, day: bool, subtitle: &str) -> String {
+    let when = if day { "Day" } else { "Night" };
+    if subtitle.is_empty() {
+        format!("{time}, {when}")
+    } else {
+        format!("{time}, {when}, {subtitle}")
+    }
 }
 
 struct Details {
@@ -144,6 +158,9 @@ struct Details {
 }
 
 struct TimerRow {
+    /// Tells the timer apart for assistive technology ("Tea",
+    /// "5 minutes timer").
+    label: String,
     time: gtk::Label,
     progress: gtk::ProgressBar,
     start: gtk::Button,
@@ -764,8 +781,11 @@ impl Ui {
                 &row,
                 &format!("{}|{}|{removable}", wc.zone.name(), wc.name),
             );
-            let icon = gtk::Image::new();
-            icon.set_pixel_size(24);
+            // Day or night is also in the row's description.
+            let icon = gtk::Image::builder()
+                .pixel_size(24)
+                .accessible_role(gtk::AccessibleRole::Presentation)
+                .build();
             let time = label("", &["world-time", "clock-time"]);
             row.add_prefix(&icon);
             row.add_suffix(&time);
@@ -798,6 +818,7 @@ impl Ui {
             });
             self.world_list.append(&row);
             rows.push(WorldRow {
+                description: RefCell::default(),
                 time,
                 icon,
                 row,
@@ -852,8 +873,14 @@ impl Ui {
                 parts.push(rel.label().into());
             }
             parts.push(diff);
-            r.row
-                .set_subtitle(&glib::markup_escape_text(&parts.join(" • ")));
+            let subtitle = parts.join(" • ");
+            r.row.set_subtitle(&glib::markup_escape_text(&subtitle));
+            // The time, day or night and the subtitle, as text.
+            let description = world_row_description(&r.time.text(), day, &subtitle);
+            if r.description.replace(description.clone()) != description {
+                r.row
+                    .update_property(&[gtk::accessible::Property::Description(&description)]);
+            }
         }
         if let Some(d) = self.details.borrow().as_ref() {
             self.update_details(d, now);
@@ -1027,9 +1054,16 @@ impl Ui {
                         &["clock-time"],
                     ));
                     if added {
-                        let check = gtk::Image::from_icon_name("object-select-symbolic");
+                        let check = gtk::Image::builder()
+                            .icon_name("object-select-symbolic")
+                            .accessible_role(gtk::AccessibleRole::Presentation)
+                            .build();
                         check.set_tooltip_text(Some("Already added"));
                         row.add_suffix(&check);
+                        let subtitle = row.subtitle().unwrap_or_default();
+                        row.update_property(&[gtk::accessible::Property::Description(&format!(
+                            "{subtitle} • Already added"
+                        ))]);
                     }
                     list.append(&row);
                 }
@@ -1231,6 +1265,7 @@ impl Ui {
         time_box.append(&label(":", &["alarm-time"]));
         time_box.append(&minute);
         let ampm = gtk::DropDown::from_strings(&["AM", "PM"]);
+        helix_app_common::set_accessible_label(&ampm, "AM or PM");
         ampm.set_valign(gtk::Align::Center);
         ampm.set_selected(if a.hour >= 12 { 1 } else { 0 });
         ampm.set_visible(twelve);
@@ -1644,7 +1679,15 @@ impl Ui {
         }
         let mut rows = Vec::new();
         let count = self.timers.borrow().len();
-        for i in 0..count {
+        let labels = {
+            let timers = self.timers.borrow();
+            let named: Vec<(&str, u64)> = timers
+                .iter()
+                .map(|t| (t.name.as_str(), t.duration.as_secs()))
+                .collect();
+            timer::timer_labels(&named)
+        };
+        for (i, timer_label) in labels.into_iter().enumerate() {
             let name = self.timers.borrow()[i].name.clone();
             let row = gtk::ListBoxRow::new();
             row.set_activatable(false);
@@ -1671,12 +1714,12 @@ impl Ui {
             start.set_valign(gtk::Align::Center);
             let reset = gtk::Button::from_icon_name("view-refresh-symbolic");
             reset.set_tooltip_text(Some("Reset"));
-            helix_app_common::set_accessible_label(&reset, "Reset");
+            helix_app_common::set_accessible_label(&reset, &format!("Reset {timer_label}"));
             reset.add_css_class("circular");
             reset.set_valign(gtk::Align::Center);
             let delete = gtk::Button::from_icon_name("user-trash-symbolic");
             delete.set_tooltip_text(Some("Delete"));
-            helix_app_common::set_accessible_label(&delete, "Delete");
+            helix_app_common::set_accessible_label(&delete, &format!("Delete {timer_label}"));
             delete.add_css_class("circular");
             delete.add_css_class("flat");
             delete.set_valign(gtk::Align::Center);
@@ -1688,8 +1731,10 @@ impl Ui {
             hb.append(&delete);
             vb.append(&hb);
             let progress = gtk::ProgressBar::new();
+            helix_app_common::set_accessible_label(&progress, &timer_label);
             vb.append(&progress);
             row.set_child(Some(&vb));
+            row.update_property(&[gtk::accessible::Property::Label(&timer_label)]);
             self.timer_list.append(&row);
 
             let weak = Rc::downgrade(self);
@@ -1730,6 +1775,7 @@ impl Ui {
                 });
             });
             rows.push(TimerRow {
+                label: timer_label,
                 time,
                 progress,
                 start,
@@ -1756,10 +1802,7 @@ impl Ui {
             };
             r.start.set_icon_name(icon);
             r.start.set_tooltip_text(Some(tip));
-            helix_app_common::set_accessible_label(
-                &r.start,
-                helix_app_common::a11y::name_from_tooltip(tip),
-            );
+            helix_app_common::set_accessible_label(&r.start, &format!("{tip} {}", r.label));
             if t.is_running() {
                 r.start.remove_css_class("suggested-action");
             } else {
@@ -1909,3 +1952,17 @@ const SHORTCUTS_UI: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
   </object>
 </interface>
 "#;
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn world_rows_say_day_or_night() {
+        assert_eq!(
+            super::world_row_description("10:30 PM", false, "Japan • +8 hours"),
+            "10:30 PM, Night, Japan • +8 hours"
+        );
+        assert_eq!(
+            super::world_row_description("09:00", true, ""),
+            "09:00, Day"
+        );
+    }
+}

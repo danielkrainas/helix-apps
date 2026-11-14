@@ -264,3 +264,13 @@ window (used by autostart; see Alarms). Plus GApplication's standard options
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): a timer going off ("Time is up: …", assertive); a ringing alarm opens its alert dialog.
 - Focus is kept across list rebuilds (`helix_app_common::focus`): Rebuilding the world clock, alarm and timer lists (toggling an alarm, ringing / snooze / stop, removing a clock or timer) keeps keyboard focus on the same control of the same row; after a removal focus goes to the next row (or the previous one, or the Add button).
+- What icons show is also text: a world clock row's accessible
+  description gives its time, "Day" or "Night" and its subtitle ("10:30
+  PM, Night, Japan • +8 hours"); in the add-location dialog an already
+  added place's description ends in "Already added". The icons themselves
+  are presentational.
+- Timers are told apart by name: a timer's own name, or "5 minutes timer"
+  for an unnamed one, numbered when repeated ("5 minutes timer 2"). Its
+  row, progress bar and Start / Pause / Resume, Reset and Delete buttons
+  carry that name ("Pause 5 minutes timer 2", "Delete Tea").
+- The alarm editor's AM/PM drop-down is named "AM or PM".

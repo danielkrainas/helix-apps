@@ -114,6 +114,7 @@ impl Doc {
             .placeholder_text("Find")
             .hexpand(true)
             .build();
+        helix_app_common::set_accessible_label(&entry, "Find");
         let count = gtk::Label::new(None);
         count.add_css_class("dim-label");
         count.add_css_class("numeric");
@@ -146,6 +147,7 @@ impl Doc {
             .placeholder_text("Replace")
             .hexpand(true)
             .build();
+        helix_app_common::set_accessible_label(&replace_entry, "Replace With");
         let replace_btn = gtk::Button::with_label("_Replace");
         replace_btn.set_use_underline(true);
         let replace_all_btn = gtk::Button::with_label("Replace _All");

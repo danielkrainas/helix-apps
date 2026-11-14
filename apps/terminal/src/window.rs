@@ -275,7 +275,8 @@ impl Window {
         let search_entry = gtk::SearchEntry::builder()
             .placeholder_text("Find")
             .hexpand(true)
-            .build();
+            .build()
+            .labelled("Find");
         let prev = gtk::Button::builder()
             .icon_name("go-up-symbolic")
             .tooltip_text("Previous Match (older output)")
@@ -286,16 +287,17 @@ impl Window {
             .tooltip_text("Next Match (newer output)")
             .build()
             .labelled("Next Match (newer output)");
+        // The glyphs are only the visible face; the names are spoken.
         let match_case = gtk::ToggleButton::builder()
-            .icon_name("format-text-plaintext-symbolic")
+            .label("Aa")
             .tooltip_text("Match Case")
             .build()
             .labelled("Match Case");
-        match_case.set_label("Aa");
         let use_regex = gtk::ToggleButton::builder()
             .label(".*")
             .tooltip_text("Regular Expression")
-            .build();
+            .build()
+            .labelled("Regular Expression");
         let nav = gtk::Box::builder().css_classes(["linked"]).build();
         nav.append(&prev);
         nav.append(&next);

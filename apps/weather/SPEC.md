@@ -236,3 +236,8 @@ WMO codes map to a description and a standard symbolic icon
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): the forecast or location error page appearing (assertive) and the offline banner appearing.
 - Focus is kept across list rebuilds (`helix_app_common::focus`): Refreshes, including the automatic one, keep keyboard focus on the same day row and the scroll position.
+- In the places popover the shown place's row is exposed as selected (its
+  check mark and the current-location icon are presentational; the
+  subtitle already says "Current location"); each Remove button names its
+  place ("Remove Berlin"). The loading spinners are named "Loading
+  Forecast" and "Updating Forecast".

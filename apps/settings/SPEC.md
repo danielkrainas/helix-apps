@@ -324,7 +324,8 @@ menu entry opens this panel when Settings is installed.
   of `/etc/os-release`, else `NAME VERSION`), OS type (64-bit / 32-bit),
   desktop (`XDG_CURRENT_DESKTOP`), windowing system (Wayland / X11 from the
   GDK display), kernel (`/proc/sys/kernel/osrelease`).
-- *Copy* puts all of it on the clipboard as text.
+- *Copy* puts all of it on the clipboard as text and confirms with a
+  "System information copied" toast (which screen readers speak).
 
 ### D-Bus
 - All D-Bus traffic uses `zbus` (blocking API) on worker threads; results
@@ -369,3 +370,6 @@ window, `F1` about.
 - Style cards: no third *Light* card; match GNOME with *Default* and *Dark*
   only (`prefer-light` set elsewhere shows as *Default* and is kept).
 - Focus is kept across list rebuilds (`helix_app_common::focus`): Input sources: Move Up / Move Down keep focus on the moved source's button (so repeated presses keep moving it; at the top or bottom focus stays in the row), Remove moves focus to the neighbouring source.
+- Per-row buttons name their row for assistive technology: "Move English
+  (US) Up", "Remove English (US)"; an extension's buttons "Show Log for X",
+  "Restart X" and "Change Shortcut for Command (X)".

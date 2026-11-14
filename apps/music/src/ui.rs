@@ -978,6 +978,13 @@ impl App {
         self.suppress_ui.set(false);
         self.bar.elapsed.set_label(&model::format_duration(pos));
         self.bar.total.set_label(&model::format_duration(dur));
+        self.bar
+            .scale
+            .update_property(
+                &[gtk::accessible::Property::ValueText(&model::position_text(
+                    pos, dur,
+                ))],
+            );
         if let Some(m) = &self.mpris {
             m.update(|s| s.position_us = pos as i64 * 1000);
         }
@@ -1197,11 +1204,7 @@ impl App {
             let Some(ind) = r.indicator.upgrade() else {
                 return false;
             };
-            ind.set_visible_child_name(if current.as_ref() == Some(&r.path) {
-                "playing"
-            } else {
-                "number"
-            });
+            show_playing(&ind, current.as_ref() == Some(&r.path));
             if let Some(h) = r.heart.upgrade() {
                 sync_heart(&h, stats.is_favorite(&r.path));
             }
@@ -1550,6 +1553,19 @@ impl App {
     }
 }
 
+/// Shows a track row's playing indicator (instead of its number) and
+/// says "Now playing" in the row's accessible description.
+pub fn show_playing(indicator: &gtk::Stack, playing: bool) {
+    indicator.set_visible_child_name(if playing { "playing" } else { "number" });
+    if let Some(row) = indicator.ancestor(gtk::ListBoxRow::static_type()) {
+        if playing {
+            row.update_property(&[gtk::accessible::Property::Description("Now playing")]);
+        } else {
+            row.reset_property(gtk::AccessibleProperty::Description);
+        }
+    }
+}
+
 pub fn sync_heart(btn: &gtk::ToggleButton, on: bool) {
     if btn.is_active() != on {
         btn.set_active(on);
@@ -1678,6 +1694,9 @@ fn build_player_bar() -> PlayerBar {
     volume.set_size_request(-1, 140);
     volume.set_draw_value(false);
     helix_app_common::set_accessible_label(&volume, "Volume");
+    volume.update_property(&[gtk::accessible::Property::ValueText(&model::volume_text(
+        volume.value(),
+    ))]);
     let vol_pop = gtk::Popover::builder().child(&volume).build();
     let vol_btn = gtk::MenuButton::builder()
         .icon_name("audio-volume-high-symbolic")
@@ -1690,6 +1709,7 @@ fn build_player_bar() -> PlayerBar {
     let vb = vol_btn.clone();
     volume.connect_value_changed(move |s| {
         let v = s.value();
+        s.update_property(&[gtk::accessible::Property::ValueText(&model::volume_text(v))]);
         vb.set_icon_name(match v {
             v if v <= 0.0 => "audio-volume-muted-symbolic",
             v if v < 0.34 => "audio-volume-low-symbolic",

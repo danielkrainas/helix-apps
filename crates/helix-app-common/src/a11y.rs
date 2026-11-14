@@ -10,8 +10,9 @@
 //!
 //! Setting `HELIX_A11Y_CHECK=1` makes every app built on
 //! [`crate::install_standard_actions`] list the visible buttons that have no
-//! accessible name on standard error, re-checking every two seconds, and
-//! log every announcement it makes.
+//! accessible name, and the visible entries, drop-downs and scales that are
+//! not labelled (a placeholder is not a name), on standard error,
+//! re-checking every two seconds, and log every announcement it makes.
 //!
 //! [`announce`] and friends tell screen readers about status changes that
 //! happen without focus moving (see their docs).
@@ -145,12 +146,16 @@ fn is_marked(widget: &gtk::Widget) -> bool {
 
 /// Sets `label` as the accessible name of `widget`.
 ///
-/// For a [`gtk::MenuButton`] the name is also put on its internal toggle
-/// button, which is what assistive technology focuses.
+/// For a [`gtk::MenuButton`], [`gtk::ColorDialogButton`] or
+/// [`gtk::FontDialogButton`] the name is also put on its internal button,
+/// which is what assistive technology focuses.
 pub fn set_accessible_label(widget: &impl IsA<gtk::Widget>, label: &str) {
     let w = widget.as_ref();
     w.update_property(&[accessible::Property::Label(label)]);
-    if w.is::<gtk::MenuButton>() {
+    if w.is::<gtk::MenuButton>()
+        || w.is::<gtk::ColorDialogButton>()
+        || w.is::<gtk::FontDialogButton>()
+    {
         if let Some(inner) = w.first_child().filter(|c| c.is::<gtk::Button>()) {
             inner.update_property(&[accessible::Property::Label(label)]);
             mark_named(&inner);
@@ -365,7 +370,78 @@ pub fn unnamed_buttons(root: &gtk::Widget) -> (Vec<String>, usize) {
     (out, n)
 }
 
-/// With `HELIX_A11Y_CHECK` set, reports unnamed buttons of every window
+/// Input widgets whose children are part of the input itself.
+fn is_input(w: &gtk::Widget) -> bool {
+    w.is::<gtk::Entry>()
+        || w.is::<gtk::SearchEntry>()
+        || w.is::<gtk::PasswordEntry>()
+        || w.is::<gtk::DropDown>()
+        || w.is::<gtk::Scale>()
+}
+
+/// Describes every mapped entry, search entry, password entry, drop-down
+/// and scale under `root` that is neither named here (see
+/// [`set_accessible_label`], [`label_widget`]) nor the mnemonic widget of
+/// a label. Inputs inside libadwaita rows that label them are skipped.
+pub fn unlabelled_inputs(root: &gtk::Widget) -> Vec<String> {
+    fn mnemonic_targets(w: &gtk::Widget, out: &mut Vec<gtk::Widget>) {
+        if let Some(t) = w
+            .downcast_ref::<gtk::Label>()
+            .and_then(|l| l.mnemonic_widget())
+        {
+            out.push(t);
+        }
+        let mut child = w.first_child();
+        while let Some(c) = child {
+            mnemonic_targets(&c, out);
+            child = c.next_sibling();
+        }
+    }
+    fn walk(w: &gtk::Widget, targets: &[gtk::Widget], out: &mut Vec<String>) {
+        if !w.is_mapped()
+            || matches!(
+                w.type_().name(),
+                "AdwEntryRow" | "AdwPasswordEntryRow" | "AdwComboRow" | "AdwSpinRow"
+            )
+            || w.is::<gtk::ScaleButton>()
+        {
+            return;
+        }
+        if is_input(w) {
+            if !is_marked(w) && !targets.contains(w) {
+                let hint = w
+                    .downcast_ref::<gtk::Entry>()
+                    .and_then(|e| e.placeholder_text())
+                    .or_else(|| {
+                        w.downcast_ref::<gtk::SearchEntry>()
+                            .and_then(|e| e.placeholder_text())
+                    })
+                    .unwrap_or_default();
+                out.push(format!(
+                    "{} placeholder={hint:?} in {}",
+                    w.type_().name(),
+                    w.parent()
+                        .map(|p| p.type_().name().to_string())
+                        .unwrap_or_default()
+                ));
+            }
+            return;
+        }
+        let mut child = w.first_child();
+        while let Some(c) = child {
+            walk(&c, targets, out);
+            child = c.next_sibling();
+        }
+    }
+    let mut targets = Vec::new();
+    mnemonic_targets(root, &mut targets);
+    let mut out = Vec::new();
+    walk(root, &targets, &mut out);
+    out
+}
+
+/// With `HELIX_A11Y_CHECK` set, reports unnamed buttons and unlabelled
+/// inputs of every window
 /// `app` shows (see the module docs). The check repeats every two seconds,
 /// so rows, pages and dialogs shown later are covered; each problem is
 /// reported once.
@@ -388,6 +464,11 @@ pub fn install_check(app: &impl IsA<gtk::Application>) {
             for line in unnamed {
                 if seen.insert(line.clone()) {
                     eprintln!("helix-a11y: unnamed button in “{title}”: {line}");
+                }
+            }
+            for line in unlabelled_inputs(window.upcast_ref()) {
+                if seen.insert(line.clone()) {
+                    eprintln!("helix-a11y: unlabelled input in “{title}”: {line}");
                 }
             }
             if seen.insert(format!("total {total}")) {

@@ -291,6 +291,7 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
         .label("Show Log")
         .valign(gtk::Align::Center)
         .build();
+    helix_app_common::set_accessible_label(&log_button, &format!("Show Log for {}", e.name));
     {
         let weak = Rc::downgrade(state);
         let (id, name) = (id.clone(), e.name.clone());
@@ -308,6 +309,7 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
         .label("Restart")
         .valign(gtk::Align::Center)
         .build();
+    helix_app_common::set_accessible_label(&restart_button, &format!("Restart {}", e.name));
     {
         let weak = Rc::downgrade(state);
         let id = id.clone();
@@ -343,6 +345,10 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
             .label("Change…")
             .valign(gtk::Align::Center)
             .build();
+        helix_app_common::set_accessible_label(
+            &change,
+            &format!("Change Shortcut for {title} ({})", e.name),
+        );
         let weak = Rc::downgrade(state);
         let (full, title) = (format!("{id}/{command}"), title.clone());
         change.connect_clicked(move |_| {

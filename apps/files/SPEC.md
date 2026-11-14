@@ -297,3 +297,10 @@ bookmark, `F2` rename, `Delete` trash, `Shift+Delete` delete,
 ### Accessibility
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): a recursive search finishing ("Search finished: 12 items found" / "No results") and a file operation finishing ("Finished copying 3 items to “Docs”"); failures open an alert, cancellation shows a toast.
+- Every control has a specific accessible name: icon-only buttons are
+  named like their tooltip (without shortcut text); the root `/` crumb is
+  named "Computer"; the slashes between crumbs are not exposed; the
+  location and search entries are named "Location" and "Search Current
+  Folder"; per-item buttons name their item ("Eject REPOS", "Cancel
+  Copying 3 items to “Docs”"), and each job's progress bar is labelled by
+  the job's title.

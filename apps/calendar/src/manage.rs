@@ -61,6 +61,8 @@ pub fn open(ui: &Rc<Ui>) {
         gtk::ColorDialogButton::new(Some(gtk::ColorDialog::builder().with_alpha(false).build()));
     color.set_rgba(&rgba(colors::next_free(&used)));
     color.set_valign(gtk::Align::Center);
+    color.set_tooltip_text(Some("Calendar Colour"));
+    helix_app_common::set_accessible_label(&color, "New Calendar Colour");
     let add = gtk::Button::builder()
         .label("Add")
         .css_classes(["suggested-action"])
@@ -120,6 +122,7 @@ fn url_group(
     color.set_rgba(&rgba(colors::next_free(used)));
     color.set_valign(gtk::Align::Center);
     color.set_tooltip_text(Some("Calendar Colour"));
+    helix_app_common::set_accessible_label(&color, "Subscribed Calendar Colour");
     name.add_suffix(&color);
     let error = gtk::Label::builder()
         .css_classes(["error", "caption"])
@@ -273,12 +276,16 @@ fn calendar_row(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gtk
     color.set_rgba(&rgba(&colors::normalize(s.color())));
     color.set_valign(gtk::Align::Center);
     color.set_sensitive(s.writable);
+    color.set_tooltip_text(Some("Calendar Colour"));
+    let display = s.display_name();
+    helix_app_common::set_accessible_label(&color, &format!("Colour of {display}"));
     let shown = gtk::Switch::builder()
         .active(s.selected())
         .valign(gtk::Align::Center)
         .sensitive(s.writable)
         .build();
     shown.set_tooltip_text(Some("Show in Calendar"));
+    helix_app_common::set_accessible_label(&shown, &format!("Show {display}"));
 
     let row: gtk::Widget = if s.writable && backend == "local" {
         let r = adw::EntryRow::builder()
@@ -340,7 +347,7 @@ fn remove_button(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gt
         .css_classes(["flat"])
         .valign(gtk::Align::Center)
         .build()
-        .labelled("Remove Calendar");
+        .labelled(&format!("Remove Calendar {}", s.display_name()));
     let (ui, src, dialog) = (ui.clone(), s.clone(), dialog.clone());
     b.connect_clicked(move |b| {
         let alert = adw::AlertDialog::new(

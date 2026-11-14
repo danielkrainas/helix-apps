@@ -57,6 +57,7 @@ pub struct Window {
     reload: gtk::Button,
     home: gtk::Button,
     reader: gtk::Button,
+    zoom_reset: gtk::Button,
     /// Title shown instead of the address entry in web-app mode.
     app_title: Option<adw::WindowTitle>,
     suggest_pop: gtk::Popover,
@@ -211,7 +212,18 @@ impl Window {
         let forward = icon_button("go-next-symbolic", "Forward", "win.forward");
         let reload = icon_button("view-refresh-symbolic", "Reload", "win.reload");
         let home = icon_button("go-home-symbolic", "Home", "win.home");
-        let reader = icon_button("format-justify-left-symbolic", "Reader View", "win.reader");
+        // A button acting as a toggle: the pressed state follows the tab's
+        // reader mode, which changes only once the page has reloaded.
+        let reader = gtk::Button::builder()
+            .icon_name("format-justify-left-symbolic")
+            .tooltip_text("Reader View")
+            .action_name("win.reader")
+            .accessible_role(gtk::AccessibleRole::ToggleButton)
+            .build()
+            .labelled("Reader View");
+        reader.update_state(&[gtk::accessible::State::Pressed(
+            gtk::AccessibleTristate::False,
+        )]);
         reader.set_visible(false);
         let web_app = app.web_app.is_some();
         let header = adw::HeaderBar::new();
@@ -257,7 +269,8 @@ impl Window {
             .child(&zoom_label)
             .action_name("win.zoom-reset")
             .tooltip_text("Reset Zoom")
-            .build();
+            .build()
+            .labelled("Reset Zoom");
         for b in [&zout, &zreset, &zin] {
             b.add_css_class("flat");
         }
@@ -454,6 +467,7 @@ impl Window {
             bm_search,
             bm_list,
             zoom_label,
+            zoom_reset: zreset.clone(),
             closed: RefCell::default(),
             info_pop,
             bm_pop,
@@ -1057,6 +1071,13 @@ impl Window {
         } else {
             "Reader View"
         }));
+        // The name stays "Reader View"; the state says whether it is on.
+        self.reader
+            .update_state(&[gtk::accessible::State::Pressed(if active {
+                gtk::AccessibleTristate::True
+            } else {
+                gtk::AccessibleTristate::False
+            })]);
         if active {
             self.reader.add_css_class("suggested-action");
         } else {
@@ -1128,7 +1149,12 @@ impl Window {
 
     fn sync_zoom(&self) {
         let z = self.current().map(|t| t.view.zoom_level()).unwrap_or(1.0);
-        self.zoom_label.set_text(&format!("{:.0}%", z * 100.0));
+        let level = format!("{:.0}%", z * 100.0);
+        self.zoom_label.set_text(&level);
+        self.zoom_reset
+            .update_property(&[gtk::accessible::Property::Description(&format!(
+                "Current zoom {level}"
+            ))]);
     }
 
     pub fn sync_bookmark_state(&self) {
@@ -1529,7 +1555,7 @@ impl Window {
                 .tooltip_text("Remove Bookmark")
                 .valign(gtk::Align::Center)
                 .build()
-                .labelled("Remove Bookmark");
+                .labelled(&format!("Remove Bookmark {title}"));
             remove.add_css_class("flat");
             content.append(&remove);
             let row = gtk::ListBoxRow::builder()
@@ -1637,26 +1663,27 @@ impl Window {
         text.append(&progress);
         text.append(&status);
         row_box.append(&text);
+        helix_app_common::label_widget(&progress, &name_label);
         let cancel = gtk::Button::builder()
             .icon_name("process-stop-symbolic")
             .tooltip_text("Cancel")
             .valign(gtk::Align::Center)
             .build()
-            .labelled("Cancel");
+            .labelled(&format!("Cancel {name}"));
         let open = gtk::Button::builder()
             .icon_name("document-open-symbolic")
             .tooltip_text("Open")
             .valign(gtk::Align::Center)
             .visible(false)
             .build()
-            .labelled("Open");
+            .labelled(&format!("Open {name}"));
         let folder = gtk::Button::builder()
             .icon_name("folder-open-symbolic")
             .tooltip_text("Open Folder")
             .valign(gtk::Align::Center)
             .visible(false)
             .build()
-            .labelled("Open Folder");
+            .labelled(&format!("Open Folder of {name}"));
         for b in [&cancel, &open, &folder] {
             b.add_css_class("flat");
             row_box.append(b);

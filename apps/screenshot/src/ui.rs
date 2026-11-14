@@ -187,6 +187,18 @@ struct Shot {
     png: glib::Bytes,
     texture: gdk::Texture,
     stamp: Stamp,
+    mode: Mode,
+}
+
+/// The preview's alternative text: what was captured and its size —
+/// "Screenshot of the whole screen, 1920 × 1080".
+fn preview_text(mode: Mode, width: i32, height: i32) -> String {
+    let what = match mode {
+        Mode::Screen => "the whole screen",
+        Mode::Window => "a window",
+        Mode::Area => "a selected area",
+    };
+    format!("Screenshot of {what}, {width} × {height}")
 }
 
 struct Win {
@@ -266,10 +278,14 @@ impl Win {
         for b in &modes[1..] {
             b.set_group(Some(&modes[0]));
         }
+        // One labelled group of exclusive toggles (libadwaita 1.5 has no
+        // toggle group widget).
         let mode_box = gtk::Box::builder()
             .homogeneous(true)
             .css_classes(["linked"])
-            .build();
+            .accessible_role(gtk::AccessibleRole::Group)
+            .build()
+            .labelled("Take");
         for b in &modes {
             mode_box.append(b);
         }
@@ -504,6 +520,11 @@ impl Win {
 
     fn show_preview(&self, shot: Shot) {
         self.picture.set_paintable(Some(&shot.texture));
+        self.picture.set_alternative_text(Some(&preview_text(
+            shot.mode,
+            shot.texture.width(),
+            shot.texture.height(),
+        )));
         self.preview_title.set_subtitle(&format!(
             "{} × {}",
             shot.texture.width(),
@@ -524,6 +545,7 @@ impl Win {
         let hold = self.app.hold();
         self.window.set_visible(false);
         let w = self.clone();
+        let mode = req.mode;
         glib::spawn_future_local(async move {
             let _hold = hold;
             let result = gio::spawn_blocking(move || shell::take(&req))
@@ -538,6 +560,7 @@ impl Win {
                         png,
                         texture,
                         stamp: Stamp::now(),
+                        mode,
                     })
                     .map_err(|e| {
                         CaptureError::Failed(format!("Could not load the screenshot: {e}"))
@@ -614,5 +637,21 @@ impl Win {
                 }
             }
         });
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn preview_says_what_was_captured() {
+        assert_eq!(
+            preview_text(Mode::Screen, 1920, 1080),
+            "Screenshot of the whole screen, 1920 × 1080"
+        );
+        assert_eq!(
+            preview_text(Mode::Area, 300, 200),
+            "Screenshot of a selected area, 300 × 200"
+        );
     }
 }

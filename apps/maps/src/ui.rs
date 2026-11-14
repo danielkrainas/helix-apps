@@ -145,6 +145,38 @@ fn icon_button(icon: &str, tooltip: &str) -> gtk::Button {
         .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
 }
 
+/// An icon-only button that acts as a toggle: exposed as a toggle button
+/// with a fixed name, its pressed state set by [`set_pressed`].
+fn icon_toggle(icon: &str, tooltip: &str) -> gtk::Button {
+    let b = gtk::Button::builder()
+        .icon_name(icon)
+        .tooltip_text(tooltip)
+        .accessible_role(gtk::AccessibleRole::ToggleButton)
+        .build()
+        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip));
+    set_pressed(&b, false);
+    b
+}
+
+fn set_pressed(button: &gtk::Button, pressed: bool) {
+    button.update_state(&[gtk::accessible::State::Pressed(if pressed {
+        gtk::AccessibleTristate::True
+    } else {
+        gtk::AccessibleTristate::False
+    })]);
+}
+
+/// Accessible name of a place detail's link button, saying what it opens:
+/// "Open Website", "Open Wikipedia Article", "Call +49 30 1234".
+fn link_name(label: &str, value: &str) -> String {
+    match label {
+        "Website" => "Open Website".into(),
+        "Wikipedia" => "Open Wikipedia Article".into(),
+        "Phone" => format!("Call {}", value.split(';').next().unwrap_or(value).trim()),
+        other => format!("Open {other}"),
+    }
+}
+
 fn dim_label(text: &str) -> gtk::Label {
     gtk::Label::builder()
         .label(text)
@@ -260,7 +292,8 @@ impl Ui {
         let search = gtk::SearchEntry::builder()
             .placeholder_text("Search for places or coordinates")
             .hexpand(true)
-            .build();
+            .build()
+            .labelled("Search for Places");
         search.set_key_capture_widget(None::<&gtk::Widget>);
         let clamp = adw::Clamp::builder()
             .maximum_size(480)
@@ -319,7 +352,7 @@ impl Ui {
             .build()
             .labelled("Favorites");
         header.pack_end(&fav_button);
-        let directions_button = icon_button("go-jump-symbolic", "Directions (Ctrl+D)");
+        let directions_button = icon_toggle("go-jump-symbolic", "Directions (Ctrl+D)");
         directions_button.set_action_name(Some("win.directions"));
         header.pack_end(&directions_button);
 
@@ -341,6 +374,28 @@ impl Ui {
             .min_sidebar_width(300.0)
             .max_sidebar_width(380.0)
             .build();
+        // Directions is pressed while the sidebar shows the route page.
+        {
+            let sync = {
+                let (b, split, stack) = (
+                    directions_button.clone(),
+                    split.downgrade(),
+                    stack.downgrade(),
+                );
+                move || {
+                    if let (Some(split), Some(stack)) = (split.upgrade(), stack.upgrade()) {
+                        set_pressed(
+                            &b,
+                            split.shows_sidebar()
+                                && stack.visible_child_name().as_deref() == Some("route"),
+                        );
+                    }
+                }
+            };
+            let s = sync.clone();
+            split.connect_show_sidebar_notify(move |_| s());
+            stack.connect_visible_child_name_notify(move |_| sync());
+        }
 
         let toasts = adw::ToastOverlay::new();
         toasts.set_child(Some(&split));
@@ -1050,7 +1105,7 @@ impl Ui {
                 .build();
             row.add_css_class("property");
             if let Some(url) = link_for(label, value) {
-                let b = icon_button("web-browser-symbolic", "Open");
+                let b = icon_button("web-browser-symbolic", &link_name(label, value));
                 b.set_valign(gtk::Align::Center);
                 b.add_css_class("flat");
                 let w = self.weak();
@@ -1075,10 +1130,8 @@ impl Ui {
         } else {
             "Add to Favorites"
         }));
-        helix_app_common::set_accessible_label(
-            &page.favorite,
-            &page.favorite.tooltip_text().unwrap_or_default(),
-        );
+        // The name stays "Favorite"; the pressed state says whether it is.
+        set_pressed(&page.favorite, fav);
     }
 
     fn whats_here(&self, p: LatLon) {
@@ -1772,7 +1825,8 @@ fn build_place_page() -> (gtk::Widget, PlacePage) {
         .css_classes(["suggested-action", "pill"])
         .build();
     buttons.append(&directions);
-    let favorite = icon_button("non-starred-symbolic", "Add to Favorites");
+    let favorite = icon_toggle("non-starred-symbolic", "Add to Favorites");
+    helix_app_common::set_accessible_label(&favorite, "Favorite");
     favorite.add_css_class("circular");
     buttons.append(&favorite);
     for (icon, tip, action) in [
@@ -1876,11 +1930,13 @@ fn build_route_page(current: Mode) -> (gtk::Widget, RoutePage) {
     let from = gtk::Entry::builder()
         .placeholder_text("From")
         .hexpand(true)
-        .build();
+        .build()
+        .labelled("From");
     let to = gtk::Entry::builder()
         .placeholder_text("To")
         .hexpand(true)
-        .build();
+        .build()
+        .labelled("To");
     let my_loc = icon_button("find-location-symbolic", "Start at My Location");
     my_loc.set_action_name(Some("win.route-my-location"));
     let swap = icon_button(
@@ -1944,6 +2000,19 @@ fn build_route_page(current: Mode) -> (gtk::Widget, RoutePage) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn link_buttons_say_what_they_open() {
+        assert_eq!(link_name("Website", "example.org"), "Open Website");
+        assert_eq!(
+            link_name("Wikipedia", "de:Brandenburger Tor"),
+            "Open Wikipedia Article"
+        );
+        assert_eq!(
+            link_name("Phone", "+49 30 1234;+49 30 5678"),
+            "Call +49 30 1234"
+        );
+    }
 
     #[test]
     fn links() {

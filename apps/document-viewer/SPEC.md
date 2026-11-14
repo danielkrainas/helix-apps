@@ -305,3 +305,8 @@ View PDF and other documents.
   above), named by the text under the link (poppler's text for the link
   area, whitespace collapsed) or, if there is none, by the target, and
   described by the target ("Go to page 4", or the address).
+- Entries are named: the page entry "Current Page" (described by the "of
+  12" beside it), the zoom entry "Zoom Level", the search entry "Search
+  Document", and the unlock dialog's entry "Password" (described by the
+  dialog's message). Icon-only buttons have explicit names without
+  shortcut text.

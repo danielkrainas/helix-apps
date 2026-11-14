@@ -275,7 +275,10 @@ fn build(app: &adw::Application) -> Ui {
         .build()
         .labelled("Refresh");
     header.pack_end(&refresh_button);
-    let header_spinner = gtk::Spinner::builder().visible(false).build();
+    let header_spinner = gtk::Spinner::builder()
+        .visible(false)
+        .build()
+        .labelled("Updating Forecast");
     header.pack_end(&header_spinner);
 
     // ---- pages ----
@@ -315,7 +318,8 @@ fn build(app: &adw::Application) -> Ui {
         .height_request(32)
         .halign(gtk::Align::Center)
         .valign(gtk::Align::Center)
-        .build();
+        .build()
+        .labelled("Loading Forecast");
     stack.add_named(&loading, Some("loading"));
 
     let retry = gtk::Button::builder()
@@ -798,26 +802,25 @@ impl Ui {
                 .subtitle(glib::markup_escape_text(&subtitle))
                 .activatable(true)
                 .build();
+            // The subtitle says "Current location" and the row's selected
+            // state which place is shown; the icons only show it.
             if p.automatic {
-                row.add_suffix(&gtk::Image::from_icon_name("find-location-symbolic"));
+                row.add_suffix(&decorative_icon("find-location-symbolic"));
             }
-            if i == locs.selected {
-                row.add_prefix(&gtk::Image::from_icon_name("object-select-symbolic"));
-            } else {
-                row.add_prefix(
-                    &gtk::Image::builder()
-                        .icon_name("object-select-symbolic")
-                        .opacity(0.0)
-                        .build(),
-                );
+            let selected = i == locs.selected;
+            let check = decorative_icon("object-select-symbolic");
+            if !selected {
+                check.set_opacity(0.0);
             }
+            row.add_prefix(&check);
+            row.update_state(&[gtk::accessible::State::Selected(Some(selected))]);
             let remove = gtk::Button::builder()
                 .icon_name("user-trash-symbolic")
                 .tooltip_text("Remove")
                 .valign(gtk::Align::Center)
                 .css_classes(["flat"])
                 .build()
-                .labelled("Remove");
+                .labelled(&remove_place_name(&p.name));
             let weak = self.weak();
             remove.connect_clicked(move |_| {
                 if let Some(ui) = Ui::upgrade(&weak) {
@@ -1396,4 +1399,23 @@ fn daily_section(days: &[api::Day], local_now: &DateTime, units: &Units, fg: Rgb
         list.append(&lrow);
     }
     list
+}
+/// An icon that only repeats what text or state already says.
+fn decorative_icon(name: &str) -> gtk::Image {
+    gtk::Image::builder()
+        .icon_name(name)
+        .accessible_role(gtk::AccessibleRole::Presentation)
+        .build()
+}
+/// Accessible name of a saved place's Remove button: "Remove Berlin".
+fn remove_place_name(place: &str) -> String {
+    format!("Remove {place}")
+}
+
+#[cfg(test)]
+mod name_tests {
+    #[test]
+    fn remove_names_its_place() {
+        assert_eq!(super::remove_place_name("Berlin"), "Remove Berlin");
+    }
 }

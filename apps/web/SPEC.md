@@ -106,9 +106,11 @@ Web browser.
   Downloads button (visible once a download exists in this window),
   Bookmarks button (popover with a filter entry and the bookmark list),
   Reader View button (only when the page has a readable article; highlighted
-  while reader view is shown).
+  while reader view is shown, and exposed to assistive technology as a
+  toggle named "Reader View" that is pressed while reader view is shown).
 - Main menu: New Tab, New Window, New Private Window, zoom row
-  (−, current %, +), Reopen Closed Tab, Find…, Print…, Fullscreen,
+  (−, current %, +; the % button is named "Reset Zoom" and described by
+  the current level), Reopen Closed Tab, Find…, Print…, Fullscreen,
   Install Site as Web Application… (http/https pages, normal windows),
   History, Passwords, Import Bookmarks…, Export Bookmarks…, Preferences,
   About Web.
@@ -459,3 +461,8 @@ Web browser.
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): the find-in-page match count once typing pauses, downloads finishing or failing (failures assertive) and the untrusted-certificate bar appearing (assertive).
 - Focus is kept across list rebuilds (`helix_app_common::focus`): Removing a history entry moves focus to the next entry's Remove button (or the previous one, or the search entry).
+- Per-row buttons name their row: "Remove Bookmark Example", "Remove
+  DuckDuckGo", "Remove password for jane on example.org", "Remove
+  example.org"; a download's buttons "Cancel file.pdf", "Open file.pdf",
+  "Open Folder of file.pdf", and its progress bar is labelled by the file
+  name.

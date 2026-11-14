@@ -376,6 +376,20 @@ pub fn format_duration(ms: u64) -> String {
     }
 }
 
+/// Value text of the seek slider: "1:23 of 4:56".
+pub fn position_text(pos_ms: u64, dur_ms: u64) -> String {
+    format!(
+        "{} of {}",
+        format_duration(pos_ms.min(dur_ms)),
+        format_duration(dur_ms)
+    )
+}
+
+/// Value text of the volume slider (0.0–1.0): "75%".
+pub fn volume_text(level: f64) -> String {
+    format!("{:.0}%", level.clamp(0.0, 1.0) * 100.0)
+}
+
 /// Human-friendly total length, e.g. "42 minutes" or "1 hour 5 minutes".
 pub fn format_total(ms: u64) -> String {
     let mins = ms.div_ceil(60_000);
@@ -551,6 +565,10 @@ mod tests {
     #[test]
     fn durations() {
         assert_eq!(format_duration(65_000), "1:05");
+        assert_eq!(position_text(83_000, 296_000), "1:23 of 4:56");
+        assert_eq!(position_text(400_000, 296_000), "4:56 of 4:56");
+        assert_eq!(volume_text(0.754), "75%");
+        assert_eq!(volume_text(1.2), "100%");
         assert_eq!(format_duration(3_725_000), "1:02:05");
         assert_eq!(format_total(60_000), "1 minute");
         assert_eq!(format_total(3_900_000), "1 hour 5 minutes");

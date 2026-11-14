@@ -149,6 +149,8 @@ pub fn ask_password(
         .show_peek_icon(true)
         .activates_default(true)
         .build();
+    helix_app_common::set_accessible_label(&entry, "Password");
+    entry.update_property(&[gtk::accessible::Property::Description(&body)]);
     dialog.set_extra_child(Some(&entry));
     dialog.add_responses(&[("cancel", "_Cancel"), ("unlock", "_Unlock")]);
     dialog.set_response_appearance("unlock", adw::ResponseAppearance::Suggested);

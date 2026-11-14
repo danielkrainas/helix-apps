@@ -99,7 +99,8 @@ View processes, resources, and file systems.
     parent PID, threads, command line. Updates while open.
   - *Change Priority* (Ctrl+N): dialog with Very High / High / Normal / Low /
     Very Low presets and a custom nice slider (−20…19). Applied with
-    `setpriority(2)`.
+    `setpriority(2)`. The presets form a radio group labelled by a visible
+    "Priority" heading; the slider is named "Nice Value".
   - *Stop* (Ctrl+S, `SIGSTOP`), *Continue* (Ctrl+C, `SIGCONT`),
     *End* (Ctrl+E, `SIGTERM`), *Kill* (Ctrl+K, `SIGKILL`).
   - End and Kill ask for confirmation when `kill-dialog` is true (default).
@@ -156,6 +157,11 @@ View processes, resources, and file systems.
 - Graphs keep `graph-data-points` samples (default 60), newest on the right,
   drawn with cairo in `GtkDrawingArea`s, with horizontal grid lines and
   time labels.
+- For assistive technology each graph is an image named after its section
+  ("CPU History") and described by the current values, updated each
+  sample ("Average 23.4 %; CPU1 12.5 %, …", "Memory: … , Swap: …",
+  "Receiving 1.2 MB/s, Sending 30 kB/s"). Each legend entry reads as one
+  text, "CPU3: 12.5 %"; the colour swatches are presentational.
 
 ### File Systems page
 - `GtkColumnView` with columns **Device**, **Directory**, **Type**,

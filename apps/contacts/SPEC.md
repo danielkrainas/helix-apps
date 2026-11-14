@@ -65,7 +65,8 @@ Manage contacts.
   - Email rows open `mailto:`; phone rows open `tel:`; addresses open
     `geo:0,0?q=<address>` (maps); websites open the URL — all through
     `gtk::UriLauncher` (OpenURI portal when sandboxed).
-  - Each value has a copy button.
+  - Each value has a copy button, named with its value for assistive
+    technology ("Copy jane@example.org").
 - **Empty states**: no contacts → status page with *Create Contact* and
   *Import…*; no selection → "Select a contact"; no search results →
   "No Results".
@@ -111,7 +112,9 @@ Manage contacts.
   `[book-uid, contact-uid]` groups). Linking is non-destructive.
 - In selection mode, selecting 2+ contacts enables *Link*. Linked contacts
   show as one entry whose details are the union of all members (first
-  non-empty name/org/etc., all distinct emails/phones/addresses/urls).
+  non-empty name/org/etc., all distinct emails/phones/addresses/urls). In
+  the list a link icon marks them, and the row's accessible description
+  says "Linked contact".
 - The content menu of a linked contact offers *Unlink*, which splits the
   group back into separate contacts.
 - Editing a linked contact edits its first writable member.
@@ -226,3 +229,10 @@ quit, `Ctrl+W` close window, `Ctrl+?` shortcuts.
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): the number of contacts matching a search once typing pauses.
 - Focus is kept across list rebuilds (`helix_app_common::focus`): Rebuilding the contact list (entering / leaving selection mode, search, address-book changes) keeps keyboard focus on the same contact and the scroll position.
+- Editor controls have specific names: each value's Remove button names
+  the value ("Remove Email jane@example.org", "Remove Address 1 Main St,
+  Springfield"), following edits; type drop-downs are "Email Type",
+  "Phone Number Type", "Website Type", "Address Type"; the address-book
+  drop-downs are "Address Book" (editor) and "Address Book for New
+  Contacts" (first-run dialog); the notes field is "Notes"; the list's
+  search entry is "Search Contacts".

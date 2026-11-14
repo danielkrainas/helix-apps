@@ -24,8 +24,20 @@ struct TypedList {
     group: adw::PreferencesGroup,
     rows: RefCell<Vec<TypedRow>>,
     choices: Choices,
-    title: &'static str,
+    /// What one value is: "Email", "Phone Number", "Website".
+    kind: &'static str,
     phone: bool,
+}
+
+/// Accessible name of a value's Remove button: "Remove Email
+/// jane@example.org", or "Remove Email" while the value is empty.
+fn remove_name(kind: &str, value: &str) -> String {
+    let value = value.trim();
+    if value.is_empty() {
+        format!("Remove {kind}")
+    } else {
+        format!("Remove {kind} {value}")
+    }
 }
 
 impl TypedList {
@@ -40,7 +52,7 @@ impl TypedList {
             group,
             rows: RefCell::default(),
             choices,
-            title,
+            kind: add_label.trim_start_matches("Add "),
             phone,
         });
         let add = gtk::Button::builder()
@@ -77,6 +89,7 @@ impl TypedList {
         let types = gtk::DropDown::from_strings(&labels);
         types.set_valign(gtk::Align::Center);
         types.add_css_class("flat");
+        helix_app_common::set_accessible_label(&types, &format!("{} Type", self.kind));
         let idx = self.index_for(t);
         types.set_selected(idx);
         let row = adw::EntryRow::builder()
@@ -90,14 +103,18 @@ impl TypedList {
                 r.set_title(l);
             }
         });
-        let remove_label = format!("Remove {}", self.title.trim_end_matches('s'));
+        let remove_label = format!("Remove {}", self.kind);
         let remove = gtk::Button::builder()
             .icon_name("user-trash-symbolic")
             .tooltip_text(&remove_label)
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
             .build()
-            .labelled(&remove_label);
+            .labelled(&remove_name(self.kind, &t.value));
+        let (rm, kind) = (remove.clone(), self.kind);
+        row.connect_changed(move |e| {
+            helix_app_common::set_accessible_label(&rm, &remove_name(kind, &e.text()));
+        });
         row.add_suffix(&types);
         row.add_suffix(&remove);
         let weak = Rc::downgrade(self);
@@ -224,6 +241,7 @@ impl Editor {
                 .position(|(u, _)| u == default_book)
                 .unwrap_or(0);
             dd.set_selected(idx as u32);
+            helix_app_common::set_accessible_label(&dd, "Address Book");
             let row = adw::ActionRow::builder().title("Address Book").build();
             row.add_suffix(&dd);
             let g = adw::PreferencesGroup::new();
@@ -342,6 +360,7 @@ impl Editor {
             .right_margin(8)
             .height_request(96)
             .build();
+        helix_app_common::set_accessible_label(&note, "Notes");
         note.buffer().set_text(&contact.note);
         let frame = gtk::Frame::builder()
             .child(&note)
@@ -433,6 +452,7 @@ impl Editor {
         let labels: Vec<&str> = GENERIC_TYPES.iter().map(|(l, _)| *l).collect();
         let types = gtk::DropDown::from_strings(&labels);
         types.set_valign(gtk::Align::Center);
+        helix_app_common::set_accessible_label(&types, "Address Type");
         let idx = if a.is_empty() && a.types.is_empty() {
             0
         } else {
@@ -445,7 +465,10 @@ impl Editor {
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
             .build()
-            .labelled("Remove Address");
+            .labelled(&remove_name(
+                "Address",
+                &address_summary(&a.street, &a.locality),
+            ));
         let suffix = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         suffix.append(&types);
         suffix.append(&remove);
@@ -476,6 +499,14 @@ impl Editor {
             group.add(e);
         }
         self.address_box.append(&group);
+        // The Remove button names the address by its street and city.
+        for e in [&row.street, &row.locality] {
+            let (rm, street, city) = (remove.clone(), row.street.clone(), row.locality.clone());
+            e.connect_changed(move |_| {
+                let summary = address_summary(&street.text(), &city.text());
+                helix_app_common::set_accessible_label(&rm, &remove_name("Address", &summary));
+            });
+        }
         let weak = Rc::downgrade(self);
         let g = group.clone();
         remove.connect_clicked(move |_| {
@@ -605,9 +636,32 @@ fn mime_for(path: &std::path::Path) -> Option<String> {
     )
 }
 
+/// An address in a few words for a button name: "1 Main St, Springfield".
+fn address_summary(street: &str, city: &str) -> String {
+    [street.trim(), city.trim()]
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn remove_buttons_name_their_value() {
+        assert_eq!(
+            remove_name("Email", "jane@example.org"),
+            "Remove Email jane@example.org"
+        );
+        assert_eq!(remove_name("Phone Number", "  "), "Remove Phone Number");
+        assert_eq!(
+            remove_name("Address", &address_summary("1 Main St", "Springfield")),
+            "Remove Address 1 Main St, Springfield"
+        );
+        assert_eq!(address_summary("", "Springfield"), "Springfield");
+    }
 
     #[test]
     fn unchanged_edit_is_clean() {
