@@ -138,14 +138,17 @@ apps/screenshot/src/shortcuts.rs
 apps/screenshot/src/ui.rs
 apps/settings/src/bluez.rs
 apps/settings/src/dbus.rs
+apps/settings/src/defaults.rs
 apps/settings/src/displays.rs
 apps/settings/src/extensions.rs
 apps/settings/src/nm.rs
 apps/settings/src/panels.rs
+apps/settings/src/permissions.rs
 apps/settings/src/sound.rs
 apps/settings/src/ui/about.rs
 apps/settings/src/ui/access.rs
 apps/settings/src/ui/appearance.rs
+apps/settings/src/ui/apps.rs
 apps/settings/src/ui/bluetooth.rs
 apps/settings/src/ui/datetime.rs
 apps/settings/src/ui/displays.rs

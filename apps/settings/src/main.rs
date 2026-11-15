@@ -3,6 +3,7 @@
 mod bluez;
 mod bus;
 mod dbus;
+mod defaults;
 mod displays;
 mod extensions;
 #[cfg(test)]
@@ -11,6 +12,7 @@ mod icon_themes;
 mod netconf;
 mod nm;
 mod panels;
+mod permissions;
 mod rfkill;
 mod sound;
 mod sysinfo;

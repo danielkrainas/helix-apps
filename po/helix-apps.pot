@@ -307,8 +307,8 @@ msgstr ""
 #: apps/audio-player/src/ui.rs:217 apps/camera/src/ui.rs:279
 #: apps/disk-usage/src/shortcuts.rs:30 apps/document-viewer/src/shortcuts.rs:11
 #: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:11
-#: apps/settings/src/ui/bluetooth.rs:129 apps/text-editor/src/shortcuts.rs:15
-#: apps/web/src/window.rs:2222
+#: apps/settings/src/ui/apps.rs:530 apps/settings/src/ui/bluetooth.rs:129
+#: apps/text-editor/src/shortcuts.rs:15 apps/web/src/window.rs:2222
 msgid "Open"
 msgstr ""
 
@@ -345,7 +345,7 @@ msgstr ""
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:488 apps/maps/src/ui.rs:490
 #: apps/music/src/ui.rs:316 apps/music/src/ui.rs:318
 #: apps/screenshot/src/ui.rs:287 apps/screenshot/src/ui.rs:289
-#: apps/settings/src/ui/mod.rs:201 apps/settings/src/ui/mod.rs:203
+#: apps/settings/src/ui/mod.rs:203 apps/settings/src/ui/mod.rs:205
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:291 apps/terminal/src/window.rs:295
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
@@ -1410,13 +1410,14 @@ msgid "Title"
 msgstr ""
 
 #: apps/calendar/src/editor.rs:490 apps/calendar/src/ui.rs:45
-#: apps/calendar/src/ui.rs:221
+#: apps/calendar/src/ui.rs:221 apps/settings/src/defaults.rs:28
 msgid "Calendar"
 msgstr ""
 
 #: apps/calendar/src/editor.rs:504 apps/document-viewer/src/dialogs.rs:112
 #: apps/files/src/ui/window.rs:210 apps/image-viewer/src/ui.rs:562
-#: apps/settings/src/ui/privacy.rs:128 apps/web/src/permissions.rs:24
+#: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:128
+#: apps/web/src/permissions.rs:24
 msgid "Location"
 msgstr ""
 
@@ -1768,11 +1769,11 @@ msgstr ""
 #: apps/logs/src/shortcuts.rs:17 apps/logs/src/ui.rs:276
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:24 apps/music/src/ui.rs:289
-#: apps/music/src/ui.rs:291 apps/settings/src/ui/mod.rs:186
-#: apps/settings/src/ui/mod.rs:188 apps/settings/src/ui/shortcuts.rs:8
-#: apps/system-monitor/src/shortcuts.rs:31 apps/system-monitor/src/ui.rs:223
-#: apps/system-monitor/src/ui.rs:225 apps/web/src/dialogs.rs:142
-#: apps/web/src/window.rs:47
+#: apps/music/src/ui.rs:291 apps/settings/src/ui/apps.rs:439
+#: apps/settings/src/ui/mod.rs:188 apps/settings/src/ui/mod.rs:190
+#: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
+#: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
+#: apps/web/src/dialogs.rs:142 apps/web/src/window.rs:47
 msgid "Search"
 msgstr ""
 
@@ -1920,7 +1921,7 @@ msgstr ""
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:482
-#: apps/settings/src/ui/mod.rs:195 apps/terminal/src/window.rs:286
+#: apps/settings/src/ui/mod.rs:197 apps/terminal/src/window.rs:286
 #: apps/text-editor/src/window.rs:64 apps/web/src/window.rs:221
 #: apps/web/src/window.rs:264 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -1939,7 +1940,7 @@ msgid "Search Events"
 msgstr ""
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:961 apps/settings/src/ui/mod.rs:224
+#: apps/files/src/ui/tab.rs:961 apps/settings/src/ui/mod.rs:226
 #: apps/settings/src/ui/picker.rs:114 apps/web/src/dialogs.rs:739
 #: apps/web/src/window.rs:2372
 msgid "No Results Found"
@@ -1947,7 +1948,7 @@ msgstr ""
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:225
+#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:227
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:740
 #: apps/web/src/window.rs:2373
 msgid "Try a different search"
@@ -2226,8 +2227,8 @@ msgstr ""
 
 #: apps/camera/src/ui.rs:109 apps/camera/src/ui.rs:199
 #: apps/image-viewer/src/ui.rs:546 apps/image-viewer/src/ui.rs:557
-#: apps/settings/src/bluez.rs:230 apps/settings/src/ui/privacy.rs:145
-#: apps/web/src/permissions.rs:27
+#: apps/settings/src/bluez.rs:230 apps/settings/src/permissions.rs:52
+#: apps/settings/src/ui/privacy.rs:145 apps/web/src/permissions.rs:27
 msgid "Camera"
 msgstr ""
 
@@ -2285,8 +2286,8 @@ msgstr ""
 msgid "Photo"
 msgstr ""
 
-#: apps/camera/src/ui.rs:344 apps/video-player/src/screenshot.rs:19
-#: apps/video-player/src/ui.rs:411
+#: apps/camera/src/ui.rs:344 apps/settings/src/defaults.rs:44
+#: apps/video-player/src/screenshot.rs:19 apps/video-player/src/ui.rs:411
 msgid "Video"
 msgstr ""
 
@@ -2755,6 +2756,7 @@ msgstr ""
 
 #: apps/clocks/src/shortcuts.rs:35 apps/clocks/src/ui.rs:1759
 #: apps/clocks/src/ui.rs:2086 apps/maps/src/ui.rs:1878
+#: apps/settings/src/ui/apps.rs:490 apps/settings/src/ui/apps.rs:550
 #: apps/web/src/window.rs:1945
 msgid "Reset"
 msgstr ""
@@ -6622,7 +6624,7 @@ msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr ""
 
 #: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1251
-#: apps/maps/src/ui.rs:1254 apps/settings/src/ui/mod.rs:422
+#: apps/maps/src/ui.rs:1254 apps/settings/src/ui/mod.rs:424
 #: apps/settings/src/ui/picker.rs:33
 msgid "No results found"
 msgstr ""
@@ -7171,6 +7173,7 @@ msgid "Could not read properties: {}"
 msgstr ""
 
 #: apps/files/src/ui/properties.rs:128 apps/files/src/ui/properties.rs:231
+#: apps/settings/src/ui/apps.rs:518
 msgid "Calculating…"
 msgstr ""
 
@@ -7204,7 +7207,8 @@ msgid_plural "{n} items selected"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/files/src/ui/properties.rs:271 apps/web/src/window.rs:1928
+#: apps/files/src/ui/properties.rs:271 apps/settings/src/ui/apps.rs:404
+#: apps/web/src/window.rs:1928
 msgid "Permissions"
 msgstr ""
 
@@ -8500,7 +8504,7 @@ msgid "Focal Length"
 msgstr ""
 
 #: apps/image-viewer/src/ui.rs:569 apps/image-viewer/src/ui.rs:571
-#: apps/web/src/window.rs:2229
+#: apps/settings/src/ui/apps.rs:222 apps/web/src/window.rs:2229
 msgid "Open Folder"
 msgstr ""
 
@@ -9672,6 +9676,7 @@ msgid "Various Artists"
 msgstr ""
 
 #: apps/music/src/mpris.rs:147 apps/music/src/ui.rs:25
+#: apps/settings/src/defaults.rs:32
 msgid "Music"
 msgstr ""
 
@@ -9940,6 +9945,7 @@ msgid "Even out loudness using the volume tags of songs or albums"
 msgstr ""
 
 #: apps/music/src/pages.rs:1802 apps/settings/src/panels.rs:156
+#: apps/settings/src/permissions.rs:38 apps/settings/src/ui/apps.rs:419
 #: apps/web/src/permissions.rs:25
 msgid "Notifications"
 msgstr ""
@@ -10426,6 +10432,36 @@ msgstr ""
 msgid "Hostname"
 msgstr ""
 
+#: apps/settings/src/defaults.rs:15 apps/web/src/app.rs:126
+#: apps/web/src/app.rs:150 apps/web/src/app.rs:904 apps/web/src/window.rs:319
+#: apps/web/src/window.rs:1568
+msgid "Web"
+msgstr ""
+
+#: apps/settings/src/defaults.rs:24
+msgid "Mail"
+msgstr ""
+
+#: apps/settings/src/defaults.rs:55 apps/settings/src/defaults.rs:72
+msgid "Photos"
+msgstr ""
+
+#: apps/settings/src/defaults.rs:69
+msgid "CD Audio"
+msgstr ""
+
+#: apps/settings/src/defaults.rs:70
+msgid "DVD Video"
+msgstr ""
+
+#: apps/settings/src/defaults.rs:71
+msgid "Music Player"
+msgstr ""
+
+#: apps/settings/src/defaults.rs:73 apps/settings/src/ui/about.rs:109
+msgid "Software"
+msgstr ""
+
 #: apps/settings/src/displays.rs:592
 msgid "Variable (up to {rate})"
 msgstr ""
@@ -10740,6 +10776,23 @@ msgid ""
 "device name;hostname;memory;processor;cpu;disk;os;version;kernel;hardware;"
 msgstr ""
 
+#: apps/settings/src/permissions.rs:31
+msgid "Run in Background"
+msgstr ""
+
+#: apps/settings/src/permissions.rs:59 apps/settings/src/ui/privacy.rs:153
+#: apps/web/src/permissions.rs:26
+msgid "Microphone"
+msgstr ""
+
+#: apps/settings/src/permissions.rs:66
+msgid "Speakers"
+msgstr ""
+
+#: apps/settings/src/permissions.rs:73
+msgid "Screenshots"
+msgstr ""
+
 #: apps/settings/src/sound.rs:635
 msgid "Front Left"
 msgstr ""
@@ -10795,10 +10848,6 @@ msgstr ""
 
 #: apps/settings/src/ui/about.rs:97
 msgid "Device Name"
-msgstr ""
-
-#: apps/settings/src/ui/about.rs:109
-msgid "Software"
 msgstr ""
 
 #: apps/settings/src/ui/about.rs:118 apps/settings/src/ui/about.rs:145
@@ -11295,6 +11344,122 @@ msgstr ""
 
 #: apps/settings/src/ui/appearance.rs:546
 msgid "Could not add picture: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:67
+msgid "Installed Apps"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:148
+msgid "Default Apps"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:157
+msgid "No apps installed for this"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:192 apps/settings/src/ui/apps.rs:265
+msgid "Could not change the default app: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:202
+msgid "Removable Media"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:208
+msgid "Never Ask or Start Apps"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:209
+msgid "Inserting media does nothing"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:222
+msgid "Ask What to Do"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:222
+msgid "Do Nothing"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:226
+msgid "Open {app}"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:327
+msgid "The permission store is not running, so permissions cannot be shown."
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:329
+msgid "The permissions could not be read."
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:334
+msgid "This app has not asked for any permissions yet."
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:356
+msgid "Could not change the permission: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:427
+msgid "Show Notifications"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:442
+msgid "Search in the Overview"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:463
+msgid "Opens"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:478
+msgid "Default for"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:480
+msgid "No file types"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:488
+msgid "Reset File Types"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:489
+msgid "Forget your choices of default app for these file types"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:507
+msgid "Links"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:518
+msgid "App Data"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:528
+msgid "Open in Software"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:529
+msgid "Details, updates and uninstalling"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:541
+msgid "No software center is installed"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:548
+msgid "Reset Permissions"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:549
+msgid "The app asks again next time"
+msgstr ""
+
+#: apps/settings/src/ui/apps.rs:567
+msgid "Could not reset the permissions: {e}"
 msgstr ""
 
 #: apps/settings/src/ui/bluetooth.rs:72
@@ -11984,46 +12149,46 @@ msgstr ""
 msgid "Remove {source}"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:157 apps/settings/src/ui/mod.rs:237
-#: apps/settings/src/ui/mod.rs:491
+#: apps/settings/src/ui/mod.rs:159 apps/settings/src/ui/mod.rs:239
+#: apps/settings/src/ui/mod.rs:493
 msgid "Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:175
+#: apps/settings/src/ui/mod.rs:177
 msgid "Search settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:178 apps/settings/src/ui/shortcuts.rs:10
+#: apps/settings/src/ui/mod.rs:180 apps/settings/src/ui/shortcuts.rs:10
 msgid "Search Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:196
+#: apps/settings/src/ui/mod.rs:198
 msgid "_About Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:346 apps/settings/src/ui/mod.rs:359
+#: apps/settings/src/ui/mod.rs:348 apps/settings/src/ui/mod.rs:361
 msgid "Not yet available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:380
+#: apps/settings/src/ui/mod.rs:382
 msgid "Not Yet Available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:423
+#: apps/settings/src/ui/mod.rs:425
 msgid "{n} panel found"
 msgid_plural "{n} panels found"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/ui/mod.rs:460
+#: apps/settings/src/ui/mod.rs:462
 msgid "{} Is Not Yet Available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:461
+#: apps/settings/src/ui/mod.rs:463
 msgid "This panel will be added in a later version of Helix Settings."
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:492
+#: apps/settings/src/ui/mod.rs:494
 msgid "Configure the Helix desktop"
 msgstr ""
 
@@ -12553,10 +12718,6 @@ msgstr ""
 
 #: apps/settings/src/ui/privacy.rs:146
 msgid "Allow apps to use the camera"
-msgstr ""
-
-#: apps/settings/src/ui/privacy.rs:153 apps/web/src/permissions.rs:26
-msgid "Microphone"
 msgstr ""
 
 #: apps/settings/src/ui/privacy.rs:154
@@ -15161,11 +15322,6 @@ msgstr ""
 
 #: apps/web/data/org.helix.Web.metainfo.xml
 msgid "web"
-msgstr ""
-
-#: apps/web/src/app.rs:126 apps/web/src/app.rs:150 apps/web/src/app.rs:904
-#: apps/web/src/window.rs:319 apps/web/src/window.rs:1568
-msgid "Web"
 msgstr ""
 
 #: apps/web/src/app.rs:150 apps/web/src/app.rs:904

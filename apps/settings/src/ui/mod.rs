@@ -7,6 +7,7 @@ use helix_app_common::trnf;
 mod about;
 mod access;
 mod appearance;
+mod apps;
 mod bluetooth;
 mod datetime;
 mod displays;
@@ -68,7 +69,8 @@ fn panel_impl(id: PanelId) -> Option<&'static dyn Panel> {
         PanelId::Network => &network::NetworkPanel,
         PanelId::Sound => &sound::SoundPanel,
         PanelId::Display => &displays::DisplaysPanel,
-        PanelId::Apps | PanelId::Users => return None,
+        PanelId::Apps => &apps::AppsPanel,
+        PanelId::Users => return None,
     })
 }
 

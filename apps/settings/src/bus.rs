@@ -254,8 +254,28 @@ pub mod testbus {
 
     /// A new private bus, or `None` (with a note) without `dbus-daemon`.
     pub fn private_bus() -> Option<Bus> {
+        // No service directories: nothing real is started on it by
+        // activation (the session configuration would start, say, the
+        // real permission store).
+        static N: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+        let conf = std::env::temp_dir().join(format!(
+            "helix-settings-test-bus-{}-{}.conf",
+            std::process::id(),
+            N.fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+        ));
+        std::fs::write(
+            &conf,
+            "<!DOCTYPE busconfig PUBLIC \"-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN\" \
+             \"http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd\">\
+             <busconfig><type>session</type><listen>unix:tmpdir=/tmp</listen>\
+             <auth>EXTERNAL</auth><policy context=\"default\">\
+             <allow send_destination=\"*\" eavesdrop=\"true\"/><allow eavesdrop=\"true\"/>\
+             <allow own=\"*\"/></policy></busconfig>",
+        )
+        .ok()?;
         let daemon = std::process::Command::new("dbus-daemon")
-            .args(["--session", "--nofork", "--print-address=1"])
+            .arg(format!("--config-file={}", conf.display()))
+            .args(["--nofork", "--print-address=1"])
             .stdout(std::process::Stdio::piped())
             .spawn();
         let Ok(mut daemon) = daemon else {
@@ -267,6 +287,7 @@ pub mod testbus {
             .read_line(&mut line)
             .ok()?;
         let address = line.trim().to_string();
+        let _ = std::fs::remove_file(&conf);
         if address.is_empty() {
             let _ = daemon.kill();
             return None;

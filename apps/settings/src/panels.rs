@@ -147,7 +147,7 @@ pub const PANELS: &[PanelInfo] = &[
         // by semicolons; add words people would search for in your language.
         keywords: n_("default;applications;permissions;browser;storage;"),
         group: 2,
-        available: false,
+        available: true,
     },
     PanelInfo {
         id: PanelId::Notifications,
@@ -383,9 +383,7 @@ mod tests {
     fn availability() {
         assert!(info(PanelId::Appearance).available);
         assert!(info(PanelId::About).available);
-        for id in [PanelId::Users, PanelId::Apps] {
-            assert!(!info(id).available, "{id:?}");
-        }
+        assert!(!info(PanelId::Users).available);
     }
 
     #[test]

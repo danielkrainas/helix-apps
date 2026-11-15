@@ -97,7 +97,7 @@ Primary configuration UI for the desktop and system.
 | `power` | | yes |
 | `multitasking` | `workspaces` | yes |
 | `appearance` | `background`, `wallpaper` | yes |
-| `apps` | `applications`, `default-apps` | no |
+| `apps` | `applications`, `default-apps` | yes |
 | `notifications` | | yes |
 | `extensions` | `shell-extensions`, `add-ons` | yes |
 | `mouse` | `touchpad`, `mouse-touchpad` | yes |
@@ -475,6 +475,59 @@ live), and the network proxy.
   wired connections; the `nmcli` import path has not been tried against a
   real NetworkManager.
 
+#### Apps
+- *Default Apps*: *Web*, *Mail*, *Calendar*, *Music*, *Video*, *Photos*,
+  each a choice of the apps GIO lists for its first content type
+  (`x-scheme-handler/http`, `x-scheme-handler/mailto`, `text/calendar`,
+  `audio/mpeg`, `video/mp4`, `image/jpeg`), showing GIO's default.
+  Choosing one makes it the default (`set_as_default_for_type`, i.e. the
+  user's `mimeapps.list`) for that type and the category's related types
+  it supports (Web also https, HTML and XHTML; Music, Video and Photos
+  the common formats; `defaults.rs`).
+- *Removable Media* (`org.gnome.desktop.media-handling`): *Never Ask or
+  Start Apps* (`autorun-never`; the rows below are insensitive while on)
+  and, for CD Audio, DVD Video, Music Player, Photos and Software
+  (`x-content/…` types), *Ask What to Do* (in none of the lists), *Do
+  Nothing* (`autorun-x-content-ignore`), *Open Folder*
+  (`autorun-x-content-open-folder`) or *Open APP* (one of the apps for the
+  type: `autorun-x-content-start-app`, and that app made GIO's default for
+  the type). A type is in at most one list. Follows changes made
+  elsewhere.
+- *Installed Apps*: the apps GIO shows (`should_show`), by name, with
+  their icons; the list follows `GAppInfoMonitor`. Activating one opens
+  a dialog:
+  - its name, icon and description;
+  - *Permissions*: a switch for each permission the portals' permission
+    store (`org.freedesktop.impl.portal.PermissionStore`, session bus)
+    has an entry for, for the app id (desktop id without `.desktop`):
+    Run in Background (`background`/`background`), Notifications
+    (`notifications`/`notification`), Location (`location`/`location`,
+    `EXACT` / `NONE`, its time stamp kept), Camera, Microphone, Speakers
+    (`devices`/…), Screenshots (`screenshot`/`screenshot`); others `yes` /
+    `no`. Changed with `SetPermission`. Without entries: "This app has not
+    asked for any permissions yet."; without the store, that it is not
+    running. The dialog follows the store's `Changed` signal;
+  - *Notifications* (`org.gnome.desktop.notifications.application`
+    `enable` for the app, when it is one of `application-children`, the
+    same switch as the Notifications panel);
+  - *Search in the Overview*, for apps with a shell search provider
+    (`gnome-shell/search-providers/*.ini` naming its desktop id), the
+    inverse of its entry in `org.gnome.desktop.search-providers
+    disabled`;
+  - *Opens*: the file types it is GIO's default for (by description),
+    *Reset File Types* (forgets the user's choices for them), and the link
+    schemes it handles (`x-scheme-handler/…`);
+  - for Flatpak apps (desktop file under `…/flatpak/exports/`), *App Data*:
+    the size of `~/.var/app/<id>`, counted on a worker thread;
+  - *Open in Software* (`appstream://<id>`; a toast when nothing handles
+    it), where updates and uninstalling are; *Reset Permissions*
+    (`DeletePermission` for each of its entries: the portals ask again).
+- Tested against a fake permission store on a private bus
+  (`permissions.rs`) and the media and type logic in unit tests
+  (`defaults.rs`). Not yet: uninstalling from here (Software does it),
+  a Flatpak app's installed size, per-app storage for other kinds of
+  apps, file-type-level choices other than reset.
+
 #### Displays
 `org.gnome.Mutter.DisplayConfig` on the session bus (served by helix-comp;
 helix-desktop-spec `contracts/dbus/org.gnome.Mutter.DisplayConfig.md`):
@@ -705,8 +758,6 @@ registered accelerators.
 
 ### Follow-up panels (listed, not yet available)
 - **Users**: `org.freedesktop.Accounts`.
-- **Apps**: default applications (`gio::AppInfo` defaults) and per-app
-  permissions through the permission store.
 - Not listed yet: Region & Language, Online Accounts, Sharing, Printers,
   Search, Color, Wacom, power mode (`org.freedesktop.UPower.PowerProfiles`).
 
