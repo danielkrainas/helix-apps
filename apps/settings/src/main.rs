@@ -1,9 +1,14 @@
 //! Helix Settings.
 
+mod bluez;
+mod bus;
 mod dbus;
 mod extensions;
+#[cfg(test)]
+mod fakes;
 mod icon_themes;
 mod panels;
+mod rfkill;
 mod sysinfo;
 mod ui;
 mod values;

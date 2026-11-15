@@ -91,7 +91,7 @@ Primary configuration UI for the desktop and system.
 |---|---|---|
 | `wifi` | `wi-fi`, `wireless` | no |
 | `network` | `wired` | no |
-| `bluetooth` | | no |
+| `bluetooth` | | yes |
 | `display` | `displays`, `screen` | no |
 | `sound` | `audio` | no |
 | `power` | | yes |
@@ -361,6 +361,56 @@ menu entry opens this panel when Settings is installed.
   Off = `interactive`, Hibernate, Nothing), *Show Battery Percentage*
   (`interface show-battery-percentage`).
 
+#### Bluetooth
+BlueZ (`org.bluez` on the system bus: the object manager at `/`,
+`org.bluez.Adapter1`, `Device1`, `Battery1`). The panel uses the first
+adapter (by object path, normally `hci0`).
+
+- Until the first reading the page shows *Loading Bluetooth…*. Then one
+  of: *Bluetooth Is Not Available* (BlueZ is not running), *No Bluetooth
+  Adapter Found*, *Bluetooth Is Turned Off by a Hardware Switch* (every
+  Bluetooth radio in `/sys/class/rfkill` is hard-blocked and the adapter
+  is off), or the list below. The page follows BlueZ live (any signal it
+  sends, and it coming or going, read again at most every 0.25 s).
+- *Bluetooth*: a switch for the adapter's `Powered`. Turning it on while
+  a radio is soft-blocked first lifts the block (an `RFKILL_OP_CHANGE_ALL`
+  event for Bluetooth written to `/dev/rfkill`). Its subtitle: "Turn on to
+  connect devices and receive files" when off, "Visible to nearby devices
+  as “NAME” while this page is open" when discoverable.
+- *Visible Name*: an entry row with an apply button for the adapter's
+  `Alias`.
+- While the page is on screen and the adapter is on, the adapter is made
+  `Discoverable` (only if it was not; set back when the page goes away)
+  and searches for devices (`StartDiscovery`, `StopDiscovery` when the
+  page goes away).
+- *Devices*: paired devices by name, each with its kind's icon and a
+  status ("Connected", "Not connected", with "· Battery N %" when
+  connected and BlueZ reports a battery). Activating one opens a dialog:
+  *Connection* (switch: `Connect` / `Disconnect`), *Type* (from BlueZ's
+  `Icon`: Headset, Keyboard, Phone…), *Address*, *Battery*, *Send Files…*
+  (the shell's `org.helix.BluetoothSendTo.SendFiles(address, [])`, which
+  asks for the files and shows progress; a toast says sending needs the
+  Helix shell when it is not there) and *Forget…* (confirmed, then
+  `Adapter1.RemoveDevice`). The dialog follows the device and closes when
+  it goes away.
+- *Nearby Devices*: unpaired devices that have a name (BlueZ's made-up
+  alias from the address does not count), with a spinner while
+  searching. Activating one pairs it: "Pairing…" while `Pair()` runs (the
+  shell's pairing agent asks for codes, so the call has no time limit),
+  then `Trusted` and `Connect()`; a failure gives a toast "Could not pair
+  with NAME: reason" ("Pairing with NAME was cancelled" when refused),
+  success is announced ("Paired with NAME").
+- *Received Files*: files other devices send are saved in the Downloads
+  folder by the shell (helix-desktop-spec `contracts/dbus/org.bluez.obex.md`);
+  *Open* shows the folder.
+- Errors of user actions are toasts ("Could not turn Bluetooth on: …");
+  polkit or user refusals are not reported.
+- Tested against a fake BlueZ and a fake shell on a private bus
+  (`bluez.rs`); not yet tried with a real adapter.
+- Not yet: choosing between several adapters, the per-device details
+  of input devices (mouse and keyboard settings links), device-specific
+  audio profiles (those belong in Sound).
+
 #### Date & Time
 - Reads `org.freedesktop.timedate1` (`Timezone`, `NTP`, `CanNTP`,
   `NTPSynchronized`) on a worker thread. A change of the sync status on
@@ -433,8 +483,6 @@ registered accelerators.
 - **Wi-Fi / Network**: NetworkManager D-Bus (`org.freedesktop.NetworkManager`)
   for devices, connections and VPN; connection editor dialogs; proxy via
   `org.gnome.system.proxy`.
-- **Bluetooth**: BlueZ (`org.bluez` Adapter1 / Device1, pairing through an
-  `Agent1`).
 - **Displays**: `org.gnome.Mutter.DisplayConfig` (`GetCurrentState` /
   `ApplyMonitorsConfig`, with a revert-countdown confirmation), night light
   via `org.gnome.settings-daemon.plugins.color`.

@@ -305,7 +305,8 @@ msgstr ""
 #: apps/audio-player/src/ui.rs:217 apps/camera/src/ui.rs:279
 #: apps/disk-usage/src/shortcuts.rs:30 apps/document-viewer/src/shortcuts.rs:11
 #: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:11
-#: apps/text-editor/src/shortcuts.rs:15 apps/web/src/window.rs:2222
+#: apps/settings/src/ui/bluetooth.rs:129 apps/text-editor/src/shortcuts.rs:15
+#: apps/web/src/window.rs:2222
 msgid "Open"
 msgstr ""
 
@@ -342,7 +343,7 @@ msgstr ""
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:488 apps/maps/src/ui.rs:490
 #: apps/music/src/ui.rs:316 apps/music/src/ui.rs:318
 #: apps/screenshot/src/ui.rs:287 apps/screenshot/src/ui.rs:289
-#: apps/settings/src/ui/mod.rs:169 apps/settings/src/ui/mod.rs:171
+#: apps/settings/src/ui/mod.rs:197 apps/settings/src/ui/mod.rs:199
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:291 apps/terminal/src/window.rs:295
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
@@ -1136,7 +1137,7 @@ msgstr ""
 #: apps/files/src/ui/dialogs.rs:74 apps/files/src/ui/dialogs.rs:220
 #: apps/files/src/ui/sidebar.rs:626 apps/music/src/pages.rs:1523
 #: apps/music/src/pages.rs:1621 apps/music/src/pages.rs:1683
-#: apps/system-monitor/src/dialogs.rs:142
+#: apps/settings/src/ui/bluetooth.rs:647 apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1283
 #: apps/text-editor/src/window.rs:975 apps/web/src/dialogs.rs:413
 #: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
@@ -1761,8 +1762,8 @@ msgstr ""
 #: apps/logs/src/shortcuts.rs:17 apps/logs/src/ui.rs:276
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:24 apps/music/src/ui.rs:289
-#: apps/music/src/ui.rs:291 apps/settings/src/ui/mod.rs:154
-#: apps/settings/src/ui/mod.rs:156 apps/settings/src/ui/shortcuts.rs:8
+#: apps/music/src/ui.rs:291 apps/settings/src/ui/mod.rs:182
+#: apps/settings/src/ui/mod.rs:184 apps/settings/src/ui/shortcuts.rs:8
 #: apps/system-monitor/src/shortcuts.rs:31 apps/system-monitor/src/ui.rs:223
 #: apps/system-monitor/src/ui.rs:225 apps/web/src/dialogs.rs:142
 #: apps/web/src/window.rs:47
@@ -1913,7 +1914,7 @@ msgstr ""
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:482
-#: apps/settings/src/ui/mod.rs:163 apps/terminal/src/window.rs:286
+#: apps/settings/src/ui/mod.rs:191 apps/terminal/src/window.rs:286
 #: apps/text-editor/src/window.rs:64 apps/web/src/window.rs:221
 #: apps/web/src/window.rs:264 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -1932,7 +1933,7 @@ msgid "Search Events"
 msgstr ""
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:961 apps/settings/src/ui/mod.rs:192
+#: apps/files/src/ui/tab.rs:961 apps/settings/src/ui/mod.rs:220
 #: apps/settings/src/ui/picker.rs:114 apps/web/src/dialogs.rs:739
 #: apps/web/src/window.rs:2372
 msgid "No Results Found"
@@ -1940,7 +1941,7 @@ msgstr ""
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:193
+#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:221
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:740
 #: apps/web/src/window.rs:2373
 msgid "Try a different search"
@@ -2219,7 +2220,8 @@ msgstr ""
 
 #: apps/camera/src/ui.rs:109 apps/camera/src/ui.rs:199
 #: apps/image-viewer/src/ui.rs:546 apps/image-viewer/src/ui.rs:557
-#: apps/settings/src/ui/privacy.rs:145 apps/web/src/permissions.rs:27
+#: apps/settings/src/bluez.rs:230 apps/settings/src/ui/privacy.rs:145
+#: apps/web/src/permissions.rs:27
 msgid "Camera"
 msgstr ""
 
@@ -3675,11 +3677,12 @@ msgstr ""
 
 #: apps/contacts/src/ui.rs:1272 apps/maps/src/nominatim.rs:153
 #: apps/maps/src/nominatim.rs:154 apps/maps/src/ui.rs:289
+#: apps/settings/src/bluez.rs:228
 msgid "Phone"
 msgstr ""
 
 #: apps/contacts/src/ui.rs:1288 apps/maps/src/nominatim.rs:248
-#: apps/web/src/window.rs:48
+#: apps/settings/src/ui/bluetooth.rs:515 apps/web/src/window.rs:48
 msgid "Address"
 msgstr ""
 
@@ -3873,7 +3876,7 @@ msgstr ""
 
 #: apps/disk-usage/src/mounts.rs:155 apps/files/src/pathbar.rs:25
 #: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1246
-#: apps/files/src/ui/window.rs:138
+#: apps/files/src/ui/window.rs:138 apps/settings/src/bluez.rs:229
 msgid "Computer"
 msgstr ""
 
@@ -5163,7 +5166,7 @@ msgstr ""
 #: apps/disks/src/ui.rs:1357 apps/disks/src/ui.rs:1626
 #: apps/disks/src/ui.rs:1898 apps/files/src/sorting.rs:45
 #: apps/files/src/ui/properties.rs:126 apps/files/src/ui/tab.rs:192
-#: apps/system-monitor/src/fs_view.rs:25
+#: apps/settings/src/ui/bluetooth.rs:513 apps/system-monitor/src/fs_view.rs:25
 msgid "Type"
 msgstr ""
 
@@ -5896,6 +5899,7 @@ msgid "Please check your scanner is connected and powered on."
 msgstr ""
 
 #: apps/document-scanner/src/ui.rs:361 apps/document-scanner/src/ui.rs:1713
+#: apps/settings/src/bluez.rs:233
 msgid "Scanner"
 msgstr ""
 
@@ -6604,7 +6608,7 @@ msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr ""
 
 #: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1251
-#: apps/maps/src/ui.rs:1254 apps/settings/src/ui/mod.rs:390
+#: apps/maps/src/ui.rs:1254 apps/settings/src/ui/mod.rs:418
 #: apps/settings/src/ui/picker.rs:33
 msgid "No results found"
 msgstr ""
@@ -6834,8 +6838,8 @@ msgid "Recent"
 msgstr ""
 
 #: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:385
-#: apps/files/src/ui/tab.rs:1256 apps/settings/src/panels.rs:60
-#: apps/system-monitor/src/res_view.rs:385
+#: apps/files/src/ui/tab.rs:1256 apps/settings/src/bluez.rs:235
+#: apps/settings/src/panels.rs:60 apps/system-monitor/src/res_view.rs:385
 msgid "Network"
 msgstr ""
 
@@ -10330,6 +10334,74 @@ msgstr ""
 msgid "settings"
 msgstr ""
 
+#: apps/settings/src/bluez.rs:66
+msgid "Connected"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:68
+msgid "Not connected"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:70
+msgid "Not paired"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:74
+msgid "{state} · Battery {percent} %"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:221
+msgid "Headset"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:222
+msgid "Headphones"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:223
+msgid "Speaker"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:224 apps/settings/src/panels.rs:192
+msgid "Keyboard"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:225 apps/settings/src/ui/input.rs:76
+msgid "Mouse"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:226
+msgid "Tablet"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:227
+msgid "Game Controller"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:231
+msgid "Video Camera"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:232
+msgid "Printer"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:234
+msgid "Modem"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:236 apps/text-editor/src/prefs.rs:119
+msgid "Display"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:237
+msgid "Media Player"
+msgstr ""
+
+#: apps/settings/src/bluez.rs:243
+msgid "Other Device"
+msgstr ""
+
 #: apps/settings/src/dbus.rs:134
 msgid "Hostname"
 msgstr ""
@@ -10453,7 +10525,7 @@ msgstr ""
 msgid "ethernet;wired;vpn;proxy;ip;dns;internet;"
 msgstr ""
 
-#: apps/settings/src/panels.rs:72
+#: apps/settings/src/panels.rs:72 apps/settings/src/ui/bluetooth.rs:102
 msgid "Bluetooth"
 msgstr ""
 
@@ -10541,10 +10613,6 @@ msgstr ""
 msgid ""
 "touchpad;pointer;speed;scroll;natural;tap;click;trackpad;primary "
 "button;acceleration;"
-msgstr ""
-
-#: apps/settings/src/panels.rs:192
-msgid "Keyboard"
 msgstr ""
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
@@ -11120,6 +11188,187 @@ msgstr ""
 msgid "Could not add picture: {e}"
 msgstr ""
 
+#: apps/settings/src/ui/bluetooth.rs:72
+msgid "Loading Bluetooth…"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:76
+msgid "Bluetooth Is Not Available"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:77
+msgid "The Bluetooth service is not running."
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:84
+msgid "No Bluetooth Adapter Found"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:85
+msgid "Plug in a Bluetooth adapter to use Bluetooth."
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:92
+msgid "Bluetooth Is Turned Off by a Hardware Switch"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:93
+msgid "Turn it on with the switch or key on the computer."
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:107
+msgid "Visible Name"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:112 apps/settings/src/ui/privacy.rs:139
+msgid "Devices"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:114
+msgid "Nearby Devices"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:116
+msgid "Searching for Devices"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:120
+msgid "Received Files"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:124
+msgid "Received Files Folder"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:125
+msgid "Files sent to this computer are saved in {folder}"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:141
+msgid "Could not open the folder"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:195
+msgid "Could not rename the adapter: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:288
+msgid "Turn on to connect devices and receive files"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:290
+msgid "Visible to nearby devices as “{name}” while this page is open"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:346
+msgid "Pairing…"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:348
+msgid "Pairing"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:352
+msgid "Select to pair"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:376
+msgid "No devices are paired yet."
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:381
+msgid "Searching for devices…"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:383
+msgid "Make sure the device is in pairing mode."
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:450
+msgid "Could not turn Bluetooth on: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:452
+msgid "Could not turn Bluetooth off: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:475
+msgid "Paired with {name}"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:480
+msgid "Pairing with {name} was cancelled"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:484
+msgid "Could not pair with {name}: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:510
+msgid "Connection"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:517 apps/settings/src/ui/power.rs:40
+#: apps/settings/src/ui/power.rs:70 apps/settings/src/ui/power.rs:79
+msgid "Battery"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:523
+msgid "Send Files"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:524
+msgid "Choose files to send to this device"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:525
+msgid "Send Files…"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:530
+msgid "Forget Device"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:531
+msgid "It will have to be paired again to be used"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:532
+msgid "Forget…"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:562
+msgid "Could not connect: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:564
+msgid "Could not disconnect: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:582
+msgid "Sending files needs the Helix shell"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:584
+msgid "Could not send files: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:644
+msgid "Forget {name}?"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:645
+msgid "It will have to be paired again before it can be used."
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:648
+msgid "_Forget"
+msgstr ""
+
+#: apps/settings/src/ui/bluetooth.rs:669
+msgid "Could not forget the device: {e}"
+msgstr ""
+
 #: apps/settings/src/ui/datetime.rs:71
 msgid "Synchronized with network time servers"
 msgstr ""
@@ -11320,10 +11569,6 @@ msgstr ""
 msgid "Button order on mice and touchpads"
 msgstr ""
 
-#: apps/settings/src/ui/input.rs:76
-msgid "Mouse"
-msgstr ""
-
 #: apps/settings/src/ui/input.rs:85 apps/settings/src/ui/input.rs:134
 msgid "Pointer Speed"
 msgstr ""
@@ -11460,46 +11705,46 @@ msgstr ""
 msgid "Remove {source}"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:125 apps/settings/src/ui/mod.rs:205
-#: apps/settings/src/ui/mod.rs:459
+#: apps/settings/src/ui/mod.rs:153 apps/settings/src/ui/mod.rs:233
+#: apps/settings/src/ui/mod.rs:487
 msgid "Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:143
+#: apps/settings/src/ui/mod.rs:171
 msgid "Search settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:146 apps/settings/src/ui/shortcuts.rs:10
+#: apps/settings/src/ui/mod.rs:174 apps/settings/src/ui/shortcuts.rs:10
 msgid "Search Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:164
+#: apps/settings/src/ui/mod.rs:192
 msgid "_About Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:314 apps/settings/src/ui/mod.rs:327
+#: apps/settings/src/ui/mod.rs:342 apps/settings/src/ui/mod.rs:355
 msgid "Not yet available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:348
+#: apps/settings/src/ui/mod.rs:376
 msgid "Not Yet Available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:391
+#: apps/settings/src/ui/mod.rs:419
 msgid "{n} panel found"
 msgid_plural "{n} panels found"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/ui/mod.rs:428
+#: apps/settings/src/ui/mod.rs:456
 msgid "{} Is Not Yet Available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:429
+#: apps/settings/src/ui/mod.rs:457
 msgid "This panel will be added in a later version of Helix Settings."
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:460
+#: apps/settings/src/ui/mod.rs:488
 msgid "Configure the Helix desktop"
 msgstr ""
 
@@ -11590,11 +11835,6 @@ msgstr ""
 
 #: apps/settings/src/ui/picker.rs:223
 msgid "{message}, showing the first {choices}"
-msgstr ""
-
-#: apps/settings/src/ui/power.rs:40 apps/settings/src/ui/power.rs:70
-#: apps/settings/src/ui/power.rs:79
-msgid "Battery"
 msgstr ""
 
 #: apps/settings/src/ui/power.rs:78
@@ -11715,10 +11955,6 @@ msgstr ""
 
 #: apps/settings/src/ui/privacy.rs:135
 msgid "Let apps determine your geographical location"
-msgstr ""
-
-#: apps/settings/src/ui/privacy.rs:139
-msgid "Devices"
 msgstr ""
 
 #: apps/settings/src/ui/privacy.rs:146
@@ -12836,10 +13072,6 @@ msgstr ""
 
 #: apps/text-editor/src/prefs.rs:97
 msgid "Editor Font"
-msgstr ""
-
-#: apps/text-editor/src/prefs.rs:119
-msgid "Display"
 msgstr ""
 
 #: apps/text-editor/src/prefs.rs:124

@@ -7,6 +7,7 @@ use helix_app_common::trnf;
 mod about;
 mod access;
 mod appearance;
+mod bluetooth;
 mod datetime;
 mod extensions;
 mod input;
@@ -57,9 +58,9 @@ fn panel_impl(id: PanelId) -> Option<&'static dyn Panel> {
         PanelId::Power => &power::PowerPanel,
         PanelId::DateTime => &datetime::DateTimePanel,
         PanelId::About => &about::AboutPanel,
+        PanelId::Bluetooth => &bluetooth::BluetoothPanel,
         PanelId::Wifi
         | PanelId::Network
-        | PanelId::Bluetooth
         | PanelId::Display
         | PanelId::Sound
         | PanelId::Apps
@@ -102,6 +103,33 @@ pub fn spawn_worker<T: Send + 'static>(
     glib::spawn_future_local(async move {
         if let Ok(v) = rx.recv().await {
             done(v);
+        }
+    });
+}
+
+/// Keeps a panel's view of a service current: `watch` runs on a thread
+/// and calls its argument for every change it sees (stopping when that
+/// returns false); `changed` then runs on the GTK thread, at most once per
+/// `settle`, while `state` lives.
+pub fn follow<S: 'static>(
+    state: &Rc<S>,
+    settle: std::time::Duration,
+    watch: impl FnOnce(&mut dyn FnMut() -> bool) + Send + 'static,
+    changed: impl Fn(&Rc<S>) + 'static,
+) {
+    let (tx, rx) = async_channel::unbounded::<()>();
+    std::thread::spawn(move || {
+        let mut tell = move || tx.send_blocking(()).is_ok();
+        watch(&mut tell);
+    });
+    let weak = Rc::downgrade(state);
+    glib::spawn_future_local(async move {
+        while rx.recv().await.is_ok() {
+            // Changes closer together than `settle` are read once.
+            glib::timeout_future(settle).await;
+            while rx.try_recv().is_ok() {}
+            let Some(state) = weak.upgrade() else { break };
+            changed(&state);
         }
     });
 }

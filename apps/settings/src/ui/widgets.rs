@@ -415,3 +415,115 @@ pub fn value_label(value: &str) -> gtk::Label {
 pub fn page() -> adw::PreferencesPage {
     adw::PreferencesPage::new()
 }
+
+/// A spinner with a visible label (also its accessible name), shown
+/// while a service is first read.
+pub fn loading(label: &str) -> gtk::Widget {
+    let spinner = gtk::Spinner::builder()
+        .spinning(true)
+        .width_request(32)
+        .height_request(32)
+        .build();
+    let label = gtk::Label::builder()
+        .label(label)
+        .css_classes(["dim-label"])
+        .build();
+    helix_app_common::label_widget(&spinner, &label);
+    let bx = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(12)
+        .valign(gtk::Align::Center)
+        .halign(gtk::Align::Center)
+        .build();
+    bx.append(&spinner);
+    bx.append(&label);
+    bx.upcast()
+}
+
+/// A status page (a service or device that is not there).
+pub fn status(icon: &str, title: &str, description: &str) -> adw::StatusPage {
+    adw::StatusPage::builder()
+        .icon_name(icon)
+        .title(glib::markup_escape_text(title))
+        .description(glib::markup_escape_text(description))
+        .build()
+}
+
+/// A row showing a read-only value (selectable, so it can be copied);
+/// [`InfoRow::set`] changes it.
+#[derive(Clone)]
+pub struct InfoRow {
+    pub row: adw::ActionRow,
+    pub value: gtk::Label,
+}
+
+impl InfoRow {
+    pub fn new(title: &str, value: &str) -> Self {
+        let row = adw::ActionRow::builder()
+            .use_markup(false)
+            .title(title)
+            .build();
+        let label = value_label(value);
+        helix_app_common::set_accessible_label(&label, title);
+        row.add_suffix(&label);
+        InfoRow { row, value: label }
+    }
+
+    pub fn set(&self, value: &str) {
+        self.value.set_label(value);
+    }
+}
+
+/// A dialog with a header bar around `content`.
+pub fn dialog(title: &str, content: &impl IsA<gtk::Widget>) -> adw::Dialog {
+    let view = adw::ToolbarView::new();
+    view.add_top_bar(&adw::HeaderBar::new());
+    view.set_content(Some(content));
+    adw::Dialog::builder()
+        .title(title)
+        .content_width(460)
+        .child(&view)
+        .build()
+}
+
+/// A row with one button at its end, named after the row.
+pub fn action_row(
+    title: &str,
+    subtitle: &str,
+    button: &str,
+    css: Option<&str>,
+) -> (adw::ActionRow, gtk::Button) {
+    let row = adw::ActionRow::builder()
+        .use_markup(false)
+        .title(title)
+        .build();
+    if !subtitle.is_empty() {
+        row.set_subtitle(subtitle);
+    }
+    let b = gtk::Button::builder()
+        .label(button)
+        .valign(gtk::Align::Center)
+        .build();
+    if let Some(c) = css {
+        b.add_css_class(c);
+    }
+    helix_app_common::set_accessible_label(&b, title);
+    row.add_suffix(&b);
+    row.set_activatable_widget(Some(&b));
+    (row, b)
+}
+
+/// Replaces `rows` (previously added to `group`) with `new`.
+pub fn replace_rows(
+    group: &adw::PreferencesGroup,
+    rows: &std::cell::RefCell<Vec<gtk::Widget>>,
+    new: Vec<gtk::Widget>,
+) {
+    for r in rows.borrow_mut().drain(..) {
+        group.remove(&r);
+    }
+    for r in &new {
+        group.add(r);
+    }
+    *rows.borrow_mut() = new;
+}
