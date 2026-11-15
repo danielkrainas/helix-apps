@@ -139,7 +139,7 @@ fn selection_title(selection_mode: bool, n: usize) -> String {
     match (selection_mode, n) {
         (false, _) => tr("Contacts").into(),
         (true, 0) => tr("Select Contacts").into(),
-        (true, n) => trf!("{n} Selected", n = n),
+        (true, n) => trnf!("{n} Selected", "{n} Selected", n),
     }
 }
 
@@ -772,7 +772,8 @@ impl Ui {
         match msg {
             Msg::Unavailable(e) => {
                 self.unavailable_page.set_description(Some(&format!(
-                    "Could not reach Evolution Data Server.\n{}",
+                    "{}\n{}",
+                    tr("Could not reach Evolution Data Server."),
                     glib::markup_escape_text(&e)
                 )));
                 self.main_stack.set_visible_child_name("unavailable");
@@ -1261,7 +1262,7 @@ impl Ui {
             for e in &c.emails {
                 g.add(&self.value_row(
                     &e.value,
-                    vcard::generic_label(&e.types),
+                    tr(vcard::generic_label(&e.types)),
                     Some((RowAction::Email, format!("mailto:{}", e.value))),
                 ));
             }
@@ -1277,7 +1278,7 @@ impl Ui {
                     .collect();
                 g.add(&self.value_row(
                     &p.value,
-                    phone_label(p),
+                    tr(phone_label(p)),
                     Some((RowAction::Call, format!("tel:{tel}"))),
                 ));
             }
@@ -1289,7 +1290,7 @@ impl Ui {
                 let q = glib::Uri::escape_string(&a.one_line(), None, false);
                 g.add(&self.value_row(
                     &a.formatted(),
-                    vcard::generic_label(&a.types),
+                    tr(vcard::generic_label(&a.types)),
                     Some((RowAction::Map, format!("geo:0,0?q={q}"))),
                 ));
             }
@@ -1305,7 +1306,7 @@ impl Ui {
                 };
                 g.add(&self.value_row(
                     &u.value,
-                    vcard::generic_label(&u.types),
+                    tr(vcard::generic_label(&u.types)),
                     Some((RowAction::Website, uri)),
                 ));
             }
@@ -1637,7 +1638,7 @@ impl Ui {
             .title(if n == 1 {
                 tr("Contact deleted").to_string()
             } else {
-                trf!("{n} contacts deleted", n = n)
+                trnf!("{n} contact deleted", "{n} contacts deleted", n)
             })
             .button_label(tr("Undo"))
             .timeout(5)
@@ -1694,7 +1695,7 @@ impl Ui {
 
     fn choose_import(self: &Rc<Self>) {
         let filter = gtk::FileFilter::new();
-        filter.set_name(Some("vCard files"));
+        filter.set_name(Some(tr("vCard files")));
         filter.add_mime_type("text/vcard");
         filter.add_mime_type("text/x-vcard");
         filter.add_suffix("vcf");
@@ -1890,8 +1891,10 @@ fn format_vcard_date(v: &str) -> Option<String> {
     }
     let month = helix_app_common::i18n::month_name(m);
     Some(match y {
-        Some(y) => format!("{d} {month} {y}"),
-        None => format!("{d} {month}"),
+        // Translators: a birthday or anniversary, "17" "May" "1990".
+        Some(y) => trf!("{day} {month} {year}", day = d, month = month, year = y),
+        // Translators: a birthday or anniversary without a year, "17" "May".
+        None => trf!("{day} {month}", day = d, month = month),
     })
 }
 

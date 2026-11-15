@@ -16,6 +16,7 @@ use crate::pathbar::{self, Target};
 use crate::sorting::SortKey;
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
+use helix_app_common::trnf;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum OpenIn {
@@ -743,11 +744,12 @@ impl Window {
                     .sum();
                 let dirs = infos.iter().filter(|i| info_is_dir(i)).count();
                 if dirs == n {
-                    trf!("{n} folders selected", n = n)
+                    trnf!("{n} folder selected", "{n} folders selected", n)
                 } else {
-                    trf!(
+                    trnf!(
+                        "{n} item selected ({bytes})",
                         "{n} items selected ({bytes})",
-                        n = n,
+                        n,
                         bytes = crate::fmt::size(bytes)
                     )
                 }
@@ -1282,9 +1284,10 @@ impl Window {
                         crate::ops::display_name(&out.trashed[0])
                     )
                 } else {
-                    trf!(
-                        "{} moved to Trash",
-                        crate::fmt::item_count(out.trashed.len() as u64)
+                    trnf!(
+                        "{n} item moved to Trash",
+                        "{n} items moved to Trash",
+                        out.trashed.len()
                     )
                 };
                 let toast = adw::Toast::builder()
@@ -1364,9 +1367,10 @@ impl Window {
                 crate::ops::display_name(&files[0])
             )
         } else {
-            trf!(
-                "Permanently Delete {}?",
-                crate::fmt::item_count(files.len() as u64)
+            trnf!(
+                "Permanently Delete {n} Item?",
+                "Permanently Delete {n} Items?",
+                files.len()
             )
         };
         dialogs::confirm(

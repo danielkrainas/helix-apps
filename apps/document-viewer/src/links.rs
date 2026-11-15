@@ -56,7 +56,8 @@ impl Target {
                 trf!("Go to page {label}", label = label)
             }
             Target::Uri(u) => u.clone(),
-            Target::Remote { file, .. } => format!("Go to {file}"),
+            // Translators: a link to another document, "Go to report.pdf".
+            Target::Remote { file, .. } => trf!("Go to {file}", file = file),
             Target::Named(n) => match n {
                 Named::NextPage => tr("Next page").into(),
                 Named::PrevPage => tr("Previous page").into(),

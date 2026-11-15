@@ -545,10 +545,12 @@ impl Tab {
             t.crash_page.set_visible(true);
             helix_app_common::announce(
                 &t.crash_page,
-                &format!(
-                    "{}. {}",
-                    t.crash_page.title(),
-                    t.crash_page.description().unwrap_or_default()
+                // Translators: announced when a page crashes: the heading,
+                // then the explanation.
+                &trf!(
+                    "{title}. {description}",
+                    title = t.crash_page.title(),
+                    description = t.crash_page.description().unwrap_or_default()
                 ),
                 helix_app_common::Urgency::Assertive,
             );

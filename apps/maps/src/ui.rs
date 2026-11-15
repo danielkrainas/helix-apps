@@ -1066,7 +1066,7 @@ impl Ui {
 
         let esc = gtk::ShortcutController::new();
         esc.add_shortcut(gtk::Shortcut::new(
-            gtk::ShortcutTrigger::parse_string(tr("Escape")),
+            gtk::ShortcutTrigger::parse_string("Escape"),
             Some(gtk::NamedAction::new("win.close-sidebar")),
         ));
         win.add_controller(esc);

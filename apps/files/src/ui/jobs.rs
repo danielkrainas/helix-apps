@@ -45,16 +45,17 @@ impl ops::Handler for ChannelHandler {
 
 fn details(p: &Progress) -> String {
     if p.total_bytes > 0 {
-        format!(
-            "{} of {}",
-            crate::fmt::size(p.done_bytes.min(p.total_bytes)),
-            crate::fmt::size(p.total_bytes)
+        trf!(
+            "{done} of {total}",
+            done = crate::fmt::size(p.done_bytes.min(p.total_bytes)),
+            total = crate::fmt::size(p.total_bytes)
         )
     } else if p.total_items > 0 {
-        format!(
-            "{} of {}",
-            p.done_items.min(p.total_items),
-            crate::fmt::item_count(p.total_items)
+        helix_app_common::trnf!(
+            "{done} of {n} item",
+            "{done} of {n} items",
+            p.total_items,
+            done = p.done_items.min(p.total_items)
         )
     } else {
         tr("Preparing…").into()

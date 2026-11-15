@@ -1,6 +1,7 @@
 //! Coordinates, `geo:` URIs, launch arguments and human-readable
 //! distance / duration formatting.
 
+use helix_app_common::i18n::{format_number, tr};
 use helix_app_common::trf;
 use std::f64::consts::PI;
 
@@ -224,25 +225,29 @@ pub fn format_distance(m: f64, units: Units) -> String {
     match units {
         Units::Metric => {
             if m < 1000.0 {
-                format!(
+                // Translators: a distance in metres.
+                trf!(
                     "{} m",
                     round_to(m, if m < 100.0 { 5.0 } else { 10.0 }) as i64
                 )
             } else if m < 10_000.0 {
-                format!("{:.1} km", m / 1000.0)
+                // Translators: a distance in kilometres.
+                trf!("{} km", format_number(m / 1000.0, 1))
             } else {
-                format!("{} km", (m / 1000.0).round() as i64)
+                trf!("{} km", (m / 1000.0).round() as i64)
             }
         }
         Units::Imperial => {
             let ft = m / 0.3048;
             let mi = m / 1609.344;
             if mi < 0.1 {
-                format!("{} ft", round_to(ft, 10.0) as i64)
+                // Translators: a distance in feet.
+                trf!("{} ft", round_to(ft, 10.0) as i64)
             } else if mi < 10.0 {
-                format!("{mi:.1} mi")
+                // Translators: a distance in miles.
+                trf!("{} mi", format_number(mi, 1))
             } else {
-                format!("{} mi", mi.round() as i64)
+                trf!("{} mi", mi.round() as i64)
             }
         }
     }
@@ -255,14 +260,15 @@ fn round_to(v: f64, step: f64) -> f64 {
 pub fn format_duration(secs: f64) -> String {
     let mins = (secs / 60.0).round() as i64;
     if mins < 1 {
-        "less than a minute".to_string()
+        tr("less than a minute").to_string()
     } else if mins < 60 {
         trf!("{mins} min", mins = mins)
     } else {
         let h = mins / 60;
         let m = mins % 60;
         if m == 0 {
-            format!("{h} h")
+            // Translators: a travel time in hours, "2 h".
+            trf!("{h} h", h = h)
         } else {
             trf!("{h} h {m} min", h = h, m = m)
         }

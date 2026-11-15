@@ -1,11 +1,11 @@
 //! Journal entries as emitted by `journalctl -o json`, boot lists, and the
 //! journalctl command line.
 
-use helix_app_common::i18n::tr;
+use helix_app_common::i18n::{n_, tr};
 use serde_json::Value;
 
 /// Placeholder shown for fields journalctl did not serialise (`null`).
-pub const OMITTED: &str = "[data omitted]";
+pub const OMITTED: &str = n_("[data omitted]");
 
 /// One journal entry. Fields keep journalctl's order of appearance only
 /// loosely: they are sorted by name so lookups and display are stable.
@@ -43,7 +43,7 @@ fn decode_bytes(arr: &[Value]) -> Option<String> {
 fn push_value(out: &mut Vec<(String, String)>, key: &str, v: &Value, nested: bool) {
     match v {
         Value::String(s) => out.push((key.to_string(), s.clone())),
-        Value::Null => out.push((key.to_string(), OMITTED.to_string())),
+        Value::Null => out.push((key.to_string(), tr(OMITTED).to_string())),
         Value::Number(n) => out.push((key.to_string(), n.to_string())),
         Value::Bool(b) => out.push((key.to_string(), b.to_string())),
         Value::Array(arr) => {

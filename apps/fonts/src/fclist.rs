@@ -179,7 +179,7 @@ fn output_with_timeout(cmd: &mut Command, timeout: Duration) -> Result<Vec<u8>, 
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()
-        .map_err(|e| format!("{name}: {e}"))?;
+        .map_err(|e| trf!("{program}: {error}", program = name, error = e))?;
     // Read on another thread so a full pipe never blocks the child while
     // this one waits for it with a deadline.
     let Some(mut stdout) = child.stdout.take() else {
@@ -205,13 +205,13 @@ fn output_with_timeout(cmd: &mut Command, timeout: Duration) -> Result<Vec<u8>, 
                     as_secs_f64 = timeout.as_secs_f64()
                 ));
             }
-            Err(e) => return Err(format!("{name}: {e}")),
+            Err(e) => return Err(trf!("{program}: {error}", program = name, error = e)),
         }
     };
     let out = reader
         .join()
         .map_err(|_| trf!("{name}: reading its output failed", name = name))?
-        .map_err(|e| format!("{name}: {e}"))?;
+        .map_err(|e| trf!("{program}: {error}", program = name, error = e))?;
     if !status.success() {
         return Err(trf!(
             "{name} failed ({status})",
@@ -314,7 +314,7 @@ pub fn list_families() -> Result<Vec<Family>, String> {
         result => {
             let why = result
                 .err()
-                .unwrap_or_else(|| "fc-list found no fonts".into());
+                .unwrap_or_else(|| tr("fc-list found no fonts").into());
             gtk::glib::g_warning!("helix-fonts", "{why}; scanning font directories");
             let faces = scan_dirs(&fallback_dirs());
             if faces.is_empty() {

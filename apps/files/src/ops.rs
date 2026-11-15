@@ -11,6 +11,7 @@ use gtk::glib;
 use crate::naming;
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
+use helix_app_common::trnf;
 
 #[derive(Debug, Clone)]
 pub enum Job {
@@ -39,19 +40,33 @@ pub enum Job {
 impl Job {
     /// Short description for the progress popover.
     pub fn title(&self) -> String {
-        let n = |v: &Vec<gio::File>| crate::fmt::item_count(v.len() as u64);
-        let dest_name = |d: &gio::File| display_name(d);
         match self {
-            Job::Copy { sources, dest } => {
-                trf!("Copying {} to “{}”", n(sources), dest_name(dest))
+            Job::Copy { sources, dest } => trnf!(
+                "Copying {n} item to “{folder}”",
+                "Copying {n} items to “{folder}”",
+                sources.len(),
+                folder = display_name(dest)
+            ),
+            Job::Move { sources, dest } => trnf!(
+                "Moving {n} item to “{folder}”",
+                "Moving {n} items to “{folder}”",
+                sources.len(),
+                folder = display_name(dest)
+            ),
+            Job::Link { sources, .. } => trnf!(
+                "Creating links to {n} item",
+                "Creating links to {n} items",
+                sources.len()
+            ),
+            Job::Trash(v) => trnf!(
+                "Moving {n} item to Trash",
+                "Moving {n} items to Trash",
+                v.len()
+            ),
+            Job::Delete(v) => trnf!("Deleting {n} item", "Deleting {n} items", v.len()),
+            Job::Restore(v) | Job::Untrash(v) => {
+                trnf!("Restoring {n} item", "Restoring {n} items", v.len())
             }
-            Job::Move { sources, dest } => {
-                trf!("Moving {} to “{}”", n(sources), dest_name(dest))
-            }
-            Job::Link { sources, .. } => trf!("Creating links to {}", n(sources)),
-            Job::Trash(v) => trf!("Moving {} to Trash", n(v)),
-            Job::Delete(v) => trf!("Deleting {}", n(v)),
-            Job::Restore(v) | Job::Untrash(v) => trf!("Restoring {}", n(v)),
             Job::EmptyTrash => tr("Emptying Trash").into(),
         }
     }
@@ -62,26 +77,27 @@ impl Job {
     /// many top-level items it produced (`None`: the caller reports it
     /// itself, as for Move to Trash).
     pub fn finished(&self, created: usize) -> Option<String> {
-        let count = |v: &Vec<gio::File>| {
-            crate::fmt::item_count(if created > 0 { created } else { v.len() } as u64)
-        };
+        let count = |v: &Vec<gio::File>| if created > 0 { created } else { v.len() };
         Some(match self {
-            Job::Copy { sources, dest } => {
-                trf!("Copied {} to “{}”", count(sources), display_name(dest))
-            }
-            Job::Move { sources, dest } => {
-                trf!("Moved {} to “{}”", count(sources), display_name(dest))
-            }
+            Job::Copy { sources, dest } => trnf!(
+                "Copied {n} item to “{folder}”",
+                "Copied {n} items to “{folder}”",
+                count(sources),
+                folder = display_name(dest)
+            ),
+            Job::Move { sources, dest } => trnf!(
+                "Moved {n} item to “{folder}”",
+                "Moved {n} items to “{folder}”",
+                count(sources),
+                folder = display_name(dest)
+            ),
             Job::Link { sources, .. } => {
-                let n = if created > 0 { created } else { sources.len() };
-                if n == 1 {
-                    tr("Created 1 link").into()
-                } else {
-                    trf!("Created {n} links", n = n)
-                }
+                trnf!("Created {n} link", "Created {n} links", count(sources))
             }
-            Job::Restore(v) | Job::Untrash(v) => trf!("Restored {}", count(v)),
-            Job::Delete(v) => trf!("Deleted {}", count(v)),
+            Job::Restore(v) | Job::Untrash(v) => {
+                trnf!("Restored {n} item", "Restored {n} items", count(v))
+            }
+            Job::Delete(v) => trnf!("Deleted {n} item", "Deleted {n} items", count(v)),
             Job::EmptyTrash => tr("Trash emptied").into(),
             Job::Trash(_) => return None,
         })
@@ -236,16 +252,65 @@ impl Runner<'_> {
         }
     }
 
+    /// Records that `verb` (one of the keys matched below) failed on `f`.
     fn error(&mut self, verb: &str, f: &gio::File, e: &glib::Error) {
         if is_cancelled(e) {
             self.out.cancelled = true;
         } else {
-            self.out.errors.push(trf!(
-                "Could not {verb} “{file}”: {error}",
-                verb = verb,
-                file = display_name(f),
-                error = e.message()
-            ));
+            let file = display_name(f);
+            let error = e.message();
+            self.out.errors.push(match verb {
+                "replace" => trf!(
+                    "Could not replace “{file}”: {error}",
+                    file = file,
+                    error = error
+                ),
+                "move" => trf!(
+                    "Could not move “{file}”: {error}",
+                    file = file,
+                    error = error
+                ),
+                "read" => trf!(
+                    "Could not read “{file}”: {error}",
+                    file = file,
+                    error = error
+                ),
+                "remove" => trf!(
+                    "Could not remove “{file}”: {error}",
+                    file = file,
+                    error = error
+                ),
+                "link to" => trf!(
+                    "Could not link to “{file}”: {error}",
+                    file = file,
+                    error = error
+                ),
+                "move to the Trash" => trf!(
+                    "Could not move “{file}” to the Trash: {error}",
+                    file = file,
+                    error = error
+                ),
+                "delete" => trf!(
+                    "Could not delete “{file}”: {error}",
+                    file = file,
+                    error = error
+                ),
+                "restore" => trf!(
+                    "Could not restore “{file}”: {error}",
+                    file = file,
+                    error = error
+                ),
+                "empty" => trf!(
+                    "Could not empty “{file}”: {error}",
+                    file = file,
+                    error = error
+                ),
+                _ => trf!(
+                    "Could not process “{file}”: {error}",
+                    file = file,
+                    error = error
+                ),
+            });
         }
     }
 
@@ -647,9 +712,10 @@ impl Runner<'_> {
             })
             .collect();
         if items.len() < originals.len() {
-            self.out.errors.push(trf!(
-                "{} could not be found in the Trash",
-                crate::fmt::item_count((originals.len() - items.len()) as u64)
+            self.out.errors.push(trnf!(
+                "{n} item could not be found in the Trash",
+                "{n} items could not be found in the Trash",
+                originals.len() - items.len()
             ));
         }
         self.restore(&items);

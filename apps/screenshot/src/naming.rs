@@ -1,6 +1,7 @@
 //! File names and folders.
 
 use gtk::glib;
+use helix_app_common::trf;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU32, Ordering};
 
@@ -40,10 +41,13 @@ impl Stamp {
 
 /// `Screenshot from YYYY-MM-DD HH-MM-SS.png`.
 pub fn default_file_name(t: Stamp) -> String {
-    format!(
-        "Screenshot from {:04}-{:02}-{:02} {:02}-{:02}-{:02}.png",
+    let when = format!(
+        "{:04}-{:02}-{:02} {:02}-{:02}-{:02}",
         t.year, t.month, t.day, t.hour, t.minute, t.second
-    )
+    );
+    // Translators: the default file name of a screenshot; {when} is its
+    // date and time. ".png" is added after it.
+    format!("{}.png", trf!("Screenshot from {when}", when = when))
 }
 
 /// The folder the save dialog starts in: the last one used if it still

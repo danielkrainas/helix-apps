@@ -1,6 +1,7 @@
 //! Countdown timers on a monotonic timestamp.
 
 use helix_app_common::trf;
+use helix_app_common::trnf;
 use std::time::Duration;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -113,13 +114,15 @@ pub fn describe_duration(secs: u64) -> String {
     let (h, m, s) = (secs / 3600, (secs / 60) % 60, secs % 60);
     let mut parts = Vec::new();
     if h > 0 {
-        parts.push(format!("{h} h"));
+        // Translators: hours in a short duration, "1 h 30 min".
+        parts.push(trf!("{h} h", h = h));
     }
     if m > 0 {
         parts.push(trf!("{m} min", m = m));
     }
     if s > 0 || parts.is_empty() {
-        parts.push(format!("{s} s"));
+        // Translators: seconds in a short duration, "45 s".
+        parts.push(trf!("{s} s", s = s));
     }
     parts.join(" ")
 }
@@ -127,24 +130,23 @@ pub fn describe_duration(secs: u64) -> String {
 /// A duration in words, for speech: "1 hour 30 minutes", "45 seconds".
 pub fn spoken_duration(secs: u64) -> String {
     let (h, m, s) = (secs / 3600, (secs / 60) % 60, secs % 60);
-    let unit = |n: u64, one: &str| {
-        if n == 1 {
-            format!("1 {one}")
-        } else {
-            format!("{n} {one}s")
-        }
-    };
-    let mut parts = Vec::new();
-    if h > 0 {
-        parts.push(unit(h, "hour"));
+    let hours = trnf!("{n} hour", "{n} hours", h);
+    let minutes = trnf!("{n} minute", "{n} minutes", m);
+    let seconds = trnf!("{n} second", "{n} seconds", s);
+    match (h > 0, m > 0, s > 0) {
+        (true, false, false) => hours,
+        (false, true, false) => minutes,
+        (false, false, _) => seconds,
+        (true, true, false) => trf!("{hours} {minutes}", hours = hours, minutes = minutes),
+        (false, true, true) => trf!("{minutes} {seconds}", minutes = minutes, seconds = seconds),
+        (true, false, true) => trf!("{hours} {seconds}", hours = hours, seconds = seconds),
+        (true, true, true) => trf!(
+            "{hours} {minutes} {seconds}",
+            hours = hours,
+            minutes = minutes,
+            seconds = seconds
+        ),
     }
-    if m > 0 {
-        parts.push(unit(m, "minute"));
-    }
-    if s > 0 || parts.is_empty() {
-        parts.push(unit(s, "second"));
-    }
-    parts.join(" ")
 }
 
 /// Names that tell timers apart for assistive technology, from each

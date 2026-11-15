@@ -218,7 +218,7 @@ async fn read_faces(path: PathBuf) -> Result<Vec<FaceSource>, String> {
     let p = path.clone();
     let res = gio::spawn_blocking(move || fontinfo::read_file(&p).map_err(|e| e.to_string()))
         .await
-        .map_err(|_| "worker failed".to_string())??;
+        .map_err(|_| tr("worker failed").to_string())??;
     Ok(res
         .into_iter()
         .map(|f| FaceSource {
@@ -233,7 +233,7 @@ async fn read_faces(path: PathBuf) -> Result<Vec<FaceSource>, String> {
 
 fn open_dialog(win: &Rc<Win>) {
     let filter = gtk::FileFilter::new();
-    filter.set_name(Some("Font Files"));
+    filter.set_name(Some(tr("Font Files")));
     for m in [
         "font/ttf",
         "font/otf",
@@ -386,7 +386,12 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
         child.set_tooltip_text(Some(&fam.name));
         let n = fam.faces.len();
         let count = trnf!("{n} style", "{n} styles", n);
-        item.set_accessible_label(&format!("{}, {count}", fam.name));
+        // Translators: accessible name of a font family tile: "Cantarell, 4 styles".
+        item.set_accessible_label(&trf!(
+            "{family}, {styles}",
+            family = fam.name,
+            styles = count
+        ));
         styles.set_label(&count);
     });
     let grid = gtk::GridView::builder()

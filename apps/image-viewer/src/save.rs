@@ -215,7 +215,7 @@ pub fn save_rotated(path: &Path, degrees: u32) -> Result<(), String> {
     let name = Pixbuf::file_info(path)
         .and_then(|(f, _, _)| f.name())
         .map(|n| n.to_string())
-        .ok_or_else(|| "Unknown image format".to_string())?;
+        .ok_or_else(|| tr("Unknown image format").to_string())?;
     let label = match name.as_str() {
         "jpeg" => "JPEG",
         "png" => "PNG",

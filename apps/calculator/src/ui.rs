@@ -338,7 +338,7 @@ fn financial_keys() -> Vec<Vec<Key>> {
     let f = |i: usize| Key {
         label: financial::FUNCTIONS[i].name,
         act: Act::Financial(i),
-        tooltip: Some(financial::FUNCTIONS[i].title),
+        tooltip: Some(tr(financial::FUNCTIONS[i].title)),
         class: None,
     };
     vec![
@@ -1510,13 +1510,13 @@ impl Ui {
 
     fn financial_dialog(&self, i: usize) {
         let f = &financial::FUNCTIONS[i];
-        let dialog = adw::AlertDialog::builder().heading(f.title).build();
+        let dialog = adw::AlertDialog::builder().heading(tr(f.title)).build();
         let group = adw::PreferencesGroup::new();
         let rows: Vec<adw::EntryRow> = f
             .params
             .iter()
             .map(|p| {
-                let row = adw::EntryRow::builder().title(*p).build();
+                let row = adw::EntryRow::builder().title(tr(p)).build();
                 group.add(&row);
                 row
             })

@@ -210,9 +210,9 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
 
     if !app.prefs.is_persistent() {
         let note = adw::PreferencesGroup::builder()
-            .description(glib::markup_escape_text(
+            .description(glib::markup_escape_text(tr(
                 "The org.gnome.TextEditor settings schema is not installed; changes last until the editor quits.",
-            ))
+            )))
             .build();
         page.add(&note);
     }

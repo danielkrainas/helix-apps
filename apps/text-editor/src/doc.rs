@@ -860,8 +860,9 @@ impl Doc {
             // Spoken right away by refresh_search.
             (0, _) if invalid => tr("Invalid expression").into(),
             (0, _) => tr("No results").into(),
-            (n, Some(i)) => format!("{} of {}", i + 1, n),
-            (n, None) => trf!("{n} results", n = n),
+            // Translators: the current search match, "3 of 12".
+            (n, Some(i)) => trf!("{current} of {n}", current = i + 1, n = n),
+            (n, None) => trnf!("{n} result", "{n} results", n),
         };
         if !invalid && !text.is_empty() && text != self.find.count.text() {
             helix_app_common::announce_settled(&self.find.count, &text);

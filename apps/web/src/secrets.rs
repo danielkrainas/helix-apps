@@ -114,12 +114,11 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::Bus(e) => f.write_str(&trf!("Secret Service error: {e}", e = e)),
-            Error::Dismissed => write!(f, "the keyring prompt was dismissed"),
-            Error::Unavailable => write!(f, "no Secret Service collection is available"),
-            Error::Crypto => write!(
-                f,
-                "could not set up or use the encrypted Secret Service session"
-            ),
+            Error::Dismissed => f.write_str(tr("the keyring prompt was dismissed")),
+            Error::Unavailable => f.write_str(tr("no Secret Service collection is available")),
+            Error::Crypto => f.write_str(tr(
+                "could not set up or use the encrypted Secret Service session",
+            )),
         }
     }
 }

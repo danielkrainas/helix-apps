@@ -848,11 +848,13 @@ impl Ui {
                 .position(|v| Some(v.key()) == key)
                 .map(|i| (i, all[i]))
             {
-                Some((i, v)) => format!(
-                    "{}, {} of {}",
-                    v.spoken(&format::size(v.size)),
-                    i + 1,
-                    all.len()
+                // Translators: the selected volume, then its position
+                // among the volumes, "Data, 512 GB, Ext4, 2 of 3".
+                Some((i, v)) => trf!(
+                    "{volume}, {index} of {count}",
+                    volume = v.spoken(&format::size(v.size)),
+                    index = i + 1,
+                    count = all.len()
                 ),
                 None if all.is_empty() => tr("No media").to_string(),
                 None => tr("No volume selected").to_string(),
@@ -1238,10 +1240,10 @@ impl Ui {
         let weak = Rc::downgrade(self);
         glib::spawn_future_local(async move {
             let res = gio::spawn_blocking(move || -> Result<OpOutput, (String, &'static str)> {
-                let c = udisks::conn().map_err(|e| (e, "connecting to UDisks2"))?;
+                let c = udisks::conn().map_err(|e| (e, tr("Error connecting to UDisks2")))?;
                 let mut out = OpOutput::None;
                 for op in &ops {
-                    out = udisks::run(&c, op).map_err(|e| (e, op.verb()))?;
+                    out = udisks::run(&c, op).map_err(|e| (e, op.error_title()))?;
                 }
                 Ok(out)
             })
@@ -1250,7 +1252,7 @@ impl Ui {
             ui.set_busy(false);
             match res {
                 Ok(Ok(out)) => done(&ui, out),
-                Ok(Err((msg, verb))) => ui.error(&trf!("Error {verb}", verb = verb), &msg),
+                Ok(Err((msg, title))) => ui.error(title, &msg),
                 Err(_) => ui.error(tr("Error"), tr("The operation failed unexpectedly.")),
             }
         });
@@ -1463,15 +1465,16 @@ impl Ui {
                 passphrase,
                 update_partition_type: is_partition,
             };
-            let mut body = format!(
-                "All data on the volume {} will be lost and cannot be recovered.\n\nNew type: {}",
-                describe_volume(&v),
-                model::fs_name(&fs_type, "")
+            let mut body = trf!(
+                "All data on the volume {volume} will be lost and cannot be recovered.\n\nNew type: {new_type}",
+                volume = describe_volume(&v),
+                new_type = model::fs_name(&fs_type, "")
             );
             if v.is_mounted() {
-                body.push_str(&format!(
-                    "\n\nThe volume is mounted at {} and will be unmounted first.",
-                    v.mount_points()[0]
+                body.push_str("\n\n");
+                body.push_str(&trf!(
+                    "The volume is mounted at {path} and will be unmounted first.",
+                    path = v.mount_points()[0]
                 ));
             }
             ui.confirm(tr("Format Volume?"), &body, tr("_Format"), move |ui| {
@@ -1570,12 +1573,14 @@ impl Ui {
             describe_volume(&v)
         );
         if v.is_container() {
-            body.push_str("\n\nThis is an extended partition: all logical partitions inside it will be deleted too.");
+            body.push_str("\n\n");
+            body.push_str(tr("This is an extended partition: all logical partitions inside it will be deleted too."));
         }
         if v.is_mounted() {
-            body.push_str(&format!(
-                "\n\nThe partition is mounted at {} and will be unmounted first.",
-                v.mount_points()[0]
+            body.push_str("\n\n");
+            body.push_str(&trf!(
+                "The partition is mounted at {path} and will be unmounted first.",
+                path = v.mount_points()[0]
             ));
         }
         self.confirm(tr("Delete Partition?"), &body, tr("_Delete"), move |ui| {
@@ -1733,9 +1738,9 @@ impl Ui {
             }
         };
         if repair {
-            let body = format!(
-                "Repairing the filesystem on {} may result in loss of data. Make a backup first; repairing is a risky operation.",
-                describe_volume(&v)
+            let body = trf!(
+                "Repairing the filesystem on {volume} may result in loss of data. Make a backup first; repairing is a risky operation.",
+                volume = describe_volume(&v)
             );
             self.confirm(tr("Repair Filesystem?"), &body, tr("_Repair"), move |ui| {
                 let report = report.clone();
@@ -1874,7 +1879,7 @@ impl Ui {
         for (title, value) in rows {
             let r = property_row(title);
             r.set_subtitle(&glib::markup_escape_text(&value));
-            if title == "Overall Assessment" && smart.is_warning() {
+            if title == tr("Overall Assessment") && smart.is_warning() {
                 r.add_css_class("error");
             }
             summary.add(&r);
@@ -1966,13 +1971,13 @@ impl Ui {
     fn attach_image(self: &Rc<Self>) {
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         let f = gtk::FileFilter::new();
-        f.set_name(Some("Disk Images (*.img, *.iso)"));
+        f.set_name(Some(tr("Disk Images (*.img, *.iso)")));
         for p in ["*.img", "*.iso", "*.raw", "*.IMG", "*.ISO"] {
             f.add_pattern(p);
         }
         filters.append(&f);
         let all = gtk::FileFilter::new();
-        all.set_name(Some("All Files"));
+        all.set_name(Some(tr("All Files")));
         all.add_pattern("*");
         filters.append(&all);
         let dialog = gtk::FileDialog::builder()
@@ -2166,10 +2171,12 @@ impl Ui {
             }
             let mut body = trf!("All existing data on {desc} will be overwritten by the image “{path}” ({image_size}) and cannot be recovered.", desc = desc, path = path.display(), image_size = format::size(image_size));
             if image_size < size {
-                body.push_str(&format!("\n\nThe image is smaller than the target; the remaining {} will be left as is.", format::size(size - image_size)));
+                body.push_str("\n\n");
+                body.push_str(&trf!("The image is smaller than the target; the remaining {size} will be left as is.", size = format::size(size - image_size)));
             }
             if !teardown.is_empty() {
-                body.push_str("\n\nMounted volumes will be unmounted first.");
+                body.push_str("\n\n");
+                body.push_str(tr("Mounted volumes will be unmounted first."));
             }
             let block = block.clone();
             let desc = desc.clone();

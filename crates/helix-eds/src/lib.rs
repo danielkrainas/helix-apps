@@ -26,6 +26,14 @@ pub use ical::{Event, Instance, Time, Zones};
 pub use source::{Source, SourceKind};
 pub use vcard::Contact;
 
+/// Marks text for translation without translating it (this crate has no
+/// gettext): the labels and messages it returns are English, and the apps
+/// show them through `helix_app_common::i18n::tr`, which finds them in the
+/// shared catalogue because `tools/i18n/update-pot.sh` extracts `n_` calls.
+pub(crate) const fn n_(msgid: &'static str) -> &'static str {
+    msgid
+}
+
 /// A random 40-hex-digit identifier (the shape EDS uses for UIDs).
 pub fn new_id() -> String {
     use std::collections::hash_map::RandomState;

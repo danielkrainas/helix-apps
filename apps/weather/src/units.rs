@@ -1,6 +1,7 @@
 //! Unit handling: GWeather unit preferences, locale defaults, conversion and
 //! formatting. Raw data is always metric (°C, km/h, hPa).
 
+use helix_app_common::i18n::trc;
 use helix_app_common::trf;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -172,7 +173,7 @@ impl Pressure {
         match self {
             Pressure::Kpa => trf!("{v} kPa", v = helix_app_common::i18n::format_number(v, 1)),
             Pressure::Hpa => trf!("{v} hPa", v = helix_app_common::i18n::format_number(v, 0)),
-            Pressure::Mb => format!("{v:.0} mb"),
+            Pressure::Mb => trf!("{v} mb", v = helix_app_common::i18n::format_number(v, 0)),
             Pressure::MmHg => trf!("{v} mmHg", v = helix_app_common::i18n::format_number(v, 0)),
             Pressure::InHg => trf!("{v} inHg", v = helix_app_common::i18n::format_number(v, 2)),
             Pressure::Atm => trf!("{v} atm", v = helix_app_common::i18n::format_number(v, 3)),
@@ -182,13 +183,28 @@ impl Pressure {
 
 /// 16-point compass abbreviation for a direction in degrees (where the wind
 /// comes from).
-pub fn compass(degrees: f64) -> &'static str {
-    const POINTS: [&str; 16] = [
-        "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW",
-        "NW", "NNW",
-    ];
+pub fn compass(degrees: f64) -> String {
     let d = degrees.rem_euclid(360.0);
-    POINTS[((d / 22.5).round() as usize) % 16]
+    match ((d / 22.5).round() as usize) % 16 {
+        // Translators: compass points, abbreviated (N = north, NNE =
+        // north-northeast, …), after a wind speed: "12 km/h NNE".
+        0 => trc("wind direction", "N"),
+        1 => trc("wind direction", "NNE"),
+        2 => trc("wind direction", "NE"),
+        3 => trc("wind direction", "ENE"),
+        4 => trc("wind direction", "E"),
+        5 => trc("wind direction", "ESE"),
+        6 => trc("wind direction", "SE"),
+        7 => trc("wind direction", "SSE"),
+        8 => trc("wind direction", "S"),
+        9 => trc("wind direction", "SSW"),
+        10 => trc("wind direction", "SW"),
+        11 => trc("wind direction", "WSW"),
+        12 => trc("wind direction", "W"),
+        13 => trc("wind direction", "WNW"),
+        14 => trc("wind direction", "NW"),
+        _ => trc("wind direction", "NNW"),
+    }
 }
 
 #[cfg(test)]

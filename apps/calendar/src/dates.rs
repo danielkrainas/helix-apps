@@ -2,6 +2,7 @@
 
 use chrono::{Datelike, Duration, NaiveDate, NaiveTime, Timelike, Weekday};
 use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 pub fn month_name(m: u32) -> &'static str {
     helix_app_common::i18n::month_name(m)
@@ -52,60 +53,70 @@ pub fn iso_week(d: NaiveDate) -> u32 {
 }
 
 pub fn month_title(d: NaiveDate) -> String {
-    format!("{} {}", month_name(d.month()), d.year())
+    // Translators: a month view's title, "November 2026".
+    trf!(
+        "{month} {year}",
+        month = month_name(d.month()),
+        year = d.year()
+    )
 }
 
 /// "9 – 15 Nov 2026", "30 Nov – 6 Dec 2026", "28 Dec 2026 – 3 Jan 2027".
 pub fn range_title(start: NaiveDate, end_inclusive: NaiveDate) -> String {
     let (s, e) = (start, end_inclusive);
     if s.year() != e.year() {
-        format!(
-            "{} {} {} – {} {} {}",
-            s.day(),
-            month_short(s.month()),
-            s.year(),
-            e.day(),
-            month_short(e.month()),
-            e.year()
+        // Translators: a week spanning two years, "28 Dec 2026 – 3 Jan 2027".
+        trf!(
+            "{day1} {month1} {year1} – {day2} {month2} {year2}",
+            day1 = s.day(),
+            month1 = month_short(s.month()),
+            year1 = s.year(),
+            day2 = e.day(),
+            month2 = month_short(e.month()),
+            year2 = e.year()
         )
     } else if s.month() != e.month() {
-        format!(
-            "{} {} – {} {} {}",
-            s.day(),
-            month_short(s.month()),
-            e.day(),
-            month_short(e.month()),
-            e.year()
+        // Translators: a week spanning two months, "30 Nov – 6 Dec 2026".
+        trf!(
+            "{day1} {month1} – {day2} {month2} {year}",
+            day1 = s.day(),
+            month1 = month_short(s.month()),
+            day2 = e.day(),
+            month2 = month_short(e.month()),
+            year = e.year()
         )
     } else {
-        format!(
-            "{} – {} {} {}",
-            s.day(),
-            e.day(),
-            month_short(e.month()),
-            e.year()
+        // Translators: a week within one month, "9 – 15 Nov 2026".
+        trf!(
+            "{day1} – {day2} {month} {year}",
+            day1 = s.day(),
+            day2 = e.day(),
+            month = month_short(e.month()),
+            year = e.year()
         )
     }
 }
 
-/// "Friday, 13 November 2026".
+/// "Friday, 13 November 2026", with the weekday in the current locale.
 pub fn long_date(d: NaiveDate) -> String {
-    format!(
-        "{}, {} {} {}",
-        d.format("%A"),
-        d.day(),
-        month_name(d.month()),
-        d.year()
+    // Translators: a full date, "Friday, 13 November 2026".
+    trf!(
+        "{weekday}, {day} {month} {year}",
+        weekday = helix_app_common::i18n::weekday_name(d.weekday().num_days_from_monday()),
+        day = d.day(),
+        month = month_name(d.month()),
+        year = d.year()
     )
 }
 
 /// "Fri 13 Nov".
 pub fn short_date(d: NaiveDate) -> String {
-    format!(
-        "{} {} {}",
-        weekday_short(d.weekday()),
-        d.day(),
-        month_short(d.month())
+    // Translators: a short date, "Fri 13 Nov".
+    trf!(
+        "{weekday} {day} {month}",
+        weekday = weekday_short(d.weekday()),
+        day = d.day(),
+        month = month_short(d.month())
     )
 }
 

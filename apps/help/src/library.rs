@@ -124,7 +124,10 @@ impl Library {
             return Ok(d.clone());
         }
         let found = self.resolve(doc).ok_or_else(|| match doc {
-            DocRef::Id(id) => format!("The help document \u{201C}{id}\u{201D} is not installed."),
+            DocRef::Id(id) => trf!(
+                "The help document \u{201C}{id}\u{201D} is not installed.",
+                id = id
+            ),
             DocRef::Path(p) => trf!("No help document was found at {}.", p.display()),
         })?;
         let mut start_page = None;
@@ -225,9 +228,9 @@ impl Library {
                     html::page(
                         &d.title(),
                         &format!(
-                            "<meta http-equiv=\"refresh\" content=\"0;url={0}\"><p><a href=\"{0}\">Open {1}</a></p>",
+                            "<meta http-equiv=\"refresh\" content=\"0;url={0}\"><p><a href=\"{0}\">{1}</a></p>",
                             escape_attr(&uri),
-                            escape(&d.title())
+                            escape(&trf!("Open {title}", title = d.title()))
                         ),
                     ),
                 ))
@@ -237,9 +240,9 @@ impl Library {
             Some((_, h)) => h,
             None => html::error_page(
                 tr("Page Not Found"),
-                &format!(
-                    "The page \u{201C}{}\u{201D} was not found in this document.",
-                    page.unwrap_or("index")
+                &trf!(
+                    "The page \u{201C}{page}\u{201D} was not found in this document.",
+                    page = page.unwrap_or("index")
                 ),
             ),
         }
@@ -261,9 +264,12 @@ impl Library {
 
     fn home(&self) -> String {
         let docs = self.documents();
-        let mut body = String::from("<h1>Help</h1>");
+        let mut body = format!("<h1>{}</h1>", escape(tr("Help")));
         if docs.is_empty() {
-            body.push_str("<p>No help documents are installed.</p>");
+            body.push_str(&format!(
+                "<p>{}</p>",
+                escape(tr("No help documents are installed."))
+            ));
         } else {
             body.push_str("<ul class=\"doclist\">");
             for d in &docs {
@@ -314,7 +320,8 @@ fn mallard_listing(docref: &DocRef, m: &MallardDoc) -> (String, String) {
         })
         .collect();
     let body = format!(
-        "<h1>Pages</h1>{}",
+        "<h1>{}</h1>{}",
+        escape(tr("Pages")),
         html::link_list("links-topic", None, &items)
     );
     (tr("Pages").into(), html::page(tr("Pages"), &body))
@@ -347,11 +354,14 @@ fn results_page(q: &str, items: &[String], back: Option<(String, String)>) -> St
         body.push_str(&html::trail(&[(uri, title)]));
     }
     body.push_str(&format!(
-        "<h1>Search results for \u{201C}{}\u{201D}</h1>",
-        escape(q)
+        "<h1>{}</h1>",
+        escape(&trf!("Search results for \u{201C}{q}\u{201D}", q = q))
     ));
     if items.is_empty() {
-        body.push_str("<p>No matching pages were found.</p>");
+        body.push_str(&format!(
+            "<p>{}</p>",
+            escape(tr("No matching pages were found."))
+        ));
     } else {
         body.push_str(&format!(
             "<ul class=\"links results\">{}</ul>",

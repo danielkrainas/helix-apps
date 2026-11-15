@@ -196,17 +196,23 @@ struct Shot {
 /// The preview's alternative text: what was captured and its size —
 /// "Screenshot of the whole screen, 1920 × 1080".
 fn preview_text(mode: Mode, width: i32, height: i32) -> String {
-    let what = match mode {
-        Mode::Screen => "the whole screen",
-        Mode::Window => "a window",
-        Mode::Area => "a selected area",
-    };
-    trf!(
-        "Screenshot of {what}, {width} × {height}",
-        what = what,
-        width = width,
-        height = height
-    )
+    match mode {
+        Mode::Screen => trf!(
+            "Screenshot of the whole screen, {width} × {height}",
+            width = width,
+            height = height
+        ),
+        Mode::Window => trf!(
+            "Screenshot of a window, {width} × {height}",
+            width = width,
+            height = height
+        ),
+        Mode::Area => trf!(
+            "Screenshot of a selected area, {width} × {height}",
+            width = width,
+            height = height
+        ),
+    }
 }
 
 struct Win {
@@ -633,7 +639,7 @@ impl Win {
         };
         let folder = naming::save_folder(self.settings.borrow().last_folder.as_deref());
         let filter = gtk::FileFilter::new();
-        filter.set_name(Some("PNG Images"));
+        filter.set_name(Some(tr("PNG Images")));
         filter.add_mime_type("image/png");
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&filter);

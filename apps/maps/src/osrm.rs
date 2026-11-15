@@ -156,78 +156,160 @@ pub fn parse_route(json: &str) -> Result<Route, String> {
     })
 }
 
-fn direction(modifier: &str) -> &'static str {
-    match modifier {
-        "left" => "left",
-        "right" => "right",
-        "slight left" => "slightly left",
-        "slight right" => "slightly right",
-        "sharp left" => "sharp left",
-        "sharp right" => "sharp right",
-        "uturn" => "around",
-        _ => "",
+/// The direction of a turn (OSRM's maneuver `modifier`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Dir {
+    Left,
+    Right,
+    SlightLeft,
+    SlightRight,
+    SharpLeft,
+    SharpRight,
+    UTurn,
+}
+
+fn direction(modifier: &str) -> Option<Dir> {
+    Some(match modifier {
+        "left" => Dir::Left,
+        "right" => Dir::Right,
+        "slight left" => Dir::SlightLeft,
+        "slight right" => Dir::SlightRight,
+        "sharp left" => Dir::SharpLeft,
+        "sharp right" => Dir::SharpRight,
+        "uturn" => Dir::UTurn,
+        _ => return None,
+    })
+}
+
+/// "Turn left", "Turn left onto {name}", …
+fn turn(dir: Dir, name: &str) -> String {
+    let n = name;
+    match (dir, name.is_empty()) {
+        (Dir::Left, true) => tr("Turn left").into(),
+        (Dir::Left, false) => trf!("Turn left onto {name}", name = n),
+        (Dir::Right, true) => tr("Turn right").into(),
+        (Dir::Right, false) => trf!("Turn right onto {name}", name = n),
+        (Dir::SlightLeft, true) => tr("Turn slightly left").into(),
+        (Dir::SlightLeft, false) => trf!("Turn slightly left onto {name}", name = n),
+        (Dir::SlightRight, true) => tr("Turn slightly right").into(),
+        (Dir::SlightRight, false) => trf!("Turn slightly right onto {name}", name = n),
+        (Dir::SharpLeft, true) => tr("Turn sharp left").into(),
+        (Dir::SharpLeft, false) => trf!("Turn sharp left onto {name}", name = n),
+        (Dir::SharpRight, true) => tr("Turn sharp right").into(),
+        (Dir::SharpRight, false) => trf!("Turn sharp right onto {name}", name = n),
+        (Dir::UTurn, true) => tr("Make a U-turn").into(),
+        (Dir::UTurn, false) => trf!("Make a U-turn onto {name}", name = n),
     }
 }
 
-/// Builds an English instruction from an OSRM maneuver.
+/// "Keep left", "Keep left onto {name}", … (a bend in a road that goes on).
+fn keep(dir: Dir, name: &str) -> String {
+    let n = name;
+    match (dir, name.is_empty()) {
+        (Dir::Left | Dir::SharpLeft, true) => tr("Keep left").into(),
+        (Dir::Left | Dir::SharpLeft, false) => trf!("Keep left onto {name}", name = n),
+        (Dir::Right | Dir::SharpRight, true) => tr("Keep right").into(),
+        (Dir::Right | Dir::SharpRight, false) => trf!("Keep right onto {name}", name = n),
+        (Dir::SlightLeft, true) => tr("Keep slightly left").into(),
+        (Dir::SlightLeft, false) => trf!("Keep slightly left onto {name}", name = n),
+        (Dir::SlightRight, true) => tr("Keep slightly right").into(),
+        (Dir::SlightRight, false) => trf!("Keep slightly right onto {name}", name = n),
+        (Dir::UTurn, _) => turn(dir, name),
+    }
+}
+
+/// "At the end of the road, turn left", …
+fn end_of_road(dir: Dir, name: &str) -> String {
+    let n = name;
+    let left = matches!(dir, Dir::Left | Dir::SlightLeft | Dir::SharpLeft);
+    match (dir, left, name.is_empty()) {
+        (Dir::UTurn, _, _) => turn(dir, name),
+        (_, true, true) => tr("At the end of the road, turn left").into(),
+        (_, true, false) => trf!("At the end of the road, turn left onto {name}", name = n),
+        (_, false, true) => tr("At the end of the road, turn right").into(),
+        (_, false, false) => trf!("At the end of the road, turn right onto {name}", name = n),
+    }
+}
+
+/// Builds the instruction for an OSRM maneuver, in the interface language.
 pub fn instruction(kind: &str, modifier: &str, name: &str, exit: Option<u64>) -> String {
-    let onto = if name.is_empty() {
-        String::new()
-    } else {
-        trf!(" onto {name}", name = name)
-    };
-    let on = if name.is_empty() {
-        String::new()
-    } else {
-        format!(" on {name}")
-    };
+    let n = name;
+    let named = !name.is_empty();
     let dir = direction(modifier);
     match kind {
         "depart" => {
-            if name.is_empty() {
-                tr("Start").to_string()
+            if named {
+                trf!("Start on {name}", name = n)
             } else {
-                trf!("Start on {name}", name = name)
+                tr("Start").to_string()
             }
         }
         "arrive" => tr("Arrive at destination").to_string(),
-        "roundabout" | "rotary" => match exit {
-            Some(n) => trf!("At the roundabout, take exit {n}{onto}", n = n, onto = onto),
-            None => trf!("Enter the roundabout{onto}", onto = onto),
+        "roundabout" | "rotary" => match (exit, named) {
+            (Some(x), true) => trf!(
+                "At the roundabout, take exit {n} onto {name}",
+                n = x,
+                name = n
+            ),
+            (Some(x), false) => trf!("At the roundabout, take exit {n}", n = x),
+            (None, true) => trf!("Enter the roundabout and continue onto {name}", name = n),
+            (None, false) => tr("Enter the roundabout").to_string(),
         },
-        "exit roundabout" | "exit rotary" => trf!("Exit the roundabout{onto}", onto = onto),
-        "merge" => trf!("Merge{onto}", onto = onto),
-        "on ramp" => trf!("Take the ramp{onto}", onto = onto),
-        "off ramp" => trf!("Take the exit{onto}", onto = onto),
-        "fork" => {
-            let side = if modifier.contains("left") {
-                "left"
+        "exit roundabout" | "exit rotary" => {
+            if named {
+                trf!("Exit the roundabout onto {name}", name = n)
             } else {
-                "right"
-            };
-            trf!("Keep {side} at the fork{onto}", side = side, onto = onto)
-        }
-        "end of road" if !dir.is_empty() => trf!(
-            "At the end of the road, turn {dir}{onto}",
-            dir = dir,
-            onto = onto
-        ),
-        "continue" | "new name" => {
-            if modifier == "straight" || dir.is_empty() {
-                trf!("Continue{on}", on = on)
-            } else {
-                trf!("Keep {dir}{onto}", dir = dir, onto = onto)
+                tr("Exit the roundabout").to_string()
             }
         }
-        _ => {
-            if modifier == "uturn" {
-                trf!("Make a U-turn{onto}", onto = onto)
-            } else if modifier == "straight" || dir.is_empty() {
-                trf!("Continue straight{onto}", onto = onto)
+        "merge" => {
+            if named {
+                trf!("Merge onto {name}", name = n)
             } else {
-                trf!("Turn {dir}{onto}", dir = dir, onto = onto)
+                tr("Merge").to_string()
             }
         }
+        "on ramp" => {
+            if named {
+                trf!("Take the ramp onto {name}", name = n)
+            } else {
+                tr("Take the ramp").to_string()
+            }
+        }
+        "off ramp" => {
+            if named {
+                trf!("Take the exit onto {name}", name = n)
+            } else {
+                tr("Take the exit").to_string()
+            }
+        }
+        "fork" => match (modifier.contains("left"), named) {
+            (true, true) => trf!("Keep left at the fork onto {name}", name = n),
+            (true, false) => tr("Keep left at the fork").to_string(),
+            (false, true) => trf!("Keep right at the fork onto {name}", name = n),
+            (false, false) => tr("Keep right at the fork").to_string(),
+        },
+        "end of road" if dir.is_some() => end_of_road(dir.unwrap_or(Dir::Left), name),
+        "continue" | "new name" => match dir {
+            Some(d) if modifier != "straight" => keep(d, name),
+            _ => {
+                if named {
+                    trf!("Continue on {name}", name = n)
+                } else {
+                    tr("Continue").to_string()
+                }
+            }
+        },
+        _ => match dir {
+            Some(d) => turn(d, name),
+            None => {
+                if named {
+                    trf!("Continue straight onto {name}", name = n)
+                } else {
+                    tr("Continue straight").to_string()
+                }
+            }
+        },
     }
 }
 

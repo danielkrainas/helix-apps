@@ -5,6 +5,7 @@
 
 use crate::model::{Drive, Volume};
 use crate::smart::Attribute;
+use helix_app_common::i18n::tr;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Op {
@@ -94,28 +95,28 @@ pub enum OpOutput {
 }
 
 impl Op {
-    /// Present-participle description used in error headings.
-    pub fn verb(&self) -> &'static str {
+    /// The heading of the error shown when the operation fails.
+    pub fn error_title(&self) -> &'static str {
         match self {
-            Op::Mount { .. } => "mounting filesystem",
-            Op::Unmount { .. } => "unmounting filesystem",
-            Op::SwapStart { .. } => "starting swap",
-            Op::SwapStop { .. } => "stopping swap",
-            Op::Unlock { .. } => "unlocking encrypted device",
-            Op::Lock { .. } => "locking encrypted device",
-            Op::Format { .. } => "formatting volume",
-            Op::CreatePartition { .. } => "creating partition",
-            Op::DeletePartition { .. } => "deleting partition",
-            Op::SetPartitionType { .. } => "setting partition type",
-            Op::SetPartitionName { .. } => "setting partition name",
-            Op::SetPartitionFlags { .. } => "setting partition flags",
-            Op::SetLabel { .. } => "setting filesystem label",
-            Op::Check { .. } => "checking filesystem",
-            Op::Repair { .. } => "repairing filesystem",
-            Op::PowerOff { .. } => "powering off drive",
-            Op::Eject { .. } => "ejecting media",
-            Op::LoopDetach { .. } => "detaching loop device",
-            Op::SmartAttributes { .. } => "reading SMART data",
+            Op::Mount { .. } => tr("Error mounting filesystem"),
+            Op::Unmount { .. } => tr("Error unmounting filesystem"),
+            Op::SwapStart { .. } => tr("Error starting swap"),
+            Op::SwapStop { .. } => tr("Error stopping swap"),
+            Op::Unlock { .. } => tr("Error unlocking encrypted device"),
+            Op::Lock { .. } => tr("Error locking encrypted device"),
+            Op::Format { .. } => tr("Error formatting volume"),
+            Op::CreatePartition { .. } => tr("Error creating partition"),
+            Op::DeletePartition { .. } => tr("Error deleting partition"),
+            Op::SetPartitionType { .. } => tr("Error setting partition type"),
+            Op::SetPartitionName { .. } => tr("Error setting partition name"),
+            Op::SetPartitionFlags { .. } => tr("Error setting partition flags"),
+            Op::SetLabel { .. } => tr("Error setting filesystem label"),
+            Op::Check { .. } => tr("Error checking filesystem"),
+            Op::Repair { .. } => tr("Error repairing filesystem"),
+            Op::PowerOff { .. } => tr("Error powering off drive"),
+            Op::Eject { .. } => tr("Error ejecting media"),
+            Op::LoopDetach { .. } => tr("Error detaching loop device"),
+            Op::SmartAttributes { .. } => tr("Error reading SMART data"),
         }
     }
 }
@@ -203,6 +204,9 @@ mod tests {
         let m = build(&snapshot());
         let d = m.find_drive(USB).unwrap();
         assert!(teardown_drive(d).is_empty());
-        assert_eq!(Op::Eject { drive: USB.into() }.verb(), "ejecting media");
+        assert_eq!(
+            Op::Eject { drive: USB.into() }.error_title(),
+            "Error ejecting media"
+        );
     }
 }

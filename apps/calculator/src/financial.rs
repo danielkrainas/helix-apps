@@ -1,7 +1,7 @@
 //! Financial functions. Rates are fractions per period (5% = 0.05).
 
 use crate::engine::CalcError;
-use helix_app_common::i18n::n_;
+use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 
 /// Describes a financial function for the UI's input forms.
@@ -24,7 +24,7 @@ pub const FUNCTIONS: &[FinancialFn] = &[
     FinancialFn {
         name: "ddb",
         title: n_("Double-Declining Depreciation"),
-        params: &["Cost", "Life", "Period"],
+        params: &[n_("Cost"), n_("Life"), n_("Period")],
     },
     FinancialFn {
         name: "fv",
@@ -38,12 +38,12 @@ pub const FUNCTIONS: &[FinancialFn] = &[
     FinancialFn {
         name: "gpm",
         title: n_("Gross Profit Margin"),
-        params: &["Cost", "Margin"],
+        params: &[n_("Cost"), n_("Margin")],
     },
     FinancialFn {
         name: "pmt",
         title: n_("Periodic Payment"),
-        params: &["Principal", n_("Periodic interest rate"), "Term"],
+        params: &[n_("Principal"), n_("Periodic interest rate"), n_("Term")],
     },
     FinancialFn {
         name: "pv",
@@ -57,17 +57,17 @@ pub const FUNCTIONS: &[FinancialFn] = &[
     FinancialFn {
         name: "rate",
         title: n_("Periodic Interest Rate"),
-        params: &[n_("Future value"), n_("Present value"), "Term"],
+        params: &[n_("Future value"), n_("Present value"), n_("Term")],
     },
     FinancialFn {
         name: "sln",
         title: n_("Straight-Line Depreciation"),
-        params: &["Cost", "Salvage", "Life"],
+        params: &[n_("Cost"), n_("Salvage"), n_("Life")],
     },
     FinancialFn {
         name: "syd",
         title: n_("Sum-of-the-Years'-Digits Depreciation"),
-        params: &["Cost", "Salvage", "Life", "Period"],
+        params: &[n_("Cost"), n_("Salvage"), n_("Life"), n_("Period")],
     },
     FinancialFn {
         name: "term",
@@ -93,7 +93,7 @@ pub fn call(name: &str, a: &[f64]) -> Option<Result<f64, CalcError>> {
     let undefined = || {
         Err(CalcError::Domain(trf!(
             "{} is undefined for these values",
-            f.title
+            tr(f.title)
         )))
     };
     let r = match name {

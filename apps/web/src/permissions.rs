@@ -45,18 +45,20 @@ impl Kind {
 
 /// Builds the "<host> wants to …" sentence for a request.
 pub fn request_text(host: &str, kinds: &[Kind]) -> String {
-    let what = match kinds {
-        [Kind::Geolocation] => "know your location".to_string(),
-        [Kind::Notifications] => "show notifications".to_string(),
-        [Kind::Clipboard] => "read your clipboard".to_string(),
+    match kinds {
+        [Kind::Geolocation] => trf!("{host} wants to know your location", host = host),
+        [Kind::Notifications] => trf!("{host} wants to show notifications", host = host),
+        [Kind::Clipboard] => trf!("{host} wants to read your clipboard", host = host),
         k if k.contains(&Kind::Camera) && k.contains(&Kind::Microphone) => {
-            "use your camera and microphone".to_string()
+            trf!(
+                "{host} wants to use your camera and microphone",
+                host = host
+            )
         }
-        [Kind::Camera] => "use your camera".to_string(),
-        [Kind::Microphone] => "use your microphone".to_string(),
-        _ => "use additional permissions".to_string(),
-    };
-    trf!("{host} wants to {what}", host = host, what = what)
+        [Kind::Camera] => trf!("{host} wants to use your camera", host = host),
+        [Kind::Microphone] => trf!("{host} wants to use your microphone", host = host),
+        _ => trf!("{host} wants to use additional permissions", host = host),
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -177,7 +177,7 @@ fn accent_group(prefs: &Prefs) -> adw::PreferencesGroup {
             .valign(gtk::Align::Center)
             .halign(gtk::Align::Center)
             .build();
-        helix_app_common::set_accessible_label(&b, label);
+        helix_app_common::set_accessible_label(&b, tr(label));
         if let Some((first, _)) = buttons.first() {
             b.set_group(Some(first));
         }
@@ -505,7 +505,7 @@ fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
     let ctx_weak = Rc::downgrade(ctx);
     add_button.connect_clicked(move |_| {
         let filter = gtk::FileFilter::new();
-        filter.set_name(Some("Images"));
+        filter.set_name(Some(tr("Images")));
         filter.add_pixbuf_formats();
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&filter);

@@ -115,7 +115,7 @@ fn make_context(library: Arc<Library>) -> webkit6::WebContext {
                     Err(_) => {
                         let mut err = glib::Error::new(
                             gio::IOErrorEnum::Failed,
-                            "help page rendering failed",
+                            tr("help page rendering failed"),
                         );
                         request.finish_error(&mut err);
                     }

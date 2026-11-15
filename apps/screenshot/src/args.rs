@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use crate::shell::Mode;
+use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 
 pub const MAX_DELAY: u32 = 99;
@@ -157,7 +158,7 @@ where
         }
     }
     if out.file.as_ref().is_some_and(|f| f.as_os_str().is_empty()) {
-        return Err("option --file needs a file name".into());
+        return Err(tr("option --file needs a file name").into());
     }
     Ok(Command::Run(out))
 }

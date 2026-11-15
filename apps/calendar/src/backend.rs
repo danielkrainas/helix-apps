@@ -3,7 +3,7 @@
 
 use chrono::{DateTime, Utc};
 use helix_app_common::i18n::tr;
-use helix_app_common::trf;
+use helix_app_common::{trf, trnf};
 use helix_eds::client::split_calendar_id;
 use helix_eds::ical::{parse_events, resolve_tzid, Event, Time};
 use helix_eds::{sexp, Calendar, Eds, ModType, Source, SourceKind, View, ViewEvent, Watch};
@@ -327,8 +327,9 @@ impl Worker {
                             Ok(_) => Ok(()),
                             Err(_) => {
                                 // Probably an existing UID: import as a copy.
-                                let mut ev = Event::parse(ics)
-                                    .ok_or_else(|| helix_eds::Error::Invalid("bad event".into()))?;
+                                let mut ev = Event::parse(ics).ok_or_else(|| {
+                                    helix_eds::Error::Invalid(tr("bad event").into())
+                                })?;
                                 ev.uid = helix_eds::new_id();
                                 c.create(&[ev.to_ics(Utc::now())]).map(|_| ())
                             }
@@ -345,10 +346,11 @@ impl Worker {
                 };
                 match r {
                     Ok(()) if ok == n => self.send(Msg::Imported(ok)),
-                    Ok(()) => self.send(Msg::Error(trf!(
+                    Ok(()) => self.send(Msg::Error(trnf!(
+                        "Imported {ok} of {n} event",
                         "Imported {ok} of {n} events",
-                        ok = ok,
-                        n = n
+                        n,
+                        ok = ok
                     ))),
                     Err(e) => self.send(Msg::Error(trf!("Import failed: {e}", e = e))),
                 }
@@ -364,7 +366,9 @@ impl Worker {
         what: &str,
     ) {
         if let Err(e) = eds.open_calendar(cal).and_then(|c| f(&c)) {
-            self.send(Msg::Error(format!("{what}: {e}")));
+            // Translators: an error message: what failed ("Could not save
+            // the event"), then the reason.
+            self.send(Msg::Error(trf!("{what}: {error}", what = what, error = e)));
         }
     }
 

@@ -14,30 +14,32 @@ pub struct Choice<T> {
 /// Formats a duration in seconds as e.g. "30 seconds", "5 minutes",
 /// "1 hour", "1 hour 30 minutes".
 pub fn format_duration(secs: u32) -> String {
-    fn plural(n: u32, unit: &str) -> String {
-        if n == 1 {
-            format!("1 {unit}")
-        } else {
-            format!("{n} {unit}s")
-        }
-    }
     if secs < 60 {
-        return plural(secs, "second");
+        return trnf!("{n} second", "{n} seconds", secs);
     }
     let hours = secs / 3600;
     let minutes = (secs % 3600) / 60;
     let seconds = secs % 60;
-    let mut parts = Vec::new();
-    if hours > 0 {
-        parts.push(plural(hours, "hour"));
+    let h = trnf!("{n} hour", "{n} hours", hours);
+    let m = trnf!("{n} minute", "{n} minutes", minutes);
+    let s = trnf!("{n} second", "{n} seconds", seconds);
+    match (hours > 0, minutes > 0, seconds > 0) {
+        (true, false, false) => h,
+        (false, true, false) => m,
+        // Translators: a duration, "1 hour 30 minutes".
+        (true, true, false) => trf!("{hours} {minutes}", hours = h, minutes = m),
+        // Translators: a duration, "5 minutes 30 seconds".
+        (false, true, true) => trf!("{minutes} {seconds}", minutes = m, seconds = s),
+        // Translators: a duration, "1 hour 30 seconds".
+        (true, false, true) => trf!("{hours} {seconds}", hours = h, seconds = s),
+        // Translators: a duration, "1 hour 5 minutes 30 seconds".
+        _ => trf!(
+            "{hours} {minutes} {seconds}",
+            hours = h,
+            minutes = m,
+            seconds = s
+        ),
     }
-    if minutes > 0 {
-        parts.push(plural(minutes, "minute"));
-    }
-    if seconds > 0 {
-        parts.push(plural(seconds, "second"));
-    }
-    parts.join(" ")
 }
 
 fn duration_choices(secs: &[u32], zero_label: Option<&str>) -> Vec<Choice<i64>> {

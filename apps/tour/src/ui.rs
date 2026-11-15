@@ -217,7 +217,10 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
     welcome.append(&illustration(Art::Welcome, &mut areas));
     welcome.append(&title_label(pages::WELCOME_TITLE));
     if let Some(os) = crate::os_release::system_display_name() {
-        let markup = format!("You are running <b>{}</b>.", glib::markup_escape_text(&os));
+        let markup = trf!(
+            "You are running <b>{system}</b>.",
+            system = glib::markup_escape_text(&os)
+        );
         let os_label = body_label(&markup);
         os_label.add_css_class("dim-label");
         welcome.append(&os_label);

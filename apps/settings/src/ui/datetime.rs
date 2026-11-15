@@ -104,10 +104,11 @@ impl State {
         });
     }
 
-    fn report(&self, what: &str, res: Result<(), String>) {
+    /// Shows `failed(error)` as a toast if `res` is an error.
+    fn report(&self, res: Result<(), String>, failed: fn(&str) -> String) {
         if let Err(e) = res {
             if let Some(ctx) = self.ctx.upgrade() {
-                ctx.toast(&trf!("Could not change {what}: {e}", what = what, e = e));
+                ctx.toast(&failed(&e));
             }
         }
     }
@@ -222,7 +223,9 @@ impl Panel for DateTimePanel {
                 move || dbus::set_ntp(enabled),
                 move |res| {
                     if let Some(st) = weak.upgrade() {
-                        st.report("automatic date & time", res);
+                        st.report(res, |e| {
+                            trf!("Could not change automatic date & time: {e}", e = e)
+                        });
                         st.load();
                     }
                 },
@@ -321,7 +324,7 @@ fn timezone_dialog(parent: &adw::ApplicationWindow, state: &Rc<State>) {
                     move || dbus::set_timezone(&tz),
                     move |res| {
                         if let Some(st) = weak.upgrade() {
-                            st.report("the time zone", res);
+                            st.report(res, |e| trf!("Could not change the time zone: {e}", e = e));
                             st.load();
                         }
                     },

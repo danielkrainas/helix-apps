@@ -201,10 +201,12 @@ pub async fn conflict(parent: &adw::ApplicationWindow, c: &Conflict) -> Resoluti
     };
     let (o, n) = (describe(dst.as_ref()), describe(src.as_ref()));
     if !o.is_empty() {
-        body.push_str(&format!("\n\nOriginal: {o}"));
+        body.push_str("\n\n");
+        body.push_str(&trf!("Original: {description}", description = o));
     }
     if !n.is_empty() {
-        body.push_str(&format!("\nReplace with: {n}"));
+        body.push('\n');
+        body.push_str(&trf!("Replace with: {description}", description = n));
     }
     let all = gtk::CheckButton::with_label(tr("Apply this action to all conflicts"));
     let dialog = adw::AlertDialog::builder()

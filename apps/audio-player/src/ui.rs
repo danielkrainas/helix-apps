@@ -748,11 +748,11 @@ impl Ui {
     fn choose_file(self: &Rc<Self>) {
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         let audio = gtk::FileFilter::new();
-        audio.set_name(Some("Audio Files"));
+        audio.set_name(Some(tr("Audio Files")));
         audio.add_mime_type("audio/*");
         filters.append(&audio);
         let all = gtk::FileFilter::new();
-        all.set_name(Some("All Files"));
+        all.set_name(Some(tr("All Files")));
         all.add_pattern("*");
         filters.append(&all);
         let dialog = gtk::FileDialog::builder()
@@ -1257,9 +1257,10 @@ impl Ui {
             gtk::accessible::Property::ValueMin(0.0),
             gtk::accessible::Property::ValueMax(max),
             gtk::accessible::Property::ValueNow((pos as f64 / 1e9).min(max)),
-            gtk::accessible::Property::ValueText(&format!(
-                "{e} of {}",
-                timefmt::format(st.duration.unwrap_or(0), timefmt::is_long(st.duration))
+            gtk::accessible::Property::ValueText(&trf!(
+                "{position} of {duration}",
+                position = e,
+                duration = timefmt::format(st.duration.unwrap_or(0), timefmt::is_long(st.duration))
             )),
         ]);
         drop(st);

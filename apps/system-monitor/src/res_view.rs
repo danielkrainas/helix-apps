@@ -10,6 +10,7 @@ use crate::history::{nice_ceiling, History};
 use crate::sampler::ResourceSample;
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
+use helix_app_common::trnf;
 
 /// Distinct colours for per-CPU lines (GNOME palette hues).
 /// Adwaita's caption text is 82 % of the body size.
@@ -129,10 +130,7 @@ impl Graph {
         let time_labels: Vec<(f64, pango::Layout)> = [
             (
                 0.0,
-                trf!(
-                    "{span_s} seconds",
-                    span_s = helix_app_common::i18n::format_number(span_s, 0)
-                ),
+                trnf!("{n} second", "{n} seconds", span_s.round() as u64),
             ),
             (0.5, format!("{:.0}", span_s / 2.0)),
             (1.0, "0".to_string()),
@@ -280,7 +278,8 @@ fn set_legend_value(value_label: &gtk::Label, value: &str) {
 
 /// One legend entry as text: "CPU1: 12.5 %".
 fn legend_text(title: &str, value: &str) -> String {
-    format!("{title}: {value}")
+    // Translators: a graph legend entry, "CPU1: 12.5 %".
+    trf!("{title}: {value}", title = title, value = value)
 }
 
 /// The CPU graph's description: the average, then each CPU.
@@ -300,7 +299,13 @@ fn cpu_description(cpus: &[f64]) -> String {
             )
         })
         .collect();
-    format!("Average {:.1} %; {}", avg * 100.0, each.join(", "))
+    // Translators: the CPU graph for screen readers, "Average 12.5 %;
+    // CPU1 10.0 %, CPU2 15.0 %".
+    trf!(
+        "Average {average} %; {cpus}",
+        average = helix_app_common::i18n::format_number(avg * 100.0, 1),
+        cpus = each.join(", ")
+    )
 }
 
 fn section(title: &str, graph: &gtk::DrawingArea, legend: &impl IsA<gtk::Widget>) -> gtk::Box {
@@ -375,7 +380,7 @@ impl ResView {
             .margin_start(18)
             .margin_end(18)
             .build();
-        content.append(&section("CPU", &cpu.area, &cpu_legend));
+        content.append(&section(tr("CPU"), &cpu.area, &cpu_legend));
         content.append(&section(tr("Memory and Swap"), &mem.area, &mem_legend));
         content.append(&section(tr("Network"), &net.area, &net_legend));
         let page = gtk::ScrolledWindow::builder()
@@ -424,7 +429,7 @@ impl ResView {
         let mut colors = Vec::new();
         for i in 0..n {
             let c = cpu_color(i);
-            let (e, l) = legend_entry(c, &format!("CPU{}", i + 1));
+            let (e, l) = legend_entry(c, &trf!("CPU{}", i + 1));
             self.cpu_legend.append(&e);
             labels.push(l);
             colors.push(c);
@@ -436,7 +441,10 @@ impl ResView {
     pub fn push(&self, r: &ResourceSample) {
         self.ensure_cpu_legend(r.cpus.len());
         for (l, v) in self.cpu_labels.borrow().iter().zip(&r.cpus) {
-            set_legend_value(l, &format!("{:.1} %", v * 100.0));
+            set_legend_value(
+                l,
+                &trf!("{} %", helix_app_common::i18n::format_number(v * 100.0, 1)),
+            );
         }
         self.cpu.describe(&cpu_description(&r.cpus));
         self.cpu.history.borrow_mut().push(&r.cpus);
@@ -453,20 +461,21 @@ impl ResView {
         let swap_f = frac(m.swap_used(), m.swap_total);
         self.mem.history.borrow_mut().push(&[mem_f, swap_f]);
         let iec = self.iec.get();
-        let mem_text = format!(
-            "{} ({:.1} %) of {}",
-            format::size(m.mem_used(), iec),
-            mem_f * 100.0,
-            format::size(m.mem_total, iec)
+        // Translators: memory use, "3.2 GB (41.0 %) of 7.8 GB".
+        let mem_text = trf!(
+            "{used} ({percent} %) of {total}",
+            used = format::size(m.mem_used(), iec),
+            percent = helix_app_common::i18n::format_number(mem_f * 100.0, 1),
+            total = format::size(m.mem_total, iec)
         );
         let swap_text = if m.swap_total == 0 {
             tr("Not available").to_string()
         } else {
-            format!(
-                "{} ({:.1} %) of {}",
-                format::size(m.swap_used(), iec),
-                swap_f * 100.0,
-                format::size(m.swap_total, iec)
+            trf!(
+                "{used} ({percent} %) of {total}",
+                used = format::size(m.swap_used(), iec),
+                percent = helix_app_common::i18n::format_number(swap_f * 100.0, 1),
+                total = format::size(m.swap_total, iec)
             )
         };
         set_legend_value(&self.mem_label, &mem_text);

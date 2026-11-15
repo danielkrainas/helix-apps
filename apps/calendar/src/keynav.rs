@@ -4,7 +4,8 @@
 use chrono::{Datelike, Duration, NaiveDate, Weekday};
 
 use crate::dates;
-use helix_app_common::trf;
+use helix_app_common::i18n::tr;
+use helix_app_common::trnf;
 
 /// A navigation key, independent of GDK.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -85,23 +86,31 @@ pub fn week_target(d: NaiveDate, minutes: i64, key: NavKey) -> (NaiveDate, i64) 
 
 /// "Friday, 14 November 2026, today, selected, 3 events: A, B, C".
 pub fn day_label(d: NaiveDate, today: NaiveDate, selected: bool, titles: &[&str]) -> String {
-    let mut s = dates::long_date(d);
+    let mut parts = vec![dates::long_date(d)];
     if d == today {
-        s.push_str(", today");
+        // Translators: part of a day's accessible name, after its date.
+        parts.push(tr("today").to_string());
     }
     if selected {
-        s.push_str(", selected");
+        // Translators: part of a day's accessible name, after its date.
+        parts.push(tr("selected").to_string());
     }
-    match titles.len() {
-        0 => s.push_str(", no events"),
-        1 => s.push_str(&trf!(", 1 event: {}", titles[0])),
-        n => s.push_str(&trf!(
-            ", {n} events: {join}",
-            n = n,
-            join = titles.join(", ")
-        )),
-    }
-    s
+    parts.push(if titles.is_empty() {
+        // Translators: part of a day's accessible name, after its date.
+        tr("no events").to_string()
+    } else {
+        // Translators: part of a day's accessible name, after its date;
+        // {titles} is the list of event titles.
+        trnf!(
+            "{n} event: {titles}",
+            "{n} events: {titles}",
+            titles.len(),
+            titles = titles.join(tr(", "))
+        )
+    });
+    // Translators: separator between the parts of an accessible name
+    // ("Friday, 13 November 2026, today, 2 events: …").
+    parts.join(tr(", "))
 }
 
 #[cfg(test)]

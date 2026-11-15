@@ -174,10 +174,12 @@ fn capture(conn: &Connection, req: &Request) -> Result<Vec<u8>> {
         .map_err(describe)?;
     if !success {
         let _ = std::fs::remove_file(&target);
-        let mut reason = String::from(tr("The shell could not take the screenshot."));
-        if req.mode == Mode::Window {
-            reason.push_str(" Is a window focused?");
+        let reason = if req.mode == Mode::Window {
+            tr("The shell could not take the screenshot. Is a window focused?")
+        } else {
+            tr("The shell could not take the screenshot.")
         }
+        .to_string();
         return Err(CaptureError::Failed(reason));
     }
     let used = if used.is_empty() {

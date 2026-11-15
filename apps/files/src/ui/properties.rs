@@ -9,6 +9,7 @@ use super::Window;
 use crate::fmt::{self, Perm, Who};
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
+use helix_app_common::trnf;
 
 const ATTRS: &str = "standard::*,time::modified,time::access,time::created,unix::mode,unix::uid,owner::user,owner::group,access::can-write,trash::orig-path,trash::deletion-date";
 
@@ -204,7 +205,11 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
                     let free_b = fs.attribute_uint64("filesystem::free");
                     let total = fs.attribute_uint64("filesystem::size");
                     free.set_subtitle(&if total > 0 {
-                        format!("{} of {}", fmt::size(free_b), fmt::size(total))
+                        trf!(
+                            "{free} of {total}",
+                            free = fmt::size(free_b),
+                            total = fmt::size(total)
+                        )
                     } else {
                         fmt::size(free_b)
                     });
@@ -218,7 +223,11 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
         }
     } else {
         img.set_icon_name(Some("edit-copy-symbolic"));
-        title.set_text(&trf!("{} selected", fmt::item_count(infos.len() as u64)));
+        title.set_text(&trnf!(
+            "{n} item selected",
+            "{n} items selected",
+            infos.len()
+        ));
         let contents = row(tr("Contents"), tr("Calculating…"));
         group.add(&contents);
         measure_into(
@@ -285,10 +294,18 @@ fn permissions_group(
         ] {
             let check = gtk::CheckButton::with_label(plabel);
             // The visible label is just "Read"; say whose permission it is.
-            helix_app_common::set_accessible_label(
-                &check,
-                &format!("{label} {}", plabel.to_lowercase()),
-            );
+            let spoken = match (who, perm) {
+                (Who::Owner, Perm::Read) => tr("Owner can read"),
+                (Who::Owner, Perm::Write) => tr("Owner can write"),
+                (Who::Owner, Perm::Execute) => tr("Owner can execute"),
+                (Who::Group, Perm::Read) => tr("Group can read"),
+                (Who::Group, Perm::Write) => tr("Group can write"),
+                (Who::Group, Perm::Execute) => tr("Group can execute"),
+                (Who::Others, Perm::Read) => tr("Others can read"),
+                (Who::Others, Perm::Write) => tr("Others can write"),
+                (Who::Others, Perm::Execute) => tr("Others can execute"),
+            };
+            helix_app_common::set_accessible_label(&check, spoken);
             check.set_active(mode.get() & fmt::mode_bit(who, perm) != 0);
             check.set_sensitive(editable);
             let mode = mode.clone();

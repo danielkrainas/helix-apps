@@ -28,7 +28,8 @@ const SETTINGS_SAVE_DELAY: Duration = Duration::from_millis(500);
 const SPEEDS: &[(&str, &str)] = &[
     ("0.5", "0.5×"),
     ("0.75", "0.75×"),
-    ("1", "Normal"),
+    // Translators: playback speed 1×.
+    ("1", n_("Normal")),
     ("1.25", "1.25×"),
     ("1.5", "1.5×"),
     ("2", "2×"),
@@ -501,8 +502,8 @@ impl Ui {
             .labelled(tr("Volume"));
 
         let speed_menu = gio::Menu::new();
-        for (value, label) in SPEEDS {
-            let item = gio::MenuItem::new(Some(label), None);
+        for &(value, label) in SPEEDS {
+            let item = gio::MenuItem::new(Some(tr(label)), None);
             item.set_action_and_target_value(Some("win.speed"), Some(&value.to_variant()));
             speed_menu.append_item(&item);
         }
@@ -1035,10 +1036,10 @@ impl Ui {
 
     fn open_dialog(self: &Rc<Self>) {
         let videos = gtk::FileFilter::new();
-        videos.set_name(Some("Videos"));
+        videos.set_name(Some(tr("Videos")));
         videos.add_mime_type("video/*");
         let all = gtk::FileFilter::new();
-        all.set_name(Some("All Files"));
+        all.set_name(Some(tr("All Files")));
         all.add_pattern("*");
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&videos);
@@ -1065,7 +1066,7 @@ impl Ui {
 
     fn subtitle_dialog(self: &Rc<Self>) {
         let subs = gtk::FileFilter::new();
-        subs.set_name(Some("Subtitles"));
+        subs.set_name(Some(tr("Subtitles")));
         for ext in subtitles::EXTENSIONS {
             subs.add_suffix(ext);
         }
@@ -1160,9 +1161,9 @@ impl Ui {
         let description = if missing.is_empty() {
             glib::markup_escape_text(detail).to_string()
         } else {
-            format!(
-                "The required codec is not installed: <b>{}</b>",
-                glib::markup_escape_text(&missing.join(", "))
+            trf!(
+                "The required codec is not installed: <b>{codec}</b>",
+                codec = glib::markup_escape_text(&missing.join(", "))
             )
         };
         self.error_page.set_description(Some(&description));

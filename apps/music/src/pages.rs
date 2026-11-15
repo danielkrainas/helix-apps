@@ -1250,7 +1250,7 @@ impl App {
     fn playlist_filters(save: bool) -> gio::ListStore {
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         let all = gtk::FileFilter::new();
-        all.set_name(Some("Playlists"));
+        all.set_name(Some(tr("Playlists")));
         let kinds: &[(&str, &[&str], &str)] = &[
             (tr("M3U Playlist"), &["m3u", "m3u8"], "audio/x-mpegurl"),
             (tr("XSPF Playlist"), &["xspf"], "application/xspf+xml"),
@@ -1329,7 +1329,7 @@ impl App {
         std::thread::spawn(move || {
             let res = match crate::tracker::Endpoint::connect() {
                 Some(ep) => crate::tracker::playlists(&ep),
-                None => Err("the LocalSearch index is not available".into()),
+                None => Err(tr("the LocalSearch index is not available").into()),
             };
             let _ = tx.send_blocking(res);
         });
@@ -1778,7 +1778,7 @@ impl App {
         let modes = crate::player::ReplayGain::ALL;
         let labels: Vec<&str> = modes.iter().map(|m| m.label()).collect();
         let rg = adw::ComboRow::builder()
-            .title("ReplayGain")
+            .title(tr("ReplayGain"))
             .subtitle(tr(
                 "Even out loudness using the volume tags of songs or albums",
             ))

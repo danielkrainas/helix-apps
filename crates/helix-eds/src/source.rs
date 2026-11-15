@@ -2,6 +2,7 @@
 //! source registry (`org.gnome.evolution.dataserver.Sources5`).
 
 use crate::keyfile::{user_languages, KeyFile};
+use crate::n_;
 
 pub const GROUP_SOURCE: &str = "Data Source";
 pub const GROUP_ADDRESS_BOOK: &str = "Address Book";
@@ -212,17 +213,24 @@ pub enum UrlError {
     Credentials,
 }
 
+impl UrlError {
+    /// The message in English; show it with `helix_app_common::i18n::tr`.
+    pub fn message(&self) -> &'static str {
+        match self {
+            UrlError::Empty => n_("Enter the address of the calendar"),
+            UrlError::Whitespace => n_("The address must not contain spaces"),
+            UrlError::Scheme => n_("The address must start with http://, https:// or webcal://"),
+            UrlError::NoHost => n_("The address has no server name"),
+            UrlError::BadHost => n_("The server name is not valid"),
+            UrlError::BadPort => n_("The port number is not valid"),
+            UrlError::Credentials => n_("Remove the user name and password from the address"),
+        }
+    }
+}
+
 impl std::fmt::Display for UrlError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            UrlError::Empty => "Enter the address of the calendar",
-            UrlError::Whitespace => "The address must not contain spaces",
-            UrlError::Scheme => "The address must start with http://, https:// or webcal://",
-            UrlError::NoHost => "The address has no server name",
-            UrlError::BadHost => "The server name is not valid",
-            UrlError::BadPort => "The port number is not valid",
-            UrlError::Credentials => "Remove the user name and password from the address",
-        })
+        f.write_str(self.message())
     }
 }
 

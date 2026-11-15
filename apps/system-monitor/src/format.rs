@@ -1,6 +1,6 @@
 //! Human-readable formatting of sizes, rates, states and priorities.
 
-use helix_app_common::i18n::{n_, tr};
+use helix_app_common::i18n::{format_number, n_, tr};
 use helix_app_common::trf;
 
 /// Formats a byte count, SI (kB = 1000) or IEC (KiB = 1024).
@@ -19,7 +19,18 @@ pub fn size(bytes: u64, iec: bool) -> String {
             ],
         )
     } else {
-        (1000.0, ["bytes", "kB", "MB", "GB", "TB", "PB", "EB"])
+        (
+            1000.0,
+            [
+                "bytes",
+                tr("kB"),
+                tr("MB"),
+                tr("GB"),
+                tr("TB"),
+                tr("PB"),
+                tr("EB"),
+            ],
+        )
     };
     if (bytes as f64) < base {
         return trf!("{bytes} bytes", bytes = bytes);
@@ -30,7 +41,12 @@ pub fn size(bytes: u64, iec: bool) -> String {
         v /= base;
         i += 1;
     }
-    format!("{v:.1} {}", units[i])
+    // Translators: a size, "2.5 MB"; {unit} is one of the units above.
+    trf!(
+        "{value} {unit}",
+        value = format_number(v, 1),
+        unit = units[i]
+    )
 }
 
 /// Formats a transfer rate in bytes per second, or bits per second.
@@ -38,20 +54,24 @@ pub fn rate(bytes_per_sec: f64, bits: bool) -> String {
     let v = bytes_per_sec.max(0.0);
     if bits {
         let b = v * 8.0;
-        let units = ["bits/s", "kbit/s", "Mbit/s", "Gbit/s", "Tbit/s"];
+        let units = [
+            tr("bits/s"),
+            tr("kbit/s"),
+            tr("Mbit/s"),
+            tr("Gbit/s"),
+            tr("Tbit/s"),
+        ];
         let mut x = b;
         let mut i = 0;
         while x >= 1000.0 && i < units.len() - 1 {
             x /= 1000.0;
             i += 1;
         }
-        if i == 0 {
-            format!("{x:.0} {}", units[0])
-        } else {
-            format!("{x:.1} {}", units[i])
-        }
+        let value = format_number(x, if i == 0 { 0 } else { 1 });
+        trf!("{value} {unit}", value = value, unit = units[i])
     } else {
-        format!("{}/s", size(v.round() as u64, false))
+        // Translators: a transfer rate, "2.5 kB/s".
+        trf!("{size}/s", size = size(v.round() as u64, false))
     }
 }
 

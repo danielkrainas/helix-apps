@@ -3,6 +3,7 @@
 use crate::bookmarks::escape_html;
 use crate::history::{strip_scheme, Entry};
 use gtk::glib;
+use helix_app_common::i18n::tr;
 
 const STYLE: &str = "
 :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
@@ -49,17 +50,26 @@ pub fn ui_lang() -> String {
 pub fn html(most_visited: &[Entry], private: bool, lang: &str, high_contrast: bool) -> String {
     let mut body = String::new();
     if private {
-        body.push_str(
-            "<h1>Private Browsing</h1><p class=\"note\">Pages you visit in this window are not \
-             saved to history, and cookies and site data are discarded when the window closes. \
-             Downloads and bookmarks are kept.</p>",
-        );
+        body.push_str(&format!(
+            "<h1>{}</h1><p class=\"note\">{}</p>",
+            escape_html(tr("Private Browsing")),
+            escape_html(tr(
+                "Pages you visit in this window are not saved to history, and cookies \
+                 and site data are discarded when the window closes. Downloads and bookmarks \
+                 are kept."
+            )),
+        ));
     } else if most_visited.is_empty() {
-        body.push_str(
-            "<h1>Welcome to Web</h1><p class=\"note\">Sites you visit often will appear here.</p>",
-        );
+        body.push_str(&format!(
+            "<h1>{}</h1><p class=\"note\">{}</p>",
+            escape_html(tr("Welcome to Web")),
+            escape_html(tr("Sites you visit often will appear here.")),
+        ));
     } else {
-        body.push_str("<h1>Most Visited</h1><div class=\"grid\">");
+        body.push_str(&format!(
+            "<h1>{}</h1><div class=\"grid\">",
+            escape_html(tr("Most Visited"))
+        ));
         for e in most_visited {
             let title = if e.title.is_empty() {
                 strip_scheme(&e.url)
@@ -76,8 +86,9 @@ pub fn html(most_visited: &[Entry], private: bool, lang: &str, high_contrast: bo
         body.push_str("</div>");
     }
     format!(
-        "<!DOCTYPE html><html lang=\"{lang}\"{class}><head><meta charset=\"utf-8\"><title>New Tab</title>\
+        "<!DOCTYPE html><html lang=\"{lang}\"{class}><head><meta charset=\"utf-8\"><title>{title}</title>\
          <style>{STYLE}</style></head><body>{body}</body></html>",
+        title = escape_html(tr("New Tab")),
         lang = escape_html(lang),
         class = if high_contrast { " class=\"hc\"" } else { "" },
     )

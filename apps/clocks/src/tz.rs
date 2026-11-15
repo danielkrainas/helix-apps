@@ -340,26 +340,30 @@ pub fn describe_offset(diff: i32) -> String {
     if diff == 0 {
         return tr("Current time zone").into();
     }
-    let dir = if diff > 0 { "ahead" } else { "behind" };
     let mins = diff.unsigned_abs() / 60;
     let (h, m) = (mins / 60, mins % 60);
-    let hours = |n: u32, frac: &str| {
-        let plural = if n == 1 && frac.is_empty() {
-            "hour"
-        } else {
-            "hours"
-        };
-        format!("{n}{frac} {plural}")
-    };
     let amount = match (h, m) {
         (0, m) => trnf!("{n} minute", "{n} minutes", m),
-        (h, 0) => hours(h, ""),
-        (h, 30) => hours(h, "½"),
-        (h, 15) => hours(h, "¼"),
-        (h, 45) => hours(h, "¾"),
-        (h, m) => trf!("{hours} {m} minutes", hours = hours(h, ""), m = m),
+        (h, 0) => trnf!("{n} hour", "{n} hours", h),
+        // Translators: a time difference, "3½ hours".
+        (h, 30) => trnf!("{n}½ hour", "{n}½ hours", h),
+        // Translators: a time difference, "5¼ hours".
+        (h, 15) => trnf!("{n}¼ hour", "{n}¼ hours", h),
+        // Translators: a time difference, "5¾ hours".
+        (h, 45) => trnf!("{n}¾ hour", "{n}¾ hours", h),
+        (h, m) => trf!(
+            "{hours} {minutes}",
+            hours = trnf!("{n} hour", "{n} hours", h),
+            minutes = trnf!("{n} minute", "{n} minutes", m)
+        ),
     };
-    format!("{amount} {dir}")
+    if diff > 0 {
+        // Translators: another time zone's offset, "9 hours ahead".
+        trf!("{amount} ahead", amount = amount)
+    } else {
+        // Translators: another time zone's offset, "3 hours behind".
+        trf!("{amount} behind", amount = amount)
+    }
 }
 
 /// Formats a UTC offset as "UTC+05:30" / "UTC−03:00" / "UTC".
@@ -372,11 +376,22 @@ pub fn format_utc_offset(secs: i32) -> String {
     format!("UTC{sign}{:02}:{:02}", m / 60, m % 60)
 }
 
+/// "AM" or "PM" for 12-hour times.
+fn am_pm(pm: bool) -> &'static str {
+    if pm {
+        // Translators: after noon in 12-hour times, "2:05 PM".
+        tr("PM")
+    } else {
+        // Translators: before noon in 12-hour times, "9:05 AM".
+        tr("AM")
+    }
+}
+
 /// Formats a wall time as "14:05" or "2:05 PM".
 pub fn format_time(t: NaiveTime, twelve_hour: bool) -> String {
     if twelve_hour {
         let (pm, h) = t.hour12();
-        format!("{h}:{:02} {}", t.minute(), if pm { "PM" } else { "AM" })
+        format!("{h}:{:02} {}", t.minute(), am_pm(pm))
     } else {
         format!("{:02}:{:02}", t.hour(), t.minute())
     }
@@ -386,12 +401,7 @@ pub fn format_time(t: NaiveTime, twelve_hour: bool) -> String {
 pub fn format_time_secs(t: NaiveTime, twelve_hour: bool) -> String {
     if twelve_hour {
         let (pm, h) = t.hour12();
-        format!(
-            "{h}:{:02}:{:02} {}",
-            t.minute(),
-            t.second(),
-            if pm { "PM" } else { "AM" }
-        )
+        format!("{h}:{:02}:{:02} {}", t.minute(), t.second(), am_pm(pm))
     } else {
         format!("{:02}:{:02}:{:02}", t.hour(), t.minute(), t.second())
     }

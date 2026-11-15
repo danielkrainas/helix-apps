@@ -538,8 +538,12 @@ impl Window {
                     }
                     Err(e) => {
                         let msg = format!(
-                            "\x1b[1;31mFailed to start “{what}”: {}\x1b[0m\r\n",
-                            e.message()
+                            "\x1b[1;31m{}\x1b[0m\r\n",
+                            trf!(
+                                "Failed to start “{what}”: {error}",
+                                what = what,
+                                error = e.message()
+                            )
                         );
                         tab.term.feed(msg.as_bytes());
                         tab.show_banner(
@@ -1270,9 +1274,9 @@ async fn confirm_close(win: &adw::ApplicationWindow, names: &[String], window: b
         trf!("“{}” is still running. Closing will stop it.", names[0])
     } else {
         let list: Vec<String> = names.iter().map(|n| format!("• {n}")).collect();
-        format!(
-            "Some programs are still running:\n{}\nClosing will stop them.",
-            list.join("\n")
+        trf!(
+            "Some programs are still running:\n{list}\nClosing will stop them.",
+            list = list.join("\n")
         )
     };
     let dialog = adw::AlertDialog::new(Some(heading), Some(&body));

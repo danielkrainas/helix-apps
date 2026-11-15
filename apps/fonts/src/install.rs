@@ -1,5 +1,6 @@
 //! Installing a font file into the user's font directory.
 
+use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -103,7 +104,7 @@ pub fn install_into(src: &Path, fonts_dir: &Path) -> io::Result<Installed> {
     }
     let name = src
         .file_name()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "no file name"))?;
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, tr("no file name")))?;
     let target = unique_target(fonts_dir, Path::new(name));
     // Copy to a temporary name then rename, so a crash never leaves a
     // half-written font for fontconfig to choke on.

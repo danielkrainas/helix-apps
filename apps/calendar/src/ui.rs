@@ -1117,9 +1117,9 @@ impl Ui {
     fn handle(self: &Rc<Self>, msg: Msg) {
         match msg {
             Msg::Unavailable(e) => {
-                self.unavailable_page.set_description(Some(&format!(
-                    "Could not reach Evolution Data Server.\n{}",
-                    glib::markup_escape_text(&e)
+                self.unavailable_page.set_description(Some(&trf!(
+                    "Could not reach Evolution Data Server.\n{error}",
+                    error = glib::markup_escape_text(&e)
                 )));
                 self.main_stack.set_visible_child_name("unavailable");
                 self.state.borrow_mut().unavailable = true;
@@ -1405,11 +1405,19 @@ impl Ui {
     fn item_label(&self, item: &Item) -> String {
         let when = self.describe_when(item);
         let cal = self.cal_name(&item.calendar);
-        let mut s = format!("{}, {when}", item.title());
-        if !cal.is_empty() {
-            s.push_str(&format!(", {cal}"));
+        if cal.is_empty() {
+            // Translators: accessible name of an event: its title and time.
+            trf!("{title}, {when}", title = item.title(), when = when)
+        } else {
+            // Translators: accessible name of an event: its title, time and
+            // calendar.
+            trf!(
+                "{title}, {when}, {calendar}",
+                title = item.title(),
+                when = when,
+                calendar = cal
+            )
         }
-        s
     }
 
     /// Tooltip: title, time, location and calendar, one per line.
@@ -2379,7 +2387,7 @@ impl Ui {
 
     fn choose_import(self: &Rc<Self>) {
         let filter = gtk::FileFilter::new();
-        filter.set_name(Some("Calendar files"));
+        filter.set_name(Some(tr("Calendar files")));
         filter.add_mime_type("text/calendar");
         filter.add_suffix("ics");
         let filters = gio::ListStore::new::<gtk::FileFilter>();

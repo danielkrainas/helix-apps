@@ -160,7 +160,8 @@ fn date_text(d: NaiveDate) -> String {
 
 /// Accessible name of a date button: "Start Date, Sat 14 Nov 2026".
 fn date_button_name(role: &str, d: NaiveDate) -> String {
-    format!("{role}, {}", date_text(d))
+    // Translators: accessible name of a date button: "Start Date, Sat 14 Nov 2026".
+    trf!("{role}, {date}", role = role, date = date_text(d))
 }
 
 fn time_entry(t: NaiveTime, twelve: bool, name: &str) -> gtk::Entry {

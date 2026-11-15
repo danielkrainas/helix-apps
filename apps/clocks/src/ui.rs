@@ -982,7 +982,19 @@ impl Ui {
         let lt = now.with_timezone(&zone);
         let twelve = self.twelve.get();
         d.time.set_text(&tz::format_time_secs(lt.time(), twelve));
-        d.date.set_text(&lt.format("%A, %-d %B %Y").to_string());
+        {
+            use chrono::Datelike;
+            // chrono's %A and %B are English only; the names come from
+            // the locale and the order from the translation.
+            // Translators: a full date, "Friday, 13 November 2026".
+            d.date.set_text(&trf!(
+                "{weekday}, {day} {month} {year}",
+                weekday = helix_app_common::i18n::weekday_name(lt.weekday().num_days_from_monday()),
+                day = lt.day(),
+                month = helix_app_common::i18n::month_name(lt.month()),
+                year = lt.year()
+            ));
+        }
         let off = tz::utc_offset(zone, now);
         let sun = d
             .clock
@@ -1368,7 +1380,7 @@ impl Ui {
         time_box.append(&hour);
         time_box.append(&label(":", &["alarm-time"]));
         time_box.append(&minute);
-        let ampm = gtk::DropDown::from_strings(&["AM", "PM"]);
+        let ampm = gtk::DropDown::from_strings(&[tr("AM"), tr("PM")]);
         helix_app_common::set_accessible_label(&ampm, tr("AM or PM"));
         ampm.set_valign(gtk::Align::Center);
         ampm.set_selected(if a.hour >= 12 { 1 } else { 0 });
@@ -2059,7 +2071,7 @@ impl Ui {
             let status_icon = gtk::Image::from_icon_name("alarm-symbolic");
             status_icon.set_accessible_role(gtk::AccessibleRole::Presentation);
             status.append(&status_icon);
-            status.append(&label("Time\u{2019}s up", &["heading", "accent"]));
+            status.append(&label(tr("Time\u{2019}s up"), &["heading", "accent"]));
             status.set_visible(false);
             vb.append(&status);
             let hb = gtk::Box::new(gtk::Orientation::Horizontal, 6);
@@ -2216,7 +2228,8 @@ impl Ui {
                 r.dismiss.set_visible(t.finished);
                 let name = if t.finished {
                     r.row.add_css_class("timer-finished");
-                    format!("{}, time\u{2019}s up", r.label)
+                    // Translators: a finished timer for screen readers, "Tea, time’s up".
+                    trf!("{timer}, time\u{2019}s up", timer = r.label)
                 } else {
                     r.row.remove_css_class("timer-finished");
                     r.label.clone()
@@ -2234,7 +2247,17 @@ impl Ui {
             };
             r.start.set_icon_name(icon);
             r.start.set_tooltip_text(Some(tip));
-            helix_app_common::set_accessible_label(&r.start, &format!("{tip} {}", r.label));
+            helix_app_common::set_accessible_label(
+                &r.start,
+                &match t.state {
+                    timer::State::Running { .. } => trf!("Pause {timer}", timer = r.label),
+                    timer::State::Paused { .. } => trf!("Resume {timer}", timer = r.label),
+                    timer::State::Stopped if t.finished => {
+                        trf!("Restart {timer}", timer = r.label)
+                    }
+                    timer::State::Stopped => trf!("Start {timer}", timer = r.label),
+                },
+            );
             if t.is_running() || t.finished {
                 r.start.remove_css_class("suggested-action");
             } else {

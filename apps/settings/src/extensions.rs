@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use helix_app_common::i18n::tr;
+use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 use zbus::blocking::Connection;
 use zbus::zvariant::{OwnedValue, Value};
@@ -13,28 +13,30 @@ pub const BUS: &str = "org.gnome.Shell";
 pub const PATH: &str = "/org/helix/Extensions1";
 pub const IFACE: &str = "org.helix.Extensions1";
 
-/// What an extension's permission lets it do (as the shell words it).
-pub fn permission_text(name: &str) -> &str {
+/// What an extension's permission lets it do (as the shell words it),
+/// completing "Can: …".
+pub fn permission_text(name: &str) -> String {
     const TEXTS: [(&str, &str); 14] = [
-        ("notifications", "show notifications"),
-        ("inhibit-idle", "keep the screen on"),
-        ("launch-apps", "start apps"),
-        ("popover", "show its own panels"),
-        ("network", "use the network"),
-        ("files:home", "read and change all your files"),
-        ("files:documents", "read and change your Documents"),
-        ("files:downloads", "read and change your Downloads"),
-        ("files:music", "read and change your Music"),
-        ("files:pictures", "read and change your Pictures"),
-        ("files:videos", "read and change your Videos"),
-        ("files:desktop", "read and change your Desktop"),
-        ("session-bus", "talk to your other programs"),
-        ("system-bus", "talk to system services"),
+        // Translators: what an extension may do; completes "Can: …".
+        ("notifications", n_("show notifications")),
+        ("inhibit-idle", n_("keep the screen on")),
+        ("launch-apps", n_("start apps")),
+        ("popover", n_("show its own panels")),
+        ("network", n_("use the network")),
+        ("files:home", n_("read and change all your files")),
+        ("files:documents", n_("read and change your Documents")),
+        ("files:downloads", n_("read and change your Downloads")),
+        ("files:music", n_("read and change your Music")),
+        ("files:pictures", n_("read and change your Pictures")),
+        ("files:videos", n_("read and change your Videos")),
+        ("files:desktop", n_("read and change your Desktop")),
+        ("session-bus", n_("talk to your other programs")),
+        ("system-bus", n_("talk to system services")),
     ];
     TEXTS
         .iter()
         .find(|(n, _)| *n == name)
-        .map_or(name, |(_, t)| t)
+        .map_or_else(|| name.to_string(), |&(_, t)| tr(t).to_string())
 }
 
 /// One extension, as `ListExtensions` describes it.
@@ -82,7 +84,7 @@ impl Ext {
 
     /// The *Access* row: title and the lines below it.
     pub fn access(&self) -> (String, String) {
-        let can: Vec<&str> = self
+        let can: Vec<String> = self
             .permissions
             .iter()
             .map(|p| permission_text(p))

@@ -129,9 +129,10 @@ pub struct ProcView {
 const COLUMNS: [(&str, &str, ProcColumn, bool, f32); 8] = [
     (n_("Process Name"), "name", ProcColumn::Name, true, 0.0),
     (n_("User"), "user", ProcColumn::User, false, 0.0),
-    ("% CPU", "cpu-text", ProcColumn::Cpu, false, 1.0),
+    (n_("% CPU"), "cpu-text", ProcColumn::Cpu, false, 1.0),
     (n_("Memory"), "memory-text", ProcColumn::Memory, false, 1.0),
-    ("ID", "pid-text", ProcColumn::Pid, false, 1.0),
+    // Translators: the process ID column.
+    (n_("ID"), "pid-text", ProcColumn::Pid, false, 1.0),
     (
         n_("Priority"),
         "priority-text",

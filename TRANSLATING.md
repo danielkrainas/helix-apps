@@ -73,7 +73,12 @@ Every app calls `helix_app_common::i18n::init()` first thing in `main`.
 Write whole sentences with placeholders rather than gluing pieces
 together, and use `i18n::month_name`, `weekday_name`, `format_number`,
 or GLib's `DateTime::format` instead of hand-written names and number
-formats. Use `Start`/`End` alignment; for label justification use
+formats (chrono's `%A`, `%B` and `%p` are English in every locale).
+Put the order of a date's parts in a translatable message
+(`trf!("{weekday}, {day} {month} {year}", …)`), and translate a label
+from an `n_` table with `tr` everywhere it is shown, including
+accessible labels. Never translate text that is parsed or compared
+(`/proc` keys, key names, protocol values). Use `Start`/`End` alignment; for label justification use
 `i18n::justify_start`/`justify_end`, and in CSS give right-to-left
 variants (`:dir(rtl)`) for one-sided borders and padding.
 

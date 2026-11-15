@@ -40,14 +40,19 @@ impl Smart {
             if self.num_bad_sectors == 1 {
                 tr("Disk is OK, one bad sector").into()
             } else {
-                trf!("Disk is OK, {} bad sectors", self.num_bad_sectors)
+                trnf!(
+                    "Disk is OK, {n} bad sector",
+                    "Disk is OK, {n} bad sectors",
+                    self.num_bad_sectors
+                )
             }
         } else if self.attrs_failing > 0 {
             if self.attrs_failing == 1 {
                 tr("Disk is OK, one attribute is exceeding its threshold").into()
             } else {
-                trf!(
-                    "Disk is OK, {} attributes are exceeding their thresholds",
+                trnf!(
+                    "Disk is OK, {n} attribute is exceeding its threshold",
+                    "Disk is OK, {n} attributes are exceeding their thresholds",
                     self.attrs_failing
                 )
             }
@@ -55,8 +60,9 @@ impl Smart {
             if self.attrs_failed_in_past == 1 {
                 tr("Disk is OK, one attribute failed in the past").into()
             } else {
-                trf!(
-                    "Disk is OK, {} attributes failed in the past",
+                trnf!(
+                    "Disk is OK, {n} attribute failed in the past",
+                    "Disk is OK, {n} attributes failed in the past",
                     self.attrs_failed_in_past
                 )
             }
@@ -64,9 +70,11 @@ impl Smart {
             tr("Disk is OK").into()
         };
         if self.temperature_k > 0.0 {
-            format!(
-                "{base} ({})",
-                format::temperature_kelvin(self.temperature_k)
+            // Translators: the disk's assessment and its temperature.
+            trf!(
+                "{assessment} ({temperature})",
+                assessment = base,
+                temperature = format::temperature_kelvin(self.temperature_k)
             )
         } else {
             base

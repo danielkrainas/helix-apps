@@ -416,7 +416,11 @@ fn build(app: &adw::Application) -> Ui {
     page_box.append(&content);
     page_box.append(&updated_label);
     let credit = gtk::Label::builder()
-        .label("Weather data by <a href=\"https://open-meteo.com/\">Open-Meteo.com</a>")
+        // Translators: {provider} is a link to the weather service.
+        .label(trf!(
+            "Weather data by {provider}",
+            provider = "<a href=\"https://open-meteo.com/\">Open-Meteo.com</a>"
+        ))
         .use_markup(true)
         .css_classes(["dim-label", "caption"])
         .halign(gtk::Align::Center)
@@ -1414,10 +1418,7 @@ fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool) -> gtk::Wid
         );
         item.update_property(&[gtk::accessible::Property::Label(&name)]);
         // Keeps focus on the same hour when a refresh rebuilds the page.
-        helix_app_common::focus::set_key(
-            &item,
-            &trf!("hour {time}", time = format!("{:?}", h.time)),
-        );
+        helix_app_common::focus::set_key(&item, &format!("hour {:?}", h.time));
         top.insert(&item, -1);
 
         let precip = h
@@ -1530,11 +1531,28 @@ fn hourly_adjustment(root: &gtk::Widget) -> Option<gtk::Adjustment> {
 /// Plain words for a forecast, search or location error; the technical
 /// text stays available under "Details" and in the log.
 fn friendly_error(raw: &str) -> &'static str {
-    if raw.starts_with("Could not connect") || raw.starts_with("Could not read response") {
+    // The errors come translated from `api` and `autoloc`; compare with the
+    // translated messages up to where their detail goes.
+    const MARK: char = '\u{1}';
+    let starts = |message: String| {
+        let head = message.split(MARK).next().unwrap_or_default();
+        !head.is_empty() && raw.starts_with(head)
+    };
+    if starts(trf!(
+        "Could not connect to the weather service: {t}",
+        t = MARK
+    )) || starts(trf!("Could not read response: {e}", e = MARK))
+    {
         tr("Could not reach the weather service. Check your internet connection and try again.")
-    } else if raw.contains("returned HTTP 5") {
+    } else if starts(trf!(
+        "The weather service returned HTTP {code}",
+        code = format!("5{MARK}")
+    )) {
         tr("The weather service is having problems. Try again later.")
-    } else if raw.starts_with("Unexpected") {
+    } else if starts(trf!("Unexpected forecast data: {e}", e = MARK))
+        || starts(trf!("Unexpected search data: {e}", e = MARK))
+        || starts(trf!("Unexpected reverse geocoding data: {e}", e = MARK))
+    {
         tr("The weather service sent data that could not be read. Try again later.")
     } else {
         tr("The weather service could not answer this request. Try again later.")
@@ -1553,7 +1571,14 @@ fn hour_description(
     sky: &str,
     precipitation: Option<f64>,
 ) -> String {
-    let mut text = format!("{time}, {temperature}, {sky}");
+    // Translators: an hour of the forecast for screen readers, "15:00, 12°,
+    // Partly cloudy".
+    let mut text = trf!(
+        "{time}, {temperature}, {sky}",
+        time = time,
+        temperature = temperature,
+        sky = sky
+    );
     if let Some(p) = precipitation.filter(|p| *p >= 10.0) {
         text.push_str(&trf!(", {}% chance of precipitation", p.round() as i64));
     }
@@ -1569,7 +1594,9 @@ fn day_description(
     low: &str,
     high: &str,
 ) -> String {
-    let mut text = format!("{day}, {sky}");
+    // Translators: a day of the forecast for screen readers, "Tomorrow,
+    // Slight rain".
+    let mut text = trf!("{day}, {sky}", day = day, sky = sky);
     if let Some(p) = precipitation.filter(|p| *p >= 10.0) {
         text.push_str(&trf!(", {}% chance of precipitation", p.round() as i64));
     }

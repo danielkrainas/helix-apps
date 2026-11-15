@@ -42,16 +42,16 @@ pub fn restrictions(bits: u32) -> Vec<&'static str> {
     let p = poppler::Permissions::from_bits_truncate(bits);
     let mut out = Vec::new();
     if !p.contains(poppler::Permissions::OK_TO_PRINT) {
-        out.push("printing");
+        out.push(tr("printing"));
     }
     if !p.contains(poppler::Permissions::OK_TO_COPY) {
-        out.push("copying");
+        out.push(tr("copying"));
     }
     if !p.contains(poppler::Permissions::OK_TO_MODIFY) {
-        out.push("modifying");
+        out.push(tr("modifying"));
     }
     if !p.contains(poppler::Permissions::OK_TO_ADD_NOTES) {
-        out.push("annotating");
+        out.push(tr("annotating"));
     }
     out
 }
@@ -83,7 +83,13 @@ pub fn show_properties(parent: &impl IsA<gtk::Widget>, info: &DocInfo) {
         };
         let r = restrictions(info.permissions);
         if !r.is_empty() {
-            s.push_str(&format!("; not permitted: {}", r.join(", ")));
+            // Translators: document security in Properties, "None; not
+            // permitted: printing, copying".
+            s = trf!(
+                "{security}; not permitted: {actions}",
+                security = s,
+                actions = r.join(", ")
+            );
         }
         s
     };
@@ -142,7 +148,10 @@ pub fn ask_password(
     on_unlock: impl Fn(String) + 'static,
 ) {
     let body = if wrong {
-        format!("Incorrect password. “{name}” is locked; enter its password to open it.")
+        trf!(
+            "Incorrect password. “{name}” is locked; enter its password to open it.",
+            name = name
+        )
     } else {
         trf!(
             "“{name}” is password protected. Enter its password to open it.",

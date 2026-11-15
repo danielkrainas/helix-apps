@@ -28,19 +28,54 @@ struct TypedList {
     group: adw::PreferencesGroup,
     rows: RefCell<Vec<TypedRow>>,
     choices: Choices,
-    /// What one value is: "Email", "Phone Number", "Website".
-    kind: &'static str,
+    /// What one value is.
+    kind: ValueKind,
     phone: bool,
+}
+
+/// What the values of a [`TypedList`] are.
+#[derive(Clone, Copy)]
+enum ValueKind {
+    Email,
+    Phone,
+    Website,
+    Address,
+}
+
+impl ValueKind {
+    /// Accessible name of a value's type drop-down.
+    fn type_name(self) -> &'static str {
+        match self {
+            ValueKind::Email => tr("Email Type"),
+            ValueKind::Phone => tr("Phone Number Type"),
+            ValueKind::Website => tr("Website Type"),
+            ValueKind::Address => tr("Address Type"),
+        }
+    }
+
+    /// Tooltip of a value's Remove button.
+    fn remove(self) -> &'static str {
+        match self {
+            ValueKind::Email => tr("Remove Email"),
+            ValueKind::Phone => tr("Remove Phone Number"),
+            ValueKind::Website => tr("Remove Website"),
+            ValueKind::Address => tr("Remove Address"),
+        }
+    }
 }
 
 /// Accessible name of a value's Remove button: "Remove Email
 /// jane@example.org", or "Remove Email" while the value is empty.
-fn remove_name(kind: &str, value: &str) -> String {
+fn remove_name(kind: ValueKind, value: &str) -> String {
     let value = value.trim();
     if value.is_empty() {
-        trf!("Remove {kind}", kind = kind)
-    } else {
-        trf!("Remove {kind} {value}", kind = kind, value = value)
+        return kind.remove().to_string();
+    }
+    match kind {
+        ValueKind::Email => trf!("Remove Email {value}", value = value),
+        ValueKind::Phone => trf!("Remove Phone Number {value}", value = value),
+        ValueKind::Website => trf!("Remove Website {value}", value = value),
+        ValueKind::Address => trf!("Remove Address {value}", value = value),
     }
 }
 
@@ -48,6 +83,7 @@ impl TypedList {
     fn new(
         title: &'static str,
         add_label: &'static str,
+        kind: ValueKind,
         choices: Choices,
         phone: bool,
     ) -> Rc<TypedList> {
@@ -56,7 +92,7 @@ impl TypedList {
             group,
             rows: RefCell::default(),
             choices,
-            kind: add_label.trim_start_matches("Add "),
+            kind,
             phone,
         });
         let add = gtk::Button::builder()
@@ -89,11 +125,11 @@ impl TypedList {
     }
 
     fn add(self: &Rc<Self>, t: &Typed) -> adw::EntryRow {
-        let labels: Vec<&str> = self.choices.iter().map(|(l, _)| *l).collect();
+        let labels: Vec<&str> = self.choices.iter().map(|(l, _)| tr(l)).collect();
         let types = gtk::DropDown::from_strings(&labels);
         types.set_valign(gtk::Align::Center);
         types.add_css_class("flat");
-        helix_app_common::set_accessible_label(&types, &trf!("{} Type", self.kind));
+        helix_app_common::set_accessible_label(&types, self.kind.type_name());
         let idx = self.index_for(t);
         types.set_selected(idx);
         let row = adw::EntryRow::builder()
@@ -107,10 +143,9 @@ impl TypedList {
                 r.set_title(l);
             }
         });
-        let remove_label = trf!("Remove {}", self.kind);
         let remove = gtk::Button::builder()
             .icon_name("user-trash-symbolic")
-            .tooltip_text(&remove_label)
+            .tooltip_text(self.kind.remove())
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
             .build()
@@ -293,20 +328,33 @@ impl Editor {
         }
         page.append(&org_group);
 
-        let emails = TypedList::new(tr("Email Addresses"), tr("Add Email"), GENERIC_TYPES, false);
+        let emails = TypedList::new(
+            tr("Email Addresses"),
+            tr("Add Email"),
+            ValueKind::Email,
+            GENERIC_TYPES,
+            false,
+        );
         for e in &contact.emails {
             emails.add(e);
         }
         let phones = TypedList::new(
             tr("Phone Numbers"),
             tr("Add Phone Number"),
+            ValueKind::Phone,
             PHONE_TYPES,
             true,
         );
         for p in &contact.phones {
             phones.add(p);
         }
-        let urls = TypedList::new(tr("Websites"), tr("Add Website"), GENERIC_TYPES, false);
+        let urls = TypedList::new(
+            tr("Websites"),
+            tr("Add Website"),
+            ValueKind::Website,
+            GENERIC_TYPES,
+            false,
+        );
         for u in &contact.urls {
             urls.add(u);
         }
@@ -407,7 +455,7 @@ impl Editor {
         change.connect_clicked(move |b| {
             let Some(e) = weak.upgrade() else { return };
             let filter = gtk::FileFilter::new();
-            filter.set_name(Some("Images"));
+            filter.set_name(Some(tr("Images")));
             filter.add_mime_type("image/*");
             let filters = gio::ListStore::new::<gtk::FileFilter>();
             filters.append(&filter);
@@ -435,7 +483,7 @@ impl Editor {
     }
 
     fn add_address(self: &Rc<Self>, a: &Address) {
-        let labels: Vec<&str> = GENERIC_TYPES.iter().map(|(l, _)| *l).collect();
+        let labels: Vec<&str> = GENERIC_TYPES.iter().map(|(l, _)| tr(l)).collect();
         let types = gtk::DropDown::from_strings(&labels);
         types.set_valign(gtk::Align::Center);
         helix_app_common::set_accessible_label(&types, tr("Address Type"));
@@ -447,12 +495,12 @@ impl Editor {
         types.set_selected(idx);
         let remove = gtk::Button::builder()
             .icon_name("user-trash-symbolic")
-            .tooltip_text(tr("Remove Address"))
+            .tooltip_text(ValueKind::Address.remove())
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
             .build()
             .labelled(&remove_name(
-                tr("Address"),
+                ValueKind::Address,
                 &address_summary(&a.street, &a.locality),
             ));
         let suffix = gtk::Box::new(gtk::Orientation::Horizontal, 6);
@@ -469,7 +517,7 @@ impl Editor {
             extended: entry(tr("Extended Address"), &a.extended),
             po_box: entry(tr("PO Box"), &a.po_box),
             locality: entry(tr("City"), &a.locality),
-            region: entry("State/Province", &a.region),
+            region: entry(tr("State/Province"), &a.region),
             postal_code: entry(tr("Postal Code"), &a.postal_code),
             country: entry(tr("Country"), &a.country),
         };
@@ -490,7 +538,10 @@ impl Editor {
             let (rm, street, city) = (remove.clone(), row.street.clone(), row.locality.clone());
             e.connect_changed(move |_| {
                 let summary = address_summary(&street.text(), &city.text());
-                helix_app_common::set_accessible_label(&rm, &remove_name(tr("Address"), &summary));
+                helix_app_common::set_accessible_label(
+                    &rm,
+                    &remove_name(ValueKind::Address, &summary),
+                );
             });
         }
         let weak = Rc::downgrade(self);
@@ -646,12 +697,15 @@ mod tests {
     #[test]
     fn remove_buttons_name_their_value() {
         assert_eq!(
-            remove_name("Email", "jane@example.org"),
+            remove_name(ValueKind::Email, "jane@example.org"),
             "Remove Email jane@example.org"
         );
-        assert_eq!(remove_name("Phone Number", "  "), "Remove Phone Number");
+        assert_eq!(remove_name(ValueKind::Phone, "  "), "Remove Phone Number");
         assert_eq!(
-            remove_name("Address", &address_summary("1 Main St", "Springfield")),
+            remove_name(
+                ValueKind::Address,
+                &address_summary("1 Main St", "Springfield")
+            ),
             "Remove Address 1 Main St, Springfield"
         );
         assert_eq!(address_summary("", "Springfield"), "Springfield");

@@ -2,6 +2,7 @@
 //! a typed [`Contact`] view that preserves properties it does not manage.
 
 use crate::contentline::{self, escape_text, fold, Property};
+use crate::n_;
 use base64::Engine;
 
 /// A raw vCard: an ordered list of properties (without BEGIN/END).
@@ -677,24 +678,25 @@ fn decode_photo(p: &Property) -> Option<Photo> {
     }
 }
 
-/// Human label for a phone's TYPE set.
+/// Human label for a phone's TYPE set (English; translate it with
+/// `helix_app_common::i18n::tr` where it is shown).
 pub fn phone_label(t: &Typed) -> &'static str {
     if t.has("CELL") {
-        "Mobile"
+        n_("Mobile")
     } else if t.has("FAX") {
         if t.has("WORK") {
-            "Work Fax"
+            n_("Work Fax")
         } else {
-            "Home Fax"
+            n_("Home Fax")
         }
     } else if t.has("PAGER") {
-        "Pager"
+        n_("Pager")
     } else if t.has("HOME") {
-        "Home"
+        n_("Home")
     } else if t.has("WORK") {
-        "Work"
+        n_("Work")
     } else {
-        "Other"
+        n_("Other")
     }
 }
 
@@ -702,30 +704,31 @@ pub fn phone_label(t: &Typed) -> &'static str {
 pub fn generic_label(types: &[String]) -> &'static str {
     let has = |x: &str| types.iter().any(|t| t.eq_ignore_ascii_case(x));
     if has("HOME") {
-        "Personal"
+        n_("Personal")
     } else if has("WORK") {
-        "Work"
+        n_("Work")
     } else {
-        "Other"
+        n_("Other")
     }
 }
 
-/// Phone type choices offered by editors: (label, TYPE values).
+/// Phone type choices offered by editors: (label, TYPE values); the labels
+/// are English, translate them where they are shown.
 pub const PHONE_TYPES: &[(&str, &[&str])] = &[
-    ("Mobile", &["CELL"]),
-    ("Home", &["HOME", "VOICE"]),
-    ("Work", &["WORK", "VOICE"]),
-    ("Home Fax", &["HOME", "FAX"]),
-    ("Work Fax", &["WORK", "FAX"]),
-    ("Pager", &["PAGER"]),
-    ("Other", &["VOICE"]),
+    (n_("Mobile"), &["CELL"]),
+    (n_("Home"), &["HOME", "VOICE"]),
+    (n_("Work"), &["WORK", "VOICE"]),
+    (n_("Home Fax"), &["HOME", "FAX"]),
+    (n_("Work Fax"), &["WORK", "FAX"]),
+    (n_("Pager"), &["PAGER"]),
+    (n_("Other"), &["VOICE"]),
 ];
 
 /// Email / address / URL type choices: (label, TYPE values).
 pub const GENERIC_TYPES: &[(&str, &[&str])] = &[
-    ("Personal", &["HOME"]),
-    ("Work", &["WORK"]),
-    ("Other", &["OTHER"]),
+    (n_("Personal"), &["HOME"]),
+    (n_("Work"), &["WORK"]),
+    (n_("Other"), &["OTHER"]),
 ];
 
 /// Index into [`PHONE_TYPES`] that best matches `t`.

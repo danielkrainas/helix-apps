@@ -4,6 +4,7 @@ use crate::html::{self, escape, escape_attr};
 use crate::search;
 use crate::uri::DocRef;
 use crate::xmlutil;
+use helix_app_common::i18n::tr;
 use roxmltree::{Node, NodeId};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -310,7 +311,10 @@ impl DocBookDoc {
                 }
                 body.push_str(&r.content(root, 2));
                 if !self.chunks.is_empty() {
-                    body.push_str("<div class=\"toc\"><h2>Contents</h2><ul>");
+                    body.push_str(&format!(
+                        "<div class=\"toc\"><h2>{}</h2><ul>",
+                        escape(tr("Contents"))
+                    ));
                     for c in &self.chunks {
                         let pad = if c.depth > 0 {
                             " style=\"margin-inline-start:1.2em\""

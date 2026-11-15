@@ -107,13 +107,18 @@ pub fn format_name(face: &Face, collection: bool) -> String {
     } else {
         tr("OpenType (bitmap)")
     };
-    let variable = if face.is_variable() {
-        tr("Variable ")
+    let name = if face.is_variable() {
+        // Translators: a variable font's format: "Variable TrueType".
+        trf!("Variable {format}", format = base)
     } else {
-        ""
+        base.to_string()
     };
-    let coll = if collection { tr(" Collection") } else { "" };
-    format!("{variable}{base}{coll}")
+    if collection {
+        // Translators: a font collection's format: "TrueType Collection".
+        trf!("{format} Collection", format = name)
+    } else {
+        name
+    }
 }
 
 /// Returns the best string for `id`: English Unicode first, then any

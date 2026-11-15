@@ -1355,11 +1355,13 @@ impl Win {
         self.updating.set(false);
         self.title
             .set_subtitle(&subtitle.unwrap_or_else(|| self.device_label()));
-        self.window.set_title(Some(if dirty {
-            "*Document Scanner"
+        // A leading "*" marks unsaved changes, as in other GNOME apps.
+        let title = if dirty {
+            format!("*{}", tr(APP_NAME))
         } else {
-            tr(APP_NAME)
-        }));
+            tr(APP_NAME).to_string()
+        };
+        self.window.set_title(Some(&title));
     }
 
     // ---- document operations --------------------------------------------

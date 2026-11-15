@@ -913,7 +913,7 @@ impl Viewer {
 
     fn open_dialog(&self) {
         let filter = gtk::FileFilter::new();
-        filter.set_name(Some("Supported Images"));
+        filter.set_name(Some(tr("Supported Images")));
         for m in decode::supported_mime_types() {
             filter.add_mime_type(&m);
         }
@@ -1067,7 +1067,12 @@ impl Viewer {
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_default();
         self.error_page
-            .set_description(Some(&glib::markup_escape_text(&format!("{name}: {msg}"))));
+            // Translators: an image that could not be shown: its file name, then why.
+            .set_description(Some(&glib::markup_escape_text(&trf!(
+                "{name}: {error}",
+                name = name,
+                error = msg
+            ))));
         self.stack.set_visible_child_name("error");
         self.fill_props(path, None, &details);
         self.update_ui();
@@ -1188,7 +1193,12 @@ impl Viewer {
                     .file_name()
                     .map(|n| n.to_string_lossy().into_owned())
                     .unwrap_or_default();
-                self.window.set_title(Some(&format!("{name} — {APP_NAME}")));
+                // Translators: window title: file name, then the app name.
+                self.window.set_title(Some(&trf!(
+                    "{name} — {app}",
+                    name = name,
+                    app = tr(APP_NAME)
+                )));
                 self.title.set_title(&name);
                 let pos = st
                     .playlist

@@ -32,7 +32,9 @@ pub struct PanelInfo {
     pub aliases: &'static [&'static str],
     pub title: &'static str,
     pub icon: &'static str,
-    pub keywords: &'static [&'static str],
+    /// Search keywords, each ending in `;` (like a desktop file's
+    /// `Keywords`), so translators can add their own.
+    pub keywords: &'static str,
     /// Sidebar group; a separator is drawn between groups.
     pub group: u8,
     pub available: bool,
@@ -45,9 +47,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["wi-fi", "wireless"],
         title: n_("Wi-Fi"),
         icon: "network-wireless-symbolic",
-        keywords: &[
-            "network", "wireless", "wlan", "hotspot", "internet", "airplane",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("network;wireless;wlan;hotspot;internet;airplane;"),
         group: 0,
         available: false,
     },
@@ -57,7 +59,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["wired"],
         title: n_("Network"),
         icon: "network-wired-symbolic",
-        keywords: &["ethernet", "wired", "vpn", "proxy", "ip", "dns", "internet"],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("ethernet;wired;vpn;proxy;ip;dns;internet;"),
         group: 0,
         available: false,
     },
@@ -67,7 +71,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &[],
         title: n_("Bluetooth"),
         icon: "bluetooth-symbolic",
-        keywords: &["share", "devices", "pair", "headset", "wireless"],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("share;devices;pair;headset;wireless;"),
         group: 0,
         available: false,
     },
@@ -77,16 +83,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["displays", "screen"],
         title: n_("Displays"),
         icon: "video-display-symbolic",
-        keywords: &[
-            "monitor",
-            "screen",
-            "resolution",
-            "refresh",
-            "scale",
-            "night light",
-            "projector",
-            "rotation",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("monitor;screen;resolution;refresh;scale;night light;projector;rotation;"),
         group: 1,
         available: false,
     },
@@ -96,16 +95,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["audio"],
         title: n_("Sound"),
         icon: "audio-speakers-symbolic",
-        keywords: &[
-            "volume",
-            "speaker",
-            "microphone",
-            "audio",
-            "output",
-            "input",
-            "alert",
-            "mute",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("volume;speaker;microphone;audio;output;input;alert;mute;"),
         group: 1,
         available: false,
     },
@@ -115,16 +107,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &[],
         title: n_("Power"),
         icon: "battery-full-symbolic",
-        keywords: &[
-            "battery",
-            "suspend",
-            "sleep",
-            "dim",
-            "blank",
-            "power button",
-            "hibernate",
-            "energy",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("battery;suspend;sleep;dim;blank;power button;hibernate;energy;"),
         group: 1,
         available: true,
     },
@@ -134,14 +119,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["workspaces"],
         title: n_("Multitasking"),
         icon: "view-grid-symbolic",
-        keywords: &[
-            "hot corner",
-            "workspace",
-            "screen edges",
-            "tiling",
-            "app switching",
-            "multi-monitor",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("hot corner;workspace;screen edges;tiling;app switching;multi-monitor;"),
         group: 1,
         available: true,
     },
@@ -151,19 +131,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["background", "wallpaper"],
         title: n_("Appearance"),
         icon: "preferences-desktop-appearance-symbolic",
-        keywords: &[
-            "dark",
-            "light",
-            "style",
-            "theme",
-            "icon",
-            "icons",
-            "accent",
-            "color",
-            "colour",
-            "wallpaper",
-            "background",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("dark;light;style;theme;icon;icons;accent;color;colour;wallpaper;background;"),
         group: 1,
         available: true,
     },
@@ -173,13 +143,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["applications", "default-apps"],
         title: n_("Apps"),
         icon: "view-app-grid-symbolic",
-        keywords: &[
-            "default",
-            "applications",
-            "permissions",
-            "browser",
-            "storage",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("default;applications;permissions;browser;storage;"),
         group: 2,
         available: false,
     },
@@ -189,14 +155,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &[],
         title: n_("Notifications"),
         icon: "preferences-system-notifications-symbolic",
-        keywords: &[
-            "do not disturb",
-            "dnd",
-            "banner",
-            "alerts",
-            "lock screen",
-            "messages",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("do not disturb;dnd;banner;alerts;lock screen;messages;"),
         group: 2,
         available: true,
     },
@@ -206,16 +167,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["shell-extensions", "add-ons"],
         title: n_("Extensions"),
         icon: "application-x-addon-symbolic",
-        keywords: &[
-            "add-on",
-            "plugin",
-            "panel item",
-            "indicator",
-            "quick settings",
-            "dock",
-            "sandbox",
-            "permissions",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("add-on;plugin;panel item;indicator;quick settings;dock;sandbox;permissions;"),
         group: 2,
         available: true,
     },
@@ -225,18 +179,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["touchpad", "mouse-touchpad"],
         title: n_("Mouse & Touchpad"),
         icon: "input-mouse-symbolic",
-        keywords: &[
-            "touchpad",
-            "pointer",
-            "speed",
-            "scroll",
-            "natural",
-            "tap",
-            "click",
-            "trackpad",
-            "primary button",
-            "acceleration",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("touchpad;pointer;speed;scroll;natural;tap;click;trackpad;primary button;acceleration;"),
         group: 3,
         available: true,
     },
@@ -246,15 +191,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["input-sources"],
         title: n_("Keyboard"),
         icon: "input-keyboard-symbolic",
-        keywords: &[
-            "layout",
-            "input source",
-            "language",
-            "repeat",
-            "delay",
-            "typing",
-            "xkb",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("layout;input source;language;repeat;delay;typing;xkb;"),
         group: 3,
         available: true,
     },
@@ -264,23 +203,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["universal-access", "a11y"],
         title: n_("Accessibility"),
         icon: "preferences-desktop-accessibility-symbolic",
-        keywords: &[
-            "high contrast",
-            "large text",
-            "zoom",
-            "magnifier",
-            "screen reader",
-            "cursor size",
-            "reduce animation",
-            "sticky keys",
-            "slow keys",
-            "bounce keys",
-            "mouse keys",
-            "scrollbars",
-            "screen keyboard",
-            "double-click",
-            "locate pointer",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("high contrast;large text;zoom;magnifier;screen reader;cursor size;reduce animation;sticky keys;slow keys;bounce keys;mouse keys;scrollbars;screen keyboard;double-click;locate pointer;"),
         group: 4,
         available: true,
     },
@@ -290,20 +215,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["security", "screen-lock", "location"],
         title: n_("Privacy & Security"),
         icon: "preferences-system-privacy-symbolic",
-        keywords: &[
-            "screen lock",
-            "lock",
-            "blank",
-            "idle",
-            "recent files",
-            "file history",
-            "trash",
-            "temporary",
-            "location",
-            "camera",
-            "microphone",
-            "problem reporting",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("screen lock;lock;blank;idle;recent files;file history;trash;temporary;location;camera;microphone;problem reporting;"),
         group: 4,
         available: true,
     },
@@ -313,16 +227,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["date-time", "time"],
         title: n_("Date & Time"),
         icon: "preferences-system-time-symbolic",
-        keywords: &[
-            "clock",
-            "time zone",
-            "timezone",
-            "ntp",
-            "24-hour",
-            "am/pm",
-            "week numbers",
-            "calendar",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("clock;time zone;timezone;ntp;24-hour;am/pm;week numbers;calendar;"),
         group: 5,
         available: true,
     },
@@ -332,7 +239,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["user-accounts"],
         title: n_("Users"),
         icon: "system-users-symbolic",
-        keywords: &["account", "password", "login", "avatar", "administrator"],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("account;password;login;avatar;administrator;"),
         group: 5,
         available: false,
     },
@@ -342,18 +251,9 @@ pub const PANELS: &[PanelInfo] = &[
         aliases: &["info-overview", "info", "system"],
         title: n_("About"),
         icon: "help-about-symbolic",
-        keywords: &[
-            "device name",
-            "hostname",
-            "memory",
-            "processor",
-            "cpu",
-            "disk",
-            "os",
-            "version",
-            "kernel",
-            "hardware",
-        ],
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("device name;hostname;memory;processor;cpu;disk;os;version;kernel;hardware;"),
         group: 5,
         available: true,
     },
@@ -403,9 +303,19 @@ pub fn sidebar_order(query: &str) -> Vec<PanelId> {
 /// Lower rank is a better match; `None` means no match.
 fn rank(p: &PanelInfo, query: &str, terms: &[&str]) -> Option<u8> {
     let title = helix_app_common::i18n::tr(p.title).to_lowercase();
+    // Keywords match in English and in the interface language, as in
+    // GNOME Settings, so a search typed either way finds the panel.
+    let translated = helix_app_common::i18n::tr(p.keywords).to_lowercase();
+    let keywords: Vec<&str> = p
+        .keywords
+        .split(';')
+        .chain(translated.split(';'))
+        .map(str::trim)
+        .filter(|k| !k.is_empty())
+        .collect();
     let all_match = terms
         .iter()
-        .all(|t| title.contains(t) || p.keywords.iter().any(|k| k.contains(t)));
+        .all(|t| title.contains(t) || keywords.iter().any(|k| k.contains(t)));
     if !all_match {
         return None;
     }

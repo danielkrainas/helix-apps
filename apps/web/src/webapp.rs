@@ -6,6 +6,7 @@
 //! `org.helix.Web.WebApp_<ID>` and keeps its own WebKit data in
 //! `$XDG_DATA_HOME/helix-web/web-apps/<ID>/`.
 
+use helix_app_common::i18n::tr;
 use std::collections::HashMap;
 use zbus::blocking::{Connection, Proxy};
 use zbus::zvariant::{OwnedObjectPath, OwnedValue, Value};
@@ -335,7 +336,7 @@ pub fn install(name: &str, url: &str, icon: &[u8], exe: &str) -> Result<(WebApp,
     let unique = conn
         .unique_name()
         .map(|n| n.to_string())
-        .ok_or_else(|| Error::Failed("no unique bus name".into()))?;
+        .ok_or_else(|| Error::Failed(tr("no unique bus name").into()))?;
     let token = format!("helix_web_{}", std::process::id());
     let req_path = request_path(&unique, &token);
     let request = Proxy::new(&conn, PORTAL_BUS, req_path.as_str(), REQUEST)?;
@@ -355,7 +356,7 @@ pub fn install(name: &str, url: &str, icon: &[u8], exe: &str) -> Result<(WebApp,
         launcher.call("PrepareInstall", &("", name, icon_variant, options))?;
     let msg = responses
         .next()
-        .ok_or_else(|| Error::Failed("no response from portal".into()))?;
+        .ok_or_else(|| Error::Failed(tr("no response from portal").into()))?;
     let (code, results): (u32, HashMap<String, OwnedValue>) = msg.body().deserialize()?;
     if code != 0 {
         return Err(Error::Cancelled);
@@ -367,7 +368,7 @@ pub fn install(name: &str, url: &str, icon: &[u8], exe: &str) -> Result<(WebApp,
     let install_token = results
         .get("token")
         .and_then(|v| String::try_from(v.try_clone().ok()?).ok())
-        .ok_or_else(|| Error::Failed("portal returned no token".into()))?;
+        .ok_or_else(|| Error::Failed(tr("portal returned no token").into()))?;
 
     let app = WebApp {
         id: make_id(&chosen, url),

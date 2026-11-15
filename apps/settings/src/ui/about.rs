@@ -36,7 +36,8 @@ fn read_local() -> LocalInfo {
     LocalInfo {
         os: sysinfo::os_name(&sysinfo::parse_os_release(&os_release))
             .unwrap_or_else(|| tr("Unknown").into()),
-        os_type: format!("{}-bit", usize::BITS),
+        // Translators: the OS type in About, "64-bit".
+        os_type: trf!("{}-bit", usize::BITS),
         cpu: sysinfo::cpu_description(&sysinfo::read("/proc/cpuinfo"))
             .unwrap_or_else(|| tr("Unknown").into()),
         memory: sysinfo::mem_total_bytes(&sysinfo::read("/proc/meminfo")),

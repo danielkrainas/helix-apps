@@ -46,6 +46,7 @@ apps/disk-usage/src/shortcuts.rs
 apps/disk-usage/src/ui.rs
 apps/disks/src/format.rs
 apps/disks/src/model.rs
+apps/disks/src/ops.rs
 apps/disks/src/parttypes.rs
 apps/disks/src/shortcuts.rs
 apps/disks/src/smart.rs
@@ -56,6 +57,7 @@ apps/document-scanner/src/email.rs
 apps/document-scanner/src/export.rs
 apps/document-scanner/src/page.rs
 apps/document-scanner/src/postproc.rs
+apps/document-scanner/src/sane.rs
 apps/document-scanner/src/scanner.rs
 apps/document-scanner/src/settings.rs
 apps/document-scanner/src/shortcuts.rs
@@ -87,6 +89,8 @@ apps/fonts/src/fontinfo.rs
 apps/fonts/src/install.rs
 apps/fonts/src/shortcuts.rs
 apps/fonts/src/ui.rs
+apps/help/src/docbook.rs
+apps/help/src/html.rs
 apps/help/src/library.rs
 apps/help/src/mallard.rs
 apps/help/src/sandbox.rs
@@ -97,6 +101,7 @@ apps/image-viewer/src/save.rs
 apps/image-viewer/src/shortcuts.rs
 apps/image-viewer/src/trash.rs
 apps/image-viewer/src/ui.rs
+apps/image-viewer/src/wallpaper.rs
 apps/logs/src/category.rs
 apps/logs/src/format.rs
 apps/logs/src/journal.rs
@@ -127,6 +132,7 @@ apps/music/src/tracker.rs
 apps/music/src/ui.rs
 apps/screenshot/src/args.rs
 apps/screenshot/src/main.rs
+apps/screenshot/src/naming.rs
 apps/screenshot/src/shell.rs
 apps/screenshot/src/shortcuts.rs
 apps/screenshot/src/ui.rs
@@ -156,7 +162,6 @@ apps/system-monitor/src/format.rs
 apps/system-monitor/src/fs_view.rs
 apps/system-monitor/src/helper_args.rs
 apps/system-monitor/src/proc_view.rs
-apps/system-monitor/src/procfs.rs
 apps/system-monitor/src/res_view.rs
 apps/system-monitor/src/shortcuts.rs
 apps/system-monitor/src/ui.rs
@@ -179,6 +184,7 @@ apps/tour/src/ui.rs
 apps/video-player/src/mpris.rs
 apps/video-player/src/player.rs
 apps/video-player/src/screenshot.rs
+apps/video-player/src/timefmt.rs
 apps/video-player/src/ui.rs
 apps/weather/src/api.rs
 apps/weather/src/autoloc.rs
@@ -189,6 +195,7 @@ apps/weather/src/units.rs
 apps/weather/src/wmo.rs
 apps/web/src/app.rs
 apps/web/src/dialogs.rs
+apps/web/src/overview.rs
 apps/web/src/passwords.rs
 apps/web/src/permissions.rs
 apps/web/src/sandbox.rs
@@ -196,10 +203,12 @@ apps/web/src/secrets.rs
 apps/web/src/settings.rs
 apps/web/src/shortcuts.rs
 apps/web/src/tab.rs
+apps/web/src/webapp.rs
 apps/web/src/window.rs
-crates/helix-app-common/src/a11y.rs
 crates/helix-app-common/src/about.rs
 crates/helix-app-common/src/shortcuts.rs
+crates/helix-eds/src/source.rs
+crates/helix-eds/src/vcard.rs
 apps/audio-player/data/org.helix.AudioPlayer.desktop
 apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
 apps/calculator/data/org.helix.Calculator.desktop

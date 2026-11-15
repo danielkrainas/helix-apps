@@ -15,7 +15,7 @@ use crate::settings::{CookiePolicy, OVERVIEW};
 use crate::store;
 use crate::webapp;
 use crate::window::Window;
-use helix_app_common::i18n::{n_, tr};
+use helix_app_common::i18n::{n_, tr, trc};
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
@@ -106,9 +106,10 @@ pub fn show_preferences(app: &Rc<App>) {
     let reader_group = adw::PreferencesGroup::builder()
         .title(tr("Reader Mode"))
         .build();
+    let (sans, serif) = (trc("font style", "Sans"), trc("font style", "Serif"));
     let font = adw::ComboRow::builder()
         .title(tr("Font Style"))
-        .model(&gtk::StringList::new(&["Sans", "Serif"]))
+        .model(&gtk::StringList::new(&[sans.as_str(), serif.as_str()]))
         .build();
     font.set_selected(u32::from(s.reader_font == "serif"));
     let weak = Rc::downgrade(app);
@@ -153,7 +154,7 @@ pub fn show_preferences(app: &Rc<App>) {
         .title(tr("New engine name"))
         .build();
     let add_url = adw::EntryRow::builder()
-        .title("URL template, e.g. https://example.com/?q=%s")
+        .title(tr("URL template, e.g. https://example.com/?q=%s"))
         .show_apply_button(true)
         .build();
     general.add(&search_group);
@@ -778,7 +779,7 @@ fn days_from_civil(year: i32, month: i32, day: i32) -> i64 {
 
 fn html_filter() -> gio::ListStore {
     let filter = gtk::FileFilter::new();
-    filter.set_name(Some("HTML Bookmark Files"));
+    filter.set_name(Some(tr("HTML Bookmark Files")));
     filter.add_mime_type("text/html");
     filter.add_suffix("html");
     filter.add_suffix("htm");
@@ -1212,10 +1213,10 @@ pub fn show_web_app_preferences(app: &Rc<App>) {
     let page = adw::PreferencesPage::new();
     let group = adw::PreferencesGroup::builder()
         .title(tr("Additional Allowed Sites"))
-        .description(glib::markup_escape_text(&format!(
+        .description(glib::markup_escape_text(&trf!(
             "Links to these sites open in this web application instead of the browser, \
-             like links within {}. Write *.example.com to include all subdomains.",
-            crate::urlinput::host_of(&wa.url).unwrap_or_else(|| wa.url.clone())
+             like links within {host}. Write *.example.com to include all subdomains.",
+            host = crate::urlinput::host_of(&wa.url).unwrap_or_else(|| wa.url.clone())
         )))
         .build();
     let list = gtk::ListBox::builder()

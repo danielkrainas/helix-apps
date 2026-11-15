@@ -121,13 +121,26 @@ pub fn one_line(msg: &str) -> String {
 /// What a screen reader says for a list row: severity, time, process and
 /// message ("Error, 12:03:39, gdm-password: unable to locate …").
 pub fn row_accessible_label(severity: &str, time: &str, process: &str, message: &str) -> String {
-    let mut s = format!("{severity}, {time}");
-    if !process.is_empty() {
-        s.push_str(&format!(", {process}"));
+    if process.is_empty() {
+        // Translators: accessible name of a log entry: severity, time and
+        // message ("Error, 12:03:39: unable to locate …").
+        trf!(
+            "{severity}, {time}: {message}",
+            severity = severity,
+            time = time,
+            message = message
+        )
+    } else {
+        // Translators: accessible name of a log entry: severity, time,
+        // process and message ("Error, 12:03:39, gdm-password: unable to …").
+        trf!(
+            "{severity}, {time}, {process}: {message}",
+            severity = severity,
+            time = time,
+            process = process,
+            message = message
+        )
     }
-    s.push_str(": ");
-    s.push_str(message);
-    s
 }
 
 #[cfg(test)]

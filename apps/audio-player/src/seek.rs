@@ -108,7 +108,8 @@ pub fn volume_text(slider: f64, muted: bool) -> String {
     if muted {
         trf!("{pct}%, muted", pct = pct)
     } else {
-        format!("{pct}%")
+        // Translators: the volume, as a percentage.
+        trf!("{pct}%", pct = pct)
     }
 }
 

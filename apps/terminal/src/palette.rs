@@ -104,7 +104,7 @@ pub const DARK: Palette = Palette {
 };
 
 pub const HACKER: Palette = Palette {
-    name: "Hacker",
+    name: n_("Hacker"),
     foreground: "#33ff66",
     background: "#050805",
     cursor: "#33ff66",

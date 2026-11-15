@@ -169,7 +169,7 @@ pub fn profile_text(binary: &str, paths: &[String]) -> String {
 pub fn fix_commands(binary: &str, profile_installed: bool) -> String {
     let target = format!("/etc/apparmor.d/{binary}");
     if profile_installed {
-        trf!("sudo apparmor_parser -r {target}", target = target)
+        format!("sudo apparmor_parser -r {target}")
     } else {
         format!(
             "sudo tee {target} < {binary}.apparmor >/dev/null\nsudo apparmor_parser -r {target}"
@@ -180,26 +180,33 @@ pub fn fix_commands(binary: &str, profile_installed: bool) -> String {
 /// Body text for the status page.
 pub fn explanation(app_name: &str, cause: Cause, exe: &str, profile_installed: bool) -> String {
     let lead = trf!("{app_name} shows web content only inside WebKit’s sandbox, which needs unprivileged user namespaces.", app_name = app_name);
-    match cause {
-        Cause::AppArmor if profile_installed => format!(
-            "{lead} This system’s AppArmor policy restricts them (kernel.apparmor_restrict_unprivileged_userns = 1). \
+    let rest = match cause {
+        Cause::AppArmor if profile_installed => trf!(
+            "This system’s AppArmor policy restricts them (kernel.apparmor_restrict_unprivileged_userns = 1). \
              An AppArmor profile for {app_name} is installed but does not apply to this program ({exe}): \
-             load it, or add this path to it, then start {app_name} again."
+             load it, or add this path to it, then start {app_name} again.",
+            app_name = app_name,
+            exe = exe
         ),
-        Cause::AppArmor => format!(
-            "{lead} This system’s AppArmor policy restricts them (kernel.apparmor_restrict_unprivileged_userns = 1), \
+        Cause::AppArmor => trf!(
+            "This system’s AppArmor policy restricts them (kernel.apparmor_restrict_unprivileged_userns = 1), \
              and no AppArmor profile grants them to {app_name}. Save the profile below as a file, install it \
-             with the commands shown, then start {app_name} again."
+             with the commands shown, then start {app_name} again.",
+            app_name = app_name
         ),
-        Cause::Disabled => format!(
-            "{lead} They are disabled on this system (kernel.unprivileged_userns_clone or \
-             user.max_user_namespaces is 0). Ask your administrator to enable them, then start {app_name} again."
+        Cause::Disabled => trf!(
+            "They are disabled on this system (kernel.unprivileged_userns_clone or \
+             user.max_user_namespaces is 0). Ask your administrator to enable them, then start {app_name} again.",
+            app_name = app_name
         ),
-        Cause::Unknown => format!(
-            "{lead} Creating one failed on this system, so web content cannot be shown safely. \
-             Check your security policy (AppArmor, SELinux, seccomp), then start {app_name} again."
+        Cause::Unknown => trf!(
+            "Creating one failed on this system, so web content cannot be shown safely. \
+             Check your security policy (AppArmor, SELinux, seccomp), then start {app_name} again.",
+            app_name = app_name
         ),
-    }
+    };
+    // Translators: two sentences of the sandbox explanation; swap them if your language needs it.
+    trf!("{lead} {rest}", lead = lead, rest = rest)
 }
 
 fn mono_box(text: &str) -> gtk::Widget {

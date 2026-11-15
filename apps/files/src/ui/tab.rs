@@ -1191,9 +1191,10 @@ impl Tab {
                         let found = if n == 0 {
                             tr("No results").to_string()
                         } else {
-                            trf!(
-                                "Search finished: {} found",
-                                crate::fmt::item_count(n as u64)
+                            helix_app_common::trnf!(
+                                "Search finished: {n} item found",
+                                "Search finished: {n} items found",
+                                n
                             )
                         };
                         helix_app_common::announce(

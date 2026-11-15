@@ -157,7 +157,9 @@ impl Settings {
         {
             Some(tr("A search engine with this name already exists"))
         } else if !crate::urlinput::valid_template(url) {
-            Some("The address must start with https:// or http:// and contain %s where the search goes")
+            Some(tr(
+                "The address must start with https:// or http:// and contain %s where the search goes",
+            ))
         } else {
             None
         }

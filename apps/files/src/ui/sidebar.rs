@@ -420,17 +420,17 @@ impl Sidebar {
             b.append(&label);
             if let Kind::Mount(m) = &p.kind {
                 if m.can_eject() || m.can_unmount() {
-                    let verb = if m.can_eject() {
-                        tr("Eject")
+                    let (verb, spoken) = if m.can_eject() {
+                        (tr("Eject"), trf!("Eject {name}", name = p.label))
                     } else {
-                        tr("Unmount")
+                        (tr("Unmount"), trf!("Unmount {name}", name = p.label))
                     };
                     let btn = gtk::Button::builder()
                         .icon_name("media-eject-symbolic")
                         .tooltip_text(verb)
                         .valign(gtk::Align::Center)
                         .build();
-                    helix_app_common::set_accessible_label(&btn, &format!("{verb} {}", p.label));
+                    helix_app_common::set_accessible_label(&btn, &spoken);
                     btn.add_css_class("flat");
                     btn.add_css_class("sidebar-eject");
                     let weak = Rc::downgrade(self);
@@ -450,6 +450,9 @@ impl Sidebar {
                         .unwrap_or_default(),
                 )
                 .build();
+            // GTK would name the row after its tooltip (a path or URI
+            // such as "trash:///"); screen readers should say the label.
+            helix_app_common::set_accessible_label(&row, &p.label);
             row.set_widget_name(&p.section.to_string());
             let key = p
                 .file()

@@ -223,24 +223,18 @@ impl Volume {
             };
         }
         if let Some(clear) = &self.encrypted {
-            return format!(
-                "{name} — {}",
-                if clear.is_some() {
-                    tr("Unlocked")
-                } else {
-                    tr("Locked")
-                }
-            );
+            return if clear.is_some() {
+                trf!("{name} — Unlocked", name = name)
+            } else {
+                trf!("{name} — Locked", name = name)
+            };
         }
         if let Some(active) = self.swap_active {
-            return format!(
-                "{name} — {}",
-                if active {
-                    tr("Active")
-                } else {
-                    tr("Not Active")
-                }
-            );
+            return if active {
+                trf!("{name} — Active", name = name)
+            } else {
+                trf!("{name} — Not Active", name = name)
+            };
         }
         if self.id_usage.is_empty() && self.id_type.is_empty() {
             return tr("Unknown").into();
@@ -303,7 +297,7 @@ impl Volume {
         let p = self.partition.as_ref()?;
         let mut s = parttypes::name(&p.table_type, &p.type_id);
         if p.table_type == "dos" && p.flags & parttypes::DOS_FLAG_BOOTABLE != 0 {
-            s.push_str(" (Bootable)");
+            s = trf!("{partition_type} (Bootable)", partition_type = s);
         }
         Some(s)
     }

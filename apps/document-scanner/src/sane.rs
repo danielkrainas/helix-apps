@@ -99,7 +99,7 @@ impl std::fmt::Display for Error {
         // SAFETY: sane_strstatus returns a static string (or NULL).
         let s = unsafe { cstr(sane_strstatus(self.0)) };
         if s.is_empty() {
-            write!(f, "SANE error {}", self.0)
+            f.write_str(&helix_app_common::trf!("SANE error {code}", code = self.0))
         } else {
             f.write_str(&s)
         }

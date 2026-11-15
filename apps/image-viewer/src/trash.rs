@@ -127,7 +127,7 @@ pub fn restore(original: &Path, dirs: &[(PathBuf, PathBuf)]) -> Result<(), Strin
         return Err(tr("A file with the same name already exists").into());
     }
     let t = find_trashed(original, dirs)
-        .ok_or_else(|| "The file was not found in the trash".to_string())?;
+        .ok_or_else(|| tr("The file was not found in the trash").to_string())?;
     if std::fs::rename(&t.file, original).is_err() {
         // Different file system (e.g. home trash for a file elsewhere).
         let src = gio::File::for_path(&t.file);

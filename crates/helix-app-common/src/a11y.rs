@@ -17,7 +17,6 @@
 //! [`announce`] and friends tell screen readers about status changes that
 //! happen without focus moving (see their docs).
 
-use crate::trf;
 use gtk::prelude::*;
 use gtk::{accessible, glib};
 use std::cell::RefCell;
@@ -523,23 +522,15 @@ fn size_problems(window: &gtk::Window, shrunk: bool) -> Vec<String> {
     let mut out = Vec::new();
     let (rw, rh) = window.size_request();
     if (rw, rh) != (MIN_WIDTH, MIN_HEIGHT) {
-        out.push(trf!(
-            "minimum size is {rw}×{rh}, not {MIN_WIDTH}×{MIN_HEIGHT}",
-            rw = rw,
-            rh = rh,
-            MIN_WIDTH = MIN_WIDTH,
-            MIN_HEIGHT = MIN_HEIGHT
+        out.push(format!(
+            "minimum size is {rw}×{rh}, not {MIN_WIDTH}×{MIN_HEIGHT}"
         ));
     }
     if shrunk && !window.is_maximized() {
         let (w, h) = (window.width(), window.height());
         if w > MIN_WIDTH || h > MIN_HEIGHT {
-            out.push(trf!(
-                "content does not fit {MIN_WIDTH}×{MIN_HEIGHT}: the window is {w}×{h}",
-                MIN_WIDTH = MIN_WIDTH,
-                MIN_HEIGHT = MIN_HEIGHT,
-                w = w,
-                h = h
+            out.push(format!(
+                "content does not fit {MIN_WIDTH}×{MIN_HEIGHT}: the window is {w}×{h}"
             ));
         }
         // A libadwaita window with breakpoints keeps its size and clips
@@ -554,12 +545,10 @@ fn size_problems(window: &gtk::Window, shrunk: bool) -> Vec<String> {
                 .measure(gtk::Orientation::Vertical, content.width().max(min_w))
                 .0;
             if min_w > content.width() || min_h > content.height() {
-                out.push(trf!(
-                    "content needs {min_w}×{min_h} but has {width}×{height}",
-                    min_w = min_w,
-                    min_h = min_h,
-                    width = content.width(),
-                    height = content.height()
+                out.push(format!(
+                    "content needs {min_w}×{min_h} but has {}×{}",
+                    content.width(),
+                    content.height()
                 ));
             }
         }
@@ -622,7 +611,7 @@ pub fn install_check(app: &impl IsA<gtk::Application>) {
                     eprintln!("helix-a11y: unlabelled input in “{title}”: {line}");
                 }
             }
-            if seen.insert(trf!("total {total}", total = total)) {
+            if seen.insert(format!("total {total}")) {
                 eprintln!("helix-a11y: checked “{title}”: {total} buttons");
             }
             glib::ControlFlow::Continue

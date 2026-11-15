@@ -128,7 +128,7 @@ pub fn format_time(t: &DateTime, use_12h: bool) -> String {
             0 => 12,
             h => h,
         };
-        let ampm = if t.hour < 12 { "AM" } else { "PM" };
+        let ampm = if t.hour < 12 { tr("AM") } else { tr("PM") };
         format!("{h}:{:02} {ampm}", t.minute)
     } else {
         format!("{:02}:{:02}", t.hour, t.minute)
@@ -142,7 +142,7 @@ pub fn format_hour(t: &DateTime, use_12h: bool) -> String {
             0 => 12,
             h => h,
         };
-        format!("{h} {}", if t.hour < 12 { "AM" } else { "PM" })
+        format!("{h} {}", if t.hour < 12 { tr("AM") } else { tr("PM") })
     } else {
         format!("{:02}:00", t.hour)
     }

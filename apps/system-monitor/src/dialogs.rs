@@ -32,7 +32,7 @@ fn property_rows(p: &ProcessInfo, iec: bool) -> Vec<(&'static str, String)> {
         (tr("Virtual Memory"), opt_size(p.vm_size, iec)),
         (tr("Resident Memory"), opt_size(p.vm_rss, iec)),
         (tr("Shared Memory"), opt_size(p.shared, iec)),
-        ("CPU", format::percent(p.cpu)),
+        (tr("CPU"), format::percent(p.cpu)),
         (
             tr("CPU Time"),
             format::cpu_time(p.cpu_ticks, sampler::clock_ticks()),
@@ -40,7 +40,7 @@ fn property_rows(p: &ProcessInfo, iec: bool) -> Vec<(&'static str, String)> {
         (tr("Started"), started),
         (tr("Nice"), p.nice.to_string()),
         (tr("Priority"), format::priority(p.nice).to_string()),
-        ("ID", p.pid.to_string()),
+        (tr("ID"), p.pid.to_string()),
         (tr("Parent ID"), p.ppid.to_string()),
         (tr("Threads"), p.threads.to_string()),
         (tr("Command Line"), p.cmdline.clone()),

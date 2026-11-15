@@ -1,6 +1,7 @@
 //! HTML page shell.
 
 pub use crate::xmlutil::{escape, escape_attr};
+use helix_app_common::i18n::tr;
 
 pub const CSS: &str = include_str!("style.css");
 
@@ -35,9 +36,10 @@ pub fn error_page(title: &str, message: &str) -> String {
     page(
         title,
         &format!(
-            "<h1>{}</h1><p class=\"error\">{}</p><p><a href=\"help:\">All help documents</a></p>",
+            "<h1>{}</h1><p class=\"error\">{}</p><p><a href=\"help:\">{}</a></p>",
             escape(title),
-            escape(message)
+            escape(message),
+            escape(tr("All help documents"))
         ),
     )
 }

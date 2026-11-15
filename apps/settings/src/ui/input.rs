@@ -338,9 +338,9 @@ impl SourcesUi {
                 row.set_subtitle(id);
             }
             helix_app_common::focus::set_key(&row, &format!("{kind}:{id}"));
-            for (icon, tip, delta, enabled) in [
-                ("go-up-symbolic", tr("Move Up"), -1isize, i > 0),
-                ("go-down-symbolic", tr("Move Down"), 1, i + 1 < n),
+            for (icon, tip, action, delta, enabled) in [
+                ("go-up-symbolic", tr("Move Up"), "up", -1isize, i > 0),
+                ("go-down-symbolic", tr("Move Down"), "down", 1, i + 1 < n),
             ] {
                 let b = gtk::Button::builder()
                     .icon_name(icon)
@@ -349,7 +349,7 @@ impl SourcesUi {
                     .css_classes(["flat"])
                     .sensitive(enabled)
                     .build()
-                    .labelled(&row_button_name(tip, &name));
+                    .labelled(&row_button_name(action, &name));
                 helix_app_common::focus::set_part(&b, tip);
                 let weak = Rc::downgrade(self);
                 b.connect_clicked(move |_| {
@@ -368,7 +368,7 @@ impl SourcesUi {
                 .valign(gtk::Align::Center)
                 .css_classes(["flat"])
                 .build()
-                .labelled(&row_button_name(tr("Remove"), &name));
+                .labelled(&row_button_name("remove", &name));
             helix_app_common::focus::set_part(&rm, "remove");
             let weak = Rc::downgrade(self);
             rm.connect_clicked(move |_| {
@@ -487,15 +487,13 @@ fn add_source_dialog(parent: &adw::ApplicationWindow, ui: &Rc<SourcesUi>) {
 }
 
 /// Accessible name of an input source's row button, naming the source:
-/// "Move English (US) Up", "Remove English (US)".
+/// "Move English (US) Up", "Remove English (US)"; `action` is `up`,
+/// `down` or `remove`.
 fn row_button_name(action: &str, source: &str) -> String {
-    match action.strip_prefix("Move ") {
-        Some(direction) => trf!(
-            "Move {source} {direction}",
-            source = source,
-            direction = direction
-        ),
-        None => format!("{action} {source}"),
+    match action {
+        "up" => trf!("Move {source} Up", source = source),
+        "down" => trf!("Move {source} Down", source = source),
+        _ => trf!("Remove {source}", source = source),
     }
 }
 
@@ -506,10 +504,10 @@ mod tests {
     #[test]
     fn row_buttons_name_their_source() {
         assert_eq!(
-            row_button_name("Move Up", "English (US)"),
+            row_button_name("up", "English (US)"),
             "Move English (US) Up"
         );
-        assert_eq!(row_button_name("Move Down", "German"), "Move German Down");
-        assert_eq!(row_button_name("Remove", "German"), "Remove German");
+        assert_eq!(row_button_name("down", "German"), "Move German Down");
+        assert_eq!(row_button_name("remove", "German"), "Remove German");
     }
 }

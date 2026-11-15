@@ -1,6 +1,7 @@
 //! Library model: tracks and their grouping into albums and artists.
 
 use helix_app_common::i18n::{n_, tr};
+use helix_app_common::{trf, trnf};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
@@ -388,10 +389,11 @@ pub fn format_duration(ms: u64) -> String {
 
 /// Value text of the seek slider: "1:23 of 4:56".
 pub fn position_text(pos_ms: u64, dur_ms: u64) -> String {
-    format!(
-        "{} of {}",
-        format_duration(pos_ms.min(dur_ms)),
-        format_duration(dur_ms)
+    // Translators: the position in a track, "1:23 of 4:56".
+    trf!(
+        "{position} of {duration}",
+        position = format_duration(pos_ms.min(dur_ms)),
+        duration = format_duration(dur_ms)
     )
 }
 
@@ -404,17 +406,14 @@ pub fn volume_text(level: f64) -> String {
 pub fn format_total(ms: u64) -> String {
     let mins = ms.div_ceil(60_000);
     let (h, m) = (mins / 60, mins % 60);
-    let plural = |n: u64, w: &str| {
-        if n == 1 {
-            format!("1 {w}")
-        } else {
-            format!("{n} {w}s")
-        }
-    };
     match (h, m) {
-        (0, m) => plural(m, "minute"),
-        (h, 0) => plural(h, "hour"),
-        (h, m) => format!("{} {}", plural(h, "hour"), plural(m, "minute")),
+        (0, m) => trnf!("{n} minute", "{n} minutes", m),
+        (h, 0) => trnf!("{n} hour", "{n} hours", h),
+        (h, m) => trf!(
+            "{hours} {minutes}",
+            hours = trnf!("{n} hour", "{n} hours", h),
+            minutes = trnf!("{n} minute", "{n} minutes", m)
+        ),
     }
 }
 

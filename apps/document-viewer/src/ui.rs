@@ -965,9 +965,11 @@ impl Win {
             self.page_entry.set_text(&label);
         }
         let of = if info.has_labels && label != (p + 1).to_string() {
-            format!("({} of {})", p + 1, n)
+            // Translators: after a page label in the page box, "iv (4 of 120)".
+            trf!("({page} of {n})", page = p + 1, n = n)
         } else {
-            format!("of {n}")
+            // Translators: after the page number in the page box, "4 of 120".
+            trf!("of {n}", n = n)
         };
         self.page_of.set_label(&of);
         helix_app_common::announce_settled(
@@ -1475,11 +1477,11 @@ impl Win {
 
     fn choose_file(self: &Rc<Self>) {
         let pdf = gtk::FileFilter::new();
-        pdf.set_name(Some("PDF Documents"));
+        pdf.set_name(Some(tr("PDF Documents")));
         pdf.add_mime_type("application/pdf");
         pdf.add_suffix("pdf");
         let all = gtk::FileFilter::new();
-        all.set_name(Some("All Files"));
+        all.set_name(Some(tr("All Files")));
         all.add_pattern("*");
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&pdf);

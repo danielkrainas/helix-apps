@@ -117,7 +117,7 @@ fn url_group(
         .description(tr("Subscribe to a published calendar (.ics). It is read-only and refreshed automatically."))
         .build();
     let url = adw::EntryRow::builder()
-        .title("Calendar Address (https:// or webcal://)")
+        .title(tr("Calendar Address (https:// or webcal://)"))
         .input_purpose(gtk::InputPurpose::Url)
         .build();
     let name = adw::EntryRow::builder().title(tr("Calendar Name")).build();
@@ -175,7 +175,7 @@ fn url_group(
             let parsed = match source::parse_webcal_url(&url.text()) {
                 Ok(u) => u,
                 Err(e) => {
-                    let message = e.to_string();
+                    let message = tr(e.message()).to_string();
                     error.set_label(&message);
                     error.set_visible(true);
                     helix_app_common::set_input_error(&url, Some(&error), Some(&message));

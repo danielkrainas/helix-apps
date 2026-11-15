@@ -1,6 +1,7 @@
 //! Setting the desktop background through the XDG Wallpaper portal
 //! (`org.freedesktop.portal.Wallpaper.SetWallpaperURI`).
 
+use helix_app_common::i18n::tr;
 use std::collections::HashMap;
 
 use zbus::zvariant::{OwnedValue, Value};
@@ -69,7 +70,7 @@ pub fn set_wallpaper(uri: &str, parent: &str) -> Result<Outcome, String> {
     .map_err(|e| e.to_string())?;
     let msg = responses
         .next()
-        .ok_or_else(|| "The portal closed the request".to_string())?;
+        .ok_or_else(|| tr("The portal closed the request").to_string())?;
     let (code, _results): (u32, HashMap<String, OwnedValue>) =
         msg.body().deserialize().map_err(|e| e.to_string())?;
     Ok(outcome(code))

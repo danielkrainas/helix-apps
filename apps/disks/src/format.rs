@@ -1,10 +1,10 @@
 //! Human-readable formatting of sizes, durations and temperatures.
 
-use helix_app_common::i18n::tr;
+use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
-const UNITS: [&str; 6] = ["kB", "MB", "GB", "TB", "PB", "EB"];
+const UNITS: [&str; 6] = [n_("kB"), n_("MB"), n_("GB"), n_("TB"), n_("PB"), n_("EB")];
 
 /// Short decimal (SI) size: `512 bytes`, `1.0 kB`, `60 GB`, `2.0 TB`.
 ///
@@ -24,11 +24,13 @@ pub fn size(bytes: u64) -> String {
             value.round()
         };
         if rounded < 1000.0 || unit == UNITS.len() - 1 {
-            return if rounded < 10.0 {
-                format!("{rounded:.1} {}", UNITS[unit])
+            let value = if rounded < 10.0 {
+                format!("{rounded:.1}")
             } else {
-                format!("{rounded:.0} {}", UNITS[unit])
+                format!("{rounded:.0}")
             };
+            // Translators: a size, "1.5" "MB".
+            return trf!("{value} {unit}", value = value, unit = tr(UNITS[unit]));
         }
         value /= 1000.0;
         unit += 1;
@@ -56,11 +58,15 @@ pub fn size_long(bytes: u64) -> String {
     trf!("{} ({} bytes)", size(bytes), group_thousands(bytes))
 }
 
-fn plural(n: u64, one: &str, many: &str) -> String {
-    if n == 1 {
-        format!("1 {one}")
-    } else {
-        format!("{n} {many}")
+/// `n` of the unit at `index` in `duration`'s table.
+fn count(index: usize, n: u64) -> String {
+    match index {
+        0 => trnf!("{n} year", "{n} years", n),
+        1 => trnf!("{n} month", "{n} months", n),
+        2 => trnf!("{n} day", "{n} days", n),
+        3 => trnf!("{n} hour", "{n} hours", n),
+        4 => trnf!("{n} minute", "{n} minutes", n),
+        _ => trnf!("{n} second", "{n} seconds", n),
     }
 }
 
@@ -72,27 +78,23 @@ pub fn duration(secs: u64) -> String {
     const DAY: u64 = 24 * HOUR;
     const MONTH: u64 = 30 * DAY;
     const YEAR: u64 = 365 * DAY;
-    let units: [(u64, &str, &str); 6] = [
-        (YEAR, "year", "years"),
-        (MONTH, "month", "months"),
-        (DAY, "day", "days"),
-        (HOUR, "hour", "hours"),
-        (MIN, "minute", "minutes"),
-        (1, "second", "seconds"),
-    ];
-    for (i, &(len, one, many)) in units.iter().enumerate() {
+    let units: [u64; 6] = [YEAR, MONTH, DAY, HOUR, MIN, 1];
+    for (i, &len) in units.iter().enumerate() {
         if secs >= len || len == 1 {
             let major = secs / len;
             let rest = secs % len;
-            let mut s = plural(major, one, many);
-            if let Some(&(len2, one2, many2)) = units.get(i + 1) {
+            if let Some(&len2) = units.get(i + 1) {
                 let minor = rest / len2;
                 if minor > 0 && len2 >= MIN {
-                    s.push_str(", ");
-                    s.push_str(&plural(minor, one2, many2));
+                    // Translators: a duration in two units, "4 years" "11 months".
+                    return trf!(
+                        "{major}, {minor}",
+                        major = count(i, major),
+                        minor = count(i + 1, minor)
+                    );
                 }
             }
-            return s;
+            return count(i, major);
         }
     }
     unreachable!()
@@ -102,7 +104,11 @@ pub fn duration(secs: u64) -> String {
 pub fn temperature_kelvin(k: f64) -> String {
     let c = k - 273.15;
     let f = c * 9.0 / 5.0 + 32.0;
-    format!("{:.0}° C / {:.0}° F", c, f)
+    trf!(
+        "{celsius}° C / {fahrenheit}° F",
+        celsius = format!("{c:.0}"),
+        fahrenheit = format!("{f:.0}")
+    )
 }
 
 /// Relative time of a past event: `Less than a minute ago`, `5 minutes ago`.
@@ -116,7 +122,8 @@ pub fn ago(secs: u64) -> String {
 
 /// Data rate: `85.3 MB/s`.
 pub fn rate(bytes_per_sec: f64) -> String {
-    format!("{}/s", size(bytes_per_sec.max(0.0) as u64))
+    // Translators: a data rate, "85.3 MB" per second.
+    trf!("{size}/s", size = size(bytes_per_sec.max(0.0) as u64))
 }
 
 #[cfg(test)]

@@ -2,6 +2,7 @@
 
 use crate::geo::{percent_encode, LatLon};
 use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -163,7 +164,7 @@ fn parse_place(v: &Value) -> Option<Place> {
                 if !extras.iter().any(|(l, _): &(String, String)| l == label) {
                     let val = match key {
                         "cuisine" => val.replace(['_', ';'], " "),
-                        "ele" => format!("{val} m"),
+                        "ele" => trf!("{} m", val),
                         _ => val.to_string(),
                     };
                     extras.push((label.to_string(), val));

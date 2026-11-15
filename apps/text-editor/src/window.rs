@@ -813,7 +813,7 @@ impl Window {
         page.set_indicator_icon(icon.as_ref());
         page.set_indicator_tooltip(if modified { tr(UNSAVED) } else { "" });
         let tip = if modified {
-            format!("{UNSAVED}\n{}", doc.subtitle())
+            format!("{}\n{}", tr(UNSAVED), doc.subtitle())
         } else {
             doc.subtitle()
         };
@@ -830,7 +830,7 @@ impl Window {
                 self.title.set_title(&d.title());
                 if d.is_modified() {
                     self.title
-                        .set_subtitle(&format!("{UNSAVED} · {}", d.subtitle()));
+                        .set_subtitle(&format!("{} · {}", tr(UNSAVED), d.subtitle()));
                     self.win.set_title(Some(&trf!(
                         "{} ({}) — Text Editor",
                         d.title(),
@@ -963,7 +963,10 @@ async fn confirm_close(win: &adw::ApplicationWindow, docs: &[Rc<Doc>]) -> String
         let names: Vec<String> = docs.iter().map(|d| format!("• {}", d.title())).collect();
         (
             tr("Save Changes?").to_string(),
-            format!("These documents have unsaved changes:\n{}\nUnsaved changes will be permanently lost.", names.join("\n")),
+            trf!(
+                "These documents have unsaved changes:\n{documents}\nUnsaved changes will be permanently lost.",
+                documents = names.join("\n")
+            ),
         )
     };
     let dialog = adw::AlertDialog::new(Some(&heading), Some(&body));

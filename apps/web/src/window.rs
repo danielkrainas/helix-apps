@@ -57,9 +57,44 @@ impl SuggestionKind {
 fn suggestion_label(kind: SuggestionKind, title: &str, url: &str) -> String {
     match kind {
         SuggestionKind::Search | SuggestionKind::Address => title.to_string(),
-        _ if url.is_empty() || url == title => format!("{title}, {}", kind.word()),
-        _ => format!("{title}, {}, {url}", kind.word()),
+        // Translators: accessible name of an address-bar suggestion: its
+        // title and its kind ("Bookmark", "History", …).
+        _ if url.is_empty() || url == title => {
+            trf!("{title}, {kind}", title = title, kind = kind.word())
+        }
+        // Translators: accessible name of an address-bar suggestion: its
+        // title, its kind ("Bookmark", "History", …) and its address.
+        _ => trf!(
+            "{title}, {kind}, {url}",
+            title = title,
+            kind = kind.word(),
+            url = url
+        ),
     }
+}
+
+/// The certificate problems in `flags`, in words, separated by commas.
+fn tls_problems(flags: gio::TlsCertificateFlags) -> String {
+    use gio::TlsCertificateFlags as F;
+    let known = [
+        (F::UNKNOWN_CA, tr("not signed by a trusted authority")),
+        (F::BAD_IDENTITY, tr("issued for a different site")),
+        (F::NOT_ACTIVATED, tr("not valid yet")),
+        (F::EXPIRED, tr("expired")),
+        (F::REVOKED, tr("revoked")),
+        (F::INSECURE, tr("uses an insecure algorithm")),
+        (F::GENERIC_ERROR, tr("could not be checked")),
+    ];
+    let words: Vec<&str> = known
+        .iter()
+        .filter(|(f, _)| flags.contains(*f))
+        .map(|(_, w)| *w)
+        .collect();
+    if words.is_empty() {
+        return tr("could not be checked").to_string();
+    }
+    // Translators: separator between certificate problems in a list.
+    words.join(tr(", "))
 }
 
 fn suggestion_count(n: usize) -> String {
@@ -1535,7 +1570,12 @@ impl Window {
         if title.is_empty() {
             self.win.set_title(Some(suffix));
         } else {
-            self.win.set_title(Some(&format!("{title} — {suffix}")));
+            // Translators: window title: page title, then "Web" or "Private Browsing".
+            self.win.set_title(Some(&trf!(
+                "{title} — {suffix}",
+                title = title,
+                suffix = suffix
+            )));
         }
     }
 
@@ -1869,7 +1909,7 @@ impl Window {
                 lines.push(trf!("Expires: {d}", d = d));
             }
             if !flags.is_empty() {
-                lines.push(format!("Problems: {flags:?}"));
+                lines.push(trf!("Problems: {list}", list = tls_problems(flags)));
             }
             let l = gtk::Label::builder()
                 .label(lines.join("\n"))
@@ -1951,7 +1991,9 @@ impl Window {
         // The summary is not focusable; say it when the popover opens.
         helix_app_common::announce(
             &self.info_pop,
-            &format!("{host}. {status}"),
+            // Translators: announced when the site information opens: the
+            // site's host name, then its security status sentence.
+            &trf!("{host}. {status}", host = host, status = status),
             helix_app_common::Urgency::Polite,
         );
     }

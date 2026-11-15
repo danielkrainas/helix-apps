@@ -1134,16 +1134,21 @@ impl App {
                 let Some(t) = tree.as_ref() else { return false };
                 let n = t.node(id);
                 let mut text = format!(
-                    "<b>{}</b>\n{} on disk ({} apparent)",
+                    "<b>{}</b>\n{}",
                     glib::markup_escape_text(&n.name),
-                    size_text(n.size),
-                    size_text(n.apparent)
+                    glib::markup_escape_text(&trf!(
+                        "{size} on disk ({apparent} apparent)",
+                        size = size_text(n.size),
+                        apparent = size_text(n.apparent)
+                    ))
                 );
                 if n.kind == Kind::Dir {
-                    text.push_str(&format!("\n{} items", n.items));
+                    text.push('\n');
+                    text.push_str(&trnf!("{n} item", "{n} items", n.items));
                 }
                 if id == a.chart_root.get() && n.parent.is_some() {
-                    text.push_str("\nClick to go up");
+                    text.push('\n');
+                    text.push_str(tr("Click to go up"));
                 }
                 tooltip.set_markup(Some(&text));
                 true
@@ -1342,18 +1347,30 @@ impl App {
                     up = up
                 )
             } else {
-                let share = n
-                    .parent
-                    .map(|p| t.node(p))
-                    .filter(|p| p.size > 0)
-                    .map(|p| format!(", {} % of {}", n.size * 100 / p.size, p.name))
-                    .unwrap_or_default();
+                let share = n.parent.map(|p| t.node(p)).filter(|p| p.size > 0);
                 let what = match n.kind {
-                    Kind::Dir if !n.children.is_empty() => "folder, press Enter to open",
-                    Kind::Dir => "empty folder",
-                    _ => "file",
+                    Kind::Dir if !n.children.is_empty() => tr("folder, press Enter to open"),
+                    Kind::Dir => tr("empty folder"),
+                    _ => tr("file"),
                 };
-                format!("{}, {}{share}, {what}", n.name, size_text(n.size))
+                match share {
+                    // Translators: spoken for an item of the chart: name,
+                    // size, share of its parent folder, then "folder" or "file".
+                    Some(p) => trf!(
+                        "{name}, {size}, {percent} % of {parent}, {kind}",
+                        name = n.name,
+                        size = size_text(n.size),
+                        percent = n.size * 100 / p.size,
+                        parent = p.name,
+                        kind = what
+                    ),
+                    None => trf!(
+                        "{name}, {size}, {kind}",
+                        name = n.name,
+                        size = size_text(n.size),
+                        kind = what
+                    ),
+                }
             }
         };
         helix_app_common::announce(&self.chart, &text, helix_app_common::Urgency::Polite);
@@ -1426,11 +1443,17 @@ impl App {
             .take(5)
             .map(|n| {
                 let pct = (n.size * 100).checked_div(root.size).unwrap_or(0);
-                format!("{} {}, {pct} %", n.name, size_text(n.size))
+                // Translators: one of the largest items in the chart's description.
+                trf!(
+                    "{name} {size}, {percent} %",
+                    name = n.name,
+                    size = size_text(n.size),
+                    percent = pct
+                )
             })
             .collect();
         let description = if parts.is_empty() {
-            format!("{} in total; no items", size_text(root.size))
+            trf!("{size} in total; no items", size = size_text(root.size))
         } else {
             trf!(
                 "{} in total. Largest: {}. Use the arrow keys to explore.",
@@ -1648,9 +1671,12 @@ impl App {
         let dialog = adw::AlertDialog::new(
             Some(&trf!("Move “{name}” to the Trash?", name = name)),
             Some(&format!(
-                "{}\n\nThis frees up to {} once the trash is emptied.",
+                "{}\n\n{}",
                 path.display(),
-                size_text(size)
+                trf!(
+                    "This frees up to {size} once the trash is emptied.",
+                    size = size_text(size)
+                )
             )),
         );
         dialog.add_responses(&[("cancel", tr("_Cancel")), ("trash", tr("_Move to Trash"))]);

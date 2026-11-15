@@ -1,5 +1,7 @@
 //! Time formatting for the elapsed / remaining labels and resume toast.
 
+use helix_app_common::trf;
+
 /// Formats whole seconds as `m:ss`, or `h:mm:ss` when `long` is set (used
 /// for every label once the duration reaches an hour so widths stay stable)
 /// or when the value itself is at least an hour.
@@ -39,7 +41,12 @@ pub fn position_text(pos: f64, duration: Option<f64>) -> String {
     match duration {
         Some(d) if d.is_finite() && d > 0.0 => {
             let long = d >= 3600.0;
-            format!("{} of {}", format_secs(pos, long), format_secs(d, long))
+            // Translators: the seek bar's value, "1:23 of 45:00".
+            trf!(
+                "{position} of {duration}",
+                position = format_secs(pos, long),
+                duration = format_secs(d, long)
+            )
         }
         _ => format_secs(pos, false),
     }
