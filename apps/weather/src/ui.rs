@@ -10,7 +10,7 @@ use std::rc::{Rc, Weak};
 
 use crate::api::{self, Forecast};
 use crate::autoloc;
-use crate::graph::{self, Rgba};
+use crate::graph;
 use crate::gwdb;
 use crate::import;
 use crate::store::{self, CachedForecast, Locations, Place};
@@ -145,8 +145,7 @@ fn load_css() {
         ".weather-temp { font-size: 48pt; font-weight: 300; }
          .weather-card { padding: 12px; }
          .weather-card-value { font-size: 14pt; font-weight: bold; }
-         .weather-day { padding: 8px 12px; }
-         .weather-hour { font-size: 10pt; }",
+         .weather-day { padding: 8px 12px; }",
     );
     if let Some(display) = gtk::gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
@@ -1045,7 +1044,6 @@ impl Ui {
             s.content.remove(&child);
         }
         let units = s.units.borrow();
-        let fg = fg_color(&s.window);
         let local_now = DateTime::from_unix(now_unix(), f.utc_offset);
 
         s.content
@@ -1054,15 +1052,13 @@ impl Ui {
         let hours = f.hours_from(&local_now, HOURS);
         if !hours.is_empty() {
             s.content.append(&heading("Hourly Forecast"));
-            s.content
-                .append(&hourly_section(hours, &units, s.use_12h, fg));
+            s.content.append(&hourly_section(hours, &units, s.use_12h));
         }
 
         let days = f.days_from(&local_now);
         if !days.is_empty() {
             s.content.append(&heading("Daily Forecast"));
-            s.content
-                .append(&daily_section(days, &local_now, &units, fg));
+            s.content.append(&daily_section(days, &local_now, &units));
         }
     }
 }
@@ -1078,14 +1074,49 @@ fn messages_locale() -> String {
     String::new()
 }
 
-fn fg_color(widget: &impl IsA<gtk::Widget>) -> Rgba {
-    let c = widget.as_ref().color();
-    Rgba {
-        r: c.red() as f64,
-        g: c.green() as f64,
-        b: c.blue() as f64,
-        a: c.alpha() as f64,
+/// The colours to draw `area` in, read now from the style: it carries the
+/// `accent` class, so its own colour is the accent colour, and text uses
+/// its parent's (normal) colour.
+fn graph_colors(area: &gtk::DrawingArea) -> graph::Colors {
+    let accent = area.color();
+    graph::Colors {
+        fg: area.parent().map_or(accent, |p| p.color()).into(),
+        accent: accent.into(),
     }
+}
+
+/// Redraws `area` right away when the style (dark, high contrast) or the
+/// interface font or text scaling changes, instead of keeping the old
+/// colours and sizes until the next refresh.
+fn follow_style(area: &gtk::DrawingArea) {
+    let redraw = {
+        let weak = area.downgrade();
+        move || {
+            if let Some(a) = weak.upgrade() {
+                a.queue_draw();
+            }
+        }
+    };
+    let style = adw::StyleManager::default();
+    let mut handlers: Vec<(glib::Object, glib::SignalHandlerId)> = Vec::new();
+    for prop in ["dark", "high-contrast"] {
+        let r = redraw.clone();
+        let id = style.connect_notify_local(Some(prop), move |_, _| r());
+        handlers.push((style.clone().upcast(), id));
+    }
+    if let Some(settings) = gtk::Settings::default() {
+        for prop in ["gtk-font-name", "gtk-xft-dpi"] {
+            let r = redraw.clone();
+            let id = settings.connect_notify_local(Some(prop), move |_, _| r());
+            handlers.push((settings.clone().upcast(), id));
+        }
+    }
+    let handlers = std::cell::RefCell::new(handlers);
+    area.connect_destroy(move |_| {
+        for (obj, id) in handlers.borrow_mut().drain(..) {
+            obj.disconnect(id);
+        }
+    });
 }
 
 fn heading(text: &str) -> gtk::Label {
@@ -1216,7 +1247,7 @@ fn current_section(f: &Forecast, local_now: &DateTime, units: &Units, use_12h: b
     section
 }
 
-fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool, fg: Rgba) -> gtk::Widget {
+fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool) -> gtk::Widget {
     let n = hours.len() as i32;
     let strip = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
@@ -1247,7 +1278,7 @@ fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool, fg: Rgba) -
         col.append(
             &gtk::Label::builder()
                 .label(label)
-                .css_classes(["weather-hour", "dim-label"])
+                .css_classes(["caption", "dim-label"])
                 .build(),
         );
         let icon = gtk::Image::builder()
@@ -1266,7 +1297,7 @@ fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool, fg: Rgba) -
         bottom.append(
             &gtk::Label::builder()
                 .label(precip)
-                .css_classes(["weather-hour", "accent"])
+                .css_classes(["caption", "accent"])
                 .width_request(COL_W)
                 .build(),
         );
@@ -1283,10 +1314,20 @@ fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool, fg: Rgba) -
     let area = gtk::DrawingArea::builder()
         .content_width(COL_W * n)
         .content_height(GRAPH_H)
+        .css_classes(["accent"])
         .build();
-    area.set_draw_func(move |_, cr, _, h| {
-        graph::draw_temperature(cr, &values, &labels, COL_W as f64, h as f64, fg);
+    area.set_draw_func(move |a, cr, _, h| {
+        graph::draw_temperature(
+            cr,
+            &a.pango_context(),
+            &values,
+            &labels,
+            COL_W as f64,
+            h as f64,
+            graph_colors(a),
+        );
     });
+    follow_style(&area);
 
     strip.append(&top);
     strip.append(&area);
@@ -1303,7 +1344,7 @@ fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool, fg: Rgba) -
     frame.upcast()
 }
 
-fn daily_section(days: &[api::Day], local_now: &DateTime, units: &Units, fg: Rgba) -> gtk::ListBox {
+fn daily_section(days: &[api::Day], local_now: &DateTime, units: &Units) -> gtk::ListBox {
     let list = gtk::ListBox::builder()
         .selection_mode(gtk::SelectionMode::None)
         .css_classes(["boxed-list"])
@@ -1378,10 +1419,19 @@ fn daily_section(days: &[api::Day], local_now: &DateTime, units: &Units, fg: Rgb
             .content_width(110)
             .content_height(20)
             .valign(gtk::Align::Center)
+            .css_classes(["accent"])
             .build();
-        bar.set_draw_func(move |_, cr, w, h| {
-            graph::draw_range_bar(cr, (lo, hi), (min, max), w as f64, h as f64, fg);
+        bar.set_draw_func(move |a, cr, w, h| {
+            graph::draw_range_bar(
+                cr,
+                (lo, hi),
+                (min, max),
+                w as f64,
+                h as f64,
+                graph_colors(a),
+            );
         });
+        follow_style(&bar);
         row.append(&bar);
         row.append(
             &gtk::Label::builder()

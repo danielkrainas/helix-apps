@@ -85,6 +85,7 @@ struct State {
 impl Panel for ExtensionsPanel {
     fn build(&self, ctx: &Rc<Ctx>) -> gtk::Widget {
         let stack = gtk::Stack::new();
+        stack.add_named(&loading_page(), Some("loading"));
         let missing = adw::StatusPage::builder()
             .icon_name("application-x-addon-symbolic")
             .title("Extensions Are Not Available")
@@ -107,7 +108,8 @@ impl Panel for ExtensionsPanel {
         let group = widgets::group("Installed");
         page.add(&group);
         stack.add_named(&page, Some("list"));
-        stack.set_visible_child_name("missing");
+        // Until the first read answers; "missing" only when it fails.
+        stack.set_visible_child_name("loading");
 
         let state = Rc::new(State {
             ctx: ctx.clone(),
@@ -144,6 +146,29 @@ impl Panel for ExtensionsPanel {
         });
         stack.upcast()
     }
+}
+
+/// A spinner with a visible label, shown while the list is first read.
+fn loading_page() -> gtk::Widget {
+    let spinner = gtk::Spinner::builder()
+        .spinning(true)
+        .width_request(32)
+        .height_request(32)
+        .build();
+    let label = gtk::Label::builder()
+        .label("Loading Extensions…")
+        .css_classes(["dim-label"])
+        .build();
+    helix_app_common::label_widget(&spinner, &label);
+    let bx = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(12)
+        .valign(gtk::Align::Center)
+        .halign(gtk::Align::Center)
+        .build();
+    bx.append(&spinner);
+    bx.append(&label);
+    bx.upcast()
 }
 
 /// Read the list (and every extension's settings) again.

@@ -1,7 +1,7 @@
 //! Cairo drawing for the hourly temperature graph and daily range bars.
 //! The geometry helpers are pure and unit-tested.
 
-use gtk::cairo;
+use gtk::{cairo, pango};
 
 /// Maps `values` linearly onto `[top, bottom]` (larger values are higher,
 /// i.e. closer to `top`). A flat series sits in the middle.
@@ -48,31 +48,67 @@ pub struct Rgba {
     pub a: f64,
 }
 
-pub const ACCENT: Rgba = Rgba {
-    r: 0.208,
-    g: 0.518,
-    b: 0.894,
-    a: 1.0,
-};
+impl From<gtk::gdk::RGBA> for Rgba {
+    fn from(c: gtk::gdk::RGBA) -> Self {
+        Rgba {
+            r: c.red() as f64,
+            g: c.green() as f64,
+            b: c.blue() as f64,
+            a: c.alpha() as f64,
+        }
+    }
+}
+
+/// The colours a graph is drawn in, read from the style when drawing so
+/// they follow the dark, light and high-contrast styles.
+#[derive(Clone, Copy)]
+pub struct Colors {
+    /// Text and tracks.
+    pub fg: Rgba,
+    /// The curve and the range bars.
+    pub accent: Rgba,
+}
 
 fn set(cr: &cairo::Context, c: Rgba, alpha: f64) {
     cr.set_source_rgba(c.r, c.g, c.b, c.a * alpha);
 }
 
+/// Space between a point and the bottom of its label.
+const LABEL_GAP: f64 = 6.0;
+
 /// Draws the temperature curve: one point per column of `col_w` pixels,
 /// with a filled area, line, dots and a value label above each point.
+/// Labels are laid out with `pango` (the widget's context, so they use
+/// the interface font and text scaling) in bold.
 pub fn draw_temperature(
     cr: &cairo::Context,
+    pango: &pango::Context,
     values: &[f64],
     labels: &[String],
     col_w: f64,
     height: f64,
-    fg: Rgba,
+    colors: Colors,
 ) {
     if values.is_empty() {
         return;
     }
-    let ys = scale_y(values, 26.0, height - 12.0);
+    let attrs = pango::AttrList::new();
+    attrs.insert(pango::AttrInt::new_weight(pango::Weight::Bold));
+    let layouts: Vec<pango::Layout> = labels
+        .iter()
+        .map(|l| {
+            let layout = pango::Layout::new(pango);
+            layout.set_text(l);
+            layout.set_attributes(Some(&attrs));
+            layout
+        })
+        .collect();
+    let label_h = layouts
+        .iter()
+        .map(|l| l.pixel_size().1 as f64)
+        .fold(0.0, f64::max);
+    let ys = scale_y(values, label_h + LABEL_GAP + 4.0, height - 12.0);
+    let accent = colors.accent;
     let xs: Vec<f64> = (0..values.len())
         .map(|i| col_w * (i as f64 + 0.5))
         .collect();
@@ -85,13 +121,13 @@ pub fn draw_temperature(
     cr.line_to(xs[xs.len() - 1], height);
     cr.close_path();
     let grad = cairo::LinearGradient::new(0.0, 0.0, 0.0, height);
-    grad.add_color_stop_rgba(0.0, ACCENT.r, ACCENT.g, ACCENT.b, 0.35);
-    grad.add_color_stop_rgba(1.0, ACCENT.r, ACCENT.g, ACCENT.b, 0.02);
+    grad.add_color_stop_rgba(0.0, accent.r, accent.g, accent.b, 0.35);
+    grad.add_color_stop_rgba(1.0, accent.r, accent.g, accent.b, 0.02);
     let _ = cr.set_source(&grad);
     let _ = cr.fill();
 
     // Line.
-    set(cr, ACCENT, 1.0);
+    set(cr, accent, 1.0);
     cr.set_line_width(2.0);
     cr.set_line_join(cairo::LineJoin::Round);
     for (i, (x, y)) in xs.iter().zip(&ys).enumerate() {
@@ -104,18 +140,15 @@ pub fn draw_temperature(
     let _ = cr.stroke();
 
     // Dots and labels.
-    cr.select_font_face("Sans", cairo::FontSlant::Normal, cairo::FontWeight::Bold);
-    cr.set_font_size(12.0);
     for (i, (x, y)) in xs.iter().zip(&ys).enumerate() {
-        set(cr, ACCENT, 1.0);
+        set(cr, accent, 1.0);
         cr.arc(*x, *y, 3.0, 0.0, std::f64::consts::TAU);
         let _ = cr.fill();
-        if let Some(label) = labels.get(i) {
-            set(cr, fg, 1.0);
-            if let Ok(ext) = cr.text_extents(label) {
-                cr.move_to(x - ext.width() / 2.0 - ext.x_bearing(), y - 9.0);
-                let _ = cr.show_text(label);
-            }
+        if let Some(layout) = layouts.get(i) {
+            set(cr, colors.fg, 1.0);
+            let (w, h) = layout.pixel_size();
+            cr.move_to(x - w as f64 / 2.0, y - LABEL_GAP - h as f64);
+            pangocairo::functions::show_layout(cr, layout);
         }
     }
 }
@@ -127,18 +160,18 @@ pub fn draw_range_bar(
     (min, max): (f64, f64),
     width: f64,
     height: f64,
-    fg: Rgba,
+    colors: Colors,
 ) {
     let h = 6.0;
     let y = (height - h) / 2.0;
     rounded(cr, 0.0, y, width, h);
-    set(cr, fg, 0.15);
+    set(cr, colors.fg, 0.15);
     let _ = cr.fill();
     let (x0, x1) = range_extent(lo, hi, min, max, width);
     let w = (x1 - x0).max(h);
     let x0 = x0.min(width - w);
     rounded(cr, x0, y, w, h);
-    set(cr, ACCENT, 1.0);
+    set(cr, colors.accent, 1.0);
     let _ = cr.fill();
 }
 
@@ -188,22 +221,28 @@ mod tests {
     fn draws_to_image_surface() {
         let surface = cairo::ImageSurface::create(cairo::Format::ARgb32, 200, 100).unwrap();
         let cr = cairo::Context::new(&surface).unwrap();
-        let fg = Rgba {
+        let black = Rgba {
             r: 0.0,
             g: 0.0,
             b: 0.0,
             a: 1.0,
         };
+        let colors = Colors {
+            fg: black,
+            accent: black,
+        };
+        let pango = pangocairo::functions::create_context(&cr);
         draw_temperature(
             &cr,
+            &pango,
             &[1.0, 4.0, 2.0, 3.0],
             &["1°".into(), "4°".into(), "2°".into(), "3°".into()],
             50.0,
             100.0,
-            fg,
+            colors,
         );
-        draw_temperature(&cr, &[], &[], 50.0, 100.0, fg);
-        draw_range_bar(&cr, (2.0, 5.0), (0.0, 10.0), 100.0, 20.0, fg);
+        draw_temperature(&cr, &pango, &[], &[], 50.0, 100.0, colors);
+        draw_range_bar(&cr, (2.0, 5.0), (0.0, 10.0), 100.0, 20.0, colors);
         assert_eq!(cr.status(), Ok(()));
     }
 }

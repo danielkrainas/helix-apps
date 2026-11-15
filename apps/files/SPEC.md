@@ -163,8 +163,18 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
 - **Create Link**: symbolic link "Link to NAME" in the same folder.
 - Copy/move/trash/delete/restore/empty run on a worker thread with a
   `GCancellable`. A pre-scan computes item count and total bytes; the
-  progress popover shows one row per job (title, progress bar, details,
-  cancel button). A toast reports completion or failure.
+  progress popover shows one row per job (title, progress bar named by the
+  title, details, cancel button). The popover only opens when the user
+  opens it — never by itself, so keyboard focus stays in the view. While
+  jobs run, the header shows the operations button, whose icon is a pie
+  of the combined progress (the mean of the jobs' fractions) and whose
+  tooltip and accessible description say "File Operations — N % done".
+- When a job finishes without errors a toast says so (libadwaita speaks
+  toasts): "Copied 3 items to “Docs”", "Moved 1 item to “tmp”", "Created
+  2 links", "Restored 4 items", "Deleted 2 items", "Trash emptied" (counts
+  are the items actually produced when that is known); Move to Trash has
+  its own toast with *Undo* (above). Errors open an alert listing them;
+  a cancelled job shows "Operation cancelled".
 - **Naming**: pasting into the folder the items came from creates
   "name (copy).ext", then "name (copy 2).ext", … (multi-dot archive
   extensions like `.tar.gz` stay intact; dot-files keep their name as
@@ -296,7 +306,10 @@ bookmark, `F2` rename, `Delete` trash, `Shift+Delete` delete,
 
 ### Accessibility
 - Status changes that happen without focus moving are announced to
-  screen readers (`helix_app_common::a11y`): a recursive search finishing ("Search finished: 12 items found" / "No results") and a file operation finishing ("Finished copying 3 items to “Docs”"); failures open an alert, cancellation shows a toast.
+  screen readers (`helix_app_common::a11y`): a recursive search finishing ("Search finished: 12 items found" / "No results") and a folder that cannot be opened ("Unable to open folder: <reason>", once per failure). A finished file operation is reported by its toast; failures open an alert, cancellation shows a toast.
+- The folder-loading spinner is named "Loading folder". Items that are
+  cut (waiting for Paste) are dimmed and have the accessible description
+  "Cut".
 - Every control has a specific accessible name: icon-only buttons are
   named like their tooltip (without shortcut text); the root `/` crumb is
   named "Computer"; the slashes between crumbs are not exposed; the

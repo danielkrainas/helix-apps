@@ -16,6 +16,8 @@ const INTERFACE: &str = "org.gnome.desktop.interface";
 const BACKGROUND: &str = "org.gnome.desktop.background";
 const THUMB_W: i32 = 160;
 const THUMB_H: i32 = 100;
+/// Narrowest a thumbnail gets, so two fit side by side at 360 px.
+const THUMB_MIN_W: i32 = 136;
 
 pub struct AppearancePanel;
 
@@ -25,7 +27,7 @@ fn install_css() {
         return;
     }
     let mut css = String::from(
-        ".style-preview { min-width: 150px; min-height: 96px; border-radius: 9px; padding: 14px 18px 0 18px; }
+        ".style-preview { min-width: 120px; min-height: 80px; border-radius: 9px; padding: 14px 18px 0 18px; }
          .style-preview.light { background: #deddda; }
          .style-preview.dark { background: #3d3846; }
          .style-window { border-radius: 6px 6px 0 0; }
@@ -125,14 +127,35 @@ fn style_group(prefs: &Prefs) -> adw::PreferencesGroup {
         });
     }
     watch(prefs, "color-scheme", sync);
-    let bx = gtk::Box::builder()
-        .spacing(24)
-        .halign(gtk::Align::Center)
-        .build();
-    bx.append(&default);
-    bx.append(&dark);
-    group.add(&bx);
+    // Side by side, stacked when the window is too narrow for both.
+    let flow = wrapping_box(2, 24);
+    flow_append(&flow, &default);
+    flow_append(&flow, &dark);
+    group.add(&flow);
     group
+}
+
+/// A centred box that wraps its children onto more lines when narrow (at
+/// most `per_line` on one line).
+fn wrapping_box(per_line: u32, spacing: u32) -> gtk::FlowBox {
+    gtk::FlowBox::builder()
+        .selection_mode(gtk::SelectionMode::None)
+        .homogeneous(true)
+        .halign(gtk::Align::Center)
+        .column_spacing(spacing)
+        .row_spacing(spacing)
+        .min_children_per_line(1)
+        .max_children_per_line(per_line)
+        .build()
+}
+
+/// Appends `child` to `flow` so that the button itself, not the flow box
+/// slot around it, takes keyboard focus.
+fn flow_append(flow: &gtk::FlowBox, child: &impl IsA<gtk::Widget>) {
+    flow.append(child);
+    if let Some(slot) = child.as_ref().parent() {
+        slot.set_focusable(false);
+    }
 }
 
 fn accent_group(prefs: &Prefs) -> adw::PreferencesGroup {
@@ -140,24 +163,22 @@ fn accent_group(prefs: &Prefs) -> adw::PreferencesGroup {
     if !has_key(prefs, "accent-color") {
         group.set_description(Some(widgets::UNSUPPORTED));
     }
-    let bx = gtk::Box::builder()
-        .spacing(10)
-        .halign(gtk::Align::Center)
-        .margin_top(6)
-        .margin_bottom(6)
-        .build();
+    let bx = wrapping_box(ACCENT_COLORS.len() as u32, 10);
+    bx.set_margin_top(6);
+    bx.set_margin_bottom(6);
     let mut buttons: Vec<(gtk::ToggleButton, &'static str)> = Vec::new();
     for (nick, label, _) in ACCENT_COLORS {
         let b = gtk::ToggleButton::builder()
             .css_classes(["accent-swatch", &format!("accent-{nick}")])
             .tooltip_text(*label)
             .valign(gtk::Align::Center)
+            .halign(gtk::Align::Center)
             .build();
         helix_app_common::set_accessible_label(&b, label);
         if let Some((first, _)) = buttons.first() {
             b.set_group(Some(first));
         }
-        bx.append(&b);
+        flow_append(&bx, &b);
         buttons.push((b, nick));
     }
     let buttons = Rc::new(buttons);
@@ -275,7 +296,7 @@ impl Background {
     fn add(self: &Rc<Self>, wp: Wallpaper) {
         let picture = gtk::Picture::builder()
             .content_fit(gtk::ContentFit::Cover)
-            .width_request(THUMB_W)
+            .width_request(THUMB_MIN_W)
             .height_request(THUMB_H)
             .can_shrink(true)
             .build();
@@ -298,7 +319,7 @@ impl Background {
                 this.apply(&wp2);
             }
         });
-        self.flow.append(&button);
+        flow_append(&self.flow, &button);
         let _ = self.thumbs.send_blocking(wp.light.clone());
         self.items.borrow_mut().push((wp, button, picture));
     }

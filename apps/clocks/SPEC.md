@@ -263,7 +263,16 @@ window (used by autostart; see Alarms). Plus GApplication's standard options
 ### Accessibility
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): a timer going off ("Time is up: …", assertive); a ringing alarm opens its alert dialog.
-- Focus is kept across list rebuilds (`helix_app_common::focus`): Rebuilding the world clock, alarm and timer lists (toggling an alarm, ringing / snooze / stop, removing a clock or timer) keeps keyboard focus on the same control of the same row; after a removal focus goes to the next row (or the previous one, or the Add button).
+- Focus is kept across list changes (`helix_app_common::focus`). Alarm
+  rows are updated in place while the same alarms are listed in the same
+  order (toggling, ringing, snoozing, stopping, renaming), so focus never
+  moves and a closing ringing or edit dialog returns focus to where it
+  was. When the list itself changes (an alarm added, removed or moved by
+  a new time), and for the world clock and timer lists, the rows are
+  rebuilt keeping keyboard focus on the same control of the same row;
+  after a removal focus goes to the next row (or the previous one, or the
+  Add button). Closing the edit dialog with *Done* focuses the edited
+  alarm's row; *Delete Alarm* focuses the alarm that took its place.
 - What icons show is also text: a world clock row's accessible
   description gives its time, "Day" or "Night" and its subtitle ("10:30
   PM, Night, Japan • +8 hours"); in the add-location dialog an already

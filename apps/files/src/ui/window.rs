@@ -38,6 +38,8 @@ pub struct Window {
     view_btn: gtk::Button,
     pub jobs_button: gtk::MenuButton,
     pub jobs_box: gtk::Box,
+    /// The jobs button's icon: a pie of the combined progress.
+    pub jobs_icon: gtk::DrawingArea,
     status: gtk::Label,
     banner: adw::Banner,
     sidebar: RefCell<Option<Rc<Sidebar>>>,
@@ -251,8 +253,22 @@ impl Window {
         jobs_box.set_margin_end(6);
         jobs_box.set_width_request(320);
         let jobs_popover = gtk::Popover::builder().child(&jobs_box).build();
+        let jobs_icon = gtk::DrawingArea::builder()
+            .content_width(16)
+            .content_height(16)
+            .halign(gtk::Align::Center)
+            .valign(gtk::Align::Center)
+            .build();
+        {
+            let jobs_box = jobs_box.downgrade();
+            jobs_icon.set_draw_func(move |a, cr, _, _| {
+                if let Some(b) = jobs_box.upgrade() {
+                    jobs::draw_indicator(a, cr, &b);
+                }
+            });
+        }
         let jobs_button = gtk::MenuButton::builder()
-            .icon_name("emblem-synchronizing-symbolic")
+            .child(&jobs_icon)
             .popover(&jobs_popover)
             .tooltip_text("File Operations")
             .visible(false)
@@ -354,6 +370,7 @@ impl Window {
             view_btn,
             jobs_button,
             jobs_box,
+            jobs_icon,
             status,
             banner,
             sidebar: RefCell::default(),

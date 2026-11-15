@@ -92,6 +92,18 @@ fn tagged_position(widget: &gtk::Widget) -> Option<u32> {
     (pos != INVALID).then_some(pos)
 }
 
+/// Shows an item as cut (dimmed) and says so to assistive technology.
+fn mark_cut(item: &impl IsA<gtk::Widget>, cut: bool) {
+    let item = item.as_ref();
+    if cut {
+        item.add_css_class("cut-item");
+        item.update_property(&[gtk::accessible::Property::Description("Cut")]);
+    } else if item.has_css_class("cut-item") {
+        item.remove_css_class("cut-item");
+        item.reset_property(gtk::AccessibleProperty::Description);
+    }
+}
+
 pub struct Tab {
     pub shared: Rc<Shared>,
     win: RefCell<Weak<Window>>,
@@ -125,6 +137,8 @@ pub struct Tab {
     restoring: Cell<bool>,
     /// The next pending match replaces the selection (later ones add).
     pending_fresh: Cell<bool>,
+    /// Whether "Unable to Open Folder" is showing (announced once).
+    error_shown: Cell<bool>,
 }
 
 impl Tab {
@@ -214,6 +228,7 @@ impl Tab {
         status.set_can_target(false);
         root.add_overlay(&status);
         let spinner = gtk::Spinner::new();
+        helix_app_common::set_accessible_label(&spinner, "Loading folder");
         spinner.set_halign(gtk::Align::End);
         spinner.set_valign(gtk::Align::End);
         spinner.set_margin_end(18);
@@ -259,6 +274,7 @@ impl Tab {
             selected_uris: RefCell::default(),
             restoring: Cell::new(false),
             pending_fresh: Cell::new(false),
+            error_shown: Cell::new(false),
         });
         tab.connect_signals();
         tab.rebuild_factories();
@@ -610,12 +626,7 @@ impl Tab {
                 None => img.set_icon_name(Some("text-x-generic")),
             }
             let file = info_file(&info);
-            b.remove_css_class("cut-item");
-            if let Some(file) = &file {
-                if t.is_cut(file) {
-                    b.add_css_class("cut-item");
-                }
-            }
+            mark_cut(&b, file.as_ref().is_some_and(|f| t.is_cut(f)));
             // Cached thumbnails, loaded asynchronously.
             let thumb = info.attribute_byte_string("thumbnail::path").filter(|_| {
                 !info.has_attribute("thumbnail::is-valid") || info.boolean("thumbnail::is-valid")
@@ -696,10 +707,7 @@ impl Tab {
                         Some(icon) => img.set_from_gicon(&icon),
                         None => img.set_icon_name(Some("text-x-generic")),
                     }
-                    b.remove_css_class("cut-item");
-                    if info_file(&info).is_some_and(|f| t.is_cut(&f)) {
-                        b.add_css_class("cut-item");
-                    }
+                    mark_cut(&b, info_file(&info).is_some_and(|f| t.is_cut(&f)));
                     info.display_name().to_string()
                 }
                 "size" => {
@@ -889,9 +897,17 @@ impl Tab {
                 self.status.set_title("Unable to Open Folder");
                 self.status.set_description(Some(err.message()));
                 self.status.set_visible(true);
+                if !self.error_shown.replace(true) {
+                    helix_app_common::announce(
+                        &self.root,
+                        &format!("Unable to open folder: {}", err.message()),
+                        helix_app_common::Urgency::Assertive,
+                    );
+                }
                 return;
             }
         }
+        self.error_shown.set(false);
         if empty && !loading {
             if self.is_searching() {
                 self.status.set_icon_name(Some("system-search-symbolic"));

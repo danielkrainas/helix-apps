@@ -127,14 +127,25 @@ View and edit events from local and online calendars.
 
 ### Event editor (dialog)
 - Title, calendar (writable calendars only), location, all-day switch,
-  start date + time, end date + time (end is moved along when start moves
-  past it), repeat (*No Repeat, Daily, Weekdays, Weekly, Monthly,
+  start date + time, end date + time, repeat (*No Repeat, Daily, Weekdays, Weekly, Monthly,
   Yearly*; an existing custom rule is kept and shown as *Custom*), repeat
   end (*Forever*, *After N occurrences*, *Until date*), reminders (list
   with remove buttons; add 5/10/15/30 minutes, 1 hour, 1 day, 2 days,
   1 week before), notes.
 - Time entries accept `9`, `930`, `9:30`, `9:30pm`, `21:30`; dates come
   from a calendar popover.
+- Moving the start keeps the event's length: when a start date is picked,
+  or the start time is confirmed (`Enter` or leaving the field with `Tab`
+  or the pointer), the end moves by the same amount. A start time that
+  does not parse leaves the end alone.
+- `Enter` in *Title* or *Location* saves (Save/Add is the dialog's default
+  button).
+- Problems are shown inside the dialog, under the schedule: an unreadable
+  time ("“25:00” is not a valid time") or an end before the start ("The
+  event ends before it starts"). The field at fault gets the error style,
+  is marked invalid for assistive technology with the message as its error
+  message, takes focus, and the message is announced. Editing any start or
+  end field clears it.
 - New timed events are written with `TZID` = the system zone; all-day
   events use `VALUE=DATE` with exclusive end.
 - *Save* creates (`CreateObjects`) or modifies (`ModifyObjects`) the event;
@@ -144,7 +155,11 @@ View and edit events from local and online calendars.
   *Only This Event* (mod `this`: a detached RECURRENCE-ID instance, or an
   EXDATE on delete) or *All Events* (mod `all`; time changes shift the
   whole series by the same offset).
-- Read-only calendars open the editor read-only (no Save/Delete).
+- Read-only calendars open the editor read-only: a banner says "This event
+  is in a read-only calendar", the header has only *Close*, text fields
+  (title, location, times, notes) can be selected and copied but not
+  edited, and the other controls (calendar, all-day, dates, repeat,
+  reminders) are insensitive; there is no Delete.
 - Unknown properties and sub-components (attendees, attachments, X-props)
   are preserved on save.
 

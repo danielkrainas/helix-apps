@@ -1583,6 +1583,7 @@ dependencies = [
  "gtk4",
  "helix-app-common",
  "libadwaita",
+ "pangocairo",
  "roxmltree",
  "serde",
  "serde_json",

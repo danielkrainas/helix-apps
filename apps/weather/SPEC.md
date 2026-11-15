@@ -109,9 +109,16 @@ WMO codes map to a description and a standard symbolic icon
    at the current location-local hour: time ("Now" for the first),
    condition icon, a temperature graph drawn with cairo (filled area, line,
    dots and value labels) and precipitation probability when ≥ 10 %.
+   Hour and precipitation texts use the `caption` style.
 3. **Daily**: 10 rows: "Today"/"Tomorrow"/weekday + day-of-month, icon,
    description, precipitation probability, min and max temperature with a
    range bar (cairo) scaled to the 10-day min/max.
+- Graphs take their colours from the style each time they are drawn: the
+  curve, dots and bars in the accent colour, labels and bar tracks in the
+  text colour. They redraw at once when the style switches between light,
+  dark and high contrast, or the interface font or text scaling changes.
+  The value labels are laid out with Pango in the interface font (bold),
+  so they follow the system font and Large Text.
 4. Footer: "Updated just now / N minutes ago / at HH:MM" (re-evaluated
    every minute).
 5. Credit line: "Weather data by Open-Meteo.com" (link).

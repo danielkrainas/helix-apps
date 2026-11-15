@@ -45,11 +45,22 @@ Basic, advanced, financial, and programming calculator.
   Digits and hex letters keep their label as the name. Tooltips still show
   the shortcut. The mode, number base and word size drop-downs are named
   "Calculator mode", "Number base" and "Word size".
+- The entry line is named "Expression". Each history row is read as one
+  unit, "*expression* equals *result*", before its two buttons.
+- Evaluating announces the outcome politely: "*expression* equals
+  *result*". An error marks the entry invalid, is the entry's error
+  message (the red caption), and is announced assertively; editing the
+  entry clears all three.
 
 ### Input
 - The entry accepts free typing. Everything a button does can be typed.
-- `Enter` / `=` / `KP_Enter` evaluates. `Escape` clears the entry. `Ctrl+Z`
-  undoes the last evaluation (restores the previous entry).
+- `Enter` / `KP_Enter` evaluates. `Escape` clears the entry (unless a
+  popover or dialog is open, which it closes instead). `Ctrl+Z` undoes the
+  last evaluation while its result is still in the entry: the expression
+  comes back and `ans` and variables return to their earlier values (the
+  history keeps the row). Otherwise `Ctrl+Z` is the entry's own text undo.
+- The entry keeps the standard editing keys: `Ctrl+A` selects all,
+  `Ctrl+C`/`Ctrl+X`/`Ctrl+V` use the clipboard.
 - After evaluation the entry shows the result, selected so typing a digit
   starts a new expression while typing an operator continues from it.
 - Errors (syntax, division by zero, domain) are shown inline below the entry
@@ -123,8 +134,18 @@ If the schema is not installed, defaults are used in-memory.
 - *Clear history* in the primary menu.
 
 ### Keyboard shortcuts
-`Ctrl+B/A/F/P` switch to Basic/Advanced/Financial/Programming mode,
-`Ctrl+,` preferences, `Ctrl+Q` quit, `F1` about.
+One table defines every shortcut; it registers them, fills the *Keyboard
+Shortcuts* dialog (grouped Calculation, Modes, General) and is checked
+against the hints in keypad tooltips, so a hint never names a key that
+does nothing and no key does two things.
+- Calculation: `Enter` calculate, `Escape` clear, `Ctrl+Z` undo last
+  calculation, typed operators `+ - * / ^ % ! |`, `Ctrl+2` square,
+  `Ctrl+R` square root, `Ctrl+P` π.
+- Modes: `Alt+1`–`Alt+4` switch to Basic, Advanced, Financial and
+  Programming.
+- General: `Ctrl+,` preferences, `Ctrl+?` keyboard shortcuts, `Ctrl+W`
+  close window, `Ctrl+Q` quit. `F1` is not bound (Calculator has no help);
+  About is in the main menu.
 
 ### Command line
 `helix-calculator --solve EXPR` prints the result to stdout and exits

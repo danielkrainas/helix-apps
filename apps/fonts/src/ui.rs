@@ -81,6 +81,11 @@ pub fn run(files: Vec<PathBuf>) -> glib::ExitCode {
     app.run_with_args(&[std::env::args().next().unwrap_or_default()])
 }
 
+/// How long the font list may take before the page says it failed: a
+/// little longer than `fc-list` itself is allowed.
+const LOAD_TIMEOUT: std::time::Duration =
+    fclist::FC_LIST_TIMEOUT.saturating_add(std::time::Duration::from_secs(15));
+
 fn load_css() {
     let css = gtk::CssProvider::new();
     css.load_from_string(
@@ -418,12 +423,27 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
         .description("Try a different search")
         .build();
     stack.add_named(&empty, Some("empty"));
+    let retry = gtk::Button::builder()
+        .label("_Retry")
+        .use_underline(true)
+        .halign(gtk::Align::Center)
+        .css_classes(["pill", "suggested-action"])
+        .build();
+    let failed = adw::StatusPage::builder()
+        .icon_name("dialog-error-symbolic")
+        .title("Could Not List Fonts")
+        .child(&retry)
+        .build();
+    stack.add_named(&failed, Some("failed"));
 
     let update_visible = {
         let stack = stack.clone();
         let filtered = filtered.clone();
         move || {
-            if stack.visible_child_name().as_deref() != Some("loading") {
+            if !matches!(
+                stack.visible_child_name().as_deref(),
+                Some("loading" | "failed")
+            ) {
                 stack.set_visible_child_name(if filtered.n_items() == 0 {
                     "empty"
                 } else {
@@ -441,27 +461,73 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
         f.changed(gtk::FilterChange::Different);
     });
 
+    // Each load has a number; only the latest one may change the page.
+    let generation = Rc::new(Cell::new(0u64));
+    let show_failure = {
+        let stack = stack.clone();
+        let failed = failed.clone();
+        move |why: &str| {
+            glib::g_warning!("helix-fonts", "could not list fonts: {why}");
+            failed.set_description(Some(&glib::markup_escape_text(why)));
+            stack.set_visible_child_name("failed");
+            helix_app_common::announce(
+                &failed,
+                "Could not list fonts",
+                helix_app_common::Urgency::Assertive,
+            );
+        }
+    };
     let reload: Rc<dyn Fn()> = {
         let stack = stack.clone();
         let store = store.clone();
         Rc::new(move || {
+            let gen = generation.get() + 1;
+            generation.set(gen);
             stack.set_visible_child_name("loading");
-            let stack = stack.clone();
-            let store = store.clone();
-            let uv = update_visible.clone();
+            // Never an endless spinner: if no answer came in time, say so
+            // (a late answer still replaces the message).
+            {
+                let (generation, stack, show_failure) =
+                    (generation.clone(), stack.clone(), show_failure.clone());
+                glib::timeout_add_local_once(LOAD_TIMEOUT, move || {
+                    if generation.get() == gen
+                        && stack.visible_child_name().as_deref() == Some("loading")
+                    {
+                        show_failure("Listing the installed fonts took too long.");
+                    }
+                });
+            }
+            let (generation, stack, store, uv, show_failure) = (
+                generation.clone(),
+                stack.clone(),
+                store.clone(),
+                update_visible.clone(),
+                show_failure.clone(),
+            );
             glib::spawn_future_local(async move {
-                let fams = gio::spawn_blocking(fclist::list_families)
-                    .await
-                    .unwrap_or_default();
-                let objs: Vec<glib::BoxedAnyObject> =
-                    fams.into_iter().map(glib::BoxedAnyObject::new).collect();
-                store.splice(0, store.n_items(), &objs);
-                stack.set_visible_child_name("grid");
-                uv();
+                let result = gio::spawn_blocking(fclist::list_families).await;
+                if generation.get() != gen {
+                    return;
+                }
+                match result {
+                    Ok(Ok(fams)) => {
+                        let objs: Vec<glib::BoxedAnyObject> =
+                            fams.into_iter().map(glib::BoxedAnyObject::new).collect();
+                        store.splice(0, store.n_items(), &objs);
+                        stack.set_visible_child_name("grid");
+                        uv();
+                    }
+                    Ok(Err(why)) => show_failure(&why),
+                    Err(_) => show_failure("Listing the installed fonts failed unexpectedly."),
+                }
             });
         })
     };
     reload();
+    {
+        let reload = reload.clone();
+        retry.connect_clicked(move |_| reload());
+    }
     *win.reload.borrow_mut() = Some(reload);
 
     let tv = adw::ToolbarView::new();
@@ -739,6 +805,7 @@ fn font_page(
                     .xalign(0.0)
                     .hexpand(true)
                     .single_line_mode(true)
+                    .ellipsize(pango::EllipsizeMode::End)
                     .build();
                 let row = gtk::Box::builder().spacing(12).build();
                 row.append(&size_label);
@@ -768,8 +835,11 @@ fn font_page(
             })
             .collect(),
     );
+    // Never wider than the window: sample lines are clipped (drawn) or
+    // ellipsized (labels) at the right edge instead.
     let preview_scroll = gtk::ScrolledWindow::builder()
         .child(&preview_box)
+        .hscrollbar_policy(gtk::PolicyType::Never)
         .vexpand(true)
         .build();
     stack.add_titled_with_icon(
@@ -944,9 +1014,8 @@ fn font_page(
                 alpha_label.set_visible(!has_font && show_alpha);
                 if has_font {
                     if let Some(face) = st.font.borrow().as_ref().and_then(|f| f.face()) {
-                        let (w, h) =
+                        let (_, h) =
                             render::measure(&face, "abcdefghijklmnopqrstuvwxyz", pt_to_px(18));
-                        alpha_area.set_content_width(w.ceil() as i32 + 4);
                         alpha_area.set_content_height((h * 2.0).ceil() as i32);
                     }
                     alpha_area.queue_draw();
@@ -992,10 +1061,28 @@ fn font_page(
     tv.add_top_bar(&header);
     tv.add_top_bar(&switcher_bar);
     tv.set_content(Some(&stack));
+    // Icons above labels when the page is narrow, so all three views keep
+    // readable names.
+    let bin = adw::BreakpointBin::builder()
+        .width_request(360)
+        .height_request(294)
+        .child(&tv)
+        .build();
+    let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+        adw::BreakpointConditionLengthType::MaxWidth,
+        500.0,
+        adw::LengthUnit::Sp,
+    ));
+    narrow.add_setter(
+        &switcher,
+        "policy",
+        Some(&adw::ViewSwitcherPolicy::Narrow.to_value()),
+    );
+    bin.add_breakpoint(narrow);
     adw::NavigationPage::builder()
         .title(&first.family)
         .tag("font")
-        .child(&tv)
+        .child(&bin)
         .build()
 }
 
@@ -1018,8 +1105,10 @@ fn refresh_preview(st: &PageState, rows: &[SizeRow], src: Option<&FaceSource>) {
     for r in rows {
         match &face {
             Some(face) => {
-                let (w, h) = render::measure(face, &text, pt_to_px(r.pt));
-                r.area.set_content_width(w.ceil() as i32 + 2);
+                let (_, h) = render::measure(face, &text, pt_to_px(r.pt));
+                // No content width: the area takes the row's width and the
+                // text is clipped at its edge, so long lines never widen
+                // the page.
                 r.area.set_content_height((h * 1.15).ceil().max(8.0) as i32);
                 r.area.set_visible(true);
                 r.label.set_visible(false);

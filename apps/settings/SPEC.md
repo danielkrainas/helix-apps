@@ -37,6 +37,10 @@ Primary configuration UI for the desktop and system.
   `AdwNavigationSplitView`. It collapses to a single pane below 700 px wide
   (`AdwBreakpoint`); selecting a panel then pushes it and the back button
   returns to the list.
+- The window's minimum size is 360×294. Every implemented panel fits that
+  width without clipping: groups of cards, swatches and thumbnails wrap
+  onto more lines instead of widening the page, and sliders in rows are at
+  least 150 px wide (growing with the row).
 - **Sidebar**: header bar titled *Settings* with a search toggle and the
   primary menu (*About Settings*), a search entry
   (shown with the toggle or `Ctrl+F`), and the panel list grouped by
@@ -118,7 +122,8 @@ Primary configuration UI for the desktop and system.
   `prefer-light` (set by other tools) selects *Default* and is kept until the
   user picks a card.
 - **Accent Color**: nine round swatches (blue, teal, green, yellow, orange,
-  red, pink, purple, slate) → `accent-color`.
+  red, pink, purple, slate) → `accent-color`, wrapping onto a second line
+  when narrow. The two style cards stack likewise.
 - **Icons**: an *Icon Theme* row listing the installed icon themes by their
   `index.theme` `Name`, writing the theme's directory name to
   `icon-theme`. Themes are found in `$XDG_DATA_HOME/icons`, `~/.icons` and
@@ -127,7 +132,8 @@ Primary configuration UI for the desktop and system.
   and cursor-only themes (no `Directories`) are not listed. A value set by
   other tools that names no installed theme is listed as it is. Running apps
   follow the change.
-- **Background**: a grid of thumbnails of the images in
+- **Background**: a grid of thumbnails (at least two per line at 360 px,
+  up to six) of the images in
   `/usr/share/backgrounds` (plus one level of subdirectories) and
   `$XDG_DATA_HOME/backgrounds`. Files named `<stem>-light.<ext>` /
   `<stem>-dark.<ext>` (also `-l` / `-d`) pair into one entry. Choosing an
@@ -214,11 +220,14 @@ through `org.helix.Extensions1` at `/org/helix/Extensions1` on the session
 bus (owned by the shell, `org.gnome.Shell`). The shell's own "Extensions…"
 menu entry opens this panel when Settings is installed.
 
-- Without the service (not a Helix session, or the shell not running) the
-  page is a status page: *Extensions Are Not Available* / "They need the
-  Helix shell." Its list follows the service: it is read when the panel is
-  built, again on every `Changed(id)` signal (at most every 0.3 s), and
-  when the service appears or goes away.
+- Until the first read of the list answers, the page shows a spinner
+  labelled *Loading Extensions…* (also its accessible name).
+- When reading the list fails (not a Helix session, or the shell not
+  running) the page is a status page: *Extensions Are Not Available* /
+  "They need the Helix shell." It is never shown before that answer. The
+  list follows the service: it is read when the panel is built, again on
+  every `Changed(id)` signal (at most every 0.3 s), and when the service
+  appears or goes away.
 - *Use Extensions*: a switch row, the inverse of `org.helix.extensions
   disable-all` (marked *Not supported by this system* without the schema).
 - One expander row per extension, user and system ones by name, then
@@ -369,7 +378,7 @@ window, `F1` about.
 ## Decisions
 - Style cards: no third *Light* card; match GNOME with *Default* and *Dark*
   only (`prefer-light` set elsewhere shows as *Default* and is kept).
-- Focus is kept across list rebuilds (`helix_app_common::focus`): Input sources: Move Up / Move Down keep focus on the moved source's button (so repeated presses keep moving it; at the top or bottom focus stays in the row), Remove moves focus to the neighbouring source.
+- Focus is kept across list rebuilds (`helix_app_common::focus`): Input sources: Move Up / Move Down keep focus on the moved source's button (so repeated presses keep moving it; at the top or bottom focus stays in the row), Remove moves focus to the neighbouring source's Remove button, or to *Add Input Source…* when no source is left.
 - Per-row buttons name their row for assistive technology: "Move English
   (US) Up", "Remove English (US)"; an extension's buttons "Show Log for X",
   "Restart X" and "Change Shortcut for Command (X)".

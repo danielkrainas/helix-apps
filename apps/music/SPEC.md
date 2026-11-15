@@ -105,6 +105,14 @@ Music library and player.
   toggle (Ctrl+F) on the left, an `AdwViewSwitcher` (Albums, Artists, Songs,
   Playlists) as title, primary menu on the right (*Rescan Library*,
   *Preferences*, *Keyboard Shortcuts*, *About Music*).
+- The minimum size is 360×294. Below 550 sp wide the window switches to
+  its narrow layout: the header shows the title "Music" and the views move
+  to an `AdwViewSwitcherBar` at the bottom; the player bar takes two rows
+  (cover, title and Previous / Play / Next; then position and the other
+  controls), so every control stays on screen; album and playlist headers
+  put a 128 px cover above the text, their buttons wrapping onto more
+  lines; the Songs table hides its Album and Plays columns (and scrolls
+  sideways rather than widening the window).
 - Content is an `AdwNavigationView`; the root page is the view stack, album,
   artist, playlist and *Now Playing* pages are pushed on top (Back/Alt+Left/
   Escape pops).

@@ -68,6 +68,16 @@ struct State {
     options: Options,
     history: Vec<HistoryEntry>,
     just_evaluated: bool,
+    /// The last successful evaluation, for Ctrl+Z.
+    undo: Option<Undo>,
+}
+
+/// What an evaluation replaced: the expression and the context (`ans`,
+/// variables) before it, and the result it left in the entry.
+struct Undo {
+    expression: String,
+    result: String,
+    ctx: Context,
 }
 
 impl State {
@@ -319,6 +329,164 @@ fn financial_keys() -> Vec<Vec<Key>> {
     ]
 }
 
+/// How a keyboard shortcut is delivered.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum How {
+    /// A window accelerator for the action (runs before the focused widget).
+    Accel(&'static str),
+    /// A window shortcut for the action that runs only if the focused
+    /// widget does not use the key (Escape still closes popovers).
+    Bubble(&'static str),
+    /// Typed into, or handled by, the expression entry; no action.
+    Entry(&'static str),
+}
+
+impl How {
+    fn trigger(self) -> &'static str {
+        match self {
+            How::Accel(t) | How::Bubble(t) | How::Entry(t) => t,
+        }
+    }
+}
+
+/// A keyboard shortcut: the single table that registers the
+/// accelerators, builds the Keyboard Shortcuts dialog and backs the
+/// hints in the keypad tooltips.
+struct Shortcut {
+    section: &'static str,
+    title: &'static str,
+    /// Detailed action name; empty for [`How::Entry`].
+    action: &'static str,
+    how: How,
+}
+
+const fn sc(
+    section: &'static str,
+    title: &'static str,
+    action: &'static str,
+    how: How,
+) -> Shortcut {
+    Shortcut {
+        section,
+        title,
+        action,
+        how,
+    }
+}
+
+const SHORTCUTS: &[Shortcut] = &[
+    sc("Calculation", "Calculate result", "", How::Entry("Return")),
+    sc("Calculation", "Clear", "win.clear", How::Bubble("Escape")),
+    sc(
+        "Calculation",
+        "Undo last calculation",
+        "",
+        How::Entry("<Control>z"),
+    ),
+    sc("Calculation", "Add", "", How::Entry("plus")),
+    sc("Calculation", "Subtract", "", How::Entry("minus")),
+    sc("Calculation", "Multiply", "", How::Entry("asterisk")),
+    sc("Calculation", "Divide", "", How::Entry("slash")),
+    sc("Calculation", "Exponent", "", How::Entry("asciicircum")),
+    sc("Calculation", "Percentage", "", How::Entry("percent")),
+    sc("Calculation", "Factorial", "", How::Entry("exclam")),
+    sc("Calculation", "Absolute value", "", How::Entry("bar")),
+    sc(
+        "Calculation",
+        "Square",
+        "win.insert::²",
+        How::Accel("<Control>2"),
+    ),
+    sc(
+        "Calculation",
+        "Square root",
+        "win.insert::√",
+        How::Accel("<Control>r"),
+    ),
+    sc(
+        "Calculation",
+        "Pi",
+        "win.insert::π",
+        How::Accel("<Control>p"),
+    ),
+    sc(
+        "Modes",
+        "Basic mode",
+        "win.mode::basic",
+        How::Accel("<Alt>1"),
+    ),
+    sc(
+        "Modes",
+        "Advanced mode",
+        "win.mode::advanced",
+        How::Accel("<Alt>2"),
+    ),
+    sc(
+        "Modes",
+        "Financial mode",
+        "win.mode::financial",
+        How::Accel("<Alt>3"),
+    ),
+    sc(
+        "Modes",
+        "Programming mode",
+        "win.mode::programming",
+        How::Accel("<Alt>4"),
+    ),
+    sc(
+        "General",
+        "Preferences",
+        "win.preferences",
+        How::Accel("<Control>comma"),
+    ),
+    sc(
+        "General",
+        "Keyboard shortcuts",
+        "win.shortcuts",
+        How::Accel("<Control>question"),
+    ),
+    sc(
+        "General",
+        "Close window",
+        "window.close",
+        How::Accel("<Control>w"),
+    ),
+    sc("General", "Quit", "app.quit", How::Accel("<Control>q")),
+];
+
+/// How a GTK trigger is written for people: "<Control>comma" → "Ctrl+,".
+fn shortcut_label(trigger: &str) -> String {
+    let mut rest = trigger;
+    let mut out = String::new();
+    while let Some(after) = rest.strip_prefix('<') {
+        let Some(end) = after.find('>') else { break };
+        out.push_str(match &after[..end] {
+            "Control" | "Primary" => "Ctrl+",
+            "Alt" => "Alt+",
+            "Shift" => "Shift+",
+            "Super" => "Super+",
+            other => other,
+        });
+        rest = &after[end + 1..];
+    }
+    let key = match rest {
+        "Return" => "Enter".to_string(),
+        "comma" => ",".into(),
+        "question" => "?".into(),
+        "plus" => "+".into(),
+        "minus" => "-".into(),
+        "asterisk" => "*".into(),
+        "slash" => "/".into(),
+        "asciicircum" => "^".into(),
+        "percent" => "%".into(),
+        "exclam" => "!".into(),
+        "bar" => "|".into(),
+        k if k.chars().count() == 1 => k.to_uppercase(),
+        k => k.to_string(),
+    };
+    out + &key
+}
+
 #[derive(Clone)]
 struct Ui {
     window: adw::ApplicationWindow,
@@ -390,6 +558,7 @@ fn build(app: &adw::Application) -> Ui {
         options,
         history: load_history(),
         just_evaluated: false,
+        undo: None,
     };
     state.sync_ctx_mode();
     let state = Rc::new(RefCell::new(state));
@@ -448,6 +617,7 @@ fn build(app: &adw::Application) -> Ui {
         .xalign(1.0)
         .build();
     entry.set_input_hints(gtk::InputHints::NO_EMOJI);
+    helix_app_common::set_accessible_label(&entry, "Expression");
     let error = gtk::Label::builder()
         .xalign(1.0)
         .css_classes(["error", "caption"])
@@ -561,8 +731,7 @@ fn build(app: &adw::Application) -> Ui {
     {
         let ui = ui.clone();
         entry.connect_changed(move |_| {
-            ui.error.set_visible(false);
-            ui.entry.remove_css_class("error");
+            ui.clear_error();
             ui.refresh_bits();
         });
     }
@@ -573,8 +742,12 @@ fn build(app: &adw::Application) -> Ui {
         let keys = gtk::EventControllerKey::new();
         keys.set_propagation_phase(gtk::PropagationPhase::Capture);
         keys.connect_key_pressed(move |_, key, _, mods| {
-            if key == gtk::gdk::Key::Escape {
-                ui.entry.set_text("");
+            let ctrl_only = mods
+                & (gtk::gdk::ModifierType::CONTROL_MASK
+                    | gtk::gdk::ModifierType::ALT_MASK
+                    | gtk::gdk::ModifierType::SHIFT_MASK)
+                == gtk::gdk::ModifierType::CONTROL_MASK;
+            if ctrl_only && matches!(key, gtk::gdk::Key::z | gtk::gdk::Key::Z) && ui.undo() {
                 return glib::Propagation::Stop;
             }
             if mods
@@ -628,16 +801,39 @@ fn build(app: &adw::Application) -> Ui {
         shortcuts.connect_activate(move |_, _| show_shortcuts(&win));
     }
     window.add_action(&shortcuts);
-    for (nick, accel) in [
-        ("basic", "<Control>b"),
-        ("advanced", "<Control>a"),
-        ("financial", "<Control>f"),
-        ("programming", "<Control>p"),
-    ] {
-        app.set_accels_for_action(&format!("win.mode::{nick}"), &[accel]);
+    let insert = gio::SimpleAction::new("insert", Some(glib::VariantTy::STRING));
+    {
+        let ui = ui.clone();
+        insert.connect_activate(move |_, p| {
+            if ui.window.visible_dialog().is_some() {
+                return;
+            }
+            if let Some(text) = p.and_then(|p| p.get::<String>()) {
+                ui.insert(&text);
+                ui.entry.grab_focus_without_selecting();
+            }
+        });
     }
-    app.set_accels_for_action("win.preferences", &["<Control>comma"]);
-    app.set_accels_for_action("app.about", &["F1"]);
+    window.add_action(&insert);
+    let clear_entry = gio::SimpleAction::new("clear", None);
+    {
+        let ui = ui.clone();
+        clear_entry.connect_activate(move |_, _| {
+            if ui.window.visible_dialog().is_none() {
+                ui.activate(&Act::Clear);
+            }
+        });
+    }
+    window.add_action(&clear_entry);
+    let mut bubble = Vec::new();
+    for s in SHORTCUTS {
+        match s.how {
+            How::Accel(t) => app.set_accels_for_action(s.action, &[t]),
+            How::Bubble(t) => bubble.push((t, s.action)),
+            How::Entry(_) => {}
+        }
+    }
+    helix_app_common::add_bubble_shortcuts(&window, &bubble);
 
     {
         let state = state.clone();
@@ -657,30 +853,27 @@ fn build(app: &adw::Application) -> Ui {
 }
 
 fn show_shortcuts(win: &adw::ApplicationWindow) {
-    let rows = [
-        ("Calculate", "Enter"),
-        ("Clear", "Escape"),
-        ("Basic mode", "Ctrl+B"),
-        ("Advanced mode", "Ctrl+A"),
-        ("Financial mode", "Ctrl+F"),
-        ("Programming mode", "Ctrl+P"),
-        ("Preferences", "Ctrl+,"),
-        ("About", "F1"),
-        ("Quit", "Ctrl+Q"),
-    ];
-    let group = adw::PreferencesGroup::new();
-    for (title, keys) in rows {
-        let row = adw::ActionRow::builder().title(title).build();
-        row.add_suffix(
-            &gtk::Label::builder()
-                .label(keys)
-                .css_classes(["dim-label"])
-                .build(),
-        );
-        group.add(&row);
-    }
     let page = adw::PreferencesPage::new();
-    page.add(&group);
+    let mut sections: Vec<&str> = Vec::new();
+    for s in SHORTCUTS {
+        if !sections.contains(&s.section) {
+            sections.push(s.section);
+        }
+    }
+    for section in sections {
+        let group = adw::PreferencesGroup::builder().title(section).build();
+        for s in SHORTCUTS.iter().filter(|s| s.section == section) {
+            let row = adw::ActionRow::builder().title(s.title).build();
+            row.add_suffix(
+                &gtk::Label::builder()
+                    .label(shortcut_label(s.how.trigger()))
+                    .css_classes(["dim-label"])
+                    .build(),
+            );
+            group.add(&row);
+        }
+        page.add(&group);
+    }
     let dialog = adw::PreferencesDialog::builder()
         .title("Keyboard Shortcuts")
         .build();
@@ -801,36 +994,104 @@ impl Ui {
         if text.trim().is_empty() {
             return;
         }
-        let result = {
+        let (result, before) = {
             let mut s = self.state.borrow_mut();
-            s.ctx.evaluate(&text).map(|v| format::format(v, &s.options))
+            let before = s.ctx.clone();
+            let r = s.ctx.evaluate(&text).map(|v| format::format(v, &s.options));
+            (r, before)
         };
         match result {
             Ok(formatted) => {
                 {
                     let mut s = self.state.borrow_mut();
                     s.history.push(HistoryEntry {
-                        expression: text,
+                        expression: text.clone(),
                         result: formatted.clone(),
                     });
                     let excess = s.history.len().saturating_sub(MAX_HISTORY);
                     s.history.drain(..excess);
                     save_history(&s.history);
+                    s.undo = Some(Undo {
+                        expression: text.clone(),
+                        result: formatted.clone(),
+                        ctx: before,
+                    });
                 }
                 self.append_history_row(self.state.borrow().history.last().unwrap());
                 self.entry.set_text(&formatted);
                 self.entry.select_region(0, -1);
                 self.state.borrow_mut().just_evaluated = true;
+                helix_app_common::announce(
+                    &self.entry,
+                    &spoken_result(&text, &formatted),
+                    helix_app_common::Urgency::Polite,
+                );
             }
             Err(e) => {
-                self.error.set_label(&e.to_string());
+                let message = e.to_string();
+                self.error.set_label(&message);
                 self.error.set_visible(true);
                 self.entry.add_css_class("error");
+                self.entry.update_state(&[gtk::accessible::State::Invalid(
+                    gtk::AccessibleInvalidState::True,
+                )]);
+                let error: &gtk::Accessible = self.error.upcast_ref();
+                self.entry.update_relation(&[
+                    gtk::accessible::Relation::DescribedBy(&[error]),
+                    gtk::accessible::Relation::ErrorMessage(&[error]),
+                ]);
                 if let Some(p) = e.position() {
                     self.entry.set_position(p as i32);
                 }
+                helix_app_common::announce(
+                    &self.entry,
+                    &message,
+                    helix_app_common::Urgency::Assertive,
+                );
             }
         }
+    }
+
+    /// Undoes the last evaluation while its result is still in the entry:
+    /// restores the expression and the previous `ans` and variables.
+    /// Returns false when there is nothing to undo (the entry's own text
+    /// undo then applies).
+    fn undo(&self) -> bool {
+        let undo = {
+            let mut s = self.state.borrow_mut();
+            let current = self.entry.text();
+            match s.undo.take() {
+                Some(u) if u.result == current.as_str() => u,
+                other => {
+                    s.undo = other;
+                    return false;
+                }
+            }
+        };
+        {
+            let mut s = self.state.borrow_mut();
+            s.ctx = undo.ctx;
+            s.just_evaluated = false;
+        }
+        self.entry.set_text(&undo.expression);
+        self.entry.set_position(-1);
+        true
+    }
+
+    /// Clears an error shown by [`Ui::evaluate`] (the entry was edited).
+    fn clear_error(&self) {
+        if !self.error.is_visible() {
+            return;
+        }
+        self.error.set_visible(false);
+        self.entry.remove_css_class("error");
+        self.entry.update_state(&[gtk::accessible::State::Invalid(
+            gtk::AccessibleInvalidState::False,
+        )]);
+        self.entry
+            .reset_relation(gtk::AccessibleRelation::DescribedBy);
+        self.entry
+            .reset_relation(gtk::AccessibleRelation::ErrorMessage);
     }
 
     fn rebuild_history(&self) {
@@ -843,6 +1104,16 @@ impl Ui {
 
     fn append_history_row(&self, e: &HistoryEntry) {
         let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        // Read as one unit ("12×3+4 equals 40") when the row is focused;
+        // its buttons keep their own names.
+        let list_row = gtk::ListBoxRow::builder()
+            .child(&row)
+            .activatable(false)
+            .build();
+        list_row.update_property(&[gtk::accessible::Property::Label(&spoken_result(
+            &e.expression,
+            &e.result,
+        ))]);
         let expr = gtk::Button::builder()
             .label(&e.expression)
             .css_classes(["flat"])
@@ -869,7 +1140,7 @@ impl Ui {
         row.append(&expr);
         row.append(&eq);
         row.append(&res);
-        self.history.append(&row);
+        self.history.append(&list_row);
         // Scroll to the newest entry once laid out.
         let adj = self.history_scroll.vadjustment();
         glib::idle_add_local_once(move || adj.set_value(adj.upper()));
@@ -1168,6 +1439,11 @@ impl Ui {
     }
 }
 
+/// How a calculation is spoken: "12×3+4 equals 40".
+fn spoken_result(expression: &str, result: &str) -> String {
+    format!("{} equals {}", expression.trim(), result)
+}
+
 #[cfg(test)]
 mod key_name_tests {
     use super::*;
@@ -1189,6 +1465,59 @@ mod key_name_tests {
         assert_eq!(key_name("(", None).as_deref(), Some("Open parenthesis"));
         assert_eq!(key_name("7", None), None);
         assert_eq!(key_name("A", None), None);
+    }
+
+    #[test]
+    fn shortcut_labels() {
+        assert_eq!(shortcut_label("<Control>comma"), "Ctrl+,");
+        assert_eq!(shortcut_label("<Alt>1"), "Alt+1");
+        assert_eq!(shortcut_label("<Control>r"), "Ctrl+R");
+        assert_eq!(shortcut_label("Return"), "Enter");
+        assert_eq!(shortcut_label("Escape"), "Escape");
+        assert_eq!(shortcut_label("slash"), "/");
+    }
+
+    /// No two shortcuts share a key, and the keys the entry needs for
+    /// editing (Select All, clipboard) are not taken; F1 is not About.
+    #[test]
+    fn shortcuts_do_not_conflict() {
+        let mut seen = std::collections::HashSet::new();
+        for s in SHORTCUTS {
+            let t = s.how.trigger().to_lowercase();
+            assert!(seen.insert(t.clone()), "{t} is used twice");
+            assert_eq!(s.action.is_empty(), matches!(s.how, How::Entry(_)));
+        }
+        for reserved in ["<control>a", "<control>c", "<control>v", "<control>x", "f1"] {
+            assert!(!seen.contains(reserved), "{reserved} is taken");
+        }
+    }
+
+    /// Every shortcut a keypad tooltip shows ("Square [Ctrl+2]") exists.
+    #[test]
+    fn tooltip_hints_are_real_shortcuts() {
+        let labels: Vec<String> = SHORTCUTS
+            .iter()
+            .map(|s| shortcut_label(s.how.trigger()))
+            .collect();
+        let all = basic_keys(false)
+            .into_iter()
+            .chain(basic_keys(true))
+            .chain(advanced_keys())
+            .chain(programming_keys())
+            .chain(financial_keys())
+            .flatten();
+        for key in all {
+            let Some(tip) = key.tooltip else { continue };
+            if let (Some(a), true) = (tip.rfind(" ["), tip.ends_with(']')) {
+                let hint = &tip[a + 2..tip.len() - 1];
+                assert!(labels.iter().any(|l| l == hint), "{tip}: no {hint}");
+            }
+        }
+    }
+
+    #[test]
+    fn results_are_spoken_as_one_phrase() {
+        assert_eq!(spoken_result(" 12×3+4 ", "40"), "12×3+4 equals 40");
     }
 
     /// Every key whose label is not a plain digit / letter / word gets a

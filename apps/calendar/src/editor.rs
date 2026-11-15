@@ -123,6 +123,19 @@ struct Form {
     alarm_rows: RefCell<Vec<adw::ActionRow>>,
     notes: gtk::TextView,
     twelve: bool,
+    writable: bool,
+    /// Shows a problem with the form, under the schedule.
+    error: gtk::Label,
+    /// Fields currently marked as the cause of `error`.
+    marked: RefCell<Vec<gtk::Widget>>,
+    /// The start the end was last aligned with (see [`Form::start_moved`]).
+    last_start: Cell<NaiveDateTime>,
+}
+
+/// A problem with the form and the field that causes it.
+struct FormError {
+    message: String,
+    field: gtk::Widget,
 }
 
 struct Values {
@@ -159,17 +172,23 @@ fn time_entry(t: NaiveTime, twelve: bool, name: &str) -> gtk::Entry {
 }
 
 impl Form {
-    fn read_time(&self, e: &gtk::Entry) -> Result<NaiveTime, String> {
-        dates::parse_time_input(&e.text())
-            .ok_or_else(|| format!("“{}” is not a valid time", e.text()))
+    fn read_time(&self, e: &gtk::Entry) -> Result<NaiveTime, FormError> {
+        dates::parse_time_input(&e.text()).ok_or_else(|| FormError {
+            message: format!("“{}” is not a valid time", e.text()),
+            field: e.clone().upcast(),
+        })
     }
 
-    fn values(&self) -> Result<Values, String> {
+    fn values(&self) -> Result<Values, FormError> {
         let all_day = self.all_day.is_active();
         let (sd, ed) = (self.start_date.date.get(), self.end_date.date.get());
+        let ends_early = |field: gtk::Widget| FormError {
+            message: "The event ends before it starts".into(),
+            field,
+        };
         let (start, end) = if all_day {
             if ed < sd {
-                return Err("The event ends before it starts".into());
+                return Err(ends_early(self.end_date.button.clone().upcast()));
             }
             (
                 sd.and_time(NaiveTime::MIN),
@@ -179,7 +198,12 @@ impl Form {
             let s = sd.and_time(self.read_time(&self.start_time)?);
             let e = ed.and_time(self.read_time(&self.end_time)?);
             if e < s {
-                return Err("The event ends before it starts".into());
+                let field = if ed < sd {
+                    self.end_date.button.clone().upcast()
+                } else {
+                    self.end_time.clone().upcast()
+                };
+                return Err(ends_early(field));
             }
             (s, e)
         };
@@ -214,6 +238,89 @@ impl Form {
         })
     }
 
+    /// Shows `err` inside the dialog: the message under the schedule, the
+    /// field marked invalid (error style and state, the message as its
+    /// error message) and focused, and the message announced.
+    fn show_error(&self, err: FormError) {
+        self.clear_error();
+        self.error.set_label(&err.message);
+        self.error.set_visible(true);
+        let field = err.field;
+        field.add_css_class("error");
+        field.update_state(&[gtk::accessible::State::Invalid(
+            gtk::AccessibleInvalidState::True,
+        )]);
+        field.update_relation(&[gtk::accessible::Relation::ErrorMessage(&[self
+            .error
+            .upcast_ref()])]);
+        field.grab_focus();
+        self.marked.borrow_mut().push(field);
+        helix_app_common::announce(
+            &self.error,
+            &err.message,
+            helix_app_common::Urgency::Assertive,
+        );
+    }
+
+    fn clear_error(&self) {
+        self.error.set_visible(false);
+        for field in self.marked.borrow_mut().drain(..) {
+            field.remove_css_class("error");
+            field.update_state(&[gtk::accessible::State::Invalid(
+                gtk::AccessibleInvalidState::False,
+            )]);
+            field.reset_relation(gtk::AccessibleRelation::ErrorMessage);
+        }
+    }
+
+    /// The start shown in the form, if its time reads (all-day events
+    /// keep the time of the last start).
+    fn shown_start(&self) -> Option<NaiveDateTime> {
+        let time = if self.all_day.is_active() {
+            self.last_start.get().time()
+        } else {
+            dates::parse_time_input(&self.start_time.text())?
+        };
+        Some(self.start_date.date.get().and_time(time))
+    }
+
+    /// The start was changed (date picked, time confirmed): moves the end
+    /// by the same amount, so the event keeps its length.
+    fn start_moved(&self) {
+        self.clear_error();
+        let Some(start) = self.shown_start() else {
+            return;
+        };
+        let delta = start - self.last_start.get();
+        self.last_start.set(start);
+        if delta.is_zero() {
+            return;
+        }
+        match dates::parse_time_input(&self.end_time.text()) {
+            Some(t) => {
+                let end = self.end_date.date.get().and_time(t) + delta;
+                self.end_date.set(end.date());
+                self.end_time
+                    .set_text(&dates::format_time(end.time(), self.twelve));
+            }
+            None => {
+                let days = start.date() - (start - delta).date();
+                self.end_date.set(self.end_date.date.get() + days);
+            }
+        }
+    }
+
+    /// Confirms the start time: tidies its text and moves the end along.
+    fn start_time_done(&self) {
+        if let Some(t) = dates::parse_time_input(&self.start_time.text()) {
+            let text = dates::format_time(t, self.twelve);
+            if self.start_time.text() != text {
+                self.start_time.set_text(&text);
+            }
+        }
+        self.start_moved();
+    }
+
     fn update_visibility(&self) {
         let all_day = self.all_day.is_active();
         self.start_time.set_visible(!all_day);
@@ -243,7 +350,9 @@ impl Form {
                 "Remove Reminder “{}”",
                 recur::describe_reminder(alarm.before_start)
             ));
-        row.add_suffix(&remove);
+        if self.writable {
+            row.add_suffix(&remove);
+        }
         self.alarm_group.add(&row);
         self.alarms.borrow_mut().push(alarm);
         self.alarm_rows.borrow_mut().push(row.clone());
@@ -369,14 +478,19 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         .label(if existing.is_some() { "Save" } else { "Add" })
         .css_classes(["suggested-action"])
         .build();
-    save.set_sensitive(writable);
     header.pack_start(&cancel);
-    header.pack_end(&save);
+    if writable {
+        header.pack_end(&save);
+        dialog.set_default_widget(Some(&save));
+    } else {
+        cancel.set_label("Close");
+    }
     let page = adw::PreferencesPage::new();
 
     let main = adw::PreferencesGroup::new();
     let title = adw::EntryRow::builder()
         .title("Title")
+        .activates_default(true)
         .text(event.as_ref().map(|e| e.summary.as_str()).unwrap_or(""))
         .build();
     let names: Vec<&str> = selectable.iter().map(|(_, n)| n.as_str()).collect();
@@ -396,6 +510,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     );
     let location = adw::EntryRow::builder()
         .title("Location")
+        .activates_default(true)
         .text(event.as_ref().map(|e| e.location.as_str()).unwrap_or(""))
         .build();
     main.add(&title);
@@ -473,6 +588,14 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     sched.add(&ends);
     sched.add(&count);
     sched.add(&until_row);
+    let error = gtk::Label::builder()
+        .css_classes(["error"])
+        .xalign(0.0)
+        .wrap(true)
+        .margin_top(12)
+        .visible(false)
+        .build();
+    sched.add(&error);
     page.add(&sched);
 
     let alarm_group = adw::PreferencesGroup::builder().title("Reminders").build();
@@ -518,21 +641,34 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         g.add(&delete);
         page.add(&g);
     }
+    let view = adw::ToolbarView::new();
+    view.add_top_bar(&header);
     if !writable {
+        // Text stays selectable; everything else is shown but locked.
+        title.set_editable(false);
+        location.set_editable(false);
+        start_time.set_editable(false);
+        end_time.set_editable(false);
+        notes.set_editable(false);
         for w in [
-            title.upcast_ref::<gtk::Widget>(),
-            cal.upcast_ref(),
-            location.upcast_ref(),
-            sched.upcast_ref(),
+            cal.upcast_ref::<gtk::Widget>(),
+            all_day_row.upcast_ref(),
+            start_date.button.upcast_ref(),
+            end_date.button.upcast_ref(),
+            repeat.upcast_ref(),
+            ends.upcast_ref(),
+            count.upcast_ref(),
+            until.button.upcast_ref(),
             add_alarm.upcast_ref(),
-            notes.upcast_ref(),
         ] {
             w.set_sensitive(false);
         }
+        let banner = adw::Banner::builder()
+            .title("This event is in a read-only calendar")
+            .revealed(true)
+            .build();
+        view.add_top_bar(&banner);
     }
-
-    let view = adw::ToolbarView::new();
-    view.add_top_bar(&header);
     view.set_content(Some(&page));
     dialog.set_child(Some(&view));
 
@@ -558,6 +694,10 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         alarm_rows: RefCell::default(),
         notes,
         twelve,
+        writable,
+        error,
+        marked: RefCell::default(),
+        last_start: Cell::new(start),
     });
     let initial_alarms = match &event {
         Some(e) => e.alarms.clone(),
@@ -586,35 +726,50 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         menu_box.append(&b);
     }
 
-    // Keep the event's length when the start moves.
-    let duration = end - start;
-    let span = (end_display - start.date()).num_days().max(0);
+    // Keep the event's length when the start moves: on a picked date, and
+    // on a start time confirmed with Enter or by leaving the field.
     let weak = Rc::downgrade(&form);
-    *form.start_date.changed.borrow_mut() = Some(Box::new(move |d| {
+    *form.start_date.changed.borrow_mut() = Some(Box::new(move |_| {
         if let Some(f) = weak.upgrade() {
-            f.end_date.set(d + Duration::days(span));
+            f.start_moved();
         }
     }));
     let weak = Rc::downgrade(&form);
-    form.start_time.connect_activate(move |e| {
-        let Some(f) = weak.upgrade() else { return };
-        if let Some(t) = dates::parse_time_input(&e.text()) {
-            e.set_text(&dates::format_time(t, f.twelve));
-            let s = f.start_date.date.get().and_time(t);
-            if !f.all_day.is_active() {
-                let new_end = s + duration.max(Duration::minutes(0));
-                f.end_date.set(new_end.date());
-                f.end_time
-                    .set_text(&dates::format_time(new_end.time(), f.twelve));
-            }
+    *form.end_date.changed.borrow_mut() = Some(Box::new(move |_| {
+        if let Some(f) = weak.upgrade() {
+            f.clear_error();
+        }
+    }));
+    let weak = Rc::downgrade(&form);
+    form.start_time.connect_activate(move |_| {
+        if let Some(f) = weak.upgrade() {
+            f.start_time_done();
         }
     });
+    let focus = gtk::EventControllerFocus::new();
+    let weak = Rc::downgrade(&form);
+    focus.connect_leave(move |_| {
+        if let Some(f) = weak.upgrade() {
+            f.start_time_done();
+        }
+    });
+    form.start_time.add_controller(focus);
     let weak = Rc::downgrade(&form);
     form.end_time.connect_activate(move |e| {
         if let (Some(f), Some(t)) = (weak.upgrade(), dates::parse_time_input(&e.text())) {
             e.set_text(&dates::format_time(t, f.twelve));
         }
     });
+    for entry in [&form.start_time, &form.end_time] {
+        let weak = Rc::downgrade(&form);
+        entry.connect_changed(move |_| {
+            if let Some(f) = weak.upgrade() {
+                if !f.marked.borrow().is_empty() {
+                    f.clear_error();
+                }
+            }
+        });
+    }
     for row in [
         form.all_day.upcast_ref::<glib::Object>(),
         form.repeat.upcast_ref(),
@@ -628,6 +783,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         };
         row.connect_notify_local(Some(prop), move |_, _| {
             if let Some(f) = weak.upgrade() {
+                f.clear_error();
                 f.update_visibility();
             }
         });
@@ -655,7 +811,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         let v = match f.values() {
             Ok(v) => v,
             Err(e) => {
-                ui.toast(&e);
+                f.show_error(e);
                 return;
             }
         };

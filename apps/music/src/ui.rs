@@ -154,6 +154,11 @@ pub struct RowHandle {
 
 pub struct PlayerBar {
     pub revealer: gtk::Revealer,
+    /// The bar's layout: one row when wide, two when narrow.
+    grid: gtk::Grid,
+    info_box: gtk::Box,
+    seek_box: gtk::Box,
+    side_box: gtk::Box,
     pub cover: gtk::Image,
     pub title: gtk::Label,
     pub artist: gtk::Label,
@@ -172,6 +177,10 @@ pub struct PlayerBar {
 pub struct App {
     pub app: adw::Application,
     pub window: adw::ApplicationWindow,
+    /// Applied below [`NARROW_SP`]; views add their own setters.
+    pub narrow: adw::Breakpoint,
+    /// Album and playlist headers, laid out again when `narrow` changes.
+    pub headers: RefCell<Vec<glib::WeakRef<gtk::Box>>>,
     pub prefs: Prefs,
     pub toasts: adw::ToastOverlay,
     pub nav: adw::NavigationView,
@@ -348,6 +357,9 @@ impl App {
         root_tv.add_top_bar(&header);
         root_tv.add_top_bar(&search_bar);
         root_tv.set_content(Some(&main_stack));
+        // Narrow windows: the views move to a bar at the bottom.
+        let switcher_bar = adw::ViewSwitcherBar::builder().stack(&stack).build();
+        root_tv.add_bottom_bar(&switcher_bar);
         let root_page = adw::NavigationPage::builder()
             .child(&root_tv)
             .title(APP_NAME)
@@ -364,6 +376,17 @@ impl App {
         outer.append(&toasts);
         outer.append(&bar.revealer);
         window.set_content(Some(&outer));
+
+        let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+            adw::BreakpointConditionLengthType::MaxWidth,
+            NARROW_SP,
+            adw::LengthUnit::Sp,
+        ));
+        let narrow_title = adw::WindowTitle::new(APP_NAME, "");
+        narrow.add_setter(&header, "title-widget", Some(&narrow_title.to_value()));
+        narrow.add_setter(&switcher_bar, "reveal", Some(&true.to_value()));
+        bar.add_narrow_setters(&narrow);
+        window.add_breakpoint(narrow.clone());
 
         let (cmd_tx, cmd_rx) = async_channel::unbounded::<Command>();
         let mpris = (std::env::var_os("HELIX_MUSIC_NO_MPRIS").is_none())
@@ -405,6 +428,8 @@ impl App {
             App {
                 app: application.clone(),
                 window,
+                narrow,
+                headers: RefCell::default(),
                 prefs,
                 toasts,
                 nav,
@@ -453,6 +478,19 @@ impl App {
             ));
         }
 
+        for applied in [true, false] {
+            let w = Rc::downgrade(&app);
+            let relayout = move |_: &adw::Breakpoint| {
+                if let Some(app) = w.upgrade() {
+                    app.layout_headers(applied);
+                }
+            };
+            if applied {
+                app.narrow.connect_apply(relayout);
+            } else {
+                app.narrow.connect_unapply(relayout);
+            }
+        }
         app.build_views();
         app.connect_player_bar();
         app.install_actions();
@@ -1614,6 +1652,44 @@ fn flat_button(icon: &str, tip: &str) -> gtk::Button {
         .labelled(helix_app_common::a11y::name_from_tooltip(tip))
 }
 
+/// Below this width (in sp) the window uses its narrow layout: the view
+/// switcher at the bottom and a two-row player bar.
+pub const NARROW_SP: f64 = 550.0;
+
+impl App {
+    /// Whether the narrow layout is in use.
+    pub fn is_narrow(&self) -> bool {
+        self.window.current_breakpoint().as_ref() == Some(&self.narrow)
+    }
+
+    /// Lays out the open album and playlist headers for the window width.
+    fn layout_headers(&self, narrow: bool) {
+        self.headers.borrow_mut().retain(|h| match h.upgrade() {
+            Some(h) => {
+                crate::pages::layout_header(&h, narrow);
+                true
+            }
+            None => false,
+        });
+    }
+}
+
+impl PlayerBar {
+    /// Narrow layout: cover, title and Previous / Play / Next on the first
+    /// row; position and the other controls on the second.
+    fn add_narrow_setters(&self, bp: &adw::Breakpoint) {
+        bp.add_setter(&self.info_box, "width-request", Some(&(-1).to_value()));
+        let Some(layout) = self.grid.layout_manager() else {
+            return;
+        };
+        for (widget, column, row) in [(&self.seek_box, 0, 1), (&self.side_box, 1, 1)] {
+            let child = layout.layout_child(widget);
+            bp.add_setter(&child, "column", Some(&column.to_value()));
+            bp.add_setter(&child, "row", Some(&row.to_value()));
+        }
+    }
+}
+
 fn build_player_bar() -> PlayerBar {
     let cover = gtk::Image::builder()
         .pixel_size(48)
@@ -1736,18 +1812,27 @@ fn build_player_bar() -> PlayerBar {
         right.append(w);
     }
 
-    let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-    row.add_css_class("hm-playerbar");
-    row.append(&left);
-    row.append(&controls);
-    row.append(&seek);
-    row.append(&right);
+    controls.set_halign(gtk::Align::End);
+    right.set_halign(gtk::Align::End);
+    let grid = gtk::Grid::builder()
+        .column_spacing(12)
+        .row_spacing(4)
+        .css_classes(["hm-playerbar"])
+        .build();
+    grid.attach(&left, 0, 0, 1, 1);
+    grid.attach(&controls, 1, 0, 1, 1);
+    grid.attach(&seek, 2, 0, 1, 1);
+    grid.attach(&right, 3, 0, 1, 1);
     let revealer = gtk::Revealer::builder()
-        .child(&row)
+        .child(&grid)
         .transition_type(gtk::RevealerTransitionType::SlideUp)
         .build();
     PlayerBar {
         revealer,
+        grid,
+        info_box: left,
+        seek_box: seek,
+        side_box: right,
         cover,
         title,
         artist,

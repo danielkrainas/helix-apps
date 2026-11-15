@@ -55,6 +55,37 @@ impl Job {
     }
 }
 
+impl Job {
+    /// What a toast says when the job finished without errors, given how
+    /// many top-level items it produced (`None`: the caller reports it
+    /// itself, as for Move to Trash).
+    pub fn finished(&self, created: usize) -> Option<String> {
+        let count = |v: &Vec<gio::File>| {
+            crate::fmt::item_count(if created > 0 { created } else { v.len() } as u64)
+        };
+        Some(match self {
+            Job::Copy { sources, dest } => {
+                format!("Copied {} to “{}”", count(sources), display_name(dest))
+            }
+            Job::Move { sources, dest } => {
+                format!("Moved {} to “{}”", count(sources), display_name(dest))
+            }
+            Job::Link { sources, .. } => {
+                let n = if created > 0 { created } else { sources.len() };
+                if n == 1 {
+                    "Created 1 link".into()
+                } else {
+                    format!("Created {n} links")
+                }
+            }
+            Job::Restore(v) | Job::Untrash(v) => format!("Restored {}", count(v)),
+            Job::Delete(v) => format!("Deleted {}", count(v)),
+            Job::EmptyTrash => "Trash emptied".into(),
+            Job::Trash(_) => return None,
+        })
+    }
+}
+
 /// Best-effort display name of a file without blocking I/O.
 pub fn display_name(f: &gio::File) -> String {
     match f.path() {
@@ -679,6 +710,39 @@ pub(crate) mod tests {
     use super::*;
     use std::fs;
     use std::path::{Path, PathBuf};
+
+    #[test]
+    fn finished_messages() {
+        let f = |p: &str| gio::File::for_path(p);
+        let copy = Job::Copy {
+            sources: vec![f("/a"), f("/b"), f("/c")],
+            dest: f("/home/me/Documents"),
+        };
+        assert_eq!(
+            copy.finished(0).as_deref(),
+            Some("Copied 3 items to “Documents”")
+        );
+        // Skipped conflicts: count what was made.
+        assert_eq!(
+            copy.finished(2).as_deref(),
+            Some("Copied 2 items to “Documents”")
+        );
+        let mv = Job::Move {
+            sources: vec![f("/a")],
+            dest: f("/tmp"),
+        };
+        assert_eq!(mv.finished(1).as_deref(), Some("Moved 1 item to “tmp”"));
+        let link = Job::Link {
+            sources: vec![f("/a")],
+            dest: f("/"),
+        };
+        assert_eq!(link.finished(1).as_deref(), Some("Created 1 link"));
+        assert_eq!(
+            Job::Restore(vec![f("/a"), f("/b")]).finished(2).as_deref(),
+            Some("Restored 2 items")
+        );
+        assert_eq!(Job::Trash(vec![f("/a")]).finished(0), None);
+    }
 
     /// A unique scratch directory under the system temp dir, removed on drop.
     pub struct TempDir(pub PathBuf);

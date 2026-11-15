@@ -66,7 +66,7 @@ impl Panel for MousePanel {
             "Primary Button",
             ("Left", "Right"),
         );
-        primary.set_subtitle("Order of physical buttons on mice and touchpads");
+        primary.set_subtitle("Button order on mice and touchpads");
         general.add(&primary);
         page.add(&general);
 
@@ -280,6 +280,9 @@ struct SourcesUi {
     prefs: Prefs,
     info: Rc<XkbInfo>,
     group: adw::PreferencesGroup,
+    /// "Add Input Source…": where focus goes when the last source is
+    /// removed.
+    add: gtk::Button,
     rows: std::cell::RefCell<Vec<adw::ActionRow>>,
     writing: Cell<bool>,
 }
@@ -294,10 +297,12 @@ impl SourcesUi {
 
     /// Rebuilds the rows, keeping keyboard focus on the moved source's
     /// button (so repeated Move Up/Down presses keep moving it), on a
-    /// neighbour after Remove, and the scroll position.
+    /// neighbour after Remove (or on "Add Input Source…" when none is
+    /// left), and the scroll position.
     fn rebuild(self: &Rc<Self>) {
         let group = self.group.clone();
-        helix_app_common::focus::rebuild_keeping_focus(&group, None, || self.rebuild_rows());
+        let add = self.add.clone().upcast::<gtk::Widget>();
+        helix_app_common::focus::rebuild_keeping_focus(&group, Some(&add), || self.rebuild_rows());
     }
 
     fn rebuild_rows(self: &Rc<Self>) {
@@ -386,6 +391,7 @@ fn input_sources_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
         prefs: prefs.clone(),
         info: Rc::new(XkbInfo::load()),
         group: group.clone(),
+        add: add.clone(),
         rows: Default::default(),
         writing: Cell::new(false),
     });

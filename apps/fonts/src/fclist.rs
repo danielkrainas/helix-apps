@@ -7,8 +7,10 @@
 //! other application. `fc-list` also uses fontconfig's cache, so it is fast.
 
 use std::collections::BTreeMap;
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::time::{Duration, Instant};
 
 /// Format passed to `fc-list -f`: one tab-separated record per line.
 pub const FC_FORMAT: &str =
@@ -154,17 +156,63 @@ pub fn default_face(fam: &Family) -> usize {
         .unwrap_or(0)
 }
 
-/// Runs `fc-list`; `None` if it is unavailable or fails.
-pub fn run_fc_list() -> Option<Vec<FaceEntry>> {
-    let out = Command::new("fc-list")
-        .arg("-f")
-        .arg(FC_FORMAT)
-        .output()
-        .ok()?;
-    if !out.status.success() {
-        return None;
+/// How long `fc-list` may take. With an empty cache directory it builds
+/// fontconfig's cache first, which takes a while on a loaded system.
+pub const FC_LIST_TIMEOUT: Duration = Duration::from_secs(60);
+
+/// Runs `fc-list`, killing it after `timeout`.
+pub fn run_fc_list(timeout: Duration) -> Result<Vec<FaceEntry>, String> {
+    let mut cmd = Command::new("fc-list");
+    cmd.arg("-f").arg(FC_FORMAT);
+    let out = output_with_timeout(&mut cmd, timeout)?;
+    Ok(parse_fc_list(&String::from_utf8_lossy(&out)))
+}
+
+/// Runs `cmd` and returns its standard output, or an error when it cannot
+/// start, fails, or is still running after `timeout` (it is killed then).
+fn output_with_timeout(cmd: &mut Command, timeout: Duration) -> Result<Vec<u8>, String> {
+    let name = cmd.get_program().to_string_lossy().into_owned();
+    let mut child = cmd
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| format!("{name}: {e}"))?;
+    // Read on another thread so a full pipe never blocks the child while
+    // this one waits for it with a deadline.
+    let Some(mut stdout) = child.stdout.take() else {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err(format!("{name}: no output"));
+    };
+    let reader = std::thread::spawn(move || {
+        let mut buf = Vec::new();
+        stdout.read_to_end(&mut buf).map(|_| buf)
+    });
+    let deadline = Instant::now() + timeout;
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break status,
+            Ok(None) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(20)),
+            Ok(None) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(format!(
+                    "{name} did not finish within {} s",
+                    timeout.as_secs_f64()
+                ));
+            }
+            Err(e) => return Err(format!("{name}: {e}")),
+        }
+    };
+    let out = reader
+        .join()
+        .map_err(|_| format!("{name}: reading its output failed"))?
+        .map_err(|e| format!("{name}: {e}"))?;
+    if !status.success() {
+        return Err(format!("{name} failed ({status})"));
     }
-    Some(parse_fc_list(&String::from_utf8_lossy(&out.stdout)))
+    Ok(out)
 }
 
 /// Standard font directories used when fontconfig is unavailable.
@@ -251,12 +299,24 @@ fn style_weight(style: &str) -> f64 {
     .unwrap_or(80.0)
 }
 
-/// Lists installed families, preferring fontconfig.
-pub fn list_families() -> Vec<Family> {
-    let faces = run_fc_list()
-        .filter(|f| !f.is_empty())
-        .unwrap_or_else(|| scan_dirs(&fallback_dirs()));
-    group_families(faces)
+/// Lists installed families, preferring fontconfig and falling back to
+/// scanning the standard directories. An error when neither finds a font.
+pub fn list_families() -> Result<Vec<Family>, String> {
+    let faces = match run_fc_list(FC_LIST_TIMEOUT) {
+        Ok(faces) if !faces.is_empty() => faces,
+        result => {
+            let why = result
+                .err()
+                .unwrap_or_else(|| "fc-list found no fonts".into());
+            gtk::glib::g_warning!("helix-fonts", "{why}; scanning font directories");
+            let faces = scan_dirs(&fallback_dirs());
+            if faces.is_empty() {
+                return Err(why);
+            }
+            faces
+        }
+    };
+    Ok(group_families(faces))
 }
 
 #[cfg(test)]
@@ -356,8 +416,24 @@ garbage line
     }
 
     #[test]
+    fn commands_are_bounded_in_time() {
+        let out = output_with_timeout(Command::new("printf").arg("a\\tb"), Duration::from_secs(10));
+        assert_eq!(out.unwrap(), b"a\tb");
+        let start = Instant::now();
+        let slow = output_with_timeout(Command::new("sleep").arg("30"), Duration::from_millis(200));
+        assert!(slow.unwrap_err().contains("did not finish"));
+        assert!(start.elapsed() < Duration::from_secs(10));
+        assert!(output_with_timeout(&mut Command::new("false"), Duration::from_secs(10)).is_err());
+        assert!(output_with_timeout(
+            &mut Command::new("/nonexistent/helix-fc-list"),
+            Duration::from_secs(1)
+        )
+        .is_err());
+    }
+
+    #[test]
     fn live_fc_list_if_available() {
-        let Some(faces) = run_fc_list() else {
+        let Ok(faces) = run_fc_list(FC_LIST_TIMEOUT) else {
             eprintln!("fc-list unavailable; skipping");
             return;
         };

@@ -255,6 +255,7 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     let header = adw::HeaderBar::new();
     let boot_dropdown = gtk::DropDown::from_strings(&["Current Boot"]);
     boot_dropdown.set_tooltip_text(Some("Boot"));
+    helix_app_common::set_accessible_label(&boot_dropdown, "Boot");
     header.set_title_widget(Some(&boot_dropdown));
     let search_button = gtk::ToggleButton::builder()
         .icon_name("system-search-symbolic")
@@ -298,6 +299,8 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
         .build();
     let field_dropdown = gtk::DropDown::from_strings(&SearchField::ALL.map(|f| f.label()));
     field_dropdown.set_tooltip_text(Some("Search in"));
+    helix_app_common::set_accessible_label(&field_dropdown, "Search in");
+    helix_app_common::set_accessible_label(&search_entry, "Search events");
     let search_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     search_box.append(&search_entry);
     search_box.append(&field_dropdown);

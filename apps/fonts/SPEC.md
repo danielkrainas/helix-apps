@@ -36,16 +36,25 @@ View and install fonts.
   filters the grid (case-insensitive substring over family and style
   names; all whitespace-separated terms must match). An empty result shows
   an "No Fonts Found" status page. Activating a tile pushes the font page.
+- While the list is read a spinner shows. If reading fails (see *Data
+  sources*) or no answer has come after 75 s, the page shows *Could Not
+  List Fonts* with the reason and a *Retry* button, announces "Could not
+  list fonts", and logs the reason. A late answer still replaces it; only
+  the most recent load may change the page.
 - **Font page**: title = family name, subtitle = style. If the family (or
   the opened file, e.g. a TTC collection) has more than one face, a style
   dropdown in the header switches between faces. A view switcher offers
-  three views:
+  three views (icons above their labels when the page is narrower than
+  500 sp):
   - **Preview**: an editable preview-text entry (defaults to the pangram
     "The quick brown fox jumps over the lazy dog."; if the font does not
     cover most of its letters, a sample built from characters the font
     does cover is used instead), the alphabet/digits line when covered,
     and the text rendered at 8, 10, 12, 18, 24, 36, 48, 72 pt
-    (each line labelled with its size).
+    (each line labelled with its size). The view never scrolls
+    sideways: at any window width (down to 360 px) the entry fits the
+    window and sample lines too long for it are cut off at the right edge
+    (drawn lines are clipped, Pango-fallback lines end in "…").
   - **Characters**: a grid of every code point mapped in the face's
     `cmap`, each cell drawing the glyph; tooltip shows `U+XXXX`. A count
     of covered characters is shown above the grid.
@@ -87,10 +96,13 @@ View and install fonts.
   every other app sees it, whereas a pure-Rust fonts.conf parser would have
   to re-implement fontconfig's configuration language and would drift.
   Output is parsed into faces and grouped by (first) family name; the
-  list is sorted case-insensitively. Runs on a worker thread. If `fc-list`
-  is unavailable, Helix falls back to scanning `$XDG_DATA_HOME/fonts`,
-  `~/.fonts`, `/usr/local/share/fonts` and `/usr/share/fonts` with
-  ttf-parser.
+  list is sorted case-insensitively. Runs on a worker thread. `fc-list`
+  may take up to 60 s (with an empty cache directory it first builds
+  fontconfig's cache) and is killed after that. If it cannot run, fails,
+  times out or lists nothing, the reason is logged and Helix falls back to
+  scanning `$XDG_DATA_HOME/fonts`, `~/.fonts`, `/usr/local/share/fonts`
+  and `/usr/share/fonts` with ttf-parser; finding nothing there either is
+  a loading failure.
 - **Name table**: read with `ttf-parser`; preferred record language is
   English (Windows 0x0409 / Mac 0), then any Unicode record, then Mac
   Roman. Family prefers typographic family (ID 16) over ID 1, style

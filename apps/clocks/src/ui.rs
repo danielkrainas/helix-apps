@@ -167,6 +167,14 @@ struct TimerRow {
     reset: gtk::Button,
 }
 
+/// The widgets of one alarm row, updated in place.
+struct AlarmRow {
+    row: gtk::ListBoxRow,
+    time: gtk::Label,
+    sub: gtk::Label,
+    switch: gtk::Switch,
+}
+
 struct Ui {
     app: adw::Application,
     window: adw::ApplicationWindow,
@@ -194,6 +202,8 @@ struct Ui {
     alarms: RefCell<Vec<AlarmEntry>>,
     alarm_stack: gtk::Stack,
     alarm_list: gtk::ListBox,
+    /// The alarm rows, in list order, by alarm id.
+    alarm_rows: RefCell<Vec<(String, AlarmRow)>>,
     alarm_note: gtk::Label,
     ringing: RefCell<HashMap<String, adw::AlertDialog>>,
     id_salt: Cell<u64>,
@@ -426,6 +436,7 @@ impl Ui {
             alarms: RefCell::new(alarms),
             alarm_stack,
             alarm_list,
+            alarm_rows: RefCell::default(),
             alarm_note: note,
             ringing: RefCell::default(),
             id_salt: Cell::new(0),
@@ -1113,9 +1124,30 @@ impl Ui {
         self.update_keep_alive();
     }
 
-    /// Rebuilds the list, keeping keyboard focus on the same row (or a
-    /// neighbour after a removal) and the scroll position.
+    /// Shows the alarms. While the same alarms are listed in the same
+    /// order (toggling, ringing, snoozing, stopping, editing a name) the
+    /// rows are updated in place, so focus stays where it is, also on a
+    /// dialog's return. Otherwise the list is rebuilt, keeping keyboard
+    /// focus on the same row (or a neighbour after a removal) and the
+    /// scroll position.
     fn rebuild_alarms(self: &Rc<Self>) {
+        let same = {
+            let alarms = self.alarms.borrow();
+            let rows = self.alarm_rows.borrow();
+            rows.len() == alarms.len()
+                && rows
+                    .iter()
+                    .zip(alarms.iter())
+                    .all(|((id, _), e)| *id == e.alarm.id)
+        };
+        if same && !self.alarm_rows.borrow().is_empty() {
+            let twelve = self.twelve.get();
+            let alarms = self.alarms.borrow();
+            for ((_, row), e) in self.alarm_rows.borrow().iter().zip(alarms.iter()) {
+                self.fill_alarm_row(row, e, twelve);
+            }
+            return;
+        }
         let list = self.alarm_list.clone();
         let fallback = self.add_button.clone().upcast::<gtk::Widget>();
         helix_app_common::focus::rebuild_keeping_focus(&list, Some(&fallback), || {
@@ -1123,10 +1155,61 @@ impl Ui {
         });
     }
 
+    /// Shows `e` in `row`: time, name, repeat summary and state, switch.
+    fn fill_alarm_row(&self, row: &AlarmRow, e: &AlarmEntry, twelve: bool) {
+        let a = &e.alarm;
+        let t = NaiveTime::from_hms_opt(a.hour, a.minute, 0).unwrap_or_default();
+        row.time.set_label(&tz::format_time(t, twelve));
+        let mut parts = vec![a.name.clone()];
+        let summary = a.days.summary();
+        if !summary.is_empty() {
+            parts.push(summary);
+        }
+        match e.state {
+            RingState::Snoozed { until } => parts.push(format!(
+                "Snoozed until {}",
+                tz::format_time(until.with_timezone(&self.local).time(), twelve)
+            )),
+            RingState::Ringing { .. } => parts.push("Ringing".into()),
+            RingState::Idle => {}
+        }
+        row.sub.set_label(&parts.join(" • "));
+        // The switch's handler ignores a state the alarm already has.
+        if row.switch.is_active() != a.active {
+            row.switch.set_active(a.active);
+        }
+        helix_app_common::set_accessible_label(&row.switch, &format!("Enable alarm {}", a.name));
+        if a.active {
+            row.row.remove_css_class("alarm-inactive");
+        } else {
+            row.row.add_css_class("alarm-inactive");
+        }
+    }
+
+    /// After `dialog` closes, focuses the alarm row `key` (it may have
+    /// been rebuilt while the dialog was open), or the Add button.
+    fn focus_alarm_after(self: &Rc<Self>, dialog: &impl IsA<adw::Dialog>, key: Option<String>) {
+        let weak = Rc::downgrade(self);
+        dialog.as_ref().connect_closed(move |_| {
+            let weak = weak.clone();
+            let key = key.clone();
+            glib::idle_add_local_once(move || {
+                let Some(ui) = weak.upgrade() else { return };
+                let done = key
+                    .as_deref()
+                    .is_some_and(|k| helix_app_common::focus::focus_key(&ui.alarm_list, k));
+                if !done {
+                    ui.add_button.grab_focus();
+                }
+            });
+        });
+    }
+
     fn rebuild_alarms_rows(self: &Rc<Self>) {
         while let Some(c) = self.alarm_list.first_child() {
             self.alarm_list.remove(&c);
         }
+        self.alarm_rows.borrow_mut().clear();
         let twelve = self.twelve.get();
         let entries = self.alarms.borrow().clone();
         self.alarm_stack
@@ -1143,24 +1226,10 @@ impl Ui {
             hb.set_margin_end(12);
             let vb = gtk::Box::new(gtk::Orientation::Vertical, 2);
             vb.set_hexpand(true);
-            let t = NaiveTime::from_hms_opt(a.hour, a.minute, 0).unwrap_or_default();
-            let time = label(&tz::format_time(t, twelve), &["alarm-time", "clock-time"]);
+            let time = label("", &["alarm-time", "clock-time"]);
             time.set_xalign(0.0);
             vb.append(&time);
-            let mut parts = vec![a.name.clone()];
-            let summary = a.days.summary();
-            if !summary.is_empty() {
-                parts.push(summary);
-            }
-            match e.state {
-                RingState::Snoozed { until } => parts.push(format!(
-                    "Snoozed until {}",
-                    tz::format_time(until.with_timezone(&self.local).time(), twelve)
-                )),
-                RingState::Ringing { .. } => parts.push("Ringing".into()),
-                RingState::Idle => {}
-            }
-            let sub = label(&parts.join(" • "), &["dim-label"]);
+            let sub = label("", &["dim-label"]);
             sub.set_xalign(0.0);
             sub.set_ellipsize(gtk::pango::EllipsizeMode::End);
             vb.append(&sub);
@@ -1169,13 +1238,17 @@ impl Ui {
                 .active(a.active)
                 .valign(gtk::Align::Center)
                 .build();
-            helix_app_common::set_accessible_label(&switch, &format!("Enable alarm {}", a.name));
             helix_app_common::focus::set_part(&switch, "switch");
             hb.append(&switch);
             row.set_child(Some(&hb));
-            if !a.active {
-                row.add_css_class("alarm-inactive");
-            }
+            let widgets = AlarmRow {
+                row: row.clone(),
+                time,
+                sub,
+                switch: switch.clone(),
+            };
+            self.fill_alarm_row(&widgets, &e, twelve);
+            self.alarm_rows.borrow_mut().push((a.id.clone(), widgets));
             let id = a.id.clone();
             let weak = Rc::downgrade(self);
             switch.connect_active_notify(move |s| {
@@ -1204,10 +1277,18 @@ impl Ui {
                 }
             });
             let weak = Rc::downgrade(self);
-            let alarm = a.clone();
+            let id = a.id.clone();
             row.connect_activate(move |_| {
-                if let Some(ui) = weak.upgrade() {
-                    ui.show_alarm_dialog(Some(alarm.clone()));
+                let Some(ui) = weak.upgrade() else { return };
+                // The row may have been updated in place since it was made.
+                let alarm = ui
+                    .alarms
+                    .borrow()
+                    .iter()
+                    .find(|e| e.alarm.id == id)
+                    .map(|e| e.alarm.clone());
+                if let Some(alarm) = alarm {
+                    ui.show_alarm_dialog(Some(alarm));
                 }
             });
             self.alarm_list.append(&row);
@@ -1329,10 +1410,26 @@ impl Ui {
             let d = dialog.clone();
             delete.connect_clicked(move |_| {
                 if let Some(ui) = weak.upgrade() {
+                    let old: Vec<String> = ui
+                        .alarms
+                        .borrow()
+                        .iter()
+                        .map(|e| e.alarm.id.clone())
+                        .collect();
                     ui.dismiss_ringing(&id);
                     ui.alarms.borrow_mut().retain(|e| e.alarm.id != id);
+                    let new: Vec<String> = ui
+                        .alarms
+                        .borrow()
+                        .iter()
+                        .map(|e| e.alarm.id.clone())
+                        .collect();
                     ui.save_alarms();
                     ui.rebuild_alarms();
+                    // Back in the list: the alarm that took its place.
+                    let next = helix_app_common::focus::pick_focus(&old, &id, &new)
+                        .map(|i| new[i].clone());
+                    ui.focus_alarm_after(&d, next);
                 }
                 d.close();
             });
@@ -1384,6 +1481,7 @@ impl Ui {
                     [snooze.selected() as usize % alarm::DURATION_CHOICES.len()],
             };
             ui.dismiss_ringing(&edited.id);
+            let edited_id = edited.id.clone();
             let entry = AlarmEntry::new(edited, ui.clock.now(), &ui.local);
             {
                 let mut alarms = ui.alarms.borrow_mut();
@@ -1393,6 +1491,11 @@ impl Ui {
             }
             ui.save_alarms();
             ui.rebuild_alarms();
+            // A new time can reorder (rebuild) the list: return to the
+            // alarm's row. A new alarm leaves focus on the Add button.
+            if editing {
+                ui.focus_alarm_after(&d, Some(edited_id));
+            }
             d.close();
         });
         dialog.present(Some(&self.window));

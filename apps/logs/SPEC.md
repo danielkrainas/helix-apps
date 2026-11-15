@@ -165,3 +165,5 @@ export, `F5`/`Ctrl+R` refresh, `Ctrl+Q` quit, `Ctrl+W` close window.
 ### Accessibility
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): "No results" for a search and the "Unable to read logs" error (assertive).
+- Inputs are named: the boot drop-down "Boot", the search entry "Search
+  events" and the search-field drop-down "Search in".

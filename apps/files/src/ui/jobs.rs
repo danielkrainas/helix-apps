@@ -1,4 +1,7 @@
 //! Running file operations on worker threads with a progress popover.
+//!
+//! The popover never opens by itself (that would take keyboard focus);
+//! the header button shows the combined progress instead.
 
 use adw::prelude::*;
 use gtk::{gio, glib};
@@ -56,6 +59,78 @@ fn details(p: &Progress) -> String {
     }
 }
 
+/// Combined progress of the running jobs (the mean of their bars), or
+/// `None` when nothing runs.
+pub fn overall_fraction(jobs_box: &gtk::Box) -> Option<f64> {
+    let mut fractions = Vec::new();
+    let mut row = jobs_box.first_child();
+    while let Some(r) = row {
+        let bar = r
+            .first_child()
+            .and_then(|top| top.next_sibling())
+            .and_downcast::<gtk::ProgressBar>();
+        if let Some(bar) = bar {
+            fractions.push(bar.fraction());
+        }
+        row = r.next_sibling();
+    }
+    mean(&fractions)
+}
+
+fn mean(v: &[f64]) -> Option<f64> {
+    (!v.is_empty()).then(|| v.iter().sum::<f64>() / v.len() as f64)
+}
+
+/// The header button's tooltip and description for `fraction`.
+fn progress_text(fraction: f64) -> String {
+    format!(
+        "File Operations — {} % done",
+        (fraction.clamp(0.0, 1.0) * 100.0).floor()
+    )
+}
+
+/// Shows the combined progress on the header button: its pie icon and
+/// its tooltip and accessible description.
+fn update_indicator(w: &Window) {
+    w.jobs_icon.queue_draw();
+    let text = overall_fraction(&w.jobs_box).map(progress_text);
+    let text = text.as_deref().unwrap_or("File Operations");
+    if w.jobs_button.tooltip_text().as_deref() != Some(text) {
+        w.jobs_button.set_tooltip_text(Some(text));
+        w.jobs_button
+            .update_property(&[gtk::accessible::Property::Description(text)]);
+    }
+}
+
+/// Draws the header button's icon: a pie filled to the combined progress
+/// on a faint disc, in the button's text colour.
+pub fn draw_indicator(area: &gtk::DrawingArea, cr: &gtk::cairo::Context, jobs_box: &gtk::Box) {
+    let (w, h) = (area.width() as f64, area.height() as f64);
+    let r = w.min(h) / 2.0 - 1.0;
+    let (cx, cy) = (w / 2.0, h / 2.0);
+    let c = area.color();
+    let set = |a: f64| {
+        cr.set_source_rgba(
+            c.red() as f64,
+            c.green() as f64,
+            c.blue() as f64,
+            c.alpha() as f64 * a,
+        )
+    };
+    set(0.25);
+    cr.arc(cx, cy, r, 0.0, std::f64::consts::TAU);
+    let _ = cr.fill();
+    let f = overall_fraction(jobs_box).unwrap_or(0.0).clamp(0.0, 1.0);
+    if f > 0.0 {
+        set(1.0);
+        let start = -std::f64::consts::FRAC_PI_2;
+        cr.move_to(cx, cy);
+        cr.arc(cx, cy, r, start, start + f * std::f64::consts::TAU);
+        cr.close_path();
+        let _ = cr.fill();
+    }
+}
+
 /// Accessible name of a job's Cancel button: "Cancel Copying 3 files".
 fn cancel_name(title: &str) -> String {
     format!("Cancel {title}")
@@ -65,6 +140,7 @@ fn cancel_name(title: &str) -> String {
 /// finishes (also when cancelled).
 pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) {
     let title = job.title();
+    let summary = job.clone();
     let row = gtk::Box::new(gtk::Orientation::Vertical, 4);
     let top = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     let label = gtk::Label::builder()
@@ -97,6 +173,7 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
     row.append(&info);
     win.jobs_box.append(&row);
     win.jobs_button.set_visible(true);
+    update_indicator(win);
 
     let cancel = gio::Cancellable::new();
     let c = cancel.clone();
@@ -113,17 +190,6 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
         let _ = tx.send_blocking(Msg::Done(out));
     });
 
-    // Long-running jobs pop the progress popover open.
-    let weak = Rc::downgrade(win);
-    let pulse_row = row.clone();
-    glib::timeout_add_local_once(std::time::Duration::from_millis(1500), move || {
-        if let Some(w) = weak.upgrade() {
-            if pulse_row.parent().is_some() {
-                w.jobs_button.popup();
-            }
-        }
-    });
-
     let weak = Rc::downgrade(win);
     let mut done = Some(done);
     // Keep the application alive until the job finishes.
@@ -133,6 +199,9 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
             match msg {
                 Msg::Progress(p) => {
                     bar.set_fraction(p.fraction());
+                    if let Some(w) = weak.upgrade() {
+                        update_indicator(&w);
+                    }
                     let mut text = details(&p);
                     if !p.current.is_empty() {
                         text = format!("{text} — {}", p.current);
@@ -157,16 +226,14 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
                         w.jobs_button.popdown();
                         w.jobs_button.set_visible(false);
                     }
+                    update_indicator(&w);
                     if !out.errors.is_empty() {
                         report_errors(&w, &title, &out.errors);
                     } else if out.cancelled {
                         w.toast("Operation cancelled");
-                    } else {
-                        helix_app_common::announce(
-                            &w.window,
-                            &format!("Finished {}", lowercase_first(&title)),
-                            helix_app_common::Urgency::Polite,
-                        );
+                    } else if let Some(text) = summary.finished(out.created.len()) {
+                        // Toasts are spoken by libadwaita.
+                        w.toast(&text);
                     }
                     if let Some(d) = done.take() {
                         d(&out);
@@ -176,15 +243,6 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
             }
         }
     });
-}
-
-/// "Copying 3 items…" → "copying 3 items…", to follow "Finished".
-fn lowercase_first(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        Some(f) => f.to_lowercase().chain(c).collect(),
-        None => String::new(),
-    }
 }
 
 fn report_errors(w: &Window, title: &str, errors: &[String]) {
@@ -203,12 +261,11 @@ fn report_errors(w: &Window, title: &str, errors: &[String]) {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn finished_message() {
-        assert_eq!(
-            super::lowercase_first("Copying 2 items to “Docs”"),
-            "copying 2 items to “Docs”"
-        );
-        assert_eq!(super::lowercase_first(""), "");
+    fn combined_progress() {
+        assert_eq!(super::mean(&[]), None);
+        assert_eq!(super::mean(&[0.5, 1.0, 0.0]), Some(0.5));
+        assert_eq!(super::progress_text(0.456), "File Operations — 45 % done");
+        assert_eq!(super::progress_text(1.2), "File Operations — 100 % done");
     }
 
     #[test]

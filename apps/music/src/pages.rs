@@ -51,6 +51,34 @@ fn scrolled(child: &impl IsA<gtk::Widget>, max: i32) -> gtk::ScrolledWindow {
         .build()
 }
 
+/// Adds a button to a header's button row; the button itself, not the
+/// flow box slot around it, takes keyboard focus.
+fn add_header_button(buttons: &gtk::FlowBox, button: &impl IsA<gtk::Widget>) {
+    button.as_ref().set_halign(gtk::Align::Start);
+    buttons.append(button);
+    if let Some(slot) = button.as_ref().parent() {
+        slot.set_focusable(false);
+    }
+}
+
+/// Lays out an album or playlist header (cover, then text) side by side,
+/// or stacked with a smaller cover when the window is narrow.
+pub fn layout_header(header: &gtk::Box, narrow: bool) {
+    header.set_orientation(if narrow {
+        gtk::Orientation::Vertical
+    } else {
+        gtk::Orientation::Horizontal
+    });
+    if let Some(img) = header.first_child().and_downcast::<gtk::Image>() {
+        img.set_pixel_size(if narrow { 128 } else { 160 });
+        img.set_halign(if narrow {
+            gtk::Align::Start
+        } else {
+            gtk::Align::Fill
+        });
+    }
+}
+
 fn page(title: &str, tag: Option<&str>, content: &impl IsA<gtk::Widget>) -> adw::NavigationPage {
     let tv = adw::ToolbarView::new();
     tv.add_top_bar(&adw::HeaderBar::new());
@@ -333,6 +361,11 @@ impl App {
         for c in [&title, &artist, &album, &length, &plays] {
             cv.append_column(c);
         }
+        // Narrow windows show title, artist and length only.
+        for c in [&album, &plays] {
+            self.narrow
+                .add_setter(c, "visible", Some(&false.to_value()));
+        }
 
         // Favourite toggle.
         let f = gtk::SignalListItemFactory::new();
@@ -394,9 +427,10 @@ impl App {
                 .collect();
             app.play_tracks(&order, pos as usize, None);
         });
+        // Columns never make the window wider than it is.
         gtk::ScrolledWindow::builder()
             .child(&cv)
-            .hscrollbar_policy(gtk::PolicyType::Never)
+            .hscrollbar_policy(gtk::PolicyType::Automatic)
             .vexpand(true)
             .build()
     }
@@ -617,7 +651,7 @@ impl App {
         subtitle: &str,
         detail: &str,
         tracks: Vec<usize>,
-    ) -> (gtk::Box, gtk::Box) {
+    ) -> (gtk::Widget, gtk::FlowBox) {
         let img = gtk::Image::builder()
             .pixel_size(160)
             .css_classes(["hm-cover"])
@@ -633,8 +667,15 @@ impl App {
             info.append(&label(subtitle, &["title-4"]));
         }
         info.append(&label(detail, &["dim-label"]));
-        let buttons = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        buttons.set_margin_top(6);
+        // Wraps onto a second line when the window is narrow.
+        let buttons = gtk::FlowBox::builder()
+            .selection_mode(gtk::SelectionMode::None)
+            .column_spacing(6)
+            .row_spacing(6)
+            .margin_top(6)
+            .halign(gtk::Align::Start)
+            .max_children_per_line(8)
+            .build();
         let play = pill("Play", "media-playback-start-symbolic", true);
         let shuffle = pill("Shuffle", "media-playlist-shuffle-symbolic", false);
         play.set_sensitive(!tracks.is_empty());
@@ -651,13 +692,17 @@ impl App {
                 app.play_tracks(&tracks, 0, Some(true));
             }
         });
-        buttons.append(&play);
-        buttons.append(&shuffle);
+        add_header_button(&buttons, &play);
+        add_header_button(&buttons, &shuffle);
         info.append(&buttons);
         let header = gtk::Box::new(gtk::Orientation::Horizontal, 18);
         header.append(&img);
         header.append(&info);
-        (header, buttons)
+        // Narrow windows put the cover above the text (see
+        // `App::layout_headers`).
+        self.headers.borrow_mut().push(header.downgrade());
+        layout_header(&header, self.is_narrow());
+        (header.upcast(), buttons)
     }
 
     // ----- pages -------------------------------------------------------------
@@ -911,9 +956,9 @@ impl App {
                     app.export_playlist_dialog(&f);
                 }
             });
-            buttons.append(&rename);
-            buttons.append(&export);
-            buttons.append(&delete);
+            add_header_button(&buttons, &rename);
+            add_header_button(&buttons, &export);
+            add_header_button(&buttons, &delete);
         }
         content.append(&header);
         if tracks.is_empty() {
