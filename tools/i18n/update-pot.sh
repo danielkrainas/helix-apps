@@ -29,7 +29,10 @@ python3 tools/i18n/extract_rs.py "$tmp/rs.pot" $(cat "$tmp/rs")
 xgettext --language=Desktop --from-code=UTF-8 --add-location=file \
     -k -kName -kGenericName -kComment -kKeywords \
     -o "$tmp/desktop.pot" -f "$tmp/desktop"
-xgettext --from-code=UTF-8 --add-location=file -o "$tmp/metainfo.pot" -f "$tmp/metainfo"
+# Metainfo uses Helix's own ITS rules (tools/i18n/its), not the ones that
+# ship with gettext, which differ between versions.
+GETTEXTDATADIRS="$root/tools/i18n${GETTEXTDATADIRS:+:$GETTEXTDATADIRS}" \
+    xgettext --from-code=UTF-8 --add-location=file -o "$tmp/metainfo.pot" -f "$tmp/metainfo"
 # Rust messages keep line numbers (they help find the context);
 # desktop and metainfo ones are file-only, so regenerating them after an
 # unrelated edit does not churn.
@@ -39,8 +42,9 @@ msgcat --use-first --sort-by-file "$tmp/rs.pot" "$tmp/desktop.pot" "$tmp/metainf
 if $check; then
     status=0
     cmp -s "$tmp/POTFILES" po/POTFILES || { echo "po/POTFILES is out of date; run tools/i18n/update-pot.sh" >&2; status=1; }
-    # Compare the messages only: line numbers move with every edit.
-    strip() { grep -v '^#:' "$1"; }
+    # Compare the messages only: line numbers move with every edit, and
+    # gettext versions wrap long lines differently.
+    strip() { msgcat --no-wrap --no-location "$1"; }
     strip "$tmp/helix-apps.pot" > "$tmp/new"
     strip po/helix-apps.pot > "$tmp/old"
     cmp -s "$tmp/new" "$tmp/old" || { echo "po/helix-apps.pot is out of date; run tools/i18n/update-pot.sh" >&2; status=1; }

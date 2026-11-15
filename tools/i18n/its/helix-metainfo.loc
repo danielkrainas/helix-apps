@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!-- Helix's own extraction rules for AppStream metainfo, so every gettext
+     version extracts the same messages (older ones fall back to rules that
+     miss keywords and release notes). -->
+<locatingRules>
+  <locatingRule name="HelixMetainfo" pattern="*.metainfo.xml">
+    <documentRule localName="component" target="helix-metainfo.its"/>
+  </locatingRule>
+</locatingRules>

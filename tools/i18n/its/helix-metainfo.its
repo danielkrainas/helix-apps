@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!-- Which parts of a Helix app's metainfo are translated: the app and
+     developer names, the summary, each description paragraph and list
+     item (also in release notes), keywords and screenshot captions. -->
+<its:rules xmlns:its="http://www.w3.org/2005/11/its" version="2.0">
+  <its:translateRule selector="/*" translate="no"/>
+  <its:translateRule selector="/component/name | /component/summary | /component/developer/name | //keywords/keyword | //screenshot/caption" translate="yes"/>
+  <its:translateRule selector="//description//p | //description//li" translate="yes"/>
+  <its:withinTextRule selector="//description//em | //description//code" withinText="yes"/>
+  <its:translateRule selector="//*[@translate = 'no']" translate="no"/>
+</its:rules>
