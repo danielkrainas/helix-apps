@@ -61,6 +61,15 @@ View and edit events from local and online calendars.
   date range), a view switcher (**Week** / **Month**), search toggle and
   the primary menu (*Manage Calendars…*, *Import…*, *Keyboard Shortcuts*,
   *About Calendar*).
+- **Loading and empty states**: until the calendar list is known and
+  every enabled calendar has loaded its events (at most 4 s, so one slow
+  calendar does not hide the rest) the window shows a spinner named
+  "Loading calendars" with "Loading Calendars…"; this is announced if it
+  lasts over 0.6 s. With no enabled calendar a "No Calendars" status page
+  offers *Manage Calendars…* (announced "No calendars").
+- **Errors** from the calendar service and "Event not found" are
+  high-priority toasts that stay until dismissed (libadwaita announces
+  toasts to screen readers).
 - **Sidebar** (`AdwOverlaySplitView`, toggled with `F9`, collapses below
   800sp): a month date picker (`gtk::Calendar`) to jump to any date, the
   list of calendars with colour dots and visibility check boxes (each
@@ -231,7 +240,10 @@ month view, `Ctrl+F` search, `F9` sidebar, `Ctrl+Plus` / `Ctrl+Minus` /
 `Ctrl+0` zoom week grid, `Ctrl+I` import, `Ctrl+?` shortcuts, `Ctrl+Q`
 quit. (Bare keys such as `Home` are not bound so they keep working in
 text fields; the grid keys above only act in a focused day cell, day
-header or hour grid, and are listed in the shortcuts window.)
+header or hour grid, and are listed in the shortcuts window.) The
+shortcuts window is a `GtkShortcutsWindow` built from a table
+(`helix_app_common::shortcuts`); a unit test checks it against the
+registered accelerators.
 
 ### Command line
 - `helix-calendar [--date YYYY-MM-DD] [--uuid UID] [FILE.ics…]`.

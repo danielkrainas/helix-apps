@@ -226,6 +226,16 @@ impl Tab {
         let status = adw::StatusPage::new();
         status.set_visible(false);
         status.set_can_target(false);
+        // Shown (and the page made clickable) only for a folder error.
+        let retry = gtk::Button::builder()
+            .label("_Try Again")
+            .use_underline(true)
+            .action_name("win.reload")
+            .halign(gtk::Align::Center)
+            .visible(false)
+            .build();
+        retry.add_css_class("pill");
+        status.set_child(Some(&retry));
         root.add_overlay(&status);
         let spinner = gtk::Spinner::new();
         helix_app_common::set_accessible_label(&spinner, "Loading folder");
@@ -906,6 +916,15 @@ impl Tab {
         );
     }
 
+    /// Shows or hides the status page's "Try Again" button; the page only
+    /// takes pointer input while it is shown, so it never blocks the view.
+    fn set_status_retry(&self, show: bool) {
+        if let Some(retry) = self.status.child() {
+            retry.set_visible(show);
+        }
+        self.status.set_can_target(show);
+    }
+
     fn update_status(&self) {
         let loading = self.is_loading();
         self.spinner.set_visible(loading);
@@ -920,6 +939,7 @@ impl Tab {
                 self.status.set_icon_name(Some("dialog-error-symbolic"));
                 self.status.set_title("Unable to Open Folder");
                 self.status.set_description(Some(err.message()));
+                self.set_status_retry(true);
                 self.status.set_visible(true);
                 if !self.error_shown.replace(true) {
                     helix_app_common::announce(
@@ -932,6 +952,7 @@ impl Tab {
             }
         }
         self.error_shown.set(false);
+        self.set_status_retry(false);
         if empty && !loading {
             if self.is_searching() {
                 self.status.set_icon_name(Some("system-search-symbolic"));

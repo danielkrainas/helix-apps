@@ -278,6 +278,11 @@ fn permissions_group(
             (Perm::Execute, "Execute"),
         ] {
             let check = gtk::CheckButton::with_label(plabel);
+            // The visible label is just "Read"; say whose permission it is.
+            helix_app_common::set_accessible_label(
+                &check,
+                &format!("{label} {}", plabel.to_lowercase()),
+            );
             check.set_active(mode.get() & fmt::mode_bit(who, perm) != 0);
             check.set_sensitive(editable);
             let mode = mode.clone();

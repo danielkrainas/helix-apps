@@ -116,6 +116,24 @@ struct WeekLayout {
     labels: Vec<(gtk::Label, i32)>,
 }
 
+/// Window accelerators: (action, keys). The Keyboard Shortcuts window
+/// lists every one of them (checked by a test in `shortcuts`).
+pub const ACCELS: &[(&str, &[&str])] = &[
+    ("win.new-event", &["<Control>n"]),
+    ("win.today", &["<Control>t"]),
+    ("win.previous", &["<Alt>Left"]),
+    ("win.next", &["<Alt>Right"]),
+    ("win.week-view", &["<Control>1"]),
+    ("win.month-view", &["<Control>2"]),
+    ("win.search", &["<Control>f"]),
+    ("win.sidebar", &["F9"]),
+    ("win.zoom-in", &["<Control>plus", "<Control>equal"]),
+    ("win.zoom-out", &["<Control>minus"]),
+    ("win.zoom-reset", &["<Control>0"]),
+    ("win.import", &["<Control>i"]),
+    ("win.shortcuts", &["<Control>question"]),
+];
+
 pub struct Ui {
     pub window: adw::ApplicationWindow,
     prefs: Prefs,
@@ -143,6 +161,9 @@ pub struct Ui {
     month_toggle: gtk::ToggleButton,
     view_stack: gtk::Stack,
     main_stack: gtk::Stack,
+    /// Stop waiting on the loading page for calendars still loading.
+    load_timed_out: Cell<bool>,
+    load_timer_started: Cell<bool>,
     month_box: gtk::Box,
     week_header: gtk::Box,
     week_scroll: gtk::ScrolledWindow,
@@ -423,9 +444,41 @@ impl Ui {
             .build();
         unavailable_page.set_child(Some(&retry));
 
+        let spinner = gtk::Spinner::builder()
+            .spinning(true)
+            .width_request(32)
+            .height_request(32)
+            .build();
+        helix_app_common::set_accessible_label(&spinner, "Loading calendars");
+        let loading_page = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(12)
+            .halign(gtk::Align::Center)
+            .valign(gtk::Align::Center)
+            .build();
+        loading_page.append(&spinner);
+        loading_page.append(&label("Loading Calendars…", &["dim-label"]));
+        let no_calendars = adw::StatusPage::builder()
+            .icon_name("x-office-calendar-symbolic")
+            .title("No Calendars")
+            .description("Add or enable a calendar to see and create events")
+            .build();
+        let manage = gtk::Button::builder()
+            .label("_Manage Calendars…")
+            .use_underline(true)
+            .action_name("win.manage")
+            .css_classes(["pill", "suggested-action"])
+            .halign(gtk::Align::Center)
+            .build();
+        no_calendars.set_child(Some(&manage));
+
         let main_stack = gtk::Stack::new();
         main_stack.add_named(&split, Some("main"));
         main_stack.add_named(&unavailable_page, Some("unavailable"));
+        main_stack.add_named(&loading_page, Some("loading"));
+        main_stack.add_named(&no_calendars, Some("no-calendars"));
+        // Until the calendars are known and their events loaded.
+        main_stack.set_visible_child_name("loading");
 
         // Narrow windows: Today, previous/next and the view switcher move
         // to a bottom bar so the header fits 360 px.
@@ -545,6 +598,8 @@ impl Ui {
             month_toggle,
             view_stack,
             main_stack,
+            load_timed_out: Cell::new(false),
+            load_timer_started: Cell::new(false),
             month_box,
             week_header,
             week_scroll,
@@ -576,6 +631,19 @@ impl Ui {
         }
         ui.connect(retry);
         ui.install_actions();
+        // Say that calendars are loading if that takes noticeably long.
+        let stack = ui.main_stack.downgrade();
+        glib::timeout_add_local_once(std::time::Duration::from_millis(600), move || {
+            if let Some(stack) = stack.upgrade() {
+                if stack.visible_child_name().as_deref() == Some("loading") {
+                    helix_app_common::announce(
+                        &stack,
+                        "Loading calendars",
+                        helix_app_common::Urgency::Polite,
+                    );
+                }
+            }
+        });
         let weak = Rc::downgrade(&ui);
         glib::spawn_future_local(async move {
             while let Ok(msg) = rx.recv().await {
@@ -772,7 +840,7 @@ impl Ui {
         let w = &self.window;
         let app = w.application().expect("app");
         type F = Box<dyn Fn(&Rc<Ui>)>;
-        let add = |name: &str, accels: &[&str], f: F| {
+        let add = |name: &str, f: F| {
             let a = gio::SimpleAction::new(name, None);
             let weak = Rc::downgrade(self);
             a.connect_activate(move |_, _| {
@@ -781,35 +849,25 @@ impl Ui {
                 }
             });
             w.add_action(&a);
-            if !accels.is_empty() {
-                app.set_accels_for_action(&format!("win.{name}"), accels);
+            let detailed = format!("win.{name}");
+            if let Some((_, keys)) = ACCELS.iter().find(|(a, _)| *a == detailed) {
+                app.set_accels_for_action(&detailed, keys);
             }
         };
         add(
             "new-event",
-            &["<Control>n"],
             Box::new(|ui| ui.new_event_on(ui.selected.get(), false)),
         );
-        add(
-            "today",
-            &["<Control>t"],
-            Box::new(|ui| ui.navigate_to(today())),
-        );
-        add("previous", &["<Alt>Left"], Box::new(|ui| ui.step(-1)));
-        add("next", &["<Alt>Right"], Box::new(|ui| ui.step(1)));
-        add(
-            "week-view",
-            &["<Control>1"],
-            Box::new(|ui| ui.week_toggle.set_active(true)),
-        );
+        add("today", Box::new(|ui| ui.navigate_to(today())));
+        add("previous", Box::new(|ui| ui.step(-1)));
+        add("next", Box::new(|ui| ui.step(1)));
+        add("week-view", Box::new(|ui| ui.week_toggle.set_active(true)));
         add(
             "month-view",
-            &["<Control>2"],
             Box::new(|ui| ui.month_toggle.set_active(true)),
         );
         add(
             "search",
-            &["<Control>f"],
             Box::new(|ui| {
                 ui.search_bar.set_search_mode(true);
                 ui.search.grab_focus();
@@ -817,30 +875,16 @@ impl Ui {
         );
         add(
             "sidebar",
-            &["F9"],
             Box::new(|ui| ui.split.set_show_sidebar(!ui.split.shows_sidebar())),
         );
-        add(
-            "zoom-in",
-            &["<Control>plus", "<Control>equal"],
-            Box::new(|ui| ui.set_zoom(ui.zoom.get() * 1.25)),
-        );
-        add(
-            "zoom-out",
-            &["<Control>minus"],
-            Box::new(|ui| ui.set_zoom(ui.zoom.get() / 1.25)),
-        );
-        add(
-            "zoom-reset",
-            &["<Control>0"],
-            Box::new(|ui| ui.set_zoom(1.0)),
-        );
-        add("manage", &[], Box::new(crate::manage::open));
-        add("import", &["<Control>i"], Box::new(|ui| ui.choose_import()));
+        add("zoom-in", Box::new(|ui| ui.set_zoom(ui.zoom.get() * 1.25)));
+        add("zoom-out", Box::new(|ui| ui.set_zoom(ui.zoom.get() / 1.25)));
+        add("zoom-reset", Box::new(|ui| ui.set_zoom(1.0)));
+        add("manage", Box::new(crate::manage::open));
+        add("import", Box::new(|ui| ui.choose_import()));
         add(
             "shortcuts",
-            &["<Control>question"],
-            Box::new(|ui| show_shortcuts(&ui.window)),
+            Box::new(|ui| crate::shortcuts::show(&ui.window)),
         );
     }
 
@@ -848,6 +892,65 @@ impl Ui {
 
     pub fn toast(&self, text: &str) {
         self.toasts.add_toast(adw::Toast::new(text));
+    }
+
+    /// A failure: shown at once (not queued behind other toasts) and kept
+    /// until dismissed. libadwaita announces toasts to screen readers.
+    pub fn error_toast(&self, text: &str) {
+        let toast = adw::Toast::builder()
+            .title(glib::markup_escape_text(text).as_str())
+            .priority(adw::ToastPriority::High)
+            .timeout(0)
+            .build();
+        self.toasts.add_toast(toast);
+    }
+
+    /// Picks the main page: loading until the calendars are known and
+    /// have loaded (at most a few seconds), "No Calendars" when none is
+    /// enabled, else the views. Never goes back to loading.
+    fn update_main_page(self: &Rc<Self>) {
+        let current = self.main_stack.visible_child_name();
+        let (page, waiting) = {
+            let st = self.state.borrow();
+            if st.unavailable {
+                return;
+            }
+            let cals: Vec<&Source> = st
+                .sources
+                .iter()
+                .filter(|s| s.is(SourceKind::Calendar) && s.enabled())
+                .collect();
+            let all_loaded = cals.iter().all(|s| st.loaded.contains(&s.uid));
+            let loading = current.as_deref() == Some("loading");
+            if cals.is_empty() {
+                ("no-calendars", false)
+            } else if loading && !all_loaded && !self.load_timed_out.get() {
+                ("loading", true)
+            } else {
+                ("main", false)
+            }
+        };
+        if waiting && !self.load_timer_started.replace(true) {
+            // A calendar that never finishes loading must not hide the rest.
+            let weak = Rc::downgrade(self);
+            glib::timeout_add_local_once(std::time::Duration::from_secs(4), move || {
+                if let Some(ui) = weak.upgrade() {
+                    ui.load_timed_out.set(true);
+                    ui.update_main_page();
+                }
+            });
+        }
+        if current.as_deref() == Some(page) {
+            return;
+        }
+        self.main_stack.set_visible_child_name(page);
+        if page == "no-calendars" {
+            helix_app_common::announce(
+                &self.main_stack,
+                "No calendars",
+                helix_app_common::Urgency::Polite,
+            );
+        }
     }
 
     pub fn twelve(&self) -> bool {
@@ -1004,12 +1107,12 @@ impl Ui {
                 self.state.borrow_mut().unavailable = true;
             }
             Msg::Sources(sources) => {
-                self.main_stack.set_visible_child_name("main");
                 {
                     let mut st = self.state.borrow_mut();
                     st.unavailable = false;
                     st.sources = sources;
                 }
+                self.update_main_page();
                 self.update_color_css();
                 self.render_calendar_list();
                 self.schedule_render();
@@ -1024,6 +1127,7 @@ impl Ui {
                 st.gens.remove(&uid);
                 st.loaded.remove(&uid);
                 drop(st);
+                self.update_main_page();
                 self.schedule_render();
             }
             Msg::Reset { cal, gen } => {
@@ -1059,6 +1163,7 @@ impl Ui {
                         "calendar {cal} loaded with {n} components"
                     );
                     self.state.borrow_mut().loaded.insert(cal);
+                    self.update_main_page();
                     self.apply_startup();
                 }
             }
@@ -1096,13 +1201,13 @@ impl Ui {
                         },
                     );
                 }
-                None => self.toast("Event not found"),
+                None => self.error_toast("Event not found"),
             },
             Msg::Imported(n) => self.toast(&format!(
                 "Imported {n} event{}",
                 if n == 1 { "" } else { "s" }
             )),
-            Msg::Error(e) => self.toast(&e),
+            Msg::Error(e) => self.error_toast(&e),
         }
     }
 
@@ -2334,53 +2439,4 @@ impl Ui {
             glib::ControlFlow::Break
         });
     }
-}
-
-fn show_shortcuts(win: &adw::ApplicationWindow) {
-    let rows = [
-        ("New event on the selected day", "Ctrl+N"),
-        (
-            "Move between days (month view, week day headers)",
-            "Arrows, Home, End",
-        ),
-        (
-            "Previous / next month (month view), week (week view)",
-            "Page Up / Page Down",
-        ),
-        ("Select the focused day", "Enter"),
-        (
-            "Move the week grid's time cursor",
-            "Arrows, Home, End, Page Up / Page Down",
-        ),
-        ("New event at the week grid's time cursor", "Enter"),
-        ("Go to today", "Ctrl+T"),
-        ("Previous", "Alt+Left"),
-        ("Next", "Alt+Right"),
-        ("Week view", "Ctrl+1"),
-        ("Month view", "Ctrl+2"),
-        ("Search", "Ctrl+F"),
-        ("Toggle sidebar", "F9"),
-        ("Zoom week grid", "Ctrl+Plus / Ctrl+Minus / Ctrl+0"),
-        ("Import", "Ctrl+I"),
-        ("Keyboard shortcuts", "Ctrl+?"),
-        ("Quit", "Ctrl+Q"),
-    ];
-    let group = adw::PreferencesGroup::new();
-    for (title, keys) in rows {
-        let row = adw::ActionRow::builder().title(title).build();
-        row.add_suffix(
-            &gtk::Label::builder()
-                .label(keys)
-                .css_classes(["dim-label"])
-                .build(),
-        );
-        group.add(&row);
-    }
-    let page = adw::PreferencesPage::new();
-    page.add(&group);
-    let dialog = adw::PreferencesDialog::builder()
-        .title("Keyboard Shortcuts")
-        .build();
-    dialog.add(&page);
-    dialog.present(Some(win));
 }

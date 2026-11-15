@@ -255,9 +255,9 @@ pub fn split_list(text: &str) -> Vec<String> {
         .collect()
 }
 
-/// Whether a key combination may become a command's key: with Ctrl, Alt or
-/// Super, or a function key alone (`key` is the key's name, as GDK names it).
-pub fn shortcut_allowed(key: &str, ctrl_alt_super: bool) -> bool {
+/// Whether `key` (as GDK names it) is a modifier or lock key, which only
+/// starts a combination.
+pub fn is_modifier_key(key: &str) -> bool {
     const MODIFIERS: [&str; 9] = [
         "Shift",
         "Control",
@@ -269,7 +269,13 @@ pub fn shortcut_allowed(key: &str, ctrl_alt_super: bool) -> bool {
         "Caps_Lock",
         "Num_Lock",
     ];
-    if key.is_empty() || MODIFIERS.iter().any(|m| key.starts_with(m)) {
+    MODIFIERS.iter().any(|m| key.starts_with(m))
+}
+
+/// Whether a key combination may become a command's key: with Ctrl, Alt or
+/// Super, or a function key alone (`key` is the key's name, as GDK names it).
+pub fn shortcut_allowed(key: &str, ctrl_alt_super: bool) -> bool {
+    if key.is_empty() || is_modifier_key(key) {
         return false;
     }
     let function = key.len() > 1 && key.starts_with('F') && key[1..].parse::<u32>().is_ok();
@@ -525,6 +531,7 @@ mod tests {
         assert!(!shortcut_allowed("t", false));
         assert!(!shortcut_allowed("Control_L", true));
         assert!(!shortcut_allowed("Fa", false));
+        assert!(is_modifier_key("Shift_L") && !is_modifier_key("t"));
     }
 
     #[test]

@@ -1,10 +1,12 @@
 //! Helix Contacts.
 
 mod backend;
+mod datefield;
 mod editor;
 mod folks;
 mod individual;
 mod links;
+mod shortcuts;
 mod ui;
 
 use gtk::glib;

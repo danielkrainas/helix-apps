@@ -3,7 +3,7 @@
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use helix_app_common::Prefs;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -42,6 +42,7 @@ fn install_css() {
          .wallpaper-button { padding: 3px; border-radius: 10px; }
          .wallpaper-button picture { border-radius: 8px; }
          .wallpaper-button.current { box-shadow: 0 0 0 3px @accent_bg_color; }
+         .wallpaper-check { background: @accent_bg_color; color: @accent_fg_color; border-radius: 9999px; padding: 4px; margin: 8px; }
         ",
     );
     for (nick, _, hex) in ACCENT_COLORS {
@@ -266,24 +267,59 @@ fn path_uri(path: &Path) -> String {
         .unwrap_or_default()
 }
 
+/// One background tile.
+struct Tile {
+    wp: Wallpaper,
+    /// A toggle button, so assistive technology reads the current
+    /// background as "pressed".
+    button: gtk::ToggleButton,
+    picture: gtk::Picture,
+    /// Check mark on the current background (not shown by colour alone).
+    check: gtk::Image,
+}
+
 struct Background {
     prefs: Prefs,
     flow: gtk::FlowBox,
-    items: RefCell<Vec<(Wallpaper, gtk::Button, gtk::Picture)>>,
+    /// "No Backgrounds Found", shown when the grid is empty.
+    empty: gtk::Label,
+    items: RefCell<Vec<Tile>>,
     thumbs: async_channel::Sender<PathBuf>,
+    /// Set while the tiles' states are updated from the settings.
+    updating: Cell<bool>,
+    /// The background folders have been read.
+    scanned: Cell<bool>,
+}
+
+/// Accessible name of a background tile: its name, and whether it comes
+/// as a light and dark pair.
+fn tile_name(name: &str, pair: bool) -> String {
+    if pair {
+        format!("{name}, light and dark variants")
+    } else {
+        name.to_string()
+    }
 }
 
 impl Background {
     fn refresh_current(&self) {
         let light = uri_path(&self.prefs.get::<String>("picture-uri", String::new()));
         let dark = uri_path(&self.prefs.get::<String>("picture-uri-dark", String::new()));
-        for (wp, button, _) in self.items.borrow().iter() {
-            if wallpaper::is_current(wp, light.as_deref(), dark.as_deref()) {
-                button.add_css_class("current");
+        self.updating.set(true);
+        for t in self.items.borrow().iter() {
+            let current = wallpaper::is_current(&t.wp, light.as_deref(), dark.as_deref());
+            t.button.set_active(current);
+            t.check.set_visible(current);
+            if current {
+                t.button.add_css_class("current");
             } else {
-                button.remove_css_class("current");
+                t.button.remove_css_class("current");
             }
         }
+        self.updating.set(false);
+        let empty = self.scanned.get() && self.items.borrow().is_empty();
+        self.empty.set_visible(empty);
+        self.flow.set_visible(!empty);
     }
 
     fn apply(&self, wp: &Wallpaper) {
@@ -306,28 +342,50 @@ impl Background {
             .and_then(|s| s.to_str())
             .unwrap_or("Wallpaper")
             .replace('_', " ");
-        let button = gtk::Button::builder()
-            .child(&picture)
+        let check = gtk::Image::builder()
+            .icon_name("object-select-symbolic")
+            .halign(gtk::Align::End)
+            .valign(gtk::Align::Start)
+            .css_classes(["wallpaper-check"])
+            .accessible_role(gtk::AccessibleRole::Presentation)
+            .visible(false)
+            .build();
+        let overlay = gtk::Overlay::builder().child(&picture).build();
+        overlay.add_overlay(&check);
+        let button = gtk::ToggleButton::builder()
+            .child(&overlay)
             .css_classes(["flat", "wallpaper-button"])
             .tooltip_text(&name)
             .build();
-        helix_app_common::set_accessible_label(&button, &name);
+        helix_app_common::set_accessible_label(&button, &tile_name(&name, wp.dark.is_some()));
         let weak = Rc::downgrade(self);
         let wp2 = wp.clone();
-        button.connect_clicked(move |_| {
-            if let Some(this) = weak.upgrade() {
+        button.connect_toggled(move |b| {
+            let Some(this) = weak.upgrade() else { return };
+            if this.updating.get() {
+                return;
+            }
+            if b.is_active() {
                 this.apply(&wp2);
+            } else {
+                // Pressing the current background keeps it current.
+                this.refresh_current();
             }
         });
         flow_append(&self.flow, &button);
         let _ = self.thumbs.send_blocking(wp.light.clone());
-        self.items.borrow_mut().push((wp, button, picture));
+        self.items.borrow_mut().push(Tile {
+            wp,
+            button,
+            picture,
+            check,
+        });
     }
 
     fn set_thumbnail(&self, path: &Path, texture: &gdk::Texture) {
-        for (wp, _, picture) in self.items.borrow().iter() {
-            if wp.light == path {
-                picture.set_paintable(Some(texture));
+        for t in self.items.borrow().iter() {
+            if t.wp.light == path {
+                t.picture.set_paintable(Some(texture));
             }
         }
     }
@@ -364,6 +422,18 @@ fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
         .max_children_per_line(6)
         .build();
     group.add(&flow);
+    let empty = gtk::Label::builder()
+        .label("No Backgrounds Found")
+        .wrap(true)
+        .margin_top(12)
+        .margin_bottom(12)
+        .css_classes(["dim-label"])
+        .visible(false)
+        .build();
+    empty.update_property(&[gtk::accessible::Property::Description(
+        "Add a picture with Add Picture…",
+    )]);
+    group.add(&empty);
 
     // Thumbnail worker: paths in, pixel data out.
     let (path_tx, path_rx) = async_channel::unbounded::<PathBuf>();
@@ -379,8 +449,11 @@ fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
     let bg = Rc::new(Background {
         prefs: prefs.clone(),
         flow,
+        empty,
         items: RefCell::default(),
         thumbs: path_tx,
+        updating: Cell::new(false),
+        scanned: Cell::new(false),
     });
     let weak = Rc::downgrade(&bg);
     glib::spawn_future_local(async move {
@@ -412,6 +485,7 @@ fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
                 for wp in wps {
                     bg.add(wp);
                 }
+                bg.scanned.set(true);
                 bg.refresh_current();
             },
         );
@@ -475,4 +549,16 @@ fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
         });
     });
     group
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn pairs_are_described() {
+        assert_eq!(
+            super::tile_name("Adwaita", true),
+            "Adwaita, light and dark variants"
+        );
+        assert_eq!(super::tile_name("Beach", false), "Beach");
+    }
 }

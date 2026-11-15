@@ -29,6 +29,16 @@ pub struct Options {
     pub files: Vec<std::path::PathBuf>,
 }
 
+/// Window accelerators: (action, keys). The Keyboard Shortcuts window
+/// lists every one of them (checked by a test in `shortcuts`).
+pub const ACCELS: &[(&str, &[&str])] = &[
+    ("win.new-contact", &["<Control>n"]),
+    ("win.edit", &["<Control>e"]),
+    ("win.search", &["<Control>f"]),
+    ("win.import", &["<Control>i"]),
+    ("win.shortcuts", &["<Control>question"]),
+];
+
 pub fn run(opts: Options) -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
     helix_app_common::install_standard_actions(&app, "Contacts", "Manage your contacts");
@@ -245,13 +255,25 @@ impl Ui {
         empty_box.append(&import);
         empty.set_child(Some(&empty_box));
         list_stack.add_named(&empty, Some("empty"));
-        let loading = gtk::Spinner::builder()
+        let spinner = gtk::Spinner::builder()
             .spinning(true)
             .width_request(32)
             .height_request(32)
+            .build();
+        helix_app_common::set_accessible_label(&spinner, "Loading contacts");
+        let loading = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(12)
             .halign(gtk::Align::Center)
             .valign(gtk::Align::Center)
             .build();
+        loading.append(&spinner);
+        loading.append(
+            &gtk::Label::builder()
+                .label("Loading Contacts…")
+                .css_classes(["dim-label"])
+                .build(),
+        );
         list_stack.add_named(&loading, Some("loading"));
         list_stack.set_visible_child_name("loading");
 
@@ -275,6 +297,9 @@ impl Ui {
         action_bar.set_revealed(false);
 
         let side_view = adw::ToolbarView::new();
+        // Typing while the contact list (or anything else in the sidebar)
+        // has focus starts a search.
+        search.set_key_capture_widget(Some(&side_view));
         side_view.add_top_bar(&side_header);
         side_view.add_top_bar(&search_box);
         side_view.set_content(Some(&list_stack));
@@ -401,6 +426,20 @@ impl Ui {
             ui.search.set_text(q);
         }
         ui.show_placeholder();
+        // Say that contacts are loading if that takes noticeably long (the
+        // finished state is announced from `refresh_list_rows`).
+        let stack = ui.list_stack.downgrade();
+        glib::timeout_add_local_once(std::time::Duration::from_millis(600), move || {
+            if let Some(stack) = stack.upgrade() {
+                if stack.visible_child_name().as_deref() == Some("loading") {
+                    helix_app_common::announce(
+                        &stack,
+                        "Loading contacts",
+                        helix_app_common::Urgency::Polite,
+                    );
+                }
+            }
+        });
         ui.connect(retry);
         let weak = Rc::downgrade(&ui);
         glib::spawn_future_local(async move {
@@ -411,9 +450,6 @@ impl Ui {
                 }
             }
         });
-        for f in &opts.files {
-            ui.import_file(f.clone());
-        }
         ui
     }
 
@@ -563,7 +599,7 @@ impl Ui {
     fn install_actions(self: &Rc<Self>) {
         let w = &self.window;
         let app = w.application().expect("app");
-        let add = |name: &str, accels: &[&str], f: ActionFn| {
+        let add = |name: &str, f: ActionFn| {
             let a = gio::SimpleAction::new(name, None);
             let weak = Rc::downgrade(self);
             a.connect_activate(move |_, _| {
@@ -572,33 +608,27 @@ impl Ui {
                 }
             });
             w.add_action(&a);
-            if !accels.is_empty() {
-                app.set_accels_for_action(&format!("win.{name}"), accels);
+            let detailed = format!("win.{name}");
+            if let Some((_, keys)) = ACCELS.iter().find(|(a, _)| *a == detailed) {
+                app.set_accels_for_action(&detailed, keys);
             }
         };
-        add(
-            "new-contact",
-            &["<Control>n"],
-            Box::new(|ui| ui.new_contact(None)),
-        );
-        add("edit", &["<Control>e"], Box::new(|ui| ui.start_edit()));
+        add("new-contact", Box::new(|ui| ui.new_contact(None)));
+        add("edit", Box::new(|ui| ui.start_edit()));
         add(
             "search",
-            &["<Control>f"],
             Box::new(|ui| {
                 ui.split.set_show_content(false);
                 ui.search.grab_focus();
             }),
         );
-        add("import", &["<Control>i"], Box::new(|ui| ui.choose_import()));
+        add("import", Box::new(|ui| ui.choose_import()));
         add(
             "shortcuts",
-            &["<Control>question"],
-            Box::new(|ui| show_shortcuts(&ui.window)),
+            Box::new(|ui| crate::shortcuts::show(&ui.window)),
         );
         add(
             "delete-contact",
-            &[],
             Box::new(|ui| {
                 if let Some(ind) = ui.selected_individual() {
                     ui.delete_keys(ind.members.clone());
@@ -607,7 +637,6 @@ impl Ui {
         );
         add(
             "unlink",
-            &[],
             Box::new(|ui| {
                 if let Some(ind) = ui.selected_individual() {
                     let external = ui.external_links.borrow().clone();
@@ -622,7 +651,6 @@ impl Ui {
         );
         add(
             "export-contact",
-            &[],
             Box::new(|ui| {
                 if let Some(ind) = ui.selected_individual() {
                     ui.export(vec![ind.contact.clone()]);
@@ -1038,7 +1066,34 @@ impl Ui {
         } else {
             "loading"
         };
+        let was = self.list_stack.visible_child_name();
         self.list_stack.set_visible_child_name(page);
+        if was.as_deref() != Some(page) {
+            match (was.as_deref(), page) {
+                (_, "loading") => helix_app_common::announce(
+                    &self.list_stack,
+                    "Loading contacts",
+                    helix_app_common::Urgency::Polite,
+                ),
+                (Some("loading"), "empty") => helix_app_common::announce(
+                    &self.list_stack,
+                    "No contacts",
+                    helix_app_common::Urgency::Polite,
+                ),
+                (Some("loading"), "list") => {
+                    let n = self.state.borrow().individuals.len();
+                    helix_app_common::announce(
+                        &self.list_stack,
+                        &match n {
+                            1 => "1 contact loaded".to_string(),
+                            n => format!("{n} contacts loaded"),
+                        },
+                        helix_app_common::Urgency::Polite,
+                    );
+                }
+                _ => {}
+            }
+        }
         if !query.trim().is_empty() {
             let text = match shown.len() {
                 0 => "No results".to_string(),
@@ -1124,11 +1179,21 @@ impl Ui {
     }
 
     fn show_placeholder(&self) {
-        let page = adw::StatusPage::builder()
-            .icon_name("avatar-default-symbolic")
-            .title("Select a Contact")
-            .build();
-        self.content_body.set_child(Some(&page));
+        // With no contacts (or none loaded yet) the sidebar says so; an
+        // empty content pane avoids the contradictory "Select a Contact".
+        let has_contacts = !matches!(
+            self.list_stack.visible_child_name().as_deref(),
+            Some("empty" | "loading")
+        );
+        if has_contacts {
+            let page = adw::StatusPage::builder()
+                .icon_name("avatar-default-symbolic")
+                .title("Select a Contact")
+                .build();
+            self.content_body.set_child(Some(&page));
+        } else {
+            self.content_body.set_child(None::<&gtk::Widget>);
+        }
         self.content_page.set_title("Contact");
         self.set_header_mode(false, None);
     }
@@ -1194,7 +1259,7 @@ impl Ui {
                 g.add(&self.value_row(
                     &e.value,
                     vcard::generic_label(&e.types),
-                    Some(format!("mailto:{}", e.value)),
+                    Some((RowAction::Email, format!("mailto:{}", e.value))),
                 ));
             }
             page.append(&g);
@@ -1207,7 +1272,11 @@ impl Ui {
                     .chars()
                     .filter(|ch| ch.is_ascii_digit() || *ch == '+')
                     .collect();
-                g.add(&self.value_row(&p.value, phone_label(p), Some(format!("tel:{tel}"))));
+                g.add(&self.value_row(
+                    &p.value,
+                    phone_label(p),
+                    Some((RowAction::Call, format!("tel:{tel}"))),
+                ));
             }
             page.append(&g);
         }
@@ -1218,7 +1287,7 @@ impl Ui {
                 g.add(&self.value_row(
                     &a.formatted(),
                     vcard::generic_label(&a.types),
-                    Some(format!("geo:0,0?q={q}")),
+                    Some((RowAction::Map, format!("geo:0,0?q={q}"))),
                 ));
             }
             page.append(&g);
@@ -1231,7 +1300,11 @@ impl Ui {
                 } else {
                     format!("https://{}", u.value)
                 };
-                g.add(&self.value_row(&u.value, vcard::generic_label(&u.types), Some(uri)));
+                g.add(&self.value_row(
+                    &u.value,
+                    vcard::generic_label(&u.types),
+                    Some((RowAction::Website, uri)),
+                ));
             }
             page.append(&g);
         }
@@ -1297,13 +1370,57 @@ impl Ui {
         self.content_body.set_child(Some(&scroll));
     }
 
-    fn value_row(&self, value: &str, kind: &str, uri: Option<String>) -> adw::ActionRow {
+    /// A detail row: the value, its type, a Copy button and, for values
+    /// that can be opened, a labelled button for that (activating the row
+    /// does the same).
+    fn value_row(
+        &self,
+        value: &str,
+        kind: &str,
+        action: Option<(RowAction, String)>,
+    ) -> adw::ActionRow {
         let row = adw::ActionRow::builder()
             .title(glib::markup_escape_text(value).as_str())
             .subtitle(kind)
             .css_classes(["property"])
             .build();
         row.set_title_selectable(true);
+        if let Some((action, uri)) = action {
+            let open = gtk::Button::builder()
+                .icon_name(action.icon())
+                .tooltip_text(action.label())
+                .css_classes(["flat"])
+                .valign(gtk::Align::Center)
+                .build()
+                .labelled(action.label());
+            // Read with the row, e.g. "jane@example.org, Work, Send Email".
+            row.update_property(&[gtk::accessible::Property::Description(action.label())]);
+            let launch: Rc<dyn Fn()> = {
+                let w = self.window.clone();
+                let toasts = self.toasts.clone();
+                Rc::new(move || {
+                    let toasts = toasts.clone();
+                    gtk::UriLauncher::new(&uri).launch(
+                        Some(&w),
+                        None::<&gio::Cancellable>,
+                        move |res| {
+                            if let Err(e) = res {
+                                if !e.matches(gtk::DialogError::Dismissed)
+                                    && !e.matches(gtk::DialogError::Cancelled)
+                                {
+                                    toasts.add_toast(adw::Toast::new(action.failure()));
+                                }
+                            }
+                        },
+                    );
+                })
+            };
+            let l = launch.clone();
+            open.connect_clicked(move |_| l());
+            row.add_suffix(&open);
+            row.set_activatable(true);
+            row.connect_activated(move |_| launch());
+        }
         let copy = gtk::Button::builder()
             .icon_name("edit-copy-symbolic")
             .tooltip_text("Copy")
@@ -1319,13 +1436,6 @@ impl Ui {
             toasts.add_toast(adw::Toast::new("Copied to clipboard"));
         });
         row.add_suffix(&copy);
-        if let Some(uri) = uri {
-            row.set_activatable(true);
-            let w = self.window.clone();
-            row.connect_activated(move |_| {
-                gtk::UriLauncher::new(&uri).launch(Some(&w), None::<&gio::Cancellable>, |_| {});
-            });
-        }
         row
     }
 
@@ -1424,6 +1534,8 @@ impl Ui {
             let contact = match ed.collect() {
                 Ok(c) => c,
                 Err(e) => {
+                    // An invalid date is marked inline; take the user there.
+                    ed.focus_invalid();
                     self.toast(&e);
                     return;
                 }
@@ -1701,7 +1813,8 @@ impl Ui {
         dialog.present(Some(&self.window));
     }
 
-    /// Applies `--individual` / `--email` once the books are loaded.
+    /// Applies `--individual` / `--email` and imports files given on the
+    /// command line once the books are loaded.
     fn apply_startup(self: &Rc<Self>) {
         let all_loaded = {
             let st = self.state.borrow();
@@ -1753,6 +1866,11 @@ impl Ui {
                 None => self.new_contact(Some(email)),
             }
         }
+        // vCard files given on the command line go into the default book,
+        // which is only known once the books are open.
+        for f in &opts.files {
+            self.import_file(f.clone());
+        }
     }
 }
 
@@ -1780,36 +1898,44 @@ fn format_vcard_date(v: &str) -> Option<String> {
     })
 }
 
-fn show_shortcuts(win: &adw::ApplicationWindow) {
-    let rows = [
-        ("New contact", "Ctrl+N"),
-        ("Edit contact", "Ctrl+E"),
-        ("Delete contact", "Delete"),
-        ("Search", "Ctrl+F"),
-        ("Import", "Ctrl+I"),
-        ("Cancel / leave selection", "Escape"),
-        ("Keyboard shortcuts", "Ctrl+?"),
-        ("Close window", "Ctrl+W"),
-        ("Quit", "Ctrl+Q"),
-    ];
-    let group = adw::PreferencesGroup::new();
-    for (title, keys) in rows {
-        let row = adw::ActionRow::builder().title(title).build();
-        row.add_suffix(
-            &gtk::Label::builder()
-                .label(keys)
-                .css_classes(["dim-label"])
-                .build(),
-        );
-        group.add(&row);
+/// What activating a detail row does.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RowAction {
+    Email,
+    Call,
+    Map,
+    Website,
+}
+
+impl RowAction {
+    /// The button's name and tooltip, and the row's description.
+    fn label(self) -> &'static str {
+        match self {
+            RowAction::Email => "Send Email",
+            RowAction::Call => "Call",
+            RowAction::Map => "Show on Map",
+            RowAction::Website => "Open Website",
+        }
     }
-    let page = adw::PreferencesPage::new();
-    page.add(&group);
-    let dialog = adw::PreferencesDialog::builder()
-        .title("Keyboard Shortcuts")
-        .build();
-    dialog.add(&page);
-    dialog.present(Some(win));
+
+    fn icon(self) -> &'static str {
+        match self {
+            RowAction::Email => "mail-send-symbolic",
+            RowAction::Call => "call-start-symbolic",
+            RowAction::Map => "mark-location-symbolic",
+            RowAction::Website => "web-browser-symbolic",
+        }
+    }
+
+    /// Toast shown when no application handles the link.
+    fn failure(self) -> &'static str {
+        match self {
+            RowAction::Email => "No app available to send email",
+            RowAction::Call => "No app available to make calls",
+            RowAction::Map => "No app available to show maps",
+            RowAction::Website => "No app available to open websites",
+        }
+    }
 }
 
 /// Accessible name of a detail row's Copy button, naming the value on one

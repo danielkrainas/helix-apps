@@ -9,6 +9,7 @@
 pub mod a11y;
 pub mod focus;
 pub mod keys;
+pub mod shortcuts;
 pub mod style;
 
 pub use a11y::{

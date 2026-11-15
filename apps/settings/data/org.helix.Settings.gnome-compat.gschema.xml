@@ -57,6 +57,24 @@
     <value value="5" nick="nothing"/>
     <value value="6" nick="logout"/>
   </enum>
+  <enum id="org.helix.Settings.compat.VisualBellType">
+    <value value="0" nick="fullscreen-flash"/>
+    <value value="1" nick="frame-flash"/>
+  </enum>
+  <enum id="org.helix.Settings.compat.ScreenPosition">
+    <value value="0" nick="none"/>
+    <value value="1" nick="full-screen"/>
+    <value value="2" nick="top-half"/>
+    <value value="3" nick="bottom-half"/>
+    <value value="4" nick="left-half"/>
+    <value value="5" nick="right-half"/>
+  </enum>
+  <enum id="org.helix.Settings.compat.MouseTracking">
+    <value value="0" nick="none"/>
+    <value value="1" nick="centered"/>
+    <value value="2" nick="proportional"/>
+    <value value="3" nick="push"/>
+  </enum>
   <schema id="org.gnome.desktop.interface" path="/org/gnome/desktop/interface/">
     <key name="color-scheme" enum="org.helix.Settings.compat.ColorScheme">
       <default>'default'</default>
@@ -100,6 +118,10 @@
     </key>
     <key name="clock-show-seconds" type="b">
       <default>false</default>
+    </key>
+    <key name="cursor-blink-time" type="i">
+      <default>1200</default>
+      <range min="100" max="2500"/>
     </key>
   </schema>
   <schema id="org.gnome.desktop.background" path="/org/gnome/desktop/background/">
@@ -183,6 +205,9 @@
     <key name="high-contrast" type="b">
       <default>false</default>
     </key>
+    <key name="show-status-shapes" type="b">
+      <default>false</default>
+    </key>
   </schema>
   <schema id="org.gnome.desktop.a11y.applications" path="/org/gnome/desktop/a11y/applications/">
     <key name="screen-reader-enabled" type="b">
@@ -206,6 +231,36 @@
       <default>false</default>
     </key>
     <key name="mousekeys-enable" type="b">
+      <default>false</default>
+    </key>
+    <key name="enable" type="b">
+      <default>false</default>
+    </key>
+    <key name="togglekeys-enable" type="b">
+      <default>false</default>
+    </key>
+    <key name="stickykeys-two-key-off" type="b">
+      <default>false</default>
+    </key>
+    <key name="stickykeys-modifier-beep" type="b">
+      <default>false</default>
+    </key>
+    <key name="slowkeys-delay" type="i">
+      <default>300</default>
+    </key>
+    <key name="slowkeys-beep-press" type="b">
+      <default>false</default>
+    </key>
+    <key name="slowkeys-beep-accept" type="b">
+      <default>false</default>
+    </key>
+    <key name="slowkeys-beep-reject" type="b">
+      <default>false</default>
+    </key>
+    <key name="bouncekeys-delay" type="i">
+      <default>300</default>
+    </key>
+    <key name="bouncekeys-beep-reject" type="b">
       <default>false</default>
     </key>
   </schema>
@@ -285,6 +340,12 @@
       <default>4</default>
       <range min="1" max="36"/>
     </key>
+    <key name="visual-bell" type="b">
+      <default>false</default>
+    </key>
+    <key name="visual-bell-type" enum="org.helix.Settings.compat.VisualBellType">
+      <default>'fullscreen-flash'</default>
+    </key>
   </schema>
   <schema id="org.gnome.shell.app-switcher" path="/org/gnome/shell/app-switcher/">
     <key name="current-workspace-only" type="b">
@@ -319,6 +380,84 @@
   <schema id="org.gnome.desktop.calendar" path="/org/gnome/desktop/calendar/">
     <key name="show-weekdate" type="b">
       <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.sound" path="/org/gnome/desktop/sound/">
+    <key name="allow-volume-above-100-percent" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.a11y.mouse" path="/org/gnome/desktop/a11y/mouse/">
+    <key name="secondary-click-enabled" type="b">
+      <default>false</default>
+    </key>
+    <key name="secondary-click-time" type="d">
+      <default>1.2</default>
+    </key>
+    <key name="dwell-click-enabled" type="b">
+      <default>false</default>
+    </key>
+    <key name="dwell-time" type="d">
+      <default>1.2</default>
+    </key>
+    <key name="dwell-threshold" type="i">
+      <default>10</default>
+    </key>
+  </schema>
+  <schema id="org.gnome.desktop.a11y.magnifier" path="/org/gnome/desktop/a11y/magnifier/">
+    <key name="mag-factor" type="d">
+      <default>2.0</default>
+      <range min="0.1" max="32.0"/>
+    </key>
+    <key name="screen-position" enum="org.helix.Settings.compat.ScreenPosition">
+      <default>'full-screen'</default>
+    </key>
+    <key name="mouse-tracking" enum="org.helix.Settings.compat.MouseTracking">
+      <default>'proportional'</default>
+    </key>
+    <key name="show-cross-hairs" type="b">
+      <default>false</default>
+    </key>
+    <key name="cross-hairs-clip" type="b">
+      <default>false</default>
+    </key>
+    <key name="cross-hairs-thickness" type="i">
+      <default>8</default>
+    </key>
+    <key name="cross-hairs-length" type="i">
+      <default>4096</default>
+      <range min="20" max="4096"/>
+    </key>
+    <key name="invert-lightness" type="b">
+      <default>false</default>
+    </key>
+    <key name="brightness-red" type="d">
+      <default>0.0</default>
+      <range min="-1.0" max="1.0"/>
+    </key>
+    <key name="brightness-green" type="d">
+      <default>0.0</default>
+      <range min="-1.0" max="1.0"/>
+    </key>
+    <key name="brightness-blue" type="d">
+      <default>0.0</default>
+      <range min="-1.0" max="1.0"/>
+    </key>
+    <key name="contrast-red" type="d">
+      <default>0.0</default>
+      <range min="-1.0" max="1.0"/>
+    </key>
+    <key name="contrast-green" type="d">
+      <default>0.0</default>
+      <range min="-1.0" max="1.0"/>
+    </key>
+    <key name="contrast-blue" type="d">
+      <default>0.0</default>
+      <range min="-1.0" max="1.0"/>
+    </key>
+    <key name="color-saturation" type="d">
+      <default>1.0</default>
+      <range min="0.0" max="1.0"/>
     </key>
   </schema>
 </schemalist>

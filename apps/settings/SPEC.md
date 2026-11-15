@@ -42,9 +42,10 @@ Primary configuration UI for the desktop and system.
   onto more lines instead of widening the page, and sliders in rows are at
   least 150 px wide (growing with the row).
 - **Sidebar**: header bar titled *Settings* with a search toggle and the
-  primary menu (*About Settings*), a search entry
+  primary menu (*Keyboard Shortcuts*, *About Settings*), a search entry
   (shown with the toggle or `Ctrl+F`), and the panel list grouped by
-  separators:
+  separators (GNOME's groups and order, with panels that are not yet
+  available moved to the end, see below):
   1. Wi-Fi, Network, Bluetooth
   2. Displays, Sound, Power, Multitasking, Appearance
   3. Apps, Notifications
@@ -52,8 +53,11 @@ Primary configuration UI for the desktop and system.
   5. Accessibility, Privacy & Security
   6. Date & Time, Users, About
 - Each row: symbolic icon + title. Panels that are not implemented yet are
-  listed dimmed with the subtitle *Not yet available*; selecting one shows a
-  status page saying the panel will come in a later release.
+  listed after all working panels (also in search results) under a "Not
+  Yet Available" heading, dimmed with the subtitle *Not yet available*,
+  which is also their accessible description ("Wi-Fi, Not yet
+  available"); selecting one shows a status page saying the panel will
+  come in a later release.
 - **Content**: an `AdwNavigationPage` with a header bar titled after the
   panel and an `AdwPreferencesPage` built on first visit (panels are built
   lazily and cached for the window's lifetime).
@@ -70,7 +74,11 @@ Primary configuration UI for the desktop and system.
   title, then keyword-only matches; registry order within each rank. Group
   separators are hidden while searching.
 - `Enter` in the search entry opens the first result; `Escape` clears and
-  closes the search.
+  closes the search. The entry is named "Search Settings".
+- A query without matches replaces the list with a "No Results Found"
+  status page; clearing the query brings the list back. The number of
+  matching panels ("3 panels found", "No results found") is announced once
+  typing settles.
 
 ### Panel registry
 - A static table of `PanelInfo { id, title, icon, keywords, group,
@@ -138,8 +146,13 @@ Primary configuration UI for the desktop and system.
   `$XDG_DATA_HOME/backgrounds`. Files named `<stem>-light.<ext>` /
   `<stem>-dark.<ext>` (also `-l` / `-d`) pair into one entry. Choosing an
   entry writes `org.gnome.desktop.background picture-uri` (light image) and
-  `picture-uri-dark` (dark image, or the same image). The current entry is
-  highlighted when either URI matches. Thumbnails load on worker threads.
+  `picture-uri-dark` (dark image, or the same image). The current entry
+  (either URI matches) is outlined and carries a check mark, and its tile
+  — a toggle button — is pressed, so screen readers read it as the
+  current one; pressing it again keeps it. Tiles are named after the file
+  ("Adwaita, light and dark variants" for pairs) and take one Tab stop
+  each. With no images the group says "No Backgrounds Found". Thumbnails
+  load on worker threads.
 - **Add Picture…**: file chooser filtered to images; the file is copied into
   `$XDG_DATA_HOME/backgrounds/` (name de-duplicated) and applied to both
   keys.
@@ -161,30 +174,70 @@ Primary configuration UI for the desktop and system.
   shown with human-readable names from `/usr/share/X11/xkb/rules/evdev.lst`
   (layouts and `layout+variant`; `ibus` sources show the engine id). Rows
   have *Move Up*, *Move Down* and *Remove*. *Add Input Source…* opens a
-  searchable dialog of all XKB layouts and variants. *Switch input sources
-  individually for each window* → `per-window`.
+  searchable dialog of all XKB layouts and variants plus the IBus input
+  methods that IBus component files (`/usr/share/ibus/component/*.xml`,
+  or `IBUS_COMPONENT_PATH`) list statically, without `xkb:` engines and
+  without contacting the IBus daemon; picking one adds `('ibus', name)`.
+  *Switch input sources individually for each window* → `per-window`.
+- Both pickers (input sources, time zones) share one dialog: a spinner
+  ("Loading Input Sources…" / "Loading Time Zones…", announced after
+  0.6 s) until the choices are read, a "No Results Found" page, the
+  result count announced once typing settles, `Enter` in the search
+  picks the first result and `Down` moves into the list. At most 400 rows
+  are listed; a note above them says "Showing 400 of N matches. Type to
+  narrow the search."
 - **Typing**: *Repeat Keys* (`peripherals.keyboard repeat`), *Delay*
   (`delay`, 100–2000 ms) and *Speed* (`repeat-interval`; slider position
   *p* ∈ [0,1], right = faster, maps to `round(110 − 100·p)` ms). Both
   sliders are insensitive while repeat is off.
 
 #### Accessibility
-- Seeing: *High Contrast* (`a11y.interface high-contrast`), *Large Text*
+GNOME 46+ layout: the panel is an `AdwNavigationView` (it brings its own
+header bars). The main page has *Always Show Accessibility Menu*
+(`a11y always-show-universal-access-status`) and rows opening five
+sub-pages. Options with parameters are expander rows whose switch is the
+feature key; the parameters show when expanded. Keys were checked
+against the installed GNOME schemas (memory backend); all exist there and
+in the compat schema.
+- **Seeing**: *High Contrast* (`a11y.interface high-contrast`), *Show
+  Status Shapes* (`a11y.interface show-status-shapes`), *Large Text*
   (`interface text-scaling-factor`: on = 1.25, off = 1.0; shown on when
   ≥ 1.25), *Cursor Size* (`cursor-size` 24/32/48/64/96), *Reduce Animation*
   (inverse of `interface enable-animations`), *Always Show Scrollbars*
   (inverse of `overlay-scrolling`), *Screen Reader*
-  (`a11y.applications screen-reader-enabled`), *Zoom*
-  (`screen-magnifier-enabled`).
-- Typing: *Screen Keyboard* (`screen-keyboard-enabled`), *Cursor Blinking*
-  (`interface cursor-blink`), *Sticky Keys*, *Slow Keys*, *Bounce Keys*
-  (`a11y.keyboard stickykeys-enable` / `slowkeys-enable` /
-  `bouncekeys-enable`).
-- Pointing: *Double-Click Delay* (`peripherals.mouse double-click`
-  100–1000 ms), *Locate Pointer* (`interface locate-pointer`), *Mouse Keys*
-  (`a11y.keyboard mousekeys-enable`).
-- *Always Show Accessibility Menu*
-  (`a11y always-show-universal-access-status`).
+  (`a11y.applications screen-reader-enabled`).
+- **Hearing**: *Overamplification* (`sound allow-volume-above-100-percent`),
+  *Visual Alerts* (`wm.preferences visual-bell`) with *Flash Area*
+  (`visual-bell-type`: Flash Entire Screen = `fullscreen-flash`, Flash
+  Focused Window = `frame-flash`).
+- **Typing**: *Screen Keyboard* (`screen-keyboard-enabled`), *Cursor
+  Blinking* (`interface cursor-blink`) with *Blink Speed*
+  (`cursor-blink-time` 100–2500 ms, slider slow → fast), *Sound Keys*
+  (`a11y.keyboard togglekeys-enable`). Typing Assist: *Enable by
+  Keyboard* (`a11y.keyboard enable`); *Sticky Keys* (`stickykeys-enable`)
+  with `stickykeys-two-key-off`, `stickykeys-modifier-beep`; *Slow Keys*
+  (`slowkeys-enable`) with *Acceptance Delay* (`slowkeys-delay` 0–1000 ms)
+  and `slowkeys-beep-press` / `-accept` / `-reject`; *Bounce Keys*
+  (`bouncekeys-enable`) with `bouncekeys-delay` and
+  `bouncekeys-beep-reject`.
+- **Pointing & Clicking**: *Mouse Keys* (`a11y.keyboard mousekeys-enable`),
+  *Locate Pointer* (`interface locate-pointer`), *Double-Click Delay*
+  (`peripherals.mouse double-click` 100–1000 ms). Click Assist:
+  *Simulated Secondary Click* (`a11y.mouse secondary-click-enabled`, delay
+  `secondary-click-time` 0.5–3 s), *Hover Click* (`dwell-click-enabled`,
+  `dwell-time` 0.2–3 s, `dwell-threshold` 0–30 px).
+- **Zoom**: *Zoom* (`a11y.applications screen-magnifier-enabled`),
+  *Magnification* (`a11y.magnifier mag-factor` 1–20), *Magnifier Position*
+  (`screen-position`), *Follow the Pointer* (`mouse-tracking`:
+  proportional, centered, push, none); *Crosshairs* (`show-cross-hairs`)
+  with *Overlap Pointer* (inverse of `cross-hairs-clip`),
+  `cross-hairs-thickness` 1–100, `cross-hairs-length` 20–4096; Color
+  Effects: *Invert Colors* (`invert-lightness`), *Brightness* / *Contrast*
+  (one slider writing `brightness-{red,green,blue}` /
+  `contrast-{red,green,blue}`, −1…1), *Color* (`color-saturation`).
+  Crosshair colour (`cross-hairs-color`) is not offered yet.
+- Any key missing from the installed schemas makes its row say *Not
+  supported by this system* (the value then lives in memory).
 
 #### Privacy & Security
 - Screen Lock: *Blank Screen Delay* (`session idle-delay`: 1, 2, 3, 4, 5, 8,
@@ -211,7 +264,8 @@ Primary configuration UI for the desktop and system.
   `enable` of the relocatable schema
   `org.gnome.desktop.notifications.application` at
   `/org/gnome/desktop/notifications/application/<id>/`. Names and icons come
-  from the matching desktop file when found. The group is hidden when the
+  from the matching desktop file when found (icons are presentational;
+  the row title names the app). The group is hidden when the
   relocatable schema is not installed or the list is empty.
 
 #### Extensions
@@ -266,8 +320,11 @@ menu entry opens this panel when Settings is installed.
     the first combination with Ctrl, Alt or Super (or a function key
     alone) is sent with `BindCommand(command, accelerator)` and closes it;
     Escape cancels; Backspace clears the key (`""`). A combination the
-    shell refuses (in use, or does not parse) is shown in the dialog,
-    which stays open.
+    shell refuses (in use, or does not parse) is shown in the dialog
+    ("Could not use these keys: …"), which stays open; a plain key without
+    Ctrl, Alt or Super shows "Use Ctrl, Alt or Super with this key" (a
+    modifier alone just starts a combination). Both messages are announced
+    at once (assertive), since focus stays in the dialog.
 - Changes made elsewhere (the shell, `helix-extensions`) show through
   `Changed`; the rows are updated in place, and rebuilt when the set of
   extensions or of their settings changes.
@@ -285,7 +342,10 @@ menu entry opens this panel when Settings is installed.
 
 #### Power
 - Battery (shown only when UPower reports a present battery; read-only):
-  level bar, percentage, state (Charging, Discharging, Fully Charged, …) and
+  a row titled "Battery" with the percentage first in its subtitle
+  ("57 % · Discharging — 2 hours remaining") and a level bar named
+  "Battery Level" whose value text is the percentage (read as "Battery
+  Level, 57 %"); state (Charging, Discharging, Fully Charged, …) and
   time to empty / full, from the UPower `DisplayDevice`
   (`org.freedesktop.UPower.Device`: `IsPresent`, `Type`, `Percentage`,
   `State`, `TimeToEmpty`, `TimeToFull`), fetched on a worker thread when the
@@ -295,14 +355,18 @@ menu entry opens this panel when Settings is installed.
   *Automatic Suspend* when plugged in / on battery: switch (type `suspend`
   vs `nothing`) + delay (`sleep-inactive-{ac,battery}-timeout`: 15, 20, 25,
   30, 45, 60, 80, 90, 100, 120 minutes). The battery row is shown only when a
-  battery is present.
+  battery is present. Both delay rows show "Delay" but are named "Suspend
+  Delay When Plugged In" / "Suspend Delay On Battery Power".
 - General: *Power Button Behavior* (`power-button-action`: Suspend, Power
   Off = `interactive`, Hibernate, Nothing), *Show Battery Percentage*
   (`interface show-battery-percentage`).
 
 #### Date & Time
 - Reads `org.freedesktop.timedate1` (`Timezone`, `NTP`, `CanNTP`,
-  `NTPSynchronized`) on a worker thread.
+  `NTPSynchronized`) on a worker thread. A change of the sync status on
+  a later reading ("Synchronized with network time servers") is announced.
+  When timedated cannot be reached the rows say *Unavailable* and a toast
+  says so once.
 - *Automatic Date & Time* → `SetNTP(b, interactive=true)` (insensitive when
   `CanNTP` is false). *Automatic Time Zone* →
   `org.gnome.desktop.datetime automatic-timezone`.
@@ -310,7 +374,11 @@ menu entry opens this panel when Settings is installed.
   every second, in the selected clock format. Setting the clock manually
   (`SetTime`) is not offered yet.
 - *Time Zone* opens a searchable dialog of time zones (from
-  `ListTimezones`, falling back to `/usr/share/zoneinfo/zone1970.tab`);
+  `ListTimezones`, falling back to `/usr/share/zoneinfo/zone1970.tab`),
+  titled the way people say them — "Berlin, Germany", "Buenos Aires,
+  Argentina" (country from `zone.tab` + `iso3166.tab`; zones without a
+  country keep their id) — with the id as subtitle, sorted by title and
+  searchable by either;
   choosing one calls `SetTimezone(tz, interactive=true)`. Errors (e.g. polkit
   denial) are shown as a toast and the displayed value is reloaded.
 - *Time Format* 24-hour / AM/PM (`interface clock-format`).
@@ -321,7 +389,8 @@ menu entry opens this panel when Settings is installed.
 
 #### About
 - *Device Name* (`org.freedesktop.hostname1` `PrettyHostname`, else
-  `Hostname`) in an entry row; applying calls `SetPrettyHostname(name, true)`
+  `Hostname`) in an entry row (read-only, with a toast and tooltip saying
+  why, when hostnamed cannot be reached); applying calls `SetPrettyHostname(name, true)`
   and `SetStaticHostname(static, true)` where *static* is the name
   lower-cased, spaces/underscores → `-`, other characters outside
   `[a-z0-9-]` dropped, repeated `-` collapsed, leading/trailing `-` trimmed,
@@ -346,7 +415,10 @@ menu entry opens this panel when Settings is installed.
 
 ### Shortcuts
 `Ctrl+F` search, `Escape` close search, `Ctrl+Q` quit, `Ctrl+W` close
-window, `F1` about.
+window, `F1` about, `Ctrl+?` Keyboard Shortcuts window (also in the
+primary menu). The window is built from a table
+(`helix_app_common::shortcuts`) that a unit test checks against the
+registered accelerators.
 
 ### Command line
 - `helix-settings-app [PANEL]` opens (or raises the running instance on)

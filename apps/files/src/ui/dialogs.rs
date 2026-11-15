@@ -248,6 +248,59 @@ fn conflict_default_response(merge: bool) -> &'static str {
 }
 
 /// "Open With" chooser for the selected files.
+/// Which heading an application is listed under in Open With.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum AppGroup {
+    Recommended,
+    Other,
+    All,
+}
+
+impl AppGroup {
+    fn title(self) -> &'static str {
+        match self {
+            AppGroup::Recommended => "Recommended Applications",
+            AppGroup::Other => "Other Applications",
+            AppGroup::All => "All Applications",
+        }
+    }
+}
+
+/// Groups application ids for Open With: the recommended ones first, then
+/// the others registered for the type. Only when the type has no
+/// applications at all is every installed application offered. Duplicates
+/// are dropped.
+fn group_apps(
+    recommended: &[String],
+    for_type: &[String],
+    all: &[String],
+) -> Vec<(AppGroup, String)> {
+    let mut out: Vec<(AppGroup, String)> = Vec::new();
+    let push = |group, id: &String, out: &mut Vec<(AppGroup, String)>| {
+        if !out.iter().any(|(_, x)| x == id) {
+            out.push((group, id.clone()));
+        }
+    };
+    for id in recommended {
+        push(AppGroup::Recommended, id, &mut out);
+    }
+    for id in for_type {
+        push(AppGroup::Other, id, &mut out);
+    }
+    if out.is_empty() {
+        for id in all {
+            push(AppGroup::All, id, &mut out);
+        }
+    }
+    out
+}
+
+/// Whether an application named `name` matches the Open With search.
+fn app_matches(name: &str, query: &str) -> bool {
+    let query = query.trim().to_lowercase();
+    query.is_empty() || name.to_lowercase().contains(&query)
+}
+
 pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
     let files: Vec<gio::File> = infos.iter().filter_map(super::tab::info_target).collect();
     let Some(first) = infos.first() else { return };
@@ -258,59 +311,143 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
         .unwrap_or_else(|| "application/octet-stream".into());
     let desc = gio::content_type_get_description(&ct);
 
-    let mut apps: Vec<gio::AppInfo> = gio::AppInfo::recommended_for_type(&ct);
-    for a in gio::AppInfo::all_for_type(&ct)
-        .into_iter()
-        .chain(gio::AppInfo::all())
-    {
-        if a.should_show() && !apps.iter().any(|x| x.id() == a.id()) {
-            apps.push(a);
-        }
-    }
+    let shown = |v: Vec<gio::AppInfo>| -> Vec<gio::AppInfo> {
+        v.into_iter().filter(|a| a.should_show()).collect()
+    };
+    let recommended = shown(gio::AppInfo::recommended_for_type(&ct));
+    let for_type = shown(gio::AppInfo::all_for_type(&ct));
+    let all = if recommended.is_empty() && for_type.is_empty() {
+        shown(gio::AppInfo::all())
+    } else {
+        Vec::new()
+    };
+    let id_of = |a: &gio::AppInfo| a.id().map(|s| s.to_string()).unwrap_or_default();
+    let ids = |v: &[gio::AppInfo]| v.iter().map(id_of).collect::<Vec<_>>();
+    let pool: Vec<gio::AppInfo> = recommended
+        .iter()
+        .chain(&for_type)
+        .chain(&all)
+        .cloned()
+        .collect();
+    let apps: Vec<(AppGroup, gio::AppInfo)> =
+        group_apps(&ids(&recommended), &ids(&for_type), &ids(&all))
+            .into_iter()
+            .filter_map(|(g, id)| pool.iter().find(|a| id_of(a) == id).map(|a| (g, a.clone())))
+            .collect();
     let default = gio::AppInfo::default_for_type(&ct, false);
 
     let list = gtk::ListBox::new();
     list.add_css_class("boxed-list");
     list.set_selection_mode(gtk::SelectionMode::Single);
-    let recommended = gio::AppInfo::recommended_for_type(&ct).len();
-    for (i, app) in apps.iter().enumerate() {
+    list.update_property(&[gtk::accessible::Property::Label("Applications")]);
+    for (_, app) in &apps {
         let row = adw::ActionRow::builder()
             .title(app.display_name().as_str())
             .activatable(true)
             .build();
         if let Some(icon) = app.icon() {
-            let img = gtk::Image::from_gicon(&icon);
-            img.set_pixel_size(32);
+            let img = gtk::Image::builder()
+                .gicon(&icon)
+                .pixel_size(32)
+                .accessible_role(gtk::AccessibleRole::Presentation)
+                .build();
             row.add_prefix(&img);
         }
         if default.as_ref().is_some_and(|d| d.id() == app.id()) {
             row.set_subtitle("Default");
-        } else if i >= recommended {
-            row.set_subtitle("Other application");
         }
         list.append(&row);
+    }
+    // A heading above the first row of each group.
+    let groups: Vec<AppGroup> = apps.iter().map(|(g, _)| *g).collect();
+    list.set_header_func(move |row, before| {
+        let group = groups.get(row.index() as usize).copied();
+        let prev = before.and_then(|b| groups.get(b.index() as usize).copied());
+        match group {
+            Some(g) if prev != Some(g) => {
+                let label = gtk::Label::builder()
+                    .label(g.title())
+                    .xalign(0.0)
+                    .margin_top(if before.is_some() { 18 } else { 6 })
+                    .margin_bottom(6)
+                    .margin_start(6)
+                    .build();
+                label.add_css_class("heading");
+                row.set_header(Some(&label));
+            }
+            _ => row.set_header(None::<&gtk::Widget>),
+        }
+    });
+    let names: Rc<Vec<String>> = Rc::new(
+        apps.iter()
+            .map(|(_, a)| a.display_name().to_string())
+            .collect(),
+    );
+    let matching = {
+        let names = names.clone();
+        move |query: &str| -> Vec<usize> {
+            (0..names.len())
+                .filter(|&i| app_matches(&names[i], query))
+                .collect()
+        }
+    };
+    let search = gtk::SearchEntry::builder()
+        .placeholder_text("Search applications")
+        .build();
+    search.update_property(&[gtk::accessible::Property::Label("Search Applications")]);
+    {
+        let names = names.clone();
+        let search = search.clone();
+        list.set_filter_func(move |row| {
+            names
+                .get(row.index() as usize)
+                .is_some_and(|n| app_matches(n, &search.text()))
+        });
     }
     if let Some(r) = list.row_at_index(0) {
         list.select_row(Some(&r));
     }
+
     let scroll = gtk::ScrolledWindow::builder()
         .child(&list)
         .vexpand(true)
         .hscrollbar_policy(gtk::PolicyType::Never)
-        .min_content_height(320)
+        .min_content_height(240)
         .build();
+    let empty = adw::StatusPage::builder()
+        .icon_name("system-search-symbolic")
+        .title(if apps.is_empty() {
+            "No Applications Found"
+        } else {
+            "No Results Found"
+        })
+        .description(if apps.is_empty() {
+            "No installed application can open this file"
+        } else {
+            "Try a different search"
+        })
+        .vexpand(true)
+        .build();
+    empty.add_css_class("compact");
+    let stack = gtk::Stack::new();
+    stack.add_named(&scroll, Some("list"));
+    stack.add_named(&empty, Some("empty"));
+    stack.set_visible_child_name(if apps.is_empty() { "empty" } else { "list" });
+
     let always = gtk::CheckButton::with_label(&format!("Always use for “{desc}” files"));
     let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
     content.set_margin_top(12);
     content.set_margin_bottom(12);
     content.set_margin_start(12);
     content.set_margin_end(12);
-    content.append(&scroll);
+    content.append(&search);
+    content.append(&stack);
     content.append(&always);
 
     let header = adw::HeaderBar::new();
     let open_btn = gtk::Button::with_mnemonic("_Open");
     open_btn.add_css_class("suggested-action");
+    open_btn.set_sensitive(!apps.is_empty());
     header.pack_end(&open_btn);
     let tv = adw::ToolbarView::new();
     tv.add_top_bar(&header);
@@ -318,9 +455,36 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
     let dialog = adw::Dialog::builder()
         .title("Open With")
         .content_width(420)
-        .content_height(520)
+        .content_height(560)
         .child(&tv)
+        .default_widget(&open_btn)
+        .focus_widget(&search)
         .build();
+
+    {
+        let list = list.clone();
+        let stack = stack.clone();
+        let open_btn = open_btn.clone();
+        search.connect_search_changed(move |e| {
+            list.invalidate_filter();
+            let shown = matching(&e.text());
+            let keep = list
+                .selected_row()
+                .is_some_and(|r| shown.contains(&(r.index() as usize)));
+            if !keep {
+                let first = shown.first().and_then(|&i| list.row_at_index(i as i32));
+                list.select_row(first.as_ref());
+            }
+            stack.set_visible_child_name(if shown.is_empty() { "empty" } else { "list" });
+            open_btn.set_sensitive(!shown.is_empty());
+            let msg = match shown.len() {
+                0 => "No applications found".to_string(),
+                1 => "1 application".to_string(),
+                n => format!("{n} applications"),
+            };
+            helix_app_common::announce_settled(e, &msg);
+        });
+    }
 
     let apps = Rc::new(apps);
     let launch = {
@@ -332,7 +496,7 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
             let Some(row) = list.selected_row() else {
                 return;
             };
-            let Some(app) = apps.get(row.index() as usize) else {
+            let Some((_, app)) = apps.get(row.index() as usize) else {
                 return;
             };
             if always.is_active() {
@@ -354,8 +518,32 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
     let l = Rc::new(launch);
     let l2 = l.clone();
     open_btn.connect_clicked(move |_| l2());
-    list.connect_row_activated(move |_, _| l());
+    // Enter in the search entry opens the selected (first matching) app.
+    let l3 = l.clone();
+    search.connect_activate(move |_| l3());
+    list.connect_row_activated(move |list, row| {
+        list.select_row(Some(row));
+        l()
+    });
+    // Typing anywhere in the dialog goes to the search; Down from the search moves
+    // into the list.
+    search.set_key_capture_widget(Some(&dialog));
+    let key = gtk::EventControllerKey::new();
+    {
+        let list = list.clone();
+        key.connect_key_pressed(move |_, keyval, _, _| {
+            if keyval == gtk::gdk::Key::Down {
+                if let Some(r) = list.selected_row() {
+                    r.grab_focus();
+                    return glib::Propagation::Stop;
+                }
+            }
+            glib::Propagation::Proceed
+        });
+    }
+    search.add_controller(key);
     dialog.present(Some(&win.window));
+    search.grab_focus();
 }
 
 /// Preferences dialog bound to the Nautilus GSettings keys.
@@ -509,7 +697,35 @@ pub fn preferences(win: &Rc<Window>) {
 
 #[cfg(test)]
 mod tests {
-    use super::conflict_default_response;
+    use super::{app_matches, conflict_default_response, group_apps, AppGroup};
+
+    fn v(ids: &[&str]) -> Vec<String> {
+        ids.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn open_with_groups_relevant_apps_only() {
+        let g = group_apps(&v(&["a", "b"]), &v(&["b", "c"]), &v(&["x"]));
+        assert_eq!(
+            g,
+            vec![
+                (AppGroup::Recommended, "a".into()),
+                (AppGroup::Recommended, "b".into()),
+                (AppGroup::Other, "c".into()),
+            ]
+        );
+        // Every app is offered only when none handles the type.
+        let g = group_apps(&[], &[], &v(&["x", "y"]));
+        assert!(g.iter().all(|(grp, _)| *grp == AppGroup::All));
+        assert_eq!(g.len(), 2);
+    }
+
+    #[test]
+    fn open_with_search_matches_names() {
+        assert!(app_matches("Text Editor", ""));
+        assert!(app_matches("Text Editor", " edit "));
+        assert!(!app_matches("Text Editor", "image"));
+    }
 
     #[test]
     fn enter_never_replaces_a_file() {

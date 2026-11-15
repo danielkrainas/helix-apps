@@ -22,6 +22,25 @@ pub enum OpenIn {
     NewWindow,
 }
 
+/// Shortcuts that act on the file view only, so text entries keep these
+/// keys: (trigger, action). Listed in the Keyboard Shortcuts window.
+pub const VIEW_SHORTCUTS: &[(&str, &str)] = &[
+    ("Delete", "win.trash"),
+    ("KP_Delete", "win.trash"),
+    ("<Shift>Delete", "win.delete"),
+    ("<Shift>KP_Delete", "win.delete"),
+    ("<Control>a", "win.select-all"),
+    ("<Control>c", "win.copy"),
+    ("<Control>x", "win.cut"),
+    ("<Control>v", "win.paste"),
+    ("<Control>z", "win.undo"),
+    ("F2", "win.rename"),
+    ("Menu", "win.context-menu"),
+    ("<Shift>F10", "win.context-menu"),
+    ("<Control>Return", "win.open-new-tab"),
+    ("<Alt>Down", "win.open"),
+];
+
 pub struct Window {
     pub shared: Rc<Shared>,
     pub window: adw::ApplicationWindow,
@@ -197,10 +216,10 @@ impl Window {
         main_menu.append_section(None, &sec);
         let sec = gio::Menu::new();
         sec.append(Some("_Undo"), Some("win.undo"));
-        sec.append(Some("Show _Hidden Files"), Some("win.show-hidden"));
         main_menu.append_section(None, &sec);
         let sec = gio::Menu::new();
         sec.append(Some("_Preferences"), Some("app.preferences"));
+        sec.append(Some("_Keyboard Shortcuts"), Some("win.show-shortcuts"));
         sec.append(Some("_About Files"), Some("app.about"));
         main_menu.append_section(None, &sec);
         let menu_btn = gtk::MenuButton::builder()
@@ -559,22 +578,7 @@ impl Window {
         // View-local shortcuts (not global so text entries keep them).
         let sc = gtk::ShortcutController::new();
         sc.set_scope(gtk::ShortcutScope::Local);
-        for (trigger, action) in [
-            ("Delete", "win.trash"),
-            ("KP_Delete", "win.trash"),
-            ("<Shift>Delete", "win.delete"),
-            ("<Shift>KP_Delete", "win.delete"),
-            ("<Control>a", "win.select-all"),
-            ("<Control>c", "win.copy"),
-            ("<Control>x", "win.cut"),
-            ("<Control>v", "win.paste"),
-            ("<Control>z", "win.undo"),
-            ("F2", "win.rename"),
-            ("Menu", "win.context-menu"),
-            ("<Shift>F10", "win.context-menu"),
-            ("<Control>Return", "win.open-new-tab"),
-            ("<Alt>Down", "win.open"),
-        ] {
+        for (trigger, action) in VIEW_SHORTCUTS {
             sc.add_shortcut(gtk::Shortcut::new(
                 gtk::ShortcutTrigger::parse_string(trigger),
                 Some(gtk::NamedAction::new(action)),
@@ -1643,6 +1647,7 @@ impl Window {
         add("delete", |w| w.delete_selection());
         add("empty-trash", |w| w.empty_trash());
         add("undo", |w| w.undo());
+        add("show-shortcuts", |w| super::shortcuts::show(&w.window));
         add("restore", |w| {
             if let Some(t) = w.current_tab() {
                 let files = t.selected_files();

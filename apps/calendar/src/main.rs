@@ -9,6 +9,7 @@ mod layout;
 mod manage;
 mod model;
 mod recur;
+mod shortcuts;
 mod ui;
 
 use gtk::glib;

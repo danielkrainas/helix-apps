@@ -79,6 +79,97 @@ pub fn source_name(info: &XkbInfo, kind: &str, id: &str) -> String {
     }
 }
 
+/// Where IBus components describe their engines.
+pub const IBUS_COMPONENT_DIR: &str = "/usr/share/ibus/component";
+
+/// An IBus input method: engine name, long name, language.
+#[derive(Debug, Clone, PartialEq)]
+pub struct IbusEngine {
+    pub name: String,
+    pub longname: String,
+    pub language: String,
+}
+
+fn xml_unescape(s: &str) -> String {
+    s.replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&apos;", "'")
+        .replace("&amp;", "&")
+}
+
+fn xml_element<'a>(block: &'a str, tag: &str) -> Option<&'a str> {
+    let start = block.find(&format!("<{tag}>"))? + tag.len() + 2;
+    let end = block[start..].find(&format!("</{tag}>"))? + start;
+    Some(block[start..end].trim())
+}
+
+/// The engines an IBus component file lists statically, without the
+/// `xkb:` ones (plain layouts are offered from XKB directly). Engines a
+/// component only reports by running a program (`<engines exec=…>`) are
+/// not listed.
+pub fn ibus_engines(component_xml: &str) -> Vec<IbusEngine> {
+    let mut out = Vec::new();
+    let mut rest = component_xml;
+    while let Some(i) = rest.find("<engine>") {
+        let after = &rest[i + "<engine>".len()..];
+        let Some(end) = after.find("</engine>") else {
+            break;
+        };
+        let block = &after[..end];
+        rest = &after[end..];
+        let Some(name) = xml_element(block, "name").map(xml_unescape) else {
+            continue;
+        };
+        if name.is_empty() || name.starts_with("xkb:") {
+            continue;
+        }
+        let longname = xml_element(block, "longname")
+            .map(xml_unescape)
+            .filter(|l| !l.is_empty())
+            .unwrap_or_else(|| name.clone());
+        let language = xml_element(block, "language")
+            .map(xml_unescape)
+            .unwrap_or_default();
+        out.push(IbusEngine {
+            name,
+            longname,
+            language,
+        });
+    }
+    out
+}
+
+/// IBus engines from every installed component file (read from disk;
+/// no IBus daemon is contacted). Like IBus, `IBUS_COMPONENT_PATH`
+/// (colon-separated) replaces the default directory.
+pub fn load_ibus_engines() -> Vec<IbusEngine> {
+    let dirs: Vec<std::path::PathBuf> = match std::env::var_os("IBUS_COMPONENT_PATH") {
+        Some(p) => std::env::split_paths(&p).collect(),
+        None => vec![IBUS_COMPONENT_DIR.into()],
+    };
+    let mut engines: Vec<IbusEngine> = dirs
+        .iter()
+        .filter_map(|d| std::fs::read_dir(d).ok())
+        .flat_map(|dir| dir.flatten())
+        .filter(|e| e.path().extension().is_some_and(|x| x == "xml"))
+        .filter_map(|e| std::fs::read_to_string(e.path()).ok())
+        .flat_map(|text| ibus_engines(&text))
+        .collect();
+    engines.sort_by_key(|e| e.longname.to_lowercase());
+    engines.dedup_by(|a, b| a.name == b.name);
+    engines
+}
+
+/// Case-insensitive substring filter on an engine's names and language.
+pub fn ibus_matches(engine: &IbusEngine, query: &str) -> bool {
+    let q = query.trim().to_lowercase();
+    q.is_empty()
+        || engine.longname.to_lowercase().contains(&q)
+        || engine.name.to_lowercase().contains(&q)
+        || engine.language.to_lowercase().contains(&q)
+}
+
 /// Moves item `i` by `delta` positions, returning whether it moved.
 pub fn move_item<T>(items: &mut [T], i: usize, delta: isize) -> bool {
     let j = i as isize + delta;
@@ -105,6 +196,25 @@ mod tests {
     use super::*;
 
     const SAMPLE: &str = "! model\n  pc105 Generic 105-key PC\n\n! layout\n  us              English (US)\n  de              German\n\n! variant\n  dvorak          us: English (Dvorak)\n  nodeadkeys      de: German (no dead keys)\n\n! option\n  grp             Switching\n";
+
+    #[test]
+    fn ibus_component_engines() {
+        let xml = r#"<component><name>org.freedesktop.IBus.Test</name><engines>
+            <engine><name>xkb:us::eng</name><longname>English (US)</longname></engine>
+            <engine><name>anthy</name><longname>Anthy &amp; friends</longname><language>ja</language></engine>
+            <engine><name>pinyin</name><language>zh_CN</language></engine>
+            </engines></component>"#;
+        let e = ibus_engines(xml);
+        assert_eq!(e.len(), 2);
+        assert_eq!(e[0].name, "anthy");
+        assert_eq!(e[0].longname, "Anthy & friends");
+        assert_eq!(e[1].longname, "pinyin");
+        assert!(ibus_matches(&e[0], "JA"));
+        assert!(ibus_matches(&e[1], "pin"));
+        assert!(!ibus_matches(&e[1], "anthy"));
+        // Engines listed by running a program are skipped.
+        assert!(ibus_engines("<engines exec='/usr/libexec/x --xml'/>").is_empty());
+    }
 
     #[test]
     fn parses_sections() {

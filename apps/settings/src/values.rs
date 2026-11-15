@@ -289,6 +289,49 @@ pub fn battery_time_label(state: u32, time_to_empty: i64, time_to_full: i64) -> 
     }
 }
 
+/// Country names by time zone, from the tz database's `zone.tab` (zone →
+/// country code) and `iso3166.tab` (code → name).
+pub fn zone_countries(zone_tab: &str, iso3166: &str) -> std::collections::HashMap<String, String> {
+    let names: std::collections::HashMap<&str, &str> = iso3166
+        .lines()
+        .filter(|l| !l.starts_with('#'))
+        .filter_map(|l| l.split_once('\t'))
+        .map(|(code, name)| (code.trim(), name.trim()))
+        .collect();
+    zone_tab
+        .lines()
+        .filter(|l| !l.starts_with('#'))
+        .filter_map(|l| {
+            let mut cols = l.split('\t');
+            let code = cols.next()?.trim();
+            let zone = cols.nth(1)?.trim();
+            let name = names.get(code)?;
+            Some((zone.to_string(), name.to_string()))
+        })
+        .collect()
+}
+
+/// A time zone as people say it: "Berlin, Germany", "Buenos Aires,
+/// Argentina"; zones without a country keep their id ("UTC", "Etc/GMT+5").
+pub fn zone_label(zone: &str, country: Option<&str>) -> String {
+    match country {
+        Some(country) => {
+            let city = zone.rsplit('/').next().unwrap_or(zone).replace('_', " ");
+            format!("{city}, {country}")
+        }
+        None => zone.replace('_', " "),
+    }
+}
+
+/// Whether a time zone matches the search `query` by its label or id
+/// (spaces and underscores are the same).
+pub fn zone_matches(zone: &str, label: &str, query: &str) -> bool {
+    let q = query.trim().to_lowercase().replace('_', " ");
+    q.is_empty()
+        || label.to_lowercase().contains(&q)
+        || zone.to_lowercase().replace('_', " ").contains(&q)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -455,5 +498,32 @@ mod tests {
         );
         assert_eq!(battery_time_label(4, 0, 0), None);
         assert_eq!(battery_time_label(2, 0, 0), None);
+    }
+
+    #[test]
+    fn friendly_zone_names() {
+        let countries = zone_countries(
+            "# c\nDE\t+5230+01322\tEurope/Berlin\nAR\t-3436-05827\tAmerica/Argentina/Buenos_Aires\n",
+            "# c\nDE\tGermany\nAR\tArgentina\n",
+        );
+        let label = |z: &str| zone_label(z, countries.get(z).map(String::as_str));
+        assert_eq!(label("Europe/Berlin"), "Berlin, Germany");
+        assert_eq!(
+            label("America/Argentina/Buenos_Aires"),
+            "Buenos Aires, Argentina"
+        );
+        assert_eq!(label("UTC"), "UTC");
+        assert!(zone_matches("Europe/Berlin", "Berlin, Germany", "germ"));
+        assert!(zone_matches(
+            "Europe/Berlin",
+            "Berlin, Germany",
+            "europe/ber"
+        ));
+        assert!(zone_matches(
+            "America/Argentina/Buenos_Aires",
+            "Buenos Aires, Argentina",
+            "buenos_aires"
+        ));
+        assert!(!zone_matches("Europe/Berlin", "Berlin, Germany", "paris"));
     }
 }

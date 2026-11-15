@@ -168,6 +168,7 @@ impl Panel for AboutPanel {
                 (model.clone(), memory, cpu, os, os_type, kernel);
             let name_row = name_row.clone();
             let header = header.clone();
+            let host_ctx = Rc::downgrade(ctx);
             spawn_worker(
                 || (read_local(), dbus::read_hostname()),
                 move |(local, host)| {
@@ -200,6 +201,13 @@ impl Panel for AboutPanel {
                         Err(e) => {
                             name_row.set_text(&glib::host_name());
                             eprintln!("helix-settings-app: hostname1: {e}");
+                            // The name stays read-only; say why.
+                            name_row.set_tooltip_text(Some(
+                                "The device name cannot be changed: the hostname service is unavailable",
+                            ));
+                            if let Some(ctx) = host_ctx.upgrade() {
+                                ctx.toast("The device name cannot be changed right now");
+                            }
                         }
                     }
                 },

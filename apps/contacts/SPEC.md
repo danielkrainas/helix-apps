@@ -64,12 +64,20 @@ Manage contacts.
   type ("Work", "Mobile", …).
   - Email rows open `mailto:`; phone rows open `tel:`; addresses open
     `geo:0,0?q=<address>` (maps); websites open the URL — all through
-    `gtk::UriLauncher` (OpenURI portal when sandboxed).
+    `gtk::UriLauncher` (OpenURI portal when sandboxed). Each such row
+    shows a labelled button for it (*Send Email*, *Call*, *Show on Map*,
+    *Open Website*; also the row's accessible description), and
+    activating the row does the same. When no application handles the
+    link a toast says so ("No app available to send email").
   - Each value has a copy button, named with its value for assistive
     technology ("Copy jane@example.org").
-- **Empty states**: no contacts → status page with *Create Contact* and
-  *Import…*; no selection → "Select a contact"; no search results →
-  "No Results".
+- **Empty states**: while the address books load, the list shows a
+  spinner named "Loading contacts" with "Loading Contacts…" below it; no
+  contacts → status page with *Create Contact* and *Import…* (the content
+  pane stays blank, not "Select a Contact", both then and while loading);
+  no selection → "Select a contact"; no search results → "No Results".
+- Type-to-search: typing while focus is anywhere in the sidebar (for
+  example on the contact list) goes to the search entry.
 - On narrow windows the split view collapses (sidebar first, content
   pushed on selection), via an `AdwBreakpoint` at 500sp.
 
@@ -81,8 +89,14 @@ Manage contacts.
   addresses (street, extended, PO box, city, region, postal code,
   country), websites — each with a type dropdown (phones: Mobile, Home,
   Work, Home Fax, Work Fax, Pager, Other; others: Personal, Work, Other) and
-  a remove button, plus *Add* buttons; birthday (date entry `YYYY-MM-DD`
-  or `--MM-DD` with a calendar popover); notes (multi-line).
+  a remove button, plus *Add* buttons; birthday and anniversary (each a
+  day drop-down, a month drop-down, an optional year field and a
+  calendar popover — no ISO typing; stored as `YYYY-MM-DD`, or `--MM-DD`
+  without a year, and an unchanged date keeps its original text); notes
+  (multi-line). An impossible or incomplete date ("April has only 30
+  days", "Choose both a day and a month") is shown under the date and
+  marks the control (invalid state, error-message relation, announced);
+  *Done* then moves focus there.
 - Leaving the editor any other way than *Done* / *Cancel* — `Escape`
   (also while typing in a field), selecting another contact, or *New
   Contact* (`Ctrl+N`) — first checks for unsaved changes. Without changes
@@ -197,7 +211,10 @@ writes folks' data.
 `Ctrl+N` new contact, `Ctrl+F` search, `Ctrl+E` edit, `Ctrl+I` import,
 `Delete` delete
 contact, `Escape` cancel edit / leave selection / clear search, `Ctrl+Q`
-quit, `Ctrl+W` close window, `Ctrl+?` shortcuts.
+quit, `Ctrl+W` close window, `Ctrl+?` shortcuts. `Ctrl+?` (and the menu
+item) opens a `GtkShortcutsWindow` built from a table
+(`helix_app_common::shortcuts`); a unit test checks it lists every
+registered accelerator.
 
 ### Command line
 - `helix-contacts` opens the window.
@@ -205,7 +222,8 @@ quit, `Ctrl+W` close window, `Ctrl+?` shortcuts.
 - `--email ADDRESS` (`-e`) selects the contact with that address, or opens
   the new-contact editor pre-filled with it.
 - `--search TERM` (`-s`) starts with the search filled in.
-- `FILE.vcf` arguments are imported.
+- `FILE.vcf` arguments are imported into the default address book once
+  the address books have loaded.
 
 ### Testing
 - `crates/helix-eds` unit tests cover vCard parsing/serialization.
@@ -227,7 +245,7 @@ quit, `Ctrl+W` close window, `Ctrl+?` shortcuts.
 
 ### Accessibility
 - Status changes that happen without focus moving are announced to
-  screen readers (`helix_app_common::a11y`): the number of contacts matching a search once typing pauses.
+  screen readers (`helix_app_common::a11y`): the number of contacts matching a search once typing pauses; "Loading contacts" when the list starts loading and "N contacts loaded" / "No contacts" when it finishes.
 - Focus is kept across list rebuilds (`helix_app_common::focus`): Rebuilding the contact list (entering / leaving selection mode, search, address-book changes) keeps keyboard focus on the same contact and the scroll position.
 - Editor controls have specific names: each value's Remove button names
   the value ("Remove Email jane@example.org", "Remove Address 1 Main St,

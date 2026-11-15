@@ -74,6 +74,15 @@ pub fn list_timezones() -> Vec<String> {
     zones
 }
 
+/// Country names by zone from the system's tz database tables.
+pub fn zone_countries() -> std::collections::HashMap<String, String> {
+    let read = |name: &str| std::fs::read_to_string(format!("/usr/share/zoneinfo/{name}"));
+    crate::values::zone_countries(
+        &read("zone.tab").unwrap_or_default(),
+        &read("iso3166.tab").unwrap_or_default(),
+    )
+}
+
 /// Zone names (third column) from a `zone1970.tab`/`zone.tab` file.
 pub fn parse_zone_tab(text: &str) -> Vec<String> {
     text.lines()

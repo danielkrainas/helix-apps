@@ -4,6 +4,7 @@ mod dbus;
 mod dialogs;
 mod jobs;
 mod properties;
+mod shortcuts;
 mod sidebar;
 mod tab;
 mod window;
@@ -284,37 +285,41 @@ fn install_app_actions(shared: &Rc<Shared>) {
         .build();
     app.add_action_entries([new_window, prefs]);
 
-    let accels: &[(&str, &[&str])] = &[
-        ("app.new-window", &["<Control>n"]),
-        ("app.preferences", &["<Control>comma"]),
-        ("win.new-tab", &["<Control>t"]),
-        ("win.close-tab", &["<Control>w"]),
-        ("win.back", &["<Alt>Left", "Back"]),
-        ("win.forward", &["<Alt>Right", "Forward"]),
-        ("win.up", &["<Alt>Up"]),
-        ("win.home", &["<Alt>Home"]),
-        ("win.reload", &["F5", "<Control>r"]),
-        ("win.location", &["<Control>l"]),
-        ("win.search", &["<Control>f"]),
-        ("win.view-mode::grid", &["<Control>1"]),
-        ("win.view-mode::list", &["<Control>2"]),
-        (
-            "win.zoom-in",
-            &["<Control>plus", "<Control>equal", "<Control>KP_Add"],
-        ),
-        ("win.zoom-out", &["<Control>minus", "<Control>KP_Subtract"]),
-        ("win.zoom-reset", &["<Control>0", "<Control>KP_0"]),
-        ("win.show-hidden", &["<Control>h"]),
-        ("win.bookmark", &["<Control>d"]),
-        ("win.new-folder", &["<Shift><Control>n"]),
-        ("win.properties", &["<Alt>Return", "<Control>i"]),
-        ("win.toggle-sidebar", &["F9"]),
-        ("win.invert-selection", &["<Shift><Control>i"]),
-    ];
-    for (action, keys) in accels {
+    for (action, keys) in ACCELS {
         app.set_accels_for_action(action, keys);
     }
 }
+
+/// Application accelerators: (action, keys). The Keyboard Shortcuts
+/// window lists every one of them (checked by a test in `shortcuts`).
+pub const ACCELS: &[(&str, &[&str])] = &[
+    ("app.new-window", &["<Control>n"]),
+    ("app.preferences", &["<Control>comma"]),
+    ("win.new-tab", &["<Control>t"]),
+    ("win.close-tab", &["<Control>w"]),
+    ("win.back", &["<Alt>Left", "Back"]),
+    ("win.forward", &["<Alt>Right", "Forward"]),
+    ("win.up", &["<Alt>Up"]),
+    ("win.home", &["<Alt>Home"]),
+    ("win.reload", &["F5", "<Control>r"]),
+    ("win.location", &["<Control>l"]),
+    ("win.search", &["<Control>f"]),
+    ("win.view-mode::grid", &["<Control>1"]),
+    ("win.view-mode::list", &["<Control>2"]),
+    (
+        "win.zoom-in",
+        &["<Control>plus", "<Control>equal", "<Control>KP_Add"],
+    ),
+    ("win.zoom-out", &["<Control>minus", "<Control>KP_Subtract"]),
+    ("win.zoom-reset", &["<Control>0", "<Control>KP_0"]),
+    ("win.show-hidden", &["<Control>h"]),
+    ("win.bookmark", &["<Control>d"]),
+    ("win.new-folder", &["<Shift><Control>n"]),
+    ("win.properties", &["<Alt>Return", "<Control>i"]),
+    ("win.toggle-sidebar", &["F9"]),
+    ("win.invert-selection", &["<Shift><Control>i"]),
+    ("win.show-shortcuts", &["<Control>question"]),
+];
 
 fn arg_strings(cmd: &gio::ApplicationCommandLine) -> Vec<String> {
     cmd.arguments()

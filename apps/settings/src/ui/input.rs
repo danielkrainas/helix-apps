@@ -4,11 +4,12 @@ use adw::prelude::*;
 use gtk::glib;
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
+use super::picker::{self, Picker};
 use super::widgets::{self, identity, scale_row, switch, watch, Num};
-use super::{Ctx, Panel};
+use super::{spawn_worker, Ctx, Panel};
 use crate::values;
 use crate::xkb::{self, XkbInfo};
 
@@ -411,70 +412,72 @@ fn input_sources_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
 }
 
 fn add_source_dialog(parent: &adw::ApplicationWindow, ui: &Rc<SourcesUi>) {
-    let dialog = adw::Dialog::builder()
-        .title("Add Input Source")
-        .content_width(420)
-        .content_height(520)
-        .build();
-    let search = gtk::SearchEntry::builder()
-        .placeholder_text("Search languages and layouts")
-        .margin_start(12)
-        .margin_end(12)
-        .margin_top(6)
-        .margin_bottom(6)
-        .build();
-    let list = gtk::ListBox::builder()
-        .css_classes(["navigation-sidebar"])
-        .build();
-    let scrolled = gtk::ScrolledWindow::builder()
-        .vexpand(true)
-        .hscrollbar_policy(gtk::PolicyType::Never)
-        .child(&list)
-        .build();
+    let picker = Picker::new(
+        "Add Input Source",
+        "Search languages, layouts and input methods",
+        "Search Input Sources",
+        "Loading Input Sources…",
+    );
+    let engines: Rc<RefCell<Option<Vec<xkb::IbusEngine>>>> = Rc::default();
     let fill = {
-        let (list, info) = (list.clone(), ui.info.clone());
+        let (picker, info, engines) = (Rc::downgrade(&picker), ui.info.clone(), engines.clone());
         move |q: &str| {
-            list.remove_all();
-            for (id, desc) in xkb::filter(&info, q).into_iter().take(400) {
-                let row = adw::ActionRow::builder()
-                    .use_markup(false)
-                    .title(desc.as_str())
-                    .subtitle(id.as_str())
-                    .activatable(true)
-                    .build();
-                row.set_widget_name(id);
-                list.append(&row);
-            }
+            let Some(picker) = picker.upgrade() else {
+                return;
+            };
+            let engines = engines.borrow();
+            let Some(engines) = engines.as_ref() else {
+                return;
+            };
+            // Ids are "<type>\t<id>" so IBus names may contain anything.
+            let mut all: Vec<picker::Choice> = xkb::filter(&info, q)
+                .into_iter()
+                .map(|(id, desc)| (format!("xkb\t{id}"), desc.clone(), id.clone()))
+                .collect();
+            all.extend(engines.iter().filter(|e| xkb::ibus_matches(e, q)).map(|e| {
+                let lang = if e.language.is_empty() {
+                    String::new()
+                } else {
+                    format!(" · {}", e.language)
+                };
+                (
+                    format!("ibus\t{}", e.name),
+                    e.longname.clone(),
+                    format!("Input method (IBus){lang}"),
+                )
+            }));
+            let total = all.len();
+            all.truncate(picker::MAX_ROWS);
+            picker.set_choices(&all, total);
         }
     };
-    fill("");
-    search.connect_search_changed(move |e| fill(&e.text()));
+    {
+        let (fill, engines, search) = (fill.clone(), engines.clone(), picker.search.clone());
+        spawn_worker(xkb::load_ibus_engines, move |list| {
+            *engines.borrow_mut() = Some(list);
+            fill(&search.text());
+        });
+    }
+    picker
+        .search
+        .connect_search_changed(move |e| fill(&e.text()));
     let weak = Rc::downgrade(ui);
-    let dlg = dialog.downgrade();
-    list.connect_row_activated(move |_, row| {
-        let id = row.widget_name().to_string();
+    picker.connect_pick(move |choice| {
+        let Some((kind, id)) = choice.split_once('\t') else {
+            return;
+        };
         if let Some(ui) = weak.upgrade() {
             let mut s = read_sources(&ui.prefs);
-            let entry = ("xkb".to_string(), id);
+            let entry = (kind.to_string(), id.to_string());
             if !s.contains(&entry) {
                 s.push(entry);
                 ui.write(s);
             }
         }
-        if let Some(d) = dlg.upgrade() {
-            d.close();
-        }
     });
-    let bx = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    bx.append(&search);
-    bx.append(&scrolled);
-    let view = adw::ToolbarView::new();
-    view.add_top_bar(&adw::HeaderBar::new());
-    view.set_content(Some(&bx));
-    dialog.set_child(Some(&view));
-    dialog.present(Some(parent));
-    search.grab_focus();
+    picker.present(parent);
 }
+
 /// Accessible name of an input source's row button, naming the source:
 /// "Move English (US) Up", "Remove English (US)".
 fn row_button_name(action: &str, source: &str) -> String {

@@ -589,6 +589,14 @@ fn show_log(state: &Rc<State>, id: &str, name: &str) {
     );
 }
 
+/// Shows why keys were refused in the capture dialog and speaks it at
+/// once (focus stays on the dialog, so nothing else would).
+fn show_capture_error(status: &gtk::Label, message: &str) {
+    status.set_label(message);
+    status.set_visible(true);
+    helix_app_common::announce(status, message, helix_app_common::Urgency::Assertive);
+}
+
 /// "Change…": wait for a key combination for `command`.
 fn capture_shortcut(state: &Rc<State>, command: &str, title: &str) {
     let heading = gtk::Label::builder()
@@ -630,6 +638,7 @@ fn capture_shortcut(state: &Rc<State>, command: &str, title: &str) {
     let weak = Rc::downgrade(state);
     let command = command.to_owned();
     let d = dialog.downgrade();
+    let status_weak = status.downgrade();
     keys.connect_key_pressed(move |_, keyval, _, mods| {
         let wanted = mods
             & (gdk::ModifierType::CONTROL_MASK
@@ -652,6 +661,13 @@ fn capture_shortcut(state: &Rc<State>, command: &str, title: &str) {
                         | gdk::ModifierType::SUPER_MASK,
                 );
                 if !ext::shortcut_allowed(&name, ctrl_alt_super) {
+                    // A plain key is refused; say so (a modifier alone just
+                    // starts a combination).
+                    if !ext::is_modifier_key(&name) {
+                        if let Some(status) = status_weak.upgrade() {
+                            show_capture_error(&status, "Use Ctrl, Alt or Super with this key");
+                        }
+                    }
                     return glib::Propagation::Stop;
                 }
                 gtk::accelerator_name(keyval.to_lower(), wanted).to_string()
@@ -677,8 +693,7 @@ fn capture_shortcut(state: &Rc<State>, command: &str, title: &str) {
                         Failure::Denied => "Not allowed".to_owned(),
                     };
                     if let Some(status) = status.upgrade() {
-                        status.set_label(&msg);
-                        status.set_visible(true);
+                        show_capture_error(&status, &format!("Could not use these keys: {msg}"));
                     }
                 }
             },

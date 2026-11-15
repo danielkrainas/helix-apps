@@ -5,9 +5,10 @@ use gtk::glib;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
+use super::picker::{self, Picker};
 use super::widgets::{self, switch, watch};
 use super::{spawn_worker, Ctx, Panel};
-use crate::dbus;
+use crate::{dbus, values};
 
 const INTERFACE: &str = "org.gnome.desktop.interface";
 const DATETIME: &str = "org.gnome.desktop.datetime";
@@ -24,6 +25,8 @@ struct State {
     timezone: RefCell<String>,
     /// Suppresses SetNTP while the switch is updated from timedated.
     loading: Cell<bool>,
+    /// "Unavailable" was already reported with a toast.
+    reported_unavailable: Cell<bool>,
 }
 
 /// Formats `now` in `tz` per `clock-format` (`24h` / `12h`).
@@ -62,11 +65,21 @@ impl State {
                     this.loading.set(true);
                     this.ntp.set_active(td.ntp);
                     this.ntp.set_sensitive(td.can_ntp);
-                    this.ntp.set_subtitle(if td.ntp_synchronized {
+                    let sync = if td.ntp_synchronized {
                         "Synchronized with network time servers"
                     } else {
                         "Requires internet access"
-                    });
+                    };
+                    // Speak a change of sync state (not the first reading).
+                    let before = this.ntp.subtitle();
+                    this.ntp.set_subtitle(sync);
+                    if before.is_some_and(|b| !b.is_empty() && b != sync) && td.ntp {
+                        helix_app_common::announce(
+                            &this.ntp,
+                            sync,
+                            helix_app_common::Urgency::Polite,
+                        );
+                    }
                     this.loading.set(false);
                     this.tz_row.set_subtitle(&td.timezone);
                     *this.timezone.borrow_mut() = td.timezone;
@@ -77,6 +90,12 @@ impl State {
                     this.tz_row.set_sensitive(false);
                     this.tz_row.set_subtitle("Unavailable");
                     eprintln!("helix-settings-app: timedate1: {e}");
+                    // Report once, not on every reload.
+                    if !this.reported_unavailable.replace(true) {
+                        if let Some(ctx) = this.ctx.upgrade() {
+                            ctx.toast("Date and time settings are unavailable");
+                        }
+                    }
                 }
             }
             this.tick();
@@ -171,6 +190,7 @@ impl Panel for DateTimePanel {
             time_row,
             timezone: RefCell::default(),
             loading: Cell::new(false),
+            reported_unavailable: Cell::new(false),
         });
         state.load();
         state.tick();
@@ -225,59 +245,60 @@ impl Panel for DateTimePanel {
 }
 
 fn timezone_dialog(parent: &adw::ApplicationWindow, state: &Rc<State>) {
-    let dialog = adw::Dialog::builder()
-        .title("Select Time Zone")
-        .content_width(420)
-        .content_height(560)
-        .build();
-    let search = gtk::SearchEntry::builder()
-        .placeholder_text("Search for a city or region")
-        .margin_start(12)
-        .margin_end(12)
-        .margin_top(6)
-        .margin_bottom(6)
-        .build();
-    let list = gtk::ListBox::builder()
-        .css_classes(["navigation-sidebar"])
-        .build();
-    let scrolled = gtk::ScrolledWindow::builder()
-        .vexpand(true)
-        .hscrollbar_policy(gtk::PolicyType::Never)
-        .child(&list)
-        .build();
-    let zones: Rc<RefCell<Vec<String>>> = Rc::default();
+    let picker = Picker::new(
+        "Select Time Zone",
+        "Search for a city, country or region",
+        "Search Time Zones",
+        "Loading Time Zones…",
+    );
+    // (zone id, label), sorted by label.
+    let zones: Rc<RefCell<Vec<(String, String)>>> = Rc::default();
     let fill = {
-        let (list, zones) = (list.clone(), zones.clone());
+        let (picker, zones) = (Rc::downgrade(&picker), zones.clone());
         move |q: &str| {
-            list.remove_all();
-            let q = q.trim().to_lowercase().replace(' ', "_");
-            for z in zones
-                .borrow()
+            let Some(picker) = picker.upgrade() else {
+                return;
+            };
+            let zones = zones.borrow();
+            let matches: Vec<&(String, String)> = zones
                 .iter()
-                .filter(|z| q.is_empty() || z.to_lowercase().contains(&q))
-            {
-                let row = adw::ActionRow::builder()
-                    .use_markup(false)
-                    .title(z.replace('_', " ").as_str())
-                    .activatable(true)
-                    .build();
-                row.set_widget_name(z);
-                list.append(&row);
-            }
+                .filter(|(z, label)| values::zone_matches(z, label, q))
+                .collect();
+            let shown: Vec<picker::Choice> = matches
+                .iter()
+                .take(picker::MAX_ROWS)
+                .map(|(z, label)| (z.clone(), label.clone(), z.replace('_', " ")))
+                .collect();
+            picker.set_choices(&shown, matches.len());
         }
     };
     {
-        let (fill, zones) = (fill.clone(), zones.clone());
-        spawn_worker(dbus::list_timezones, move |list| {
-            *zones.borrow_mut() = list;
-            fill("");
-        });
+        let (fill, zones, search) = (fill.clone(), zones.clone(), picker.search.clone());
+        spawn_worker(
+            || {
+                let countries = dbus::zone_countries();
+                let mut list: Vec<(String, String)> = dbus::list_timezones()
+                    .into_iter()
+                    .map(|z| {
+                        let label = values::zone_label(&z, countries.get(&z).map(String::as_str));
+                        (z, label)
+                    })
+                    .collect();
+                list.sort_by_key(|(_, label)| label.to_lowercase());
+                list
+            },
+            move |list| {
+                *zones.borrow_mut() = list;
+                fill(&search.text());
+            },
+        );
     }
-    search.connect_search_changed(move |e| fill(&e.text()));
+    picker
+        .search
+        .connect_search_changed(move |e| fill(&e.text()));
     let weak = Rc::downgrade(state);
-    let dlg = dialog.downgrade();
-    list.connect_row_activated(move |_, row| {
-        let tz = row.widget_name().to_string();
+    picker.connect_pick(move |tz| {
+        let tz = tz.to_string();
         if let Some(st) = weak.upgrade() {
             if *st.timezone.borrow() != tz {
                 let weak = Rc::downgrade(&st);
@@ -293,19 +314,8 @@ fn timezone_dialog(parent: &adw::ApplicationWindow, state: &Rc<State>) {
                 );
             }
         }
-        if let Some(d) = dlg.upgrade() {
-            d.close();
-        }
     });
-    let bx = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    bx.append(&search);
-    bx.append(&scrolled);
-    let view = adw::ToolbarView::new();
-    view.add_top_bar(&adw::HeaderBar::new());
-    view.set_content(Some(&bx));
-    dialog.set_child(Some(&view));
-    dialog.present(Some(parent));
-    search.grab_focus();
+    picker.present(parent);
 }
 
 #[cfg(test)]

@@ -8,8 +8,10 @@ mod extensions;
 mod input;
 mod multitasking;
 mod notifications;
+mod picker;
 mod power;
 mod privacy;
+mod shortcuts;
 mod widgets;
 
 use adw::prelude::*;
@@ -29,6 +31,12 @@ const DEFAULT_PANEL: PanelId = PanelId::Appearance;
 pub trait Panel {
     /// Builds the panel's content (usually an `AdwPreferencesPage`).
     fn build(&self, ctx: &Rc<Ctx>) -> gtk::Widget;
+
+    /// Whether the content brings its own header bars (an
+    /// `AdwNavigationView` of sub-pages), so none is added around it.
+    fn own_header(&self) -> bool {
+        false
+    }
 }
 
 /// Implementation registry: `None` for panels that are not available yet.
@@ -98,6 +106,9 @@ struct Window {
     ctx: Rc<Ctx>,
     split: adw::NavigationSplitView,
     list: gtk::ListBox,
+    /// The panel list, or "No Results Found" for a search without matches.
+    list_stack: gtk::Stack,
+    search_entry: gtk::SearchEntry,
     rows: Vec<(PanelId, gtk::ListBoxRow)>,
     pages: RefCell<HashMap<PanelId, adw::NavigationPage>>,
     searching: RefCell<bool>,
@@ -123,7 +134,8 @@ impl Window {
         let search_entry = gtk::SearchEntry::builder()
             .placeholder_text("Search settings")
             .hexpand(true)
-            .build();
+            .build()
+            .labelled("Search Settings");
         let search_bar = gtk::SearchBar::builder()
             .child(&search_entry)
             .show_close_button(false)
@@ -140,6 +152,7 @@ impl Window {
             .build();
 
         let menu = gio::Menu::new();
+        menu.append(Some("_Keyboard Shortcuts"), Some("win.show-shortcuts"));
         menu.append(Some("_About Settings"), Some("app.about"));
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
@@ -156,20 +169,29 @@ impl Window {
             .css_classes(["navigation-sidebar"])
             .build();
         let mut rows = Vec::new();
-        for p in panels::PANELS {
-            let row = Self::make_row(p);
+        for id in panels::sidebar_order("") {
+            let row = Self::make_row(panels::info(id));
             list.append(&row);
-            rows.push((p.id, row));
+            rows.push((id, row));
         }
         let scrolled = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never)
             .vexpand(true)
             .child(&list)
             .build();
+        let no_results = adw::StatusPage::builder()
+            .icon_name("system-search-symbolic")
+            .title("No Results Found")
+            .description("Try a different search")
+            .build();
+        no_results.add_css_class("compact");
+        let list_stack = gtk::Stack::new();
+        list_stack.add_named(&scrolled, Some("list"));
+        list_stack.add_named(&no_results, Some("no-results"));
         let sidebar_view = adw::ToolbarView::new();
         sidebar_view.add_top_bar(&header);
         sidebar_view.add_top_bar(&search_bar);
-        sidebar_view.set_content(Some(&scrolled));
+        sidebar_view.set_content(Some(&list_stack));
         split.set_sidebar(Some(&adw::NavigationPage::new(&sidebar_view, "Settings")));
 
         toasts.set_child(Some(&split));
@@ -192,6 +214,8 @@ impl Window {
             ctx,
             split,
             list: list.clone(),
+            list_stack,
+            search_entry: search_entry.clone(),
             rows,
             pages: RefCell::default(),
             searching: RefCell::new(false),
@@ -220,8 +244,10 @@ impl Window {
             #[weak(rename_to = this)]
             this,
             move |_| {
-                if let Some(row) = this.list.row_at_index(0) {
-                    row.activate();
+                // Enter opens the first (best) match.
+                let first = this.list.row_at_index(0).and_then(|r| this.id_of(&r));
+                if let Some(id) = first {
+                    this.show_panel(id);
                 }
             }
         ));
@@ -249,8 +275,13 @@ impl Window {
         let search_action = gio::ActionEntry::builder("search")
             .activate(move |_: &adw::ApplicationWindow, _, _| search_bar.set_search_mode(true))
             .build();
-        window.add_action_entries([search_action]);
-        app.set_accels_for_action("win.search", &["<Control>f"]);
+        let shortcuts_action = gio::ActionEntry::builder("show-shortcuts")
+            .activate(|win: &adw::ApplicationWindow, _, _| shortcuts::show(win))
+            .build();
+        window.add_action_entries([search_action, shortcuts_action]);
+        for (action, keys) in ACCELS {
+            app.set_accels_for_action(action, keys);
+        }
         this
     }
 
@@ -280,6 +311,10 @@ impl Window {
         let row = gtk::ListBoxRow::builder().child(&bx).build();
         row.set_widget_name(p.name);
         helix_app_common::set_accessible_label(&row, p.title);
+        if !p.available {
+            // Read as "Wi-Fi, Not yet available".
+            row.update_property(&[gtk::accessible::Property::Description("Not yet available")]);
+        }
         row
     }
 
@@ -288,10 +323,31 @@ impl Window {
     }
 
     fn update_header(&self, row: &gtk::ListBoxRow, before: Option<&gtk::ListBoxRow>) {
-        let group = |r: &gtk::ListBoxRow| self.id_of(r).map(|id| panels::info(id).group);
+        let info = |r: &gtk::ListBoxRow| self.id_of(r).map(panels::info);
+        let available = |r: &gtk::ListBoxRow| info(r).is_some_and(|i| i.available);
+        // Placeholders come last, under their own heading.
+        if !available(row) && before.is_none_or(available) {
+            let is_heading = row
+                .header()
+                .is_some_and(|h| h.widget_name() == "placeholders-heading");
+            if !is_heading {
+                let heading = gtk::Label::builder()
+                    .label("Not Yet Available")
+                    .xalign(0.0)
+                    .margin_top(if before.is_some() { 12 } else { 6 })
+                    .margin_bottom(6)
+                    .margin_start(12)
+                    .css_classes(["heading", "dim-label"])
+                    .name("placeholders-heading")
+                    .build();
+                row.set_header(Some(&heading));
+            }
+            return;
+        }
+        let group = |r: &gtk::ListBoxRow| info(r).map(|i| i.group);
         let needs = !*self.searching.borrow() && before.is_some_and(|b| group(b) != group(row));
         if needs {
-            if row.header().is_none() {
+            if !row.header().is_some_and(|h| h.is::<gtk::Separator>()) {
                 row.set_header(Some(&gtk::Separator::new(gtk::Orientation::Horizontal)));
             }
         } else {
@@ -301,18 +357,29 @@ impl Window {
 
     fn filter(&self, query: &str) {
         *self.searching.borrow_mut() = !query.trim().is_empty();
-        let order = panels::search(query);
+        let order = panels::sidebar_order(query);
         for (_, row) in &self.rows {
             if row.parent().is_some() {
                 self.list.remove(row);
             }
         }
+        let found = order.len();
         for id in order {
             if let Some((_, row)) = self.rows.iter().find(|(i, _)| *i == id) {
                 self.list.append(row);
             }
         }
         self.list.invalidate_headers();
+        self.list_stack
+            .set_visible_child_name(if found == 0 { "no-results" } else { "list" });
+        if !query.trim().is_empty() {
+            let message = match found {
+                0 => "No results found".to_string(),
+                1 => "1 panel found".to_string(),
+                n => format!("{n} panels found"),
+            };
+            helix_app_common::announce_settled(&self.search_entry, &message);
+        }
     }
 
     fn show_panel(&self, id: PanelId) {
@@ -333,6 +400,13 @@ impl Window {
 
     fn build_page(&self, id: PanelId) -> adw::NavigationPage {
         let info = panels::info(id);
+        if let Some(panel) = panel_impl(id).filter(|p| p.own_header()) {
+            return adw::NavigationPage::builder()
+                .title(info.title)
+                .tag(info.name)
+                .child(&panel.build(&self.ctx))
+                .build();
+        }
         let view = adw::ToolbarView::new();
         view.add_top_bar(&adw::HeaderBar::new());
         let content: gtk::Widget = match panel_impl(id) {
@@ -353,13 +427,20 @@ impl Window {
     }
 }
 
+/// Application accelerators: (action, keys). The Keyboard Shortcuts
+/// window lists every one of them (checked by a test in `shortcuts`).
+pub const ACCELS: &[(&str, &[&str])] = &[
+    ("win.search", &["<Control>f"]),
+    ("win.show-shortcuts", &["<Control>question"]),
+    ("app.about", &["F1"]),
+];
+
 pub fn run(args: Vec<String>) -> glib::ExitCode {
     let app = adw::Application::builder()
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::HANDLES_COMMAND_LINE)
         .build();
     helix_app_common::install_standard_actions(&app, "Settings", "Configure the Helix desktop");
-    app.set_accels_for_action("app.about", &["F1"]);
     let window: Rc<RefCell<Option<Rc<Window>>>> = Rc::default();
     app.connect_command_line(move |app, cmd| {
         let panel = cmd

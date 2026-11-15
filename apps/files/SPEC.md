@@ -204,14 +204,23 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
   "N items, totalling X"), parent folder, link target, modified /
   accessed / created times, free space of the filesystem, and
   permissions (owner/group/others read, write, execute switches for
-  files supporting `unix::mode`; changes applied immediately). For
+  files supporting `unix::mode`; changes applied immediately). Each
+  check box is named with its scope ("Owner read", "Group write",
+  "Others execute"). For
   several items: count and combined size.
 
 ### Open With
-- Dialog listing applications for the content type
-  (`g_app_info_get_recommended_for_type`, then all others for the type),
-  with *Open* and "Always use for this file type"
-  (`g_app_info_set_as_default_for_type`).
+- Dialog listing applications for the content type under two headings:
+  "Recommended Applications" (`g_app_info_get_recommended_for_type`)
+  and "Other Applications" (the rest of `g_app_info_get_all_for_type`).
+  Only when no application handles the type is every installed
+  application offered ("All Applications"). A search entry (focused on
+  open; typing anywhere in the dialog goes to it) filters by name, shows
+  "No Results Found" when nothing matches and announces the match count;
+  Down moves into the list. *Open* is the default button; Enter in the
+  search or on a row opens the selected (first matching) application.
+  "Always use for this file type" calls
+  `g_app_info_set_as_default_for_type`. App icons are presentational.
 
 ### Preferences dialog (`Ctrl+,`)
 Default view, sort folders before files, click policy, show hidden
@@ -288,7 +297,12 @@ window, `Ctrl+1`/`Ctrl+2` view, `Ctrl+H` hidden files, `Ctrl+D`
 bookmark, `F2` rename, `Delete` trash, `Shift+Delete` delete,
 `Ctrl+X/C/V` clipboard, `Ctrl+A` select all, `Ctrl+Z` undo,
 `Alt+Return`/`Ctrl+I` properties, `Shift+Ctrl+N` new folder, `F5` reload,
-`F9` sidebar, `Ctrl+,` preferences, `Ctrl+Q` quit.
+`F9` sidebar, `Ctrl+,` preferences, `Ctrl+Q` quit, `Ctrl+?` Keyboard
+Shortcuts window (also in the main menu, before About). The window is
+built from a table that a unit test checks against every registered
+accelerator and view shortcut, so it stays complete. "Show Hidden
+Files" lives in the view menu (and the folder background menu), not in
+the main menu.
 
 ## Deferred
 - Starred files (needs Tracker/LocalSearch).
@@ -306,7 +320,7 @@ bookmark, `F2` rename, `Delete` trash, `Shift+Delete` delete,
 
 ### Accessibility
 - Status changes that happen without focus moving are announced to
-  screen readers (`helix_app_common::a11y`): a recursive search finishing ("Search finished: 12 items found" / "No results") and a folder that cannot be opened ("Unable to open folder: <reason>", once per failure). A finished file operation is reported by its toast; failures open an alert, cancellation shows a toast.
+  screen readers (`helix_app_common::a11y`): a recursive search finishing ("Search finished: 12 items found" / "No results") and a folder that cannot be opened ("Unable to open folder: <reason>", once per failure); its "Unable to Open Folder" page has a *Try Again* button that reloads the folder. A finished file operation is reported by its toast; failures open an alert, cancellation shows a toast.
 - The folder-loading spinner is named "Loading folder". Items that are
   cut (waiting for Paste) are dimmed and have the accessible description
   "Cut".

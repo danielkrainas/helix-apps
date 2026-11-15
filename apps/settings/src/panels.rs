@@ -390,6 +390,14 @@ pub fn search(query: &str) -> Vec<PanelId> {
     ranked.into_iter().map(|(_, _, id)| id).collect()
 }
 
+/// The sidebar's rows for `query`: [`search`] order, but panels that
+/// work come first and placeholders ("Not yet available") last.
+pub fn sidebar_order(query: &str) -> Vec<PanelId> {
+    let mut ids = search(query);
+    ids.sort_by_key(|id| !info(*id).available);
+    ids
+}
+
 /// Lower rank is a better match; `None` means no match.
 fn rank(p: &PanelInfo, query: &str, terms: &[&str]) -> Option<u8> {
     let title = p.title.to_lowercase();
@@ -492,6 +500,21 @@ mod tests {
     fn empty_query_lists_all() {
         assert_eq!(search("").len(), PANELS.len());
         assert_eq!(search("   ")[0], PanelId::Wifi);
+    }
+
+    #[test]
+    fn placeholders_listed_last() {
+        let order = sidebar_order("");
+        assert_eq!(order.len(), PANELS.len());
+        let first_placeholder = order.iter().position(|id| !info(*id).available).unwrap();
+        assert!(order[first_placeholder..]
+            .iter()
+            .all(|id| !info(*id).available));
+        // Working panels keep their GNOME order.
+        assert_eq!(order[0], PanelId::Power);
+        // Searching keeps the rule: a working match before a placeholder.
+        let r = sidebar_order("wireless");
+        assert!(r.iter().all(|id| !info(*id).available) || info(r[0]).available);
     }
 
     #[test]

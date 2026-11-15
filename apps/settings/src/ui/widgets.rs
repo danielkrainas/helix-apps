@@ -77,6 +77,98 @@ pub fn switch(
     row
 }
 
+/// Expander row whose enable switch is bound to a boolean key; the rows
+/// added to it are the feature's parameters.
+pub fn expander(
+    prefs: &Prefs,
+    key: &'static str,
+    default: bool,
+    title: &str,
+    subtitle: &str,
+) -> adw::ExpanderRow {
+    let row = adw::ExpanderRow::builder()
+        .title(glib::markup_escape_text(title))
+        .show_enable_switch(true)
+        .build();
+    if !subtitle.is_empty() {
+        row.set_subtitle(&glib::markup_escape_text(subtitle));
+    }
+    if !has_key(prefs, key) {
+        row.set_subtitle(UNSUPPORTED);
+    }
+    row.set_enable_expansion(prefs.get::<bool>(key, default));
+    row.connect_enable_expansion_notify(glib::clone!(
+        #[strong]
+        prefs,
+        move |r| {
+            if prefs.get::<bool>(key, default) != r.enables_expansion() {
+                prefs.set(key, r.enables_expansion());
+            }
+        }
+    ));
+    let (weak, p) = (row.downgrade(), prefs.clone());
+    watch(prefs, key, move || {
+        if let Some(r) = weak.upgrade() {
+            r.set_enable_expansion(p.get::<bool>(key, default));
+        }
+    });
+    row
+}
+
+/// Spin row bound to a `d` key.
+pub fn spin_row(
+    prefs: &Prefs,
+    key: &'static str,
+    default: f64,
+    (min, max, step): (f64, f64, f64),
+    title: &str,
+) -> adw::SpinRow {
+    let row = adw::SpinRow::with_range(min, max, step);
+    row.set_title(&glib::markup_escape_text(title));
+    row.set_digits(2);
+    mark(&row, prefs, key);
+    row.set_value(prefs.get::<f64>(key, default));
+    row.connect_value_notify(glib::clone!(
+        #[strong]
+        prefs,
+        move |r| set_num(&prefs, key, Num::F64, r.value())
+    ));
+    let (weak, p) = (row.downgrade(), prefs.clone());
+    watch(prefs, key, move || {
+        if let Some(r) = weak.upgrade() {
+            let v = p.get::<f64>(key, default);
+            if (r.value() - v).abs() > 1e-9 {
+                r.set_value(v);
+            }
+        }
+    });
+    row
+}
+
+/// A row that opens a sub-page (chevron, activatable).
+pub fn subpage_row(title: &str, subtitle: &str, icon: &str) -> adw::ActionRow {
+    let row = adw::ActionRow::builder()
+        .title(glib::markup_escape_text(title))
+        .activatable(true)
+        .build();
+    if !subtitle.is_empty() {
+        row.set_subtitle(&glib::markup_escape_text(subtitle));
+    }
+    row.add_prefix(
+        &gtk::Image::builder()
+            .icon_name(icon)
+            .accessible_role(gtk::AccessibleRole::Presentation)
+            .build(),
+    );
+    row.add_suffix(
+        &gtk::Image::builder()
+            .icon_name("go-next-symbolic")
+            .accessible_role(gtk::AccessibleRole::Presentation)
+            .build(),
+    );
+    row
+}
+
 fn string_list(labels: impl IntoIterator<Item = String>) -> gtk::StringList {
     let list = gtk::StringList::new(&[]);
     for l in labels {

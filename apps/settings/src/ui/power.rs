@@ -30,9 +30,13 @@ impl BatteryUi {
             w.set_visible(present);
         }
         if let Some(b) = battery {
+            let percent = format!("{:.0} %", b.percentage);
             self.level.set_value(b.percentage / 100.0);
-            self.row.set_title(&format!("{:.0} %", b.percentage));
-            let mut subtitle = values::battery_state_label(b.state).to_string();
+            // Read as "Battery Level, 57 %".
+            self.level
+                .update_property(&[gtk::accessible::Property::ValueText(&percent)]);
+            self.row.set_title("Battery");
+            let mut subtitle = format!("{percent} · {}", values::battery_state_label(b.state));
             if let Some(t) = values::battery_time_label(b.state, b.time_to_empty, b.time_to_full) {
                 subtitle = format!("{subtitle} — {t}");
             }
@@ -69,6 +73,7 @@ impl Panel for PowerPanel {
             .valign(gtk::Align::Center)
             .width_request(160)
             .build();
+        helix_app_common::set_accessible_label(&level, "Battery Level");
         let row = adw::ActionRow::builder().title("Battery").build();
         row.add_suffix(&level);
         battery.add(&row);
@@ -123,6 +128,8 @@ impl Panel for PowerPanel {
                 seconds_label,
                 "Delay",
             );
+            // Both rows read "Delay"; say which suspend each belongs to.
+            helix_app_common::set_accessible_label(&delay, &format!("Suspend Delay {label}"));
             sw.bind_property("active", &delay, "sensitive")
                 .sync_create()
                 .build();

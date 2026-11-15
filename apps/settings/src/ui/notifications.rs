@@ -66,7 +66,11 @@ impl Panel for NotificationsPanel {
                     .title(name.as_str())
                     .use_markup(false)
                     .build();
-                let image = gtk::Image::builder().pixel_size(32).build();
+                // Decorative: the row's title names the app.
+                let image = gtk::Image::builder()
+                    .pixel_size(32)
+                    .accessible_role(gtk::AccessibleRole::Presentation)
+                    .build();
                 match icon {
                     Some(icon) => image.set_from_gicon(&icon),
                     None => image.set_icon_name(Some("application-x-executable")),

@@ -4,11 +4,13 @@ use adw::prelude::*;
 use gtk::{gio, glib};
 use helix_app_common::Labelled;
 use helix_eds::vcard::{
-    self, generic_type_index, phone_type_index, Address, Contact, Photo, StructuredName, Typed,
+    generic_type_index, phone_type_index, Address, Contact, Photo, StructuredName, Typed,
     GENERIC_TYPES, PHONE_TYPES,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
+
+use crate::datefield::DateField;
 
 type Choices = &'static [(&'static str, &'static [&'static str])];
 
@@ -194,7 +196,8 @@ pub struct Editor {
     urls: Rc<TypedList>,
     addresses: RefCell<Vec<AddressRow>>,
     address_box: gtk::Box,
-    birthday: adw::EntryRow,
+    birthday: Rc<DateField>,
+    anniversary: Rc<DateField>,
     note: gtk::TextView,
     /// Address-book chooser for new contacts: (dropdown, book uids).
     pub book_choice: Option<(gtk::DropDown, Vec<String>)>,
@@ -318,37 +321,10 @@ impl Editor {
         page.append(&urls.group);
 
         let misc = adw::PreferencesGroup::builder().title("Other").build();
-        let birthday = entry("Birthday (YYYY-MM-DD)", &contact.birthday);
-        let cal_button = gtk::MenuButton::builder()
-            .icon_name("x-office-calendar-symbolic")
-            .tooltip_text("Pick Date")
-            .css_classes(["flat"])
-            .valign(gtk::Align::Center)
-            .build()
-            .labelled("Pick Date");
-        let calendar = gtk::Calendar::new();
-        if let Some((y, m, d)) = vcard::parse_date(&contact.birthday) {
-            if let Ok(dt) =
-                glib::DateTime::from_local(y.unwrap_or(2000), m as i32, d as i32, 0, 0, 0.0)
-            {
-                calendar.select_day(&dt);
-            }
-        }
-        let pop = gtk::Popover::builder().child(&calendar).build();
-        cal_button.set_popover(Some(&pop));
-        let b = birthday.clone();
-        let p = pop.clone();
-        calendar.connect_day_selected(move |c| {
-            let d = c.date();
-            b.set_text(&vcard::format_date(
-                d.year(),
-                d.month() as u32,
-                d.day_of_month() as u32,
-            ));
-            p.popdown();
-        });
-        birthday.add_suffix(&cal_button);
-        misc.add(&birthday);
+        let birthday = DateField::new("Birthday", &contact.birthday);
+        let anniversary = DateField::new("Anniversary", &contact.anniversary);
+        misc.add(&birthday.row);
+        misc.add(&anniversary.row);
         page.append(&misc);
 
         let notes_group = adw::PreferencesGroup::builder().title("Notes").build();
@@ -396,6 +372,7 @@ impl Editor {
             addresses: RefCell::default(),
             address_box,
             birthday,
+            anniversary,
             note,
             book_choice,
             initial: RefCell::default(),
@@ -566,11 +543,8 @@ impl Editor {
             })
             .filter(|a| !a.is_empty())
             .collect();
-        let bday = t(&self.birthday);
-        if !bday.is_empty() && vcard::parse_date(&bday).is_none() {
-            return Err("Birthday must look like 1990-05-17 or --05-17".into());
-        }
-        c.birthday = bday;
+        c.birthday = self.birthday.value()?;
+        c.anniversary = self.anniversary.value()?;
         let buf = self.note.buffer();
         c.note = buf
             .text(&buf.start_iter(), &buf.end_iter(), false)
@@ -596,6 +570,17 @@ impl Editor {
         self.book_choice
             .as_ref()
             .and_then(|(dd, uids)| uids.get(dd.selected() as usize).cloned())
+    }
+
+    /// Focuses the first invalid date field, if any (after a failed save).
+    pub fn focus_invalid(&self) -> bool {
+        for f in [&self.birthday, &self.anniversary] {
+            if f.value().is_err() {
+                f.focus();
+                return true;
+            }
+        }
+        false
     }
 
     pub fn focus_first(&self) {
