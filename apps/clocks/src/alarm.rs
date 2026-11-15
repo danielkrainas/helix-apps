@@ -63,6 +63,43 @@ impl Weekdays {
     }
 }
 
+/// The full day name, for assistive technology and explanations.
+pub fn full_name(d: Weekday) -> &'static str {
+    match d {
+        Weekday::Mon => "Monday",
+        Weekday::Tue => "Tuesday",
+        Weekday::Wed => "Wednesday",
+        Weekday::Thu => "Thursday",
+        Weekday::Fri => "Friday",
+        Weekday::Sat => "Saturday",
+        Weekday::Sun => "Sunday",
+    }
+}
+
+/// Explains what the selected days mean, shown under the alarm editor's
+/// day toggles: "Rings once, at the next 7:00, then turns off" when no day
+/// is selected.
+pub fn repeat_hint(days: Weekdays) -> String {
+    match days.0 & 0x7f {
+        0 => "No days selected: the alarm rings once, then turns off".into(),
+        0x7f => "Rings every day".into(),
+        0x1f => "Rings Monday to Friday".into(),
+        0x60 => "Rings Saturday and Sunday".into(),
+        _ => {
+            let names: Vec<&str> = Weekdays::ALL
+                .iter()
+                .filter(|d| days.contains(**d))
+                .map(|d| full_name(*d))
+                .collect();
+            match names.as_slice() {
+                [one] => format!("Rings every {one}"),
+                [rest @ .., last] => format!("Rings every {} and {last}", rest.join(", ")),
+                [] => String::new(),
+            }
+        }
+    }
+}
+
 pub fn short_name(d: Weekday) -> &'static str {
     match d {
         Weekday::Mon => "Mon",
@@ -321,6 +358,18 @@ mod tests {
         assert_eq!(w.to_numbers(), vec![6]);
         w.set(Weekday::Sun, false);
         assert!(w.is_empty());
+    }
+
+    #[test]
+    fn repeat_hints() {
+        assert!(repeat_hint(Weekdays(0)).contains("rings once"));
+        assert_eq!(repeat_hint(Weekdays(0x7f)), "Rings every day");
+        assert_eq!(repeat_hint(Weekdays(0x1f)), "Rings Monday to Friday");
+        assert_eq!(repeat_hint(Weekdays(0b100)), "Rings every Wednesday");
+        assert_eq!(
+            repeat_hint(Weekdays(0b10101)),
+            "Rings every Monday, Wednesday and Friday"
+        );
     }
 
     #[test]

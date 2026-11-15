@@ -188,9 +188,22 @@ World clocks, alarms, stopwatch, and timer.
 - Multiple timers are listed, each with its name, a large countdown
   (`H:MM:SS` / `MM:SS`), and buttons **Start/Pause/Resume**, **Reset**,
   **Delete**. A running timer's row has a progress bar.
+- Clicking (or pressing Enter on) a timer row opens *Edit Timer*: its
+  hours/minutes/seconds and name. A changed duration resets a running or
+  paused timer (the dialog says so); a zero duration is refused with an
+  error under the spin buttons.
+- Deleting a timer shows a "… deleted" toast with *Undo*, which puts the
+  timer back in its place (still running if it was) and focuses it.
+- The setup page's *Cancel* (back to the list) sits beside *Start*.
 - When a timer reaches zero it stops, resets to its full duration, sends a
   `gio::Notification` ("Time is up!", the timer's name) and plays the timer
-  sound once (not while an alarm is ringing).
+  sound once (not while an alarm is ringing). Its row then stays visibly
+  finished — "Time's up" with an icon, `00:00`, a full progress bar, a
+  tinted background and a *Dismiss* button — and the Timer tab shows an
+  attention dot, until the user dismisses, restarts, resets, edits or
+  deletes it (this does not depend on notifications being shown). A hidden
+  window is presented. Acknowledging the last finished timer stops the
+  sound and withdraws the notification.
 - Timer definitions (name, duration) are persisted; running state is not.
 
 ### GSettings (`org.gnome.clocks`)
@@ -224,7 +237,7 @@ If a schema is not installed, values live in memory for the session.
 |---|---|
 | `Alt+1` … `Alt+4` | World / Alarms / Stopwatch / Timer |
 | `Ctrl+N` | New location / alarm / timer (current page) |
-| `Space`, `L`, `Delete` | Stopwatch start-pause, lap, reset (stopwatch page) |
+| `Space`, `L`, `Delete` or `Backspace` | Stopwatch start-pause, lap, reset (stopwatch page) |
 | `Ctrl+Q` | Quit |
 | `Ctrl+W` | Close window |
 | `Ctrl+?` | Keyboard shortcuts |
@@ -262,7 +275,8 @@ window (used by autostart; see Alarms). Plus GApplication's standard options
 
 ### Accessibility
 - Status changes that happen without focus moving are announced to
-  screen readers (`helix_app_common::a11y`): a timer going off ("Time is up: …", assertive); a ringing alarm opens its alert dialog.
+  screen readers (`helix_app_common::a11y`): a timer going off ("Time is up: …", assertive; the finished row's
+  accessible name then ends in "time's up" until it is acknowledged); a ringing alarm opens its alert dialog.
 - Focus is kept across list changes (`helix_app_common::focus`). Alarm
   rows are updated in place while the same alarms are listed in the same
   order (toggling, ringing, snoozing, stopping, renaming), so focus never
@@ -283,3 +297,11 @@ window (used by autostart; see Alarms). Plus GApplication's standard options
   row, progress bar and Start / Pause / Resume, Reset and Delete buttons
   carry that name ("Pause 5 minutes timer 2", "Delete Tea").
 - The alarm editor's AM/PM drop-down is named "AM or PM".
+- A lap row reads in full: "Lap 3, lap time 00:12.40, total 01:02.00,
+  +0:01.23 compared with the previous lap".
+- The alarm editor's day toggles form a group named "Repeat"; each toggle
+  is named by the full day name ("Monday", pressed or not), and a caption
+  under them (the group's description) explains the selection ("Rings
+  every Monday and Friday", or that with no day selected the alarm rings
+  once, then turns off). The toggles wrap onto two lines (four and three)
+  below 400sp, and the editor scrolls, so it fits a 360×294 window.

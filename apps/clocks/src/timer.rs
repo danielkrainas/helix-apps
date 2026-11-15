@@ -14,6 +14,9 @@ pub struct Timer {
     pub name: String,
     pub duration: Duration,
     pub state: State,
+    /// Reached zero and not yet acknowledged: the row shows "Time's up"
+    /// until the user dismisses, restarts, resets, edits or deletes it.
+    pub finished: bool,
 }
 
 /// Preset durations in seconds.
@@ -25,6 +28,7 @@ impl Timer {
             name: name.into(),
             duration,
             state: State::Stopped,
+            finished: false,
         }
     }
 
@@ -49,6 +53,7 @@ impl Timer {
     }
 
     pub fn start(&mut self, mono: Duration) {
+        self.finished = false;
         let remaining = match self.state {
             State::Running { .. } => return,
             State::Stopped => self.duration,
@@ -69,14 +74,21 @@ impl Timer {
 
     pub fn reset(&mut self) {
         self.state = State::Stopped;
+        self.finished = false;
+    }
+
+    /// Clears the "Time's up" state of a finished timer.
+    pub fn acknowledge(&mut self) {
+        self.finished = false;
     }
 
     /// Returns true exactly once when a running timer reaches zero; the
-    /// timer is then reset to its full duration.
+    /// timer is then reset to its full duration and marked finished.
     pub fn tick(&mut self, mono: Duration) -> bool {
         if let State::Running { end } = self.state {
             if mono >= end {
                 self.state = State::Stopped;
+                self.finished = true;
                 return true;
             }
         }
@@ -203,12 +215,22 @@ mod tests {
         c.advance(Duration::from_millis(1));
         assert!(t.tick(c.mono()), "fires at zero");
         assert_eq!(t.state, State::Stopped);
+        assert!(t.finished, "stays finished until acknowledged");
         assert_eq!(
             t.remaining(c.mono()),
             Duration::from_secs(180),
             "resets to full duration"
         );
         assert!(!t.tick(c.mono()), "fires only once");
+        assert!(t.finished);
+        t.acknowledge();
+        assert!(!t.finished);
+        t.finished = true;
+        t.start(c.mono());
+        assert!(!t.finished, "restarting acknowledges");
+        t.finished = true;
+        t.reset();
+        assert!(!t.finished, "resetting acknowledges");
     }
 
     #[test]

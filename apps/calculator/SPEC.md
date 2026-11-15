@@ -37,6 +37,14 @@ Basic, advanced, financial, and programming calculator.
 - Clicking a history row's expression inserts it into the entry; clicking its
   result inserts the result.
 - Window size and the current mode persist across runs.
+- Narrow windows (an `AdwBreakpoint` below 500sp; minimum 360×500): in
+  Advanced, Financial and Programming mode a linked *Numbers* /
+  *Functions* (/ *Bits* in Programming) toggle group above the keypad
+  shows one part at a time instead of the function and number grids side
+  by side; keypad buttons shrink (32 px minimum); the bit panel shows 8
+  bits per row and scrolls if taller than the window. Wider than 500sp the
+  side-by-side layout (and 16 bits per row) comes back. All four modes fit
+  360×600 without clipping.
 - Accessible names: a keypad button whose label is a symbol or short form
   is named by the operation it performs — its tooltip without the
   bracketed shortcut hint ("÷" → "Divide", "x²" → "Square", "⌫" →
@@ -91,7 +99,13 @@ Basic, advanced, financial, and programming calculator.
 - Additional operators: `and or xor not`, `<<`, `>>`; functions `ones`
   (one's complement), `twos` (two's complement).
 - The result is shown in the selected base, with a bit panel showing the
-  value's bits (clickable to toggle) grouped in nibbles.
+  value's bits (clickable to toggle) grouped in nibbles: 16 per row, most
+  significant first, an 8 px gap before each nibble, the bit number of each
+  nibble's lowest bit under it (Adwaita `caption`, `numeric`). Each bit is
+  a toggle button (at least 22×28 px) named "Bit N" whose pressed state is
+  the bit's value ("Bit 5, toggle button, pressed"); the captions are
+  presentational. The panel keeps its own list of toggles and their bit
+  numbers (tooltips are text only).
 
 ### Financial mode
 Functions available as buttons, each opening a small form, and also typeable:

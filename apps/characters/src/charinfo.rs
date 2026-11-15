@@ -67,6 +67,16 @@ pub fn display_name(s: &str) -> String {
     }
 }
 
+/// The name assistive technology reads for `s`: [`display_name`] in
+/// sentence case ("Combining acute accent", "Grinning face"), since
+/// all-capital Unicode names may be spelled out letter by letter.
+pub fn spoken_name(s: &str) -> String {
+    if emojis::get(s).is_some() {
+        return display_name(s);
+    }
+    sentence_case(&display_name(s).to_lowercase())
+}
+
 /// `U+0041`, space separated for sequences.
 pub fn codepoints(s: &str) -> String {
     s.chars()
@@ -142,6 +152,13 @@ mod tests {
         assert_eq!(display_name("😀"), "Grinning face");
         assert_eq!(display_name("\u{E000}"), "Private use character");
         assert_eq!(display_name("一"), "CJK UNIFIED IDEOGRAPH-4E00");
+    }
+
+    #[test]
+    fn spoken_names() {
+        assert_eq!(spoken_name("\u{301}"), "Combining acute accent");
+        assert_eq!(spoken_name("😀"), "Grinning face");
+        assert_eq!(spoken_name("A"), "Latin capital letter a");
     }
 
     #[test]

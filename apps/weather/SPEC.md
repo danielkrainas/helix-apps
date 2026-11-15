@@ -81,21 +81,32 @@ WMO codes map to a description and a standard symbolic icon
 | other | Unknown | `weather-severe-alert` |
 
 ### Window
-- One `AdwApplicationWindow` (default 900×700; size and maximized state
-  persist via `org.gnome.Weather` window keys).
+- One `AdwApplicationWindow` (default 900×700, minimum 360×294; size and
+  maximized state persist via `org.gnome.Weather` window keys).
+- Below 450sp wide (an `AdwBreakpoint`) the page is rebuilt compact: the
+  condition icon (64 px) stacked above a 32pt temperature, centred, and
+  daily rows without the description and range bar (day name, icon,
+  precipitation, low, high fit about 290 px). The places popover is 300 px
+  wide.
 - **Header bar**: title is the selected location's name (subtitle:
   region, country). Start: a *Places* menu button (Ctrl+L / Ctrl+F)
   opening a popover with a search entry, search results and the saved
   locations. End: primary menu and a *Refresh* button (F5 / Ctrl+R).
-- Primary menu: *Temperature unit* radio (°C / °F), *Refresh*,
-  *About Weather*, *Quit*.
+- Primary menu (HIG: no *Quit*; Ctrl+Q still quits): *Temperature unit*
+  radio (°C / °F), *Refresh*, *Keyboard Shortcuts* (Ctrl+?, a shortcuts
+  window), *About Weather*.
 - **Content** is a stack:
   - *Empty*: `AdwStatusPage` "Add a Location" with a button opening the
     search when no location is saved.
   - *Loading*: a spinner while the first forecast for a location loads
     and nothing is cached.
-  - *Error*: `AdwStatusPage` with the error text and a *Retry* button when
-    the fetch failed and no cached forecast exists.
+  - *Error*: `AdwStatusPage` with a plain-language explanation ("Could not
+    reach the weather service. Check your internet connection and try
+    again.", "The weather service is having problems…", or for automatic
+    location "Turn on location services, or search for a place instead.")
+    and a *Retry* button when the fetch failed and no cached forecast
+    exists; the technical error text is under a *Details* expander (and in
+    the log). Search errors use the same plain wording.
   - *Weather*: scrollable page (below).
 - An `AdwBanner` shows "Offline — showing forecast from <time>" when the
   latest refresh failed but a cached forecast is shown; its button retries.
@@ -225,7 +236,8 @@ WMO codes map to a description and a standard symbolic icon
 
 ### Keyboard shortcuts
 `Ctrl+L` / `Ctrl+F` open place search, `F5` / `Ctrl+R` refresh,
-`Ctrl+Q` quit, `Ctrl+W` close window.
+`Ctrl+?` keyboard shortcuts, `Ctrl+Q` quit, `Ctrl+W` close window. In the
+hourly strip: arrow keys, `Home`, `End`.
 
 ### Command line
 `helix-weather` (no options). `--help` prints usage.
@@ -241,10 +253,21 @@ WMO codes map to a description and a standard symbolic icon
 
 ### Accessibility
 - Status changes that happen without focus moving are announced to
-  screen readers (`helix_app_common::a11y`): the forecast or location error page appearing (assertive) and the offline banner appearing.
-- Focus is kept across list rebuilds (`helix_app_common::focus`): Refreshes, including the automatic one, keep keyboard focus on the same day row and the scroll position.
+  screen readers (`helix_app_common::a11y`): the forecast or location error page appearing (assertive), the offline banner appearing, coming back online ("Back online, forecast updated"), the end of a refresh the user asked for ("Forecast updated", or "Could not update the forecast. …"; automatic refreshes stay quiet), and search results once typing settles ("10 locations found", "No locations found").
+- Focus is kept across list rebuilds (`helix_app_common::focus`): Refreshes, including the automatic one, keep keyboard focus on the same hour or day row (with its focus ring), the page's scroll position and the hourly strip's horizontal position.
 - In the places popover the shown place's row is exposed as selected (its
   check mark and the current-location icon are presentational; the
   subtitle already says "Current location"); each Remove button names its
   place ("Remove Berlin"). The loading spinners are named "Loading
   Forecast" and "Updating Forecast".
+- The hourly strip is a list named "Hourly Forecast" with one focusable
+  item per hour, named with everything its column shows ("15:00, 12°,
+  Partly cloudy, 40% chance of precipitation"). It is one Tab stop: the
+  arrow keys (and Home/End) move between hours and scroll the strip; Tab
+  leaves it. The temperature graph and the precipitation figures under it
+  are presentational (the items carry the data). The current-conditions
+  cards take no focus, so Tab goes from the header bar straight to the
+  forecast.
+- Each daily row is named with everything it shows, including what
+  narrow windows leave out ("Tomorrow, Slight rain, 58% chance of
+  precipitation, low 1°, high 8°").

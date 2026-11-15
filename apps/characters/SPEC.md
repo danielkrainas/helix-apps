@@ -91,6 +91,11 @@ Character map and emoji picker.
 - Ranking: exact name match, then name prefix match, then entries where all
   terms match at word starts, then any match; ties prefer emoji, then
   code point / CLDR order. Results are capped at 5 000.
+- A new query hides the grid at once (the previous category or results
+  are never shown under the "Search" title); if the results take longer
+  than 150 ms a spinner ("Loading Characters") shows until they arrive.
+  While results are shown no sidebar row is selected; leaving the search
+  (Escape, clearing the entry) selects the category again.
 - Special queries are put first: a literal single character or emoji (paste
   `é` to find it), and a code point written as `U+XXXX`, `0xXXXX` or `\uXXXX`.
 
@@ -155,3 +160,9 @@ schema does not have; the glyphs use the theme font).
 ### Accessibility
 - Status changes that happen without focus moving are announced to
   screen readers (`helix_app_common::a11y`): the number of characters found by a search once typing pauses.
+- Characters are read by name, not glyph: each grid cell (the list item
+  that takes focus), each "See also" variant button and the details
+  dialog's big glyph are named with the character's name in sentence case
+  ("Grinning face", "Combining acute accent", "Latin capital letter a" —
+  all-capital Unicode names could be spelled out), with the code points as
+  the description where it helps (grid cells, details glyph).

@@ -151,10 +151,20 @@ pub struct Ui {
     week_layout: RefCell<WeekLayout>,
     week_scrolled_once: Cell<bool>,
     picker: gtk::Calendar,
+    cal_header: gtk::Label,
     cal_list: gtk::ListBox,
     agenda_title: gtk::Label,
     agenda: gtk::ListBox,
     agenda_items: RefCell<Vec<Item>>,
+    /// "No Results Found", in place of the agenda for an empty search.
+    search_empty: adw::StatusPage,
+    /// The sidebar was revealed for a search (narrow windows) and is
+    /// hidden again when the search ends.
+    sidebar_for_search: Cell<bool>,
+    /// Narrow windows: the selected day's events under the view, since
+    /// the sidebar agenda is hidden there.
+    day_title: gtk::Label,
+    day_list: gtk::ListBox,
     search_bar: gtk::SearchBar,
     search: gtk::SearchEntry,
     unavailable_page: adw::StatusPage,
@@ -274,6 +284,7 @@ impl Ui {
             )
             .build();
         search_bar.connect_entry(&search);
+        helix_app_common::set_accessible_label(&search, "Search Events");
         search_button
             .bind_property("active", &search_bar, "search-mode-enabled")
             .bidirectional()
@@ -319,6 +330,14 @@ impl Ui {
         side_box.append(&cal_list);
         side_box.append(&agenda_title);
         side_box.append(&agenda);
+        let search_empty = adw::StatusPage::builder()
+            .icon_name("system-search-symbolic")
+            .title("No Results Found")
+            .description("Try a different search")
+            .css_classes(["compact"])
+            .visible(false)
+            .build();
+        side_box.append(&search_empty);
         let side_scroll = gtk::ScrolledWindow::builder()
             .child(&side_box)
             .hscrollbar_policy(gtk::PolicyType::Never)
@@ -353,9 +372,37 @@ impl Ui {
         view_stack.add_named(&month_box, Some("month"));
         view_stack.add_named(&week_box, Some("week"));
 
+        // Narrow windows: the selected day's events under the month or week
+        // view (the sidebar with the agenda is hidden there).
+        let day_title = label("", &["heading"]);
+        day_title.set_xalign(0.0);
+        day_title.set_margin_start(12);
+        day_title.set_margin_top(6);
+        day_title.set_wrap(true);
+        let day_list = gtk::ListBox::builder()
+            .css_classes(["navigation-sidebar"])
+            .build();
+        helix_app_common::label_widget(&day_list, &day_title);
+        let day_panel = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        day_panel.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
+        day_panel.append(&day_title);
+        day_panel.append(
+            &gtk::ScrolledWindow::builder()
+                .child(&day_list)
+                .hscrollbar_policy(gtk::PolicyType::Never)
+                .propagate_natural_height(true)
+                .max_content_height(160)
+                .build(),
+        );
+        day_panel.set_visible(false);
+        let content_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        view_stack.set_vexpand(true);
+        content_box.append(&view_stack);
+        content_box.append(&day_panel);
+
         let split = adw::OverlaySplitView::builder()
             .sidebar(&side_scroll)
-            .content(&view_stack)
+            .content(&content_box)
             .build();
         split.set_min_sidebar_width(250.0);
         split.set_max_sidebar_width(300.0);
@@ -380,9 +427,54 @@ impl Ui {
         main_stack.add_named(&split, Some("main"));
         main_stack.add_named(&unavailable_page, Some("unavailable"));
 
+        // Narrow windows: Today, previous/next and the view switcher move
+        // to a bottom bar so the header fits 360 px.
+        let bottom_today = gtk::Button::with_label("Today");
+        bottom_today.set_action_name(Some("win.today"));
+        let bottom_prev = gtk::Button::builder()
+            .icon_name("go-previous-symbolic")
+            .tooltip_text("Previous")
+            .build()
+            .labelled("Previous");
+        bottom_prev.set_action_name(Some("win.previous"));
+        let bottom_next = gtk::Button::builder()
+            .icon_name("go-next-symbolic")
+            .tooltip_text("Next")
+            .build()
+            .labelled("Next");
+        bottom_next.set_action_name(Some("win.next"));
+        let bottom_nav = gtk::Box::builder().css_classes(["linked"]).build();
+        bottom_nav.append(&bottom_prev);
+        bottom_nav.append(&bottom_next);
+        let bottom_week = gtk::ToggleButton::with_label("Week");
+        let bottom_month = gtk::ToggleButton::with_label("Month");
+        bottom_month.set_group(Some(&bottom_week));
+        for (a, b) in [(&week_toggle, &bottom_week), (&month_toggle, &bottom_month)] {
+            a.bind_property("active", b, "active")
+                .bidirectional()
+                .sync_create()
+                .build();
+        }
+        let bottom_switcher = gtk::Box::builder().css_classes(["linked"]).build();
+        bottom_switcher.append(&bottom_week);
+        bottom_switcher.append(&bottom_month);
+        let bottom = gtk::CenterBox::builder()
+            .margin_start(6)
+            .margin_end(6)
+            .margin_top(6)
+            .margin_bottom(6)
+            .build();
+        let bottom_start = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        bottom_start.append(&bottom_today);
+        bottom_start.append(&bottom_nav);
+        bottom.set_start_widget(Some(&bottom_start));
+        bottom.set_end_widget(Some(&bottom_switcher));
+
         let toolbar = adw::ToolbarView::new();
         toolbar.add_top_bar(&header);
         toolbar.add_top_bar(&search_bar);
+        toolbar.add_bottom_bar(&bottom);
+        toolbar.set_reveal_bottom_bars(false);
         toolbar.set_content(Some(&main_stack));
         let toasts = adw::ToastOverlay::new();
         toasts.set_child(Some(&toolbar));
@@ -390,7 +482,21 @@ impl Ui {
 
         let bp = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 800sp").unwrap());
         bp.add_setter(&split, "collapsed", Some(&true.to_value()));
+        bp.add_setter(&day_panel, "visible", Some(&true.to_value()));
         window.add_breakpoint(bp);
+        let small =
+            adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 550sp").unwrap());
+        small.add_setter(&split, "collapsed", Some(&true.to_value()));
+        small.add_setter(&day_panel, "visible", Some(&true.to_value()));
+        small.add_setter(&toolbar, "reveal-bottom-bars", Some(&true.to_value()));
+        for w in [
+            today_button.upcast_ref::<gtk::Widget>(),
+            nav.upcast_ref(),
+            switcher.upcast_ref(),
+        ] {
+            small.add_setter(w, "visible", Some(&false.to_value()));
+        }
+        window.add_breakpoint(small);
 
         let color_css = gtk::CssProvider::new();
         if let Some(display) = gtk::gdk::Display::default() {
@@ -451,10 +557,15 @@ impl Ui {
             }),
             week_scrolled_once: Cell::new(false),
             picker,
+            cal_header,
             cal_list,
             agenda_title,
             agenda,
             agenda_items: RefCell::default(),
+            search_empty,
+            sidebar_for_search: Cell::new(false),
+            day_title,
+            day_list,
             search_bar,
             search,
             unavailable_page,
@@ -521,16 +632,19 @@ impl Ui {
                 }
             }
         });
-        let weak = Rc::downgrade(self);
-        self.agenda.connect_row_activated(move |_, row| {
-            let Some(ui) = weak.upgrade() else { return };
-            let name = row.widget_name().to_string();
-            ui.activate_agenda_row(&name);
-        });
+        for list in [&self.agenda, &self.day_list] {
+            let weak = Rc::downgrade(self);
+            list.connect_row_activated(move |_, row| {
+                let Some(ui) = weak.upgrade() else { return };
+                let name = row.widget_name().to_string();
+                ui.activate_agenda_row(&name);
+            });
+        }
         let weak = Rc::downgrade(self);
         self.search.connect_search_changed(move |e| {
             let Some(ui) = weak.upgrade() else { return };
             let q = e.text().to_string();
+            ui.update_search_layout();
             if q.trim().is_empty() {
                 ui.state.borrow_mut().search_results = None;
                 ui.render_agenda();
@@ -548,6 +662,7 @@ impl Ui {
             .connect_search_mode_enabled_notify(move |b| {
                 if let (Some(ui), false) = (weak.upgrade(), b.is_search_mode()) {
                     ui.search.set_text("");
+                    ui.update_search_layout();
                 }
             });
 
@@ -1899,11 +2014,90 @@ impl Ui {
         }
     }
 
+    /// While a search has text, the sidebar shows only its results (the
+    /// date picker and calendar list step aside), and in a narrow window
+    /// the sidebar is revealed for them; it hides again after the search.
+    fn update_search_layout(&self) {
+        let searching = self.search_bar.is_search_mode() && !self.search.text().trim().is_empty();
+        for w in [
+            self.picker.upcast_ref::<gtk::Widget>(),
+            self.cal_header.upcast_ref(),
+            self.cal_list.upcast_ref(),
+        ] {
+            w.set_visible(!searching);
+        }
+        if searching {
+            if self.split.is_collapsed() && !self.split.shows_sidebar() {
+                self.split.set_show_sidebar(true);
+                self.sidebar_for_search.set(true);
+            }
+        } else if self.sidebar_for_search.replace(false) && self.split.is_collapsed() {
+            self.split.set_show_sidebar(false);
+        }
+    }
+
     /// Rebuilds the agenda, keeping focus on the same event (or a
     /// neighbour) and the scroll position.
     fn render_agenda(self: &Rc<Self>) {
         let list = self.agenda.clone();
         helix_app_common::focus::rebuild_keeping_focus(&list, None, || self.render_agenda_rows());
+        let list = self.day_list.clone();
+        helix_app_common::focus::rebuild_keeping_focus(&list, None, || self.render_day_rows());
+    }
+
+    /// The narrow layout's day panel: the selected day's events (also
+    /// during a search).
+    fn render_day_rows(self: &Rc<Self>) {
+        while let Some(c) = self.day_list.first_child() {
+            self.day_list.remove(&c);
+        }
+        let day = self.selected.get();
+        self.day_title.set_label(&dates::long_date(day));
+        let items = self.day_items(day);
+        if items.is_empty() {
+            let l = label("No events", &["dim-label"]);
+            l.set_margin_top(6);
+            l.set_margin_bottom(6);
+            self.day_list.append(
+                &gtk::ListBoxRow::builder()
+                    .child(&l)
+                    .activatable(false)
+                    .selectable(false)
+                    .build(),
+            );
+        }
+        let twelve = self.twelve();
+        for (i, it) in items.iter().enumerate() {
+            let when = self.item_when(it, twelve);
+            let row = self.agenda_row(&it.calendar, it.title(), &when);
+            helix_app_common::focus::set_key(
+                &row,
+                &format!("{}|{}|{when}", it.calendar, it.title()),
+            );
+            row.set_widget_name(&format!("day:{i}"));
+            self.day_list.append(&row);
+        }
+    }
+
+    /// The events on `day`, as the agenda lists them.
+    fn day_items(&self, day: NaiveDate) -> Vec<Item> {
+        self.items(day, day + Duration::days(1))
+            .into_iter()
+            .filter(|i| i.on_day(day))
+            .collect()
+    }
+
+    /// An agenda row's time text: "All day" or "09:00 – 10:00".
+    fn item_when(&self, it: &Item, twelve: bool) -> String {
+        if it.spans_days() {
+            "All day".to_string()
+        } else {
+            format!(
+                "{} – {}",
+                dates::format_time(it.start.time(), twelve),
+                dates::format_time(it.end.time(), twelve)
+            )
+        }
     }
 
     fn render_agenda_rows(self: &Rc<Self>) {
@@ -1912,7 +2106,17 @@ impl Ui {
         }
         let twelve = self.twelve();
         let results = self.state.borrow().search_results.clone();
+        let no_results = results.as_ref().is_some_and(|r| r.is_empty());
+        self.search_empty.set_visible(no_results);
+        self.agenda_title.set_visible(!no_results);
+        self.agenda.set_visible(!no_results);
         if let Some(results) = results {
+            let count = match results.len() {
+                0 => "No events found".to_string(),
+                1 => "1 event found".to_string(),
+                n => format!("{n} events found"),
+            };
+            helix_app_common::announce_settled(&self.search, &count);
             self.agenda_title
                 .set_label(&format!("{} Search Results", results.len()));
             let zones = self.zones.borrow();
@@ -1941,11 +2145,7 @@ impl Ui {
         }
         let day = self.selected.get();
         self.agenda_title.set_label(&dates::long_date(day));
-        let items: Vec<Item> = self
-            .items(day, day + Duration::days(1))
-            .into_iter()
-            .filter(|i| i.on_day(day))
-            .collect();
+        let items = self.day_items(day);
         if items.is_empty() {
             let l = label("No events", &["dim-label"]);
             l.set_margin_top(6);
@@ -1958,15 +2158,7 @@ impl Ui {
             self.agenda.append(&row);
         }
         for (i, it) in items.iter().enumerate() {
-            let when = if it.spans_days() {
-                "All day".to_string()
-            } else {
-                format!(
-                    "{} – {}",
-                    dates::format_time(it.start.time(), twelve),
-                    dates::format_time(it.end.time(), twelve)
-                )
-            };
+            let when = self.item_when(it, twelve);
             let row = self.agenda_row(&it.calendar, it.title(), &when);
             helix_app_common::focus::set_key(
                 &row,
@@ -2020,6 +2212,14 @@ impl Ui {
             .and_then(|i| i.parse::<usize>().ok())
         {
             let item = self.agenda_items.borrow().get(i).cloned();
+            if let Some(item) = item {
+                self.open_item(&item);
+            }
+        } else if let Some(i) = name
+            .strip_prefix("day:")
+            .and_then(|i| i.parse::<usize>().ok())
+        {
+            let item = self.day_items(self.selected.get()).get(i).cloned();
             if let Some(item) = item {
                 self.open_item(&item);
             }

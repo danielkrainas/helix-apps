@@ -261,6 +261,19 @@ header or hour grid, and are listed in the shortcuts window.)
 - Webcal: Helix has its own "New Calendar from URL" flow creating an EDS
   `webcal` source through the sources registry (EDS fetches/refreshes it).
 
+### Narrow windows
+- Below 800sp the sidebar collapses (overlay) and a day panel under the
+  month/week view lists the selected day's events (heading = the date;
+  rows open the event like the agenda's).
+- Below 550sp *Today*, *Previous*/*Next* and the *Week*/*Month* switcher
+  move from the header bar to a bottom bar, so the header (sidebar, new
+  event, title, search, menu) fits 360 px.
+- While a search has text the sidebar shows only the results (the date
+  picker and calendar list step aside); in a collapsed layout the sidebar
+  is revealed for the search and hidden again when it ends. A search
+  without matches shows a "No Results Found" status page. The result count
+  is announced once typing settles ("3 events found", "No events found").
+
 ### Accessibility
 - Focus is kept across list rebuilds (`helix_app_common::focus`): Rebuilding the calendar list keeps focus on the toggled check box; rebuilding the agenda keeps focus on the same event (or a neighbour) and the scroll position.
 - Form controls have specific accessible names: the event editor's date

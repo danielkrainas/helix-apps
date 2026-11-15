@@ -102,7 +102,9 @@ fn load_css() {
          .stopwatch-time { font-size: 54pt; font-weight: 200; }
          .timer-time { font-size: 30pt; font-weight: 300; }
          .day-toggle { min-width: 44px; }
-         .alarm-inactive .alarm-time { opacity: 0.55; }",
+         .alarm-inactive .alarm-time { opacity: 0.55; }
+         row.timer-finished { background-color: alpha(@accent_bg_color, 0.18); }
+         .timer-finished .timer-time { color: @accent_color; }",
     );
     if let Some(display) = gtk::gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
@@ -161,10 +163,16 @@ struct TimerRow {
     /// Tells the timer apart for assistive technology ("Tea",
     /// "5 minutes timer").
     label: String,
+    row: gtk::ListBoxRow,
     time: gtk::Label,
     progress: gtk::ProgressBar,
     start: gtk::Button,
     reset: gtk::Button,
+    /// "Time's up", shown while the timer is finished.
+    status: gtk::Box,
+    dismiss: gtk::Button,
+    /// Whether the row currently shows the finished state.
+    shown_finished: Cell<Option<bool>>,
 }
 
 /// The widgets of one alarm row, updated in place.
@@ -231,6 +239,7 @@ struct Ui {
     timer_list: gtk::ListBox,
     timer_rows: RefCell<Vec<TimerRow>>,
     timer_cancel: gtk::Button,
+    toasts: adw::ToastOverlay,
 }
 
 impl Ui {
@@ -401,7 +410,9 @@ impl Ui {
         let switcher_bar = adw::ViewSwitcherBar::builder().stack(&stack).build();
         let toolbar = adw::ToolbarView::new();
         toolbar.add_top_bar(&header);
-        toolbar.set_content(Some(&stack));
+        let toasts = adw::ToastOverlay::new();
+        toasts.set_child(Some(&stack));
+        toolbar.set_content(Some(&toasts));
         toolbar.add_bottom_bar(&switcher_bar);
         window.set_content(Some(&toolbar));
         let bp = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 550sp").unwrap());
@@ -457,6 +468,7 @@ impl Ui {
             timer_list,
             timer_rows: RefCell::default(),
             timer_cancel: timer_cancel.clone(),
+            toasts,
         });
 
         ui.build_timer_pages();
@@ -480,6 +492,22 @@ impl Ui {
         add_button.connect_clicked(with_ui(&weak, |ui| ui.new_item()));
         empty_add.connect_clicked(with_ui(&weak, |ui| ui.show_add_location()));
         alarm_add.connect_clicked(with_ui(&weak, |ui| ui.show_alarm_dialog(None)));
+        // A click or Enter on an alarm row edits it. (A row's own
+        // "activate" signal is only emitted for the keyboard.)
+        {
+            let weak = weak.clone();
+            ui.alarm_list.connect_row_activated(move |_, row| {
+                let Some(ui) = weak.upgrade() else { return };
+                let Ok(i) = usize::try_from(row.index()) else {
+                    return;
+                };
+                // The row may have been updated in place since it was made.
+                let alarm = ui.alarms.borrow().get(i).map(|e| e.alarm.clone());
+                if let Some(alarm) = alarm {
+                    ui.show_alarm_dialog(Some(alarm));
+                }
+            });
+        }
         sw_primary.connect_clicked(with_ui(&weak, |ui| ui.stopwatch_primary()));
         sw_secondary.connect_clicked(with_ui(&weak, |ui| ui.stopwatch_secondary()));
         timer_cancel.connect_clicked(with_ui(&weak, |ui| {
@@ -1276,21 +1304,6 @@ impl Ui {
                     });
                 }
             });
-            let weak = Rc::downgrade(self);
-            let id = a.id.clone();
-            row.connect_activate(move |_| {
-                let Some(ui) = weak.upgrade() else { return };
-                // The row may have been updated in place since it was made.
-                let alarm = ui
-                    .alarms
-                    .borrow()
-                    .iter()
-                    .find(|e| e.alarm.id == id)
-                    .map(|e| e.alarm.clone());
-                if let Some(alarm) = alarm {
-                    ui.show_alarm_dialog(Some(alarm));
-                }
-            });
             self.alarm_list.append(&row);
         }
     }
@@ -1309,6 +1322,9 @@ impl Ui {
         let dialog = adw::Dialog::builder()
             .title(if editing { "Edit Alarm" } else { "New Alarm" })
             .content_width(420)
+            // Needed by the breakpoint below; fits a 360×294 window.
+            .width_request(300)
+            .height_request(200)
             .build();
         let header = adw::HeaderBar::builder()
             .show_end_title_buttons(false)
@@ -1353,9 +1369,18 @@ impl Ui {
         time_box.append(&ampm);
         content.append(&time_box);
 
-        // Days
-        let days_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        days_box.set_halign(gtk::Align::Center);
+        // Days: a "Repeat" group of toggles that wraps onto two lines in
+        // narrow windows, with a line explaining the selection.
+        let days_box = gtk::FlowBox::builder()
+            .accessible_role(gtk::AccessibleRole::Group)
+            .selection_mode(gtk::SelectionMode::None)
+            .homogeneous(true)
+            .min_children_per_line(4)
+            .max_children_per_line(7)
+            .column_spacing(6)
+            .row_spacing(6)
+            .halign(gtk::Align::Center)
+            .build();
         let day_buttons: Vec<(chrono::Weekday, gtk::ToggleButton)> = Weekdays::ALL
             .iter()
             .map(|d| {
@@ -1363,14 +1388,53 @@ impl Ui {
                 b.add_css_class("day-toggle");
                 b.add_css_class("circular");
                 b.set_active(a.days.contains(*d));
-                days_box.append(&b);
+                // "Monday, toggle button, pressed", not "Mon".
+                helix_app_common::set_accessible_label(&b, alarm::full_name(*d));
+                // The buttons take focus, not the flow box's cells.
+                let cell = gtk::FlowBoxChild::builder()
+                    .accessible_role(gtk::AccessibleRole::Presentation)
+                    .focusable(false)
+                    .child(&b)
+                    .build();
+                days_box.insert(&cell, -1);
                 (*d, b)
             })
             .collect();
         let repeat_label = label("Repeat", &["heading"]);
         repeat_label.set_xalign(0.0);
-        content.append(&repeat_label);
-        content.append(&days_box);
+        let repeat_hint = label(&alarm::repeat_hint(a.days), &["dim-label", "caption"]);
+        repeat_hint.set_wrap(true);
+        repeat_hint.set_justify(gtk::Justification::Center);
+        helix_app_common::label_widget(&days_box, &repeat_label);
+        days_box.update_relation(&[gtk::accessible::Relation::DescribedBy(&[
+            repeat_hint.upcast_ref()
+        ])]);
+        let repeat_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
+        repeat_box.append(&repeat_label);
+        repeat_box.append(&days_box);
+        repeat_box.append(&repeat_hint);
+        content.append(&repeat_box);
+        // Narrow: four days on the first line, three on the second.
+        let narrow = adw::Breakpoint::new(
+            adw::BreakpointCondition::parse("max-width: 400sp").expect("valid condition"),
+        );
+        narrow.add_setter(&days_box, "max-children-per-line", Some(&4u32.to_value()));
+        dialog.add_breakpoint(narrow);
+        let day_buttons = Rc::new(day_buttons);
+        for (_, b) in day_buttons.iter() {
+            let buttons = Rc::downgrade(&day_buttons);
+            let hint = repeat_hint.clone();
+            b.connect_toggled(move |_| {
+                let Some(buttons) = buttons.upgrade() else {
+                    return;
+                };
+                let mut days = Weekdays::default();
+                for (wd, b) in buttons.iter() {
+                    days.set(*wd, b.is_active());
+                }
+                hint.set_label(&alarm::repeat_hint(days));
+            });
+        }
 
         let group = adw::PreferencesGroup::new();
         let name = adw::EntryRow::builder().title("Name").text(&a.name).build();
@@ -1436,9 +1500,15 @@ impl Ui {
             content.append(&delete);
         }
 
+        // Scrolls in short windows (a 294 px tall bottom sheet).
+        let scroller = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .propagate_natural_height(true)
+            .child(&content)
+            .build();
         let toolbar = adw::ToolbarView::new();
         toolbar.add_top_bar(&header);
-        toolbar.set_content(Some(&content));
+        toolbar.set_content(Some(&scroller));
         dialog.set_child(Some(&toolbar));
         dialog.set_default_widget(Some(&save));
 
@@ -1460,7 +1530,7 @@ impl Ui {
                 }
             }
             let mut days = Weekdays::default();
-            for (wd, b) in &day_buttons {
+            for (wd, b) in day_buttons.iter() {
                 days.set(*wd, b.is_active());
             }
             let text = name.text().trim().to_string();
@@ -1745,12 +1815,177 @@ impl Ui {
                 name2.set_text("");
             }
         });
-        setup.append(&start);
-        setup.append(&self.timer_cancel);
+        // Cancel (back to the list) beside Start rather than at the end of
+        // the page.
+        let actions = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+        actions.set_halign(gtk::Align::Center);
+        actions.append(&self.timer_cancel);
+        actions.append(&start);
+        setup.append(&actions);
         self.timer_stack
             .add_named(&scrolled_clamped(&setup), Some("setup"));
         self.timer_stack
             .add_named(&scrolled_clamped(&self.timer_list), Some("list"));
+        // A click or Enter on a timer row edits it.
+        let weak = Rc::downgrade(self);
+        self.timer_list.connect_row_activated(move |_, row| {
+            if let (Some(ui), Ok(i)) = (weak.upgrade(), usize::try_from(row.index())) {
+                ui.show_timer_dialog(i);
+            }
+        });
+    }
+
+    /// Shows "… deleted" with Undo, which puts `timer` back at `index`
+    /// (still running if it was) and focuses its row.
+    fn offer_timer_undo(self: &Rc<Self>, index: usize, timer: Timer) {
+        let label = {
+            let named = [(timer.name.as_str(), timer.duration.as_secs())];
+            timer::timer_labels(&named).remove(0)
+        };
+        let toast = adw::Toast::builder()
+            .title(format!("{label} deleted"))
+            .button_label("_Undo")
+            .build();
+        let weak = Rc::downgrade(self);
+        let timer = RefCell::new(Some(timer));
+        toast.connect_button_clicked(move |_| {
+            let (Some(ui), Some(t)) = (weak.upgrade(), timer.borrow_mut().take()) else {
+                return;
+            };
+            let at = {
+                let mut timers = ui.timers.borrow_mut();
+                let at = index.min(timers.len());
+                timers.insert(at, t);
+                at
+            };
+            ui.save_timers();
+            ui.rebuild_timers();
+            ui.timers_acknowledged();
+            helix_app_common::focus::focus_key(&ui.timer_list, &at.to_string());
+        });
+        self.toasts.add_toast(toast);
+    }
+
+    /// Edits timer `index`: its name and duration. A new duration resets
+    /// a running or paused timer.
+    fn show_timer_dialog(self: &Rc<Self>, index: usize) {
+        let Some(t) = self.timers.borrow().get(index).cloned() else {
+            return;
+        };
+        let dialog = adw::Dialog::builder()
+            .title("Edit Timer")
+            .content_width(420)
+            .build();
+        let header = adw::HeaderBar::builder()
+            .show_end_title_buttons(false)
+            .show_start_title_buttons(false)
+            .build();
+        let cancel = gtk::Button::with_mnemonic("_Cancel");
+        let save = gtk::Button::with_mnemonic("_Done");
+        save.add_css_class("suggested-action");
+        header.pack_start(&cancel);
+        header.pack_end(&save);
+
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 18);
+        content.set_margin_top(12);
+        content.set_margin_bottom(24);
+        content.set_margin_start(12);
+        content.set_margin_end(12);
+        let secs = t.duration.as_secs();
+        let spins = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        spins.set_halign(gtk::Align::Center);
+        let h = time_spin(0.0, 99.0, (secs / 3600) as f64);
+        let m = time_spin(0.0, 59.0, ((secs / 60) % 60) as f64);
+        let s = time_spin(0.0, 59.0, (secs % 60) as f64);
+        for (i, (spin, name)) in [(&h, "Hours"), (&m, "Minutes"), (&s, "Seconds")]
+            .into_iter()
+            .enumerate()
+        {
+            helix_app_common::set_accessible_label(spin, name);
+            if i > 0 {
+                spins.append(&label(":", &["timer-time"]));
+            }
+            spins.append(spin);
+        }
+        content.append(&spins);
+        if t.state != timer::State::Stopped {
+            let note = label(
+                "Changing the duration resets the timer.",
+                &["dim-label", "caption"],
+            );
+            note.set_wrap(true);
+            content.append(&note);
+        }
+        let error = label("", &["error", "caption"]);
+        error.set_wrap(true);
+        error.set_visible(false);
+        content.append(&error);
+        let group = adw::PreferencesGroup::new();
+        let name = adw::EntryRow::builder()
+            .title("Name (optional)")
+            .text(&t.name)
+            .build();
+        group.add(&name);
+        content.append(&group);
+
+        // Scrolls in short windows (a 294 px tall bottom sheet).
+        let scroller = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .propagate_natural_height(true)
+            .child(&content)
+            .build();
+        let toolbar = adw::ToolbarView::new();
+        toolbar.add_top_bar(&header);
+        toolbar.set_content(Some(&scroller));
+        dialog.set_child(Some(&toolbar));
+        dialog.set_default_widget(Some(&save));
+        {
+            let d = dialog.clone();
+            cancel.connect_clicked(move |_| {
+                d.close();
+            });
+        }
+        // Back in the list: the edited timer's row.
+        let weak = Rc::downgrade(self);
+        dialog.connect_closed(move |_| {
+            let weak = weak.clone();
+            glib::idle_add_local_once(move || {
+                if let Some(ui) = weak.upgrade() {
+                    helix_app_common::focus::focus_key(&ui.timer_list, &index.to_string());
+                }
+            });
+        });
+        let weak = Rc::downgrade(self);
+        let d = dialog.clone();
+        save.connect_clicked(move |_| {
+            let Some(ui) = weak.upgrade() else { return };
+            let secs = h.value() as u64 * 3600 + m.value() as u64 * 60 + s.value() as u64;
+            if secs == 0 {
+                let message = "A timer needs a duration of at least one second";
+                error.set_label(message);
+                error.set_visible(true);
+                helix_app_common::a11y::set_input_error(&s, Some(&error), Some(message));
+                return;
+            }
+            {
+                let mut timers = ui.timers.borrow_mut();
+                let Some(t) = timers.get_mut(index) else {
+                    return;
+                };
+                t.name = name.text().trim().to_string();
+                let duration = Duration::from_secs(secs);
+                if duration != t.duration {
+                    t.duration = duration;
+                    t.reset();
+                }
+                t.acknowledge();
+            }
+            ui.save_timers();
+            ui.rebuild_timers();
+            ui.timers_acknowledged();
+            d.close();
+        });
+        dialog.present(Some(&self.window));
     }
 
     fn add_timer(self: &Rc<Self>, mut t: Timer) {
@@ -1793,7 +2028,8 @@ impl Ui {
         for (i, timer_label) in labels.into_iter().enumerate() {
             let name = self.timers.borrow()[i].name.clone();
             let row = gtk::ListBoxRow::new();
-            row.set_activatable(false);
+            // Activating the row edits the timer (see build_timer_pages).
+            row.set_activatable(true);
             // Timers have no id; after a deletion the same index is the
             // next timer, which is where focus should go.
             helix_app_common::focus::set_key(&row, &i.to_string());
@@ -1807,6 +2043,13 @@ impl Ui {
                 l.set_xalign(0.0);
                 vb.append(&l);
             }
+            let status = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+            let status_icon = gtk::Image::from_icon_name("alarm-symbolic");
+            status_icon.set_accessible_role(gtk::AccessibleRole::Presentation);
+            status.append(&status_icon);
+            status.append(&label("Time\u{2019}s up", &["heading", "accent"]));
+            status.set_visible(false);
+            vb.append(&status);
             let hb = gtk::Box::new(gtk::Orientation::Horizontal, 6);
             let time = label("", &["timer-time", "clock-time"]);
             time.set_hexpand(true);
@@ -1826,9 +2069,17 @@ impl Ui {
             delete.add_css_class("circular");
             delete.add_css_class("flat");
             delete.set_valign(gtk::Align::Center);
+            let dismiss = gtk::Button::with_mnemonic("_Dismiss");
+            dismiss.add_css_class("pill");
+            dismiss.add_css_class("suggested-action");
+            dismiss.set_valign(gtk::Align::Center);
+            dismiss.set_visible(false);
+            helix_app_common::set_accessible_label(&dismiss, &format!("Dismiss {timer_label}"));
             helix_app_common::focus::set_part(&start, "start");
             helix_app_common::focus::set_part(&reset, "reset");
             helix_app_common::focus::set_part(&delete, "delete");
+            helix_app_common::focus::set_part(&dismiss, "dismiss");
+            hb.append(&dismiss);
             hb.append(&start);
             hb.append(&reset);
             hb.append(&delete);
@@ -1852,7 +2103,21 @@ impl Ui {
                     }
                 }
                 ui.update_keep_alive();
-                ui.update_timers(mono);
+                ui.timers_acknowledged();
+            });
+            let weak = Rc::downgrade(self);
+            dismiss.connect_clicked(move |b| {
+                let Some(ui) = weak.upgrade() else { return };
+                if let Some(t) = ui.timers.borrow_mut().get_mut(i) {
+                    t.acknowledge();
+                }
+                // Keep keyboard focus in the row once the button hides.
+                if b.has_focus() {
+                    if let Some(row) = ui.timer_rows.borrow().get(i) {
+                        row.start.grab_focus();
+                    }
+                }
+                ui.timers_acknowledged();
             });
             let weak = Rc::downgrade(self);
             reset.connect_clicked(move |_| {
@@ -1861,28 +2126,34 @@ impl Ui {
                     t.reset();
                 }
                 ui.update_keep_alive();
-                ui.update_timers(ui.clock.mono());
+                ui.timers_acknowledged();
             });
             let weak = Rc::downgrade(self);
             delete.connect_clicked(move |_| {
                 let Some(ui) = weak.upgrade() else { return };
                 if i < ui.timers.borrow().len() {
-                    ui.timers.borrow_mut().remove(i);
+                    let removed = ui.timers.borrow_mut().remove(i);
+                    ui.offer_timer_undo(i, removed);
                 }
                 ui.save_timers();
                 let weak = Rc::downgrade(&ui);
                 glib::idle_add_local_once(move || {
                     if let Some(ui) = weak.upgrade() {
                         ui.rebuild_timers();
+                        ui.timers_acknowledged();
                     }
                 });
             });
             rows.push(TimerRow {
                 label: timer_label,
+                row: row.clone(),
                 time,
                 progress,
                 start,
                 reset,
+                status,
+                dismiss,
+                shown_finished: Cell::new(None),
             });
         }
         self.timer_rows.replace(rows);
@@ -1892,26 +2163,68 @@ impl Ui {
         self.update_timers(self.clock.mono());
     }
 
+    /// After a timer was dismissed, restarted, reset, edited or deleted:
+    /// once no timer shows "Time's up", stops the timer sound and removes
+    /// the notification.
+    fn timers_acknowledged(&self) {
+        self.update_timers(self.clock.mono());
+        if !self.timers.borrow().iter().any(|t| t.finished) {
+            self.app.withdraw_notification("timer");
+            if self.player.borrow().playing() == Some(Sound::Timer) {
+                self.player.borrow_mut().stop();
+            }
+        }
+    }
+
     fn update_timers(&self, mono: Duration) {
         let timers = self.timers.borrow();
         for (t, r) in timers.iter().zip(self.timer_rows.borrow().iter()) {
-            r.time.set_text(&timer::format_countdown(t.remaining(mono)));
-            r.progress.set_fraction(t.progress(mono));
-            r.progress.set_visible(t.state != timer::State::Stopped);
+            let remaining = if t.finished {
+                Duration::ZERO
+            } else {
+                t.remaining(mono)
+            };
+            r.time.set_text(&timer::format_countdown(remaining));
+            r.progress
+                .set_fraction(if t.finished { 1.0 } else { t.progress(mono) });
+            r.progress
+                .set_visible(t.finished || t.state != timer::State::Stopped);
+            if r.shown_finished.get() != Some(t.finished) {
+                r.shown_finished.set(Some(t.finished));
+                r.status.set_visible(t.finished);
+                r.dismiss.set_visible(t.finished);
+                let name = if t.finished {
+                    r.row.add_css_class("timer-finished");
+                    format!("{}, time\u{2019}s up", r.label)
+                } else {
+                    r.row.remove_css_class("timer-finished");
+                    r.label.clone()
+                };
+                r.row
+                    .update_property(&[gtk::accessible::Property::Label(&name)]);
+            }
             let (icon, tip) = match t.state {
                 timer::State::Running { .. } => ("media-playback-pause-symbolic", "Pause"),
                 timer::State::Paused { .. } => ("media-playback-start-symbolic", "Resume"),
+                timer::State::Stopped if t.finished => ("media-playback-start-symbolic", "Restart"),
                 timer::State::Stopped => ("media-playback-start-symbolic", "Start"),
             };
             r.start.set_icon_name(icon);
             r.start.set_tooltip_text(Some(tip));
             helix_app_common::set_accessible_label(&r.start, &format!("{tip} {}", r.label));
-            if t.is_running() {
+            if t.is_running() || t.finished {
                 r.start.remove_css_class("suggested-action");
             } else {
                 r.start.add_css_class("suggested-action");
             }
-            r.reset.set_sensitive(t.state != timer::State::Stopped);
+            r.reset
+                .set_sensitive(t.finished || t.state != timer::State::Stopped);
+        }
+        // A dot on the Timer tab while a timer shows "Time's up".
+        let finished = timers.iter().any(|t| t.finished);
+        let page = self.stack.page(&self.timer_stack);
+        if page.needs_attention() != finished {
+            page.set_needs_attention(finished);
         }
     }
 
@@ -1926,7 +2239,8 @@ impl Ui {
             }
             timers.iter().any(|t| t.is_running())
         };
-        if any_active || !finished.is_empty() {
+        let finished_any = !finished.is_empty();
+        if any_active || finished_any {
             self.update_timers(mono);
         }
         for (name, dur) in finished {
@@ -1954,6 +2268,13 @@ impl Ui {
                 }
             }
             self.update_keep_alive();
+        }
+        if finished_any {
+            // Without notifications (or with Do Not Disturb) the finished
+            // row is the only visible sign, so bring the window back.
+            if !self.window.is_visible() {
+                self.window.present();
+            }
         }
     }
 }
@@ -2019,7 +2340,26 @@ fn lap_row(lap: &stopwatch::Lap) -> adw::ActionRow {
     total.set_width_chars(10);
     row.add_suffix(&split);
     row.add_suffix(&total);
+    row.update_property(&[gtk::accessible::Property::Label(&lap_description(lap))]);
     row
+}
+
+/// What a lap row says to assistive technology: "Lap 3, lap time
+/// 00:12.40, total 01:02.00, +0:01.23 compared with the previous lap".
+fn lap_description(lap: &stopwatch::Lap) -> String {
+    let mut text = format!(
+        "Lap {}, lap time {}, total {}",
+        lap.number,
+        stopwatch::format_elapsed(lap.split, true),
+        stopwatch::format_elapsed(lap.total, true)
+    );
+    if let Some(d) = lap.delta_ms {
+        text.push_str(&format!(
+            ", {} compared with the previous lap",
+            stopwatch::format_delta(d)
+        ));
+    }
+    text
 }
 
 const SHORTCUTS_UI: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
@@ -2047,7 +2387,7 @@ const SHORTCUTS_UI: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
             <property name="title">Stopwatch</property>
             <child><object class="GtkShortcutsShortcut"><property name="title">Start / pause</property><property name="accelerator">space</property></object></child>
             <child><object class="GtkShortcutsShortcut"><property name="title">Lap</property><property name="accelerator">l</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Reset</property><property name="accelerator">Delete</property></object></child>
+            <child><object class="GtkShortcutsShortcut"><property name="title">Reset</property><property name="accelerator">Delete BackSpace</property></object></child>
           </object>
         </child>
       </object>
@@ -2057,6 +2397,20 @@ const SHORTCUTS_UI: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 "#;
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn laps_are_read_in_full() {
+        let lap = crate::stopwatch::Lap {
+            number: 3,
+            split: std::time::Duration::from_millis(12_400),
+            total: std::time::Duration::from_millis(62_000),
+            delta_ms: None,
+        };
+        assert_eq!(
+            super::lap_description(&lap),
+            "Lap 3, lap time 00:12.40, total 01:02.00"
+        );
+    }
+
     #[test]
     fn world_rows_say_day_or_night() {
         assert_eq!(

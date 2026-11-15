@@ -8,7 +8,7 @@
 use gst::prelude::*;
 use gtk::gio::prelude::SettingsExt;
 use gtk::glib;
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, Instant};
@@ -113,7 +113,9 @@ struct Playing {
     kind: Sound,
     pipeline: gst::Element,
     _bus: Option<gst::bus::BusWatchGuard>,
-    source: Option<glib::SourceId>,
+    /// The tone's timer; emptied when it ends by itself, so it is never
+    /// removed twice.
+    source: Rc<RefCell<Option<glib::SourceId>>>,
 }
 
 /// Plays one sound at a time.
@@ -136,7 +138,7 @@ impl Player {
 
     pub fn stop(&mut self) {
         if let Some(p) = self.current.take() {
-            if let Some(s) = p.source {
+            if let Some(s) = p.source.borrow_mut().take() {
                 s.remove();
             }
             let _ = p.pipeline.set_state(gst::State::Null);
@@ -214,14 +216,18 @@ impl Player {
         });
         let started = Instant::now();
         let p2 = pipeline.downgrade();
+        let slot: Rc<RefCell<Option<glib::SourceId>>> = Rc::default();
+        let slot2 = slot.clone();
         let source = (volume.is_some() || !looping).then(|| {
             glib::timeout_add_local(Duration::from_millis(50), move || {
                 let Some(p) = p2.upgrade() else {
+                    slot2.borrow_mut().take();
                     return glib::ControlFlow::Break;
                 };
                 let t = started.elapsed();
                 if !looping && t >= ONE_SHOT {
                     let _ = p.set_state(gst::State::Null);
+                    slot2.borrow_mut().take();
                     return glib::ControlFlow::Break;
                 }
                 if let Some(src) = &volume {
@@ -237,11 +243,12 @@ impl Player {
             let _ = pipeline.set_state(gst::State::Null);
             return None;
         }
+        *slot.borrow_mut() = source;
         self.current = Some(Playing {
             kind,
             pipeline,
             _bus: bus.ok(),
-            source,
+            source: slot,
         });
         Some(())
     }

@@ -34,7 +34,14 @@ struct App {
     /// Bumped on every category switch / search so stale async results are dropped.
     generation: Cell<u64>,
     cache: RefCell<HashMap<Category, Rc<Vec<String>>>>,
+    /// Set while the sidebar selection is changed from code, so the
+    /// selection handler leaves search alone.
+    quiet_select: Cell<bool>,
 }
+
+/// How long a search may take before its progress indicator shows (so
+/// fast searches do not flicker).
+const SEARCH_SPINNER_DELAY: std::time::Duration = std::time::Duration::from_millis(150);
 
 pub fn run(initial_search: Option<String>) -> glib::ExitCode {
     let app = adw::Application::builder()
@@ -163,14 +170,31 @@ impl App {
     fn run_search(self: &Rc<Self>) {
         let query = self.search_entry.text().trim().to_string();
         if query.is_empty() {
+            // Back to the category the sidebar shows again.
+            self.select_sidebar_quietly(self.current.get());
             self.show_category(self.current.get());
             return;
         }
         self.title.set_title("Search");
         self.title.set_subtitle(&query);
+        // Search results are not a category: nothing in the sidebar is
+        // current while they are shown.
+        self.sidebar.unselect_all();
         let generation = self.next_generation();
-        if self.stack.visible_child_name().as_deref() != Some("grid") {
-            self.stack.set_visible_child_name("loading");
+        // Never show the previous category (or results) under the new
+        // search title: hide the grid at once, and show progress if the
+        // search takes a moment. (The model is replaced when the results
+        // come.)
+        self.stack.set_visible_child_name("pending");
+        {
+            let app = self.clone();
+            glib::timeout_add_local_once(SEARCH_SPINNER_DELAY, move || {
+                if app.generation.get() == generation
+                    && app.stack.visible_child_name().as_deref() == Some("pending")
+                {
+                    app.stack.set_visible_child_name("loading");
+                }
+            });
         }
         let app = self.clone();
         glib::spawn_future_local(async move {
@@ -202,6 +226,13 @@ impl App {
                 .timeout(2)
                 .build(),
         );
+    }
+
+    /// Selects `cat` in the sidebar without the selection handler running.
+    fn select_sidebar_quietly(&self, cat: Category) {
+        self.quiet_select.set(true);
+        self.select_sidebar(cat);
+        self.quiet_select.set(false);
     }
 
     fn select_sidebar(&self, cat: Category) {
@@ -348,8 +379,14 @@ fn build(gapp: &adw::Application) -> Rc<App> {
             return;
         };
         let text = obj.string();
+        let name = charinfo::display_name(&text);
         label.set_label(&charinfo::grid_label(&text));
-        label.set_tooltip_text(Some(&charinfo::display_name(&text)));
+        label.set_tooltip_text(Some(&name));
+        // The focused grid cell is the list item: read the character's
+        // name ("Grinning face", "Combining acute accent"), not the glyph,
+        // with its code points as the description.
+        item.set_accessible_label(&charinfo::spoken_name(&text));
+        item.set_accessible_description(&charinfo::codepoints(&text));
     });
     let grid = gtk::GridView::builder()
         .model(&gtk::NoSelection::new(Some(model.clone())))
@@ -391,8 +428,14 @@ fn build(gapp: &adw::Application) -> Rc<App> {
         .height_request(32)
         .halign(gtk::Align::Center)
         .valign(gtk::Align::Center)
-        .build();
+        .build()
+        .labelled("Loading Characters");
     stack.add_named(&spinner, Some("loading"));
+    // A search just started: empty until results come or the spinner shows.
+    stack.add_named(
+        &gtk::Box::new(gtk::Orientation::Vertical, 0),
+        Some("pending"),
+    );
 
     let toasts = adw::ToastOverlay::new();
     toasts.set_child(Some(&stack));
@@ -436,12 +479,16 @@ fn build(gapp: &adw::Application) -> Rc<App> {
         current: Cell::new(Category::Recent),
         generation: Cell::new(0),
         cache: RefCell::default(),
+        quiet_select: Cell::new(false),
     });
 
     // Signals.
     let a = app.clone();
     sidebar.connect_row_selected(move |_, row| {
         let Some(row) = row else { return };
+        if a.quiet_select.get() {
+            return;
+        }
         let Some(cat) = a.sidebar_cats.get(row.index() as usize).copied() else {
             return;
         };
@@ -571,6 +618,11 @@ fn show_details(app: &Rc<App>, text: String) {
         let display = charinfo::display_name(s);
         dlg.set_title(&display);
         glyph.set_label(&charinfo::grid_label(s));
+        // Read by name; the code points are its description.
+        glyph.update_property(&[
+            gtk::accessible::Property::Label(&charinfo::spoken_name(s)),
+            gtk::accessible::Property::Description(&charinfo::codepoints(s)),
+        ]);
         name.set_label(&display);
         cp_row.set_subtitle(&charinfo::codepoints(s));
         utf8_row.set_subtitle(&charinfo::utf8_hex(s));
@@ -582,7 +634,8 @@ fn show_details(app: &Rc<App>, text: String) {
             let b = gtk::Button::builder()
                 .label(charinfo::grid_label(&v))
                 .tooltip_text(charinfo::display_name(&v))
-                .build();
+                .build()
+                .labelled(&charinfo::spoken_name(&v));
             b.add_css_class("flat");
             b.add_css_class("char-variant");
             let wf = weak_fill.clone();

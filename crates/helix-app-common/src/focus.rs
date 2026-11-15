@@ -214,13 +214,36 @@ pub fn rebuild_keeping_focus(
         .and_then(|s| s.downcast::<gtk::ScrolledWindow>().ok())
         .map(|s| s.vadjustment());
     let value = adj.as_ref().map(|a| a.value());
+    // Removing the focused widget can turn the focus ring off; keep it as
+    // it was, so keyboard users still see where they are.
+    let window = root.root().and_then(|r| r.downcast::<gtk::Window>().ok());
+    let visible = window.as_ref().map(|w| w.gets_focus_visible());
     rebuild();
-    memo.restore(&root, fallback);
-    if let (Some(adj), Some(value)) = (adj, value) {
-        // Rows get their size on the next layout, so restore then too.
-        adj.set_value(value);
-        gtk::glib::idle_add_local_once(move || adj.set_value(value));
+    if memo.restore(&root, fallback) {
+        if let (Some(w), Some(v)) = (window, visible) {
+            w.set_focus_visible(v);
+        }
     }
+    if let (Some(adj), Some(value)) = (adj, value) {
+        restore_scroll(&adj, value);
+    }
+}
+
+/// Puts `adj` back at `value` now and, as the rebuilt content gets its
+/// size over the next layouts (which can come after an idle callback),
+/// again whenever its range changes, for half a second.
+pub fn restore_scroll(adj: &gtk::Adjustment, value: f64) {
+    use std::cell::RefCell;
+    use std::rc::Rc;
+    adj.set_value(value);
+    let id: Rc<RefCell<Option<gtk::glib::SignalHandlerId>>> = Rc::default();
+    *id.borrow_mut() = Some(adj.connect_changed(move |a| a.set_value(value)));
+    let weak = adj.downgrade();
+    gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(500), move || {
+        if let (Some(adj), Some(id)) = (weak.upgrade(), id.borrow_mut().take()) {
+            adj.disconnect(id);
+        }
+    });
 }
 
 #[cfg(test)]

@@ -5,7 +5,7 @@ use gtk::{gio, glib};
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use crate::engine::{to_signed, AngleUnit, Context, Mode, Value};
@@ -15,6 +15,24 @@ use crate::format::{self, NumberFormat, Options};
 pub const APP_ID: &str = "org.helix.Calculator";
 const SCHEMA: &str = "org.gnome.calculator";
 const MAX_HISTORY: usize = 100;
+
+/// The part of the keypad shown in a narrow window.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Pane {
+    Numbers,
+    Functions,
+    Bits,
+}
+
+impl Pane {
+    fn label(self) -> &'static str {
+        match self {
+            Pane::Numbers => "Numbers",
+            Pane::Functions => "Functions",
+            Pane::Bits => "Bits",
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ButtonMode {
@@ -487,6 +505,9 @@ fn shortcut_label(trigger: &str) -> String {
     out + &key
 }
 
+/// A keypad's function grid (if the mode has one) and number grid.
+type KeypadParts = (Option<gtk::Grid>, gtk::Grid);
+
 #[derive(Clone)]
 struct Ui {
     window: adw::ApplicationWindow,
@@ -497,6 +518,18 @@ struct Ui {
     keypad: gtk::Stack,
     prog_bar: gtk::Box,
     bits: gtk::Grid,
+    /// The bit panel's toggles with the bit each one stands for.
+    bit_buttons: Rc<RefCell<Vec<(gtk::ToggleButton, u32)>>>,
+    /// Bits per row of the bit panel (16, or 8 when narrow).
+    bits_per_row: Rc<Cell<u32>>,
+    /// Each keypad's function grid (if any) and number grid.
+    keypad_parts: Rc<RefCell<Vec<KeypadParts>>>,
+    /// Narrow layout (below 500sp): one keypad part at a time.
+    narrow: Rc<Cell<bool>>,
+    /// The part shown in the narrow layout.
+    pane: Rc<Cell<Pane>>,
+    pane_switcher: gtk::Box,
+    pane_buttons: [gtk::ToggleButton; 3],
     digit_buttons: Rc<RefCell<Vec<(gtk::Button, u32)>>>,
     state: Rc<RefCell<State>>,
 }
@@ -524,15 +557,21 @@ pub fn run(initial_expr: Option<String>) -> glib::ExitCode {
     app.run_with_args(&[std::env::args().next().unwrap_or_default()])
 }
 
+/// Where bit `bit` of a `bits`-wide word goes in the bit panel with
+/// `per_row` bits per row, most significant first: (row, column).
+fn bit_cell(bit: u32, bits: u32, per_row: u32) -> (u32, u32) {
+    ((bits - 1 - bit) / per_row, per_row - 1 - (bit % per_row))
+}
+
 fn load_css() {
     let css = gtk::CssProvider::new();
     css.load_from_string(
         ".calc-entry { font-size: 22pt; min-height: 56px; }
          .calc-keypad button { min-width: 52px; min-height: 40px; font-size: 13pt; }
+         .calc-narrow .calc-keypad button { min-width: 32px; padding-left: 2px; padding-right: 2px; }
          .calc-op { font-weight: bold; }
          .calc-history-result { font-weight: bold; }
-         .calc-bit { min-width: 14px; padding: 0 1px; font-family: monospace; font-size: 9pt; }
-         .calc-bit-index { font-size: 7pt; }",
+         .calc-bit { min-width: 22px; min-height: 28px; padding: 0; font-family: monospace; }",
     );
     if let Some(display) = gtk::gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
@@ -569,6 +608,8 @@ fn build(app: &adw::Application) -> Ui {
         .title("Calculator")
         .default_width(if w > 200 { w } else { 420 })
         .default_height(if h > 200 { h } else { 560 })
+        .width_request(360)
+        .height_request(500)
         .build();
     if prefs.get("window-maximized", false) {
         window.maximize();
@@ -656,11 +697,37 @@ fn build(app: &adw::Application) -> Ui {
         .halign(gtk::Align::Center)
         .build();
     prog_bar.append(&prog_row);
-    prog_bar.append(&bits);
+    // Scrolls when a 64-bit word at 8 bits per row is taller than the
+    // window (narrow layout).
+    let bits_scroll = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .propagate_natural_height(true)
+        .child(&bits)
+        .build();
+    prog_bar.append(&bits_scroll);
 
     let keypad = gtk::Stack::builder()
         .transition_type(gtk::StackTransitionType::Crossfade)
         .build();
+
+    // Narrow windows show one part of the keypad at a time, chosen here.
+    let pane_switcher = gtk::Box::builder()
+        .css_classes(["linked"])
+        .halign(gtk::Align::Center)
+        .visible(false)
+        .build();
+    let pane_buttons = [Pane::Numbers, Pane::Functions, Pane::Bits].map(|p| {
+        gtk::ToggleButton::builder()
+            .label(p.label())
+            .active(p == Pane::Numbers)
+            .build()
+    });
+    for b in &pane_buttons[1..] {
+        b.set_group(Some(&pane_buttons[0]));
+    }
+    for b in &pane_buttons {
+        pane_switcher.append(b);
+    }
 
     let content = gtk::Box::new(gtk::Orientation::Vertical, 6);
     content.set_margin_start(12);
@@ -669,6 +736,7 @@ fn build(app: &adw::Application) -> Ui {
     content.append(&history_scroll);
     content.append(&entry);
     content.append(&error);
+    content.append(&pane_switcher);
     content.append(&prog_bar);
     content.append(&keypad);
 
@@ -686,6 +754,13 @@ fn build(app: &adw::Application) -> Ui {
         keypad: keypad.clone(),
         prog_bar,
         bits,
+        bit_buttons: Rc::default(),
+        bits_per_row: Rc::new(Cell::new(16)),
+        keypad_parts: Rc::default(),
+        narrow: Rc::default(),
+        pane: Rc::new(Cell::new(Pane::Numbers)),
+        pane_switcher: pane_switcher.clone(),
+        pane_buttons: pane_buttons.clone(),
         digit_buttons: Rc::default(),
         state: state.clone(),
     };
@@ -695,6 +770,35 @@ fn build(app: &adw::Application) -> Ui {
     }
     ui.apply_mode();
     ui.rebuild_history();
+    for (b, pane) in ui
+        .pane_buttons
+        .iter()
+        .zip([Pane::Numbers, Pane::Functions, Pane::Bits])
+    {
+        let ui = ui.clone();
+        b.connect_toggled(move |b| {
+            if b.is_active() && ui.pane.replace(pane) != pane {
+                ui.update_layout();
+            }
+        });
+    }
+    let narrow = adw::Breakpoint::new(
+        adw::BreakpointCondition::parse("max-width: 500sp").expect("valid condition"),
+    );
+    for on in [true, false] {
+        let ui = ui.clone();
+        let handler = move |_: &adw::Breakpoint| {
+            if ui.narrow.replace(on) != on {
+                ui.update_layout();
+            }
+        };
+        if on {
+            narrow.connect_apply(handler);
+        } else {
+            narrow.connect_unapply(handler);
+        }
+    }
+    window.add_breakpoint(narrow);
 
     // Signals.
     {
@@ -892,10 +996,13 @@ impl Ui {
             ButtonMode::Financial => Some(financial_keys()),
             ButtonMode::Programming => Some(programming_keys()),
         };
-        if let Some(rows) = extra {
-            outer.append(&self.grid(rows, mode));
+        let extra = extra.map(|rows| self.grid(rows, mode));
+        if let Some(g) = &extra {
+            outer.append(g);
         }
-        outer.append(&self.grid(basic_keys(mode == ButtonMode::Programming), mode));
+        let basic = self.grid(basic_keys(mode == ButtonMode::Programming), mode);
+        outer.append(&basic);
+        self.keypad_parts.borrow_mut().push((extra, basic));
         outer.into()
     }
 
@@ -1176,7 +1283,60 @@ impl Ui {
         self.keypad.set_visible_child_name(mode.nick());
         self.prog_bar.set_visible(mode == ButtonMode::Programming);
         self.update_digit_sensitivity();
+        self.update_layout();
         self.rebuild_bits();
+    }
+
+    /// Wide: each mode's function and number grids side by side, the bit
+    /// panel above. Narrow: a Numbers / Functions (/ Bits) switcher and
+    /// only that part, with smaller buttons and 8 bits per row.
+    fn update_layout(&self) {
+        let mode = self.state.borrow().mode;
+        let narrow = self.narrow.get();
+        let mut pane = self.pane.get();
+        if pane == Pane::Bits && mode != ButtonMode::Programming {
+            pane = Pane::Numbers;
+        }
+        if mode == ButtonMode::Basic {
+            pane = Pane::Numbers;
+        }
+        self.pane.set(pane);
+        for (b, p) in self
+            .pane_buttons
+            .iter()
+            .zip([Pane::Numbers, Pane::Functions, Pane::Bits])
+        {
+            if p == pane && !b.is_active() {
+                b.set_active(true);
+            }
+        }
+        self.pane_buttons[2].set_visible(mode == ButtonMode::Programming);
+        self.pane_switcher
+            .set_visible(narrow && mode != ButtonMode::Basic);
+        if narrow {
+            self.window.add_css_class("calc-narrow");
+        } else {
+            self.window.remove_css_class("calc-narrow");
+        }
+        for (extra, basic) in self.keypad_parts.borrow().iter() {
+            if let Some(g) = extra {
+                g.set_visible(!narrow || pane == Pane::Functions);
+            }
+            basic.set_visible(!narrow || pane == Pane::Numbers);
+        }
+        self.keypad.set_visible(!narrow || pane != Pane::Bits);
+        let show_bits = !narrow || pane == Pane::Bits;
+        self.bits.set_visible(show_bits);
+        if let Some(scroll) = self.bits.ancestor(gtk::ScrolledWindow::static_type()) {
+            scroll.set_visible(show_bits);
+            // The bits take the room the keypad leaves.
+            self.prog_bar.set_vexpand(narrow && pane == Pane::Bits);
+            scroll.set_vexpand(narrow && pane == Pane::Bits);
+        }
+        let per_row = if narrow { 8 } else { 16 };
+        if self.bits_per_row.replace(per_row) != per_row {
+            self.rebuild_bits();
+        }
     }
 
     fn update_digit_sensitivity(&self) {
@@ -1229,31 +1389,41 @@ impl Ui {
         while let Some(child) = self.bits.first_child() {
             self.bits.remove(&child);
         }
+        self.bit_buttons.borrow_mut().clear();
         let bits = self.state.borrow().options.word_size;
         if self.state.borrow().mode != ButtonMode::Programming {
             return;
         }
-        // 16 bits per row, MSB first; one-column gap between nibbles.
-        let per_row = 16u32.min(bits);
+        // 16 (narrow: 8) bits per row, MSB first, with a gap between
+        // nibbles.
+        let per_row = self.bits_per_row.get().min(bits);
         for bit in (0..bits).rev() {
-            let row = ((bits - 1 - bit) / per_row) as i32 * 2;
-            let pos = per_row - 1 - (bit % per_row);
-            let col = (pos + pos / 4) as i32;
+            let (row, col) = bit_cell(bit, bits, per_row);
             let b = gtk::ToggleButton::builder()
                 .label("0")
                 .css_classes(["flat", "calc-bit"])
                 .tooltip_text(format!("Bit {bit}"))
                 .build();
+            // "Bit 5, toggle button, pressed": the pressed state is the
+            // bit's value.
+            helix_app_common::set_accessible_label(&b, &format!("Bit {bit}"));
+            if col % 4 == 0 && col > 0 {
+                // A gap before each nibble.
+                b.set_margin_start(8);
+            }
             let ui = self.clone();
             b.connect_clicked(move |_| ui.toggle_bit(bit));
-            self.bits.attach(&b, col, row, 1, 1);
+            self.bits.attach(&b, col as i32, row as i32 * 2, 1, 1);
             if bit % 4 == 0 {
+                // The toggles carry their numbers; the captions are for the eye.
                 let idx = gtk::Label::builder()
                     .label(bit.to_string())
-                    .css_classes(["dim-label", "calc-bit-index"])
+                    .css_classes(["dim-label", "caption", "numeric"])
+                    .accessible_role(gtk::AccessibleRole::Presentation)
                     .build();
-                self.bits.attach(&idx, col, row + 1, 1, 1);
+                self.bits.attach(&idx, col as i32, row as i32 * 2 + 1, 1, 1);
             }
+            self.bit_buttons.borrow_mut().push((b, bit));
         }
         self.refresh_bits();
     }
@@ -1263,18 +1433,12 @@ impl Ui {
             return;
         }
         let value = self.current_int();
-        let mut child = self.bits.first_child();
-        while let Some(w) = child {
-            if let Some(b) = w.downcast_ref::<gtk::ToggleButton>() {
-                let bit: u32 = b
-                    .tooltip_text()
-                    .and_then(|t| t.strip_prefix("Bit ").and_then(|n| n.parse().ok()))
-                    .unwrap_or(0);
-                let on = value.is_some_and(|v| v >> bit & 1 == 1);
-                b.set_label(if on { "1" } else { "0" });
-                b.set_sensitive(value.is_some());
-            }
-            child = w.next_sibling();
+        for (b, bit) in self.bit_buttons.borrow().iter() {
+            let on = value.is_some_and(|v| v >> bit & 1 == 1);
+            b.set_label(if on { "1" } else { "0" });
+            // Only "clicked" changes the value, so this does not recurse.
+            b.set_active(on);
+            b.set_sensitive(value.is_some());
         }
     }
 
@@ -1447,6 +1611,17 @@ fn spoken_result(expression: &str, result: &str) -> String {
 #[cfg(test)]
 mod key_name_tests {
     use super::*;
+
+    #[test]
+    fn bits_are_laid_out_msb_first() {
+        // 16-bit word, 16 per row: bit 15 first, bit 0 last.
+        assert_eq!(bit_cell(15, 16, 16), (0, 0));
+        assert_eq!(bit_cell(0, 16, 16), (0, 15));
+        // 64-bit word, 8 per row: bit 63 starts row 0, bit 0 ends row 7.
+        assert_eq!(bit_cell(63, 64, 8), (0, 0));
+        assert_eq!(bit_cell(0, 64, 8), (7, 7));
+        assert_eq!(bit_cell(8, 64, 8), (6, 7));
+    }
 
     #[test]
     fn names_drop_shortcut_hints() {
