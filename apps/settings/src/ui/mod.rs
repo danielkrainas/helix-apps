@@ -9,6 +9,7 @@ mod access;
 mod appearance;
 mod bluetooth;
 mod datetime;
+mod displays;
 mod extensions;
 mod input;
 mod multitasking;
@@ -66,7 +67,8 @@ fn panel_impl(id: PanelId) -> Option<&'static dyn Panel> {
         PanelId::Wifi => &wifi::WifiPanel,
         PanelId::Network => &network::NetworkPanel,
         PanelId::Sound => &sound::SoundPanel,
-        PanelId::Display | PanelId::Apps | PanelId::Users => return None,
+        PanelId::Display => &displays::DisplaysPanel,
+        PanelId::Apps | PanelId::Users => return None,
     })
 }
 

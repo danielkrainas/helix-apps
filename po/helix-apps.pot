@@ -345,7 +345,7 @@ msgstr ""
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:488 apps/maps/src/ui.rs:490
 #: apps/music/src/ui.rs:316 apps/music/src/ui.rs:318
 #: apps/screenshot/src/ui.rs:287 apps/screenshot/src/ui.rs:289
-#: apps/settings/src/ui/mod.rs:199 apps/settings/src/ui/mod.rs:201
+#: apps/settings/src/ui/mod.rs:201 apps/settings/src/ui/mod.rs:203
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:291 apps/terminal/src/window.rs:295
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
@@ -1420,7 +1420,7 @@ msgstr ""
 msgid "Location"
 msgstr ""
 
-#: apps/calendar/src/editor.rs:514
+#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:829
 msgid "Schedule"
 msgstr ""
 
@@ -1768,8 +1768,8 @@ msgstr ""
 #: apps/logs/src/shortcuts.rs:17 apps/logs/src/ui.rs:276
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:24 apps/music/src/ui.rs:289
-#: apps/music/src/ui.rs:291 apps/settings/src/ui/mod.rs:184
-#: apps/settings/src/ui/mod.rs:186 apps/settings/src/ui/shortcuts.rs:8
+#: apps/music/src/ui.rs:291 apps/settings/src/ui/mod.rs:186
+#: apps/settings/src/ui/mod.rs:188 apps/settings/src/ui/shortcuts.rs:8
 #: apps/system-monitor/src/shortcuts.rs:31 apps/system-monitor/src/ui.rs:223
 #: apps/system-monitor/src/ui.rs:225 apps/web/src/dialogs.rs:142
 #: apps/web/src/window.rs:47
@@ -1920,7 +1920,7 @@ msgstr ""
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:482
-#: apps/settings/src/ui/mod.rs:193 apps/terminal/src/window.rs:286
+#: apps/settings/src/ui/mod.rs:195 apps/terminal/src/window.rs:286
 #: apps/text-editor/src/window.rs:64 apps/web/src/window.rs:221
 #: apps/web/src/window.rs:264 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -1939,7 +1939,7 @@ msgid "Search Events"
 msgstr ""
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:961 apps/settings/src/ui/mod.rs:222
+#: apps/files/src/ui/tab.rs:961 apps/settings/src/ui/mod.rs:224
 #: apps/settings/src/ui/picker.rs:114 apps/web/src/dialogs.rs:739
 #: apps/web/src/window.rs:2372
 msgid "No Results Found"
@@ -1947,7 +1947,7 @@ msgstr ""
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:223
+#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:225
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:740
 #: apps/web/src/window.rs:2373
 msgid "Try a different search"
@@ -6622,7 +6622,7 @@ msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr ""
 
 #: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1251
-#: apps/maps/src/ui.rs:1254 apps/settings/src/ui/mod.rs:420
+#: apps/maps/src/ui.rs:1254 apps/settings/src/ui/mod.rs:422
 #: apps/settings/src/ui/picker.rs:33
 msgid "No results found"
 msgstr ""
@@ -9562,10 +9562,12 @@ msgid "Open in OpenStreetMap"
 msgstr ""
 
 #: apps/maps/src/ui.rs:2364 apps/maps/src/ui.rs:2367
+#: apps/settings/src/ui/displays.rs:846
 msgid "From"
 msgstr ""
 
 #: apps/maps/src/ui.rs:2369 apps/maps/src/ui.rs:2372
+#: apps/settings/src/ui/displays.rs:847
 msgid "To"
 msgstr ""
 
@@ -10406,7 +10408,9 @@ msgstr ""
 msgid "Modem"
 msgstr ""
 
-#: apps/settings/src/bluez.rs:236 apps/text-editor/src/prefs.rs:119
+#: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:96
+#: apps/settings/src/ui/displays.rs:120 apps/settings/src/ui/displays.rs:121
+#: apps/settings/src/ui/displays.rs:380 apps/text-editor/src/prefs.rs:119
 msgid "Display"
 msgstr ""
 
@@ -10420,6 +10424,10 @@ msgstr ""
 
 #: apps/settings/src/dbus.rs:134
 msgid "Hostname"
+msgstr ""
+
+#: apps/settings/src/displays.rs:592
+msgid "Variable (up to {rate})"
 msgstr ""
 
 #. Translators: what an extension may do; completes "Can: …".
@@ -11566,6 +11574,176 @@ msgstr ""
 msgid "Could not change the time zone: {e}"
 msgstr ""
 
+#: apps/settings/src/ui/displays.rs:23
+msgid "Join Displays"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:24
+msgid "Mirror"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:25
+msgid "Single Display"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:30
+msgid "Landscape"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:31
+msgid "Portrait Right"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:32
+msgid "Portrait Left"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:33
+msgid "Landscape (Flipped)"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:87
+msgid "Loading Displays…"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:90
+msgid "Arrangement"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:91
+msgid "Display Mode"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:97
+msgid "Display to Use"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:106
+msgid "Display Arrangement"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:107
+msgid ""
+"Drag displays to match how they stand on your desk; with the keyboard, move "
+"the selected display with the arrow keys"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:115
+msgid "Primary Display"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:116
+msgid "Holds the top bar and new windows"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:122
+msgid "Display to Set Up"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:124
+msgid "Orientation"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:129
+msgid "Resolution"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:131
+msgid "Refresh Rate"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:133
+msgid "Scale"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:134
+msgid "Makes everything larger or smaller"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:138
+msgid "Adjust for TV"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:139
+msgid "Shrinks the picture for TVs that cut off its edges"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:155
+msgid "The display settings changed."
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:156 apps/web/src/dialogs.rs:413
+msgid "_Reset"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:158 apps/settings/src/ui/netedit.rs:286
+msgid "_Apply"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:177
+msgid "Displays Are Not Available"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:178
+msgid "The display service is not running."
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:259
+msgid "Changing the displays is not allowed in this session."
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:294
+msgid "Could not change the displays: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:374
+msgid "Mirrored Displays"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:481
+msgid "These displays have no resolution in common to mirror"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:734
+msgid "{display} at {x}, {y}"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:765
+msgid "{time}, Hours"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:766
+msgid "{time}, Minutes"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:816 apps/settings/src/ui/displays.rs:825
+msgid "Night Light"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:817
+msgid "Makes the screen warmer in the evening, which can help you sleep."
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:831
+msgid "Sunset to Sunrise"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:832
+msgid "Manual Schedule"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:858
+msgid "Color Temperature"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:859
+msgid "Cooler"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:859
+msgid "Warmer"
+msgstr ""
+
 #: apps/settings/src/ui/extensions.rs:93
 msgid "Extensions Are Not Available"
 msgstr ""
@@ -11806,46 +11984,46 @@ msgstr ""
 msgid "Remove {source}"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:155 apps/settings/src/ui/mod.rs:235
-#: apps/settings/src/ui/mod.rs:489
+#: apps/settings/src/ui/mod.rs:157 apps/settings/src/ui/mod.rs:237
+#: apps/settings/src/ui/mod.rs:491
 msgid "Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:173
+#: apps/settings/src/ui/mod.rs:175
 msgid "Search settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:176 apps/settings/src/ui/shortcuts.rs:10
+#: apps/settings/src/ui/mod.rs:178 apps/settings/src/ui/shortcuts.rs:10
 msgid "Search Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:194
+#: apps/settings/src/ui/mod.rs:196
 msgid "_About Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:344 apps/settings/src/ui/mod.rs:357
+#: apps/settings/src/ui/mod.rs:346 apps/settings/src/ui/mod.rs:359
 msgid "Not yet available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:378
+#: apps/settings/src/ui/mod.rs:380
 msgid "Not Yet Available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:421
+#: apps/settings/src/ui/mod.rs:423
 msgid "{n} panel found"
 msgid_plural "{n} panels found"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/ui/mod.rs:458
+#: apps/settings/src/ui/mod.rs:460
 msgid "{} Is Not Yet Available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:459
+#: apps/settings/src/ui/mod.rs:461
 msgid "This panel will be added in a later version of Helix Settings."
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:490
+#: apps/settings/src/ui/mod.rs:492
 msgid "Configure the Helix desktop"
 msgstr ""
 
@@ -12023,10 +12201,6 @@ msgstr ""
 
 #: apps/settings/src/ui/netedit.rs:277
 msgid "Remove…"
-msgstr ""
-
-#: apps/settings/src/ui/netedit.rs:286
-msgid "_Apply"
 msgstr ""
 
 #: apps/settings/src/ui/netedit.rs:355
@@ -15157,10 +15331,6 @@ msgstr ""
 msgid ""
 "Every site will ask again before using your camera, location, notifications "
 "and other permissions."
-msgstr ""
-
-#: apps/web/src/dialogs.rs:413
-msgid "_Reset"
 msgstr ""
 
 #: apps/web/src/dialogs.rs:423

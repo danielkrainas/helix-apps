@@ -471,6 +471,23 @@
       <range min="0.0" max="1.0"/>
     </key>
   </schema>
+  <schema id="org.gnome.settings-daemon.plugins.color" path="/org/gnome/settings-daemon/plugins/color/">
+    <key name="night-light-enabled" type="b">
+      <default>false</default>
+    </key>
+    <key name="night-light-schedule-automatic" type="b">
+      <default>true</default>
+    </key>
+    <key name="night-light-schedule-from" type="d">
+      <default>20.0</default>
+    </key>
+    <key name="night-light-schedule-to" type="d">
+      <default>6.0</default>
+    </key>
+    <key name="night-light-temperature" type="u">
+      <default>2700</default>
+    </key>
+  </schema>
   <schema id="org.gnome.system.proxy" path="/system/proxy/">
     <key name="mode" enum="org.helix.Settings.compat.ProxyMode">
       <default>'none'</default>

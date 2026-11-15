@@ -26,6 +26,11 @@ fn serve_fakes() {
     crate::bluez::tests::serve_send_to(&shell, &log);
     let nm = connect();
     crate::nm::tests::serve(&nm, &log);
+    // Only when asked: the compositor normally serves it.
+    let displays = connect();
+    if std::env::var_os("HELIX_FAKE_DISPLAYS").is_some_and(|v| !v.is_empty()) {
+        crate::displays::tests::serve(&displays, &log);
+    }
     eprintln!("fakes ready");
     loop {
         std::thread::sleep(std::time::Duration::from_secs(5));

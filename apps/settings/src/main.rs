@@ -3,6 +3,7 @@
 mod bluez;
 mod bus;
 mod dbus;
+mod displays;
 mod extensions;
 #[cfg(test)]
 mod fakes;

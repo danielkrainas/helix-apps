@@ -92,7 +92,7 @@ Primary configuration UI for the desktop and system.
 | `wifi` | `wi-fi`, `wireless` | yes |
 | `network` | `wired` | yes |
 | `bluetooth` | | yes |
-| `display` | `displays`, `screen` | no |
+| `display` | `displays`, `screen` | yes |
 | `sound` | `audio` | yes |
 | `power` | | yes |
 | `multitasking` | `workspaces` | yes |
@@ -475,6 +475,68 @@ live), and the network proxy.
   wired connections; the `nmcli` import path has not been tried against a
   real NetworkManager.
 
+#### Displays
+`org.gnome.Mutter.DisplayConfig` on the session bus (served by helix-comp;
+helix-desktop-spec `contracts/dbus/org.gnome.Mutter.DisplayConfig.md`):
+`GetCurrentState`, `ApplyMonitorsConfig`, `ApplyMonitorsConfigAllowed`,
+followed live through its signals (`MonitorsChanged`) and it coming or
+going (`displays.rs`).
+
+- Until the first reading: *Loading Displays…*; without the service,
+  *Displays Are Not Available* / "The display service is not running."
+  When `ApplyMonitorsConfigAllowed` is false the controls are insensitive
+  and say changing the displays is not allowed in this session.
+- Changes are collected first: while the edited configuration differs
+  from the current one, a bar under the page says "The display settings
+  changed." with *Reset* and *Apply*. *Apply* calls
+  `ApplyMonitorsConfig` with method verify, then persistent; the shell
+  then asks whether to keep the change and reverts it when not answered
+  (helix-comp's confirmation). A refused configuration is a toast with
+  the reason. A change from elsewhere replaces what was being edited.
+- *Arrangement* (with two or more monitors): *Display Mode* — *Join
+  Displays* (each monitor its own logical monitor, side by side, keeping
+  what it had), *Mirror* (one logical monitor showing all at the largest
+  resolution they all have; a toast when there is none), *Single Display*
+  (only the one chosen in *Display* on, the built-in one first). When
+  joined: the arrangement area and *Primary Display* ("Holds the top bar
+  and new windows"). Monitors are numbered "1. Name" in the order the
+  service lists them.
+- The arrangement area draws each logical monitor at its logical size
+  (mode ÷ scale, turned for portrait orientations), the selected one
+  outlined. Dragging moves a monitor; when let go it snaps to the nearest
+  place where it touches another without overlapping (`displays::snap`),
+  and the whole layout moves so its top-left corner is 0, 0. Keyboard:
+  the area takes focus (named "Display Arrangement"), Space selects the
+  next monitor, the arrow keys move the selected one by its own width or
+  height (snapping the same way); each move is announced ("1. Built-in
+  display at 0, 0") and kept as the area's description.
+- *Display* group (titled with the monitor's name when there is one;
+  with several, *Display* chooses which one): *Orientation* (Landscape,
+  Portrait Right = transform 1, Portrait Left = 3, Landscape (Flipped) =
+  2), *Resolution* ("1920 × 1080 (16:9)", largest first; mirrored
+  monitors offer only resolutions they share and follow the choice with
+  their fastest rate), *Refresh Rate* ("60.00 Hz", fastest first;
+  "Variable (up to N Hz)" for modes whose `refresh-rate-mode` is
+  `variable`), *Scale* (the mode's supported scales, fractional ones
+  included, as "125 %"; all logical monitors together when
+  `global-scale-required`), *Adjust for TV* (underscanning, shown only for
+  monitors that report `is-underscanning`). Changing a size keeps the
+  monitors touching (they are laid side by side again when they would
+  overlap or drift apart).
+- *Night Light* (`org.gnome.settings-daemon.plugins.color`): *Night
+  Light* (`night-light-enabled`), *Schedule* (*Sunset to Sunrise* /
+  *Manual Schedule*: `night-light-schedule-automatic`), *From* and *To*
+  for a manual schedule (hour and minute spin buttons, named "From,
+  Hours"…, written as hours to `night-light-schedule-from` / `-to`),
+  *Color Temperature* (`night-light-temperature`, 1700 K "Warmer" …
+  4700 K "Cooler"). The compat schema has these keys.
+- Tested against a fake DisplayConfig on a private bus (two monitors,
+  underscanning, a stale serial), the layout logic in unit tests, and
+  against helix-comp's own DisplayConfig in a headless session on a
+  private bus (`displays::tests::live_helix_comp`: read, verify, apply a
+  fractional scale temporarily and read it back). Not yet tried with
+  several real monitors.
+
 #### Sound
 The sound server's PulseAudio interface through `pactl` (as the shell's
 volume keys use it; PipeWire serves it with pipewire-pulse): `pactl -f
@@ -642,9 +704,6 @@ registered accelerators.
 - `-h` / `--help` prints usage.
 
 ### Follow-up panels (listed, not yet available)
-- **Displays**: `org.gnome.Mutter.DisplayConfig` (`GetCurrentState` /
-  `ApplyMonitorsConfig`, with a revert-countdown confirmation), night light
-  via `org.gnome.settings-daemon.plugins.color`.
 - **Users**: `org.freedesktop.Accounts`.
 - **Apps**: default applications (`gio::AppInfo` defaults) and per-app
   permissions through the permission store.
