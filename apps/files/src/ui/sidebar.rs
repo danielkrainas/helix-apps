@@ -127,6 +127,54 @@ impl Sidebar {
         });
         self.list.add_controller(click);
 
+        // Touch: long-press opens the row's menu.
+        let long_press = gtk::GestureLongPress::new();
+        long_press.set_touch_only(true);
+        let weak = Rc::downgrade(self);
+        long_press.connect_pressed(move |g, x, y| {
+            let Some(s) = weak.upgrade() else { return };
+            if let Some(row) = s.list.row_at_y(y as i32) {
+                g.set_state(gtk::EventSequenceState::Claimed);
+                s.popup(row.index() as usize, x, y);
+            }
+        });
+        self.list.add_controller(long_press);
+
+        // Keyboard: Menu / Shift+F10 open the focused row's menu, F2
+        // renames a focused bookmark.
+        let keys = gtk::ShortcutController::new();
+        let weak = Rc::downgrade(self);
+        let open_menu = gtk::CallbackAction::new(move |_, _| {
+            weak.upgrade().is_some_and(|s| s.popup_focused()).into()
+        });
+        for trigger in ["Menu", "<Shift>F10"] {
+            keys.add_shortcut(gtk::Shortcut::new(
+                gtk::ShortcutTrigger::parse_string(trigger),
+                Some(open_menu.clone()),
+            ));
+        }
+        let weak = Rc::downgrade(self);
+        keys.add_shortcut(gtk::Shortcut::new(
+            gtk::ShortcutTrigger::parse_string("F2"),
+            Some(gtk::CallbackAction::new(move |_, _| {
+                let Some(s) = weak.upgrade() else {
+                    return glib::Propagation::Proceed;
+                };
+                let Some(idx) = s.focused_index() else {
+                    return glib::Propagation::Proceed;
+                };
+                let is_bookmark = matches!(
+                    s.places.borrow().get(idx).map(|p| &p.kind),
+                    Some(Kind::Bookmark(..))
+                );
+                if is_bookmark {
+                    s.rename_bookmark(idx);
+                }
+                is_bookmark.into()
+            })),
+        ));
+        self.list.add_controller(keys);
+
         // Actions for the context menu.
         let group = gio::SimpleActionGroup::new();
         let add = |name: &str, f: fn(&Rc<Sidebar>, usize)| {
@@ -342,6 +390,13 @@ impl Sidebar {
     }
 
     pub fn rebuild(self: &Rc<Self>) {
+        // Keyboard focus stays on the same place (or moves to a neighbour
+        // when it was removed) across the rebuild.
+        let list = self.list.clone();
+        helix_app_common::focus::rebuild_keeping_focus(&list, None, || self.rebuild_rows());
+    }
+
+    fn rebuild_rows(self: &Rc<Self>) {
         let places = self.collect();
         while let Some(row) = self.list.row_at_index(0) {
             self.list.remove(&row);
@@ -385,6 +440,10 @@ impl Sidebar {
                 )
                 .build();
             row.set_widget_name(&p.section.to_string());
+            let key = p
+                .file()
+                .map_or_else(|| p.label.clone(), |f| f.uri().to_string());
+            helix_app_common::focus::set_key(&row, &key);
             if let (Some(w), Some(f)) = (self.win.upgrade(), p.file()) {
                 if f.uri() != OTHER_LOCATIONS
                     && f.uri_scheme().as_deref() != Some("recent")
@@ -471,6 +530,33 @@ impl Sidebar {
         self.popover.popup();
     }
 
+    /// The index of the row holding keyboard focus (or else the selected
+    /// row).
+    fn focused_index(&self) -> Option<usize> {
+        self.list
+            .focus_child()
+            .and_downcast::<gtk::ListBoxRow>()
+            .or_else(|| self.list.selected_row())
+            .map(|r| r.index() as usize)
+    }
+
+    /// Opens the menu of the focused row, below it. Returns whether a menu
+    /// was shown.
+    fn popup_focused(&self) -> bool {
+        let Some(idx) = self.focused_index() else {
+            return false;
+        };
+        let Some(row) = self.list.row_at_index(idx as i32) else {
+            return false;
+        };
+        let (x, y) = row
+            .compute_bounds(&self.list)
+            .map(|b| (f64::from(b.x() + 24.0), f64::from(b.y() + b.height())))
+            .unwrap_or((24.0, 0.0));
+        self.popup(idx, x, y);
+        true
+    }
+
     fn eject(&self, idx: usize) {
         let Some(place) = self.places.borrow().get(idx).cloned() else {
             return;
@@ -504,26 +590,42 @@ impl Sidebar {
             return;
         };
         let Some(w) = self.win.upgrade() else { return };
-        let entry = gtk::Entry::builder()
+        let entry = adw::EntryRow::builder()
+            .title("Bookmark _Name")
+            .use_underline(true)
             .text(&place.label)
             .activates_default(true)
             .build();
+        let list_box = gtk::ListBox::builder()
+            .selection_mode(gtk::SelectionMode::None)
+            .css_classes(["boxed-list"])
+            .build();
+        list_box.append(&entry);
         let dialog = adw::AlertDialog::builder()
             .heading("Rename Bookmark")
-            .extra_child(&entry)
+            .extra_child(&list_box)
             .default_response("rename")
             .close_response("cancel")
             .build();
         dialog.add_responses(&[("cancel", "_Cancel"), ("rename", "_Rename")]);
         dialog.set_response_appearance("rename", adw::ResponseAppearance::Suggested);
+        let win = self.win.clone();
+        let e = entry.clone();
         dialog.connect_response(Some("rename"), move |_, _| {
             let mut list = bookmarks::load();
             if let Some(b) = list.get_mut(bi) {
-                let text = entry.text().trim().to_string();
+                let text = e.text().trim().to_string();
                 b.label = (!text.is_empty()).then_some(text);
-                let _ = bookmarks::save(&list);
+                if let Err(err) = bookmarks::save(&list) {
+                    if let Some(w) = win.upgrade() {
+                        w.toast(&format!("Could not save bookmarks: {err}"));
+                    }
+                }
             }
         });
         dialog.present(Some(&w.window));
+        glib::idle_add_local_once(move || {
+            entry.grab_focus();
+        });
     }
 }

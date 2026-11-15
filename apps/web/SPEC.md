@@ -113,8 +113,8 @@ Web browser.
   the current level), Reopen Closed Tab, Find…, Print…, Fullscreen,
   Install Site as Web Application… (http/https pages, normal windows),
   History, Passwords, Import Bookmarks…, Export Bookmarks…, Preferences,
-  About Web.
-  (No shortcuts window; shortcuts are listed below.)
+  Keyboard Shortcuts, About Web. The web-app menu also has Keyboard
+  Shortcuts. The shortcuts window (Ctrl+?) lists every accelerator below.
 - Ctrl+Shift+W closes the window (Ctrl+W closes the tab).
 - Private windows: title "Private Browsing", header bar carries a
   "Private" indicator icon, and they never appear in the saved session.
@@ -422,7 +422,7 @@ Web browser.
 | Ctrl+L, F6, Alt+D | Focus address bar |
 | Alt+Left / Alt+Right | Back / Forward |
 | Ctrl+R, F5 / Ctrl+Shift+R, Shift+F5 | Reload / Reload bypassing cache |
-| Escape (page focused) | Stop loading |
+| Escape (page focused) | Stop loading (while loading; otherwise the page gets it) |
 | Alt+Home | Home |
 | Ctrl+D | Bookmark page |
 | Ctrl+H | History |
@@ -433,6 +433,7 @@ Web browser.
 | F11 | Fullscreen |
 | Ctrl+Alt+R | Reader view |
 | Ctrl+, | Preferences |
+| Ctrl+? | Keyboard shortcuts |
 | Ctrl+Q | Quit |
 | Ctrl+Tab, Ctrl+PgUp/PgDn, Alt+1…9 | Tab switching (AdwTabView built-ins) |
 

@@ -19,6 +19,53 @@ use crate::urlinput;
 const MAX_CLOSED: usize = 10;
 const MAX_SUGGESTIONS: usize = 8;
 
+/// What an address-bar suggestion is; shown as an icon and spoken as a
+/// word.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SuggestionKind {
+    Search,
+    Address,
+    Bookmark,
+    History,
+}
+
+impl SuggestionKind {
+    fn icon(self) -> &'static str {
+        match self {
+            Self::Search => "system-search-symbolic",
+            Self::Address => "web-browser-symbolic",
+            Self::Bookmark => "starred-symbolic",
+            Self::History => "document-open-recent-symbolic",
+        }
+    }
+
+    fn word(self) -> &'static str {
+        match self {
+            Self::Search => "Search",
+            Self::Address => "Address",
+            Self::Bookmark => "Bookmark",
+            Self::History => "History",
+        }
+    }
+}
+
+/// The accessible name of a suggestion row: its text plus its type, which
+/// sighted users get from the icon.
+fn suggestion_label(kind: SuggestionKind, title: &str, url: &str) -> String {
+    match kind {
+        SuggestionKind::Search | SuggestionKind::Address => title.to_string(),
+        _ if url.is_empty() || url == title => format!("{title}, {}", kind.word()),
+        _ => format!("{title}, {}, {url}", kind.word()),
+    }
+}
+
+fn suggestion_count(n: usize) -> String {
+    match n {
+        1 => "1 suggestion".to_string(),
+        n => format!("{n} suggestions"),
+    }
+}
+
 const CSS: &str = "
 .permission-bar, .tls-bar { border-bottom: 1px solid alpha(currentColor, .15); }
 .permission-bar { background: alpha(@accent_bg_color, .18); }
@@ -63,6 +110,8 @@ pub struct Window {
     suggest_pop: gtk::Popover,
     suggest_list: gtk::ListBox,
     suggestions: RefCell<Vec<String>>,
+    /// Spoken text of each suggestion row, in order.
+    suggestion_labels: RefCell<Vec<String>>,
     /// Set while the program (not the user) changes the entry text.
     setting_entry: Cell<bool>,
     /// The user has typed since the entry was last synced.
@@ -78,8 +127,8 @@ pub struct Window {
     closed: RefCell<Vec<TabState>>,
     info_pop: gtk::Popover,
     bm_pop: gtk::Popover,
-    bm_title: gtk::Entry,
-    bm_tags: gtk::Entry,
+    bm_title: adw::EntryRow,
+    bm_tags: adw::EntryRow,
     bm_editing: RefCell<Option<String>>,
     toasts: adw::ToastOverlay,
 }
@@ -115,6 +164,7 @@ fn web_app_menu() -> gio::Menu {
         Some("_Uninstall Web Application…"),
         Some("app.uninstall-web-app"),
     );
+    s2.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
     s2.append(Some("_About Web"), Some("app.about"));
     menu.append_section(None, &s2);
     menu
@@ -150,6 +200,7 @@ fn main_menu() -> gio::Menu {
     menu.append_section(None, &s3);
     let s4 = gio::Menu::new();
     s4.append(Some("_Preferences"), Some("app.preferences"));
+    s4.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
     s4.append(Some("_About Web"), Some("app.about"));
     menu.append_section(None, &s4);
     menu
@@ -200,6 +251,7 @@ impl Window {
             .default_height(800)
             .title(if private { "Private Browsing" } else { "Web" })
             .build();
+        win.set_help_overlay(Some(&crate::shortcuts::window()));
 
         let tab_view = adw::TabView::new();
         let tab_bar = adw::TabBar::builder()
@@ -243,7 +295,8 @@ impl Window {
             .secondary_icon_name("non-starred-symbolic")
             .secondary_icon_activatable(true)
             .secondary_icon_tooltip_text("Bookmark this page")
-            .build();
+            .build()
+            .labelled("Address and Search");
         let clamp = adw::Clamp::builder()
             .maximum_size(760)
             .tightening_threshold(560)
@@ -322,7 +375,8 @@ impl Window {
 
         let bm_search = gtk::SearchEntry::builder()
             .placeholder_text("Search bookmarks")
-            .build();
+            .build()
+            .labelled("Search Bookmarks");
         let bm_list = gtk::ListBox::builder()
             .selection_mode(gtk::SelectionMode::None)
             .build();
@@ -361,7 +415,8 @@ impl Window {
         let find_entry = gtk::SearchEntry::builder()
             .placeholder_text("Find in page")
             .width_chars(28)
-            .build();
+            .build()
+            .labelled("Find in Page");
         let find_prev = icon_button("go-up-symbolic", "Previous Match", "win.find-prev");
         let find_next = icon_button("go-down-symbolic", "Next Match", "win.find-next");
         let find_label = gtk::Label::new(None);
@@ -402,6 +457,18 @@ impl Window {
             .build();
         suggest_list.add_css_class("navigation-sidebar");
         suggest_list.set_can_focus(false);
+        helix_app_common::set_accessible_label(&suggest_list, "Suggestions");
+        // Combobox pattern: focus stays in the entry, which says that it
+        // has a list of completions, whether it is open, and (see
+        // entry_key) which row is highlighted.
+        entry.update_property(&[
+            gtk::accessible::Property::Autocomplete(gtk::AccessibleAutocomplete::List),
+            gtk::accessible::Property::HasPopup(true),
+        ]);
+        entry.update_relation(&[gtk::accessible::Relation::Controls(&[suggest_list
+            .upcast_ref::<gtk::Accessible>(
+        )])]);
+        entry.update_state(&[gtk::accessible::State::Expanded(Some(false))]);
         let suggest_pop = gtk::Popover::builder()
             .child(&suggest_list)
             .autohide(false)
@@ -415,10 +482,22 @@ impl Window {
         // Site info and bookmark-edit popovers, anchored to entry icons.
         let info_pop = gtk::Popover::new();
         info_pop.set_parent(&entry);
-        let bm_title = gtk::Entry::builder().width_chars(28).build();
-        let bm_tags = gtk::Entry::builder()
-            .placeholder_text("Tags, comma separated")
+        // Visible field labels: libadwaita entry rows in a boxed list.
+        let bm_title = adw::EntryRow::builder()
+            .title("_Name")
+            .use_underline(true)
             .build();
+        let bm_tags = adw::EntryRow::builder()
+            .title("_Tags (comma separated)")
+            .use_underline(true)
+            .build();
+        let bm_fields = gtk::ListBox::builder()
+            .selection_mode(gtk::SelectionMode::None)
+            .css_classes(["boxed-list"])
+            .width_request(300)
+            .build();
+        bm_fields.append(&bm_title);
+        bm_fields.append(&bm_tags);
         let bm_remove = gtk::Button::with_label("Remove Bookmark");
         bm_remove.add_css_class("destructive-action");
         let bm_edit_box = gtk::Box::builder()
@@ -432,8 +511,7 @@ impl Window {
         let heading = gtk::Label::builder().label("Bookmark").xalign(0.0).build();
         heading.add_css_class("heading");
         bm_edit_box.append(&heading);
-        bm_edit_box.append(&bm_title);
-        bm_edit_box.append(&bm_tags);
+        bm_edit_box.append(&bm_fields);
         bm_edit_box.append(&bm_remove);
         let bm_pop = gtk::Popover::builder().child(&bm_edit_box).build();
         bm_pop.set_parent(&entry);
@@ -457,6 +535,7 @@ impl Window {
             suggest_pop,
             suggest_list,
             suggestions: RefCell::default(),
+            suggestion_labels: RefCell::default(),
             setting_entry: Cell::new(false),
             editing: Cell::new(false),
             find_bar,
@@ -711,6 +790,16 @@ impl Window {
         let cb = self.weak_fn(|w, index: i32| w.activate_suggestion(index as usize, false));
         self.suggest_list
             .connect_row_activated(move |_, row| cb(row.index()));
+        let cb = self.weak_fn(|w, ()| {
+            let open = w.suggest_pop.is_visible();
+            w.entry
+                .update_state(&[gtk::accessible::State::Expanded(Some(open))]);
+            if !open {
+                w.entry
+                    .reset_relation(gtk::AccessibleRelation::ActiveDescendant);
+            }
+        });
+        self.suggest_pop.connect_visible_notify(move |_| cb(()));
 
         // Find bar.
         let cb = self.weak_fn(|w, ()| w.find_changed());
@@ -781,9 +870,10 @@ impl Window {
         });
         bm_remove.connect_clicked(move |_| cb(()));
         let pop = self.bm_pop.clone();
-        self.bm_title.connect_activate(move |_| pop.popdown());
+        self.bm_title
+            .connect_entry_activated(move |_| pop.popdown());
         let pop = self.bm_pop.clone();
-        self.bm_tags.connect_activate(move |_| pop.popdown());
+        self.bm_tags.connect_entry_activated(move |_| pop.popdown());
     }
 
     // ---- tabs -------------------------------------------------------------
@@ -1223,8 +1313,25 @@ impl Window {
                             self.set_entry_text(url);
                             self.entry.set_position(-1);
                         }
+                        // Focus stays in the entry: point at the row and
+                        // read it (with its type) out.
+                        self.entry
+                            .update_relation(&[gtk::accessible::Relation::ActiveDescendant(
+                                row.upcast_ref::<gtk::Accessible>(),
+                            )]);
+                        if let Some(label) = self.suggestion_labels.borrow().get(next as usize) {
+                            helix_app_common::announce(
+                                &self.entry,
+                                label,
+                                helix_app_common::Urgency::Polite,
+                            );
+                        }
                     }
-                    _ => self.suggest_list.unselect_all(),
+                    _ => {
+                        self.suggest_list.unselect_all();
+                        self.entry
+                            .reset_relation(gtk::AccessibleRelation::ActiveDescendant);
+                    }
                 }
                 glib::Propagation::Stop
             }
@@ -1302,17 +1409,17 @@ impl Window {
         }
         let home = glib::home_dir().to_string_lossy().into_owned();
         let engine = app.settings.borrow().engine();
-        let mut rows: Vec<(String, String, &'static str, String)> = Vec::new();
+        let mut rows: Vec<(String, String, SuggestionKind, String)> = Vec::new();
         match urlinput::classify(query, &home) {
             Some(urlinput::Input::Search(q)) => rows.push((
                 format!("Search {} for “{}”", engine.name, q),
                 String::new(),
-                "system-search-symbolic",
+                SuggestionKind::Search,
                 app.resolve_input(query)
                     .unwrap_or_else(|| engine.search_url(&q)),
             )),
             Some(urlinput::Input::Url(u)) => {
-                rows.push((u.clone(), String::new(), "web-browser-symbolic", u))
+                rows.push((u.clone(), String::new(), SuggestionKind::Address, u))
             }
             None => {}
         }
@@ -1322,7 +1429,7 @@ impl Window {
             } else {
                 b.title.clone()
             };
-            rows.push((title, b.url.clone(), "starred-symbolic", b.url));
+            rows.push((title, b.url.clone(), SuggestionKind::Bookmark, b.url));
         }
         if !self.private || app.history.borrow().len() > 0 {
             for e in app
@@ -1335,22 +1442,30 @@ impl Window {
                 } else {
                     e.title.clone()
                 };
-                rows.push((title, e.url.clone(), "document-open-recent-symbolic", e.url));
+                rows.push((title, e.url.clone(), SuggestionKind::History, e.url));
             }
         }
         let mut seen = std::collections::HashSet::new();
-        for (title, subtitle, icon, url) in rows {
+        let mut labels = Vec::new();
+        for (title, subtitle, kind, url) in rows {
             if urls.len() > MAX_SUGGESTIONS || !seen.insert(url.clone()) {
                 continue;
             }
-            let (content, _) = two_line_row(&title, &subtitle, icon);
+            let (content, _) = two_line_row(&title, &subtitle, kind.icon());
+            let label = suggestion_label(kind, &title, &subtitle);
             let row = gtk::ListBoxRow::builder()
                 .child(&content)
                 .focusable(false)
                 .build();
+            helix_app_common::set_accessible_label(&row, &label);
             self.suggest_list.append(&row);
             urls.push(url);
+            labels.push(label);
         }
+        self.suggestion_labels.replace(labels);
+        helix_app_common::announce_settled(&self.suggest_list, &suggestion_count(urls.len()));
+        self.entry
+            .reset_relation(gtk::AccessibleRelation::ActiveDescendant);
         self.suggestions.replace(urls);
         let width = self.entry.width().max(320);
         self.suggest_list.set_size_request(width - 24, -1);
@@ -1793,4 +1908,31 @@ impl Window {
 /// Whether a launcher error only means the user closed the app chooser.
 fn is_dismissed(e: &glib::Error) -> bool {
     e.matches(gtk::DialogError::Dismissed) || e.matches(gtk::DialogError::Cancelled)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{suggestion_count, suggestion_label, SuggestionKind};
+
+    #[test]
+    fn suggestion_rows_say_their_type() {
+        assert_eq!(
+            suggestion_label(SuggestionKind::Bookmark, "GNOME", "https://gnome.org/"),
+            "GNOME, Bookmark, https://gnome.org/"
+        );
+        assert_eq!(
+            suggestion_label(
+                SuggestionKind::History,
+                "https://a.example/",
+                "https://a.example/"
+            ),
+            "https://a.example/, History"
+        );
+        assert_eq!(
+            suggestion_label(SuggestionKind::Search, "Search DuckDuckGo for “x”", ""),
+            "Search DuckDuckGo for “x”"
+        );
+        assert_eq!(suggestion_count(1), "1 suggestion");
+        assert_eq!(suggestion_count(4), "4 suggestions");
+    }
 }

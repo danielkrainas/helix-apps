@@ -43,10 +43,19 @@ pub fn name_dialog(
         .activates_default(true)
         .width_chars(30)
         .build();
+    let field = gtk::Label::builder()
+        .label(if is_dir { "Folder _Name" } else { "File _Name" })
+        .use_underline(true)
+        .mnemonic_widget(&entry)
+        .xalign(0.0)
+        .build();
+    field.add_css_class("heading");
+    helix_app_common::a11y::label_widget(&entry, &field);
     let error = gtk::Label::builder().xalign(0.0).wrap(true).build();
     error.add_css_class("error");
     error.add_css_class("caption");
     let b = gtk::Box::new(gtk::Orientation::Vertical, 6);
+    b.append(&field);
     b.append(&entry);
     b.append(&error);
     let dialog = adw::AlertDialog::builder()
@@ -61,6 +70,7 @@ pub fn name_dialog(
     let initial = initial.to_string();
     let validate = {
         let dialog = dialog.clone();
+        let entry = entry.clone();
         let error = error.clone();
         let initial = initial.clone();
         move |text: &str| {
@@ -83,12 +93,32 @@ pub fn name_dialog(
             dialog.set_response_enabled("accept", msg.is_none());
             error.set_text(msg.as_deref().unwrap_or(""));
             error.set_visible(msg.as_ref().is_some_and(|m| !m.is_empty()));
+            // Empty and unchanged names only disable the button; real
+            // errors mark the entry invalid and are spoken.
+            helix_app_common::a11y::set_input_error(
+                &entry,
+                Some(&error),
+                msg.as_deref().filter(|m| !m.is_empty()),
+            );
             if text.starts_with('.') && msg.is_none() {
-                error.set_text("Names starting with “.” are hidden.");
+                const HIDDEN: &str = "Names starting with “.” are hidden.";
+                error.set_text(HIDDEN);
                 error.remove_css_class("error");
                 error.set_visible(true);
+                entry.update_property(&[gtk::accessible::Property::Description(HIDDEN)]);
+                helix_app_common::a11y::announce_change(
+                    &error,
+                    HIDDEN,
+                    helix_app_common::a11y::Urgency::Polite,
+                );
             } else {
                 error.add_css_class("error");
+                entry.reset_property(gtk::AccessibleProperty::Description);
+                helix_app_common::a11y::announce_change(
+                    &error,
+                    "",
+                    helix_app_common::a11y::Urgency::Polite,
+                );
             }
         }
     };

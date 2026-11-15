@@ -14,6 +14,17 @@ use crate::reader::{self, Article};
 use crate::secrets;
 use crate::urlinput;
 
+/// Whether a key press on the page should stop loading: a bare Escape
+/// while the page loads. Any other time Escape belongs to the page.
+fn escape_stops_loading(key: gdk::Key, mods: gdk::ModifierType, loading: bool) -> bool {
+    let held = mods
+        & (gdk::ModifierType::SHIFT_MASK
+            | gdk::ModifierType::CONTROL_MASK
+            | gdk::ModifierType::ALT_MASK
+            | gdk::ModifierType::SUPER_MASK);
+    loading && key == gdk::Key::Escape && held.is_empty()
+}
+
 pub const START_URI: &str = "helix-about:overview";
 
 /// Clones a captured handle into a closure (a small `glib::clone!` stand-in).
@@ -325,6 +336,22 @@ impl Tab {
 
     fn connect_view(self: &Rc<Self>) {
         let view = &self.view;
+
+        // Escape stops a page that is loading; otherwise the page gets it.
+        let keys = gtk::EventControllerKey::new();
+        keys.set_propagation_phase(gtk::PropagationPhase::Capture);
+        keys.connect_key_pressed(|c, key, _, mods| {
+            let Some(view) = c.widget().and_downcast::<webkit6::WebView>() else {
+                return glib::Propagation::Proceed;
+            };
+            if escape_stops_loading(key, mods, view.is_loading()) {
+                view.stop_loading();
+                return glib::Propagation::Stop;
+            }
+            glib::Propagation::Proceed
+        });
+        view.add_controller(keys);
+
         let weak = Rc::downgrade(self);
         let w = move || weak.upgrade();
 
@@ -962,6 +989,12 @@ impl Tab {
             webkit6::ScriptDialogType::Prompt => {
                 entry.set_text(&dialog.prompt_get_default_text().unwrap_or_default());
                 entry.set_activates_default(true);
+                // The page's question names the field.
+                let name = message.trim();
+                helix_app_common::set_accessible_label(
+                    &entry,
+                    if name.is_empty() { "Answer" } else { name },
+                );
                 ad.set_extra_child(Some(&entry));
                 ad.add_responses(&[("cancel", "_Cancel"), ("ok", "_OK")]);
                 ad.set_response_appearance("ok", adw::ResponseAppearance::Suggested);
@@ -1010,5 +1043,29 @@ pub fn origin_string(o: &webkit6::SecurityOrigin) -> String {
     match o.port() {
         0 => format!("{proto}://{host}"),
         p => format!("{proto}://{host}:{p}"),
+    }
+}
+
+#[cfg(test)]
+mod escape_tests {
+    use super::escape_stops_loading;
+    use gtk::gdk::{Key, ModifierType};
+
+    #[test]
+    fn escape_stops_only_a_loading_page() {
+        let none = ModifierType::empty();
+        assert!(escape_stops_loading(Key::Escape, none, true));
+        assert!(escape_stops_loading(
+            Key::Escape,
+            ModifierType::LOCK_MASK,
+            true
+        ));
+        assert!(!escape_stops_loading(Key::Escape, none, false));
+        assert!(!escape_stops_loading(
+            Key::Escape,
+            ModifierType::SHIFT_MASK,
+            true
+        ));
+        assert!(!escape_stops_loading(Key::a, none, true));
     }
 }

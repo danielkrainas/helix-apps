@@ -23,9 +23,9 @@ pub struct FindBar {
     pub replace_entry: gtk::Entry,
     pub replace_toggle: gtk::ToggleButton,
     pub count: gtk::Label,
-    pub case_btn: gtk::ToggleButton,
-    pub word_btn: gtk::ToggleButton,
-    pub regex_btn: gtk::ToggleButton,
+    pub case_btn: gtk::CheckButton,
+    pub word_btn: gtk::CheckButton,
+    pub regex_btn: gtk::CheckButton,
 }
 
 pub struct Doc {
@@ -34,7 +34,9 @@ pub struct Doc {
     pub buffer: gtk::TextBuffer,
     pub view: EditorView,
     pub gutter: LineGutter,
-    pub root: gtk::Box,
+    /// The tab's content; a breakpoint bin so the find bar can adapt to
+    /// the tab's width.
+    pub root: adw::BreakpointBin,
     pub file: RefCell<Option<gio::File>>,
     pub format: Cell<TextFormat>,
     pub untitled: Cell<u32>,
@@ -62,13 +64,11 @@ fn icon_button(icon: &str, tooltip: &str) -> gtk::Button {
     b
 }
 
-fn option_toggle(label: &str, tooltip: &str) -> gtk::ToggleButton {
-    let b = gtk::ToggleButton::with_label(label);
-    b.set_tooltip_text(Some(tooltip));
-    helix_app_common::set_accessible_label(&b, helix_app_common::a11y::name_from_tooltip(tooltip));
-    b.add_css_class("flat");
-    b.add_css_class("find-option");
-    b
+fn option_check(label: &str) -> gtk::CheckButton {
+    gtk::CheckButton::builder()
+        .label(label)
+        .use_underline(true)
+        .build()
 }
 
 impl Doc {
@@ -110,9 +110,11 @@ impl Doc {
         let banner = gtk::Revealer::builder().child(&banner_box).build();
 
         // Find bar.
+        // Small minimum widths: the entries grow into the room there is.
         let entry = gtk::SearchEntry::builder()
             .placeholder_text("Find")
             .hexpand(true)
+            .width_chars(6)
             .build();
         helix_app_common::set_accessible_label(&entry, "Find");
         let count = gtk::Label::new(None);
@@ -120,9 +122,17 @@ impl Doc {
         count.add_css_class("numeric");
         let prev = icon_button("go-up-symbolic", "Previous Match (Ctrl+Shift+G)");
         let next = icon_button("go-down-symbolic", "Next Match (Ctrl+G)");
-        let case_btn = option_toggle("Aa", "Case Sensitive");
-        let word_btn = option_toggle("W", "Match Whole Words Only");
-        let regex_btn = option_toggle(".*", "Regular Expression");
+        // Search options live in a menu so the bar fits narrow windows.
+        let case_btn = option_check("_Case Sensitive");
+        let word_btn = option_check("Match _Whole Words Only");
+        let regex_btn = option_check("_Regular Expression");
+        let options_box = gtk::Box::new(gtk::Orientation::Vertical, 2);
+        options_box.append(&case_btn);
+        options_box.append(&word_btn);
+        options_box.append(&regex_btn);
+        let options = helix_app_common::icon_menu_button("view-more-symbolic", "Search Options");
+        options.set_popover(Some(&gtk::Popover::builder().child(&options_box).build()));
+        options.add_css_class("flat");
         let replace_toggle = gtk::ToggleButton::new();
         replace_toggle.set_icon_name("edit-find-replace-symbolic");
         replace_toggle.set_tooltip_text(Some("Replace (Ctrl+H)"));
@@ -135,9 +145,7 @@ impl Doc {
             count.upcast_ref(),
             prev.upcast_ref(),
             next.upcast_ref(),
-            case_btn.upcast_ref(),
-            word_btn.upcast_ref(),
-            regex_btn.upcast_ref(),
+            options.upcast_ref(),
             replace_toggle.upcast_ref(),
             close.upcast_ref(),
         ] {
@@ -146,6 +154,7 @@ impl Doc {
         let replace_entry = gtk::Entry::builder()
             .placeholder_text("Replace")
             .hexpand(true)
+            .width_chars(6)
             .build();
         helix_app_common::set_accessible_label(&replace_entry, "Replace With");
         let replace_btn = gtk::Button::with_label("_Replace");
@@ -163,10 +172,24 @@ impl Doc {
         find_box.append(&replace_revealer);
         let find_revealer = gtk::Revealer::builder().child(&find_box).build();
 
-        let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        root.append(&banner);
-        root.append(&find_revealer);
-        root.append(&scroller);
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        content.append(&banner);
+        content.append(&find_revealer);
+        content.append(&scroller);
+        let root = adw::BreakpointBin::builder()
+            .child(&content)
+            .width_request(300)
+            .height_request(120)
+            .build();
+        // Narrow tabs: drop the match count from the bar (it is still
+        // announced) so the entry keeps room.
+        let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+            adw::BreakpointConditionLengthType::MaxWidth,
+            450.0,
+            adw::LengthUnit::Sp,
+        ));
+        narrow.add_setter(&count, "visible", Some(&false.to_value()));
+        root.add_breakpoint(narrow);
         view.set_gutter(gtk::TextWindowType::Left, Some(&gutter));
 
         let settings = app.settings.borrow().clone();
@@ -207,6 +230,7 @@ impl Doc {
         });
         doc.apply_settings(&settings);
         doc.connect_signals(
+            &find_box,
             &scroller,
             &banner_ignore,
             &prev,
@@ -225,6 +249,7 @@ impl Doc {
     #[allow(clippy::too_many_arguments)]
     fn connect_signals(
         self: &Rc<Self>,
+        find_box: &gtk::Box,
         scroller: &gtk::ScrolledWindow,
         banner_ignore: &gtk::Button,
         prev: &gtk::Button,
@@ -288,6 +313,28 @@ impl Doc {
         });
         self.view.add_controller(keys);
 
+        // Ctrl+scroll zooms.
+        let scroll = gtk::EventControllerScroll::new(gtk::EventControllerScrollFlags::VERTICAL);
+        scroll.set_propagation_phase(gtk::PropagationPhase::Capture);
+        scroll.connect_scroll(|c, _, dy| {
+            let ctrl = c
+                .current_event_state()
+                .contains(gdk::ModifierType::CONTROL_MASK);
+            if !ctrl || dy == 0.0 {
+                return glib::Propagation::Proceed;
+            }
+            let action = if dy < 0.0 {
+                "app.zoom-in"
+            } else {
+                "app.zoom-out"
+            };
+            if let Some(w) = c.widget() {
+                w.activate_action(action, None).ok();
+            }
+            glib::Propagation::Stop
+        });
+        self.view.add_controller(scroll);
+
         // Find bar.
         let find = &self.find;
         find.entry.connect_search_changed({
@@ -333,6 +380,8 @@ impl Doc {
             }
         });
         find.entry.add_controller(shift_enter);
+        // Escape closes the bar from any control in it (the find entry
+        // handles it itself through stop-search).
         let esc = gtk::EventControllerKey::new();
         esc.connect_key_pressed({
             let w = w.clone();
@@ -346,7 +395,7 @@ impl Doc {
                 glib::Propagation::Proceed
             }
         });
-        find.replace_entry.add_controller(esc);
+        find_box.add_controller(esc);
         prev.connect_clicked({
             let f = with_doc!(w, |d| d.find_next(true));
             move |_| f()
@@ -710,10 +759,12 @@ impl Doc {
         let (s, e) = self.buffer.bounds();
         self.buffer.remove_tag(&self.match_tag, &s, &e);
         self.find.entry.remove_css_class("error");
+        let mut error = None;
         let matches = match self.matcher() {
             None => Vec::new(),
             Some(Err(_)) => {
                 self.find.entry.add_css_class("error");
+                error = Some("Invalid regular expression");
                 Vec::new()
             }
             Some(Ok(m)) => {
@@ -727,6 +778,7 @@ impl Doc {
             self.buffer.apply_tag(&self.match_tag, &a, &b);
         }
         *self.matches.borrow_mut() = matches;
+        helix_app_common::a11y::set_input_error(&self.find.entry, None, error);
         if jump {
             let start = self
                 .buffer
@@ -750,13 +802,16 @@ impl Doc {
 
     fn update_count(&self) {
         let n = self.matches.borrow().len();
+        let invalid = self.find.entry.has_css_class("error");
         let text = match (n, self.current_match()) {
             (0, _) if self.find.entry.text().is_empty() => String::new(),
+            // Spoken right away by refresh_search.
+            (0, _) if invalid => "Invalid expression".into(),
             (0, _) => "No results".into(),
             (n, Some(i)) => format!("{} of {}", i + 1, n),
             (n, None) => format!("{n} results"),
         };
-        if !text.is_empty() && text != self.find.count.text() {
+        if !invalid && !text.is_empty() && text != self.find.count.text() {
             helix_app_common::announce_settled(&self.find.count, &text);
         }
         self.find.count.set_text(&text);
@@ -1022,6 +1077,13 @@ impl Doc {
             "The file has changed on disk."
         });
         self.banner_reload.set_visible(!deleted);
+        if !self.banner.reveals_child() {
+            helix_app_common::announce(
+                &self.banner_label,
+                &self.banner_label.text(),
+                helix_app_common::a11y::Urgency::Polite,
+            );
+        }
         self.banner.set_reveal_child(true);
     }
 

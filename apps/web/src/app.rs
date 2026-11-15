@@ -23,6 +23,49 @@ pub const APP_ID: &str = "org.helix.Web";
 pub const APP_DIR: &str = "helix-web";
 const SAVE_DELAY: std::time::Duration = std::time::Duration::from_secs(2);
 
+/// Application accelerators: (action, keys). The shortcuts window lists
+/// every one of them (checked by a test in `shortcuts`).
+pub const ACCELS: &[(&str, &[&str])] = &[
+    ("app.new-window", &["<Control>n"]),
+    ("app.new-private-window", &["<Control><Shift>n"]),
+    ("app.preferences", &["<Control>comma"]),
+    ("app.history", &["<Control>h"]),
+    // Ctrl+W closes the tab here; closing the window moves to Ctrl+Shift+W.
+    ("window.close", &["<Control><Shift>w"]),
+    ("win.new-tab", &["<Control>t"]),
+    ("win.close-tab", &["<Control>w"]),
+    ("win.reopen-tab", &["<Control><Shift>t"]),
+    ("win.location", &["<Control>l", "F6", "<Alt>d"]),
+    ("win.back", &["<Alt>Left", "Back"]),
+    ("win.forward", &["<Alt>Right", "Forward"]),
+    ("win.reload", &["<Control>r", "F5", "Reload"]),
+    ("win.reload-bypass", &["<Control><Shift>r", "<Shift>F5"]),
+    ("win.home", &["<Alt>Home", "HomePage"]),
+    ("win.bookmark", &["<Control>d"]),
+    ("win.overview", &["<Control><Shift>o"]),
+    ("win.find", &["<Control>f"]),
+    ("win.find-next", &["<Control>g"]),
+    ("win.find-prev", &["<Control><Shift>g"]),
+    ("win.print", &["<Control>p"]),
+    (
+        "win.zoom-in",
+        &[
+            "<Control>plus",
+            "<Control>equal",
+            "<Control>KP_Add",
+            "ZoomIn",
+        ],
+    ),
+    (
+        "win.zoom-out",
+        &["<Control>minus", "<Control>KP_Subtract", "ZoomOut"],
+    ),
+    ("win.zoom-reset", &["<Control>0", "<Control>KP_0"]),
+    ("win.fullscreen", &["F11"]),
+    ("win.reader", &["<Control><Alt>r"]),
+    ("win.show-help-overlay", &["<Control>question"]),
+];
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Saved {
     History,
@@ -881,47 +924,7 @@ impl App {
             crate::dialogs::show_web_app_preferences,
         );
 
-        let accels: &[(&str, &[&str])] = &[
-            ("app.new-window", &["<Control>n"]),
-            ("app.new-private-window", &["<Control><Shift>n"]),
-            ("app.preferences", &["<Control>comma"]),
-            ("app.history", &["<Control>h"]),
-            ("win.new-tab", &["<Control>t"]),
-            ("win.close-tab", &["<Control>w"]),
-            ("win.reopen-tab", &["<Control><Shift>t"]),
-            ("win.location", &["<Control>l", "F6", "<Alt>d"]),
-            ("win.back", &["<Alt>Left", "Back"]),
-            ("win.forward", &["<Alt>Right", "Forward"]),
-            ("win.reload", &["<Control>r", "F5", "Reload"]),
-            ("win.reload-bypass", &["<Control><Shift>r", "<Shift>F5"]),
-            ("win.home", &["<Alt>Home", "HomePage"]),
-            ("win.bookmark", &["<Control>d"]),
-            ("win.overview", &["<Control><Shift>o"]),
-            ("win.find", &["<Control>f"]),
-            ("win.find-next", &["<Control>g"]),
-            ("win.find-prev", &["<Control><Shift>g"]),
-            ("win.print", &["<Control>p"]),
-            (
-                "win.zoom-in",
-                &[
-                    "<Control>plus",
-                    "<Control>equal",
-                    "<Control>KP_Add",
-                    "ZoomIn",
-                ],
-            ),
-            (
-                "win.zoom-out",
-                &["<Control>minus", "<Control>KP_Subtract", "ZoomOut"],
-            ),
-            ("win.zoom-reset", &["<Control>0", "<Control>KP_0"]),
-            ("win.fullscreen", &["F11"]),
-            ("win.reader", &["<Control><Alt>r"]),
-        ];
-        // Ctrl+W closes the tab here; closing the window moves to Ctrl+Shift+W.
-        self.gtk
-            .set_accels_for_action("window.close", &["<Control><Shift>w"]);
-        for (action, keys) in accels {
+        for (action, keys) in ACCELS {
             self.gtk.set_accels_for_action(action, keys);
         }
     }

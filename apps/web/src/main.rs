@@ -14,6 +14,7 @@ mod sandbox;
 mod secrets;
 mod session;
 mod settings;
+mod shortcuts;
 mod sscrypto;
 mod store;
 mod tab;

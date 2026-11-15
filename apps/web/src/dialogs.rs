@@ -482,6 +482,7 @@ pub fn show_history(app: &Rc<App>) {
         .margin_top(6)
         .margin_bottom(6)
         .build();
+    helix_app_common::set_accessible_label(&search, "Search History");
     let list = gtk::ListBox::builder()
         .selection_mode(gtk::SelectionMode::None)
         .build();

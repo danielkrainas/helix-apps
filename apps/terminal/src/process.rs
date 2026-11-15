@@ -97,6 +97,69 @@ pub fn classify(command: Option<&str>, euid: Option<u32>, self_is_root: bool) ->
     }
 }
 
+/// Arguments of `pid` (`/proc/PID/cmdline`).
+pub fn command_line(pid: i32) -> Vec<String> {
+    std::fs::read(format!("/proc/{pid}/cmdline"))
+        .map(|b| {
+            b.split(|&c| c == 0)
+                .filter(|a| !a.is_empty())
+                .map(|a| String::from_utf8_lossy(a).into_owned())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// The host a remote-login command line (`ssh`, `mosh`, `telnet`, `et`)
+/// connects to, without the user name: `ssh -p 22 me@box ls` → `box`.
+pub fn remote_host(argv: &[String]) -> Option<String> {
+    let program = argv.first()?.rsplit('/').next()?;
+    // Options that take a separate value, per program.
+    let with_value: &[char] = match program {
+        "ssh" => &[
+            'B', 'b', 'c', 'D', 'E', 'e', 'F', 'I', 'i', 'J', 'L', 'l', 'm', 'O', 'o', 'p', 'Q',
+            'R', 'S', 'W', 'w',
+        ],
+        "telnet" => &['b', 'e', 'l', 'n', 'X'],
+        "mosh" | "et" => &[],
+        _ => return None,
+    };
+    let mut args = argv[1..].iter();
+    while let Some(a) = args.next() {
+        if a == "--" {
+            return args.next().map(|h| strip_user(h));
+        }
+        if let Some(opts) = a.strip_prefix('-') {
+            if opts.starts_with('-') {
+                // Long option (mosh, et): `--opt=value` or a flag; `--port`
+                // style values are rare enough to ignore.
+                continue;
+            }
+            // Bundled short flags: the value follows the first option that
+            // takes one, in the same word or the next.
+            if let Some(i) = opts.find(|c| with_value.contains(&c)) {
+                if i + 1 == opts.len() {
+                    args.next();
+                }
+            }
+            continue;
+        }
+        return Some(strip_user(a));
+    }
+    None
+}
+
+fn strip_user(dest: &str) -> String {
+    let dest = dest.strip_prefix("ssh://").unwrap_or(dest);
+    let host = dest.rsplit('@').next().unwrap_or(dest);
+    // ssh://host:port
+    match host.rsplit_once(':') {
+        Some((h, port)) if !h.contains(':') && port.chars().all(|c| c.is_ascii_digit()) => {
+            h.to_string()
+        }
+        _ => host.to_string(),
+    }
+}
+
 pub fn tint_for_pgrp(pgrp: Option<i32>) -> Tint {
     // SAFETY: geteuid has no preconditions.
     let self_root = unsafe { libc::geteuid() } == 0;
@@ -112,6 +175,35 @@ mod tests {
     use std::os::unix::process::CommandExt;
     use std::process::{Command, Stdio};
     use std::time::{Duration, Instant};
+
+    #[test]
+    fn remote_hosts() {
+        let v = |s: &str| s.split(' ').map(String::from).collect::<Vec<_>>();
+        assert_eq!(remote_host(&v("ssh box")).as_deref(), Some("box"));
+        assert_eq!(
+            remote_host(&v("/usr/bin/ssh -p 2222 -A me@box.lan uptime")).as_deref(),
+            Some("box.lan")
+        );
+        assert_eq!(
+            remote_host(&v("ssh -tt -oBatchMode=yes -i key root@10.0.0.1")).as_deref(),
+            Some("10.0.0.1")
+        );
+        assert_eq!(remote_host(&v("ssh -lme host")).as_deref(), Some("host"));
+        assert_eq!(
+            remote_host(&v("ssh ssh://me@host:2222")).as_deref(),
+            Some("host")
+        );
+        assert_eq!(
+            remote_host(&v("mosh --ssh=ssh me@host")).as_deref(),
+            Some("host")
+        );
+        assert_eq!(
+            remote_host(&v("telnet -l me host 23")).as_deref(),
+            Some("host")
+        );
+        assert_eq!(remote_host(&v("ssh -v")), None);
+        assert_eq!(remote_host(&v("bash -c ssh")), None);
+    }
 
     #[test]
     fn shell_choice() {

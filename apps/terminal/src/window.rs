@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::a11y::{self, Urgency};
 use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::os::fd::AsRawFd;
@@ -91,41 +92,62 @@ impl Tab {
         paths::tab_title(t.as_deref(), self.cwd().as_deref(), &glib::home_dir())
     }
 
-    fn update_search(&self) {
+    /// Shows `error` on the find entry (red, invalid state, spoken), or
+    /// clears it.
+    fn set_search_error(&self, error: Option<&str>) {
+        if error.is_some() {
+            self.search_entry.add_css_class("error");
+        } else {
+            self.search_entry.remove_css_class("error");
+        }
+        a11y::set_input_error(&self.search_entry, None, error);
+    }
+
+    /// Compiles the find text into the terminal's search regex. Returns
+    /// whether there is something to search for; an invalid expression is
+    /// reported on the entry. A valid one leaves the entry's state to the
+    /// next search, so an unchanged "No matches" is not spoken again on
+    /// every key press.
+    fn update_search(&self) -> bool {
         let text = self.search_entry.text();
-        self.search_entry.remove_css_class("error");
         if text.is_empty() {
             self.term.search_set_regex(None, 0);
-            return;
+            self.set_search_error(None);
+            return false;
         }
         let pattern = search::search_pattern(&text, self.use_regex.is_active());
         match vte4::Regex::for_search(&pattern, search::search_flags(self.match_case.is_active())) {
             Ok(re) => {
                 self.term.search_set_regex(Some(&re), 0);
                 self.term.search_set_wrap_around(true);
+                true
             }
             Err(_) => {
-                self.search_entry.add_css_class("error");
                 self.term.search_set_regex(None, 0);
+                self.set_search_error(Some("Invalid regular expression"));
+                false
             }
         }
     }
 
     /// Searches towards older output (`up`) or newer output.
     fn find(&self, up: bool) {
-        if self.term.search_get_regex().is_none() {
-            self.update_search();
+        if self.term.search_get_regex().is_none() && !self.update_search() {
+            return;
         }
         let found = if up {
             self.term.search_find_previous()
         } else {
             self.term.search_find_next()
         };
-        if found || self.search_entry.text().is_empty() {
-            self.search_entry.remove_css_class("error");
-        } else {
-            self.search_entry.add_css_class("error");
-        }
+        self.set_search_error((!found).then_some("No matches"));
+    }
+
+    /// Shows `title` in the tab's banner and tells screen readers.
+    fn show_banner(&self, title: &str, urgency: Urgency) {
+        self.banner.set_title(title);
+        self.banner.set_revealed(true);
+        a11y::announce(&self.banner, title, urgency);
     }
 }
 
@@ -138,6 +160,13 @@ pub struct Window {
     tab_view: adw::TabView,
     overview: adw::TabOverview,
     pub tabs: RefCell<Vec<Rc<Tab>>>,
+    find_button: gtk::ToggleButton,
+    /// Set while `find_button` is being updated from the find bar.
+    syncing_find: Cell<bool>,
+    title: adw::WindowTitle,
+    tint_icon: gtk::Image,
+    /// The words for the current tint ("Running as root", …), or empty.
+    tint_status: RefCell<String>,
     tint: Cell<Tint>,
     /// Set once closing has been confirmed.
     closing: Cell<bool>,
@@ -156,6 +185,20 @@ impl Window {
             .build();
 
         let header = adw::HeaderBar::new();
+        // Title, plus an icon and subtitle that say (not only tint) when
+        // the tab runs as root or on another host.
+        let title = adw::WindowTitle::new("Terminal", "");
+        win.bind_property("title", &title, "title")
+            .sync_create()
+            .build();
+        let tint_icon = gtk::Image::builder()
+            .accessible_role(gtk::AccessibleRole::Presentation)
+            .visible(false)
+            .build();
+        let title_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        title_box.append(&tint_icon);
+        title_box.append(&title);
+        header.set_title_widget(Some(&title_box));
         let new_tab = gtk::Button::builder()
             .icon_name("tab-new-symbolic")
             .tooltip_text("New Tab")
@@ -187,12 +230,9 @@ impl Window {
             .action_name("overview.open")
             .build();
         header.pack_end(&tab_button);
-        let find = gtk::Button::builder()
-            .icon_name("edit-find-symbolic")
-            .tooltip_text("Find")
-            .action_name("win.find")
-            .build()
-            .labelled("Find");
+        // Shows and hides the current tab's find bar; its pressed state
+        // follows that bar.
+        let find = a11y::icon_toggle_button("edit-find-symbolic", "Find");
         header.pack_end(&find);
 
         let toolbar = adw::ToolbarView::new();
@@ -214,13 +254,43 @@ impl Window {
             tab_view,
             overview,
             tabs: RefCell::default(),
+            find_button: find,
+            syncing_find: Cell::new(false),
+            title,
+            tint_icon,
+            tint_status: RefCell::default(),
             tint: Cell::new(Tint::None),
             closing: Cell::new(false),
         });
         app.apply_to_window(&w.win);
         w.install_actions();
         w.connect_signals();
+        let wk = Rc::downgrade(&w);
+        w.find_button.connect_toggled(move |b| {
+            let Some(w) = wk.upgrade() else { return };
+            let open = w
+                .current_tab()
+                .is_some_and(|t| t.search_bar.is_search_mode());
+            if !w.syncing_find.get() && b.is_active() != open {
+                WidgetExt::activate_action(&w.win, "win.find", None).ok();
+            }
+        });
         w.start_tint_poll();
+        let style = adw::StyleManager::default();
+        let set_hc = {
+            let win = w.win.downgrade();
+            move |style: &adw::StyleManager| {
+                if let Some(win) = win.upgrade() {
+                    if style.is_high_contrast() {
+                        win.add_css_class("high-contrast");
+                    } else {
+                        win.remove_css_class("high-contrast");
+                    }
+                }
+            }
+        };
+        set_hc(&style);
+        style.connect_high_contrast_notify(set_hc);
         w
     }
 
@@ -391,8 +461,7 @@ impl Window {
                             e.message()
                         );
                         tab.term.feed(msg.as_bytes());
-                        tab.banner.set_title(&format!("Could not start “{what}”"));
-                        tab.banner.set_revealed(true);
+                        tab.show_banner(&format!("Could not start “{what}”"), Urgency::Assertive);
                     }
                 }
             },
@@ -413,9 +482,10 @@ impl Window {
                 } else {
                     status
                 };
-                tab.banner
-                    .set_title(&format!("Process exited with status {code}"));
-                tab.banner.set_revealed(true);
+                tab.show_banner(
+                    &format!("Process exited with status {code}"),
+                    Urgency::Polite,
+                );
             } else {
                 let page = w.tab_view.page(&tab.root);
                 w.tab_view.close_page(&page);
@@ -606,15 +676,18 @@ impl Window {
         let tk = Rc::downgrade(tab);
         tab.search_entry.connect_search_changed(move |_| {
             if let Some(t) = tk.upgrade() {
-                t.update_search();
-                t.find(true);
+                if t.update_search() {
+                    t.find(true);
+                }
             }
         });
         for toggle in [&tab.match_case, &tab.use_regex] {
             let tk = Rc::downgrade(tab);
             toggle.connect_toggled(move |_| {
                 if let Some(t) = tk.upgrade() {
-                    t.update_search();
+                    if t.update_search() {
+                        t.set_search_error(None);
+                    }
                 }
             });
         }
@@ -664,6 +737,9 @@ impl Window {
         tab.search_bar
             .connect_search_mode_enabled_notify(move |bar| {
                 if let Some(t) = tk.upgrade() {
+                    if let Some(w) = t.window() {
+                        w.sync_find_button();
+                    }
                     if !bar.is_search_mode() {
                         t.term.search_set_regex(None, 0);
                         t.term.unselect_all();
@@ -683,6 +759,19 @@ impl Window {
                 t.find(false);
             }
         });
+    }
+
+    /// Makes the Find toggle show whether the current tab's find bar is
+    /// open.
+    fn sync_find_button(&self) {
+        let open = self
+            .current_tab()
+            .is_some_and(|t| t.search_bar.is_search_mode());
+        if self.find_button.is_active() != open {
+            self.syncing_find.set(true);
+            self.find_button.set_active(open);
+            self.syncing_find.set(false);
+        }
     }
 
     fn open_uri(&self, uri: &str) {
@@ -742,14 +831,46 @@ impl Window {
     }
 
     fn update_tint(&self) {
-        let tint = match self.current_tab() {
-            Some(t) if t.child_pid.get().is_some() => process::tint_for_pgrp(t.foreground()),
-            _ => Tint::None,
+        let (tint, pgrp) = match self.current_tab() {
+            Some(t) if t.child_pid.get().is_some() => {
+                let pgrp = t.foreground();
+                (process::tint_for_pgrp(pgrp), pgrp)
+            }
+            _ => (Tint::None, None),
         };
-        if tint == self.tint.get() {
+        let status = match tint {
+            Tint::Root => "Running as root".to_string(),
+            Tint::Remote => pgrp
+                .and_then(|pg| process::remote_host(&process::command_line(pg)))
+                .map_or_else(
+                    || "Connected to a remote host".to_string(),
+                    |host| format!("Connected to {host}"),
+                ),
+            Tint::None => String::new(),
+        };
+        if tint == self.tint.get() && *self.tint_status.borrow() == status {
             return;
         }
-        self.tint.set(tint);
+        let was = self.tint.replace(tint);
+        self.tint_status.replace(status.clone());
+        self.title.set_subtitle(&status);
+        match tint {
+            Tint::Root => self
+                .tint_icon
+                .set_icon_name(Some("dialog-warning-symbolic")),
+            Tint::Remote => self
+                .tint_icon
+                .set_icon_name(Some("network-server-symbolic")),
+            Tint::None => {}
+        }
+        self.tint_icon.set_visible(tint != Tint::None);
+        let spoken = match (tint, was) {
+            (Tint::None, Tint::Root) => "No longer running as root",
+            (Tint::None, Tint::Remote) => "Remote session ended",
+            (Tint::None, Tint::None) => "",
+            _ => &status,
+        };
+        a11y::announce(&self.title, spoken, Urgency::Polite);
         self.win.remove_css_class("root-tint");
         self.win.remove_css_class("remote-tint");
         match tint {
@@ -836,6 +957,7 @@ impl Window {
             w.update_titles();
             w.update_tint();
             w.update_link_actions();
+            w.sync_find_button();
             if let Some(t) = w.current_tab() {
                 glib::idle_add_local_once(move || {
                     if !t.search_bar.is_search_mode() {
@@ -985,6 +1107,18 @@ impl Window {
                         t.search_entry.grab_focus();
                     }
                     t.find(true);
+                }
+            }),
+        );
+        add(
+            "find-previous",
+            Box::new(|w| {
+                if let Some(t) = w.current_tab() {
+                    if !t.search_bar.is_search_mode() {
+                        t.search_bar.set_search_mode(true);
+                        t.search_entry.grab_focus();
+                    }
+                    t.find(false);
                 }
             }),
         );

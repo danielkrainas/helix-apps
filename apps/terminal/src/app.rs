@@ -36,13 +36,48 @@ window.transparent-background .top-bar,
 window.transparent-background searchbar > revealer > box {
   background-color: @headerbar_bg_color;
 }
+/* Root / remote tint, from theme colours. The header subtitle and icon
+   say the same in words. */
 window.root-tint .top-bar, window.root-tint headerbar {
-  background-color: mix(@headerbar_bg_color, #e01b24, 0.22);
+  background-color: mix(@headerbar_bg_color, @destructive_bg_color, 0.22);
 }
 window.remote-tint .top-bar, window.remote-tint headerbar {
-  background-color: mix(@headerbar_bg_color, #9141ac, 0.22);
+  background-color: mix(@headerbar_bg_color, @accent_bg_color, 0.22);
 }
+/* High contrast (the window gets .high-contrast): keep the header plain
+   for legible text and mark the state with a solid bar under it. */
+window.high-contrast.root-tint .top-bar, window.high-contrast.root-tint headerbar,
+window.high-contrast.remote-tint .top-bar, window.high-contrast.remote-tint headerbar {
+  background-color: @headerbar_bg_color;
+}
+window.high-contrast.root-tint headerbar { box-shadow: inset 0 -4px @destructive_bg_color; }
+window.high-contrast.remote-tint headerbar { box-shadow: inset 0 -4px @accent_bg_color; }
 ";
+
+/// Application accelerators: (action, keys). The shortcuts window lists
+/// every one of them (checked by a test in `shortcuts`).
+pub const ACCELS: &[(&str, &[&str])] = &[
+    ("app.preferences", &["<Control>comma"]),
+    ("window.close", &["<Control><Shift>q"]),
+    ("win.new-tab", &["<Control><Shift>t"]),
+    ("win.new-window", &["<Control><Shift>n"]),
+    ("win.close-tab", &["<Control><Shift>w"]),
+    ("win.copy", &["<Control><Shift>c"]),
+    ("win.paste", &["<Control><Shift>v"]),
+    ("win.select-all", &["<Control><Shift>a"]),
+    ("win.find", &["<Control><Shift>f"]),
+    ("win.find-next", &["<Control><Shift>g"]),
+    ("win.find-previous", &["<Control><Shift>h"]),
+    (
+        "win.zoom-in",
+        &["<Control>plus", "<Control>equal", "<Control>KP_Add"],
+    ),
+    ("win.zoom-out", &["<Control>minus", "<Control>KP_Subtract"]),
+    ("win.zoom-reset", &["<Control>0", "<Control>KP_0"]),
+    ("win.tab-overview", &["<Control><Shift>o"]),
+    ("win.fullscreen", &["F11"]),
+    ("win.show-shortcuts", &["<Control>question"]),
+];
 
 /// What a new tab should run and where.
 #[derive(Debug, Clone, Default)]
@@ -185,8 +220,6 @@ impl App {
         helix_app_common::install_standard_actions(&self.gtk, "Terminal", "Use the command line");
         // Ctrl+W / Ctrl+Q belong to programs running in the terminal.
         self.gtk.set_accels_for_action("app.quit", &[]);
-        self.gtk
-            .set_accels_for_action("window.close", &["<Control><Shift>q"]);
 
         let wk = self.this.clone();
         let prefs = gio::ActionEntry::builder("preferences")
@@ -200,27 +233,7 @@ impl App {
             .build();
         self.gtk.add_action_entries([prefs]);
 
-        let accels: &[(&str, &[&str])] = &[
-            ("app.preferences", &["<Control>comma"]),
-            ("win.new-tab", &["<Control><Shift>t"]),
-            ("win.new-window", &["<Control><Shift>n"]),
-            ("win.close-tab", &["<Control><Shift>w"]),
-            ("win.copy", &["<Control><Shift>c"]),
-            ("win.paste", &["<Control><Shift>v"]),
-            ("win.select-all", &["<Control><Shift>a"]),
-            ("win.find", &["<Control><Shift>f"]),
-            ("win.find-next", &["<Control><Shift>g"]),
-            (
-                "win.zoom-in",
-                &["<Control>plus", "<Control>equal", "<Control>KP_Add"],
-            ),
-            ("win.zoom-out", &["<Control>minus", "<Control>KP_Subtract"]),
-            ("win.zoom-reset", &["<Control>0", "<Control>KP_0"]),
-            ("win.tab-overview", &["<Control><Shift>o"]),
-            ("win.fullscreen", &["F11"]),
-            ("win.show-shortcuts", &["<Control>question"]),
-        ];
-        for (action, keys) in accels {
+        for (action, keys) in ACCELS {
             self.gtk.set_accels_for_action(action, keys);
         }
     }

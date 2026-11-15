@@ -7,6 +7,7 @@ mod prefs;
 mod search;
 mod session;
 mod settings;
+mod shortcuts;
 mod textops;
 mod view;
 mod window;

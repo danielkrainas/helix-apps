@@ -462,6 +462,30 @@ impl Tab {
             }
         });
         view.add_controller(click);
+
+        // Touch: long-press opens the item menu (selecting the item) or,
+        // on empty space, the background menu.
+        let long_press = gtk::GestureLongPress::new();
+        long_press.set_touch_only(true);
+        let weak = Rc::downgrade(self);
+        let v = view.clone();
+        long_press.connect_pressed(move |g, x, y| {
+            let Some(t) = weak.upgrade() else { return };
+            g.set_state(gtk::EventSequenceState::Claimed);
+            match t.position_at(&v, x, y) {
+                Some(p) => {
+                    if !t.selection.is_selected(p) {
+                        t.selection.select_item(p, true);
+                    }
+                    t.popup_menu(&v, x, y, true);
+                }
+                None => {
+                    t.selection.unselect_all();
+                    t.popup_menu(&v, x, y, false);
+                }
+            }
+        });
+        view.add_controller(long_press);
     }
 
     fn position_at(&self, view: &gtk::Widget, x: f64, y: f64) -> Option<u32> {

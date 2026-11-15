@@ -131,6 +131,41 @@ pub fn announce_settled(widget: &impl IsA<gtk::Widget>, message: &str) {
     });
 }
 
+/// Shows or clears an input error in a way that does not rely on colour.
+///
+/// With `Some(message)`, `input` is marked invalid, linked to the visible
+/// `error_label` (accessible "error-message" relation) when there is one,
+/// and `message` is announced politely — once, not again on every key
+/// press while the same error stays. With `None` the invalid state and the
+/// relation are cleared, so the next error is spoken again. The caller
+/// still styles and fills the visible label.
+pub fn set_input_error(
+    input: &impl IsA<gtk::Widget>,
+    error_label: Option<&gtk::Label>,
+    message: Option<&str>,
+) {
+    let w = input.as_ref();
+    match message.map(str::trim).filter(|m| !m.is_empty()) {
+        Some(message) => {
+            w.update_state(&[accessible::State::Invalid(
+                gtk::AccessibleInvalidState::True,
+            )]);
+            if let Some(label) = error_label {
+                w.update_relation(&[accessible::Relation::ErrorMessage(&[
+                    label.upcast_ref::<gtk::Accessible>()
+                ])]);
+            }
+            announce_change(w, message, Urgency::Polite);
+        }
+        None => {
+            w.reset_state(gtk::AccessibleState::Invalid);
+            w.reset_relation(gtk::AccessibleRelation::ErrorMessage);
+            // SAFETY: the key is only ever used with a `String` value.
+            unsafe { w.set_data(LAST_KEY, String::new()) };
+        }
+    }
+}
+
 /// Object data key marking a widget whose accessible name was set here.
 const NAMED_KEY: &str = "helix-a11y-named";
 

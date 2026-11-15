@@ -18,6 +18,7 @@ pub struct Window {
     pub tab_view: adw::TabView,
     toasts: adw::ToastOverlay,
     title: adw::WindowTitle,
+    zoom_level: gtk::Button,
     pos_btn: gtk::MenuButton,
     goto_entry: gtk::Entry,
     indent_label: gtk::Label,
@@ -31,56 +32,16 @@ pub struct Window {
     closing_tab: Cell<bool>,
 }
 
-const SHORTCUTS_UI: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-  <object class="GtkShortcutsWindow" id="help_overlay">
-    <property name="modal">1</property>
-    <child>
-      <object class="GtkShortcutsSection">
-        <property name="section-name">shortcuts</property>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">Documents</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">New tab</property><property name="accelerator">&lt;Control&gt;t</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">New window</property><property name="accelerator">&lt;Control&gt;n</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Open</property><property name="accelerator">&lt;Control&gt;o</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Save</property><property name="accelerator">&lt;Control&gt;s</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Save as</property><property name="accelerator">&lt;Control&gt;&lt;Shift&gt;s</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Close tab</property><property name="accelerator">&lt;Control&gt;w</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Close window</property><property name="accelerator">&lt;Control&gt;&lt;Shift&gt;w</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Quit</property><property name="accelerator">&lt;Control&gt;q</property></object></child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">Editing</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Undo</property><property name="accelerator">&lt;Control&gt;z</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Redo</property><property name="accelerator">&lt;Control&gt;&lt;Shift&gt;z</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Find</property><property name="accelerator">&lt;Control&gt;f</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Find and replace</property><property name="accelerator">&lt;Control&gt;h</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Next / previous match</property><property name="accelerator">&lt;Control&gt;g &lt;Control&gt;&lt;Shift&gt;g</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Go to line</property><property name="accelerator">&lt;Control&gt;i</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Indent / unindent</property><property name="accelerator">Tab &lt;Shift&gt;Tab</property></object></child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">View</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Zoom in</property><property name="accelerator">&lt;Control&gt;plus</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Zoom out</property><property name="accelerator">&lt;Control&gt;minus</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Reset zoom</property><property name="accelerator">&lt;Control&gt;0</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Preferences</property><property name="accelerator">&lt;Control&gt;comma</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Keyboard shortcuts</property><property name="accelerator">&lt;Control&gt;question</property></object></child>
-          </object>
-        </child>
-      </object>
-    </child>
-  </object>
-</interface>"#;
+/// How documents with unsaved changes are described.
+const UNSAVED: &str = "Unsaved Changes";
+
+/// Shown under the Go to Line entry for input it cannot use.
+const GOTO_ERROR: &str = "Enter a line number, or line:column";
 
 fn primary_menu() -> gio::Menu {
     let menu = gio::Menu::new();
     let s1 = gio::Menu::new();
+    s1.append(Some("New _Tab"), Some("win.new-tab"));
     s1.append(Some("New _Window"), Some("app.new-window"));
     s1.append(Some("Save _As…"), Some("win.save-as"));
     menu.append_section(None, &s1);
@@ -90,9 +51,10 @@ fn primary_menu() -> gio::Menu {
     s2.append(Some("_Go to Line…"), Some("win.goto-line"));
     menu.append_section(None, &s2);
     let s3 = gio::Menu::new();
-    s3.append(Some("Zoom _In"), Some("app.zoom-in"));
-    s3.append(Some("Zoom _Out"), Some("app.zoom-out"));
-    s3.append(Some("_Reset Zoom"), Some("app.zoom-reset"));
+    // A row of Zoom Out / level (resets) / Zoom In, added by `Window::new`.
+    let zoom = gio::MenuItem::new(None, None);
+    zoom.set_attribute_value("custom", Some(&"zoom".to_variant()));
+    s3.append_item(&zoom);
     menu.append_section(None, &s3);
     let s4 = gio::Menu::new();
     s4.append(Some("_Preferences"), Some("app.preferences"));
@@ -121,11 +83,10 @@ impl Window {
             .title("Text Editor")
             .default_width(900)
             .default_height(700)
+            .width_request(360)
+            .height_request(294)
             .build();
-        let builder = gtk::Builder::from_string(SHORTCUTS_UI);
-        if let Some(overlay) = builder.object::<gtk::ShortcutsWindow>("help_overlay") {
-            win.set_help_overlay(Some(&overlay));
-        }
+        win.set_help_overlay(Some(&crate::shortcuts::window()));
 
         // Recent documents popover.
         let recent_search = gtk::SearchEntry::builder()
@@ -179,6 +140,28 @@ impl Window {
             .tooltip_text("Main Menu")
             .build()
             .labelled("Main Menu");
+        let zoom_out = helix_app_common::icon_button("zoom-out-symbolic", "Zoom Out");
+        zoom_out.set_action_name(Some("app.zoom-out"));
+        let zoom_level = gtk::Button::builder()
+            .label("100%")
+            .action_name("app.zoom-reset")
+            .tooltip_text("Reset Zoom")
+            .hexpand(true)
+            .build();
+        zoom_level.add_css_class("flat");
+        let zoom_in = helix_app_common::icon_button("zoom-in-symbolic", "Zoom In");
+        zoom_in.set_action_name(Some("app.zoom-in"));
+        for b in [&zoom_out, &zoom_in] {
+            b.add_css_class("flat");
+            b.add_css_class("circular");
+        }
+        let zoom_row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        zoom_row.append(&zoom_out);
+        zoom_row.append(&zoom_level);
+        zoom_row.append(&zoom_in);
+        if let Some(pm) = menu_btn.popover().and_downcast::<gtk::PopoverMenu>() {
+            pm.add_child(&zoom_row, "zoom");
+        }
         let title = adw::WindowTitle::new("Text Editor", "");
         let header = adw::HeaderBar::new();
         header.pack_start(&open_btn);
@@ -186,6 +169,11 @@ impl Window {
         header.set_title_widget(Some(&title));
         header.pack_end(&menu_btn);
         header.pack_end(&save_btn);
+        let save_icon_btn = helix_app_common::icon_button("document-save-symbolic", "Save");
+        save_icon_btn.set_action_name(Some("win.save"));
+        save_icon_btn.set_tooltip_text(Some("Save (Ctrl+S)"));
+        save_icon_btn.set_visible(false);
+        header.pack_end(&save_icon_btn);
 
         let tab_view = adw::TabView::new();
         let tab_bar = adw::TabBar::builder()
@@ -206,8 +194,17 @@ impl Window {
             .css_classes(["heading"])
             .xalign(0.0)
             .build();
+        let goto_error = gtk::Label::builder()
+            .label(GOTO_ERROR)
+            .css_classes(["error", "caption"])
+            .xalign(0.0)
+            .wrap(true)
+            .max_width_chars(24)
+            .visible(false)
+            .build();
         goto_box.append(&goto_heading);
         goto_box.append(&goto_entry);
+        goto_box.append(&goto_error);
         helix_app_common::label_widget(&goto_entry, &goto_heading);
         let goto_popover = gtk::Popover::builder().child(&goto_box).build();
         let pos_btn = gtk::MenuButton::builder()
@@ -240,6 +237,20 @@ impl Window {
         toolbar.set_content(Some(&toasts));
         win.set_content(Some(&toolbar));
 
+        // Narrow windows: New Tab stays in the main menu (and Ctrl+T), Save
+        // becomes an icon and the indentation readout is left to
+        // Preferences, so the header and status bar fit 360px.
+        let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+            adw::BreakpointConditionLengthType::MaxWidth,
+            450.0,
+            adw::LengthUnit::Sp,
+        ));
+        narrow.add_setter(&new_tab_btn, "visible", Some(&false.to_value()));
+        narrow.add_setter(&save_btn, "visible", Some(&false.to_value()));
+        narrow.add_setter(&save_icon_btn, "visible", Some(&true.to_value()));
+        narrow.add_setter(&indent_label, "visible", Some(&false.to_value()));
+        win.add_breakpoint(narrow);
+
         let line_ending = gio::SimpleAction::new_stateful(
             "line-ending",
             Some(glib::VariantTy::STRING),
@@ -253,6 +264,7 @@ impl Window {
             tab_view,
             toasts,
             title,
+            zoom_level,
             pos_btn,
             goto_entry,
             indent_label,
@@ -266,7 +278,7 @@ impl Window {
             closing_tab: Cell::new(false),
         });
         w.setup_actions();
-        w.setup_signals(&goto_popover);
+        w.setup_signals(&goto_popover, &goto_error);
         w.setup_file_drops(&tab_bar);
         w.update_status();
         w
@@ -400,7 +412,7 @@ impl Window {
         self.win.add_action(&self.line_ending);
     }
 
-    fn setup_signals(self: &Rc<Self>, goto_popover: &gtk::Popover) {
+    fn setup_signals(self: &Rc<Self>, goto_popover: &gtk::Popover, goto_error: &gtk::Label) {
         let wk = self.this.clone();
         self.tab_view.connect_close_page(move |tv, page| {
             let Some(w) = wk.upgrade() else {
@@ -501,18 +513,30 @@ impl Window {
         });
         let wk = self.this.clone();
         let pop = goto_popover.clone();
+        let goto_error = goto_error.clone();
+        self.goto_entry.connect_changed({
+            let goto_error = goto_error.clone();
+            move |e| {
+                e.remove_css_class("error");
+                goto_error.set_visible(false);
+                helix_app_common::a11y::set_input_error(e, None, None);
+            }
+        });
         self.goto_entry.connect_activate(move |e| {
             let Some(w) = wk.upgrade() else { return };
             match textops::parse_goto(&e.text()) {
                 Some((line, col)) => {
-                    e.remove_css_class("error");
                     pop.popdown();
                     if let Some(d) = w.current_doc() {
                         d.goto(line, col);
                         d.grab_focus();
                     }
                 }
-                None => e.add_css_class("error"),
+                None => {
+                    e.add_css_class("error");
+                    goto_error.set_visible(true);
+                    helix_app_common::a11y::set_input_error(e, Some(&goto_error), Some(GOTO_ERROR));
+                }
             }
         });
 
@@ -765,21 +789,24 @@ impl Window {
         self.toasts.add_toast(t);
     }
 
-    fn display_title(doc: &Doc) -> String {
-        if doc.is_modified() {
-            format!("• {}", doc.title())
-        } else {
-            doc.title()
-        }
-    }
-
     pub fn refresh_doc(&self, doc: &Rc<Doc>) {
         if doc.root.parent().is_none() {
             return;
         }
         let page = self.tab_view.page(&doc.root);
-        page.set_title(&Self::display_title(doc));
-        page.set_tooltip(&glib::markup_escape_text(&doc.subtitle()));
+        page.set_title(&doc.title());
+        // Unsaved changes: an icon on the tab, and in words in its tooltip
+        // (which is also the tab's accessible description).
+        let modified = doc.is_modified();
+        let icon = modified.then(|| gio::ThemedIcon::new("document-edit-symbolic"));
+        page.set_indicator_icon(icon.as_ref());
+        page.set_indicator_tooltip(if modified { UNSAVED } else { "" });
+        let tip = if modified {
+            format!("{UNSAVED}\n{}", doc.subtitle())
+        } else {
+            doc.subtitle()
+        };
+        page.set_tooltip(&glib::markup_escape_text(&tip));
         if self.current_doc().is_some_and(|d| Rc::ptr_eq(&d, doc)) {
             self.update_title();
             self.update_status();
@@ -789,10 +816,20 @@ impl Window {
     fn update_title(&self) {
         match self.current_doc() {
             Some(d) => {
-                self.title.set_title(&Self::display_title(&d));
-                self.title.set_subtitle(&d.subtitle());
-                self.win
-                    .set_title(Some(&format!("{} — Text Editor", d.title())));
+                self.title.set_title(&d.title());
+                if d.is_modified() {
+                    self.title
+                        .set_subtitle(&format!("{UNSAVED} · {}", d.subtitle()));
+                    self.win.set_title(Some(&format!(
+                        "{} ({}) — Text Editor",
+                        d.title(),
+                        UNSAVED.to_lowercase()
+                    )));
+                } else {
+                    self.title.set_subtitle(&d.subtitle());
+                    self.win
+                        .set_title(Some(&format!("{} — Text Editor", d.title())));
+                }
             }
             None => {
                 self.title.set_title("Text Editor");
@@ -811,6 +848,12 @@ impl Window {
             format!("Tab Width: {}", s.tab_width)
         });
         drop(s);
+        let zoom = format!("{}%", app.zoom_percent());
+        self.zoom_level.set_label(&zoom);
+        helix_app_common::set_accessible_label(
+            &self.zoom_level,
+            &format!("Reset Zoom, now {zoom}"),
+        );
         let Some(d) = self.current_doc() else { return };
         let (l, c) = d.cursor_display();
         self.pos_btn.set_label(&format!("Ln {l}, Col {c}"));

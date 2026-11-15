@@ -101,6 +101,32 @@ pub fn run(standalone: bool, files: Vec<String>) -> glib::ExitCode {
     gtk_app.run_with_args(&argv)
 }
 
+/// Application accelerators: (action, keys). The shortcuts window lists
+/// every one of them (checked by a test in `shortcuts`).
+pub const ACCELS: &[(&str, &[&str])] = &[
+    ("app.quit", &["<Control>q"]),
+    ("app.new-window", &["<Control>n"]),
+    ("app.preferences", &["<Control>comma"]),
+    (
+        "app.zoom-in",
+        &["<Control>plus", "<Control>equal", "<Control>KP_Add"],
+    ),
+    ("app.zoom-out", &["<Control>minus", "<Control>KP_Subtract"]),
+    ("app.zoom-reset", &["<Control>0", "<Control>KP_0"]),
+    ("window.close", &["<Control><Shift>w"]),
+    ("win.new-tab", &["<Control>t"]),
+    ("win.open", &["<Control>o"]),
+    ("win.save", &["<Control>s"]),
+    ("win.save-as", &["<Control><Shift>s"]),
+    ("win.close-tab", &["<Control>w"]),
+    ("win.find", &["<Control>f"]),
+    ("win.replace", &["<Control>h"]),
+    ("win.find-next", &["<Control>g"]),
+    ("win.find-previous", &["<Control><Shift>g"]),
+    ("win.goto-line", &["<Control>i"]),
+    ("win.show-help-overlay", &["<Control>question"]),
+];
+
 impl App {
     fn new(gtk_app: &adw::Application, standalone: bool) -> Rc<App> {
         let prefs = Prefs::new(SCHEMA);
@@ -118,7 +144,6 @@ impl App {
             static_css.load_from_string(
                 ".change-banner { padding: 6px 12px; background: alpha(@accent_bg_color, 0.15); }
                  .find-bar { padding: 6px; border-bottom: 1px solid alpha(currentColor, 0.15); }
-                 .find-option { min-width: 28px; font-weight: bold; }
                  .statusbar { padding: 0 6px; border-top: 1px solid alpha(currentColor, 0.12); }
                  .statusbar button { min-height: 24px; padding: 2px 8px; font-size: 0.9em; }
                  linegutter { background: alpha(currentColor, 0.03); }",
@@ -210,30 +235,7 @@ impl App {
             });
             self.gtk.add_action(&a);
         }
-        let accels: &[(&str, &[&str])] = &[
-            ("app.quit", &["<Control>q"]),
-            ("app.new-window", &["<Control>n"]),
-            ("app.preferences", &["<Control>comma"]),
-            (
-                "app.zoom-in",
-                &["<Control>plus", "<Control>equal", "<Control>KP_Add"],
-            ),
-            ("app.zoom-out", &["<Control>minus", "<Control>KP_Subtract"]),
-            ("app.zoom-reset", &["<Control>0", "<Control>KP_0"]),
-            ("window.close", &["<Control><Shift>w"]),
-            ("win.new-tab", &["<Control>t"]),
-            ("win.open", &["<Control>o"]),
-            ("win.save", &["<Control>s"]),
-            ("win.save-as", &["<Control><Shift>s"]),
-            ("win.close-tab", &["<Control>w"]),
-            ("win.find", &["<Control>f"]),
-            ("win.replace", &["<Control>h"]),
-            ("win.find-next", &["<Control>g"]),
-            ("win.find-previous", &["<Control><Shift>g"]),
-            ("win.goto-line", &["<Control>i"]),
-            ("win.show-help-overlay", &["<Control>question"]),
-        ];
-        for (action, keys) in accels {
+        for (action, keys) in ACCELS {
             self.gtk.set_accels_for_action(action, keys);
         }
     }
@@ -305,7 +307,12 @@ impl App {
         self.reload_settings();
     }
 
-    fn zoom(&self, step: i32) {
+    /// The editor zoom level in percent.
+    pub fn zoom_percent(&self) -> i32 {
+        (settings::zoom_factor(self.zoom.get()) * 100.0).round() as i32
+    }
+
+    pub fn zoom(&self, step: i32) {
         let z = if step == 0 {
             0
         } else {

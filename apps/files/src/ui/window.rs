@@ -35,7 +35,8 @@ pub struct Window {
     location_entry: gtk::Entry,
     search_bar: gtk::SearchBar,
     search_entry: gtk::SearchEntry,
-    view_btn: gtk::Button,
+    /// The header's and the narrow bottom bar's view toggle.
+    view_btns: [gtk::Button; 2],
     pub jobs_button: gtk::MenuButton,
     pub jobs_box: gtk::Box,
     /// The jobs button's icon: a pie of the combined progress.
@@ -282,7 +283,9 @@ impl Window {
             .hexpand(true)
             .build()
             .labelled("Search Current Folder");
-        search_entry.set_width_chars(40);
+        // The clamp sizes the entry; a wide minimum would stop the window
+        // from shrinking (the hidden search bar still counts).
+        search_entry.set_width_chars(10);
         let search_clamp = adw::Clamp::builder()
             .maximum_size(500)
             .child(&search_entry)
@@ -340,6 +343,44 @@ impl Window {
         toasts.set_child(Some(&split));
         window.set_content(Some(&toasts));
 
+        // Narrow windows: back/forward and the view controls move from the
+        // header to a bottom bar so the path bar keeps room.
+        let nav_bar = gtk::ActionBar::builder().visible(false).build();
+        let back_btn2 = helix_app_common::a11y::icon_button("go-previous-symbolic", "Back");
+        back_btn2.set_action_name(Some("win.back"));
+        let forward_btn2 = helix_app_common::a11y::icon_button("go-next-symbolic", "Forward");
+        forward_btn2.set_action_name(Some("win.forward"));
+        let view_btn2 = gtk::Button::builder()
+            .action_name("win.toggle-view")
+            .build();
+        let view_menu_btn2 = helix_app_common::a11y::icon_menu_button(
+            "view-sort-descending-symbolic",
+            "View Options",
+        );
+        view_menu_btn2.set_menu_model(Some(&view_menu));
+        view_menu_btn2.set_direction(gtk::ArrowType::Up);
+        nav_bar.pack_start(&back_btn2);
+        nav_bar.pack_start(&forward_btn2);
+        nav_bar.pack_end(&view_menu_btn2);
+        nav_bar.pack_end(&view_btn2);
+        content.add_bottom_bar(&nav_bar);
+        let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+            adw::BreakpointConditionLengthType::MaxWidth,
+            500.0,
+            adw::LengthUnit::Sp,
+        ));
+        narrow.add_setter(&split, "collapsed", Some(&true.to_value()));
+        for w in [
+            back_btn.upcast_ref::<gtk::Widget>(),
+            forward_btn.upcast_ref(),
+            view_btn.upcast_ref(),
+            view_menu_btn.upcast_ref(),
+        ] {
+            narrow.add_setter(w, "visible", Some(&false.to_value()));
+        }
+        narrow.add_setter(&nav_bar, "visible", Some(&true.to_value()));
+        let view_btns = [view_btn, view_btn2];
+
         // Collapse sidebar on narrow windows.
         let bp = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
             adw::BreakpointConditionLengthType::MaxWidth,
@@ -348,6 +389,8 @@ impl Window {
         ));
         bp.add_setter(&split, "collapsed", Some(&true.to_value()));
         window.add_breakpoint(bp);
+        // Added last: of several matching breakpoints the last one applies.
+        window.add_breakpoint(narrow);
         split
             .bind_property("collapsed", &sidebar_btn, "visible")
             .sync_create()
@@ -367,7 +410,7 @@ impl Window {
             location_entry,
             search_bar,
             search_entry,
-            view_btn,
+            view_btns,
             jobs_button,
             jobs_box,
             jobs_icon,
@@ -722,14 +765,13 @@ impl Window {
             "view-mode",
             if s.list_view { "list" } else { "grid" }.to_variant(),
         );
-        if s.list_view {
-            self.view_btn.set_icon_name("view-grid-symbolic");
-            self.view_btn.set_tooltip_text(Some("Grid View"));
-            helix_app_common::set_accessible_label(&self.view_btn, "Grid View");
+        let (icon, label) = if s.list_view {
+            ("view-grid-symbolic", "Grid View")
         } else {
-            self.view_btn.set_icon_name("view-list-symbolic");
-            self.view_btn.set_tooltip_text(Some("List View"));
-            helix_app_common::set_accessible_label(&self.view_btn, "List View");
+            ("view-list-symbolic", "List View")
+        };
+        for b in &self.view_btns {
+            helix_app_common::a11y::set_icon_and_label(b, icon, label);
         }
         if s.location_entry {
             self.show_location_entry(false);
