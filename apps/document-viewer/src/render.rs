@@ -195,6 +195,9 @@ struct Shared {
 /// Main-thread handle of a render thread.
 pub struct Renderer {
     shared: Arc<Shared>,
+    /// Joined on drop, so poppler objects are never freed while the process
+    /// tears down poppler's globals.
+    thread: Option<std::thread::JoinHandle<()>>,
 }
 
 impl Renderer {
@@ -205,7 +208,7 @@ impl Renderer {
         });
         let (tx, rx) = async_channel::unbounded();
         let s = shared.clone();
-        std::thread::Builder::new()
+        let thread = std::thread::Builder::new()
             .name("pdf-render".into())
             .spawn(move || {
                 Worker {
@@ -216,7 +219,13 @@ impl Renderer {
                 .run()
             })
             .expect("spawn render thread");
-        (Renderer { shared }, rx)
+        (
+            Renderer {
+                shared,
+                thread: Some(thread),
+            },
+            rx,
+        )
     }
 
     fn with<R>(&self, f: impl FnOnce(&mut Queue) -> R) -> R {
@@ -305,6 +314,9 @@ impl Renderer {
 impl Drop for Renderer {
     fn drop(&mut self) {
         self.with(|q| q.quit = true);
+        if let Some(thread) = self.thread.take() {
+            let _ = thread.join();
+        }
     }
 }
 
