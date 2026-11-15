@@ -95,11 +95,6 @@ impl Tab {
     /// Shows `error` on the find entry (red, invalid state, spoken), or
     /// clears it.
     fn set_search_error(&self, error: Option<&str>) {
-        if error.is_some() {
-            self.search_entry.add_css_class("error");
-        } else {
-            self.search_entry.remove_css_class("error");
-        }
         a11y::set_input_error(&self.search_entry, None, error);
     }
 
@@ -236,6 +231,8 @@ impl Window {
         let win = adw::ApplicationWindow::builder()
             .application(&app.gtk)
             .title("Terminal")
+            .width_request(helix_app_common::MIN_WIDTH)
+            .height_request(helix_app_common::MIN_HEIGHT)
             .build();
         let tab_view = adw::TabView::new();
         let tab_bar = adw::TabBar::builder()

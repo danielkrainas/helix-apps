@@ -76,8 +76,7 @@ pub fn run(files: Vec<PathBuf>) -> glib::ExitCode {
             }
         }
     });
-    app.set_accels_for_action("win.open", &["<Control>o"]);
-    app.set_accels_for_action("win.search", &["<Control>f"]);
+    helix_app_common::shortcuts::install(&app, crate::shortcuts::ACCELS, crate::shortcuts::GROUPS);
     app.run_with_args(&[std::env::args().next().unwrap_or_default()])
 }
 
@@ -90,7 +89,7 @@ fn load_css() {
     let css = gtk::CssProvider::new();
     css.load_from_string(
         ".font-tile { padding: 8px; }
-         .font-size-label { font-size: 9pt; min-width: 28px; }
+         .font-size-label { min-width: 28px; }
          .glyph-cell { border-radius: 6px; }
          .glyph-cell:hover { background: alpha(currentColor, 0.08); }",
     );
@@ -107,8 +106,11 @@ fn main_menu() -> gtk::MenuButton {
     let menu = gio::Menu::new();
     menu.append(Some("_Open…"), Some("win.open"));
     let section = gio::Menu::new();
+    section.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::shortcuts::ACTION),
+    );
     section.append(Some("_About Fonts"), Some("app.about"));
-    section.append(Some("_Quit"), Some("app.quit"));
     menu.append_section(None, &section);
     gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
@@ -125,7 +127,13 @@ fn new_window(app: &adw::Application, file: Option<PathBuf>) -> Rc<Win> {
         .title("Fonts")
         .default_width(900)
         .default_height(680)
+        .width_request(helix_app_common::MIN_WIDTH)
+        .height_request(helix_app_common::MIN_HEIGHT)
         .build();
+    helix_app_common::window_state::persist(
+        &window,
+        helix_app_common::window_state::Store::file("helix-fonts"),
+    );
     let nav = adw::NavigationView::new();
     let toasts = adw::ToastOverlay::new();
     toasts.set_child(Some(&nav));
@@ -762,6 +770,7 @@ fn font_page(
         .margin_top(12)
         .margin_bottom(12)
         .build();
+    helix_app_common::style::redraw_on_style_change(&alpha_area);
     preview_box.append(&alpha_area);
     preview_box.append(&alpha_label);
     {
@@ -800,7 +809,7 @@ fn font_page(
                 // The sample's name says the size.
                 let size_label = gtk::Label::builder()
                     .label(pt.to_string())
-                    .css_classes(["dim-label", "font-size-label"])
+                    .css_classes(["dim-label", "caption", "numeric", "font-size-label"])
                     .xalign(1.0)
                     .valign(gtk::Align::Center)
                     .accessible_role(gtk::AccessibleRole::Presentation)
@@ -817,6 +826,7 @@ fn font_page(
                     .build();
                 let row = gtk::Box::builder().spacing(12).build();
                 row.append(&size_label);
+                helix_app_common::style::redraw_on_style_change(&area);
                 row.append(&area);
                 row.append(&label);
                 preview_box.append(&row);
@@ -877,6 +887,7 @@ fn font_page(
                 .css_classes(["glyph-cell"])
                 .accessible_role(gtk::AccessibleRole::Img)
                 .build();
+            helix_app_common::style::redraw_on_style_change(&area);
             let weak_item = item.downgrade();
             let st = st.clone();
             area.set_draw_func(move |a, cr, w, h| {
@@ -1116,6 +1127,7 @@ fn tile_sample() -> gtk::DrawingArea {
         .hexpand(true)
         .accessible_role(gtk::AccessibleRole::Presentation)
         .build();
+    helix_app_common::style::redraw_on_style_change(&area);
     area.set_draw_func(|area, cr, w, h| {
         // SAFETY: the key only ever holds a `String`.
         let family = unsafe {

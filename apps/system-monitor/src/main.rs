@@ -12,6 +12,7 @@ mod proc_view;
 mod procfs;
 mod res_view;
 mod sampler;
+mod shortcuts;
 mod ui;
 
 use gtk::glib;

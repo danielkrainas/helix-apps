@@ -124,6 +124,10 @@ impl Window {
             .width_request(360)
             .height_request(294)
             .build();
+        helix_app_common::window_state::persist(
+            &window,
+            helix_app_common::window_state::Store::file("helix-settings"),
+        );
         let toasts = adw::ToastOverlay::new();
         let split = adw::NavigationSplitView::builder()
             .min_sidebar_width(220.0)

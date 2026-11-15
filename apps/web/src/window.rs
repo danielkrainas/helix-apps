@@ -71,22 +71,22 @@ const CSS: &str = "
 .permission-bar { background: alpha(@accent_bg_color, .18); }
 .tls-bar { background: alpha(@error_bg_color, .22); }
 .link-preview { background: @popover_bg_color; color: @popover_fg_color; padding: 3px 8px; margin: 4px;
-  border-radius: 6px; font-size: smaller; box-shadow: 0 1px 3px alpha(black, .3); }
+  border-radius: 6px; box-shadow: 0 1px 3px alpha(black, .3); }
 .private-indicator { font-weight: bold; padding: 2px 8px; border-radius: 99px;
   background: alpha(@accent_bg_color, .25); }
-.suggestion-url { font-size: smaller; }
+";
+
+/// High contrast: the bars' separators reach 3:1 and their tints are
+/// stronger.
+const HIGH_CONTRAST_CSS: &str = "
+.permission-bar, .tls-bar { border-bottom-color: alpha(currentColor, .6); }
+.permission-bar { background: alpha(@accent_bg_color, .35); }
+.tls-bar { background: alpha(@error_bg_color, .4); }
+.link-preview { border: 1px solid alpha(currentColor, .6); }
 ";
 
 pub fn install_css() {
-    let provider = gtk::CssProvider::new();
-    provider.load_from_string(CSS);
-    if let Some(display) = gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &provider,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    }
+    helix_app_common::style::add_css(CSS, HIGH_CONTRAST_CSS);
 }
 
 pub struct Window {
@@ -231,6 +231,7 @@ fn two_line_row(title: &str, subtitle: &str, icon: &str) -> (gtk::Box, gtk::Box)
             .build();
         s.add_css_class("dim-label");
         s.add_css_class("suggestion-url");
+        s.add_css_class("caption");
         text.append(&s);
     }
     row.append(&text);
@@ -250,7 +251,13 @@ impl Window {
             .default_width(1200)
             .default_height(800)
             .title(if private { "Private Browsing" } else { "Web" })
+            .width_request(helix_app_common::MIN_WIDTH)
+            .height_request(helix_app_common::MIN_HEIGHT)
             .build();
+        helix_app_common::window_state::persist(
+            &win,
+            helix_app_common::window_state::Store::file("helix-web"),
+        );
         win.set_help_overlay(Some(&crate::shortcuts::window()));
 
         let tab_view = adw::TabView::new();
@@ -358,7 +365,7 @@ impl Window {
             .hscrollbar_policy(gtk::PolicyType::Never)
             .propagate_natural_height(true)
             .max_content_height(420)
-            .min_content_width(360)
+            .min_content_width(300)
             .child(&dl_list)
             .build();
         dl_box.append(&dl_scroll);
@@ -385,7 +392,7 @@ impl Window {
             .hscrollbar_policy(gtk::PolicyType::Never)
             .propagate_natural_height(true)
             .max_content_height(480)
-            .min_content_width(360)
+            .min_content_width(300)
             .child(&bm_list)
             .build();
         let bm_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
@@ -443,6 +450,34 @@ impl Window {
         toolbar.add_top_bar(&header);
         toolbar.add_top_bar(&tab_bar);
         toolbar.set_content(Some(&toasts));
+
+        // Narrow windows: the navigation buttons move from the header to a
+        // bar at the bottom, so the address entry keeps its room.
+        let bottom = gtk::ActionBar::builder().revealed(false).build();
+        bottom.pack_start(&icon_button("go-previous-symbolic", "Back", "win.back"));
+        bottom.pack_start(&icon_button("go-next-symbolic", "Forward", "win.forward"));
+        bottom.pack_start(&icon_button(
+            "view-refresh-symbolic",
+            "Reload",
+            "win.reload",
+        ));
+        bottom.pack_end(&icon_button("go-home-symbolic", "Home", "win.home"));
+        toolbar.add_bottom_bar(&bottom);
+        let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+            adw::BreakpointConditionLengthType::MaxWidth,
+            600.0,
+            adw::LengthUnit::Sp,
+        ));
+        narrow.add_setter(&bottom, "revealed", Some(&true.to_value()));
+        for w in [
+            back.upcast_ref::<gtk::Widget>(),
+            forward.upcast_ref(),
+            reload.upcast_ref(),
+            home.upcast_ref(),
+        ] {
+            narrow.add_setter(w, "visible", Some(&false.to_value()));
+        }
+        win.add_breakpoint(narrow);
 
         let overview = adw::TabOverview::builder()
             .view(&tab_view)

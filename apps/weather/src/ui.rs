@@ -150,10 +150,11 @@ pub fn run() -> glib::ExitCode {
 fn load_css() {
     let css = gtk::CssProvider::new();
     css.load_from_string(
-        ".weather-temp { font-size: 48pt; font-weight: 300; }
-         .weather-temp.narrow { font-size: 32pt; }
+        // The current temperature is display text (em, so it follows the
+        // text size); everything else uses Adwaita's typography classes.
+        ".weather-temp { font-size: 4.4em; font-weight: 300; }
+         .weather-temp.narrow { font-size: 2.9em; }
          .weather-card { padding: 12px; }
-         .weather-card-value { font-size: 14pt; font-weight: bold; }
          .weather-day { padding: 8px 12px; }
          .weather-hours > flowboxchild { padding: 0; margin: 0; }",
     );
@@ -172,18 +173,25 @@ fn build(app: &adw::Application) -> Ui {
     let use_12h =
         Prefs::new("org.gnome.desktop.interface").get_enum_nick("clock-format", "24h") == "12h";
 
-    let w = prefs.get::<i32>("window-width", 0);
-    let h = prefs.get::<i32>("window-height", 0);
     let window = adw::ApplicationWindow::builder()
         .application(app)
         .title("Weather")
-        .default_width(if w > 200 { w } else { 900 })
-        .default_height(if h > 200 { h } else { 700 })
+        .default_width(900)
+        .default_height(700)
         .width_request(360)
         .height_request(294)
         .build();
-    if prefs.get("window-maximized", false) {
-        window.maximize();
+    {
+        use helix_app_common::window_state::{persist, SizeKeys, Store};
+        persist(
+            &window,
+            Store::settings(
+                &prefs,
+                SizeKeys::Split("window-width", "window-height"),
+                "window-maximized",
+                "helix-weather",
+            ),
+        );
     }
 
     // ---- header ----
@@ -271,7 +279,10 @@ fn build(app: &adw::Application) -> Ui {
     menu.append_section(None, &misc);
     // HIG primary menu: no Quit (Ctrl+Q still works).
     let help = gio::Menu::new();
-    help.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
+    help.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some("win.show-help-overlay"),
+    );
     help.append(Some("_About Weather"), Some("app.about"));
     menu.append_section(None, &help);
     let menu_button = gtk::MenuButton::builder()
@@ -423,11 +434,7 @@ fn build(app: &adw::Application) -> Ui {
     body.append(&stack);
     toolbar.set_content(Some(&body));
     window.set_content(Some(&toolbar));
-    let builder = gtk::Builder::from_string(SHORTCUTS_UI);
-    if let Some(overlay) = builder.object::<gtk::ShortcutsWindow>("help_overlay") {
-        window.set_help_overlay(Some(&overlay));
-    }
-    app.set_accels_for_action("win.show-help-overlay", &["<Control>question"]);
+    window.set_help_overlay(Some(&helix_app_common::shortcuts::window(SHORTCUT_GROUPS)));
 
     let units_now = Units::load(&gweather);
     let unit_action = gio::SimpleAction::new_stateful(
@@ -576,7 +583,6 @@ impl Ui {
             }
         });
         app.add_action(&refresh);
-        app.set_accels_for_action("app.refresh", &["F5", "<Control>r"]);
 
         let weak = self.weak();
         let search = gio::SimpleAction::new("search", None);
@@ -586,7 +592,7 @@ impl Ui {
             }
         });
         app.add_action(&search);
-        app.set_accels_for_action("app.search", &["<Control>l", "<Control>f"]);
+        helix_app_common::shortcuts::set_accels(app, ACCELS);
 
         let weak = self.weak();
         s.unit_action.connect_activate(move |action, param| {
@@ -675,21 +681,6 @@ impl Ui {
                 ui.rebuild_saved();
                 ui.select_current();
             }
-        });
-
-        // Persist window state.
-        let weak = self.weak();
-        s.window.connect_close_request(move |win| {
-            if let Some(ui) = Ui::upgrade(&weak) {
-                let maximized = win.is_maximized();
-                ui.0.prefs.set("window-maximized", maximized);
-                if !maximized {
-                    let (w, h) = win.default_size();
-                    ui.0.prefs.set("window-width", w);
-                    ui.0.prefs.set("window-height", h);
-                }
-            }
-            glib::Propagation::Proceed
         });
 
         // Minute tick: update relative times and auto-refresh.
@@ -1195,40 +1186,6 @@ fn graph_colors(area: &gtk::DrawingArea) -> graph::Colors {
     }
 }
 
-/// Redraws `area` right away when the style (dark, high contrast) or the
-/// interface font or text scaling changes, instead of keeping the old
-/// colours and sizes until the next refresh.
-fn follow_style(area: &gtk::DrawingArea) {
-    let redraw = {
-        let weak = area.downgrade();
-        move || {
-            if let Some(a) = weak.upgrade() {
-                a.queue_draw();
-            }
-        }
-    };
-    let style = adw::StyleManager::default();
-    let mut handlers: Vec<(glib::Object, glib::SignalHandlerId)> = Vec::new();
-    for prop in ["dark", "high-contrast"] {
-        let r = redraw.clone();
-        let id = style.connect_notify_local(Some(prop), move |_, _| r());
-        handlers.push((style.clone().upcast(), id));
-    }
-    if let Some(settings) = gtk::Settings::default() {
-        for prop in ["gtk-font-name", "gtk-xft-dpi"] {
-            let r = redraw.clone();
-            let id = settings.connect_notify_local(Some(prop), move |_, _| r());
-            handlers.push((settings.clone().upcast(), id));
-        }
-    }
-    let handlers = std::cell::RefCell::new(handlers);
-    area.connect_destroy(move |_| {
-        for (obj, id) in handlers.borrow_mut().drain(..) {
-            obj.disconnect(id);
-        }
-    });
-}
-
 fn heading(text: &str) -> gtk::Label {
     gtk::Label::builder()
         .label(text)
@@ -1256,7 +1213,7 @@ fn detail_card(caption: &str, value: &str, icon: &str) -> gtk::Box {
     b.append(
         &gtk::Label::builder()
             .label(value)
-            .css_classes(["weather-card-value"])
+            .css_classes(["weather-card-value", "title-3"])
             .xalign(0.0)
             .build(),
     );
@@ -1488,7 +1445,7 @@ fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool) -> gtk::Wid
             graph_colors(a),
         );
     });
-    follow_style(&area);
+    helix_app_common::style::redraw_on_style_change(&area);
 
     strip.append(&top);
     strip.append(&area);
@@ -1702,7 +1659,7 @@ fn daily_section(
                 graph_colors(a),
             );
         });
-        follow_style(&bar);
+        helix_app_common::style::redraw_on_style_change(&bar);
         if !narrow {
             row.append(&bar);
         }
@@ -1743,35 +1700,35 @@ fn remove_place_name(place: &str) -> String {
     format!("Remove {place}")
 }
 
-const SHORTCUTS_UI: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-  <object class="GtkShortcutsWindow" id="help_overlay">
-    <property name="modal">True</property>
-    <child>
-      <object class="GtkShortcutsSection">
-        <property name="section-name">shortcuts</property>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">General</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Search for a place</property><property name="accelerator">&lt;Control&gt;l &lt;Control&gt;f</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Refresh</property><property name="accelerator">F5 &lt;Control&gt;r</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Keyboard shortcuts</property><property name="accelerator">&lt;Control&gt;question</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Close window</property><property name="accelerator">&lt;Control&gt;w</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Quit</property><property name="accelerator">&lt;Control&gt;q</property></object></child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">Hourly Forecast</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Previous or next hour</property><property name="accelerator">Left Right</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">First or last hour</property><property name="accelerator">Home End</property></object></child>
-          </object>
-        </child>
-      </object>
-    </child>
-  </object>
-</interface>
-"#;
+/// Accelerators registered on the application.
+const ACCELS: &[(&str, &[&str])] = &[
+    ("app.refresh", &["F5", "<Control>r"]),
+    ("app.search", &["<Control>l", "<Control>f"]),
+    ("win.show-help-overlay", &["<Control>question"]),
+];
+
+const SHORTCUT_GROUPS: &[helix_app_common::shortcuts::Group] = {
+    use helix_app_common::shortcuts::Item::Keys;
+    &[
+        (
+            "General",
+            &[
+                Keys("Search for a Place", "<Control>l <Control>f"),
+                Keys("Refresh", "F5 <Control>r"),
+                Keys("Keyboard Shortcuts", "<Control>question"),
+                Keys("Close Window", "<Control>w"),
+                Keys("Quit", "<Control>q"),
+            ],
+        ),
+        (
+            "Hourly Forecast",
+            &[
+                Keys("Previous or Next Hour", "Left Right"),
+                Keys("First or Last Hour", "Home End"),
+            ],
+        ),
+    ]
+};
 
 #[cfg(test)]
 mod name_tests {
@@ -1812,5 +1769,13 @@ mod name_tests {
     #[test]
     fn remove_names_its_place() {
         assert_eq!(super::remove_place_name("Berlin"), "Remove Berlin");
+    }
+}
+
+#[cfg(test)]
+mod shortcut_tests {
+    #[test]
+    fn every_accelerator_is_listed() {
+        helix_app_common::shortcuts::assert_all_listed(super::SHORTCUT_GROUPS, super::ACCELS);
     }
 }

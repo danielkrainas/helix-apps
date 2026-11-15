@@ -11,6 +11,7 @@ mod postproc;
 mod sane;
 mod scanner;
 mod settings;
+mod shortcuts;
 mod ui;
 
 use gtk::glib;

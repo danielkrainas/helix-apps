@@ -230,9 +230,15 @@ impl Panel for AboutPanel {
         );
 
         let ctx_weak = Rc::downgrade(ctx);
+        helix_app_common::clear_input_error_on_edit(&name_row, None);
         name_row.connect_apply(move |row| {
             let pretty = row.text().trim().to_string();
             if pretty.is_empty() {
+                const EMPTY: &str = "The device name cannot be empty";
+                helix_app_common::set_input_error(row, None, Some(EMPTY));
+                if let Some(ctx) = ctx_weak.upgrade() {
+                    ctx.toast(EMPTY);
+                }
                 return;
             }
             let static_name = values::pretty_to_static_hostname(&pretty);

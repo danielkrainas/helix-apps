@@ -56,9 +56,7 @@ pub fn run(opts: Options) -> glib::ExitCode {
             .activate(|app: &adw::Application, _, _| Win::new(app).window.present())
             .build();
         app.add_action_entries([new_window]);
-        for (action, accels) in ACCELS {
-            app.set_accels_for_action(action, accels);
-        }
+        helix_app_common::shortcuts::install(app, ACCELS, crate::shortcuts::GROUPS);
     });
     let initial = RefCell::new(Some(opts));
     app.connect_activate(move |app| {
@@ -84,7 +82,7 @@ pub fn run(opts: Options) -> glib::ExitCode {
     app.run_with_args(&[std::env::args().next().unwrap_or_default()])
 }
 
-const ACCELS: &[(&str, &[&str])] = &[
+pub(crate) const ACCELS: &[(&str, &[&str])] = &[
     ("app.new-window", &["<Control>n"]),
     ("win.open", &["<Control>o"]),
     ("win.print", &["<Control>p"]),
@@ -137,12 +135,13 @@ const DOC_ACTIONS: &[&str] = &[
 
 fn load_css() {
     let css = gtk::CssProvider::new();
+    // Pages and thumbnails are paper, white in every style (night mode
+    // inverts the rendered pages instead); presentations are on black.
     css.load_from_string(
         "docview { background-color: mix(@window_bg_color, @window_fg_color, 0.10); }
          .presentation-window, presentation { background-color: black; }
          .dv-thumb picture { background-color: white; box-shadow: 0 1px 3px alpha(black, 0.3); }
          .dv-thumb { padding: 6px; }
-         .dv-result-page { font-size: smaller; }
          .dv-page-entry { min-width: 0; }
          docview > doclink:focus-visible {
              outline: 2px solid @accent_color; outline-offset: 1px;
@@ -233,6 +232,10 @@ impl Win {
             .width_request(360)
             .height_request(294)
             .build();
+        helix_app_common::window_state::persist(
+            &window,
+            helix_app_common::window_state::Store::file("helix-document-viewer"),
+        );
 
         // ----- header -----
         let header = adw::HeaderBar::new();
@@ -292,6 +295,10 @@ impl Win {
         s4.append(Some("P_roperties"), Some("win.properties"));
         menu.append_section(None, &s4);
         let s5 = gio::Menu::new();
+        s5.append(
+            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some(helix_app_common::shortcuts::ACTION),
+        );
         s5.append(Some("_About Document Viewer"), Some("app.about"));
         menu.append_section(None, &s5);
         let menu_btn = gtk::MenuButton::builder()
@@ -1129,6 +1136,7 @@ impl Win {
             let p = gtk::Label::builder().xalign(0.0).build();
             p.add_css_class("dim-label");
             p.add_css_class("dv-result-page");
+            p.add_css_class("caption");
             // The snippet starts a few words before the match, so the match
             // stays visible when the end is ellipsized.
             let c = gtk::Label::builder()

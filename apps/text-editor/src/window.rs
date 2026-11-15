@@ -86,6 +86,10 @@ impl Window {
             .width_request(360)
             .height_request(294)
             .build();
+        helix_app_common::window_state::persist(
+            &win,
+            helix_app_common::window_state::Store::file("helix-text-editor"),
+        );
         win.set_help_overlay(Some(&crate::shortcuts::window()));
 
         // Recent documents popover.
@@ -517,7 +521,6 @@ impl Window {
         self.goto_entry.connect_changed({
             let goto_error = goto_error.clone();
             move |e| {
-                e.remove_css_class("error");
                 goto_error.set_visible(false);
                 helix_app_common::a11y::set_input_error(e, None, None);
             }
@@ -533,7 +536,6 @@ impl Window {
                     }
                 }
                 None => {
-                    e.add_css_class("error");
                     goto_error.set_visible(true);
                     helix_app_common::a11y::set_input_error(e, Some(&goto_error), Some(GOTO_ERROR));
                 }

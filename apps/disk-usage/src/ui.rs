@@ -34,15 +34,6 @@ struct LocalState {
     cross_filesystems: bool,
 }
 
-/// Initial window size from `window-size`, with a sane minimum.
-fn initial_size((w, h): (i32, i32)) -> (i32, i32) {
-    let (dw, dh) = DEFAULT_WINDOW_SIZE;
-    (
-        if w > 0 { w.max(360) } else { dw },
-        if h > 0 { h.max(300) } else { dh },
-    )
-}
-
 fn state_path() -> PathBuf {
     helix_app_common::config_dir("helix-disk-usage").join("state.json")
 }
@@ -148,22 +139,15 @@ pub fn run(initial: Option<String>) -> glib::ExitCode {
 }
 
 fn load_css() {
-    let css = gtk::CssProvider::new();
-    css.load_from_string(
+    helix_app_common::style::add_css(
         ".du-share { min-height: 6px; }
          .du-share block { min-height: 6px; }
          .du-capacity block { min-height: 8px; }
          .du-breadcrumbs button { padding: 2px 6px; min-height: 0; }
          .du-chart:focus-visible { outline: 2px solid alpha(@accent_color, 0.5);
                                    outline-offset: -2px; border-radius: 6px; }",
+        ".du-chart:focus-visible { outline-color: @accent_color; }",
     );
-    if let Some(display) = gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &css,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    }
 }
 
 fn clean_level_bar(bar: &gtk::LevelBar) {
@@ -196,6 +180,10 @@ fn primary_menu() -> gtk::MenuButton {
     let menu = gio::Menu::new();
     let s = gio::Menu::new();
     s.append(Some("_Preferences"), Some("win.preferences"));
+    s.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::shortcuts::ACTION),
+    );
     s.append(Some("_About Disk Usage Analyzer"), Some("app.about"));
     menu.append_section(None, &s);
     gtk::MenuButton::builder()
@@ -212,15 +200,25 @@ impl App {
         let prefs = Prefs::new(SCHEMA_PREFERENCES);
         let ui_prefs = Prefs::new(SCHEMA_UI);
         let local = LocalState::load();
-        let (width, height) = initial_size(ui_prefs.get("window-size", DEFAULT_WINDOW_SIZE));
         let window = adw::ApplicationWindow::builder()
             .application(gapp)
             .title(APP_NAME)
-            .default_width(width)
-            .default_height(height)
+            .default_width(DEFAULT_WINDOW_SIZE.0)
+            .default_height(DEFAULT_WINDOW_SIZE.1)
+            .width_request(helix_app_common::MIN_WIDTH)
+            .height_request(helix_app_common::MIN_HEIGHT)
             .build();
-        if ui_prefs.get("is-maximized", false) {
-            window.maximize();
+        {
+            use helix_app_common::window_state::{persist, SizeKeys, Store};
+            persist(
+                &window,
+                Store::settings(
+                    &ui_prefs,
+                    SizeKeys::Pair("window-size"),
+                    "is-maximized",
+                    "helix-disk-usage",
+                ),
+            );
         }
         let nav = adw::NavigationView::new();
         let toasts = adw::ToastOverlay::new();
@@ -235,6 +233,23 @@ impl App {
             .tooltip_text("Scan a folder (Ctrl+O)")
             .build();
         start_header.pack_start(&scan_btn);
+        // In narrow windows the button shows only its icon.
+        let scan_icon_btn = gtk::Button::builder()
+            .icon_name("folder-open-symbolic")
+            .action_name("win.scan-folder")
+            .tooltip_text("Scan a folder (Ctrl+O)")
+            .visible(false)
+            .build()
+            .labelled("Scan Folder");
+        start_header.pack_start(&scan_icon_btn);
+        let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+            adw::BreakpointConditionLengthType::MaxWidth,
+            450.0,
+            adw::LengthUnit::Sp,
+        ));
+        narrow.add_setter(&scan_btn, "visible", Some(&false.to_value()));
+        narrow.add_setter(&scan_icon_btn, "visible", Some(&true.to_value()));
+        window.add_breakpoint(narrow);
         start_header.pack_end(&primary_menu());
         let reload_btn = gtk::Button::builder()
             .icon_name("view-refresh-symbolic")
@@ -521,11 +536,7 @@ impl App {
             }
         });
         let a = app.clone();
-        app.window.connect_close_request(move |w| {
-            if !w.is_maximized() {
-                a.ui_prefs.set("window-size", w.default_size());
-            }
-            a.ui_prefs.set("is-maximized", w.is_maximized());
+        app.window.connect_close_request(move |_| {
             a.cancel_scan();
             glib::Propagation::Proceed
         });
@@ -1514,14 +1525,11 @@ impl App {
         add("copy-path", Box::new(|a| a.copy_target()));
         add("trash-item", Box::new(|a| a.trash_target()));
         let gapp = self.window.application().expect("application");
-        gapp.set_accels_for_action("win.scan-folder", &["<Control>o"]);
-        gapp.set_accels_for_action("win.rescan", &["<Control>r", "F5"]);
-        gapp.set_accels_for_action("win.cancel-scan", &["Escape"]);
-        gapp.set_accels_for_action("win.chart-up", &["<Alt>Up"]);
-        gapp.set_accels_for_action("win.preferences", &["<Control>comma"]);
-        // Item actions, for the selected row or the focused chart item.
-        gapp.set_accels_for_action("win.open-item", &["<Control>Return", "<Control>KP_Enter"]);
-        gapp.set_accels_for_action("win.copy-path", &["<Control><Shift>c"]);
+        helix_app_common::shortcuts::install(
+            &gapp,
+            crate::shortcuts::ACCELS,
+            crate::shortcuts::GROUPS,
+        );
         // Delete without modifiers must not reach past a focused text field
         // (the preferences search), so it is a bubble-phase shortcut.
         helix_app_common::add_bubble_shortcuts(
@@ -1892,14 +1900,6 @@ fn location_row(loc: &Location) -> gtk::ListBoxRow {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn initial_window_size() {
-        assert_eq!(initial_size((960, 600)), (960, 600));
-        assert_eq!(initial_size((100, 100)), (360, 300));
-        assert_eq!(initial_size((0, -1)), DEFAULT_WINDOW_SIZE);
-        assert_eq!(initial_size((1920, 1080)), (1920, 1080));
-    }
 
     #[test]
     fn local_state_ignores_old_window_fields() {

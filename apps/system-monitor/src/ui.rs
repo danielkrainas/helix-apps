@@ -20,7 +20,7 @@ use crate::sampler::{self, clamp_interval, Config, Control, Msg};
 pub const APP_ID: &str = "org.helix.SystemMonitor";
 const SCHEMA: &str = "org.gnome.gnome-system-monitor";
 
-const PAGES: [(&str, &str, &str); 3] = [
+pub(crate) const PAGES: [(&str, &str, &str); 3] = [
     ("processes", "Processes", "view-list-symbolic"),
     ("resources", "Resources", "speedometer-symbolic"),
     ("disks", "File Systems", "drive-harddisk-symbolic"),
@@ -152,11 +152,22 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
     let window = adw::ApplicationWindow::builder()
         .application(app)
         .title("System Monitor")
-        .default_width(prefs.get::<i32>("window-width", 700).max(360))
-        .default_height(prefs.get::<i32>("window-height", 500).max(300))
+        .default_width(700)
+        .default_height(500)
+        .width_request(helix_app_common::MIN_WIDTH)
+        .height_request(helix_app_common::MIN_HEIGHT)
         .build();
-    if prefs.get("maximized", false) {
-        window.maximize();
+    {
+        use helix_app_common::window_state::{persist, SizeKeys, Store};
+        persist(
+            &window,
+            Store::settings(
+                &prefs,
+                SizeKeys::Split("window-width", "window-height"),
+                "maximized",
+                "helix-system-monitor",
+            ),
+        );
     }
 
     let whose = Whose::from_nick(&prefs.get("show-whose-processes", "user".to_string()));
@@ -230,7 +241,10 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
     menu.append_section(None, &s);
     let s = gio::Menu::new();
     s.append(Some("_Preferences"), Some("win.preferences"));
-    s.append(Some("_Keyboard Shortcuts"), Some("win.shortcuts"));
+    s.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::shortcuts::ACTION),
+    );
     s.append(Some("_About System Monitor"), Some("app.about"));
     menu.append_section(None, &s);
     let menu_button = gtk::MenuButton::builder()
@@ -245,6 +259,22 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
     let toolbar = adw::ToolbarView::new();
     toolbar.add_top_bar(&header);
     toolbar.set_content(Some(&stack));
+    // Narrow windows: the page switcher moves from the header to a bar at
+    // the bottom.
+    let switcher_bar = adw::ViewSwitcherBar::builder().stack(&stack).build();
+    toolbar.add_bottom_bar(&switcher_bar);
+    let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+        adw::BreakpointConditionLengthType::MaxWidth,
+        550.0,
+        adw::LengthUnit::Sp,
+    ));
+    narrow.add_setter(&switcher_bar, "reveal", Some(&true.to_value()));
+    narrow.add_setter(
+        &header,
+        "title-widget",
+        Some(&None::<gtk::Widget>.to_value()),
+    );
+    window.add_breakpoint(narrow);
     let toasts = adw::ToastOverlay::new();
     toasts.set_child(Some(&toolbar));
     window.set_content(Some(&toasts));
@@ -282,19 +312,6 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
             if let Some(w) = w.upgrade() {
                 w.update_action_state();
             }
-        });
-    }
-    {
-        let w = Rc::downgrade(&win);
-        win.window.connect_close_request(move |window| {
-            if let Some(w) = w.upgrade() {
-                if !window.is_maximized() {
-                    w.prefs.set("window-width", window.default_width());
-                    w.prefs.set("window-height", window.default_height());
-                }
-                w.prefs.set("maximized", window.is_maximized());
-            }
-            glib::Propagation::Proceed
         });
     }
 
@@ -350,7 +367,6 @@ fn install_actions(win: &Rc<Win>, whose: Whose) {
         }),
     );
     add("preferences", Box::new(show_preferences));
-    add("shortcuts", Box::new(show_shortcuts));
     add(
         "proc-properties",
         Box::new(|w| {
@@ -442,28 +458,7 @@ fn install_actions(win: &Rc<Win>, whose: Whose) {
     }
     window.add_action(&show);
 
-    for (i, (name, _, _)) in PAGES.iter().enumerate() {
-        app.set_accels_for_action(
-            &format!("win.show-page::{name}"),
-            &[&format!("<Control>{}", i + 1)],
-        );
-    }
-    let accels: [(&str, &[&str]); 11] = [
-        ("win.refresh", &["<Control>r", "F5"]),
-        ("win.search", &["<Control>f"]),
-        ("win.preferences", &["<Control>comma"]),
-        ("win.shortcuts", &["<Control>question"]),
-        ("win.proc-properties", &["<Alt>Return"]),
-        ("win.proc-priority", &["<Control>n"]),
-        ("win.proc-stop", &["<Control>s"]),
-        ("win.proc-continue", &["<Control>c"]),
-        ("win.proc-end", &["<Control>e"]),
-        ("win.proc-kill", &["<Control>k"]),
-        ("win.proc-menu", &["Menu", "<Shift>F10"]),
-    ];
-    for (action, keys) in accels {
-        app.set_accels_for_action(action, keys);
-    }
+    helix_app_common::shortcuts::install(&app, crate::shortcuts::ACCELS, crate::shortcuts::GROUPS);
 }
 
 fn show_preferences(w: &Rc<Win>) {
@@ -590,56 +585,6 @@ fn show_preferences(w: &Rc<Win>) {
     ));
     page.add(&g);
 
-    dialog.add(&page);
-    dialog.present(Some(&w.window));
-}
-
-fn show_shortcuts(w: &Rc<Win>) {
-    let dialog = adw::PreferencesDialog::builder()
-        .title("Keyboard Shortcuts")
-        .build();
-    let page = adw::PreferencesPage::new();
-    let groups: [(&str, &[(&str, &str)]); 3] = [
-        (
-            "General",
-            &[
-                ("Processes / Resources / File Systems", "Ctrl+1 / 2 / 3"),
-                ("Refresh", "Ctrl+R"),
-                ("Search", "Ctrl+F"),
-                ("Preferences", "Ctrl+,"),
-                ("Close Window", "Ctrl+W"),
-                ("Quit", "Ctrl+Q"),
-            ],
-        ),
-        (
-            "Process",
-            &[
-                ("Properties", "Alt+Return"),
-                ("Context Menu", "Menu / Shift+F10"),
-                ("Change Priority", "Ctrl+N"),
-            ],
-        ),
-        (
-            "Signals",
-            &[
-                ("Stop", "Ctrl+S"),
-                ("Continue", "Ctrl+C"),
-                ("End", "Ctrl+E"),
-                ("Kill", "Ctrl+K"),
-            ],
-        ),
-    ];
-    for (title, rows) in groups {
-        let g = adw::PreferencesGroup::builder().title(title).build();
-        for (name, keys) in rows {
-            let row = adw::ActionRow::builder().title(*name).build();
-            let l = gtk::Label::new(Some(keys));
-            l.add_css_class("dim-label");
-            row.add_suffix(&l);
-            g.add(&row);
-        }
-        page.add(&g);
-    }
     dialog.add(&page);
     dialog.present(Some(&w.window));
 }

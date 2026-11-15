@@ -4,6 +4,7 @@ mod chart;
 mod layout;
 mod mounts;
 mod scanner;
+mod shortcuts;
 mod ui;
 
 use gtk::glib;

@@ -20,4 +20,5 @@ gtk.workspace = true
 adw.workspace = true
 helix-app-common.workspace = true
 libc = "0.2"
+pangocairo = "0.20"
 async-channel = "2"

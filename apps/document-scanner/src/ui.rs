@@ -21,7 +21,7 @@ const APP_NAME: &str = "Document Scanner";
 const SCHEMA: &str = "org.gnome.SimpleScan";
 const DEFAULT_DPI: [i32; 7] = [75, 150, 200, 300, 600, 1200, 2400];
 
-const ACCELS: &[(&str, &[&str])] = &[
+pub(crate) const ACCELS: &[(&str, &[&str])] = &[
     ("win.scan-single", &["<Control>1"]),
     ("win.scan-feeder", &["<Control>f"]),
     ("win.scan-batch", &["<Control>m"]),
@@ -183,7 +183,10 @@ fn main_menu() -> gio::Menu {
     let other = gio::Menu::new();
     other.append(Some("_Refresh Scanners"), Some("win.refresh"));
     other.append(Some("_Preferences"), Some("win.preferences"));
-    other.append(Some("_Keyboard Shortcuts"), Some("win.shortcuts"));
+    other.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some("win.shortcuts"),
+    );
     other.append(Some("_About Document Scanner"), Some("app.about"));
     menu.append_section(None, &other);
     menu
@@ -236,7 +239,13 @@ impl Win {
             .title(APP_NAME)
             .default_width(900)
             .default_height(680)
+            .width_request(helix_app_common::MIN_WIDTH)
+            .height_request(helix_app_common::MIN_HEIGHT)
             .build();
+        helix_app_common::window_state::persist(
+            &window,
+            helix_app_common::window_state::Store::file("helix-document-scanner"),
+        );
 
         // Header bar.
         let header = adw::HeaderBar::new();
@@ -904,8 +913,19 @@ impl Win {
         cr.rectangle(x, y, w, h);
         cr.set_fill_rule(cairo::FillRule::EvenOdd);
         let _ = cr.fill();
-        cr.set_source_rgb(0.21, 0.52, 0.89);
-        cr.set_line_width(2.0);
+        // The crop frame in the system accent colour (it is drawn over the
+        // scanned page, darkened around it).
+        let accent = helix_app_common::style::accent_rgba();
+        cr.set_source_rgb(
+            accent.red() as f64,
+            accent.green() as f64,
+            accent.blue() as f64,
+        );
+        cr.set_line_width(if helix_app_common::style::is_high_contrast() {
+            3.0
+        } else {
+            2.0
+        });
         cr.rectangle(x, y, w, h);
         let _ = cr.stroke();
         for (hx, hy) in [(x, y), (x + w, y), (x, y + h), (x + w, y + h)] {
@@ -931,6 +951,7 @@ impl Win {
                 w.draw_crop(cr);
             }
         });
+        helix_app_common::style::redraw_on_style_change(&self.crop_area);
 
         let drag = gtk::GestureDrag::new();
         let w = self.weak();
@@ -1692,12 +1713,22 @@ impl Win {
             let text = e.text().to_string();
             match crate::postproc::split_arguments(&text) {
                 Ok(_) => {
-                    e.remove_css_class("error");
+                    helix_app_common::set_input_error(e, None, None);
                     w.prefs.set("postproc-arguments", text);
                 }
-                Err(_) => e.add_css_class("error"),
+                Err(message) => {
+                    // Shown inside the preferences dialog, not behind it.
+                    helix_app_common::set_input_error(e, None, Some(&message));
+                    if let Some(d) = e
+                        .ancestor(adw::PreferencesDialog::static_type())
+                        .and_downcast::<adw::PreferencesDialog>()
+                    {
+                        d.add_toast(adw::Toast::new(&message));
+                    }
+                }
             }
         });
+        helix_app_common::clear_input_error_on_edit(&args, None);
         group.add(&args);
 
         let keep = adw::SwitchRow::builder()
@@ -1726,44 +1757,6 @@ impl Win {
     }
 
     fn shortcuts(&self) {
-        let rows: &[(&str, &str)] = &[
-            ("<Control>1", "Scan a single page"),
-            ("<Control>f", "Scan all pages from the feeder"),
-            ("<Control>m", "Scan multiple pages from the flatbed"),
-            ("Escape", "Stop scanning"),
-            ("<Control>n", "New document"),
-            ("<Control>s", "Save"),
-            ("<Control>c", "Copy page"),
-            ("<Control>p", "Print"),
-            ("<Control>e", "Email"),
-            ("bracketleft", "Rotate page left"),
-            ("bracketright", "Rotate page right"),
-            ("<Control>Page_Up", "Move page left"),
-            ("<Control>Page_Down", "Move page right"),
-            ("Delete", "Delete page"),
-            ("<Control>comma", "Preferences"),
-            ("<Control>question", "Keyboard shortcuts"),
-            ("<Control>q", "Quit"),
-        ];
-        let mut xml = String::from(
-            "<interface><object class=\"GtkShortcutsWindow\" id=\"w\"><property name=\"modal\">1</property>\
-             <child><object class=\"GtkShortcutsSection\"><property name=\"section-name\">main</property>\
-             <child><object class=\"GtkShortcutsGroup\"><property name=\"title\">Document Scanner</property>",
-        );
-        for (accel, title) in rows {
-            let esc = |s: &str| glib::markup_escape_text(s).to_string();
-            xml.push_str(&format!(
-                "<child><object class=\"GtkShortcutsShortcut\"><property name=\"accelerator\">{}</property>\
-                 <property name=\"title\">{}</property></object></child>",
-                esc(accel),
-                esc(title)
-            ));
-        }
-        xml.push_str("</object></child></object></child></object></interface>");
-        let builder = gtk::Builder::from_string(&xml);
-        if let Some(sw) = builder.object::<gtk::ShortcutsWindow>("w") {
-            sw.set_transient_for(Some(&self.window));
-            sw.present();
-        }
+        helix_app_common::shortcuts::show(&self.window, crate::shortcuts::GROUPS);
     }
 }

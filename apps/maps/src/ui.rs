@@ -303,17 +303,26 @@ impl Ui {
         let favorites =
             Favorites::load(&helix_app_common::data_dir("helix-maps").join("favorites.json"));
 
-        let (width, height) = gnome::window_size(&prefs.get::<Vec<i32>>("window-size", Vec::new()));
+        let (width, height) = gnome::window_size(&[]);
         let window = adw::ApplicationWindow::builder()
             .application(app)
             .title(APP_NAME)
             .default_width(width)
             .default_height(height)
             .width_request(360)
-            .height_request(300)
+            .height_request(294)
             .build();
-        if prefs.get("window-maximized", true) {
-            window.maximize();
+        {
+            use helix_app_common::window_state::{persist, SizeKeys, Store};
+            persist(
+                &window,
+                Store::settings(
+                    &prefs,
+                    SizeKeys::Pair("window-size"),
+                    "window-maximized",
+                    "helix-maps",
+                ),
+            );
         }
 
         // --- Map -----------------------------------------------------------
@@ -882,14 +891,8 @@ impl Ui {
         });
 
         let w = self.weak();
-        i.window.connect_close_request(move |win| {
+        i.window.connect_close_request(move |_| {
             if let Some(ui) = Ui::up(&w) {
-                let (width, height) = win.default_size();
-                let maximized = win.is_maximized();
-                ui.0.prefs.set("window-maximized", maximized);
-                if !maximized && width > 0 && height > 0 {
-                    ui.0.prefs.set("window-size", vec![width, height]);
-                }
                 ui.save_view_state();
             }
             glib::Propagation::Proceed
@@ -1883,11 +1886,12 @@ impl Ui {
         let apply = {
             let w = self.weak();
             let dialog = dialog.clone();
-            move |f: &dyn Fn(&mut Services) -> Result<bool, &'static str>| {
+            move |row: &gtk::Widget, f: &dyn Fn(&mut Services) -> Result<bool, &'static str>| {
                 let Some(ui) = Ui::up(&w) else { return };
                 let mut wanted = ui.0.services.borrow().clone();
                 match f(&mut wanted) {
                     Ok(tiles_changed) => {
+                        helix_app_common::set_input_error(row, None, None);
                         let inherited = ui.0.system.services();
                         let effective = {
                             let mut user = ui.0.user.borrow_mut();
@@ -1901,16 +1905,23 @@ impl Ui {
                         }
                         ui.update_route_note();
                     }
-                    Err(msg) => dialog.add_toast(adw::Toast::new(msg)),
+                    Err(msg) => {
+                        // Marked on the field and shown inside the dialog.
+                        helix_app_common::set_input_error(row, None, Some(msg));
+                        dialog.add_toast(adw::Toast::new(msg));
+                    }
                 }
             }
         };
         let apply = Rc::new(apply);
+        for row in [&tile_url, &geocoder, &router] {
+            helix_app_common::clear_input_error_on_edit(row, None);
+        }
 
         let a = apply.clone();
         tile_url.connect_apply(move |r| {
             let t = r.text().trim().to_string();
-            a(&move |s: &mut Services| {
+            a(r.upcast_ref(), &move |s: &mut Services| {
                 settings::validate_tile_template(&t)?;
                 s.tile_url_template = t.clone();
                 Ok(true)
@@ -1919,7 +1930,7 @@ impl Ui {
         let a = apply.clone();
         attribution.connect_apply(move |r| {
             let t = r.text().trim().to_string();
-            a(&move |s: &mut Services| {
+            a(r.upcast_ref(), &move |s: &mut Services| {
                 s.tile_attribution = t.clone();
                 Ok(true)
             });
@@ -1927,7 +1938,7 @@ impl Ui {
         let a = apply.clone();
         attribution_url.connect_apply(move |r| {
             let t = r.text().trim().to_string();
-            a(&move |s: &mut Services| {
+            a(r.upcast_ref(), &move |s: &mut Services| {
                 s.tile_attribution_url = t.clone();
                 Ok(true)
             });
@@ -1935,7 +1946,7 @@ impl Ui {
         let a = apply.clone();
         max_zoom.connect_value_notify(move |r| {
             let v = r.value() as u32;
-            a(&move |s: &mut Services| {
+            a(r.upcast_ref(), &move |s: &mut Services| {
                 s.tile_max_zoom = v;
                 Ok(true)
             });
@@ -1943,7 +1954,7 @@ impl Ui {
         let a = apply.clone();
         geocoder.connect_apply(move |r| {
             let t = r.text().trim().to_string();
-            a(&move |s: &mut Services| {
+            a(r.upcast_ref(), &move |s: &mut Services| {
                 s.geocoder_url = settings::normalize_base_url(&t)
                     .ok_or("The search server must be an http(s) URL")?;
                 Ok(false)
@@ -1952,7 +1963,7 @@ impl Ui {
         let a = apply.clone();
         router.connect_apply(move |r| {
             let t = r.text().trim().to_string();
-            a(&move |s: &mut Services| {
+            a(r.upcast_ref(), &move |s: &mut Services| {
                 s.router_url = settings::normalize_base_url(&t)
                     .ok_or("The routing server must be an http(s) URL")?;
                 Ok(false)
@@ -2005,7 +2016,7 @@ impl Ui {
         // configuration (or the built-in defaults) applies again.
         let a = apply.clone();
         let system = self.0.system.services();
-        reset.connect_clicked(move |_| {
+        reset.connect_clicked(move |b| {
             let d = system.clone();
             tile_url.set_text(&d.tile_url_template);
             attribution.set_text(&d.tile_attribution);
@@ -2013,7 +2024,7 @@ impl Ui {
             geocoder.set_text(&d.geocoder_url);
             router.set_text(&d.router_url);
             max_zoom.set_value(d.tile_max_zoom as f64);
-            a(&move |s: &mut Services| {
+            a(b.upcast_ref(), &move |s: &mut Services| {
                 *s = d.clone();
                 Ok(true)
             });

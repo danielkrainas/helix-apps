@@ -5,6 +5,7 @@ mod args;
 mod naming;
 mod settings;
 mod shell;
+mod shortcuts;
 mod ui;
 
 use gtk::glib;

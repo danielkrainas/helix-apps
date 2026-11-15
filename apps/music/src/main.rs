@@ -8,6 +8,7 @@ mod pages;
 mod player;
 mod playlist;
 mod queue;
+mod shortcuts;
 mod tracker;
 mod ui;
 

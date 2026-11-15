@@ -345,7 +345,10 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     menu.append_section(None, &zoom);
     let sec3 = gio::Menu::new();
     sec3.append(Some("_Caret Browsing"), Some("win.caret"));
-    sec3.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
+    sec3.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some("win.show-help-overlay"),
+    );
     sec3.append(Some("_About Help"), Some("app.about"));
     menu.append_section(None, &sec3);
     let menu_btn = gtk::MenuButton::builder()
@@ -414,7 +417,13 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
         .default_width(900)
         .default_height(700)
         .content(&split)
+        .width_request(helix_app_common::MIN_WIDTH)
+        .height_request(helix_app_common::MIN_HEIGHT)
         .build();
+    helix_app_common::window_state::persist(
+        &window,
+        helix_app_common::window_state::Store::file("helix-help"),
+    );
     let bp = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
         adw::BreakpointConditionLengthType::MaxWidth,
         600.0,
@@ -675,7 +684,7 @@ fn set_text_size(ui: &Ui, adjust: i32) {
 
 fn install_actions(ui: &Rc<Ui>) {
     let win = &ui.window;
-    let add = |name: &str, accels: &[&str], f: UiAction| {
+    let add = |name: &str, f: UiAction| {
         let a = gio::SimpleAction::new(name, None);
         let weak = Rc::downgrade(ui);
         a.connect_activate(move |_, _| {
@@ -684,28 +693,12 @@ fn install_actions(ui: &Rc<Ui>) {
             }
         });
         win.add_action(&a);
-        if let Some(app) = win.application() {
-            app.set_accels_for_action(&format!("win.{name}"), accels);
-        }
     };
-    add(
-        "back",
-        &["<Alt>Left", "Back"],
-        Box::new(|ui| ui.view.go_back()),
-    );
-    add(
-        "forward",
-        &["<Alt>Right", "Forward"],
-        Box::new(|ui| ui.view.go_forward()),
-    );
-    add(
-        "home",
-        &["<Alt>Home"],
-        Box::new(|ui| ui.view.load_uri("help:")),
-    );
+    add("back", Box::new(|ui| ui.view.go_back()));
+    add("forward", Box::new(|ui| ui.view.go_forward()));
+    add("home", Box::new(|ui| ui.view.load_uri("help:")));
     add(
         "search",
-        &["<Control>f"],
         Box::new(|ui| {
             ui.search_bar.set_search_mode(true);
             ui.search_entry.grab_focus();
@@ -713,7 +706,6 @@ fn install_actions(ui: &Rc<Ui>) {
     );
     add(
         "print",
-        &["<Control>p"],
         Box::new(|ui| {
             let op = webkit6::PrintOperation::new(&ui.view);
             op.run_dialog(Some(&ui.window));
@@ -721,20 +713,14 @@ fn install_actions(ui: &Rc<Ui>) {
     );
     add(
         "zoom-in",
-        &["<Control>plus", "<Control>equal", "<Control>KP_Add"],
         Box::new(|ui| set_text_size(ui, ui.prefs.get("font-adjustment", 0i32) + 1)),
     );
     add(
         "zoom-out",
-        &["<Control>minus", "<Control>KP_Subtract"],
         Box::new(|ui| set_text_size(ui, ui.prefs.get("font-adjustment", 0i32) - 1)),
     );
-    add(
-        "zoom-reset",
-        &["<Control>0", "<Control>KP_0"],
-        Box::new(|ui| set_text_size(ui, 0)),
-    );
-    add("close", &["<Control>w"], Box::new(|ui| ui.window.close()));
+    add("zoom-reset", Box::new(|ui| set_text_size(ui, 0)));
+    add("close", Box::new(|ui| ui.window.close()));
 
     let sidebar = gio::SimpleAction::new_stateful("sidebar", None, &false.to_variant());
     {
@@ -772,46 +758,14 @@ fn install_actions(ui: &Rc<Ui>) {
     }
     win.add_action(&caret);
     if let Some(app) = win.application() {
-        app.set_accels_for_action("win.sidebar", &["F9"]);
-        app.set_accels_for_action("win.caret", &["F7"]);
+        helix_app_common::shortcuts::set_accels(&app, crate::shortcuts::ACCELS);
     }
     update_nav(ui);
 }
 
 fn install_shortcuts_window(ui: &Ui) {
-    let rows: &[(&str, &str)] = &[
-        ("<Alt>Left", "Back"),
-        ("<Alt>Right", "Forward"),
-        ("<Alt>Home", "All help documents"),
-        ("<Control>f", "Search"),
-        ("F9", "Toggle sidebar"),
-        ("<Control>p", "Print"),
-        ("<Control>plus", "Larger text"),
-        ("<Control>minus", "Smaller text"),
-        ("<Control>0", "Normal text size"),
-        ("F7", "Caret browsing"),
-        ("<Control>w", "Close window"),
-        ("<Control>q", "Quit"),
-    ];
-    let mut xml = String::from(
-        "<interface><object class=\"GtkShortcutsWindow\" id=\"w\"><property name=\"modal\">1</property>\
-         <child><object class=\"GtkShortcutsSection\"><child><object class=\"GtkShortcutsGroup\">\
-         <property name=\"title\">General</property>",
-    );
-    for (accel, title) in rows {
-        xml.push_str(&format!(
-            "<child><object class=\"GtkShortcutsShortcut\"><property name=\"accelerator\">{}</property>\
-             <property name=\"title\">{}</property></object></child>",
-            crate::xmlutil::escape(accel),
-            crate::xmlutil::escape(title)
-        ));
-    }
-    xml.push_str("</object></child></object></child></object></interface>");
-    let builder = gtk::Builder::from_string(&xml);
-    if let Some(w) = builder.object::<gtk::ShortcutsWindow>("w") {
-        ui.window.set_help_overlay(Some(&w));
-    }
-    if let Some(app) = ui.window.application() {
-        app.set_accels_for_action("win.show-help-overlay", &["<Control>question"]);
-    }
+    ui.window
+        .set_help_overlay(Some(&helix_app_common::shortcuts::window(
+            crate::shortcuts::GROUPS,
+        )));
 }

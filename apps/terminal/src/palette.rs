@@ -115,11 +115,48 @@ pub const HACKER: Palette = Palette {
     ],
 };
 
-/// The palette for `theme` given the system dark preference.
-pub fn palette_for(theme: Theme, system_dark: bool) -> &'static Palette {
+/// High contrast, light: black on white, every ANSI colour dark enough
+/// for 4.5:1 on the background (the bright white entries stay light, as
+/// programs use them as backgrounds).
+pub const HIGH_CONTRAST_LIGHT: Palette = Palette {
+    name: "Helix High Contrast Light",
+    foreground: "#000000",
+    background: "#ffffff",
+    cursor: "#000000",
+    cursor_foreground: "#ffffff",
+    highlight: "#000000",
+    highlight_foreground: "#ffffff",
+    colors: [
+        "#000000", "#a1001a", "#0b5d1e", "#6b4800", "#0b3f9e", "#6d1f8f", "#005c66", "#d6d6db",
+        "#3a3a40", "#c10022", "#0f7a28", "#805600", "#1450c4", "#8a2bb0", "#00707c", "#ffffff",
+    ],
+};
+
+/// High contrast, dark: white on black, every ANSI colour light enough
+/// for 4.5:1 on the background (black stays black).
+pub const HIGH_CONTRAST_DARK: Palette = Palette {
+    name: "Helix High Contrast Dark",
+    foreground: "#ffffff",
+    background: "#000000",
+    cursor: "#ffffff",
+    cursor_foreground: "#000000",
+    highlight: "#ffffff",
+    highlight_foreground: "#000000",
+    colors: [
+        "#000000", "#ff7b7f", "#7ef08f", "#ffe07a", "#8fbcff", "#e7a3ff", "#6ff0ff", "#e8e8ec",
+        "#a0a0aa", "#ff9da0", "#a3f7af", "#ffeca8", "#b3d1ff", "#f0c4ff", "#a6f7ff", "#ffffff",
+    ],
+};
+
+/// The palette for `theme` given the system dark preference. With high
+/// contrast on, the light and dark styles use the high-contrast palettes
+/// (the Hacker theme, chosen on purpose, stays as it is).
+pub fn palette_for(theme: Theme, system_dark: bool, high_contrast: bool) -> &'static Palette {
     match theme {
         Theme::Hacker => &HACKER,
+        t if t.is_dark(system_dark) && high_contrast => &HIGH_CONTRAST_DARK,
         t if t.is_dark(system_dark) => &DARK,
+        _ if high_contrast => &HIGH_CONTRAST_LIGHT,
         _ => &LIGHT,
     }
 }
@@ -160,16 +197,64 @@ mod tests {
 
     #[test]
     fn selection() {
-        assert_eq!(palette_for(Theme::Auto, true).name, "Helix Dark");
-        assert_eq!(palette_for(Theme::Auto, false).name, "Helix Light");
-        assert_eq!(palette_for(Theme::Day, true).name, "Helix Light");
-        assert_eq!(palette_for(Theme::Night, false).name, "Helix Dark");
-        assert_eq!(palette_for(Theme::Hacker, false).name, "Hacker");
+        assert_eq!(palette_for(Theme::Auto, true, false).name, "Helix Dark");
+        assert_eq!(palette_for(Theme::Auto, false, false).name, "Helix Light");
+        assert_eq!(palette_for(Theme::Day, true, false).name, "Helix Light");
+        assert_eq!(palette_for(Theme::Night, false, false).name, "Helix Dark");
+        assert_eq!(palette_for(Theme::Hacker, false, false).name, "Hacker");
+        assert_eq!(
+            palette_for(Theme::Night, false, true).name,
+            "Helix High Contrast Dark"
+        );
+        assert_eq!(
+            palette_for(Theme::Auto, false, true).name,
+            "Helix High Contrast Light"
+        );
+        assert_eq!(palette_for(Theme::Hacker, true, true).name, "Hacker");
+    }
+
+    /// WCAG contrast of two `#rrggbb` colours.
+    fn contrast(a: &str, b: &str) -> f32 {
+        let lum = |s| {
+            let (r, g, b) = parse_hex(s).unwrap();
+            let l = |c: f32| {
+                if c <= 0.03928 {
+                    c / 12.92
+                } else {
+                    ((c + 0.055) / 1.055).powf(2.4)
+                }
+            };
+            0.2126 * l(r) + 0.7152 * l(g) + 0.0722 * l(b)
+        };
+        let (x, y) = (lum(a), lum(b));
+        (x.max(y) + 0.05) / (x.min(y) + 0.05)
+    }
+
+    #[test]
+    fn high_contrast_colours_are_readable() {
+        for p in [&HIGH_CONTRAST_LIGHT, &HIGH_CONTRAST_DARK] {
+            assert!(contrast(p.foreground, p.background) >= 7.0, "{}", p.name);
+            // Colours 1–6 and 9–14 are text colours.
+            for i in (1..7).chain(9..15) {
+                let c = p.colors[i];
+                assert!(
+                    contrast(c, p.background) >= 4.5,
+                    "{} colour {i} {c}",
+                    p.name
+                );
+            }
+        }
     }
 
     #[test]
     fn palettes_valid_and_readable() {
-        for p in [&LIGHT, &DARK, &HACKER] {
+        for p in [
+            &LIGHT,
+            &DARK,
+            &HACKER,
+            &HIGH_CONTRAST_LIGHT,
+            &HIGH_CONTRAST_DARK,
+        ] {
             let all = [
                 p.foreground,
                 p.background,

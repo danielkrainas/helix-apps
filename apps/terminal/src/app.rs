@@ -187,6 +187,12 @@ impl App {
                 app.refresh_all();
             }
         });
+        let wk = self.this.clone();
+        adw::StyleManager::default().connect_high_contrast_notify(move |_| {
+            if let Some(app) = wk.upgrade() {
+                app.refresh_all();
+            }
+        });
         if let Some(s) = self.prefs.gsettings() {
             let wk = self.this.clone();
             s.connect_changed(None, move |_, key| {
@@ -282,18 +288,18 @@ impl App {
     pub fn new_window(&self) -> Rc<Window> {
         let app = self.this.upgrade().expect("app alive");
         let w = Window::new(&app);
+        w.win.set_default_size(DEFAULT_SIZE.0, DEFAULT_SIZE.1);
         if self.prefs.get("restore-window-size", true) {
-            let (width, height) = self.prefs.get("last-window-size", (-1i32, -1i32));
-            if width > 0 && height > 0 {
-                w.win.set_default_size(width, height);
-            } else {
-                w.win.set_default_size(DEFAULT_SIZE.0, DEFAULT_SIZE.1);
-            }
-            if self.prefs.get("last-window-maximised", false) {
-                w.win.maximize();
-            }
-        } else {
-            w.win.set_default_size(DEFAULT_SIZE.0, DEFAULT_SIZE.1);
+            use helix_app_common::window_state::{persist, SizeKeys, Store};
+            persist(
+                &w.win,
+                Store::settings(
+                    &self.prefs,
+                    SizeKeys::Pair("last-window-size"),
+                    "last-window-maximised",
+                    "helix-terminal",
+                ),
+            );
         }
         w.update_zoom(self.font_scale());
         self.windows.borrow_mut().push(w.clone());
@@ -301,14 +307,6 @@ impl App {
     }
 
     pub fn remove_window(&self, w: &Rc<Window>) {
-        if self.prefs.get("restore-window-size", true) {
-            let (width, height) = w.win.default_size();
-            if !w.win.is_maximized() && width > 0 && height > 0 {
-                self.prefs.set("last-window-size", (width, height));
-            }
-            self.prefs
-                .set("last-window-maximised", w.win.is_maximized());
-        }
         self.windows.borrow_mut().retain(|x| !Rc::ptr_eq(x, w));
     }
 
@@ -381,7 +379,8 @@ impl App {
     }
 
     pub fn palette(&self) -> &'static Palette {
-        palette::palette_for(self.theme(), adw::StyleManager::default().is_dark())
+        let style = adw::StyleManager::default();
+        palette::palette_for(self.theme(), style.is_dark(), style.is_high_contrast())
     }
 
     /// Applies every setting to `term`.

@@ -1,7 +1,7 @@
 //! Resources page: CPU, memory/swap and network history graphs (cairo).
 
 use adw::prelude::*;
-use gtk::gdk;
+use gtk::{gdk, pango};
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
@@ -10,6 +10,9 @@ use crate::history::{nice_ceiling, History};
 use crate::sampler::ResourceSample;
 
 /// Distinct colours for per-CPU lines (GNOME palette hues).
+/// Adwaita's caption text is 82 % of the body size.
+const CAPTION_SCALE: f64 = 0.82;
+
 const CPU_COLORS: [&str; 16] = [
     "#e01b24", "#ff7800", "#f6d32d", "#33d17a", "#26a269", "#3584e4", "#1c71d8", "#9141ac",
     "#c061cb", "#865e3c", "#ed333b", "#ffa348", "#57e389", "#62a0ea", "#dc8add", "#cdab8f",
@@ -73,6 +76,7 @@ impl Graph {
                 g.draw(area, cr, w as f64, h as f64);
             }
         });
+        helix_app_common::style::redraw_on_style_change(&g.area);
         g
     }
 
@@ -82,53 +86,97 @@ impl Graph {
     }
 
     fn draw(&self, area: &gtk::DrawingArea, cr: &gtk::cairo::Context, w: f64, h: f64) {
+        use helix_app_common::style::{is_high_contrast, line_alpha};
         let fg = area.color();
+        // Axis labels are secondary text, at full strength in high contrast.
+        let label_alpha = if is_high_contrast() { 1.0 } else { 0.7 };
         let history = self.history.borrow();
         let max = match self.scale {
             Scale::Percent => 1.0,
             Scale::Rate => nice_ceiling(history.max(), 1000.0),
         };
-        let label_w = 80.0;
-        let (left, top, right, bottom) = (label_w, 6.0, w - 4.0, h - 18.0);
+        // Axis labels in the interface font at caption size, so they follow
+        // the font and Large Text; the margins make room for them.
+        let caption = |text: &str| {
+            let layout = area.create_pango_layout(Some(text));
+            let mut desc = area.pango_context().font_description().unwrap_or_default();
+            if desc.is_size_absolute() {
+                desc.set_absolute_size(desc.size() as f64 * CAPTION_SCALE);
+            } else {
+                desc.set_size((desc.size() as f64 * CAPTION_SCALE) as i32);
+            }
+            layout.set_font_description(Some(&desc));
+            layout
+        };
+        let value_labels: Vec<pango::Layout> = (0..=4)
+            .map(|i| {
+                let v = max * (4 - i) as f64 / 4.0;
+                caption(&match self.scale {
+                    Scale::Percent => format!("{:.0} %", v * 100.0),
+                    Scale::Rate => format::rate(v, self.bits.get()),
+                })
+            })
+            .collect();
+        let label_w = value_labels
+            .iter()
+            .map(|l| l.pixel_size().0 as f64)
+            .fold(0.0, f64::max)
+            + 10.0;
+        let span_s =
+            history.capacity().saturating_sub(1) as f64 * self.interval_ms.get() as f64 / 1000.0;
+        let time_labels: Vec<(f64, pango::Layout)> = [
+            (0.0, format!("{span_s:.0} seconds")),
+            (0.5, format!("{:.0}", span_s / 2.0)),
+            (1.0, "0".to_string()),
+        ]
+        .into_iter()
+        .map(|(frac, text)| (frac, caption(&text)))
+        .collect();
+        let time_h = time_labels
+            .iter()
+            .map(|(_, l)| l.pixel_size().1 as f64)
+            .fold(0.0, f64::max);
+        let (left, top, right, bottom) = (label_w, 6.0, w - 4.0, h - time_h - 4.0);
         let gw = (right - left).max(1.0);
         let gh = (bottom - top).max(1.0);
 
         cr.set_line_width(1.0);
-        cr.set_font_size(10.0);
         // Grid with axis labels.
-        for i in 0..=4 {
+        for (i, layout) in value_labels.iter().enumerate() {
             let y = (top + gh * i as f64 / 4.0).round() + 0.5;
-            cr.set_source_rgba(fg.red() as f64, fg.green() as f64, fg.blue() as f64, 0.15);
+            cr.set_source_rgba(
+                fg.red() as f64,
+                fg.green() as f64,
+                fg.blue() as f64,
+                line_alpha(0.15),
+            );
             cr.move_to(left, y);
             cr.line_to(right, y);
             let _ = cr.stroke();
-            let v = max * (4 - i) as f64 / 4.0;
-            let text = match self.scale {
-                Scale::Percent => format!("{:.0} %", v * 100.0),
-                Scale::Rate => format::rate(v, self.bits.get()),
-            };
-            cr.set_source_rgba(fg.red() as f64, fg.green() as f64, fg.blue() as f64, 0.7);
-            if let Ok(ext) = cr.text_extents(&text) {
-                cr.move_to(left - 6.0 - ext.width(), y + ext.height() / 2.0);
-                let _ = cr.show_text(&text);
-            }
+            cr.set_source_rgba(
+                fg.red() as f64,
+                fg.green() as f64,
+                fg.blue() as f64,
+                label_alpha,
+            );
+            let (lw, lh) = layout.pixel_size();
+            cr.move_to(left - 6.0 - lw as f64, y - lh as f64 / 2.0);
+            pangocairo::functions::show_layout(cr, layout);
         }
         // Time labels.
-        let span_s =
-            history.capacity().saturating_sub(1) as f64 * self.interval_ms.get() as f64 / 1000.0;
-        for (frac, text) in [
-            (0.0, format!("{span_s:.0} seconds")),
-            (0.5, format!("{:.0}", span_s / 2.0)),
-            (1.0, "0".to_string()),
-        ] {
-            if let Ok(ext) = cr.text_extents(&text) {
-                let x = (left + gw * frac - ext.width() * frac).clamp(left, right - ext.width());
-                cr.move_to(x, h - 4.0);
-                let _ = cr.show_text(&text);
-            }
+        for (frac, layout) in &time_labels {
+            let lw = layout.pixel_size().0 as f64;
+            let x = (left + gw * frac - lw * frac).clamp(left, (right - lw).max(left));
+            cr.move_to(x, bottom + 2.0);
+            pangocairo::functions::show_layout(cr, layout);
         }
         cr.rectangle(left + 0.5, top + 0.5, gw - 1.0, gh);
-        cr.set_source_rgba(fg.red() as f64, fg.green() as f64, fg.blue() as f64, 0.3);
+        cr.set_source_rgba(
+            fg.red() as f64,
+            fg.green() as f64,
+            fg.blue() as f64,
+            line_alpha(0.3),
+        );
         let _ = cr.stroke();
 
         // Series, newest at the right edge.
@@ -283,17 +331,27 @@ impl ResView {
             .homogeneous(true)
             .build();
 
-        let mem_legend = gtk::Box::new(gtk::Orientation::Horizontal, 24);
+        // Two entries side by side, one above the other in narrow windows.
+        let pair_legend = || {
+            gtk::FlowBox::builder()
+                .selection_mode(gtk::SelectionMode::None)
+                .max_children_per_line(2)
+                .min_children_per_line(1)
+                .column_spacing(24)
+                .row_spacing(6)
+                .build()
+        };
+        let mem_legend = pair_legend();
         let (e, mem_label) = legend_entry(colors.mem, "Memory");
-        mem_legend.append(&e);
+        mem_legend.insert(&e, -1);
         let (e, swap_label) = legend_entry(colors.swap, "Swap");
-        mem_legend.append(&e);
+        mem_legend.insert(&e, -1);
 
-        let net_legend = gtk::Box::new(gtk::Orientation::Horizontal, 24);
+        let net_legend = pair_legend();
         let (e, rx_label) = legend_entry(colors.net_in, "Receiving");
-        net_legend.append(&e);
+        net_legend.insert(&e, -1);
         let (e, tx_label) = legend_entry(colors.net_out, "Sending");
-        net_legend.append(&e);
+        net_legend.insert(&e, -1);
 
         let content = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)

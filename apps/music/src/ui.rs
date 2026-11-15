@@ -56,7 +56,7 @@ pub fn run() -> glib::ExitCode {
     app.run_with_args(&[std::env::args().next().unwrap_or_default()])
 }
 
-const ACCELS: &[(&str, &[&str])] = &[
+pub(crate) const ACCELS: &[(&str, &[&str])] = &[
     ("win.play-pause", &["<Control>space"]),
     ("win.previous", &["<Control>b"]),
     ("win.next", &["<Control>n"]),
@@ -73,21 +73,14 @@ const ACCELS: &[(&str, &[&str])] = &[
 ];
 
 fn load_css() {
-    let css = gtk::CssProvider::new();
-    css.load_from_string(
+    helix_app_common::style::add_css(
         ".hm-cover { border-radius: 8px; }
          .hm-tile { padding: 6px; }
          .hm-playerbar { padding: 6px 12px; border-top: 1px solid alpha(currentColor, 0.15); }
          .hm-num { min-width: 2.5em; }
          .hm-disc { margin-top: 12px; }",
+        ".hm-playerbar { border-top-color: alpha(currentColor, 0.6); }",
     );
-    if let Some(display) = gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &css,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    }
 }
 
 pub fn toast(text: &str) -> adw::Toast {
@@ -265,17 +258,21 @@ impl App {
             .application(application)
             .title(APP_NAME)
             .build();
-        let size: Vec<i32> = prefs.get("window-size", vec![768, 600]);
-        if size.len() == 2 && size[0] > 200 && size[1] > 200 {
-            window.set_default_size(size[0], size[1]);
-        } else {
-            window.set_default_size(1000, 700);
-        }
-        if prefs.get("window-maximized", true) {
-            window.maximize();
-        }
+        window.set_default_size(1000, 700);
         window.set_width_request(360);
         window.set_height_request(294);
+        {
+            use helix_app_common::window_state::{persist, SizeKeys, Store};
+            persist(
+                &window,
+                Store::settings(
+                    &prefs,
+                    SizeKeys::Pair("window-size"),
+                    "window-maximized",
+                    "helix-music",
+                ),
+            );
+        }
 
         // Root page: header with view switcher, search bar, view stack.
         let stack = adw::ViewStack::new();
@@ -302,7 +299,10 @@ impl App {
         menu.append_section(None, &s1);
         let s2 = gio::Menu::new();
         s2.append(Some("_Preferences"), Some("win.preferences"));
-        s2.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
+        s2.append(
+            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some("win.show-help-overlay"),
+        );
         s2.append(Some("_About Music"), Some("app.about"));
         menu.append_section(None, &s2);
         let menu_btn = gtk::MenuButton::builder()
@@ -1284,13 +1284,8 @@ impl App {
 
     fn connect_close(self: &Rc<Self>) {
         let w = Rc::downgrade(self);
-        self.window.connect_close_request(move |win| {
+        self.window.connect_close_request(move |_| {
             if let Some(app) = w.upgrade() {
-                if !win.is_maximized() {
-                    let (width, height) = win.default_size();
-                    app.prefs.set("window-size", vec![width, height]);
-                }
-                app.prefs.set("window-maximized", win.is_maximized());
                 app.state.borrow_mut().volume = app.bar.volume.value();
                 app.save_state();
                 app.stop();
@@ -1444,10 +1439,10 @@ impl App {
         });
         win.add_action(&remove);
 
-        let builder = gtk::Builder::from_string(SHORTCUTS_UI);
-        if let Some(overlay) = builder.object::<gtk::ShortcutsWindow>("help_overlay") {
-            self.window.set_help_overlay(Some(&overlay));
-        }
+        self.window
+            .set_help_overlay(Some(&helix_app_common::shortcuts::window(
+                crate::shortcuts::GROUPS,
+            )));
     }
 
     /// Space toggles playback, printable keys start a search, Escape goes back.
@@ -1879,50 +1874,6 @@ fn build_player_bar() -> PlayerBar {
         volume,
     }
 }
-
-const SHORTCUTS_UI: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-  <object class="GtkShortcutsWindow" id="help_overlay">
-    <property name="modal">True</property>
-    <child>
-      <object class="GtkShortcutsSection">
-        <property name="section-name">shortcuts</property>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">Playback</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Play / pause</property><property name="accelerator">space &lt;Control&gt;space</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Previous song</property><property name="accelerator">&lt;Control&gt;b</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Next song</property><property name="accelerator">&lt;Control&gt;n</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Cycle repeat mode</property><property name="accelerator">&lt;Control&gt;r</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Toggle shuffle</property><property name="accelerator">&lt;Control&gt;s</property></object></child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">Navigation</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Albums</property><property name="accelerator">&lt;Alt&gt;1</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Artists</property><property name="accelerator">&lt;Alt&gt;2</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Songs</property><property name="accelerator">&lt;Alt&gt;3</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Playlists</property><property name="accelerator">&lt;Alt&gt;4</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Search</property><property name="accelerator">&lt;Control&gt;f</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Go back</property><property name="accelerator">Escape &lt;Alt&gt;Left</property></object></child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">General</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Rescan library</property><property name="accelerator">F5</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Preferences</property><property name="accelerator">&lt;Control&gt;comma</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Keyboard shortcuts</property><property name="accelerator">&lt;Control&gt;question</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Close window</property><property name="accelerator">&lt;Control&gt;w</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Quit</property><property name="accelerator">&lt;Control&gt;q</property></object></child>
-          </object>
-        </child>
-      </object>
-    </child>
-  </object>
-</interface>
-"#;
 
 #[cfg(test)]
 mod tests {

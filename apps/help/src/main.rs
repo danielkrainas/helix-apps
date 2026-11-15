@@ -8,6 +8,7 @@ mod locale;
 mod mallard;
 mod sandbox;
 mod search;
+mod shortcuts;
 mod textsize;
 mod theme;
 mod ui;

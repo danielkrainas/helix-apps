@@ -43,7 +43,14 @@ pub fn run(state_path: PathBuf) -> glib::ExitCode {
         shown: Cell::new(false),
         recorded: Cell::new(false),
     });
-    app.connect_startup(|_| load_css());
+    app.connect_startup(|app| {
+        load_css();
+        helix_app_common::shortcuts::install(
+            app,
+            crate::shortcuts::ACCELS,
+            crate::shortcuts::GROUPS,
+        );
+    });
     {
         let session = session.clone();
         app.connect_activate(move |app| {
@@ -92,9 +99,12 @@ fn illustration(art: Art, areas: &mut Vec<gtk::DrawingArea>) -> gtk::DrawingArea
         .halign(gtk::Align::Center)
         .accessible_role(gtk::AccessibleRole::Presentation)
         .build();
+    // Decorative artwork (presentation role) with its own light and dark
+    // palettes; the text beside it carries the content.
     area.set_draw_func(move |_, cr, w, h| {
         illustrations::draw(art, cr, w, h, adw::StyleManager::default().is_dark());
     });
+    helix_app_common::style::redraw_on_style_change(&area);
     areas.push(area.clone());
     area
 }
@@ -182,8 +192,12 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
         .default_width(800)
         .default_height(640)
         .width_request(360)
-        .height_request(480)
+        .height_request(294)
         .build();
+    helix_app_common::window_state::persist(
+        &window,
+        helix_app_common::window_state::Store::file("helix-tour"),
+    );
     let mut areas = Vec::new();
     let mut boxes = Vec::new();
 
@@ -286,6 +300,21 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
     stack.add_named(&tour, Some("tour"));
 
     let header = adw::HeaderBar::builder().show_title(false).build();
+    let menu = gio::Menu::new();
+    menu.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::shortcuts::ACTION),
+    );
+    menu.append(Some("_About Tour"), Some("app.about"));
+    header.pack_end(
+        &gtk::MenuButton::builder()
+            .icon_name("open-menu-symbolic")
+            .menu_model(&menu)
+            .primary(true)
+            .tooltip_text("Main Menu")
+            .build()
+            .labelled("Main Menu"),
+    );
     let toolbar = adw::ToolbarView::new();
     toolbar.add_top_bar(&header);
     toolbar.set_content(Some(&stack));
@@ -437,14 +466,6 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
         });
     }
     window.add_controller(keys);
-
-    // Redraw illustrations when the light/dark style changes.
-    let style = adw::StyleManager::default();
-    style.connect_dark_notify(move |_| {
-        for a in &areas {
-            a.queue_draw();
-        }
-    });
 
     window.set_default_widget(Some(&start));
     start.grab_focus();

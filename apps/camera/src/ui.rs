@@ -111,34 +111,31 @@ pub fn run() -> glib::ExitCode {
         let state = build(app);
         state.ui.window.present();
     });
-    app.set_accels_for_action("win.shutter", &["space", "Return", "KP_Enter"]);
-    app.set_accels_for_action("win.cancel-countdown", &["Escape"]);
-    app.set_accels_for_action("win.mode::photo", &["<Control>1"]);
-    app.set_accels_for_action("win.mode::video", &["<Control>2"]);
-    app.set_accels_for_action("win.next-camera", &["<Control>Tab"]);
-    app.set_accels_for_action("win.open-gallery", &["<Control>g"]);
-    app.set_accels_for_action("win.show-help-overlay", &["<Control>question"]);
+    helix_app_common::shortcuts::set_accels(&app, crate::shortcuts::ACCELS);
     app.run_with_args(&[std::env::args().next().unwrap_or_default()])
 }
 
 fn load_css() {
     let css = gtk::CssProvider::new();
+    // Black and white here belong to the viewfinder and the controls drawn
+    // over the camera picture (the same in every style); recording uses
+    // the style's destructive colour.
     css.load_from_string(
         ".viewfinder { background: black; }
          .shutter { min-width: 64px; min-height: 64px; border-radius: 9999px; padding: 0;
                     background: white; border: 4px solid alpha(white, 0.4); background-clip: padding-box; }
          .shutter:disabled { opacity: 0.4; }
-         .shutter.video { background: #e01b24; }
-         .shutter.recording { background: #e01b24; }
+         .shutter.video { background: @destructive_bg_color; }
+         .shutter.recording { background: @destructive_bg_color; }
          .shutter image { color: black; }
-         .shutter.video image, .shutter.recording image { color: white; }
+         .shutter.video image, .shutter.recording image { color: @destructive_fg_color; }
          .gallery { min-width: 48px; min-height: 48px; border-radius: 9999px; padding: 0; }
          .gallery picture { border-radius: 9999px; }
-         .countdown { font-size: 96pt; font-weight: 800; color: white;
+         .countdown { font-size: 8.7em; font-weight: 800; color: white;
                       text-shadow: 0 2px 8px alpha(black, 0.6); }
          .flash { background: white; }
-         .rec-label { background: #e01b24; color: white; border-radius: 9999px;
-                      padding: 2px 10px; font-weight: bold; font-feature-settings: \"tnum\"; }
+         .rec-label { background: @destructive_bg_color; color: @destructive_fg_color; border-radius: 9999px;
+                      padding: 2px 10px; font-weight: bold; }
          .controls { padding: 12px 18px; }
          .qr-banner { margin: 12px; padding: 6px 6px 6px 14px; border-radius: 12px;
                       background: alpha(black, 0.75); color: white; }",
@@ -170,7 +167,10 @@ fn menu_model(formats: &[(VideoFormat, bool)]) -> gio::Menu {
     prefs.append(Some("Play Shutter _Sound"), Some("win.shutter-sound"));
     menu.append_section(None, &prefs);
     let misc = gio::Menu::new();
-    misc.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
+    misc.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some("win.show-help-overlay"),
+    );
     misc.append(Some("_About Camera"), Some("app.about"));
     menu.append_section(None, &misc);
     menu
@@ -187,10 +187,23 @@ fn build(app: &adw::Application) -> Rc<State> {
     let window = adw::ApplicationWindow::builder()
         .application(app)
         .title("Camera")
-        .default_width(settings.window_width)
-        .default_height(settings.window_height)
-        .maximized(settings.is_maximized)
+        .default_width(800)
+        .default_height(640)
+        .width_request(helix_app_common::MIN_WIDTH)
+        .height_request(helix_app_common::MIN_HEIGHT)
         .build();
+    {
+        use helix_app_common::window_state::{persist, SizeKeys, Store};
+        persist(
+            &window,
+            Store::settings(
+                &prefs,
+                SizeKeys::Split("window-width", "window-height"),
+                "is-maximized",
+                "helix-camera",
+            ),
+        );
+    }
 
     // Viewfinder area.
     let viewfinder = gtk::Picture::builder()
@@ -225,7 +238,7 @@ fn build(app: &adw::Application) -> Rc<State> {
         .valign(gtk::Align::Start)
         .margin_top(12)
         .visible(false)
-        .css_classes(["rec-label"])
+        .css_classes(["rec-label", "numeric"])
         .build();
     countdown_label.set_can_target(false);
     rec_label.set_can_target(false);
@@ -353,10 +366,9 @@ fn build(app: &adw::Application) -> Rc<State> {
     toasts.set_child(Some(&toolbar));
     window.set_content(Some(&toasts));
 
-    let builder = gtk::Builder::from_string(SHORTCUTS_UI);
-    if let Some(help) = builder.object::<gtk::ShortcutsWindow>("help_overlay") {
-        window.set_help_overlay(Some(&help));
-    }
+    window.set_help_overlay(Some(&helix_app_common::shortcuts::window(
+        crate::shortcuts::GROUPS,
+    )));
 
     let handle = controller::spawn(controller::Config {
         mode,
@@ -455,15 +467,6 @@ fn build(app: &adw::Application) -> Rc<State> {
     let weak = Rc::downgrade(&state);
     state.ui.window.connect_close_request(move |_| {
         if let Some(state) = weak.upgrade() {
-            {
-                let w = &state.ui.window;
-                let mut s = state.settings.borrow_mut();
-                s.is_maximized = w.is_maximized();
-                if !s.is_maximized {
-                    let (width, height) = w.default_size();
-                    (s.window_width, s.window_height) = (width, height);
-                }
-            }
             state.save_settings();
             stop_countdown(&state);
             // Joins the worker, which finalizes any running recording.
@@ -1048,37 +1051,6 @@ fn load_latest_capture(state: &Rc<State>) {
         update_controls(&state);
     });
 }
-
-const SHORTCUTS_UI: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-  <object class="GtkShortcutsWindow" id="help_overlay">
-    <property name="modal">True</property>
-    <child>
-      <object class="GtkShortcutsSection">
-        <property name="section-name">shortcuts</property>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">Capture</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Take photo / start or stop recording</property><property name="accelerator">space</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Cancel countdown</property><property name="accelerator">Escape</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Photo mode</property><property name="accelerator">&lt;Control&gt;1</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Video mode</property><property name="accelerator">&lt;Control&gt;2</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Switch camera</property><property name="accelerator">&lt;Control&gt;Tab</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Open last capture</property><property name="accelerator">&lt;Control&gt;g</property></object></child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">General</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Keyboard shortcuts</property><property name="accelerator">&lt;Control&gt;question</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Close window</property><property name="accelerator">&lt;Control&gt;w</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Quit</property><property name="accelerator">&lt;Control&gt;q</property></object></child>
-          </object>
-        </child>
-      </object>
-    </child>
-  </object>
-</interface>"#;
 
 #[cfg(test)]
 mod tests {

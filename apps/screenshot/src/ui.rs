@@ -257,8 +257,11 @@ impl Win {
 
         // Options page.
         let menu = gio::Menu::new();
+        menu.append(
+            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some(helix_app_common::shortcuts::ACTION),
+        );
         menu.append(Some("_About Screenshot"), Some("app.about"));
-        menu.append(Some("_Quit"), Some("app.quit"));
         let header = adw::HeaderBar::new();
         header.pack_end(
             &gtk::MenuButton::builder()
@@ -324,7 +327,14 @@ impl Win {
         options.append(&take_button);
         let options_page = adw::ToolbarView::new();
         options_page.add_top_bar(&header);
-        options_page.set_content(Some(&adw::Clamp::builder().child(&options).build()));
+        // Scrolls in short windows.
+        options_page.set_content(Some(
+            &gtk::ScrolledWindow::builder()
+                .hscrollbar_policy(gtk::PolicyType::Never)
+                .propagate_natural_height(true)
+                .child(&adw::Clamp::builder().child(&options).build())
+                .build(),
+        ));
 
         // Preview page.
         let back = gtk::Button::builder()
@@ -390,9 +400,13 @@ impl Win {
             .default_width(560)
             .default_height(520)
             .width_request(360)
-            .height_request(400)
+            .height_request(294)
             .content(&toasts)
             .build();
+        helix_app_common::window_state::persist(
+            &window,
+            helix_app_common::window_state::Store::file("helix-screenshot"),
+        );
         window.set_default_widget(Some(&take_button));
 
         let win = Rc::new(Win {
@@ -483,10 +497,11 @@ impl Win {
         add("copy", |w| w.copy());
         add("save", Win::save);
         self.window.insert_action_group("win", Some(actions));
-        self.app
-            .set_accels_for_action("win.new", &["Escape", "<Alt>Left"]);
-        self.app.set_accels_for_action("win.copy", &["<Control>c"]);
-        self.app.set_accels_for_action("win.save", &["<Control>s"]);
+        helix_app_common::shortcuts::install(
+            &self.app,
+            crate::shortcuts::ACCELS,
+            crate::shortcuts::GROUPS,
+        );
         self.set_preview_actions(false);
 
         let w = Rc::downgrade(self);

@@ -56,35 +56,33 @@ pub fn run(opts: Options) -> glib::ExitCode {
 }
 
 fn load_css() {
-    let css = gtk::CssProvider::new();
-    css.load_from_string(
+    // Secondary text (week numbers, hours, days of other months) uses the
+    // dim-label class, which high contrast strengthens; small text uses
+    // Adwaita's caption classes and figures the numeric class.
+    helix_app_common::style::add_css(
         ".month-grid { background: @view_bg_color; }
-         .weekday-header { padding: 6px; font-weight: bold; font-size: smaller; }
-         .week-number { font-size: smaller; padding: 4px; opacity: 0.55; }
+         .weekday-header { padding: 6px; }
+         .week-number { padding: 4px; }
          .day-cell { border-top: 1px solid alpha(currentColor, 0.12); border-left: 1px solid alpha(currentColor, 0.12); padding: 2px; }
          .day-cell.other-month { background: alpha(currentColor, 0.035); }
-         .day-cell.other-month .day-number { opacity: 0.5; }
          .day-cell.selected { background: alpha(@accent_bg_color, 0.12); }
-         .day-number { padding: 2px 6px; margin: 2px; border-radius: 999px; font-feature-settings: \"tnum\"; }
+         .day-number { padding: 2px 6px; margin: 2px; border-radius: 999px; }
          .day-cell.today .day-number { background: @accent_bg_color; color: @accent_fg_color; font-weight: bold; }
-         .event-chip { padding: 0 6px; min-height: 20px; margin: 1px 2px; border-radius: 5px; font-size: smaller; }
-         .more-chip { padding: 0 6px; min-height: 18px; margin: 1px 2px; font-size: smaller; }
-         .week-event { padding: 2px 6px; border-radius: 6px; font-size: smaller; }
+         .event-chip { padding: 0 6px; min-height: 20px; margin: 1px 2px; border-radius: 5px; }
+         .more-chip { padding: 0 6px; min-height: 18px; margin: 1px 2px; }
+         .week-event { padding: 2px 6px; border-radius: 6px; }
          .event-chip:focus-visible, .week-event:focus-visible { outline: 2px solid @view_fg_color; outline-offset: 1px; }
          .week-day-header { padding: 6px 0; }
          .day-cell:focus-visible, .week-day-cell:focus-visible { outline: 2px solid alpha(@accent_color, 0.7); outline-offset: -2px; }
          .week-day-header.today { color: @accent_color; font-weight: bold; }
-         .hour-label { font-size: smaller; opacity: 0.6; font-feature-settings: \"tnum\"; }
-         .cal-dot { min-width: 12px; min-height: 12px; border-radius: 999px; }
-         .agenda-time { font-feature-settings: \"tnum\"; font-size: smaller; opacity: 0.7; }",
+         .cal-dot { min-width: 12px; min-height: 12px; border-radius: 999px; }",
+        // Grid lines reach 3:1, other months and the selection stand out
+        // more, focus rings are solid.
+        ".day-cell { border-top-color: alpha(currentColor, 0.6); border-left-color: alpha(currentColor, 0.6); }
+         .day-cell.other-month { background: alpha(currentColor, 0.1); }
+         .day-cell.selected { background: alpha(@accent_bg_color, 0.3); }
+         .day-cell:focus-visible, .week-day-cell:focus-visible { outline-color: @accent_color; }",
     );
-    if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &css,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -209,17 +207,25 @@ impl Ui {
         let iface = Prefs::new(IFACE_SCHEMA);
         let desk_cal = Prefs::new(DESKTOP_CAL_SCHEMA);
         let defaults = Prefs::new(DEFAULTS_SCHEMA);
-        let (w, h) = prefs.get("window-size", (768i32, 600i32));
         let window = adw::ApplicationWindow::builder()
             .application(app)
             .title("Calendar")
-            .default_width(w.max(360))
-            .default_height(h.max(400))
+            .default_width(768)
+            .default_height(600)
             .width_request(360)
-            .height_request(400)
+            .height_request(294)
             .build();
-        if prefs.get("window-maximized", true) {
-            window.maximize();
+        {
+            use helix_app_common::window_state::{persist, SizeKeys, Store};
+            persist(
+                &window,
+                Store::settings(
+                    &prefs,
+                    SizeKeys::Pair("window-size"),
+                    "window-maximized",
+                    "helix-calendar",
+                ),
+            );
         }
 
         // Header.
@@ -390,7 +396,14 @@ impl Ui {
         let view_stack = gtk::Stack::builder()
             .transition_type(gtk::StackTransitionType::Crossfade)
             .build();
-        view_stack.add_named(&month_box, Some("month"));
+        // The month grid fills the view, and scrolls in very short windows.
+        view_stack.add_named(
+            &gtk::ScrolledWindow::builder()
+                .hscrollbar_policy(gtk::PolicyType::Never)
+                .child(&month_box)
+                .build(),
+            Some("month"),
+        );
         view_stack.add_named(&week_box, Some("week"));
 
         // Narrow windows: the selected day's events under the month or week
@@ -741,6 +754,7 @@ impl Ui {
                 ui.draw_week(area, cr, w, h);
             }
         });
+        helix_app_common::style::redraw_on_style_change(&self.week_area);
         let weak = Rc::downgrade(self);
         self.week_area.connect_resize(move |_, w, _| {
             if let Some(ui) = weak.upgrade() {
@@ -823,14 +837,9 @@ impl Ui {
         self.week_scroll.add_controller(scroll);
 
         let weak = Rc::downgrade(self);
-        self.window.connect_close_request(move |w| {
+        self.window.connect_close_request(move |_| {
             if let Some(ui) = weak.upgrade() {
                 ui.flush_deletes();
-                if !w.is_maximized() {
-                    let (width, height) = w.default_size();
-                    ui.prefs.set("window-size", (width, height));
-                }
-                ui.prefs.set("window-maximized", w.is_maximized());
             }
             glib::Propagation::Proceed
         });
@@ -1363,7 +1372,7 @@ impl Ui {
             .build();
         let b = gtk::Button::builder()
             .child(&l)
-            .css_classes(["event-chip", &self.cal_class(&item.calendar)])
+            .css_classes(["event-chip", "caption", &self.cal_class(&item.calendar)])
             .build();
         b.set_tooltip_text(Some(&self.describe(item)));
         helix_app_common::set_accessible_label(&b, &self.item_label(item));
@@ -1558,7 +1567,7 @@ impl Ui {
         for (i, day) in days.iter().take(7).enumerate() {
             let l = label(
                 dates::weekday_short(day.weekday()),
-                &["weekday-header", "dim-label"],
+                &["weekday-header", "caption-heading", "dim-label"],
             );
             grid.attach(&l, i as i32 + col0, 0, 1, 1);
         }
@@ -1566,7 +1575,10 @@ impl Ui {
         let sel = self.selected.get();
         for w in 0..weeks {
             if show_weeks {
-                let l = label(&dates::iso_week(days[w * 7]).to_string(), &["week-number"]);
+                let l = label(
+                    &dates::iso_week(days[w * 7]).to_string(),
+                    &["week-number", "caption", "numeric", "dim-label"],
+                );
                 l.set_valign(gtk::Align::Start);
                 grid.attach(&l, 0, w as i32 + 1, 1, 1);
             }
@@ -1596,7 +1608,10 @@ impl Ui {
                 if day == sel {
                     cell.add_css_class("selected");
                 }
-                let num = label(&day.day().to_string(), &["day-number"]);
+                let num = label(&day.day().to_string(), &["day-number", "numeric"]);
+                if day.month() != d.month() && day != today {
+                    num.add_css_class("dim-label");
+                }
                 num.set_halign(gtk::Align::End);
                 cell.append(&num);
                 let on_day: Vec<&Item> = items.iter().filter(|it| it.on_day(day)).collect();
@@ -1628,7 +1643,7 @@ impl Ui {
                 if on_day.len() > limit {
                     let more = gtk::MenuButton::builder()
                         .label(format!("+{} more", on_day.len() - limit))
-                        .css_classes(["flat", "more-chip"])
+                        .css_classes(["flat", "more-chip", "caption"])
                         .halign(gtk::Align::Start)
                         .build();
                     let list = gtk::Box::new(gtk::Orientation::Vertical, 2);
@@ -1697,7 +1712,7 @@ impl Ui {
         if self.desk_cal.get("show-weekdate", false) {
             gutter.append(&label(
                 &format!("W{}", dates::iso_week(ws)),
-                &["week-number"],
+                &["week-number", "caption", "numeric", "dim-label"],
             ));
         }
         row.append(&gutter);
@@ -1808,7 +1823,7 @@ impl Ui {
         for h in 1..24 {
             let l = label(
                 &dates::format_time(NaiveTime::from_hms_opt(h, 0, 0).unwrap(), twelve),
-                &["hour-label"],
+                &["hour-label", "caption", "numeric", "dim-label"],
             );
             self.week_fixed.put(&l, 4.0, h as f64 * hh - 8.0);
             labels.push((l, h as i32));
@@ -1832,7 +1847,7 @@ impl Ui {
             let cols = layout::columns(&spans);
             for ((it, (s, e)), (c, n)) in todays.iter().zip(spans).zip(cols) {
                 let b = gtk::Button::builder()
-                    .css_classes(["week-event", &self.cal_class(&it.calendar)])
+                    .css_classes(["week-event", "caption", &self.cal_class(&it.calendar)])
                     .build();
                 helix_app_common::set_accessible_label(&b, &self.item_label(it));
                 let text = format!(
@@ -1992,24 +2007,26 @@ impl Ui {
     }
 
     fn draw_week(&self, area: &gtk::DrawingArea, cr: &gtk::cairo::Context, w: i32, _h: i32) {
+        use helix_app_common::style::line_alpha;
         let fg = area.color();
         let hh = self.hour_height();
         let (r, g, b) = (fg.red() as f64, fg.green() as f64, fg.blue() as f64);
+        let fa = fg.alpha() as f64;
         cr.set_line_width(1.0);
         for h in 0..24 {
             let y = (h as f64 * hh).floor() + 0.5;
-            cr.set_source_rgba(r, g, b, 0.12);
+            cr.set_source_rgba(r, g, b, fa * line_alpha(0.12));
             cr.move_to(GUTTER as f64, y);
             cr.line_to(w as f64, y);
             let _ = cr.stroke();
             let y2 = (h as f64 * hh + hh / 2.0).floor() + 0.5;
-            cr.set_source_rgba(r, g, b, 0.05);
+            cr.set_source_rgba(r, g, b, fa * line_alpha(0.05).min(0.35));
             cr.move_to(GUTTER as f64, y2);
             cr.line_to(w as f64, y2);
             let _ = cr.stroke();
         }
         let col_w = (w - GUTTER) as f64 / 7.0;
-        cr.set_source_rgba(r, g, b, 0.12);
+        cr.set_source_rgba(r, g, b, fa * line_alpha(0.12));
         for i in 0..7 {
             let x = (GUTTER as f64 + i as f64 * col_w).floor() + 0.5;
             cr.move_to(x, 0.0);
@@ -2026,7 +2043,8 @@ impl Ui {
         }
         if area.has_focus() {
             if let Some(si) = lay.days.iter().position(|d| *d == sel) {
-                let accent = area.color();
+                let accent = helix_app_common::style::named_color(area, "accent_color")
+                    .unwrap_or_else(helix_app_common::style::accent_rgba);
                 let y = self.week_cursor.get() as f64 / 60.0 * hh;
                 cr.set_source_rgba(
                     accent.red() as f64,
@@ -2047,7 +2065,15 @@ impl Ui {
         if let Some(di) = lay.days.iter().position(|d| *d == now.date()) {
             let y = (now.time().num_seconds_from_midnight() as f64 / 3600.0) * hh;
             let x0 = GUTTER as f64 + di as f64 * col_w;
-            cr.set_source_rgb(0.88, 0.11, 0.14);
+            // The "now" line, in the style's destructive (red) colour.
+            let now_color = helix_app_common::style::named_color(area, "destructive_color")
+                .unwrap_or_else(|| gtk::gdk::RGBA::new(0.88, 0.11, 0.14, 1.0));
+            cr.set_source_rgba(
+                now_color.red() as f64,
+                now_color.green() as f64,
+                now_color.blue() as f64,
+                1.0,
+            );
             cr.set_line_width(2.0);
             cr.move_to(x0, y);
             cr.line_to(x0 + col_w, y);
@@ -2303,7 +2329,7 @@ impl Ui {
             &gtk::Label::builder()
                 .label(when)
                 .xalign(0.0)
-                .css_classes(["agenda-time"])
+                .css_classes(["agenda-time", "caption", "numeric", "dim-label"])
                 .build(),
         );
         b.append(&dot);

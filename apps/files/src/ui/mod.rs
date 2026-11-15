@@ -243,24 +243,20 @@ pub fn open_locations(
 }
 
 fn load_css() {
-    let css = gtk::CssProvider::new();
-    css.load_from_string(
+    // The path separators use the dim-label class. A cut item is faded as
+    // a whole (its state, also given in its accessible description), less
+    // so in high contrast.
+    helix_app_common::style::add_css(
         ".crumb { padding: 2px 6px; min-height: 24px; }
-         .crumb-sep { opacity: 0.4; }
          .grid-item { padding: 6px 4px; }
          .grid-item label { margin-top: 2px; }
          .files-status { padding: 3px 12px; }
          .cut-item { opacity: 0.5; }
          .drop-highlight { background-color: alpha(@accent_bg_color, 0.25); border-radius: 6px; }
          .sidebar-eject { padding: 0; min-height: 24px; min-width: 24px; }",
+        ".cut-item { opacity: 0.75; }
+         .drop-highlight { background-color: alpha(@accent_bg_color, 0.4); outline: 2px solid @accent_color; outline-offset: -2px; }",
     );
-    if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &css,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    }
 }
 
 fn install_app_actions(shared: &Rc<Shared>) {

@@ -27,7 +27,7 @@ pub const APP_ID: &str = "org.helix.Clocks";
 const SCHEMA: &str = "org.gnome.clocks";
 const WINDOW_SCHEMA: &str = "org.gnome.clocks.state.window";
 const IFACE_SCHEMA: &str = "org.gnome.desktop.interface";
-const PAGES: [(&str, &str, &str); 4] = [
+pub(crate) const PAGES: [(&str, &str, &str); 4] = [
     ("world", "World", "globe-symbolic"),
     ("alarm", "Alarms", "alarm-symbolic"),
     ("stopwatch", "Stopwatch", "stopwatch-symbolic"),
@@ -93,26 +93,21 @@ pub fn run() -> glib::ExitCode {
 }
 
 fn load_css() {
-    let css = gtk::CssProvider::new();
-    css.load_from_string(
-        ".clock-time { font-feature-settings: \"tnum\"; }
-         .world-time { font-size: 18pt; font-weight: 300; }
-         .details-time { font-size: 48pt; font-weight: 200; }
-         .alarm-time { font-size: 22pt; font-weight: 300; }
-         .stopwatch-time { font-size: 54pt; font-weight: 200; }
-         .timer-time { font-size: 30pt; font-weight: 300; }
+    // An inactive alarm's time uses the dim-label class. The times are
+    // display text, larger than Adwaita's title classes, so they have
+    // their own sizes, in em so they follow the text size; their figures
+    // use the numeric class.
+    helix_app_common::style::add_css(
+        ".world-time { font-size: 1.65em; font-weight: 300; }
+         .details-time { font-size: 4.4em; font-weight: 200; }
+         .alarm-time { font-size: 2em; font-weight: 300; }
+         .stopwatch-time { font-size: 4.9em; font-weight: 200; }
+         .timer-time { font-size: 2.75em; font-weight: 300; }
          .day-toggle { min-width: 44px; }
-         .alarm-inactive .alarm-time { opacity: 0.55; }
          row.timer-finished { background-color: alpha(@accent_bg_color, 0.18); }
          .timer-finished .timer-time { color: @accent_color; }",
+        "row.timer-finished { background-color: alpha(@accent_bg_color, 0.35); }",
     );
-    if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &css,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    }
 }
 
 fn label(text: &str, classes: &[&str]) -> gtk::Label {
@@ -284,10 +279,18 @@ impl Ui {
             .width_request(360)
             .height_request(294)
             .build();
-        let (w, h) = win_prefs.get::<(i32, i32)>("size", (870, 690));
-        window.set_default_size(w.max(360), h.max(294));
-        if win_prefs.get("maximized", false) {
-            window.maximize();
+        window.set_default_size(870, 690);
+        {
+            use helix_app_common::window_state::{persist, SizeKeys, Store};
+            persist(
+                &window,
+                Store::settings(
+                    &win_prefs,
+                    SizeKeys::Pair("size"),
+                    "maximized",
+                    "helix-clocks",
+                ),
+            );
         }
 
         // Header
@@ -306,7 +309,10 @@ impl Ui {
         back_button.set_visible(false);
         header.pack_start(&back_button);
         let menu = gio::Menu::new();
-        menu.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
+        menu.append(
+            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some("win.show-help-overlay"),
+        );
         menu.append(Some("_About Clocks"), Some("app.about"));
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
@@ -368,8 +374,8 @@ impl Ui {
         alarm_stack.add_named(&scrolled_clamped(&alarm_box), Some("list"));
 
         // Stopwatch page
-        let sw_time = label("00:00.0", &["stopwatch-time", "clock-time"]);
-        let sw_split = label("", &["dim-label", "clock-time", "title-4"]);
+        let sw_time = label("00:00.0", &["stopwatch-time", "clock-time", "numeric"]);
+        let sw_split = label("", &["dim-label", "clock-time", "numeric", "title-4"]);
         let sw_primary = gtk::Button::with_label("Start");
         let sw_secondary = gtk::Button::with_label("Lap");
         for b in [&sw_primary, &sw_secondary] {
@@ -592,12 +598,6 @@ impl Ui {
     }
 
     fn save_window_state(&self) {
-        let maximized = self.window.is_maximized();
-        self.win_prefs.set("maximized", maximized);
-        if !maximized {
-            let (w, h) = self.window.default_size();
-            self.win_prefs.set("size", (w, h));
-        }
         self.win_prefs.set_enum_nick("panel-id", &self.page());
     }
 
@@ -610,10 +610,7 @@ impl Ui {
             }
         });
         self.window.add_action(&page);
-        for (i, (name, _, _)) in PAGES.iter().enumerate() {
-            self.app
-                .set_accels_for_action(&format!("win.page::{name}"), &[&format!("<Alt>{}", i + 1)]);
-        }
+
         let weak = Rc::downgrade(self);
         let new = gio::SimpleAction::new("new", None);
         new.connect_activate(move |_, _| {
@@ -622,7 +619,7 @@ impl Ui {
             }
         });
         self.window.add_action(&new);
-        self.app.set_accels_for_action("win.new", &["<Control>n"]);
+        helix_app_common::shortcuts::set_accels(&self.app, crate::shortcuts::ACCELS);
 
         for (name, snooze) in [("alarm-snooze", true), ("alarm-stop", false)] {
             let weak = Rc::downgrade(self);
@@ -669,12 +666,10 @@ impl Ui {
         }
         self.window.add_controller(ctl);
 
-        let builder = gtk::Builder::from_string(SHORTCUTS_UI);
-        if let Some(overlay) = builder.object::<gtk::ShortcutsWindow>("help_overlay") {
-            self.window.set_help_overlay(Some(&overlay));
-        }
-        self.app
-            .set_accels_for_action("win.show-help-overlay", &["<Control>question"]);
+        self.window
+            .set_help_overlay(Some(&helix_app_common::shortcuts::window(
+                crate::shortcuts::GROUPS,
+            )));
     }
 
     fn has_active_alarms(&self) -> bool {
@@ -825,7 +820,7 @@ impl Ui {
                 .pixel_size(24)
                 .accessible_role(gtk::AccessibleRole::Presentation)
                 .build();
-            let time = label("", &["world-time", "clock-time"]);
+            let time = label("", &["world-time", "clock-time", "numeric"]);
             row.add_prefix(&icon);
             row.add_suffix(&time);
             if removable {
@@ -933,7 +928,7 @@ impl Ui {
         page_box.set_margin_start(12);
         page_box.set_margin_end(12);
         let title = label(&wc.name, &["title-1"]);
-        let time = label("", &["details-time", "clock-time"]);
+        let time = label("", &["details-time", "clock-time", "numeric"]);
         let date = label("", &["title-4", "dim-label"]);
         page_box.append(&title);
         if let Some(c) = &wc.country {
@@ -1090,7 +1085,7 @@ impl Ui {
                         .build();
                     row.add_suffix(&label(
                         &tz::format_time(now.with_timezone(&l.zone).time(), ui.twelve.get()),
-                        &["clock-time"],
+                        &["clock-time", "numeric"],
                     ));
                     if added {
                         let check = gtk::Image::builder()
@@ -1209,8 +1204,10 @@ impl Ui {
         helix_app_common::set_accessible_label(&row.switch, &format!("Enable alarm {}", a.name));
         if a.active {
             row.row.remove_css_class("alarm-inactive");
+            row.time.remove_css_class("dim-label");
         } else {
             row.row.add_css_class("alarm-inactive");
+            row.time.add_css_class("dim-label");
         }
     }
 
@@ -1254,7 +1251,7 @@ impl Ui {
             hb.set_margin_end(12);
             let vb = gtk::Box::new(gtk::Orientation::Vertical, 2);
             vb.set_hexpand(true);
-            let time = label("", &["alarm-time", "clock-time"]);
+            let time = label("", &["alarm-time", "clock-time", "numeric"]);
             time.set_xalign(0.0);
             vb.append(&time);
             let sub = label("", &["dim-label"]);
@@ -2051,7 +2048,7 @@ impl Ui {
             status.set_visible(false);
             vb.append(&status);
             let hb = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-            let time = label("", &["timer-time", "clock-time"]);
+            let time = label("", &["timer-time", "clock-time", "numeric"]);
             time.set_hexpand(true);
             time.set_xalign(0.0);
             hb.append(&time);
@@ -2317,6 +2314,7 @@ fn time_spin(min: f64, max: f64, value: f64) -> gtk::SpinButton {
     s.set_orientation(gtk::Orientation::Vertical);
     s.add_css_class("alarm-time");
     s.add_css_class("clock-time");
+    s.add_css_class("numeric");
     s.connect_output(|s| {
         s.set_text(&format!("{:02}", s.value() as i64));
         glib::Propagation::Stop
@@ -2331,10 +2329,13 @@ fn lap_row(lap: &stopwatch::Lap) -> adw::ActionRow {
     if let Some(d) = lap.delta_ms {
         row.set_subtitle(&stopwatch::format_delta(d));
     }
-    let split = label(&stopwatch::format_elapsed(lap.split, true), &["clock-time"]);
+    let split = label(
+        &stopwatch::format_elapsed(lap.split, true),
+        &["clock-time", "numeric"],
+    );
     let total = label(
         &stopwatch::format_elapsed(lap.total, true),
-        &["clock-time", "dim-label"],
+        &["clock-time", "numeric", "dim-label"],
     );
     split.set_width_chars(10);
     total.set_width_chars(10);
@@ -2362,39 +2363,6 @@ fn lap_description(lap: &stopwatch::Lap) -> String {
     text
 }
 
-const SHORTCUTS_UI: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-  <object class="GtkShortcutsWindow" id="help_overlay">
-    <property name="modal">True</property>
-    <child>
-      <object class="GtkShortcutsSection">
-        <property name="section-name">shortcuts</property>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">General</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">World</property><property name="accelerator">&lt;Alt&gt;1</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Alarms</property><property name="accelerator">&lt;Alt&gt;2</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Stopwatch</property><property name="accelerator">&lt;Alt&gt;3</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Timer</property><property name="accelerator">&lt;Alt&gt;4</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">New location, alarm or timer</property><property name="accelerator">&lt;Control&gt;n</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Keyboard shortcuts</property><property name="accelerator">&lt;Control&gt;question</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Close window</property><property name="accelerator">&lt;Control&gt;w</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Quit</property><property name="accelerator">&lt;Control&gt;q</property></object></child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkShortcutsGroup">
-            <property name="title">Stopwatch</property>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Start / pause</property><property name="accelerator">space</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Lap</property><property name="accelerator">l</property></object></child>
-            <child><object class="GtkShortcutsShortcut"><property name="title">Reset</property><property name="accelerator">Delete BackSpace</property></object></child>
-          </object>
-        </child>
-      </object>
-    </child>
-  </object>
-</interface>
-"#;
 #[cfg(test)]
 mod tests {
     #[test]

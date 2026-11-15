@@ -473,6 +473,7 @@ const SHORTCUTS: &[Shortcut] = &[
 ];
 
 /// How a GTK trigger is written for people: "<Control>comma" → "Ctrl+,".
+#[cfg(test)]
 fn shortcut_label(trigger: &str) -> String {
     let mut rest = trigger;
     let mut out = String::new();
@@ -566,9 +567,13 @@ fn bit_cell(bit: u32, bits: u32, per_row: u32) -> (u32, u32) {
 fn load_css() {
     let css = gtk::CssProvider::new();
     css.load_from_string(
-        ".calc-entry { font-size: 22pt; min-height: 56px; }
-         .calc-keypad button { min-width: 52px; min-height: 40px; font-size: 13pt; }
+        // The display and the keypad are display text, in em so they follow
+        // the text size.
+        ".calc-entry { font-size: 2em; min-height: 56px; }
+         .calc-keypad button { min-width: 52px; min-height: 40px; font-size: 1.2em; }
          .calc-narrow .calc-keypad button { min-width: 32px; padding-left: 2px; padding-right: 2px; }
+         .calc-short .calc-keypad button { min-height: 28px; padding-top: 0; padding-bottom: 0; }
+         .calc-short .calc-entry { min-height: 40px; }
          .calc-op { font-weight: bold; }
          .calc-history-result { font-weight: bold; }
          .calc-bit { min-width: 22px; min-height: 28px; padding: 0; font-family: monospace; }",
@@ -602,17 +607,25 @@ fn build(app: &adw::Application) -> Ui {
     state.sync_ctx_mode();
     let state = Rc::new(RefCell::new(state));
 
-    let (w, h) = prefs.get::<(i32, i32)>("window-size", (0, 0));
     let window = adw::ApplicationWindow::builder()
         .application(app)
         .title("Calculator")
-        .default_width(if w > 200 { w } else { 420 })
-        .default_height(if h > 200 { h } else { 560 })
+        .default_width(420)
+        .default_height(560)
         .width_request(360)
-        .height_request(500)
+        .height_request(294)
         .build();
-    if prefs.get("window-maximized", false) {
-        window.maximize();
+    {
+        use helix_app_common::window_state::{persist, SizeKeys, Store};
+        persist(
+            &window,
+            Store::settings(
+                &prefs,
+                SizeKeys::Pair("window-size"),
+                "window-maximized",
+                "helix-calculator",
+            ),
+        );
     }
 
     // Header bar.
@@ -628,7 +641,10 @@ fn build(app: &adw::Application) -> Ui {
     menu.append_section(None, &section);
     let section = gio::Menu::new();
     section.append(Some("_Preferences"), Some("win.preferences"));
-    section.append(Some("_Keyboard Shortcuts"), Some("win.shortcuts"));
+    section.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some("win.shortcuts"),
+    );
     section.append(Some("_About Calculator"), Some("app.about"));
     menu.append_section(None, &section);
     let menu_button = gtk::MenuButton::builder()
@@ -742,7 +758,14 @@ fn build(app: &adw::Application) -> Ui {
 
     let toolbar = adw::ToolbarView::new();
     toolbar.add_top_bar(&header);
-    toolbar.set_content(Some(&content));
+    // Scrolls only where even the short layout does not fit (Programming
+    // mode's base and word size row at 360×294).
+    toolbar.set_content(Some(
+        &gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .child(&content)
+            .build(),
+    ));
     window.set_content(Some(&toolbar));
 
     let ui = Ui {
@@ -782,23 +805,46 @@ fn build(app: &adw::Application) -> Ui {
             }
         });
     }
+    // Narrow windows show one keypad part at a time; short ones (down to
+    // the suite's 294 px) drop the history and use lower keys. Only one
+    // breakpoint applies at a time (the last matching one), so narrow and
+    // short together have their own.
     let narrow = adw::Breakpoint::new(
         adw::BreakpointCondition::parse("max-width: 500sp").expect("valid condition"),
     );
-    for on in [true, false] {
-        let ui = ui.clone();
-        let handler = move |_: &adw::Breakpoint| {
-            if ui.narrow.replace(on) != on {
-                ui.update_layout();
+    let short = adw::Breakpoint::new(
+        adw::BreakpointCondition::parse("max-height: 520sp").expect("valid condition"),
+    );
+    let narrow_short = adw::Breakpoint::new(
+        adw::BreakpointCondition::parse("max-width: 500sp and max-height: 520sp")
+            .expect("valid condition"),
+    );
+    for bp in [&narrow, &narrow_short] {
+        for on in [true, false] {
+            let ui = ui.clone();
+            let handler = move |_: &adw::Breakpoint| {
+                if ui.narrow.replace(on) != on {
+                    ui.update_layout();
+                }
+            };
+            if on {
+                bp.connect_apply(handler);
+            } else {
+                bp.connect_unapply(handler);
             }
-        };
-        if on {
-            narrow.connect_apply(handler);
-        } else {
-            narrow.connect_unapply(handler);
         }
     }
+    for bp in [&short, &narrow_short] {
+        bp.add_setter(&ui.history_scroll, "visible", Some(&false.to_value()));
+        bp.add_setter(
+            &content,
+            "css-classes",
+            Some(&glib::StrV::from(vec!["calc-short"]).to_value()),
+        );
+    }
     window.add_breakpoint(narrow);
+    window.add_breakpoint(short);
+    window.add_breakpoint(narrow_short);
 
     // Signals.
     {
@@ -939,50 +985,29 @@ fn build(app: &adw::Application) -> Ui {
     }
     helix_app_common::add_bubble_shortcuts(&window, &bubble);
 
-    {
-        let state = state.clone();
-        window.connect_close_request(move |w| {
-            let s = state.borrow();
-            if !w.is_maximized() {
-                s.prefs
-                    .set("window-size", (w.default_width(), w.default_height()));
-            }
-            s.prefs.set("window-maximized", w.is_maximized());
-            glib::Propagation::Proceed
-        });
-    }
-
     entry.grab_focus();
     ui
 }
 
+/// The Keyboard Shortcuts window, built from [`SHORTCUTS`] by
+/// `helix_app_common::shortcuts`.
 fn show_shortcuts(win: &adw::ApplicationWindow) {
-    let page = adw::PreferencesPage::new();
-    let mut sections: Vec<&str> = Vec::new();
+    use helix_app_common::shortcuts::Item;
+    let mut groups: Vec<(&str, Vec<Item>)> = Vec::new();
     for s in SHORTCUTS {
-        if !sections.contains(&s.section) {
-            sections.push(s.section);
+        let item = Item::Keys(s.title, s.how.trigger());
+        match groups.iter_mut().find(|(title, _)| *title == s.section) {
+            Some((_, items)) => items.push(item),
+            None => groups.push((s.section, vec![item])),
         }
     }
-    for section in sections {
-        let group = adw::PreferencesGroup::builder().title(section).build();
-        for s in SHORTCUTS.iter().filter(|s| s.section == section) {
-            let row = adw::ActionRow::builder().title(s.title).build();
-            row.add_suffix(
-                &gtk::Label::builder()
-                    .label(shortcut_label(s.how.trigger()))
-                    .css_classes(["dim-label"])
-                    .build(),
-            );
-            group.add(&row);
-        }
-        page.add(&group);
-    }
-    let dialog = adw::PreferencesDialog::builder()
-        .title("Keyboard Shortcuts")
-        .build();
-    dialog.add(&page);
-    dialog.present(Some(win));
+    let shortcuts = helix_app_common::shortcuts::window_from(
+        groups
+            .iter()
+            .map(|(title, items)| (*title, items.as_slice())),
+    );
+    shortcuts.set_transient_for(Some(win));
+    shortcuts.present();
 }
 
 impl Ui {
@@ -1138,23 +1163,10 @@ impl Ui {
                 let message = e.to_string();
                 self.error.set_label(&message);
                 self.error.set_visible(true);
-                self.entry.add_css_class("error");
-                self.entry.update_state(&[gtk::accessible::State::Invalid(
-                    gtk::AccessibleInvalidState::True,
-                )]);
-                let error: &gtk::Accessible = self.error.upcast_ref();
-                self.entry.update_relation(&[
-                    gtk::accessible::Relation::DescribedBy(&[error]),
-                    gtk::accessible::Relation::ErrorMessage(&[error]),
-                ]);
+                helix_app_common::set_input_error(&self.entry, Some(&self.error), Some(&message));
                 if let Some(p) = e.position() {
                     self.entry.set_position(p as i32);
                 }
-                helix_app_common::announce(
-                    &self.entry,
-                    &message,
-                    helix_app_common::Urgency::Assertive,
-                );
             }
         }
     }
@@ -1191,14 +1203,7 @@ impl Ui {
             return;
         }
         self.error.set_visible(false);
-        self.entry.remove_css_class("error");
-        self.entry.update_state(&[gtk::accessible::State::Invalid(
-            gtk::AccessibleInvalidState::False,
-        )]);
-        self.entry
-            .reset_relation(gtk::AccessibleRelation::DescribedBy);
-        self.entry
-            .reset_relation(gtk::AccessibleRelation::ErrorMessage);
+        helix_app_common::set_input_error(&self.entry, None, None);
     }
 
     fn rebuild_history(&self) {

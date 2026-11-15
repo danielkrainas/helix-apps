@@ -7,6 +7,7 @@ mod metadata;
 mod natsort;
 mod orientation;
 mod save;
+mod shortcuts;
 mod thumbs;
 mod trash;
 mod ui;

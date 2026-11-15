@@ -25,7 +25,8 @@ pub const APP_ID: &str = "org.helix.Disks";
 const SCHEMA: &str = "org.gnome.Disks";
 const BAR_HEIGHT: i32 = 96;
 const BAR_MIN_SEGMENT: f64 = 40.0;
-const ACCENT: (f64, f64, f64) = (0.208, 0.518, 0.894); // #3584e4
+/// Shown under the confirmation of a new passphrase that differs.
+const PASSPHRASE_MISMATCH: &str = "The passphrases do not match";
 
 /// Filesystem choices for Format / Create Partition: (id, label).
 /// `ext4+luks` means ext4 inside a LUKS2 container.
@@ -68,8 +69,11 @@ pub fn run(block_device: Option<String>) -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
     app.connect_startup(|app| {
         helix_app_common::install_standard_actions(app, "Disks", "Manage drives and media");
-        app.set_accels_for_action("win.attach-image", &["<Control>i"]);
-        app.set_accels_for_action("win.smart", &["<Control><Shift>s"]);
+        helix_app_common::shortcuts::install(
+            app,
+            crate::shortcuts::ACCELS,
+            crate::shortcuts::GROUPS,
+        );
     });
     let initial = RefCell::new(block_device);
     app.connect_activate(move |app| {
@@ -215,8 +219,12 @@ impl Ui {
             .default_width(980)
             .default_height(680)
             .width_request(360)
-            .height_request(300)
+            .height_request(294)
             .build();
+        helix_app_common::window_state::persist(
+            &window,
+            helix_app_common::window_state::Store::file("helix-disks"),
+        );
 
         // ---- actions
         let mut actions = HashMap::new();
@@ -245,7 +253,11 @@ impl Ui {
         view_section.append(Some("Hide Snap Loop Devices"), Some("win.hide-snap-loops"));
         menu.append_section(None, &view_section);
         let section = gio::Menu::new();
-        section.append(Some("About Disks"), Some("app.about"));
+        section.append(
+            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some(helix_app_common::shortcuts::ACTION),
+        );
+        section.append(Some("_About Disks"), Some("app.about"));
         menu.append_section(None, &section);
         let menu_btn = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
@@ -357,6 +369,8 @@ impl Ui {
             .hexpand(true)
             .focusable(true)
             .build();
+        // Arrow keys move the selection; the selected volume is the bar's
+        // description and is announced as it changes.
         helix_app_common::set_accessible_label(&bar, "Volumes");
         let mount_btn = icon_button("media-playback-start-symbolic", "Mount", "win.mount");
         let lock_btn = icon_button("changes-allow-symbolic", "Unlock", "win.lock");
@@ -568,6 +582,7 @@ impl Ui {
                 ui.draw_bar(area, cr, w as f64, h as f64);
             }
         });
+        helix_app_common::style::redraw_on_style_change(&self.bar);
 
         let click = gtk::GestureClick::new();
         let weak = Rc::downgrade(self);
@@ -791,9 +806,44 @@ impl Ui {
     }
 
     fn select_volume(&self, key: Option<String>) {
+        let changed = *self.volume_key.borrow() != key;
         *self.volume_key.borrow_mut() = key;
         self.update_volume();
         self.bar.queue_draw();
+        self.describe_bar_selection(changed);
+    }
+
+    /// Gives the volume bar the selected volume as its accessible
+    /// description ("Data, 512 GB, Ext4, mounted at /home, 2 of 4") and,
+    /// when the selection moved while the bar has focus, announces it.
+    fn describe_bar_selection(&self, announce: bool) {
+        let text = {
+            let model = self.model.borrow();
+            let Some(drive) = self.current_drive(&model) else {
+                return;
+            };
+            let all = drive.all_volumes();
+            let key = self.volume_key.borrow().clone();
+            match all
+                .iter()
+                .position(|v| Some(v.key()) == key)
+                .map(|i| (i, all[i]))
+            {
+                Some((i, v)) => format!(
+                    "{}, {} of {}",
+                    v.spoken(&format::size(v.size)),
+                    i + 1,
+                    all.len()
+                ),
+                None if all.is_empty() => "No media".to_string(),
+                None => "No volume selected".to_string(),
+            }
+        };
+        self.bar
+            .update_property(&[gtk::accessible::Property::Description(&text)]);
+        if announce && self.bar.has_focus() {
+            helix_app_common::announce_change(&self.bar, &text, helix_app_common::Urgency::Polite);
+        }
     }
 
     fn set_busy(&self, on: bool) {
@@ -871,6 +921,8 @@ impl Ui {
         drop(model);
         self.bar.queue_draw();
         self.update_volume();
+        // Mount state or contents may have changed; not announced.
+        self.describe_bar_selection(false);
     }
 
     fn update_volume(&self) {
@@ -995,8 +1047,17 @@ impl Ui {
         let Some(drive) = self.current_drive(&model) else {
             return;
         };
+        use helix_app_common::style::{is_high_contrast, line_alpha};
         let fg = area.color();
         let (fr, fgc, fb) = (fg.red() as f64, fg.green() as f64, fg.blue() as f64);
+        // The selection follows the system accent colour.
+        let accent = helix_app_common::style::accent_rgba();
+        let (ar, ag, ab) = (
+            accent.red() as f64,
+            accent.green() as f64,
+            accent.blue() as f64,
+        );
+        let hc = is_high_contrast();
         if drive.volumes.is_empty() {
             let layout = area.create_pango_layout(Some("No Media"));
             let (lw, lh) = layout.pixel_size();
@@ -1033,7 +1094,7 @@ impl Ui {
                 cr.save().ok();
                 cr.rectangle(x, y, rw, rh);
                 cr.clip();
-                cr.set_source_rgba(fr, fgc, fb, 0.12);
+                cr.set_source_rgba(fr, fgc, fb, line_alpha(0.12));
                 cr.set_line_width(1.0);
                 let mut sx = x - rh;
                 while sx < x + rw {
@@ -1046,20 +1107,15 @@ impl Ui {
             }
             if is_sel {
                 cr.rectangle(x, y, rw, rh);
-                cr.set_source_rgba(
-                    ACCENT.0,
-                    ACCENT.1,
-                    ACCENT.2,
-                    if focus { 0.35 } else { 0.22 },
-                );
+                cr.set_source_rgba(ar, ag, ab, if focus { 0.35 } else { 0.22 });
                 let _ = cr.fill();
             }
             cr.rectangle(x + 0.5, y + 0.5, rw - 1.0, rh - 1.0);
             if is_sel {
-                cr.set_source_rgba(ACCENT.0, ACCENT.1, ACCENT.2, 1.0);
-                cr.set_line_width(2.0);
+                cr.set_source_rgba(ar, ag, ab, 1.0);
+                cr.set_line_width(if hc { 3.0 } else { 2.0 });
             } else {
-                cr.set_source_rgba(fr, fgc, fb, 0.35);
+                cr.set_source_rgba(fr, fgc, fb, line_alpha(0.35));
                 cr.set_line_width(1.0);
             }
             let _ = cr.stroke();
@@ -1102,7 +1158,9 @@ impl Ui {
                 cr.save().ok();
                 cr.rectangle(x, y, rw, rh);
                 cr.clip();
-                cr.set_source_rgba(fr, fgc, fb, if v.is_free() { 0.6 } else { 0.95 });
+                // Free space's label is secondary, except in high contrast.
+                let text_alpha = if v.is_free() && !hc { 0.6 } else { 0.95 };
+                cr.set_source_rgba(fr, fgc, fb, text_alpha);
                 cr.move_to(x + 4.0, y + (rh - lh as f64) / 2.0);
                 pangocairo::functions::show_layout(cr, &layout);
                 cr.restore().ok();
@@ -1261,6 +1319,8 @@ impl Ui {
     }
 
     /// Rows for choosing filesystem type, name and (for LUKS) passphrase.
+    /// A confirmation that differs from the passphrase is marked invalid
+    /// and explained below it.
     /// Returns (rows box, getter of (fs_type, label, passphrase), validity notifier).
     fn fs_form(
         list: &gtk::ListBox,
@@ -1284,16 +1344,42 @@ impl Ui {
             .title("Confirm Passphrase")
             .visible(false)
             .build();
+        // Says why the dialog cannot continue while the passphrases differ.
+        let mismatch = gtk::Label::builder()
+            .label(PASSPHRASE_MISMATCH)
+            .css_classes(["error"])
+            .xalign(0.0)
+            .wrap(true)
+            .margin_top(6)
+            .margin_bottom(6)
+            .margin_start(12)
+            .margin_end(12)
+            .build();
+        let mismatch_row = gtk::ListBoxRow::builder()
+            .child(&mismatch)
+            .activatable(false)
+            .selectable(false)
+            .visible(false)
+            .build();
         list.append(&name);
         list.append(&kind);
         list.append(&pass1);
         list.append(&pass2);
+        list.append(&mismatch_row);
         let validate = {
             let (kind, pass1, pass2) = (kind.clone(), pass1.clone(), pass2.clone());
             Rc::new(move || {
                 let luks = FS_CHOICES[kind.selected() as usize].0 == "ext4+luks";
                 pass1.set_visible(luks);
                 pass2.set_visible(luks);
+                // Only once the confirmation has been typed.
+                let differ = luks && !pass2.text().is_empty() && pass1.text() != pass2.text();
+                mismatch_row.set_visible(differ);
+                helix_app_common::set_input_error(
+                    &pass2,
+                    Some(&mismatch),
+                    differ.then_some(PASSPHRASE_MISMATCH),
+                );
                 let ok = !luks || (!pass1.text().is_empty() && pass1.text() == pass2.text());
                 on_change(ok);
             })

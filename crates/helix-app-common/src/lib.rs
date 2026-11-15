@@ -7,14 +7,17 @@
 //! missing instead of aborting the way `gio::Settings::new` does.
 
 pub mod a11y;
+pub mod about;
 pub mod focus;
 pub mod keys;
 pub mod shortcuts;
 pub mod style;
+pub mod window_state;
 
 pub use a11y::{
-    announce, announce_change, announce_settled, icon_button, icon_menu_button, icon_toggle_button,
-    label_widget, set_accessible_label, set_icon_and_label, Labelled, Urgency,
+    announce, announce_change, announce_settled, clear_input_error_on_edit, icon_button,
+    icon_menu_button, icon_toggle_button, label_widget, set_accessible_label, set_icon_and_label,
+    set_input_error, set_minimum_size, Labelled, Urgency, MIN_HEIGHT, MIN_WIDTH,
 };
 pub use keys::add_bubble_shortcuts;
 
@@ -79,6 +82,7 @@ pub struct Prefs {
 impl Prefs {
     pub fn new(schema_id: &str) -> Self {
         let settings = settings(schema_id);
+        about::note_schema(schema_id, settings.is_some());
         let keys = settings
             .as_ref()
             .and_then(|s| s.settings_schema())
@@ -98,6 +102,11 @@ impl Prefs {
 
     pub fn gsettings(&self) -> Option<&gio::Settings> {
         self.settings.as_ref()
+    }
+
+    /// Whether `key` is stored in GSettings (rather than in memory).
+    pub fn is_backed(&self, key: &str) -> bool {
+        self.backed(key).is_some()
     }
 
     fn backed(&self, key: &str) -> Option<&gio::Settings> {
@@ -170,20 +179,9 @@ pub fn config_dir(app: &str) -> std::path::PathBuf {
     dir
 }
 
-/// Shows a standard About dialog.
+/// Shows the standard About window (see [`about`]).
 pub fn show_about(parent: &impl IsA<gtk::Widget>, app_name: &str, app_id: &str, comments: &str) {
-    use adw::prelude::*;
-    let about = adw::AboutDialog::builder()
-        .application_name(app_name)
-        .application_icon(app_id)
-        .developer_name("The Helix Project")
-        .version(env!("CARGO_PKG_VERSION"))
-        .license_type(gtk::License::Custom)
-        .license("CC0-1.0")
-        .website("https://github.com/danielkrainas/helix-apps")
-        .comments(comments)
-        .build();
-    about.present(Some(parent));
+    about::show(parent, app_name, app_id, comments);
 }
 
 /// Resource path of Helix's own symbolic icons (`icons/` in this crate),

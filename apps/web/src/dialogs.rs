@@ -242,9 +242,9 @@ pub fn show_preferences(app: &Rc<App>) {
                 .unwrap_or("This search engine cannot be added");
             let bad_name = name.trim().is_empty() || problem.contains("name");
             if bad_name {
-                name_row.add_css_class("error");
+                helix_app_common::set_input_error(&name_row, None, Some(problem));
             } else {
-                url_row.add_css_class("error");
+                helix_app_common::set_input_error(url_row, None, Some(problem));
             }
             if let Some(d) = url_row
                 .ancestor(adw::PreferencesDialog::static_type())
@@ -254,8 +254,8 @@ pub fn show_preferences(app: &Rc<App>) {
             }
         }
     });
-    add_url.connect_changed(|row| row.remove_css_class("error"));
-    add_name.connect_changed(|row| row.remove_css_class("error"));
+    helix_app_common::clear_input_error_on_edit(&add_url, None);
+    helix_app_common::clear_input_error_on_edit(&add_name, None);
 
     // Privacy.
     let privacy = adw::PreferencesPage::builder()
@@ -1080,7 +1080,7 @@ pub fn show_web_app_preferences(app: &Rc<App>) {
     dialog.add(&page);
     fill_allowed_sites(&list, app);
 
-    add.connect_changed(|row| row.remove_css_class("error"));
+    helix_app_common::clear_input_error_on_edit(&add, None);
     let weak = Rc::downgrade(app);
     add.connect_apply(move |row| {
         let Some(app) = weak.upgrade() else { return };
@@ -1091,7 +1091,16 @@ pub fn show_web_app_preferences(app: &Rc<App>) {
                 row.set_text("");
                 fill_allowed_sites(&list, &app);
             }
-            None => row.add_css_class("error"),
+            None => {
+                const PROBLEM: &str = "Enter a site address, such as example.org";
+                helix_app_common::set_input_error(row, None, Some(PROBLEM));
+                if let Some(d) = row
+                    .ancestor(adw::PreferencesDialog::static_type())
+                    .and_downcast::<adw::PreferencesDialog>()
+                {
+                    d.add_toast(adw::Toast::new(PROBLEM));
+                }
+            }
         }
     });
     dialog.present(parent(app).as_ref());

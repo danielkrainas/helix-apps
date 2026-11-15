@@ -2,11 +2,12 @@
 //!
 //! Settings that have a key in GNOME Snapshot's `org.gnome.Snapshot` schema
 //! are stored there so they carry over between the two apps: `countdown`,
-//! `capture-mode`, `play-shutter-sound`, `last-camera-id`, `window-width`,
-//! `window-height`, `is-maximized`. Everything else (the video format, whose
-//! Snapshot enum only knows `vp8webm`) lives in
+//! `capture-mode`, `play-shutter-sound`, `last-camera-id`. Everything else
+//! (the video format, whose Snapshot enum only knows `vp8webm`) lives in
 //! `$XDG_CONFIG_HOME/helix-camera/settings.json`. When the Snapshot schema
-//! is not installed the JSON file holds every setting instead.
+//! is not installed the JSON file holds every setting instead. The window
+//! size (`window-width`, `window-height`, `is-maximized`) is kept by
+//! `helix_app_common::window_state`.
 
 use crate::countdown;
 use crate::encoders::VideoFormat;
@@ -25,9 +26,6 @@ pub struct Settings {
     pub video_format: String,
     pub play_shutter_sound: bool,
     pub last_camera: Option<String>,
-    pub window_width: i32,
-    pub window_height: i32,
-    pub is_maximized: bool,
 }
 
 impl Default for Settings {
@@ -38,9 +36,6 @@ impl Default for Settings {
             video_format: VideoFormat::WebmVp8.id().into(),
             play_shutter_sound: true,
             last_camera: None,
-            window_width: 800,
-            window_height: 640,
-            is_maximized: false,
         }
     }
 }
@@ -84,10 +79,6 @@ impl Settings {
         if self.last_camera.as_deref() == Some("") {
             self.last_camera = None;
         }
-        if self.window_width < 200 || self.window_height < 200 {
-            let d = Settings::default();
-            (self.window_width, self.window_height) = (d.window_width, d.window_height);
-        }
         self
     }
 
@@ -108,9 +99,6 @@ impl Settings {
             s.play_shutter_sound = prefs.get("play-shutter-sound", true);
             let cam: String = prefs.get("last-camera-id", String::new());
             s.last_camera = Some(cam);
-            s.window_width = prefs.get("window-width", 800);
-            s.window_height = prefs.get("window-height", 640);
-            s.is_maximized = prefs.get("is-maximized", false);
         }
         s.sanitize()
     }
@@ -140,9 +128,7 @@ impl Settings {
             "last-camera-id",
             self.last_camera.clone().unwrap_or_default().to_variant(),
         );
-        set_if("window-width", self.window_width.to_variant());
-        set_if("window-height", self.window_height.to_variant());
-        set_if("is-maximized", self.is_maximized.to_variant());
+
         let json = serde_json::to_string_pretty(&PrivateOnly {
             video_format: &self.video_format,
         })
@@ -176,9 +162,6 @@ mod tests {
             video_format: "mp4-h264".into(),
             play_shutter_sound: false,
             last_camera: Some("Cam".into()),
-            window_width: 1000,
-            window_height: 700,
-            is_maximized: true,
         };
         s.save_to(&path).unwrap();
         assert_eq!(Settings::load_from(&path), s);

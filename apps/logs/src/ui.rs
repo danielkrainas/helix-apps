@@ -4,7 +4,6 @@ use adw::prelude::*;
 use gtk::{gio, glib};
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
-use serde::{Deserialize, Serialize};
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
@@ -61,17 +60,6 @@ struct App {
     suppress_boot_change: Cell<bool>,
 }
 
-#[derive(Serialize, Deserialize, Default)]
-struct WindowState {
-    width: i32,
-    height: i32,
-    maximized: bool,
-}
-
-fn window_state_path() -> std::path::PathBuf {
-    helix_app_common::config_dir("helix-logs").join("window.json")
-}
-
 pub fn run() -> glib::ExitCode {
     let app = adw::Application::builder()
         .application_id(APP_ID)
@@ -94,9 +82,8 @@ fn load_css() {
     let css = gtk::CssProvider::new();
     css.load_from_string(
         ".log-row { padding: 4px 6px; }
-         .log-time { font-feature-settings: \"tnum\"; min-width: 7em; }
+         .log-time { min-width: 7em; }
          .log-severity { min-width: 16px; }
-         .log-field-name { font-size: smaller; }
          .log-field-value { font-family: monospace; }",
     );
     if let Some(display) = gtk::gdk::Display::default() {
@@ -119,22 +106,20 @@ fn label(text: &str, classes: &[&str]) -> gtk::Label {
 fn build(app: &adw::Application) -> adw::ApplicationWindow {
     let prefs = Prefs::new(SCHEMA);
     let descending = prefs.get_enum_nick("sort-order", SORT_DESC) != SORT_ASC;
-    let ws: WindowState = std::fs::read(window_state_path())
-        .ok()
-        .and_then(|b| serde_json::from_slice(&b).ok())
-        .unwrap_or_default();
 
     let window = adw::ApplicationWindow::builder()
         .application(app)
         .title("Logs")
-        .default_width(if ws.width > 300 { ws.width } else { 1000 })
-        .default_height(if ws.height > 200 { ws.height } else { 680 })
+        .default_width(1000)
+        .default_height(680)
         .width_request(360)
         .height_request(294)
         .build();
-    if ws.maximized {
-        window.maximize();
-    }
+    // `org.gnome.Logs` has no window keys.
+    helix_app_common::window_state::persist(
+        &window,
+        helix_app_common::window_state::Store::file("helix-logs"),
+    );
 
     // ---- Sidebar -------------------------------------------------------
     let sidebar_list = gtk::ListBox::new();
@@ -306,6 +291,10 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     );
     menu.append_section(Some("Sort"), &s2);
     let s3 = gio::Menu::new();
+    s3.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::shortcuts::ACTION),
+    );
     s3.append(Some("_About Logs"), Some("app.about"));
     menu.append_section(None, &s3);
     let menu_button = gtk::MenuButton::builder()
@@ -557,22 +546,8 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     window.add_action(&refresh);
     window.add_action(&sort);
     window.add_action(&search_action);
-    app.set_accels_for_action("win.export", &["<Control>s"]);
-    app.set_accels_for_action("win.refresh", &["F5", "<Control>r"]);
-    app.set_accels_for_action("win.search", &["<Control>f"]);
+    helix_app_common::shortcuts::install(app, crate::shortcuts::ACCELS, crate::shortcuts::GROUPS);
 
-    window.connect_close_request(|w| {
-        let (width, height) = w.default_size();
-        let ws = WindowState {
-            width,
-            height,
-            maximized: w.is_maximized(),
-        };
-        if let Ok(json) = serde_json::to_vec(&ws) {
-            let _ = std::fs::write(window_state_path(), json);
-        }
-        glib::Propagation::Proceed
-    });
     {
         let a = app_state.clone();
         window.connect_destroy(move |_| {
@@ -862,7 +837,7 @@ fn detail_page(entry: &Entry, toasts: &adw::ToastOverlay) -> adw::NavigationPage
         b.set_margin_bottom(8);
         b.set_margin_start(12);
         b.set_margin_end(12);
-        let n = label(name, &["dim-label", "log-field-name"]);
+        let n = label(name, &["dim-label", "caption", "log-field-name"]);
         n.set_xalign(0.0);
         let v = label(value, &["log-field-value"]);
         v.set_xalign(0.0);

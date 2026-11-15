@@ -3,7 +3,6 @@
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use helix_app_common::Labelled;
-use serde::{Deserialize, Serialize};
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::{Rc, Weak};
@@ -24,17 +23,6 @@ const APP_NAME: &str = "Audio Player";
 const STATE_DIR: &str = "helix-audio-player";
 const TICK: Duration = Duration::from_millis(50);
 const COVER_SIZE: i32 = 160;
-
-#[derive(Serialize, Deserialize, Default)]
-struct WindowState {
-    width: i32,
-    height: i32,
-    maximized: bool,
-}
-
-fn window_state_path() -> std::path::PathBuf {
-    helix_app_common::config_dir(STATE_DIR).join("window.json")
-}
 
 const ACCELS: &[(&str, &[&str])] = &[
     ("win.open", &["<Control>o"]),
@@ -91,21 +79,14 @@ pub fn run(target: Option<String>) -> glib::ExitCode {
 }
 
 fn load_css() {
-    let css = gtk::CssProvider::new();
-    css.load_from_string(
+    helix_app_common::style::add_css(
         ".ap-cover { border-radius: 12px; }
          .ap-play { min-width: 56px; min-height: 56px; }
          .ap-waveform { min-height: 96px; }
          .ap-waveform:focus-visible { outline: 2px solid alpha(@accent_color, 0.5);
                                       outline-offset: 2px; border-radius: 6px; }",
+        ".ap-waveform:focus-visible { outline-color: @accent_color; }",
     );
-    if let Some(display) = gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &css,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    }
 }
 
 #[derive(Default)]
@@ -161,7 +142,6 @@ struct Ui {
     wave_cache: RefCell<HashMap<String, Rc<Vec<f32>>>>,
     /// Bumped on every load so stale worker results are dropped.
     generation: Cell<u64>,
-    saved: Cell<bool>,
     _bus_watch: RefCell<Option<gst::bus::BusWatchGuard>>,
 }
 
@@ -178,29 +158,32 @@ fn button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
 }
 
 fn shortcuts_window() -> gtk::ShortcutsWindow {
-    let ui = r#"<interface>
-  <object class="GtkShortcutsWindow" id="w">
-    <property name="modal">1</property>
-    <child><object class="GtkShortcutsSection"><property name="section-name">main</property>
-      <child><object class="GtkShortcutsGroup"><property name="title">Playback</property>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Play / Pause</property><property name="accelerator">space</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Back 10 Seconds</property><property name="accelerator">Left</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Forward 10 Seconds</property><property name="accelerator">Right</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Mute / Unmute</property><property name="accelerator">m</property></object></child>
-      </object></child>
-      <child><object class="GtkShortcutsGroup"><property name="title">General</property>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Open File</property><property name="accelerator">&lt;Control&gt;o</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Keyboard Shortcuts</property><property name="accelerator">&lt;Control&gt;question</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Close Window</property><property name="accelerator">&lt;Control&gt;w</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Quit</property><property name="accelerator">&lt;Control&gt;q</property></object></child>
-      </object></child>
-    </object></child>
-  </object>
-</interface>"#;
-    gtk::Builder::from_string(ui)
-        .object("w")
-        .expect("shortcuts window")
+    helix_app_common::shortcuts::window(SHORTCUT_GROUPS)
 }
+
+const SHORTCUT_GROUPS: &[helix_app_common::shortcuts::Group] = {
+    use helix_app_common::shortcuts::Item::Keys;
+    &[
+        (
+            "Playback",
+            &[
+                Keys("Play or Pause", "space AudioPlay"),
+                Keys("Back 10 Seconds", "Left"),
+                Keys("Forward 10 Seconds", "Right"),
+                Keys("Mute or Unmute", "m"),
+            ],
+        ),
+        (
+            "General",
+            &[
+                Keys("Open File", "<Control>o"),
+                Keys("Keyboard Shortcuts", "<Control>question"),
+                Keys("Close Window", "<Control>w"),
+                Keys("Quit", "<Control>q"),
+            ],
+        ),
+    ]
+};
 
 impl Ui {
     fn new(app: &adw::Application) -> Option<Rc<Self>> {
@@ -211,21 +194,18 @@ impl Ui {
                 return None;
             }
         };
-        let ws: WindowState = std::fs::read(window_state_path())
-            .ok()
-            .and_then(|b| serde_json::from_slice(&b).ok())
-            .unwrap_or_default();
         let window = adw::ApplicationWindow::builder()
             .application(app)
             .title(APP_NAME)
-            .default_width(if ws.width >= 360 { ws.width } else { 600 })
-            .default_height(if ws.height >= 300 { ws.height } else { 420 })
+            .default_width(600)
+            .default_height(420)
             .width_request(360)
-            .height_request(300)
+            .height_request(294)
             .build();
-        if ws.maximized {
-            window.maximize();
-        }
+        helix_app_common::window_state::persist(
+            &window,
+            helix_app_common::window_state::Store::file(STATE_DIR),
+        );
         window.set_help_overlay(Some(&shortcuts_window()));
         helix_app_common::add_bubble_shortcuts(&window, SINGLE_KEYS);
 
@@ -240,7 +220,10 @@ impl Ui {
         let menu = gio::Menu::new();
         menu.append(Some("_Open…"), Some("win.open"));
         let section = gio::Menu::new();
-        section.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
+        section.append(
+            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some("win.show-help-overlay"),
+        );
         section.append(Some("_About Audio Player"), Some("app.about"));
         menu.append_section(None, &section);
         let menu_button = gtk::MenuButton::builder()
@@ -502,7 +485,6 @@ impl Ui {
             wave_cancel: RefCell::new(None),
             wave_cache: RefCell::new(HashMap::new()),
             generation: Cell::new(0),
-            saved: Cell::new(false),
             _bus_watch: RefCell::new(None),
         });
 
@@ -734,22 +716,10 @@ impl Ui {
         });
     }
 
-    /// Stops playback and saves the window size (idempotent).
+    /// Stops playback.
     fn shutdown(&self) {
         self.cancel_waveform();
         self.player.unload();
-        if self.saved.replace(true) {
-            return;
-        }
-        let (width, height) = self.window.default_size();
-        let ws = WindowState {
-            width,
-            height,
-            maximized: self.window.is_maximized(),
-        };
-        if let Ok(json) = serde_json::to_vec(&ws) {
-            let _ = std::fs::write(window_state_path(), json);
-        }
     }
 
     fn install_bus_watch(self: &Rc<Self>) {
@@ -1346,6 +1316,20 @@ impl Ui {
         if last.as_ref() != Some(&snap) {
             m.update(snap.clone());
             *last = Some(snap);
+        }
+    }
+}
+
+#[cfg(test)]
+mod shortcut_tests {
+    use super::*;
+
+    #[test]
+    fn every_shortcut_is_listed() {
+        helix_app_common::shortcuts::assert_all_listed(SHORTCUT_GROUPS, ACCELS);
+        let listed = helix_app_common::shortcuts::listed_keys(SHORTCUT_GROUPS);
+        for (key, action) in SINGLE_KEYS {
+            assert!(listed.contains(key), "{action} {key} is not listed");
         }
     }
 }

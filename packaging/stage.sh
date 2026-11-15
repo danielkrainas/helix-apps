@@ -14,6 +14,8 @@
 #   *.policy                 /usr/share/polkit-1/actions/
 #   apparmor.d/*             /etc/apparmor.d/
 #   *.gschema.xml            /usr/share/helix-apps/schemas/ (compiled there)
+#   *.metainfo.xml           /usr/share/metainfo/
+#   icons/*-symbolic.svg     /usr/share/icons/hicolor/symbolic/apps/
 #   icons/*.svg              /usr/share/icons/hicolor/scalable/apps/
 # The schemas are Helix's copies of GNOME app schemas (org.gnome.clocks, …).
 # They stay out of /usr/share/glib-2.0/schemas so they never conflict with
@@ -55,13 +57,19 @@ for data in "$root"/apps/*/data; do
                 install -Dm644 "$f" "$dest/usr/share/polkit-1/actions/$name" ;;
             *.gschema.xml)
                 install -Dm644 "$f" "$dest/usr/share/helix-apps/schemas/$name" ;;
+            *.metainfo.xml)
+                install -Dm644 "$f" "$dest/usr/share/metainfo/$name" ;;
             *)
                 echo "stage.sh: don't know where $f goes" >&2; exit 1 ;;
         esac
     done
     if [ -d "$data/icons" ]; then
         for f in "$data"/icons/*.svg; do
-            install -Dm644 "$f" "$dest/usr/share/icons/hicolor/scalable/apps/$(basename "$f")"
+            case $f in
+                *-symbolic.svg) size=symbolic ;;
+                *) size=scalable ;;
+            esac
+            install -Dm644 "$f" "$dest/usr/share/icons/hicolor/$size/apps/$(basename "$f")"
         done
     fi
     if [ -d "$data/apparmor.d" ]; then

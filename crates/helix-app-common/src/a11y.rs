@@ -133,12 +133,16 @@ pub fn announce_settled(widget: &impl IsA<gtk::Widget>, message: &str) {
 
 /// Shows or clears an input error in a way that does not rely on colour.
 ///
-/// With `Some(message)`, `input` is marked invalid, linked to the visible
-/// `error_label` (accessible "error-message" relation) when there is one,
-/// and `message` is announced politely — once, not again on every key
-/// press while the same error stays. With `None` the invalid state and the
-/// relation are cleared, so the next error is spoken again. The caller
-/// still styles and fills the visible label.
+/// With `Some(message)`, `input` gets the `error` style and is marked
+/// invalid, is linked to the visible `error_label` when there is one
+/// (accessible "error-message" and "described-by" relations), and
+/// `message` is announced politely — once, not again on every key press
+/// while the same error stays. With `None` the style, the invalid state
+/// and the relations are cleared, so the next error is spoken again. The
+/// caller fills and shows or hides the visible label (or shows the
+/// message some other way inside the active dialog, such as a toast);
+/// [`clear_input_error_on_edit`] clears the error as soon as the text
+/// changes.
 pub fn set_input_error(
     input: &impl IsA<gtk::Widget>,
     error_label: Option<&gtk::Label>,
@@ -147,23 +151,49 @@ pub fn set_input_error(
     let w = input.as_ref();
     match message.map(str::trim).filter(|m| !m.is_empty()) {
         Some(message) => {
+            w.add_css_class("error");
             w.update_state(&[accessible::State::Invalid(
                 gtk::AccessibleInvalidState::True,
             )]);
             if let Some(label) = error_label {
-                w.update_relation(&[accessible::Relation::ErrorMessage(&[
-                    label.upcast_ref::<gtk::Accessible>()
-                ])]);
+                let label = label.upcast_ref::<gtk::Accessible>();
+                w.update_relation(&[
+                    accessible::Relation::ErrorMessage(&[label]),
+                    accessible::Relation::DescribedBy(&[label]),
+                ]);
             }
             announce_change(w, message, Urgency::Polite);
         }
         None => {
+            w.remove_css_class("error");
             w.reset_state(gtk::AccessibleState::Invalid);
             w.reset_relation(gtk::AccessibleRelation::ErrorMessage);
+            w.reset_relation(gtk::AccessibleRelation::DescribedBy);
             // SAFETY: the key is only ever used with a `String` value.
             unsafe { w.set_data(LAST_KEY, String::new()) };
         }
     }
+}
+
+/// Clears `input`'s error (see [`set_input_error`]) whenever its text
+/// changes, hiding `error_label` too when there is one.
+pub fn clear_input_error_on_edit(
+    input: &impl IsA<gtk::Editable>,
+    error_label: Option<&gtk::Label>,
+) {
+    let label = error_label.map(|l| l.downgrade());
+    input.as_ref().connect_changed(move |e| {
+        let label = label.as_ref().and_then(|l| l.upgrade());
+        if let Some(l) = &label {
+            l.set_visible(false);
+        }
+        set_input_error(e, label.as_ref(), None);
+    });
+}
+
+/// Whether `widget` is currently marked invalid by [`set_input_error`].
+pub fn has_input_error(widget: &impl IsA<gtk::Widget>) -> bool {
+    widget.as_ref().has_css_class("error")
 }
 
 /// Object data key marking a widget whose accessible name was set here.
@@ -475,18 +505,74 @@ pub fn unlabelled_inputs(root: &gtk::Widget) -> Vec<String> {
     out
 }
 
-/// With `HELIX_A11Y_CHECK` set, reports unnamed buttons and unlabelled
-/// inputs of every window
-/// `app` shows (see the module docs). The check repeats every two seconds,
-/// so rows, pages and dialogs shown later are covered; each problem is
-/// reported once.
-pub fn install_check(app: &impl IsA<gtk::Application>) {
-    if std::env::var_os("HELIX_A11Y_CHECK").is_none() {
-        return;
+/// The smallest size every main window supports (phones, half of a small
+/// screen), as in GNOME's core apps.
+pub const MIN_WIDTH: i32 = 360;
+pub const MIN_HEIGHT: i32 = 294;
+
+/// Gives `window` the suite's minimum size, [`MIN_WIDTH`] × [`MIN_HEIGHT`].
+pub fn set_minimum_size(window: &impl IsA<gtk::Widget>) {
+    window.as_ref().set_size_request(MIN_WIDTH, MIN_HEIGHT);
+}
+
+/// Problems with a main window's minimum size: its size request differs
+/// from the suite's minimum, or (once it was asked to shrink to it) it is
+/// larger, because its content does not fit.
+fn size_problems(window: &gtk::Window, shrunk: bool) -> Vec<String> {
+    let mut out = Vec::new();
+    let (rw, rh) = window.size_request();
+    if (rw, rh) != (MIN_WIDTH, MIN_HEIGHT) {
+        out.push(format!(
+            "minimum size is {rw}×{rh}, not {MIN_WIDTH}×{MIN_HEIGHT}"
+        ));
     }
-    app.connect_window_added(|_, window| {
+    if shrunk && !window.is_maximized() {
+        let (w, h) = (window.width(), window.height());
+        if w > MIN_WIDTH || h > MIN_HEIGHT {
+            out.push(format!(
+                "content does not fit {MIN_WIDTH}×{MIN_HEIGHT}: the window is {w}×{h}"
+            ));
+        }
+        // A libadwaita window with breakpoints keeps its size and clips
+        // content that needs more.
+        use adw::prelude::AdwApplicationWindowExt as _;
+        if let Some(content) = window
+            .downcast_ref::<adw::ApplicationWindow>()
+            .and_then(|a| a.content())
+        {
+            let min_w = content.measure(gtk::Orientation::Horizontal, -1).0;
+            let min_h = content
+                .measure(gtk::Orientation::Vertical, content.width().max(min_w))
+                .0;
+            if min_w > content.width() || min_h > content.height() {
+                out.push(format!(
+                    "content needs {min_w}×{min_h} but has {}×{}",
+                    content.width(),
+                    content.height()
+                ));
+            }
+        }
+    }
+    out
+}
+
+/// With `HELIX_A11Y_CHECK` set, reports unnamed buttons and unlabelled
+/// inputs of every window `app` shows (see the module docs), and main
+/// windows whose minimum size is not [`MIN_WIDTH`] × [`MIN_HEIGHT`]. With
+/// `HELIX_A11Y_CHECK=size` each main window is also shrunk to that size
+/// once it is shown, and reported if its content keeps it larger. The
+/// check repeats every two seconds, so rows, pages and dialogs shown later
+/// are covered; each problem is reported once.
+pub fn install_check(app: &impl IsA<gtk::Application>) {
+    let Some(mode) = std::env::var_os("HELIX_A11Y_CHECK") else {
+        return;
+    };
+    let shrink = mode == "size";
+    app.connect_window_added(move |_, window| {
+        let main = window.is::<gtk::ApplicationWindow>();
         let window = window.downgrade();
         let mut seen = std::collections::HashSet::new();
+        let mut shrunk = false;
         glib::timeout_add_local(std::time::Duration::from_secs(2), move || {
             let Some(window) = window.upgrade() else {
                 return glib::ControlFlow::Break;
@@ -495,6 +581,25 @@ pub fn install_check(app: &impl IsA<gtk::Application>) {
                 return glib::ControlFlow::Continue;
             }
             let title = window.title().unwrap_or_default();
+            if main {
+                for line in size_problems(&window, shrunk) {
+                    if seen.insert(line.clone()) {
+                        eprintln!("helix-a11y: size of “{title}”: {line}");
+                    }
+                }
+                if shrink && !shrunk {
+                    // Checked on the next round, after the layout settled.
+                    window.unmaximize();
+                    window.set_default_size(MIN_WIDTH, MIN_HEIGHT);
+                    shrunk = true;
+                } else if shrunk && seen.insert("size checked".into()) {
+                    eprintln!(
+                        "helix-a11y: size of “{title}”: checked at {}×{}",
+                        window.width(),
+                        window.height()
+                    );
+                }
+            }
             let (unnamed, total) = unnamed_buttons(window.upcast_ref());
             for line in unnamed {
                 if seen.insert(line.clone()) {

@@ -36,6 +36,10 @@ contents:
     dst: /usr/share/polkit-1/actions/
   - src: ./stage/usr/share/icons/hicolor/scalable/apps/*
     dst: /usr/share/icons/hicolor/scalable/apps/
+  - src: ./stage/usr/share/icons/hicolor/symbolic/apps/*
+    dst: /usr/share/icons/hicolor/symbolic/apps/
+  - src: ./stage/usr/share/metainfo/*
+    dst: /usr/share/metainfo/
   - src: ./stage/usr/share/helix-apps/schemas/*
     dst: /usr/share/helix-apps/schemas/
   - src: ./stage/usr/share/doc/helix-apps/README.md

@@ -1,0 +1,12 @@
+  <releases>
+    <release version="0.1.0" date="2026-11-15">
+      <description>
+        <p>The first release of the Helix apps.</p>
+        <ul>
+          <li>Every app has a Keyboard Shortcuts window (Ctrl+?) and remembers its window size</li>
+          <li>The About window links to the issue tracker and offers troubleshooting information</li>
+          <li>Better support for screen readers, high contrast and large text</li>
+        </ul>
+      </description>
+    </release>
+  </releases>

@@ -4,8 +4,8 @@ mod category;
 mod charinfo;
 mod recent;
 mod search;
+mod shortcuts;
 mod ui;
-mod winstate;
 
 use gtk::glib;
 

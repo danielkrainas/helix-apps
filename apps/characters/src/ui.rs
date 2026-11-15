@@ -12,7 +12,6 @@ use crate::category::{self, Category};
 use crate::charinfo;
 use crate::recent;
 use crate::search;
-use crate::winstate;
 
 pub const APP_ID: &str = "org.helix.Characters";
 const SCHEMA: &str = "org.gnome.Characters";
@@ -68,35 +67,18 @@ pub fn run(initial_search: Option<String>) -> glib::ExitCode {
         }
         app.window.present();
     });
-    // Ctrl+Q quits without close-request; save every remaining window.
-    app.connect_shutdown(|gapp| {
-        for w in gapp.windows() {
-            save_geometry(&w);
-        }
-    });
-    app.run_with_args(&[std::env::args().next().unwrap_or_default()])
-}
 
-/// Window geometry is app-private: `org.gnome.Characters` has no key for it.
-fn save_geometry(w: &gtk::Window) {
-    let (width, height) = w.default_size();
-    let state = winstate::WindowState {
-        width,
-        height,
-        maximized: w.is_maximized(),
-    };
-    if let Err(e) = state.save(&winstate::default_path()) {
-        eprintln!("helix-characters: could not save window size: {e}");
-    }
+    app.run_with_args(&[std::env::args().next().unwrap_or_default()])
 }
 
 fn load_css() {
     let provider = gtk::CssProvider::new();
     provider.load_from_string(
-        ".char-cell { font-size: 22pt; min-width: 56px; min-height: 56px; }
+        // Glyph previews are display text: em sizes follow the text size.
+        ".char-cell { font-size: 2em; min-width: 56px; min-height: 56px; }
          .char-grid > child { padding: 2px; border-radius: 8px; }
-         .char-detail-glyph { font-size: 72pt; min-height: 120px; }
-         .char-variant { font-size: 18pt; min-width: 44px; min-height: 44px; }",
+         .char-detail-glyph { font-size: 6.5em; min-height: 120px; }
+         .char-variant { font-size: 1.65em; min-width: 44px; min-height: 44px; }",
     );
     if let Some(display) = gtk::gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
@@ -306,17 +288,20 @@ fn sidebar_row(cat: Category) -> gtk::ListBoxRow {
 fn build(gapp: &adw::Application) -> Rc<App> {
     let prefs = Prefs::new(SCHEMA);
     load_css();
-    let geometry = winstate::WindowState::load(&winstate::default_path());
 
     let window = adw::ApplicationWindow::builder()
         .application(gapp)
         .title("Characters")
-        .default_width(geometry.width)
-        .default_height(geometry.height)
-        .maximized(geometry.maximized)
+        .default_width(860)
+        .default_height(620)
         .width_request(360)
         .height_request(294)
         .build();
+    // `org.gnome.Characters` has no window keys: the size is app-private.
+    helix_app_common::window_state::persist(
+        &window,
+        helix_app_common::window_state::Store::file("helix-characters"),
+    );
 
     // Sidebar.
     let sidebar_cats: Vec<Category> = std::iter::once(Category::Recent)
@@ -378,8 +363,11 @@ fn build(gapp: &adw::Application) -> Rc<App> {
         .labelled("Search");
     header.pack_start(&search_button);
     let menu = gio::Menu::new();
+    menu.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::shortcuts::ACTION),
+    );
     menu.append(Some("_About Characters"), Some("app.about"));
-    menu.append(Some("_Quit"), Some("app.quit"));
     header.pack_end(
         &gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
@@ -502,10 +490,6 @@ fn build(gapp: &adw::Application) -> Rc<App> {
         adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 560sp").unwrap());
     breakpoint.add_setter(&split, "collapsed", Some(&true.to_value()));
     window.add_breakpoint(breakpoint);
-    window.connect_close_request(|w| {
-        save_geometry(w.upcast_ref());
-        glib::Propagation::Proceed
-    });
 
     let app = Rc::new(App {
         window: window.clone(),
@@ -570,7 +554,7 @@ fn build(gapp: &adw::Application) -> Rc<App> {
         })
         .build();
     window.add_action_entries([search_action]);
-    gapp.set_accels_for_action("win.search", &["<Control>f"]);
+    helix_app_common::shortcuts::install(gapp, crate::shortcuts::ACCELS, crate::shortcuts::GROUPS);
 
     let initial = if app.recent().is_empty() {
         Category::Smileys

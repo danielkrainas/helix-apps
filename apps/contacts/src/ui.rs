@@ -159,13 +159,22 @@ impl Ui {
         let window = adw::ApplicationWindow::builder()
             .application(app)
             .title("Contacts")
-            .default_width(prefs.get("window-width", 800))
-            .default_height(prefs.get("window-height", 600))
+            .default_width(800)
+            .default_height(600)
             .width_request(360)
             .height_request(294)
             .build();
-        if prefs.get("window-maximized", false) {
-            window.maximize();
+        {
+            use helix_app_common::window_state::{persist, SizeKeys, Store};
+            persist(
+                &window,
+                Store::settings(
+                    &prefs,
+                    SizeKeys::Split("window-width", "window-height"),
+                    "window-maximized",
+                    "helix-contacts",
+                ),
+            );
         }
 
         // Sidebar.
@@ -549,15 +558,9 @@ impl Ui {
         });
 
         let weak = Rc::downgrade(self);
-        self.window.connect_close_request(move |w| {
+        self.window.connect_close_request(move |_| {
             if let Some(ui) = weak.upgrade() {
                 ui.flush_deletes();
-                let (width, height) = w.default_size();
-                if !w.is_maximized() {
-                    ui.prefs.set("window-width", width);
-                    ui.prefs.set("window-height", height);
-                }
-                ui.prefs.set("window-maximized", w.is_maximized());
             }
             glib::Propagation::Proceed
         });

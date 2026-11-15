@@ -5,6 +5,7 @@ mod background;
 mod clock;
 mod gwdb;
 mod location;
+mod shortcuts;
 mod sound;
 mod stopwatch;
 mod store;

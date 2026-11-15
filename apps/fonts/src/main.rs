@@ -4,6 +4,7 @@ mod fclist;
 mod fontinfo;
 mod install;
 mod render;
+mod shortcuts;
 mod ui;
 
 use gtk::{gio::prelude::*, glib};

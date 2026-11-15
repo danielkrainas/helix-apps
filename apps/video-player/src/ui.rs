@@ -134,48 +134,59 @@ const SINGLE_KEYS: &[(&str, &str)] = &[
 
 /// The Keyboard Shortcuts window (Ctrl+? and the main menu).
 fn shortcuts_window() -> gtk::ShortcutsWindow {
-    let ui = r#"<interface>
-  <object class="GtkShortcutsWindow" id="w">
-    <property name="modal">1</property>
-    <child><object class="GtkShortcutsSection"><property name="section-name">main</property>
-      <child><object class="GtkShortcutsGroup"><property name="title">Playback</property>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Play / Pause</property><property name="accelerator">space</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Back 10 Seconds</property><property name="accelerator">Left</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Forward 10 Seconds</property><property name="accelerator">Right</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Previous Frame (paused)</property><property name="accelerator">comma</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Next Frame (paused)</property><property name="accelerator">period</property></object></child>
-      </object></child>
-      <child><object class="GtkShortcutsGroup"><property name="title">Volume</property>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Volume Up</property><property name="accelerator">Up</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Volume Down</property><property name="accelerator">Down</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Mute / Unmute</property><property name="accelerator">m</property></object></child>
-      </object></child>
-      <child><object class="GtkShortcutsGroup"><property name="title">View</property>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Toggle Fullscreen</property><property name="accelerator">f F11</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Leave Fullscreen</property><property name="accelerator">Escape</property></object></child>
-      </object></child>
-      <child><object class="GtkShortcutsGroup"><property name="title">General</property>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Open File</property><property name="accelerator">&lt;Control&gt;o</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Take Screenshot</property><property name="accelerator">&lt;Control&gt;&lt;Alt&gt;s</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Keyboard Shortcuts</property><property name="accelerator">&lt;Control&gt;question</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Close Window</property><property name="accelerator">&lt;Control&gt;w</property></object></child>
-        <child><object class="GtkShortcutsShortcut"><property name="title">Quit</property><property name="accelerator">&lt;Control&gt;q</property></object></child>
-      </object></child>
-    </object></child>
-  </object>
-</interface>"#;
-    gtk::Builder::from_string(ui)
-        .object("w")
-        .expect("shortcuts window")
+    helix_app_common::shortcuts::window(SHORTCUT_GROUPS)
 }
+
+const SHORTCUT_GROUPS: &[helix_app_common::shortcuts::Group] = {
+    use helix_app_common::shortcuts::Item::Keys;
+    &[
+        (
+            "Playback",
+            &[
+                Keys("Play or Pause", "space KP_Space AudioPlay AudioPause"),
+                Keys("Back 10 Seconds", "Left KP_Left"),
+                Keys("Forward 10 Seconds", "Right KP_Right"),
+                Keys("Previous Frame (paused)", "comma"),
+                Keys("Next Frame (paused)", "period"),
+            ],
+        ),
+        (
+            "Volume",
+            &[
+                Keys("Volume Up", "Up KP_Up"),
+                Keys("Volume Down", "Down KP_Down"),
+                Keys("Mute or Unmute", "m AudioMute"),
+            ],
+        ),
+        (
+            "View",
+            &[
+                Keys("Fullscreen", "f F11"),
+                Keys("Leave Fullscreen", "Escape"),
+            ],
+        ),
+        (
+            "General",
+            &[
+                Keys("Open File", "<Control>o"),
+                Keys("Take Screenshot", "<Control><Alt>s"),
+                Keys("Keyboard Shortcuts", "<Control>question"),
+                Keys("Close Window", "<Control>w"),
+                Keys("Quit", "<Control>q"),
+            ],
+        ),
+    ]
+};
 
 fn load_css() {
     let css = gtk::CssProvider::new();
+    // Black and white here are the video's letterbox and the controls
+    // drawn over the picture, which look the same in every style.
     css.load_from_string(
         ".vp-video { background: black; }
          .vp-controls { margin: 12px; padding: 4px 8px; border-radius: 12px; }
          .vp-header { background: linear-gradient(to bottom, alpha(black, 0.65), transparent); color: white; box-shadow: none; }
-         .vp-time { font-feature-settings: \"tnum\"; min-width: 4.5em; }
+         .vp-time { min-width: 4.5em; }
          .vp-seek { min-width: 120px; }",
     );
     if let Some(display) = gdk::Display::default() {
@@ -277,7 +288,10 @@ fn primary_menu() -> (gio::Menu, gio::Menu) {
     s1.append(Some("Take _Screenshot"), Some("win.screenshot"));
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
-    s2.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
+    s2.append(
+        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some("win.show-help-overlay"),
+    );
     s2.append(Some("_About Video Player"), Some("app.about"));
     menu.append_section(None, &s2);
     (menu, resume)
@@ -338,6 +352,10 @@ impl Ui {
             .width_request(360)
             .height_request(294)
             .build();
+        helix_app_common::window_state::persist(
+            &window,
+            helix_app_common::window_state::Store::file("helix-video-player"),
+        );
         window.set_help_overlay(Some(&shortcuts_window()));
         helix_app_common::add_bubble_shortcuts(&window, SINGLE_KEYS);
         let (menu, resume_section) = primary_menu();
@@ -1883,5 +1901,19 @@ mod hide_tests {
         assert!(!hide_allowed(true, false, true, true));
         assert!(!hide_allowed(true, true, false, true));
         assert!(!hide_allowed(true, false, false, false));
+    }
+}
+
+#[cfg(test)]
+mod shortcut_tests {
+    use super::*;
+
+    #[test]
+    fn every_shortcut_is_listed() {
+        helix_app_common::shortcuts::assert_all_listed(SHORTCUT_GROUPS, ACCELS);
+        let listed = helix_app_common::shortcuts::listed_keys(SHORTCUT_GROUPS);
+        for (key, action) in SINGLE_KEYS {
+            assert!(listed.contains(key), "{action} {key} is not listed");
+        }
     }
 }

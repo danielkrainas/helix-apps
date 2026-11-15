@@ -5,6 +5,7 @@ mod format;
 mod journal;
 mod live;
 mod search;
+mod shortcuts;
 mod ui;
 mod worker;
 

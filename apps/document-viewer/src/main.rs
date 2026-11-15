@@ -9,6 +9,7 @@ mod pagetext;
 mod presentation;
 mod render;
 mod search;
+mod shortcuts;
 mod state;
 mod ui;
 

@@ -240,36 +240,21 @@ impl Form {
 
     /// Shows `err` inside the dialog: the message under the schedule, the
     /// field marked invalid (error style and state, the message as its
-    /// error message) and focused, and the message announced.
+    /// error message and description), focused, and the message announced.
     fn show_error(&self, err: FormError) {
         self.clear_error();
         self.error.set_label(&err.message);
         self.error.set_visible(true);
         let field = err.field;
-        field.add_css_class("error");
-        field.update_state(&[gtk::accessible::State::Invalid(
-            gtk::AccessibleInvalidState::True,
-        )]);
-        field.update_relation(&[gtk::accessible::Relation::ErrorMessage(&[self
-            .error
-            .upcast_ref()])]);
+        helix_app_common::set_input_error(&field, Some(&self.error), Some(&err.message));
         field.grab_focus();
         self.marked.borrow_mut().push(field);
-        helix_app_common::announce(
-            &self.error,
-            &err.message,
-            helix_app_common::Urgency::Assertive,
-        );
     }
 
     fn clear_error(&self) {
         self.error.set_visible(false);
         for field in self.marked.borrow_mut().drain(..) {
-            field.remove_css_class("error");
-            field.update_state(&[gtk::accessible::State::Invalid(
-                gtk::AccessibleInvalidState::False,
-            )]);
-            field.reset_relation(gtk::AccessibleRelation::ErrorMessage);
+            helix_app_common::set_input_error(&field, None, None);
         }
     }
 

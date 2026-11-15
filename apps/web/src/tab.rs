@@ -176,6 +176,7 @@ impl Tab {
             .can_target(false)
             .build();
         link_label.add_css_class("link-preview");
+        link_label.add_css_class("caption");
 
         let overlay = gtk::Overlay::new();
         overlay.set_child(Some(&view));
@@ -726,7 +727,13 @@ impl Tab {
                 },
             )
         };
-        let html = reader::render(&article, &source, font, colors);
+        let html = reader::render(
+            &article,
+            &source,
+            font,
+            colors,
+            helix_app_common::style::is_high_contrast(),
+        );
         self.entering_reader.set(true);
         self.view.load_alternate_html(&html, &source, Some(&source));
     }

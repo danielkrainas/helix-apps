@@ -3,6 +3,7 @@
 mod illustrations;
 mod os_release;
 mod pages;
+mod shortcuts;
 mod state;
 mod ui;
 

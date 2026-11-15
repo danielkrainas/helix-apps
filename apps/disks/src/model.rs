@@ -109,6 +109,28 @@ pub struct Model {
     pub drives: Vec<Drive>,
 }
 
+/// A state in title case read mid-sentence: ordinary words in lower case
+/// ("Not Mounted" → "not mounted", "Mounted at /" → "mounted at /"),
+/// names and acronyms ("LUKS Encryption", "Ext4") as they are.
+fn lower_first(text: &str) -> String {
+    let ordinary = |w: &str| {
+        let mut c = w.chars();
+        c.next().is_some_and(|f| f.is_alphabetic()) && c.all(|c| c.is_lowercase())
+    };
+    let words: Vec<&str> = text.split(' ').collect();
+    if words.iter().all(|w| ordinary(w)) {
+        return text.to_lowercase();
+    }
+    match words.first() {
+        Some(first) if ordinary(first) => {
+            let mut chars = text.chars();
+            let c = chars.next().unwrap_or_default();
+            c.to_lowercase().chain(chars).collect()
+        }
+        _ => text.to_string(),
+    }
+}
+
 /// Human name of a filesystem / content type (`IdType`).
 pub fn fs_name(id_type: &str, id_version: &str) -> String {
     match id_type {
@@ -211,6 +233,30 @@ impl Volume {
             return "Unknown".into();
         }
         name
+    }
+
+    /// What assistive technology says for the volume selected in the
+    /// volume bar: name, `size` (already formatted), what it contains and
+    /// its state, e.g. "Data, 512 GB, Ext4, mounted at /home".
+    pub fn spoken(&self, size: &str) -> String {
+        let name = self.short_name();
+        if self.is_free() {
+            return format!("{name}, {size}, not partitioned");
+        }
+        let contents = self.contents();
+        let mut parts = vec![name.clone(), size.to_string()];
+        for part in contents.split(" — ") {
+            // "Ext4" is not repeated after a volume named "Ext4".
+            if part != name {
+                parts.push(lower_first(part));
+            }
+        }
+        if let Some(t) = self.partition_type().filter(|t| !t.is_empty()) {
+            if !self.is_container() {
+                parts.push(format!("partition type {t}"));
+            }
+        }
+        parts.join(", ")
     }
 
     /// Short name for the volume bar.
@@ -1049,6 +1095,43 @@ mod tests {
     use super::*;
 
     const GB: u64 = 1_000_000_000;
+
+    /// Every volume of the fixtures is spoken with its name and size, and
+    /// with its mount point, lock state or "not partitioned".
+    #[test]
+    fn volumes_are_spoken_in_full() {
+        let m = build(&snapshot());
+        let (mut mounted, mut free) = (0, 0);
+        for d in &m.drives {
+            for v in d.all_volumes() {
+                let text = v.spoken("1 GB");
+                assert!(
+                    text.starts_with(&format!("{}, 1 GB", v.short_name())),
+                    "{text}"
+                );
+                assert!(!text.contains(" — "), "{text}");
+                if let Some(mp) = v.mount_points().first() {
+                    assert!(text.contains(&format!("mounted at {mp}")), "{text}");
+                    mounted += 1;
+                }
+                if v.is_free() {
+                    assert_eq!(text, "Free Space, 1 GB, not partitioned");
+                    free += 1;
+                }
+                if v.encrypted.is_some() {
+                    assert!(text.contains("locked"), "{text}");
+                }
+            }
+        }
+        assert!(
+            mounted > 0 && free > 0,
+            "fixtures lack mounted or free volumes"
+        );
+        assert_eq!(lower_first("Mounted at /"), "mounted at /");
+        assert_eq!(lower_first("Not Mounted"), "not mounted");
+        assert_eq!(lower_first("LUKS Encryption"), "LUKS Encryption");
+        assert_eq!(lower_first("Ext4 (version 1.0)"), "Ext4 (version 1.0)");
+    }
 
     #[test]
     fn drives_listed_in_order() {

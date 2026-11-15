@@ -14,6 +14,10 @@ a.tile { display: block; padding: 14px 16px; border-radius: 12px; text-decoratio
 a.tile:hover { background: rgba(127,127,127,.22); }
 .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .u { font-size: .85em; opacity: .65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+@media (prefers-contrast: more) {
+  h1, p.note, .u { opacity: 1; }
+  a.tile { background: transparent; border: 1px solid currentColor; }
+}
 ";
 
 pub fn html(most_visited: &[Entry], private: bool) -> String {

@@ -140,18 +140,17 @@ impl App {
                 &css,
                 gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
             );
-            let static_css = gtk::CssProvider::new();
-            static_css.load_from_string(
+            helix_app_common::style::add_css(
                 ".change-banner { padding: 6px 12px; background: alpha(@accent_bg_color, 0.15); }
                  .find-bar { padding: 6px; border-bottom: 1px solid alpha(currentColor, 0.15); }
                  .statusbar { padding: 0 6px; border-top: 1px solid alpha(currentColor, 0.12); }
-                 .statusbar button { min-height: 24px; padding: 2px 8px; font-size: 0.9em; }
+                 .statusbar button { min-height: 24px; padding: 2px 8px; }
                  linegutter { background: alpha(currentColor, 0.03); }",
-            );
-            gtk::style_context_add_provider_for_display(
-                &display,
-                &static_css,
-                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+                // Separators reach 3:1; the gutter is set apart by a line.
+                ".change-banner { background: alpha(@accent_bg_color, 0.3); }
+                 .find-bar { border-bottom-color: alpha(currentColor, 0.6); }
+                 .statusbar { border-top-color: alpha(currentColor, 0.6); }
+                 linegutter { background: none; border-right: 1px solid alpha(currentColor, 0.6); }",
             );
         }
         let app = Rc::new_cyclic(|this| App {

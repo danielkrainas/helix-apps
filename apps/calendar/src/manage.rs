@@ -154,7 +154,7 @@ fn url_group(
         let (error, url) = (error.clone(), url.clone());
         move || {
             error.set_visible(false);
-            url.remove_css_class("error");
+            helix_app_common::set_input_error(&url, None, None);
         }
     };
     {
@@ -171,9 +171,10 @@ fn url_group(
             let parsed = match source::parse_webcal_url(&url.text()) {
                 Ok(u) => u,
                 Err(e) => {
-                    error.set_label(&e.to_string());
+                    let message = e.to_string();
+                    error.set_label(&message);
                     error.set_visible(true);
-                    url.add_css_class("error");
+                    helix_app_common::set_input_error(&url, Some(&error), Some(&message));
                     url.grab_focus();
                     return;
                 }
@@ -298,12 +299,22 @@ fn calendar_row(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gtk
         let (ui2, src) = (ui.clone(), s.clone());
         r.connect_apply(move |e| {
             let n = e.text().trim().to_string();
-            if !n.is_empty() {
+            if n.is_empty() {
+                // Shown inside the dialog, next to the field.
+                helix_app_common::set_input_error(e, None, Some("The name cannot be empty"));
+                if let Some(d) = e
+                    .ancestor(adw::PreferencesDialog::static_type())
+                    .and_downcast::<adw::PreferencesDialog>()
+                {
+                    d.add_toast(adw::Toast::new("The name cannot be empty"));
+                }
+            } else {
                 let mut s = src.clone();
                 s.set_display_name(&n);
                 ui2.backend.send(Cmd::WriteSource(Box::new(s)));
             }
         });
+        helix_app_common::clear_input_error_on_edit(&r, None);
         if s.removable {
             r.add_suffix(&remove_button(ui, dialog, s));
         }

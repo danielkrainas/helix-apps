@@ -808,12 +808,10 @@ impl Doc {
         let (s, e) = self.buffer.bounds();
         self.buffer.remove_tag(&self.match_tag, &s, &e);
         self.buffer.remove_tag(&self.current_tag, &s, &e);
-        self.find.entry.remove_css_class("error");
         let mut error = None;
         let matches = match self.matcher() {
             None => Vec::new(),
             Some(Err(_)) => {
-                self.find.entry.add_css_class("error");
                 error = Some("Invalid regular expression");
                 Vec::new()
             }

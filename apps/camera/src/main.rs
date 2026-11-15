@@ -9,6 +9,7 @@ mod pipeline;
 mod portal;
 mod qr;
 mod settings;
+mod shortcuts;
 mod ui;
 
 use gtk::glib;

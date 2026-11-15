@@ -147,20 +147,26 @@ impl Window {
         location: Option<gio::File>,
         select: Vec<gio::File>,
     ) -> Rc<Window> {
-        let (w, h) = shared
-            .window_state
-            .get::<(i32, i32)>("initial-size", (890, 550));
         let window = adw::ApplicationWindow::builder()
             .application(&shared.app)
             .title("Files")
-            .default_width(w.max(360))
-            .default_height(h.max(300))
+            .default_width(890)
+            .default_height(550)
             .icon_name("system-file-manager")
             .width_request(360)
             .height_request(294)
             .build();
-        if shared.window_state.get("maximized", false) {
-            window.maximize();
+        {
+            use helix_app_common::window_state::{persist, SizeKeys, Store};
+            persist(
+                &window,
+                Store::settings(
+                    &shared.window_state,
+                    SizeKeys::Pair("initial-size"),
+                    "maximized",
+                    "helix-files",
+                ),
+            );
         }
 
         // ----- content header -----
@@ -286,6 +292,7 @@ impl Window {
                     jobs::draw_indicator(a, cr, &b);
                 }
             });
+            helix_app_common::style::redraw_on_style_change(&jobs_icon);
         }
         let jobs_button = gtk::MenuButton::builder()
             .child(&jobs_icon)
@@ -479,13 +486,8 @@ impl Window {
             glib::Propagation::Proceed
         });
         let weak = Rc::downgrade(self);
-        self.window.connect_close_request(move |win| {
+        self.window.connect_close_request(move |_| {
             if let Some(w) = weak.upgrade() {
-                let (width, height) = win.default_size();
-                w.shared.window_state.set("maximized", win.is_maximized());
-                if !win.is_maximized() && width > 0 && height > 0 {
-                    w.shared.window_state.set("initial-size", (width, height));
-                }
                 if let Some(s) = w.sidebar.borrow_mut().take() {
                     s.shutdown();
                 }
@@ -839,6 +841,7 @@ impl Window {
                     .accessible_role(gtk::AccessibleRole::Presentation)
                     .build();
                 sep.add_css_class("crumb-sep");
+                sep.add_css_class("dim-label");
                 self.crumbs.append(&sep);
             }
             let content = gtk::Box::new(gtk::Orientation::Horizontal, 4);

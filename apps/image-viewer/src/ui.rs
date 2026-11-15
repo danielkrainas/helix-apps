@@ -51,9 +51,7 @@ pub fn run(paths: Vec<PathBuf>) -> glib::ExitCode {
             .activate(|app: &adw::Application, _, _| Viewer::new(app).window.present())
             .build();
         app.add_action_entries([new_window]);
-        for (action, accels) in ACCELS {
-            app.set_accels_for_action(action, accels);
-        }
+        helix_app_common::shortcuts::install(app, ACCELS, crate::shortcuts::GROUPS);
     });
     let initial = RefCell::new(Some(paths));
     app.connect_activate(move |app| {
@@ -71,7 +69,7 @@ pub fn run(paths: Vec<PathBuf>) -> glib::ExitCode {
     app.run_with_args(&[std::env::args().next().unwrap_or_default()])
 }
 
-const ACCELS: &[(&str, &[&str])] = &[
+pub(crate) const ACCELS: &[(&str, &[&str])] = &[
     ("app.new-window", &["<Control>n"]),
     ("win.open", &["<Control>o"]),
     ("win.open-with", &["<Control><Shift>o"]),
@@ -266,6 +264,10 @@ impl Viewer {
             .width_request(360)
             .height_request(294)
             .build();
+        helix_app_common::window_state::persist(
+            &window,
+            helix_app_common::window_state::Store::file("helix-image-viewer"),
+        );
 
         // Header.
         let header = adw::HeaderBar::new();
@@ -303,6 +305,10 @@ impl Viewer {
         s3.append(Some("_Slideshow"), Some("win.slideshow"));
         menu.append_section(None, &s3);
         let s4 = gio::Menu::new();
+        s4.append(
+            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some(helix_app_common::shortcuts::ACTION),
+        );
         s4.append(Some("_About Image Viewer"), Some("app.about"));
         menu.append_section(None, &s4);
         let menu_btn = gtk::MenuButton::builder()

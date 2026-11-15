@@ -691,6 +691,8 @@ pub fn extract(html: &str, base_url: &str) -> Option<Article> {
 const READER_CSS: &str = r#"
 :root { color-scheme: light; --fg: #1e1e1e; --bg: #fafafa; --muted: #5e5c64; --link: #1c71d8; --rule: #deddda; --code: #f0f0f0; }
 :root.dark { color-scheme: dark; --fg: #e8e8e8; --bg: #1e1e1e; --muted: #a8a8a8; --link: #78aeed; --rule: #3d3d3d; --code: #2a2a2a; }
+:root.hc { --fg: #000000; --bg: #ffffff; --muted: #1e1e1e; --link: #0b4fa8; --rule: #1e1e1e; }
+:root.hc.dark { --fg: #ffffff; --bg: #000000; --muted: #e8e8e8; --link: #a8cdff; --rule: #e8e8e8; }
 html { background: var(--bg); color: var(--fg); }
 body { margin: 0 auto; max-width: 42em; padding: 2.5em 1.25em 4em; line-height: 1.6; font-size: 1.15rem; }
 body.sans { font-family: "Adwaita Sans", "Cantarell", "Inter", system-ui, sans-serif; }
@@ -714,7 +716,16 @@ h2, h3, h4 { line-height: 1.3; }
 
 /// The complete reader page. Scripts are blocked by a strict CSP, so the
 /// page is inert even if the source contained something unexpected.
-pub fn render(article: &Article, source_url: &str, font: FontStyle, colors: ColorScheme) -> String {
+/// The reader's palette is its own (it imitates paper, not the window);
+/// `high_contrast` switches it to black and white with full-strength
+/// secondary text and rules.
+pub fn render(
+    article: &Article,
+    source_url: &str,
+    font: FontStyle,
+    colors: ColorScheme,
+    high_contrast: bool,
+) -> String {
     let host = url::Url::parse(source_url)
         .ok()
         .and_then(|u| u.host_str().map(str::to_string))
@@ -738,7 +749,12 @@ pub fn render(article: &Article, source_url: &str, font: FontStyle, colors: Colo
          <title>{title}</title><style>{css}</style></head>\
          <body class=\"{font}\"><header class=\"reader\"><h1>{title}</h1><div class=\"meta\">{meta}</div></header>\
          <article>{content}</article></body></html>",
-        scheme = if colors == ColorScheme::Dark { "dark" } else { "light" },
+        scheme = match (colors == ColorScheme::Dark, high_contrast) {
+            (true, false) => "dark",
+            (false, false) => "light",
+            (true, true) => "dark hc",
+            (false, true) => "light hc",
+        },
         title = escape(&article.title),
         css = READER_CSS,
         font = if font == FontStyle::Serif { "serif" } else { "sans" },
@@ -894,6 +910,7 @@ mod tests {
             "https://site.example/a?b=\"c\"",
             FontStyle::Serif,
             ColorScheme::Dark,
+            false,
         );
         assert!(html.contains("<h1>&lt;Title&gt;</h1>"));
         assert!(html.contains("Me &amp; You"));
