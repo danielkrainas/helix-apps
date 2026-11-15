@@ -19,6 +19,7 @@ mod picker;
 mod power;
 mod privacy;
 mod shortcuts;
+mod sound;
 mod widgets;
 mod wifi;
 
@@ -64,7 +65,8 @@ fn panel_impl(id: PanelId) -> Option<&'static dyn Panel> {
         PanelId::Bluetooth => &bluetooth::BluetoothPanel,
         PanelId::Wifi => &wifi::WifiPanel,
         PanelId::Network => &network::NetworkPanel,
-        PanelId::Display | PanelId::Sound | PanelId::Apps | PanelId::Users => return None,
+        PanelId::Sound => &sound::SoundPanel,
+        PanelId::Display | PanelId::Apps | PanelId::Users => return None,
     })
 }
 

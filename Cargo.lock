@@ -1535,6 +1535,7 @@ dependencies = [
  "libadwaita",
  "qrcode",
  "serde",
+ "serde_json",
  "zbus",
 ]
 

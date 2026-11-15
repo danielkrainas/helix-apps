@@ -11,6 +11,7 @@ mod netconf;
 mod nm;
 mod panels;
 mod rfkill;
+mod sound;
 mod sysinfo;
 mod ui;
 mod values;

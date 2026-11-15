@@ -391,6 +391,12 @@
     <key name="allow-volume-above-100-percent" type="b">
       <default>false</default>
     </key>
+    <key name="event-sounds" type="b">
+      <default>true</default>
+    </key>
+    <key name="theme-name" type="s">
+      <default>'freedesktop'</default>
+    </key>
   </schema>
   <schema id="org.gnome.desktop.a11y.mouse" path="/org/gnome/desktop/a11y/mouse/">
     <key name="secondary-click-enabled" type="b">

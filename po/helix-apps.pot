@@ -345,7 +345,7 @@ msgstr ""
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:488 apps/maps/src/ui.rs:490
 #: apps/music/src/ui.rs:316 apps/music/src/ui.rs:318
 #: apps/screenshot/src/ui.rs:287 apps/screenshot/src/ui.rs:289
-#: apps/settings/src/ui/mod.rs:197 apps/settings/src/ui/mod.rs:199
+#: apps/settings/src/ui/mod.rs:199 apps/settings/src/ui/mod.rs:201
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:291 apps/terminal/src/window.rs:295
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
@@ -400,15 +400,17 @@ msgid "Repeat"
 msgstr ""
 
 #: apps/audio-player/src/ui.rs:378 apps/audio-player/src/ui.rs:380
-#: apps/video-player/src/ui.rs:481 apps/video-player/src/ui.rs:483
+#: apps/settings/src/ui/sound.rs:110 apps/video-player/src/ui.rs:481
+#: apps/video-player/src/ui.rs:483
 msgid "Mute"
 msgstr ""
 
 #: apps/audio-player/src/ui.rs:386 apps/audio-player/src/ui.rs:394
 #: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:1805
 #: apps/music/src/ui.rs:1812 apps/music/src/ui.rs:1817
-#: apps/video-player/src/ui.rs:157 apps/video-player/src/ui.rs:490
-#: apps/video-player/src/ui.rs:496 apps/video-player/src/ui.rs:502
+#: apps/settings/src/ui/sound.rs:147 apps/video-player/src/ui.rs:157
+#: apps/video-player/src/ui.rs:490 apps/video-player/src/ui.rs:496
+#: apps/video-player/src/ui.rs:502
 msgid "Volume"
 msgstr ""
 
@@ -1766,8 +1768,8 @@ msgstr ""
 #: apps/logs/src/shortcuts.rs:17 apps/logs/src/ui.rs:276
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:24 apps/music/src/ui.rs:289
-#: apps/music/src/ui.rs:291 apps/settings/src/ui/mod.rs:182
-#: apps/settings/src/ui/mod.rs:184 apps/settings/src/ui/shortcuts.rs:8
+#: apps/music/src/ui.rs:291 apps/settings/src/ui/mod.rs:184
+#: apps/settings/src/ui/mod.rs:186 apps/settings/src/ui/shortcuts.rs:8
 #: apps/system-monitor/src/shortcuts.rs:31 apps/system-monitor/src/ui.rs:223
 #: apps/system-monitor/src/ui.rs:225 apps/web/src/dialogs.rs:142
 #: apps/web/src/window.rs:47
@@ -1918,7 +1920,7 @@ msgstr ""
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:482
-#: apps/settings/src/ui/mod.rs:191 apps/terminal/src/window.rs:286
+#: apps/settings/src/ui/mod.rs:193 apps/terminal/src/window.rs:286
 #: apps/text-editor/src/window.rs:64 apps/web/src/window.rs:221
 #: apps/web/src/window.rs:264 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -1937,7 +1939,7 @@ msgid "Search Events"
 msgstr ""
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:961 apps/settings/src/ui/mod.rs:220
+#: apps/files/src/ui/tab.rs:961 apps/settings/src/ui/mod.rs:222
 #: apps/settings/src/ui/picker.rs:114 apps/web/src/dialogs.rs:739
 #: apps/web/src/window.rs:2372
 msgid "No Results Found"
@@ -1945,7 +1947,7 @@ msgstr ""
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:221
+#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:223
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:740
 #: apps/web/src/window.rs:2373
 msgid "Try a different search"
@@ -6620,7 +6622,7 @@ msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr ""
 
 #: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1251
-#: apps/maps/src/ui.rs:1254 apps/settings/src/ui/mod.rs:418
+#: apps/maps/src/ui.rs:1254 apps/settings/src/ui/mod.rs:420
 #: apps/settings/src/ui/picker.rs:33
 msgid "No results found"
 msgstr ""
@@ -6970,7 +6972,7 @@ msgid "Applications"
 msgstr ""
 
 #: apps/files/src/ui/dialogs.rs:364 apps/settings/src/ui/appearance.rs:107
-#: apps/settings/src/values.rs:198
+#: apps/settings/src/ui/sound.rs:736 apps/settings/src/values.rs:198
 msgid "Default"
 msgstr ""
 
@@ -10372,7 +10374,7 @@ msgstr ""
 msgid "Headphones"
 msgstr ""
 
-#: apps/settings/src/bluez.rs:223
+#: apps/settings/src/bluez.rs:223 apps/settings/src/sound.rs:645
 msgid "Speaker"
 msgstr ""
 
@@ -10639,6 +10641,7 @@ msgid "dark;light;style;theme;icon;icons;accent;color;colour;wallpaper;backgroun
 msgstr ""
 
 #: apps/settings/src/panels.rs:144 apps/settings/src/ui/notifications.rs:47
+#: apps/settings/src/ui/sound.rs:249
 msgid "Apps"
 msgstr ""
 
@@ -10727,6 +10730,46 @@ msgstr ""
 #: apps/settings/src/panels.rs:256
 msgid ""
 "device name;hostname;memory;processor;cpu;disk;os;version;kernel;hardware;"
+msgstr ""
+
+#: apps/settings/src/sound.rs:635
+msgid "Front Left"
+msgstr ""
+
+#: apps/settings/src/sound.rs:636
+msgid "Front Right"
+msgstr ""
+
+#: apps/settings/src/sound.rs:637
+msgid "Front Center"
+msgstr ""
+
+#: apps/settings/src/sound.rs:638
+msgid "Rear Left"
+msgstr ""
+
+#: apps/settings/src/sound.rs:639
+msgid "Rear Right"
+msgstr ""
+
+#: apps/settings/src/sound.rs:640
+msgid "Rear Center"
+msgstr ""
+
+#: apps/settings/src/sound.rs:641
+msgid "Side Left"
+msgstr ""
+
+#: apps/settings/src/sound.rs:642
+msgid "Side Right"
+msgstr ""
+
+#: apps/settings/src/sound.rs:643
+msgid "Subwoofer"
+msgstr ""
+
+#: apps/settings/src/sound.rs:644
+msgid "Mono"
 msgstr ""
 
 #. Translators: the OS type in About, "64-bit".
@@ -11615,11 +11658,11 @@ msgstr ""
 msgid "Primary Button"
 msgstr ""
 
-#: apps/settings/src/ui/input.rs:70
+#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:211
 msgid "Left"
 msgstr ""
 
-#: apps/settings/src/ui/input.rs:70
+#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:213
 msgid "Right"
 msgstr ""
 
@@ -11763,46 +11806,46 @@ msgstr ""
 msgid "Remove {source}"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:153 apps/settings/src/ui/mod.rs:233
-#: apps/settings/src/ui/mod.rs:487
+#: apps/settings/src/ui/mod.rs:155 apps/settings/src/ui/mod.rs:235
+#: apps/settings/src/ui/mod.rs:489
 msgid "Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:171
+#: apps/settings/src/ui/mod.rs:173
 msgid "Search settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:174 apps/settings/src/ui/shortcuts.rs:10
+#: apps/settings/src/ui/mod.rs:176 apps/settings/src/ui/shortcuts.rs:10
 msgid "Search Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:192
+#: apps/settings/src/ui/mod.rs:194
 msgid "_About Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:342 apps/settings/src/ui/mod.rs:355
+#: apps/settings/src/ui/mod.rs:344 apps/settings/src/ui/mod.rs:357
 msgid "Not yet available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:376
+#: apps/settings/src/ui/mod.rs:378
 msgid "Not Yet Available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:419
+#: apps/settings/src/ui/mod.rs:421
 msgid "{n} panel found"
 msgid_plural "{n} panels found"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/ui/mod.rs:456
+#: apps/settings/src/ui/mod.rs:458
 msgid "{} Is Not Yet Available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:457
+#: apps/settings/src/ui/mod.rs:459
 msgid "This panel will be added in a later version of Helix Settings."
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:488
+#: apps/settings/src/ui/mod.rs:490
 msgid "Configure the Helix desktop"
 msgstr ""
 
@@ -12368,6 +12411,150 @@ msgstr ""
 
 #: apps/settings/src/ui/shortcuts.rs:19
 msgid "About Settings"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:135
+msgid "Input"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:135
+msgid "Output"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:139
+msgid "Output Device"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:141
+msgid "Input Device"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:150
+msgid "Mute Output"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:152
+msgid "Mute Input"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:155
+msgid "Output Volume"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:157
+msgid "Input Volume"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:164
+msgid "Configuration"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:170
+msgid "Output Configuration"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:172
+msgid "Input Configuration"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:190
+msgid "Loading Sound…"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:194
+msgid "Sound Is Not Available"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:195
+msgid "No sound server is running."
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:204 apps/settings/src/ui/sound.rs:214
+msgid "Balance"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:219
+msgid "Test Speakers"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:220
+msgid "Play a sound on each speaker"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:221
+msgid "Test…"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:230 apps/settings/src/ui/sound.rs:243
+msgid "Input Level"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:252
+msgid "Sounds"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:258
+msgid "Over-Amplification"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:259
+msgid "Lets the volume go above 100 %, which can distort the sound"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:266
+msgid "System Sounds"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:267
+msgid "Sounds for events such as a message arriving"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:460
+msgid "Could not change the sound settings: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:483
+msgid "No output devices"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:485
+msgid "No input devices"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:586
+msgid "Unknown App"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:595
+msgid "Mute {app}"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:596
+msgid "Volume of {app}"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:640
+msgid "No apps are playing sound."
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:685
+msgid "Select a speaker to play a sound on it."
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:719
+msgid "Could not play the test sound: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:728
+msgid "Test {device}"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:740
+msgid "Alert Sound"
+msgstr ""
+
+#: apps/settings/src/ui/sound.rs:778
+msgid "Could not change the alert sound: {e}"
 msgstr ""
 
 #: apps/settings/src/ui/widgets.rs:13

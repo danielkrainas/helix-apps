@@ -99,7 +99,7 @@ pub const PANELS: &[PanelInfo] = &[
         // by semicolons; add words people would search for in your language.
         keywords: n_("volume;speaker;microphone;audio;output;input;alert;mute;"),
         group: 1,
-        available: false,
+        available: true,
     },
     PanelInfo {
         id: PanelId::Power,
@@ -383,12 +383,7 @@ mod tests {
     fn availability() {
         assert!(info(PanelId::Appearance).available);
         assert!(info(PanelId::About).available);
-        for id in [
-            PanelId::Display,
-            PanelId::Sound,
-            PanelId::Users,
-            PanelId::Apps,
-        ] {
+        for id in [PanelId::Display, PanelId::Users, PanelId::Apps] {
             assert!(!info(id).available, "{id:?}");
         }
     }

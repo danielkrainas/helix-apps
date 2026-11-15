@@ -93,7 +93,7 @@ Primary configuration UI for the desktop and system.
 | `network` | `wired` | yes |
 | `bluetooth` | | yes |
 | `display` | `displays`, `screen` | no |
-| `sound` | `audio` | no |
+| `sound` | `audio` | yes |
 | `power` | | yes |
 | `multitasking` | `workspaces` | yes |
 | `appearance` | `background`, `wallpaper` | yes |
@@ -475,6 +475,54 @@ live), and the network proxy.
   wired connections; the `nmcli` import path has not been tried against a
   real NetworkManager.
 
+#### Sound
+The sound server's PulseAudio interface through `pactl` (as the shell's
+volume keys use it; PipeWire serves it with pipewire-pulse): `pactl -f
+json list sinks|sources|sink-inputs|cards`, `get-default-sink/source`,
+and the `set-*` commands (`sound.rs`). The page follows `pactl subscribe`
+(sink, source, card and server events, read again at most every
+0.15 s).
+
+- Until the first reading: *Loading Sound…*; without `pactl` or a
+  server, *Sound Is Not Available* / "No sound server is running."
+- *Output*: *Output Device* (the outputs by description; choosing one is
+  `set-default-sink`), *Volume* with a mute toggle ("Mute Output") and a
+  slider ("Output Volume", value text "N %") to 100 %, or 150 % with
+  over-amplification (a "100 %" mark then), *Balance* (left … right, for
+  outputs with front-left and front-right channels: the far channel is
+  turned down), *Configuration* (the card's available profiles, by
+  priority — HDMI or analogue, A2DP or HFP —, `set-card-profile`; shown
+  when there are two or more), *Test Speakers* (a dialog with one button
+  per channel; each plays a 0.6 s tone on that channel alone with
+  `pacat --channel-map=<position>`).
+- *Input*: device, volume and mute as for output (monitors of outputs
+  are not inputs), *Input Level* (a level bar fed by `parec` of the input,
+  20 readings a second, falling back slowly; it runs only while the page
+  is on screen), *Configuration*.
+- *Apps*: one row per playing stream (event sounds, speaker tests and
+  meters left out), the app's name, what it plays, a mute toggle ("Mute
+  APP") and a volume slider ("Volume of APP"); "No apps are playing
+  sound." when there are none.
+- *Sounds*: *Over-Amplification* (`org.gnome.desktop.sound
+  allow-volume-above-100-percent`), *System Sounds* (`event-sounds`),
+  *Alert Sound*: *Default* (the theme's bell) or one of the sounds in
+  `sounds/gnome/default/alerts` of the data directories (by file name).
+  Choosing one writes a sound theme `__custom` in
+  `$XDG_DATA_HOME/sounds` that inherits from the previous theme and links
+  `bell-terminal.oga` and `bell-window-system.oga` to the file, sets
+  `theme-name` to it and plays the sound; *Default* removes the theme and
+  restores the inherited name.
+- Slider changes go out one at a time (only the newest waiting one is
+  kept), and readings leave a slider alone for 0.8 s after the user
+  moved it.
+- Tested against a private PipeWire with pipewire-pulse in a temporary
+  runtime directory, with virtual outputs and input (`sound.rs`). Without
+  a session manager nothing links streams there, so the test tone and
+  the level readings themselves were not heard or seen in tests (a
+  private WirePlumber would open the real sound hardware). Not yet: the
+  front/rear fade, a system sounds volume (only the on/off switch), port
+  choice within a device.
+
 #### Bluetooth
 BlueZ (`org.bluez` on the system bus: the object manager at `/`,
 `org.bluez.Adapter1`, `Device1`, `Battery1`). The panel uses the first
@@ -597,9 +645,6 @@ registered accelerators.
 - **Displays**: `org.gnome.Mutter.DisplayConfig` (`GetCurrentState` /
   `ApplyMonitorsConfig`, with a revert-countdown confirmation), night light
   via `org.gnome.settings-daemon.plugins.color`.
-- **Sound**: PipeWire (or the PulseAudio-compatible API) for devices and
-  volumes; `org.gnome.desktop.sound` for alert sounds and
-  `allow-volume-above-100-percent`.
 - **Users**: `org.freedesktop.Accounts`.
 - **Apps**: default applications (`gio::AppInfo` defaults) and per-app
   permissions through the permission store.
