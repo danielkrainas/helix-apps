@@ -4,9 +4,6 @@
 //! One reading takes NetworkManager's object manager (`/org/freedesktop`)
 //! and every saved connection's settings.
 
-// Parts are used by the Network panel only (next).
-#![allow(dead_code)]
-
 use std::collections::HashMap;
 
 use helix_app_common::i18n::tr;
@@ -38,6 +35,7 @@ pub const TYPE_WIFI: u32 = 2;
 pub const STATE_ACTIVATED: u32 = 100;
 /// `NM_DEVICE_STATE_UNAVAILABLE` (no cable, radio off…).
 pub const STATE_UNAVAILABLE: u32 = 20;
+#[cfg(test)]
 /// `NM_DEVICE_STATE_DISCONNECTED`.
 pub const STATE_DISCONNECTED: u32 = 30;
 
@@ -212,10 +210,6 @@ impl Saved {
 
     pub fn id(&self) -> String {
         self.s("connection", "id").unwrap_or_default()
-    }
-
-    pub fn uuid(&self) -> String {
-        self.s("connection", "uuid").unwrap_or_default()
     }
 
     /// `802-11-wireless`, `802-3-ethernet`, `vpn`, `wireguard`…
@@ -1182,7 +1176,12 @@ pub mod tests {
                 .and_then(|g| get(g, "id"))
                 .unwrap_or_default();
             self.log.lock().unwrap().push(format!("AddConnection {id}"));
-            let p = "/org/freedesktop/NetworkManager/Settings/50";
+            static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(50);
+            let p = format!(
+                "/org/freedesktop/NetworkManager/Settings/{}",
+                NEXT.fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+            );
+            let p = p.as_str();
             server
                 .at(
                     p,

@@ -75,6 +75,11 @@
     <value value="2" nick="proportional"/>
     <value value="3" nick="push"/>
   </enum>
+  <enum id="org.helix.Settings.compat.ProxyMode">
+    <value value="0" nick="none"/>
+    <value value="1" nick="manual"/>
+    <value value="2" nick="auto"/>
+  </enum>
   <schema id="org.gnome.desktop.interface" path="/org/gnome/desktop/interface/">
     <key name="color-scheme" enum="org.helix.Settings.compat.ColorScheme">
       <default>'default'</default>
@@ -458,6 +463,57 @@
     <key name="color-saturation" type="d">
       <default>1.0</default>
       <range min="0.0" max="1.0"/>
+    </key>
+  </schema>
+  <schema id="org.gnome.system.proxy" path="/system/proxy/">
+    <key name="mode" enum="org.helix.Settings.compat.ProxyMode">
+      <default>'none'</default>
+    </key>
+    <key name="autoconfig-url" type="s">
+      <default>''</default>
+    </key>
+    <key name="ignore-hosts" type="as">
+      <default>['localhost', '127.0.0.0/8', '::1']</default>
+    </key>
+    <child name="http" schema="org.gnome.system.proxy.http"/>
+    <child name="https" schema="org.gnome.system.proxy.https"/>
+    <child name="ftp" schema="org.gnome.system.proxy.ftp"/>
+    <child name="socks" schema="org.gnome.system.proxy.socks"/>
+  </schema>
+  <schema id="org.gnome.system.proxy.http" path="/system/proxy/http/">
+    <key name="host" type="s">
+      <default>''</default>
+    </key>
+    <key name="port" type="i">
+      <default>8080</default>
+      <range min="0" max="65535"/>
+    </key>
+  </schema>
+  <schema id="org.gnome.system.proxy.https" path="/system/proxy/https/">
+    <key name="host" type="s">
+      <default>''</default>
+    </key>
+    <key name="port" type="i">
+      <default>0</default>
+      <range min="0" max="65535"/>
+    </key>
+  </schema>
+  <schema id="org.gnome.system.proxy.ftp" path="/system/proxy/ftp/">
+    <key name="host" type="s">
+      <default>''</default>
+    </key>
+    <key name="port" type="i">
+      <default>0</default>
+      <range min="0" max="65535"/>
+    </key>
+  </schema>
+  <schema id="org.gnome.system.proxy.socks" path="/system/proxy/socks/">
+    <key name="host" type="s">
+      <default>''</default>
+    </key>
+    <key name="port" type="i">
+      <default>0</default>
+      <range min="0" max="65535"/>
     </key>
   </schema>
 </schemalist>

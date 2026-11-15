@@ -13,6 +13,7 @@ mod extensions;
 mod input;
 mod multitasking;
 mod netedit;
+mod network;
 mod notifications;
 mod picker;
 mod power;
@@ -62,9 +63,8 @@ fn panel_impl(id: PanelId) -> Option<&'static dyn Panel> {
         PanelId::About => &about::AboutPanel,
         PanelId::Bluetooth => &bluetooth::BluetoothPanel,
         PanelId::Wifi => &wifi::WifiPanel,
-        PanelId::Network | PanelId::Display | PanelId::Sound | PanelId::Apps | PanelId::Users => {
-            return None
-        }
+        PanelId::Network => &network::NetworkPanel,
+        PanelId::Display | PanelId::Sound | PanelId::Apps | PanelId::Users => return None,
     })
 }
 

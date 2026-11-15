@@ -248,9 +248,158 @@ pub fn write(group: Option<&Group>, e: &IpEdit, v6: bool) -> Group {
     g
 }
 
+/// A WireGuard configuration file (`wg-quick` format: `[Interface]` and
+/// `[Peer]` sections) as NetworkManager settings; `name` (the file's
+/// stem) names the connection and the interface. `None` when it is not
+/// one.
+pub fn wireguard(text: &str, name: &str) -> Option<crate::nm::Settings> {
+    let mut section = String::new();
+    let mut iface: HashMap<String, String> = HashMap::new();
+    let mut peers: Vec<HashMap<String, String>> = Vec::new();
+    for line in text.lines() {
+        let line = line.split('#').next().unwrap_or("").trim();
+        if line.is_empty() {
+            continue;
+        }
+        if line.starts_with('[') && line.ends_with(']') {
+            section = line[1..line.len() - 1].trim().to_lowercase();
+            if section == "peer" {
+                peers.push(HashMap::new());
+            }
+            continue;
+        }
+        let (k, v) = line.split_once('=')?;
+        let (k, v) = (k.trim().to_lowercase(), v.trim().to_string());
+        match section.as_str() {
+            "interface" => {
+                iface.insert(k, v);
+            }
+            "peer" => {
+                peers.last_mut()?.insert(k, v);
+            }
+            _ => return None,
+        }
+    }
+    let key = iface.get("privatekey")?;
+    let mut wg: Group = HashMap::from([("private-key".to_owned(), val(key.as_str()))]);
+    if let Some(port) = iface.get("listenport").and_then(|p| p.parse::<u32>().ok()) {
+        wg.insert("listen-port".into(), val(port));
+    }
+    let peer_list: Vec<Group> = peers
+        .iter()
+        .filter_map(|p| {
+            let mut g: Group =
+                HashMap::from([("public-key".to_owned(), val(p.get("publickey")?.as_str()))]);
+            if let Some(e) = p.get("endpoint") {
+                g.insert("endpoint".into(), val(e.as_str()));
+            }
+            if let Some(k) = p.get("presharedkey") {
+                g.insert("preshared-key".into(), val(k.as_str()));
+            }
+            if let Some(k) = p
+                .get("persistentkeepalive")
+                .and_then(|k| k.parse::<u32>().ok())
+            {
+                g.insert("persistent-keepalive".into(), val(k));
+            }
+            let ips: Vec<String> = p
+                .get("allowedips")
+                .map(|a| items(a).map(str::to_owned).collect())
+                .unwrap_or_default();
+            g.insert("allowed-ips".into(), val(ips));
+            Some(g)
+        })
+        .collect();
+    wg.insert("peers".into(), val(peer_list));
+    let addresses: Vec<&str> = iface
+        .get("address")
+        .map(|a| items(a).collect())
+        .unwrap_or_default();
+    let dns = iface.get("dns").cloned().unwrap_or_default();
+    let family = |v6: bool| {
+        let mine: Vec<&str> = addresses
+            .iter()
+            .copied()
+            .filter(|a| parse_cidr(a, v6).is_some())
+            .collect();
+        let dns: Vec<&str> = items(&dns).filter(|d| addr(d, v6).is_some()).collect();
+        let e = IpEdit {
+            method: if mine.is_empty() {
+                Method::Disabled
+            } else {
+                Method::Manual
+            },
+            addresses: mine.join(", "),
+            gateway: String::new(),
+            dns: dns.join(", "),
+            auto_dns: false,
+            routes: String::new(),
+            never_default: false,
+        };
+        write(None, &e, v6)
+    };
+    let interface: String = name
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
+        .take(15)
+        .collect();
+    let mut s = crate::nm::Settings::new();
+    s.insert(
+        "connection".into(),
+        HashMap::from([
+            ("id".to_owned(), val(name)),
+            ("type".to_owned(), val("wireguard")),
+            (
+                "interface-name".to_owned(),
+                val(if interface.is_empty() {
+                    "wg0".to_owned()
+                } else {
+                    interface
+                }),
+            ),
+            ("autoconnect".to_owned(), val(false)),
+        ]),
+    );
+    s.insert("wireguard".into(), wg);
+    s.insert("ipv4".into(), family(false));
+    s.insert("ipv6".into(), family(true));
+    Some(s)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn wireguard_files() {
+        let conf = "[Interface]\nPrivateKey = cHJpdmF0ZQ==\nAddress = 10.7.0.2/24, fd00::2/64\nDNS = 10.7.0.1\n\n[Peer] # the server\nPublicKey = cHVibGlj\nEndpoint = vpn.example.org:51820\nAllowedIPs = 0.0.0.0/0, ::/0\nPersistentKeepalive = 25\n";
+        let s = wireguard(conf, "office vpn").unwrap();
+        let wg = &s["wireguard"];
+        assert_eq!(get::<String>(wg, "private-key").unwrap(), "cHJpdmF0ZQ==");
+        let peers: Vec<HashMap<String, OwnedValue>> = get(wg, "peers").unwrap();
+        assert_eq!(peers.len(), 1);
+        assert_eq!(
+            get::<Vec<String>>(&peers[0], "allowed-ips").unwrap(),
+            ["0.0.0.0/0", "::/0"]
+        );
+        assert_eq!(get::<u32>(&peers[0], "persistent-keepalive"), Some(25));
+        let c = &s["connection"];
+        assert_eq!(get::<String>(c, "interface-name").unwrap(), "officevpn");
+        let v4 = read(s.get("ipv4"), false);
+        assert_eq!(
+            (v4.method, v4.addresses.as_str(), v4.dns.as_str()),
+            (Method::Manual, "10.7.0.2/24", "10.7.0.1")
+        );
+        assert_eq!(read(s.get("ipv6"), true).addresses, "fd00::2/64");
+        assert!(
+            wireguard("[Interface]\nAddress = 1.2.3.4\n", "x").is_none(),
+            "no key"
+        );
+        assert!(
+            wireguard("client\nremote vpn 1194\n", "x").is_none(),
+            "not WireGuard"
+        );
+    }
 
     fn edit(method: Method, addresses: &str, gateway: &str, dns: &str, routes: &str) -> IpEdit {
         IpEdit {

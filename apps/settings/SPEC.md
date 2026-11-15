@@ -90,7 +90,7 @@ Primary configuration UI for the desktop and system.
 | Id | Aliases | Available |
 |---|---|---|
 | `wifi` | `wi-fi`, `wireless` | yes |
-| `network` | `wired` | no |
+| `network` | `wired` | yes |
 | `bluetooth` | | yes |
 | `display` | `displays`, `screen` | no |
 | `sound` | `audio` | no |
@@ -431,6 +431,50 @@ saved connection (`nm.rs`). The page follows NetworkManager and BlueZ live
   enterprise (802.1X) networks, editing a saved network's password or
   security, choosing a hotspot's band.
 
+#### Network
+Wired connections and VPNs from NetworkManager (as for Wi-Fi, followed
+live), and the network proxy.
+
+- Until the first reading: *Loading Network…*. Without NetworkManager a
+  *Connections* group says it is not running; the proxy still works.
+- One *Wired* group per managed Ethernet device ("Wired (enp3s0)" when
+  there are several): a row with the state ("Connected — 1000 Mb/s",
+  "Connecting…", "Cable unplugged", "Off"), *Details* and a switch named
+  after the group. On activates the device's first profile (or, without
+  one, `AddAndActivateConnection({}, device, /)`); off is
+  `Device.Disconnect`. The switch is insensitive without a cable.
+  Profiles are the saved `802-3-ethernet` connections bound to the
+  interface or to none; with several, each is listed ("In use" with a
+  check, or activated when chosen) with its *Details*. *Add Profile* saves
+  a new one ("Wired Profile N", bound to the interface, not connecting by
+  itself) and opens its details.
+- *Details* is the shared editor described under Wi-Fi (addresses, DNS,
+  routes, metered, connect automatically), plus *Name*; *Remove
+  Profile…* deletes it.
+- *VPN*: saved `vpn` and `wireguard` connections, each with its state
+  (Connected, Connecting…, Off), *Details* (type — WireGuard, OpenVPN,
+  OpenConnect… —, addresses, the shared editor, *Remove VPN…*) and a
+  switch (`ActivateConnection(vpn, /, /)` / `DeactivateConnection`). The
+  *+* button ("Import VPN From File…") takes a `.conf` or `.ovpn` file:
+  WireGuard files (`[Interface]` / `[Peer]`, `wg-quick` format) are turned
+  into a `wireguard` connection here (`netconf::wireguard`: keys,
+  endpoint, allowed IPs, keepalive, addresses and DNS, the interface named
+  after the file, not connecting by itself) and saved with
+  `AddConnection`; other files go to `nmcli connection import type openvpn
+  file …` (the OpenVPN plugin's importer).
+- *Network Proxy*: *Mode* (`org.gnome.system.proxy mode`: Off = `none`,
+  Manual, Automatic = `auto`); Automatic shows *Configuration URL*
+  (`autoconfig-url`, applied with its button); Manual shows host and port
+  for HTTP, HTTPS, FTP and SOCKS (`org.gnome.system.proxy.{http,https,ftp,socks}`
+  `host` / `port`) and *Ignore Hosts* (`ignore-hosts`, comma separated).
+  The compat schema has these keys.
+- Tested against the fake NetworkManager (`ui/network.rs`, `nm.rs`,
+  `netconf.rs`). Not yet: creating a VPN by hand and editing a VPN's
+  plugin settings (gateway, credentials: NetworkManager's per-plugin
+  editors), importing files other than WireGuard and OpenVPN, 802.1X on
+  wired connections; the `nmcli` import path has not been tried against a
+  real NetworkManager.
+
 #### Bluetooth
 BlueZ (`org.bluez` on the system bus: the object manager at `/`,
 `org.bluez.Adapter1`, `Device1`, `Battery1`). The panel uses the first
@@ -550,8 +594,6 @@ registered accelerators.
 - `-h` / `--help` prints usage.
 
 ### Follow-up panels (listed, not yet available)
-- **Network**: NetworkManager D-Bus (`org.freedesktop.NetworkManager`)
-  for wired devices and VPN; proxy via `org.gnome.system.proxy`.
 - **Displays**: `org.gnome.Mutter.DisplayConfig` (`GetCurrentState` /
   `ApplyMonitorsConfig`, with a revert-countdown confirmation), night light
   via `org.gnome.settings-daemon.plugins.color`.

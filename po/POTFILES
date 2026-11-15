@@ -151,6 +151,7 @@ apps/settings/src/ui/input.rs
 apps/settings/src/ui/mod.rs
 apps/settings/src/ui/multitasking.rs
 apps/settings/src/ui/netedit.rs
+apps/settings/src/ui/network.rs
 apps/settings/src/ui/notifications.rs
 apps/settings/src/ui/picker.rs
 apps/settings/src/ui/power.rs

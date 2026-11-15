@@ -193,7 +193,7 @@ msgstr ""
 #: apps/audio-player/src/mpris.rs:181 apps/disks/src/model.rs:386
 #: apps/disks/src/parttypes.rs:201 apps/document-viewer/src/dialogs.rs:82
 #: apps/music/src/mpris.rs:66 apps/music/src/queue.rs:43
-#: apps/settings/src/nm.rs:121 apps/settings/src/ui/extensions.rs:368
+#: apps/settings/src/nm.rs:119 apps/settings/src/ui/extensions.rs:368
 #: apps/video-player/src/ui.rs:1739
 msgid "None"
 msgstr ""
@@ -735,7 +735,7 @@ msgstr ""
 
 #: apps/calculator/src/format.rs:32 apps/document-scanner/src/settings.rs:29
 #: apps/document-scanner/src/ui.rs:1729 apps/document-scanner/src/ui.rs:1796
-#: apps/settings/src/ui/netedit.rs:32
+#: apps/settings/src/ui/netedit.rs:32 apps/settings/src/ui/network.rs:27
 msgid "Automatic"
 msgstr ""
 
@@ -2235,6 +2235,8 @@ msgstr ""
 
 #: apps/camera/src/ui.rs:161 apps/disks/src/ui.rs:931
 #: apps/music/src/player.rs:53 apps/settings/src/extensions.rs:116
+#: apps/settings/src/ui/network.rs:25 apps/settings/src/ui/network.rs:187
+#: apps/settings/src/ui/network.rs:466
 msgid "Off"
 msgstr ""
 
@@ -3447,9 +3449,9 @@ msgstr ""
 msgid "Add Address"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:380 crates/helix-eds/src/vcard.rs:699
-#: crates/helix-eds/src/vcard.rs:711 crates/helix-eds/src/vcard.rs:724
-#: crates/helix-eds/src/vcard.rs:731
+#: apps/contacts/src/editor.rs:380 apps/settings/src/ui/network.rs:570
+#: crates/helix-eds/src/vcard.rs:699 crates/helix-eds/src/vcard.rs:711
+#: crates/helix-eds/src/vcard.rs:724 crates/helix-eds/src/vcard.rs:731
 msgid "Other"
 msgstr ""
 
@@ -5171,7 +5173,8 @@ msgstr ""
 #: apps/disks/src/ui.rs:1357 apps/disks/src/ui.rs:1626
 #: apps/disks/src/ui.rs:1898 apps/files/src/sorting.rs:45
 #: apps/files/src/ui/properties.rs:126 apps/files/src/ui/tab.rs:192
-#: apps/settings/src/ui/bluetooth.rs:513 apps/system-monitor/src/fs_view.rs:25
+#: apps/settings/src/ui/bluetooth.rs:513 apps/settings/src/ui/network.rs:528
+#: apps/system-monitor/src/fs_view.rs:25
 msgid "Type"
 msgstr ""
 
@@ -10343,7 +10346,8 @@ msgstr ""
 msgid "settings"
 msgstr ""
 
-#: apps/settings/src/bluez.rs:66 apps/settings/src/ui/wifi.rs:470
+#: apps/settings/src/bluez.rs:66 apps/settings/src/ui/network.rs:180
+#: apps/settings/src/ui/network.rs:463 apps/settings/src/ui/wifi.rs:470
 #: apps/settings/src/ui/wifi.rs:833
 msgid "Connected"
 msgstr ""
@@ -10521,47 +10525,47 @@ msgstr ""
 msgid "Stopped working: {}"
 msgstr ""
 
-#: apps/settings/src/nm.rs:122
+#: apps/settings/src/nm.rs:120
 msgid "Enhanced Open"
 msgstr ""
 
-#: apps/settings/src/nm.rs:123
+#: apps/settings/src/nm.rs:121
 msgid "WEP"
 msgstr ""
 
-#: apps/settings/src/nm.rs:124
+#: apps/settings/src/nm.rs:122
 msgid "WPA/WPA2 Personal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:125
+#: apps/settings/src/nm.rs:123
 msgid "WPA3 Personal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:126
+#: apps/settings/src/nm.rs:124
 msgid "WPA/WPA2 Enterprise"
 msgstr ""
 
-#: apps/settings/src/nm.rs:565
+#: apps/settings/src/nm.rs:559
 msgid "No signal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:566
+#: apps/settings/src/nm.rs:560
 msgid "Weak signal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:567
+#: apps/settings/src/nm.rs:561
 msgid "OK signal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:568
+#: apps/settings/src/nm.rs:562
 msgid "Good signal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:569
+#: apps/settings/src/nm.rs:563
 msgid "Excellent signal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:727 apps/settings/src/ui/wifi.rs:123
+#: apps/settings/src/nm.rs:721 apps/settings/src/ui/wifi.rs:123
 msgid "Hotspot"
 msgstr ""
 
@@ -11867,7 +11871,7 @@ msgstr ""
 msgid "Otherwise apps from all workspaces are included"
 msgstr ""
 
-#: apps/settings/src/ui/netedit.rs:33
+#: apps/settings/src/ui/netedit.rs:33 apps/settings/src/ui/network.rs:26
 msgid "Manual"
 msgstr ""
 
@@ -11949,7 +11953,8 @@ msgstr ""
 msgid "Enter routes as destination/prefix and gateway, separated by commas"
 msgstr ""
 
-#: apps/settings/src/ui/netedit.rs:222 apps/weather/src/ui.rs:388
+#: apps/settings/src/ui/netedit.rs:222 apps/settings/src/ui/network.rs:196
+#: apps/weather/src/ui.rs:388
 msgid "Details"
 msgstr ""
 
@@ -11999,6 +12004,190 @@ msgstr ""
 
 #: apps/settings/src/ui/netedit.rs:412
 msgid "Could not remove it: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:45
+msgid "Loading Network…"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:129
+msgid "Connections"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:130
+msgid ""
+"NetworkManager is not running, so wired connections and VPNs cannot be shown."
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:178
+msgid "Connected — {speed} Mb/s"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:183 apps/settings/src/ui/network.rs:464
+#: apps/settings/src/ui/wifi.rs:472
+msgid "Connecting…"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:185
+msgid "Cable unplugged"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:198 apps/settings/src/ui/wifi.rs:501
+msgid "Details of {name}"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:204
+msgid "Wired ({interface})"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:206
+msgid "Wired"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:265
+msgid "Could not change the wired connection"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:279
+msgid "In use"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:281
+msgid "Select to use this profile"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:305
+msgid "Could not use {name}"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:315
+msgid "Add Profile"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:316
+msgid "Another set of settings for this connection"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:317
+msgid "Add…"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:320
+msgid "Add Profile for {name}"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:326
+msgid "Wired Profile {n}"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:351
+msgid "Could not add a profile: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:406 apps/settings/src/ui/wifi.rs:666
+msgid "Link Speed"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:406 apps/settings/src/ui/wifi.rs:667
+msgid "{n} Mb/s"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:411 apps/settings/src/ui/wifi.rs:734
+msgid "Hardware Address"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:423
+msgid "Remove Profile"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:434
+msgid "VPN"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:439 apps/settings/src/ui/network.rs:441
+msgid "Import VPN From File…"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:453
+msgid ""
+"No VPNs are set up. Import a WireGuard or OpenVPN configuration file with "
+"the + button."
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:465
+msgid "Disconnecting…"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:505
+msgid "Could not change {name}"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:547
+msgid "Remove VPN"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:580
+msgid "VPN Configuration Files"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:587
+msgid "Import VPN"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:606
+msgid "Could not import the VPN: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:630
+msgid "nmcli is not installed"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:709
+msgid "Network Proxy"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:710
+msgid "Mode"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:711
+msgid "Network Proxy Mode"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:713
+msgid "Configuration URL"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:717
+msgid "HTTP Proxy"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:718
+msgid "HTTPS Proxy"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:719
+msgid "FTP Proxy"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:720
+msgid "SOCKS Host"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:730
+msgid "Port"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:730
+msgid "{proxy} Port"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:739
+msgid "Ignore Hosts"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:742
+msgid "Hosts and networks reached without the proxy, separated by commas"
 msgstr ""
 
 #: apps/settings/src/ui/notifications.rs:31
@@ -12294,10 +12483,6 @@ msgstr ""
 msgid "No networks found."
 msgstr ""
 
-#: apps/settings/src/ui/wifi.rs:472
-msgid "Connecting…"
-msgstr ""
-
 #: apps/settings/src/ui/wifi.rs:474
 msgid "Saved"
 msgstr ""
@@ -12308,10 +12493,6 @@ msgstr ""
 
 #: apps/settings/src/ui/wifi.rs:499
 msgid "Network Details"
-msgstr ""
-
-#: apps/settings/src/ui/wifi.rs:501
-msgid "Details of {name}"
 msgstr ""
 
 #: apps/settings/src/ui/wifi.rs:525 apps/settings/src/ui/wifi.rs:935
@@ -12341,14 +12522,6 @@ msgstr ""
 
 #: apps/settings/src/ui/wifi.rs:655
 msgid "Frequency"
-msgstr ""
-
-#: apps/settings/src/ui/wifi.rs:666
-msgid "Link Speed"
-msgstr ""
-
-#: apps/settings/src/ui/wifi.rs:667
-msgid "{n} Mb/s"
 msgstr ""
 
 #: apps/settings/src/ui/wifi.rs:677 apps/settings/src/ui/wifi.rs:813
@@ -12385,10 +12558,6 @@ msgstr ""
 
 #: apps/settings/src/ui/wifi.rs:730
 msgid "IPv6 DNS"
-msgstr ""
-
-#: apps/settings/src/ui/wifi.rs:734
-msgid "Hardware Address"
 msgstr ""
 
 #: apps/settings/src/ui/wifi.rs:786

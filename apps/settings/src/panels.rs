@@ -63,7 +63,7 @@ pub const PANELS: &[PanelInfo] = &[
         // by semicolons; add words people would search for in your language.
         keywords: n_("ethernet;wired;vpn;proxy;ip;dns;internet;"),
         group: 0,
-        available: false,
+        available: true,
     },
     PanelInfo {
         id: PanelId::Bluetooth,
@@ -384,7 +384,6 @@ mod tests {
         assert!(info(PanelId::Appearance).available);
         assert!(info(PanelId::About).available);
         for id in [
-            PanelId::Network,
             PanelId::Display,
             PanelId::Sound,
             PanelId::Users,
