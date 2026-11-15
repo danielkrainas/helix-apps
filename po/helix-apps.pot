@@ -10433,10 +10433,6 @@ msgstr ""
 msgid "Other Device"
 msgstr ""
 
-#: apps/settings/src/dbus.rs:134
-msgid "Hostname"
-msgstr ""
-
 #: apps/settings/src/defaults.rs:15 apps/web/src/app.rs:126
 #: apps/web/src/app.rs:150 apps/web/src/app.rs:904 apps/web/src/window.rs:319
 #: apps/web/src/window.rs:1568

@@ -4,7 +4,6 @@
 //! `read_battery`. Mutating calls (`set_ntp`, `set_timezone`,
 //! `set_hostname`) are only issued from explicit user actions.
 
-use helix_app_common::i18n::tr;
 use zbus::blocking::{Connection, Proxy};
 
 type Result<T> = std::result::Result<T, String>;
@@ -131,7 +130,7 @@ pub fn read_hostname() -> Result<HostInfo> {
     let p = proxy(&conn, HOSTNAME.0, HOSTNAME.1, HOSTNAME.2)?;
     let s = |name: &str| p.get_property::<String>(name).unwrap_or_default();
     Ok(HostInfo {
-        hostname: s(tr("Hostname")),
+        hostname: s("Hostname"),
         pretty_hostname: s("PrettyHostname"),
         vendor: s("HardwareVendor"),
         model: s("HardwareModel"),

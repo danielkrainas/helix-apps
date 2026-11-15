@@ -137,7 +137,6 @@ apps/screenshot/src/shell.rs
 apps/screenshot/src/shortcuts.rs
 apps/screenshot/src/ui.rs
 apps/settings/src/bluez.rs
-apps/settings/src/dbus.rs
 apps/settings/src/defaults.rs
 apps/settings/src/displays.rs
 apps/settings/src/extensions.rs
