@@ -24,6 +24,8 @@ fn serve_fakes() {
     crate::bluez::tests::serve(&bluez, &log);
     let shell = connect();
     crate::bluez::tests::serve_send_to(&shell, &log);
+    let nm = connect();
+    crate::nm::tests::serve(&nm, &log);
     eprintln!("fakes ready");
     loop {
         std::thread::sleep(std::time::Duration::from_secs(5));

@@ -12,12 +12,14 @@ mod datetime;
 mod extensions;
 mod input;
 mod multitasking;
+mod netedit;
 mod notifications;
 mod picker;
 mod power;
 mod privacy;
 mod shortcuts;
 mod widgets;
+mod wifi;
 
 use adw::prelude::*;
 use gtk::{gio, glib};
@@ -59,12 +61,10 @@ fn panel_impl(id: PanelId) -> Option<&'static dyn Panel> {
         PanelId::DateTime => &datetime::DateTimePanel,
         PanelId::About => &about::AboutPanel,
         PanelId::Bluetooth => &bluetooth::BluetoothPanel,
-        PanelId::Wifi
-        | PanelId::Network
-        | PanelId::Display
-        | PanelId::Sound
-        | PanelId::Apps
-        | PanelId::Users => return None,
+        PanelId::Wifi => &wifi::WifiPanel,
+        PanelId::Network | PanelId::Display | PanelId::Sound | PanelId::Apps | PanelId::Users => {
+            return None
+        }
     })
 }
 

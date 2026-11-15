@@ -89,7 +89,7 @@ Primary configuration UI for the desktop and system.
 
 | Id | Aliases | Available |
 |---|---|---|
-| `wifi` | `wi-fi`, `wireless` | no |
+| `wifi` | `wi-fi`, `wireless` | yes |
 | `network` | `wired` | no |
 | `bluetooth` | | yes |
 | `display` | `displays`, `screen` | no |
@@ -361,6 +361,76 @@ menu entry opens this panel when Settings is installed.
   Off = `interactive`, Hibernate, Nothing), *Show Battery Percentage*
   (`interface show-battery-percentage`).
 
+#### Wi-Fi
+NetworkManager on the system bus: one reading is the root object's
+properties, the object manager at `/org/freedesktop` (devices, access
+points, active connections, IP configurations) and `GetSettings` of every
+saved connection (`nm.rs`). The page follows NetworkManager and BlueZ live
+(their signals, read again at most every 0.5 s).
+
+- Until the first reading: *Loading Wi-Fi…*. Then *Networking Is Not
+  Available* (NetworkManager is not running), *No Wi-Fi Adapter Found*
+  (no managed device of type Wi-Fi), or the page below.
+- *Wi-Fi*: `WirelessEnabled`. When `WirelessHardwareEnabled` is false the
+  switch is insensitive: "Turned off by a hardware switch".
+- *Airplane Mode*, as in the shell's quick settings: on while Wi-Fi is off
+  and no BlueZ adapter is powered; turning it on turns Wi-Fi, mobile
+  broadband (`WwanEnabled`) and every adapter off, turning it off turns
+  Wi-Fi and the adapters on.
+- *Wi-Fi Adapter*: with several Wi-Fi devices, a choice of which one the
+  page shows (by interface name); everything below is that device's.
+- *Visible Networks*: one row per network name the device sees (hidden
+  networks without a name are left out), the connected one first, then
+  by strength. Signal icon (as the shell's status area), name, "Connected"
+  / "Connecting…" / "Saved", a lock when secured; screen readers hear
+  "Good signal, Secured" as the row's description. Saved networks have a
+  *Details* button. Activating a row: the connected network opens its
+  details; a saved one is activated (`ActivateConnection` with the
+  access point); an open one is joined with `AddAndActivateConnection({},
+  device, ap)`; WEP, WPA/WPA2 and WPA3 Personal ask for the password first
+  ("Connect to NAME", *Connect* enabled once the password fits: 8–63
+  characters or 64 hex digits for WPA) and join with `key-mgmt`
+  `wpa-psk` / `sae` / WEP keys; enterprise networks give a toast that
+  they cannot be joined here yet. The page asks for a scan
+  (`RequestScan`) when it is shown and every 20 s while it is.
+- *Details* (shared with the Network panel, `ui/netedit.rs`): while
+  connected, signal, security, band, link speed, IPv4/IPv6 addresses,
+  default route, DNS and hardware address; *Share Network* (below);
+  *Connect Automatically* (`connection.autoconnect`), *Metered Connection*
+  (`connection.metered` 1 / 2); IPv4 and IPv6: *Method* (Automatic,
+  Manual, Link-Local Only, Disabled), and as they apply *Addresses*
+  (`a.b.c.d/prefix`, comma separated; /24 or /64 when left out),
+  *Gateway*, *Automatic DNS* (`ignore-auto-dns` inverted), *DNS Servers*,
+  *Routes* (`destination/prefix gateway`, comma separated, into
+  `route-data`), *Use Only for Resources on This Network*
+  (`never-default`). *Apply* checks the fields (the first wrong one is
+  marked invalid, named and focused), then `Update`s the connection with
+  its secrets fetched first (`GetSecrets`, as an update drops secrets it
+  leaves out) and activates it again when it was active. *Forget
+  Network…* (confirmed) deletes it.
+- *Share Network* / *Show QR Code*: a dialog with a QR code in the
+  `WIFI:S:…;T:WPA|SAE|WEP|nopass;P:…;;` form phones read, the name,
+  password (from `GetSecrets`) and security.
+- *Saved Networks*: the saved Wi-Fi connections (hotspots left out),
+  each opening its details.
+- *Connect to Hidden Network*: name, security (None, WPA/WPA2 Personal,
+  WPA3 Personal) and password; `AddAndActivateConnection` with
+  `802-11-wireless.hidden`.
+- *Wi-Fi Hotspot*: network name (the host name, or the hotspot's
+  previous name) and a random 8-character password; turning it on
+  creates (or updates and activates) a connection with `mode` `ap`,
+  `wpa-psk` and `ipv4.method` `shared`, warning that it disconnects the
+  current network. While a hotspot runs the network list is replaced by a
+  *Hotspot* group with its name, password, QR code and *Turn Off*
+  (`DeactivateConnection`).
+- Mutating calls allow interactive authorization (polkit may ask);
+  refusals are not reported, other errors are toasts ("Could not connect
+  to NAME: …").
+- Tested against a fake NetworkManager on a private bus (`nm.rs`,
+  `netconf.rs`); not yet tried with real Wi-Fi hardware. Not yet:
+  enterprise (802.1X) networks, editing a saved network's password or
+  security, choosing a hotspot's band.
+
 #### Bluetooth
 BlueZ (`org.bluez` on the system bus: the object manager at `/`,
 `org.bluez.Adapter1`, `Device1`, `Battery1`). The panel uses the first
@@ -480,9 +550,8 @@ registered accelerators.
 - `-h` / `--help` prints usage.
 
 ### Follow-up panels (listed, not yet available)
-- **Wi-Fi / Network**: NetworkManager D-Bus (`org.freedesktop.NetworkManager`)
-  for devices, connections and VPN; connection editor dialogs; proxy via
-  `org.gnome.system.proxy`.
+- **Network**: NetworkManager D-Bus (`org.freedesktop.NetworkManager`)
+  for wired devices and VPN; proxy via `org.gnome.system.proxy`.
 - **Displays**: `org.gnome.Mutter.DisplayConfig` (`GetCurrentState` /
   `ApplyMonitorsConfig`, with a revert-countdown confirmation), night light
   via `org.gnome.settings-daemon.plugins.color`.

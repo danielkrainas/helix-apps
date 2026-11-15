@@ -139,6 +139,7 @@ apps/screenshot/src/ui.rs
 apps/settings/src/bluez.rs
 apps/settings/src/dbus.rs
 apps/settings/src/extensions.rs
+apps/settings/src/nm.rs
 apps/settings/src/panels.rs
 apps/settings/src/ui/about.rs
 apps/settings/src/ui/access.rs
@@ -149,12 +150,14 @@ apps/settings/src/ui/extensions.rs
 apps/settings/src/ui/input.rs
 apps/settings/src/ui/mod.rs
 apps/settings/src/ui/multitasking.rs
+apps/settings/src/ui/netedit.rs
 apps/settings/src/ui/notifications.rs
 apps/settings/src/ui/picker.rs
 apps/settings/src/ui/power.rs
 apps/settings/src/ui/privacy.rs
 apps/settings/src/ui/shortcuts.rs
 apps/settings/src/ui/widgets.rs
+apps/settings/src/ui/wifi.rs
 apps/settings/src/values.rs
 apps/settings/src/xkb.rs
 apps/system-monitor/src/bin/helper.rs

@@ -7,6 +7,8 @@ mod extensions;
 #[cfg(test)]
 mod fakes;
 mod icon_themes;
+mod netconf;
+mod nm;
 mod panels;
 mod rfkill;
 mod sysinfo;

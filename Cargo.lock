@@ -1533,6 +1533,7 @@ dependencies = [
  "gtk4",
  "helix-app-common",
  "libadwaita",
+ "qrcode",
  "serde",
  "zbus",
 ]

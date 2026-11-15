@@ -128,6 +128,44 @@ impl<'a> Obj<'a> {
         Ok(())
     }
 
+    /// Calls `method`, letting polkit ask the user (the call may then
+    /// take a while).
+    pub fn call_interactive<B, R>(&self, conn: &Connection, method: &str, body: &B) -> Result<R>
+    where
+        B: serde::ser::Serialize + DynamicType,
+        R: for<'d> DynamicDeserialize<'d>,
+    {
+        let proxy = zbus::blocking::proxy::Builder::<zbus::blocking::Proxy>::new(conn)
+            .destination(self.dest)?
+            .path(self.path)?
+            .interface(self.iface)?
+            .cache_properties(zbus::proxy::CacheProperties::No)
+            .build()?;
+        proxy
+            .call_with_flags(
+                method,
+                zbus::proxy::MethodFlags::AllowInteractiveAuth.into(),
+                body,
+            )?
+            .ok_or_else(|| Error::Other("no reply".into()))
+    }
+
+    /// [`Obj::call_interactive`] for a method that returns nothing.
+    pub fn run_interactive<B>(&self, conn: &Connection, method: &str, body: &B) -> Result<()>
+    where
+        B: serde::ser::Serialize + DynamicType,
+    {
+        self.call_interactive::<B, ()>(conn, method, body)
+    }
+
+    pub fn props(&self, conn: &Connection) -> Result<Props> {
+        Obj::new(self.dest, self.path, "org.freedesktop.DBus.Properties").call(
+            conn,
+            "GetAll",
+            &(self.iface,),
+        )
+    }
+
     pub fn set_prop<'v>(
         &self,
         conn: &Connection,

@@ -51,7 +51,7 @@ pub const PANELS: &[PanelInfo] = &[
         // by semicolons; add words people would search for in your language.
         keywords: n_("network;wireless;wlan;hotspot;internet;airplane;"),
         group: 0,
-        available: false,
+        available: true,
     },
     PanelInfo {
         id: PanelId::Network,
@@ -384,7 +384,6 @@ mod tests {
         assert!(info(PanelId::Appearance).available);
         assert!(info(PanelId::About).available);
         for id in [
-            PanelId::Wifi,
             PanelId::Network,
             PanelId::Display,
             PanelId::Sound,
@@ -422,7 +421,7 @@ mod tests {
             .iter()
             .all(|id| !info(*id).available));
         // Working panels keep their GNOME order.
-        assert_eq!(order[0], PanelId::Bluetooth);
+        assert_eq!(order[0], PanelId::Wifi);
         // Searching keeps the rule: a working match before a placeholder.
         let r = sidebar_order("wireless");
         assert!(r.iter().all(|id| !info(*id).available) || info(r[0]).available);

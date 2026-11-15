@@ -193,7 +193,8 @@ msgstr ""
 #: apps/audio-player/src/mpris.rs:181 apps/disks/src/model.rs:386
 #: apps/disks/src/parttypes.rs:201 apps/document-viewer/src/dialogs.rs:82
 #: apps/music/src/mpris.rs:66 apps/music/src/queue.rs:43
-#: apps/settings/src/ui/extensions.rs:368 apps/video-player/src/ui.rs:1739
+#: apps/settings/src/nm.rs:121 apps/settings/src/ui/extensions.rs:368
+#: apps/video-player/src/ui.rs:1739
 msgid "None"
 msgstr ""
 
@@ -253,12 +254,13 @@ msgstr ""
 #: apps/maps/src/ui.rs:1854 apps/music/src/shortcuts.rs:29
 #: apps/settings/src/ui/access.rs:62 apps/settings/src/ui/extensions.rs:99
 #: apps/settings/src/ui/input.rs:64 apps/settings/src/ui/multitasking.rs:26
-#: apps/settings/src/ui/power.rs:155 apps/settings/src/ui/shortcuts.rs:16
-#: apps/system-monitor/src/shortcuts.rs:25 apps/system-monitor/src/ui.rs:510
-#: apps/terminal/src/prefs_dialog.rs:18 apps/terminal/src/shortcuts.rs:60
-#: apps/text-editor/src/shortcuts.rs:68 apps/video-player/src/ui.rs:172
-#: apps/weather/src/ui.rs:1756 apps/web/src/dialogs.rs:45
-#: apps/web/src/shortcuts.rs:74 crates/helix-app-common/src/shortcuts.rs:40
+#: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:155
+#: apps/settings/src/ui/shortcuts.rs:16 apps/system-monitor/src/shortcuts.rs:25
+#: apps/system-monitor/src/ui.rs:510 apps/terminal/src/prefs_dialog.rs:18
+#: apps/terminal/src/shortcuts.rs:60 apps/text-editor/src/shortcuts.rs:68
+#: apps/video-player/src/ui.rs:172 apps/weather/src/ui.rs:1756
+#: apps/web/src/dialogs.rs:45 apps/web/src/shortcuts.rs:74
+#: crates/helix-app-common/src/shortcuts.rs:40
 msgid "General"
 msgstr ""
 
@@ -733,6 +735,7 @@ msgstr ""
 
 #: apps/calculator/src/format.rs:32 apps/document-scanner/src/settings.rs:29
 #: apps/document-scanner/src/ui.rs:1729 apps/document-scanner/src/ui.rs:1796
+#: apps/settings/src/ui/netedit.rs:32
 msgid "Automatic"
 msgstr ""
 
@@ -1137,7 +1140,8 @@ msgstr ""
 #: apps/files/src/ui/dialogs.rs:74 apps/files/src/ui/dialogs.rs:220
 #: apps/files/src/ui/sidebar.rs:626 apps/music/src/pages.rs:1523
 #: apps/music/src/pages.rs:1621 apps/music/src/pages.rs:1683
-#: apps/settings/src/ui/bluetooth.rs:647 apps/system-monitor/src/dialogs.rs:142
+#: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
+#: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1283
 #: apps/text-editor/src/window.rs:975 apps/web/src/dialogs.rs:413
 #: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
@@ -3054,6 +3058,7 @@ msgstr ""
 #: apps/clocks/src/ui.rs:1460 apps/contacts/src/editor.rs:301
 #: apps/disk-usage/src/ui.rs:1002 apps/disks/src/ui.rs:1632
 #: apps/files/src/sorting.rs:43 apps/files/src/ui/tab.rs:190
+#: apps/settings/src/ui/netedit.rs:235
 msgid "Name"
 msgstr ""
 
@@ -3434,7 +3439,7 @@ msgstr ""
 msgid "Add Website"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:366
+#: apps/contacts/src/editor.rs:366 apps/settings/src/ui/netedit.rs:76
 msgid "Addresses"
 msgstr ""
 
@@ -6250,6 +6255,8 @@ msgid "PDF Version"
 msgstr ""
 
 #: apps/document-viewer/src/dialogs.rs:113 apps/logs/src/category.rs:32
+#: apps/settings/src/ui/wifi.rs:651 apps/settings/src/ui/wifi.rs:673
+#: apps/settings/src/ui/wifi.rs:810 apps/settings/src/ui/wifi.rs:864
 msgid "Security"
 msgstr ""
 
@@ -6286,7 +6293,9 @@ msgstr ""
 msgid "Password Required"
 msgstr ""
 
-#: apps/document-viewer/src/dialogs.rs:166
+#: apps/document-viewer/src/dialogs.rs:166 apps/settings/src/ui/wifi.rs:128
+#: apps/settings/src/ui/wifi.rs:579 apps/settings/src/ui/wifi.rs:808
+#: apps/settings/src/ui/wifi.rs:869 apps/settings/src/ui/wifi.rs:972
 msgid "Password"
 msgstr ""
 
@@ -10334,7 +10343,8 @@ msgstr ""
 msgid "settings"
 msgstr ""
 
-#: apps/settings/src/bluez.rs:66
+#: apps/settings/src/bluez.rs:66 apps/settings/src/ui/wifi.rs:470
+#: apps/settings/src/ui/wifi.rs:833
 msgid "Connected"
 msgstr ""
 
@@ -10511,7 +10521,51 @@ msgstr ""
 msgid "Stopped working: {}"
 msgstr ""
 
-#: apps/settings/src/panels.rs:48
+#: apps/settings/src/nm.rs:122
+msgid "Enhanced Open"
+msgstr ""
+
+#: apps/settings/src/nm.rs:123
+msgid "WEP"
+msgstr ""
+
+#: apps/settings/src/nm.rs:124
+msgid "WPA/WPA2 Personal"
+msgstr ""
+
+#: apps/settings/src/nm.rs:125
+msgid "WPA3 Personal"
+msgstr ""
+
+#: apps/settings/src/nm.rs:126
+msgid "WPA/WPA2 Enterprise"
+msgstr ""
+
+#: apps/settings/src/nm.rs:565
+msgid "No signal"
+msgstr ""
+
+#: apps/settings/src/nm.rs:566
+msgid "Weak signal"
+msgstr ""
+
+#: apps/settings/src/nm.rs:567
+msgid "OK signal"
+msgstr ""
+
+#: apps/settings/src/nm.rs:568
+msgid "Good signal"
+msgstr ""
+
+#: apps/settings/src/nm.rs:569
+msgid "Excellent signal"
+msgstr ""
+
+#: apps/settings/src/nm.rs:727 apps/settings/src/ui/wifi.rs:123
+msgid "Hotspot"
+msgstr ""
+
+#: apps/settings/src/panels.rs:48 apps/settings/src/ui/wifi.rs:106
 msgid "Wi-Fi"
 msgstr ""
 
@@ -11813,6 +11867,140 @@ msgstr ""
 msgid "Otherwise apps from all workspaces are included"
 msgstr ""
 
+#: apps/settings/src/ui/netedit.rs:33
+msgid "Manual"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:34
+msgid "Link-Local Only"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:35
+msgid "Disabled"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:61
+msgid "Method"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:64
+msgid "{family} Method"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:78
+msgid "{family} Addresses"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:81
+msgid "Gateway"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:83
+msgid "{family} Gateway"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:87
+msgid "Automatic DNS"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:92
+msgid "Automatic {family} DNS"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:95
+msgid "DNS Servers"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:97
+msgid "{family} DNS Servers"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:100
+msgid "Routes"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:102
+msgid "{family} Routes"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:104
+msgid ""
+"Destination/prefix and gateway, for example 10.8.0.0/16 192.168.1.254; "
+"separate routes with commas"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:109
+msgid "Use Only for Resources on This Network"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:198
+msgid "Enter addresses such as 192.168.1.10/24, separated by commas"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:200
+msgid "Enter the gateway's address"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:203
+msgid "Enter DNS server addresses separated by commas"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:207
+msgid "Enter routes as destination/prefix and gateway, separated by commas"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:222 apps/weather/src/ui.rs:388
+msgid "Details"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:242
+msgid "Connect Automatically"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:248
+msgid "Metered Connection"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:249
+msgid "Apps and updates use less data on it"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:256
+msgid "IPv4"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:262
+msgid "IPv6"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:277
+msgid "Remove…"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:286
+msgid "_Apply"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:355
+msgid "Could not save the changes: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:384
+msgid "Remove {name}?"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:385
+msgid "Its settings and password are removed from this computer."
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:390 apps/web/src/dialogs.rs:928
+msgid "_Remove"
+msgstr ""
+
+#: apps/settings/src/ui/netedit.rs:412
+msgid "Could not remove it: {e}"
+msgstr ""
+
 #: apps/settings/src/ui/notifications.rs:31
 msgid "Do Not Disturb"
 msgstr ""
@@ -11999,6 +12187,246 @@ msgstr ""
 
 #: apps/settings/src/ui/widgets.rs:343 apps/settings/src/values.rs:92
 msgid "Forever"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:84
+msgid "Loading Wi-Fi…"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:88
+msgid "Networking Is Not Available"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:89
+msgid "NetworkManager is not running."
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:96
+msgid "No Wi-Fi Adapter Found"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:97
+msgid "Make sure a Wi-Fi adapter is plugged in and turned on."
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:111
+msgid "Airplane Mode"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:112
+msgid "Turns off Wi-Fi, Bluetooth and mobile broadband"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:117
+msgid "Wi-Fi Adapter"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:124
+msgid "Other devices can use this computer's connection through this network."
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:127 apps/settings/src/ui/wifi.rs:806
+#: apps/settings/src/ui/wifi.rs:856 apps/settings/src/ui/wifi.rs:968
+msgid "Network Name"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:131
+msgid "Share Hotspot"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:131 apps/settings/src/ui/wifi.rs:681
+msgid "Show QR Code"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:134
+msgid "Turn Off Hotspot"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:136
+msgid "Turn Off"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:143
+msgid "Visible Networks"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:148 apps/settings/src/ui/wifi.rs:827
+msgid "Saved Networks"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:149
+msgid "Forget networks and change their settings"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:153
+msgid "Connect to Hidden Network"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:154
+msgid "A network that does not show its name"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:158 apps/settings/src/ui/wifi.rs:989
+msgid "Wi-Fi Hotspot"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:159
+msgid "Share this computer's connection"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:199
+msgid "Could not change Wi-Fi"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:253
+msgid "Could not turn the hotspot off"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:379
+msgid "Turned off by a hardware switch"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:428
+msgid "Turn on Wi-Fi to see the networks around you."
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:430
+msgid "No networks found."
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:472
+msgid "Connecting…"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:474
+msgid "Saved"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:491
+msgid "Secured"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:499
+msgid "Network Details"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:501
+msgid "Details of {name}"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:525 apps/settings/src/ui/wifi.rs:935
+msgid "Could not connect to {name}"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:541
+msgid ""
+"{name} is an enterprise network; joining those is not supported here yet"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:575
+msgid "Connect to {name}"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:576
+msgid "Enter the network's password."
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:588 apps/settings/src/ui/wifi.rs:878
+msgid "C_onnect"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:647
+msgid "Signal Strength"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:655
+msgid "Frequency"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:666
+msgid "Link Speed"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:667
+msgid "{n} Mb/s"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:677 apps/settings/src/ui/wifi.rs:813
+msgid "Share Network"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:679
+msgid "QR Code"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:680
+msgid "Join from a phone by scanning the code"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:702
+msgid "Forget Network"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:716
+msgid "IPv4 Address"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:719
+msgid "Default Route"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:722
+msgid "DNS"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:727
+msgid "IPv6 Address"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:730
+msgid "IPv6 DNS"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:734
+msgid "Hardware Address"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:786
+msgid "Could not read the password: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:801
+msgid "QR code for {name}"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:825
+msgid "No networks are saved."
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:887
+msgid "Hidden Network"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:956
+msgid ""
+"Other devices can use this computer's connection. Turning the hotspot on "
+"disconnects from {network}."
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:960
+msgid "Other devices can use this computer's connection."
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:981
+msgid "_Turn On"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:1029
+msgid "Could not turn the hotspot on"
+msgstr ""
+
+#: apps/settings/src/ui/wifi.rs:1056
+msgid "Could not change airplane mode"
 msgstr ""
 
 #: apps/settings/src/values.rs:69
@@ -13809,10 +14237,6 @@ msgstr ""
 msgid "Loading Forecast"
 msgstr ""
 
-#: apps/weather/src/ui.rs:388
-msgid "Details"
-msgstr ""
-
 #: apps/weather/src/ui.rs:395 apps/weather/src/ui.rs:1075
 msgid "Could Not Load the Forecast"
 msgstr ""
@@ -14504,10 +14928,6 @@ msgstr ""
 
 #: apps/web/src/dialogs.rs:923
 msgid "This removes {who} from your keyring. It cannot be undone."
-msgstr ""
-
-#: apps/web/src/dialogs.rs:928
-msgid "_Remove"
 msgstr ""
 
 #: apps/web/src/dialogs.rs:958
