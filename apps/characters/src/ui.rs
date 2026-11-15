@@ -159,6 +159,14 @@ impl App {
             let items = gio::spawn_blocking(move || cat.characters())
                 .await
                 .unwrap_or_default();
+            // Emoji newer than the installed emoji font would show as
+            // boxes. (The other categories are too large to check here,
+            // and their fonts cover far more.)
+            let items = if category::EMOJI.contains(&cat) {
+                drawable_only(&app.grid, items)
+            } else {
+                items
+            };
             let items = Rc::new(items);
             app.cache.borrow_mut().insert(cat, items.clone());
             if app.generation.get() == generation {
@@ -244,16 +252,52 @@ impl App {
     }
 }
 
+/// Keeps the sequences every code point of which some font available to
+/// `widget` has a glyph for (joiners, variation selectors and tag
+/// characters need none of their own).
+fn drawable_only(widget: &impl IsA<gtk::Widget>, items: Vec<String>) -> Vec<String> {
+    use gtk::pango::prelude::*;
+    let ctx = widget.pango_context();
+    let desc = ctx.font_description().unwrap_or_default();
+    let Some(fontset) = ctx.load_fontset(&desc, &gtk::pango::Language::default()) else {
+        return items;
+    };
+    let mut fonts = Vec::new();
+    fontset.foreach(|_, font| {
+        fonts.push(font.clone());
+        false
+    });
+    if fonts.is_empty() {
+        return items;
+    }
+    let mut drawable: std::collections::HashMap<char, bool> = Default::default();
+    items
+        .into_iter()
+        .filter(|s| {
+            s.chars().filter(|&c| needs_glyph(c)).all(|c| {
+                *drawable
+                    .entry(c)
+                    .or_insert_with(|| fonts.iter().any(|f| f.has_char(c)))
+            })
+        })
+        .collect()
+}
+
+/// Whether `c` is drawn with a glyph of its own inside an emoji sequence.
+fn needs_glyph(c: char) -> bool {
+    !matches!(
+        c,
+        '\u{200D}' | '\u{FE0E}' | '\u{FE0F}' | '\u{E0020}'..='\u{E007F}'
+    )
+}
+
 fn sidebar_row(cat: Category) -> gtk::ListBoxRow {
     let hbox = gtk::Box::builder()
         .spacing(12)
         .margin_start(6)
         .margin_end(6)
         .build();
-    let icon = gtk::Image::new();
-    if let Some(name) = cat.icon_name() {
-        icon.set_icon_name(Some(name));
-    }
+    let icon = gtk::Image::from_icon_name(cat.icon_name());
     hbox.append(&icon);
     hbox.append(&gtk::Label::builder().label(cat.label()).xalign(0.0).build());
     gtk::ListBoxRow::builder().child(&hbox).build()

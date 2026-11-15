@@ -73,8 +73,10 @@ impl Category {
         }
     }
 
-    pub fn icon_name(self) -> Option<&'static str> {
-        Some(match self {
+    /// Every category has an icon, so sidebar rows line up. Punctuation,
+    /// arrows, currency and numbers use Helix's bundled icons.
+    pub fn icon_name(self) -> &'static str {
+        match self {
             Category::Recent => "document-open-recent-symbolic",
             Category::Smileys => "emoji-people-symbolic",
             Category::Animals => "emoji-nature-symbolic",
@@ -84,8 +86,15 @@ impl Category {
             Category::Objects => "emoji-objects-symbolic",
             Category::Symbols => "emoji-symbols-symbolic",
             Category::Flags => "emoji-flags-symbolic",
-            _ => return None,
-        })
+            Category::Punctuation => "text-punctuation-symbolic",
+            Category::Arrows => "arrows-symbolic",
+            Category::Bullets => "view-list-bullet-symbolic",
+            Category::Pictures => "starred-symbolic",
+            Category::Currency => "currency-symbolic",
+            Category::Math => "accessories-calculator-symbolic",
+            Category::Numbers => "number-sign-symbolic",
+            Category::Letters => "font-x-generic-symbolic",
+        }
     }
 
     fn emoji_groups(self) -> &'static [Group] {
@@ -226,6 +235,16 @@ mod tests {
         assert!(has(Category::Pictures, "♠"));
         assert!(has(Category::Pictures, "─"));
         assert!(!has(Category::Pictures, "😀"));
+    }
+
+    #[test]
+    fn every_category_has_its_own_icon() {
+        let all: Vec<Category> = std::iter::once(Category::Recent)
+            .chain(EMOJI)
+            .chain(LETTERS_AND_SYMBOLS)
+            .collect();
+        let icons: std::collections::HashSet<_> = all.iter().map(|c| c.icon_name()).collect();
+        assert_eq!(icons.len(), all.len());
     }
 
     #[test]

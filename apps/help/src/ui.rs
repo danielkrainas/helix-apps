@@ -183,11 +183,72 @@ fn current_doc(ui: &Ui) -> Option<DocRef> {
     }
 }
 
-/// Applies `font-adjustment` (a point offset) to the WebKit settings.
+/// Applies `font-adjustment` (a point offset) and the desktop's text
+/// scaling to the WebKit settings.
 fn apply_text_size(settings: &webkit6::Settings, adjust: i32) {
-    let (body, mono) = textsize::font_px(adjust);
+    let dpi = gtk::Settings::default().map_or(-1, |s| s.gtk_xft_dpi());
+    let (body, mono) = textsize::font_px(adjust, textsize::scale_from_xft_dpi(dpi));
     settings.set_default_font_size(body);
     settings.set_default_monospace_font_size(mono);
+}
+
+/// Keeps page styling in step with the desktop: the accent colour and
+/// high contrast (an injected style sheet, see `theme`) and text scaling
+/// (the default font sizes).
+fn follow_desktop_style(
+    view: &webkit6::WebView,
+    content: &webkit6::UserContentManager,
+    settings: &webkit6::Settings,
+    prefs: &Prefs,
+) {
+    let restyle = {
+        let content = content.clone();
+        move || {
+            let a = helix_app_common::style::accent_rgba();
+            let css = crate::theme::css(
+                crate::theme::Rgb(a.red() as f64, a.green() as f64, a.blue() as f64),
+                helix_app_common::style::is_high_contrast(),
+            );
+            content.remove_all_style_sheets();
+            content.add_style_sheet(&webkit6::UserStyleSheet::new(
+                &css,
+                webkit6::UserContentInjectedFrames::AllFrames,
+                webkit6::UserStyleLevel::Author,
+                &[],
+                &[],
+            ));
+        }
+    };
+    restyle();
+    let style = adw::StyleManager::default();
+    let mut handlers = Vec::new();
+    for prop in ["high-contrast", "accent-color"] {
+        // `accent-color` needs libadwaita 1.6.
+        if style.find_property(prop).is_none() {
+            continue;
+        }
+        let r = restyle.clone();
+        handlers.push(style.connect_notify_local(Some(prop), move |_, _| r()));
+    }
+    let dpi_handler = gtk::Settings::default().map(|gs| {
+        let (settings, prefs) = (settings.clone(), prefs.clone());
+        let id = gs.connect_gtk_xft_dpi_notify(move |_| {
+            apply_text_size(&settings, prefs.get("font-adjustment", 0i32));
+        });
+        (gs, id)
+    });
+    let handlers = RefCell::new(Some((handlers, dpi_handler)));
+    view.connect_destroy(move |_| {
+        if let Some((ids, dpi)) = handlers.take() {
+            let style = adw::StyleManager::default();
+            for id in ids {
+                style.disconnect(id);
+            }
+            if let Some((gs, id)) = dpi {
+                gs.disconnect(id);
+            }
+        }
+    });
 }
 
 fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Library>) -> Rc<Ui> {
@@ -197,10 +258,13 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     settings.set_enable_caret_browsing(prefs.get("show-cursor", false));
     settings.set_javascript_can_open_windows_automatically(false);
     apply_text_size(&settings, prefs.get("font-adjustment", 0i32));
+    let content = webkit6::UserContentManager::new();
     let view = webkit6::WebView::builder()
         .web_context(context)
         .settings(&settings)
+        .user_content_manager(&content)
         .build();
+    follow_desktop_style(&view, &content, &settings, &prefs);
     view.set_vexpand(true);
     view.set_hexpand(true);
 

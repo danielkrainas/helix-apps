@@ -50,6 +50,9 @@ pub struct Doc {
     banner_reload: gtk::Button,
     pub find: FindBar,
     match_tag: gtk::TextTag,
+    /// The current match, marked apart from the selection (which looks
+    /// different, or not at all, while the find bar has focus).
+    current_tag: gtk::TextTag,
     matches: RefCell<Vec<Range<usize>>>,
     search_pending: Cell<bool>,
     indent: Cell<Indent>,
@@ -71,11 +74,55 @@ fn option_check(label: &str) -> gtk::CheckButton {
         .build()
 }
 
+/// Applies the style's match colours to the two search tags, now and
+/// whenever the accent colour or the dark or high-contrast style changes.
+fn style_match_tags(match_tag: &gtk::TextTag, current_tag: &gtk::TextTag) {
+    fn apply(tag: &gtk::TextTag, current: bool) {
+        let s = crate::view::match_style(
+            current,
+            helix_app_common::style::is_dark(),
+            helix_app_common::style::is_high_contrast(),
+            &helix_app_common::style::accent_rgba(),
+        );
+        tag.set_background_rgba(Some(&s.background));
+        tag.set_foreground_rgba(Some(&s.foreground));
+        tag.set_underline(s.underline);
+    }
+    apply(match_tag, false);
+    apply(current_tag, true);
+    let style = adw::StyleManager::default();
+    for prop in ["dark", "high-contrast", "accent-color"] {
+        if style.find_property(prop).is_none() {
+            continue;
+        }
+        let (m, c) = (match_tag.downgrade(), current_tag.downgrade());
+        let id: Rc<RefCell<Option<glib::SignalHandlerId>>> = Rc::default();
+        let id2 = id.clone();
+        let handler = style.connect_notify_local(Some(prop), move |style, _| {
+            match (m.upgrade(), c.upgrade()) {
+                (Some(m), Some(c)) => {
+                    apply(&m, false);
+                    apply(&c, true);
+                }
+                // The document is gone.
+                _ => {
+                    if let Some(id) = id2.borrow_mut().take() {
+                        style.disconnect(id);
+                    }
+                }
+            }
+        });
+        *id.borrow_mut() = Some(handler);
+    }
+}
+
 impl Doc {
     pub fn new(app: &Rc<App>, id: Option<String>) -> Rc<Doc> {
         let buffer = gtk::TextBuffer::new(None);
         let match_tag = buffer.create_tag(Some("search-match"), &[]).expect("tag");
-        match_tag.set_background_rgba(Some(&gdk::RGBA::new(0.96, 0.83, 0.18, 0.45)));
+        // Above the match tag, so it wins where both apply.
+        let current_tag = buffer.create_tag(Some("search-current"), &[]).expect("tag");
+        style_match_tags(&match_tag, &current_tag);
 
         let view = EditorView::new(&buffer);
         view.add_css_class("helix-editor");
@@ -223,6 +270,7 @@ impl Doc {
                 regex_btn,
             },
             match_tag,
+            current_tag,
             matches: RefCell::default(),
             search_pending: Cell::new(false),
             indent: Cell::new(settings.indent()),
@@ -720,6 +768,7 @@ impl Doc {
         self.find.replace_toggle.set_active(false);
         let (s, e) = self.buffer.bounds();
         self.buffer.remove_tag(&self.match_tag, &s, &e);
+        self.buffer.remove_tag(&self.current_tag, &s, &e);
         self.matches.borrow_mut().clear();
         self.view.grab_focus();
     }
@@ -758,6 +807,7 @@ impl Doc {
     pub fn refresh_search(self: &Rc<Self>, jump: bool) {
         let (s, e) = self.buffer.bounds();
         self.buffer.remove_tag(&self.match_tag, &s, &e);
+        self.buffer.remove_tag(&self.current_tag, &s, &e);
         self.find.entry.remove_css_class("error");
         let mut error = None;
         let matches = match self.matcher() {
@@ -824,6 +874,9 @@ impl Doc {
         };
         let a = self.buffer.iter_at_offset(r.start as i32);
         let b = self.buffer.iter_at_offset(r.end as i32);
+        let (s, e) = self.buffer.bounds();
+        self.buffer.remove_tag(&self.current_tag, &s, &e);
+        self.buffer.apply_tag(&self.current_tag, &a, &b);
         self.buffer.select_range(&a, &b);
         self.view
             .scroll_to_mark(&self.buffer.get_insert(), 0.1, false, 0.0, 0.0);

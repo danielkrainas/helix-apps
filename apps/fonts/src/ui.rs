@@ -90,7 +90,6 @@ fn load_css() {
     let css = gtk::CssProvider::new();
     css.load_from_string(
         ".font-tile { padding: 8px; }
-         .font-tile-sample { font-size: 34pt; min-height: 64px; }
          .font-size-label { font-size: 9pt; min-width: 28px; }
          .glyph-cell { border-radius: 6px; }
          .glyph-cell:hover { background: alpha(currentColor, 0.08); }",
@@ -333,10 +332,8 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
     let factory = gtk::SignalListItemFactory::new();
     factory.connect_setup(|_, item| {
         let item = item.downcast_ref::<gtk::ListItem>().unwrap();
-        let sample = gtk::Label::builder()
-            .label("Aa")
-            .css_classes(["font-tile-sample"])
-            .build();
+        // The sample is decoration: the tile reads "DejaVu Sans, 9 styles".
+        let sample = tile_sample();
         let name = gtk::Label::builder()
             .ellipsize(pango::EllipsizeMode::End)
             .max_width_chars(16)
@@ -364,22 +361,23 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
             return;
         };
         let fam = obj.borrow::<Family>();
-        let sample = child.first_child().and_downcast::<gtk::Label>().unwrap();
+        let sample = child
+            .first_child()
+            .and_downcast::<gtk::DrawingArea>()
+            .unwrap();
         let name = sample.next_sibling().and_downcast::<gtk::Label>().unwrap();
         let styles = name.next_sibling().and_downcast::<gtk::Label>().unwrap();
-        let attrs = pango::AttrList::new();
-        let mut desc = pango::FontDescription::new();
-        desc.set_family(&fam.name);
-        attrs.insert(pango::AttrFontDesc::new(&desc));
-        sample.set_attributes(Some(&attrs));
+        set_tile_family(&sample, &fam.name);
         name.set_label(&fam.name);
         child.set_tooltip_text(Some(&fam.name));
         let n = fam.faces.len();
-        styles.set_label(&if n == 1 {
+        let count = if n == 1 {
             "1 style".to_string()
         } else {
             format!("{n} styles")
-        });
+        };
+        item.set_accessible_label(&format!("{}, {count}", fam.name));
+        styles.set_label(&count);
     });
     let grid = gtk::GridView::builder()
         .model(&gtk::NoSelection::new(Some(filtered.clone())))
@@ -641,6 +639,7 @@ fn font_page(
         let dd = gtk::DropDown::from_strings(&refs);
         dd.set_selected(initial as u32);
         dd.set_tooltip_text(Some("Style"));
+        helix_app_common::set_accessible_label(&dd, "Style");
         header.pack_end(&dd);
         Some(dd)
     } else {
@@ -739,6 +738,7 @@ fn font_page(
         .hexpand(true)
         .build();
     entry.set_tooltip_text(Some("Preview text"));
+    helix_app_common::set_accessible_label(&entry, "Preview Text");
     let preview_box = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
         .spacing(6)
@@ -748,9 +748,12 @@ fn font_page(
         .margin_end(18)
         .build();
     preview_box.append(&entry);
+    // Drawn samples are images for assistive technology, named after
+    // what they show (updated with the font and the preview text).
     let alpha_area = gtk::DrawingArea::builder()
         .margin_top(12)
         .margin_bottom(12)
+        .accessible_role(gtk::AccessibleRole::Img)
         .build();
     let alpha_label = gtk::Label::builder()
         .label(fontinfo::ALPHABET)
@@ -794,13 +797,18 @@ fn font_page(
         PREVIEW_SIZES
             .iter()
             .map(|&pt| {
+                // The sample's name says the size.
                 let size_label = gtk::Label::builder()
                     .label(pt.to_string())
                     .css_classes(["dim-label", "font-size-label"])
                     .xalign(1.0)
                     .valign(gtk::Align::Center)
+                    .accessible_role(gtk::AccessibleRole::Presentation)
                     .build();
-                let area = gtk::DrawingArea::builder().hexpand(true).build();
+                let area = gtk::DrawingArea::builder()
+                    .hexpand(true)
+                    .accessible_role(gtk::AccessibleRole::Img)
+                    .build();
                 let label = gtk::Label::builder()
                     .xalign(0.0)
                     .hexpand(true)
@@ -867,6 +875,7 @@ fn font_page(
                 .content_width(56)
                 .content_height(56)
                 .css_classes(["glyph-cell"])
+                .accessible_role(gtk::AccessibleRole::Img)
                 .build();
             let weak_item = item.downgrade();
             let st = st.clone();
@@ -905,7 +914,9 @@ fn font_page(
             return;
         };
         if let Some(ch) = s.string().chars().next() {
-            child.set_tooltip_text(Some(&format!("U+{:04X}", ch as u32)));
+            let code = format!("U+{:04X}", ch as u32);
+            child.set_tooltip_text(Some(&code));
+            helix_app_common::set_accessible_label(&child, &glyph_name(ch));
         }
         child.queue_draw();
     });
@@ -1019,6 +1030,10 @@ fn font_page(
                         alpha_area.set_content_height((h * 2.0).ceil() as i32);
                     }
                     alpha_area.queue_draw();
+                    helix_app_common::set_accessible_label(
+                        &alpha_area,
+                        &sample_name(fontinfo::ALPHABET, 18),
+                    );
                 } else {
                     let attrs = pango::AttrList::new();
                     attrs.insert(pango::AttrFontDesc::new(&pango_desc(&src, 18)));
@@ -1086,6 +1101,79 @@ fn font_page(
         .build()
 }
 
+/// Height of an overview tile's "Aa" sample. Fixed, so every tile has
+/// the same height and the names in a grid row line up whatever the
+/// font's ascent.
+const TILE_SAMPLE_HEIGHT: i32 = 64;
+const TILE_SAMPLE_PT: f64 = 34.0;
+const TILE_FAMILY_KEY: &str = "helix-fonts-tile-family";
+
+/// The "Aa" sample of an overview tile: drawn in the family at 34 pt,
+/// scaled down to fit when the font is unusually tall or wide.
+fn tile_sample() -> gtk::DrawingArea {
+    let area = gtk::DrawingArea::builder()
+        .content_height(TILE_SAMPLE_HEIGHT)
+        .hexpand(true)
+        .accessible_role(gtk::AccessibleRole::Presentation)
+        .build();
+    area.set_draw_func(|area, cr, w, h| {
+        // SAFETY: the key only ever holds a `String`.
+        let family = unsafe {
+            area.data::<String>(TILE_FAMILY_KEY)
+                .map(|f| f.as_ref().clone())
+        };
+        let Some(family) = family else { return };
+        let layout = area.create_pango_layout(Some("Aa"));
+        let mut desc = pango::FontDescription::new();
+        desc.set_family(&family);
+        desc.set_size((TILE_SAMPLE_PT * pango::SCALE as f64) as i32);
+        layout.set_font_description(Some(&desc));
+        let (ink, _) = layout.pixel_extents();
+        if ink.width() <= 0 || ink.height() <= 0 {
+            return;
+        }
+        let (w, h) = (w as f64, h as f64);
+        let scale = 1f64
+            .min((h - 4.0) / ink.height() as f64)
+            .min((w - 4.0) / ink.width() as f64);
+        let c = area.color();
+        cr.set_source_rgba(
+            c.red() as f64,
+            c.green() as f64,
+            c.blue() as f64,
+            c.alpha() as f64,
+        );
+        // Centre the ink box.
+        cr.translate(
+            (w - ink.width() as f64 * scale) / 2.0,
+            (h - ink.height() as f64 * scale) / 2.0,
+        );
+        cr.scale(scale, scale);
+        cr.translate(-ink.x() as f64, -ink.y() as f64);
+        pangocairo::functions::show_layout(cr, &layout);
+    });
+    area
+}
+
+fn set_tile_family(area: &gtk::DrawingArea, family: &str) {
+    // SAFETY: as above.
+    unsafe { area.set_data(TILE_FAMILY_KEY, family.to_string()) };
+    area.queue_draw();
+}
+
+/// Accessible name of a drawn sample: "The quick brown fox… at 12 points".
+fn sample_name(text: &str, pt: u32) -> String {
+    format!("{text} at {pt} points")
+}
+
+/// Accessible name of a glyph cell: "U+0041 LATIN CAPITAL LETTER A".
+fn glyph_name(ch: char) -> String {
+    match unicode_names2::name(ch) {
+        Some(name) => format!("U+{:04X} {name}", ch as u32),
+        None => format!("U+{:04X}", ch as u32),
+    }
+}
+
 fn mark_installed(b: &gtk::Button) {
     b.set_label("Installed");
     b.set_sensitive(false);
@@ -1105,6 +1193,7 @@ fn refresh_preview(st: &PageState, rows: &[SizeRow], src: Option<&FaceSource>) {
     for r in rows {
         match &face {
             Some(face) => {
+                helix_app_common::set_accessible_label(&r.area, &sample_name(&text, r.pt));
                 let (_, h) = render::measure(face, &text, pt_to_px(r.pt));
                 // No content width: the area takes the row's width and the
                 // text is clipped at its edge, so long lines never widen
@@ -1132,14 +1221,101 @@ fn info_page(rows: &[(&'static str, String)]) -> adw::PreferencesPage {
     let page = adw::PreferencesPage::new();
     let group = adw::PreferencesGroup::new();
     for (k, v) in rows {
+        if is_long(v) {
+            group.add(&long_text_row(k, v));
+            continue;
+        }
         let row = adw::ActionRow::builder()
             .title(*k)
             .subtitle(glib::markup_escape_text(v).as_str())
             .subtitle_selectable(true)
             .build();
         row.add_css_class("property");
+        if *k == "License URL" && v.starts_with("http") {
+            let open = gtk::Button::builder()
+                .icon_name("web-browser-symbolic")
+                .tooltip_text("Open License Web Page")
+                .valign(gtk::Align::Center)
+                .css_classes(["flat"])
+                .build()
+                .labelled("Open License Web Page");
+            let url = v.clone();
+            open.connect_clicked(move |b| {
+                let win = b.root().and_downcast::<gtk::Window>();
+                gtk::UriLauncher::new(&url).launch(win.as_ref(), None::<&gio::Cancellable>, |_| {});
+            });
+            row.add_suffix(&open);
+        }
         group.add(&row);
     }
     page.add(&group);
     page
+}
+
+/// Whether an info value is too long to show in full in a row (a licence
+/// is often several screens of text).
+fn is_long(text: &str) -> bool {
+    text.trim().lines().count() > 3 || text.chars().count() > 240
+}
+
+/// The first line of `text`, shortened to about `max` characters.
+fn summary(text: &str, max: usize) -> String {
+    let first = text.trim().lines().next().unwrap_or("").trim();
+    if first.chars().count() <= max {
+        first.to_string()
+    } else {
+        let cut: String = first.chars().take(max).collect();
+        let cut = cut.rsplit_once(' ').map_or(cut.as_str(), |(a, _)| a);
+        format!("{}…", cut.trim_end())
+    }
+}
+
+/// A collapsed row for a long value: its first line as the subtitle, the
+/// full text (selectable) when expanded.
+fn long_text_row(title: &str, text: &str) -> adw::ExpanderRow {
+    let row = adw::ExpanderRow::builder()
+        .title(title)
+        .subtitle(glib::markup_escape_text(&summary(text, 80)).as_str())
+        .expanded(false)
+        .build();
+    let label = gtk::Label::builder()
+        .label(text.trim())
+        .wrap(true)
+        .wrap_mode(pango::WrapMode::WordChar)
+        .xalign(0.0)
+        .selectable(true)
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
+        .build();
+    row.add_row(&label);
+    row
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn long_values_are_summarised() {
+        let licence = "Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved.\n\
+                       Permission is hereby granted, free of charge, to any person\n\
+                       obtaining a copy of the fonts accompanying this license\n\
+                       and associated documentation files.";
+        assert!(is_long(licence));
+        assert!(!is_long("SIL Open Font License, Version 1.1"));
+        assert_eq!(
+            summary(licence, 80),
+            "Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved."
+        );
+        assert_eq!(summary(&"word ".repeat(40), 20), "word word word word…");
+    }
+
+    #[test]
+    fn accessible_names() {
+        assert_eq!(glyph_name('A'), "U+0041 LATIN CAPITAL LETTER A");
+        assert_eq!(glyph_name('\u{E000}'), "U+E000");
+        assert_eq!(sample_name("Hello", 12), "Hello at 12 points");
+    }
 }

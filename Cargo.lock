@@ -1408,9 +1408,11 @@ dependencies = [
  "gtk4",
  "helix-app-common",
  "libadwaita",
+ "pangocairo",
  "rustybuzz",
  "tempfile",
  "ttf-parser",
+ "unicode_names2",
 ]
 
 [[package]]

@@ -9,6 +9,7 @@ mod mallard;
 mod sandbox;
 mod search;
 mod textsize;
+mod theme;
 mod ui;
 mod uri;
 mod xmlutil;

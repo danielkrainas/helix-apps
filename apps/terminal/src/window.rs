@@ -153,6 +153,56 @@ impl Tab {
 
 type WindowAction = Box<dyn Fn(&Rc<Window>)>;
 
+/// The main menu's Follow System / Light / Dark switcher: toggle buttons
+/// for the `app.style` action, so exactly one is pressed.
+fn style_switcher() -> gtk::Box {
+    let row = gtk::Box::builder()
+        .css_classes(["linked"])
+        .homogeneous(true)
+        .margin_start(6)
+        .margin_end(6)
+        .accessible_role(gtk::AccessibleRole::Group)
+        .build();
+    for (label, name, target) in [
+        ("System", "Follow System Style", "auto"),
+        ("Light", "Light Style", "day"),
+        ("Dark", "Dark Style", "night"),
+    ] {
+        let b = gtk::ToggleButton::builder()
+            .label(label)
+            .action_name("app.style")
+            .action_target(&target.to_variant())
+            .tooltip_text(name)
+            .build();
+        a11y::set_accessible_label(&b, name);
+        row.append(&b);
+    }
+    a11y::set_accessible_label(&row, "Style");
+    row
+}
+
+/// The main menu's Zoom Out / level (resets) / Zoom In row.
+fn zoom_row(level: &gtk::Button) -> gtk::Box {
+    let zoom_out = a11y::icon_button("zoom-out-symbolic", "Zoom Out");
+    zoom_out.set_action_name(Some("win.zoom-out"));
+    let zoom_in = a11y::icon_button("zoom-in-symbolic", "Zoom In");
+    zoom_in.set_action_name(Some("win.zoom-in"));
+    for b in [&zoom_out, &zoom_in] {
+        b.add_css_class("flat");
+        b.add_css_class("circular");
+    }
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    row.append(&zoom_out);
+    row.append(level);
+    row.append(&zoom_in);
+    row
+}
+
+/// "125%" for a font scale of 1.25.
+pub fn zoom_percent(scale: f64) -> String {
+    format!("{}%", (scale * 100.0).round() as i64)
+}
+
 pub struct Window {
     this: Weak<Window>,
     app: Weak<App>,
@@ -170,9 +220,18 @@ pub struct Window {
     tint: Cell<Tint>,
     /// Set once closing has been confirmed.
     closing: Cell<bool>,
+    /// The main menu's zoom level, which also resets the zoom.
+    zoom_level: gtk::Button,
 }
 
 impl Window {
+    /// Shows the zoom level in the main menu.
+    pub fn update_zoom(&self, scale: f64) {
+        let text = zoom_percent(scale);
+        self.zoom_level.set_label(&text);
+        a11y::set_accessible_label(&self.zoom_level, &format!("Reset Zoom, now {text}"));
+    }
+
     pub fn new(app: &Rc<App>) -> Rc<Window> {
         let win = adw::ApplicationWindow::builder()
             .application(&app.gtk)
@@ -208,6 +267,14 @@ impl Window {
         header.pack_start(&new_tab);
 
         let menu = gio::Menu::new();
+        // Style switcher and zoom row, as custom children (added below).
+        let s0 = gio::Menu::new();
+        for id in ["style", "zoom"] {
+            let item = gio::MenuItem::new(None, None);
+            item.set_attribute_value("custom", Some(&id.to_variant()));
+            s0.append_item(&item);
+        }
+        menu.append_section(None, &s0);
         let s1 = gio::Menu::new();
         s1.append(Some("_New Window"), Some("win.new-window"));
         s1.append(Some("_Show All Tabs"), Some("win.tab-overview"));
@@ -224,6 +291,17 @@ impl Window {
             .primary(true)
             .build()
             .labelled("Main Menu");
+        let zoom_level = gtk::Button::builder()
+            .label("100%")
+            .action_name("win.zoom-reset")
+            .tooltip_text("Reset Zoom")
+            .hexpand(true)
+            .css_classes(["flat"])
+            .build();
+        if let Some(pm) = menu_button.popover().and_downcast::<gtk::PopoverMenu>() {
+            pm.add_child(&style_switcher(), "style");
+            pm.add_child(&zoom_row(&zoom_level), "zoom");
+        }
         header.pack_end(&menu_button);
         let tab_button = adw::TabButton::builder()
             .view(&tab_view)
@@ -261,6 +339,7 @@ impl Window {
             tint_status: RefCell::default(),
             tint: Cell::new(Tint::None),
             closing: Cell::new(false),
+            zoom_level,
         });
         app.apply_to_window(&w.win);
         w.install_actions();
@@ -1197,4 +1276,16 @@ async fn confirm_close(win: &adw::ApplicationWindow, names: &[String], window: b
     dialog.set_default_response(Some("cancel"));
     dialog.set_close_response("cancel");
     dialog.choose_future(win).await == "close"
+}
+
+#[cfg(test)]
+mod tests {
+    use super::zoom_percent;
+
+    #[test]
+    fn zoom_level_text() {
+        assert_eq!(zoom_percent(1.0), "100%");
+        assert_eq!(zoom_percent(crate::search::zoom_in(1.0)), "110%");
+        assert_eq!(zoom_percent(crate::search::MIN_SCALE), "50%");
+    }
 }

@@ -8,6 +8,7 @@ mod nominatim;
 mod osrm;
 mod service;
 mod settings;
+mod shortcuts;
 mod tiles;
 mod ui;
 

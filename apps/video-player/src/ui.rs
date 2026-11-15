@@ -209,6 +209,9 @@ struct St {
     last_save: Option<Instant>,
     track: u64,
     playing_state: bool,
+    /// Where the current file was left last time, until the user resumes
+    /// or the offer lapses.
+    resume_offer: Option<f64>,
 }
 
 pub struct Ui {
@@ -246,6 +249,10 @@ pub struct Ui {
     /// Volume and speed remembered across sessions.
     settings: Cell<Settings>,
     settings_save: RefCell<Option<glib::SourceId>>,
+    /// The main menu's resume item, while there is an offer.
+    resume_section: gio::Menu,
+    /// The toast offering to resume, while shown.
+    resume_toast: RefCell<Option<adw::Toast>>,
 }
 
 fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
@@ -259,8 +266,12 @@ fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
 }
 
-fn primary_menu() -> gio::Menu {
+/// The main menu and its first section, which holds "Resume from 12:34"
+/// while a resume position is on offer.
+fn primary_menu() -> (gio::Menu, gio::Menu) {
     let menu = gio::Menu::new();
+    let resume = gio::Menu::new();
+    menu.append_section(None, &resume);
     let s1 = gio::Menu::new();
     s1.append(Some("_Open…"), Some("win.open"));
     s1.append(Some("Take _Screenshot"), Some("win.screenshot"));
@@ -269,8 +280,12 @@ fn primary_menu() -> gio::Menu {
     s2.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
     s2.append(Some("_About Video Player"), Some("app.about"));
     menu.append_section(None, &s2);
-    menu
+    (menu, resume)
 }
+
+/// Seconds a resume offer stays as a toast; it stays in the main menu
+/// until playback ends or another file is opened.
+const RESUME_TOAST_SECS: u32 = 30;
 
 fn header(menu: &gio::Menu) -> (adw::HeaderBar, gtk::MenuButton) {
     let header = adw::HeaderBar::new();
@@ -320,10 +335,12 @@ impl Ui {
             .title(APP_NAME)
             .default_width(960)
             .default_height(600)
+            .width_request(360)
+            .height_request(294)
             .build();
         window.set_help_overlay(Some(&shortcuts_window()));
         helix_app_common::add_bubble_shortcuts(&window, SINGLE_KEYS);
-        let menu = primary_menu();
+        let (menu, resume_section) = primary_menu();
         let mut menu_buttons = Vec::new();
 
         // Empty state.
@@ -486,23 +503,49 @@ impl Ui {
             "win.fullscreen",
         );
 
-        let controls = gtk::Box::builder()
-            .orientation(gtk::Orientation::Horizontal)
+        // Play | elapsed, seek bar, remaining | volume, speed, tracks,
+        // fullscreen in one row; below 500sp the seek bar and times get a
+        // row of their own (see the breakpoint below).
+        let seek_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        seek_box.set_hexpand(true);
+        seek_box.append(&elapsed);
+        seek_box.append(&seek);
+        seek_box.append(&remaining);
+        let end_box = gtk::Box::builder()
             .spacing(6)
-            .css_classes(["osd", "toolbar", "vp-controls"])
+            .halign(gtk::Align::End)
             .build();
         for w in [
-            play_button.upcast_ref::<gtk::Widget>(),
-            elapsed.upcast_ref(),
-            seek.upcast_ref(),
-            remaining.upcast_ref(),
-            volume_button.upcast_ref(),
+            volume_button.upcast_ref::<gtk::Widget>(),
             speed_button.upcast_ref(),
             tracks_button.upcast_ref(),
             fullscreen_button.upcast_ref(),
         ] {
-            controls.append(w);
+            end_box.append(w);
         }
+        let controls = gtk::Grid::builder()
+            .column_spacing(6)
+            .row_spacing(2)
+            .css_classes(["osd", "toolbar", "vp-controls"])
+            .build();
+        controls.attach(&play_button, 0, 0, 1, 1);
+        controls.attach(&seek_box, 1, 0, 1, 1);
+        controls.attach(&end_box, 2, 0, 1, 1);
+        let narrow =
+            adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 500sp").unwrap());
+        if let Some(layout) = controls.layout_manager() {
+            let cell = |w: &gtk::Widget| layout.layout_child(w);
+            let seek_cell = cell(seek_box.upcast_ref());
+            narrow.add_setter(&seek_cell, "column", Some(&0.to_value()));
+            narrow.add_setter(&seek_cell, "column-span", Some(&3.to_value()));
+            for w in [
+                play_button.upcast_ref::<gtk::Widget>(),
+                end_box.upcast_ref(),
+            ] {
+                narrow.add_setter(&cell(w), "row", Some(&1.to_value()));
+            }
+        }
+        window.add_breakpoint(narrow);
         let controls_revealer = gtk::Revealer::builder()
             .transition_type(gtk::RevealerTransitionType::Crossfade)
             .reveal_child(true)
@@ -558,6 +601,8 @@ impl Ui {
             }),
             settings: Cell::new(settings),
             settings_save: RefCell::new(None),
+            resume_section,
+            resume_toast: RefCell::default(),
             updating: Cell::new(false),
             me: RefCell::new(std::rc::Weak::new()),
         });
@@ -654,6 +699,7 @@ impl Ui {
         simple("frame-prev", |ui| ui.frame_step(false));
         simple("screenshot", |ui| ui.screenshot());
         simple("load-subtitle", |ui| ui.subtitle_dialog());
+        simple("resume", |ui| ui.resume());
 
         let speed = gio::SimpleAction::new_stateful(
             "speed",
@@ -731,6 +777,9 @@ impl Ui {
         if let Some(a) = self.action("screenshot") {
             a.set_enabled(has_media && self.paintable.texture().is_some());
         }
+        if let Some(a) = self.action("resume") {
+            a.set_enabled(has_media && self.st.borrow().resume_offer.is_some());
+        }
         if let Some(a) = self.action("leave-fullscreen") {
             a.set_enabled(self.window.is_fullscreen());
         }
@@ -738,7 +787,7 @@ impl Ui {
 
     // ---- signal wiring --------------------------------------------------
 
-    fn connect_signals(self: &Rc<Self>, picture: &gtk::Picture, controls: &gtk::Box) {
+    fn connect_signals(self: &Rc<Self>, picture: &gtk::Picture, controls: &gtk::Grid) {
         // Window lifecycle.
         self.window.connect_close_request(glib::clone!(
             #[weak(rename_to = ui)]
@@ -1052,6 +1101,7 @@ impl Ui {
             st.track += 1;
             st.last_save = Some(Instant::now());
         }
+        self.set_resume_offer(None);
         self.paintable.clear();
         self.window.set_title(Some(&name));
         self.title.set_title(&name);
@@ -1169,6 +1219,7 @@ impl Ui {
                     st.eos = true;
                     st.want_play = false;
                 }
+                self.set_resume_offer(None);
                 self.player.set_state(false);
                 if let Some(uri) = self.st.borrow().uri.clone() {
                     let mut store = self.resume.borrow_mut();
@@ -1253,22 +1304,50 @@ impl Ui {
         }
         let uri = self.st.borrow().uri.clone();
         if let Some(pos) = uri.and_then(|u| self.resume.borrow().lookup(&u)) {
+            // A toast (spoken by screen readers) and a main menu item that
+            // stays, so resuming is not a race against the toast.
+            self.set_resume_offer(Some(pos));
             let toast = adw::Toast::builder()
                 .title(format!("Resume from {}?", timefmt::format_secs(pos, false)))
                 .button_label("_Resume")
+                .action_name("win.resume")
                 .use_markup(false)
-                .timeout(10)
+                .timeout(RESUME_TOAST_SECS)
                 .build();
-            toast.connect_button_clicked(glib::clone!(
-                #[weak(rename_to = ui)]
-                self,
-                move |_| {
-                    ui.player.seek(pos, true);
-                    ui.update_time_labels(pos);
-                }
-            ));
-            self.toasts.add_toast(toast);
+            self.toasts.add_toast(toast.clone());
+            self.resume_toast.replace(Some(toast));
         }
+    }
+
+    /// Offers resuming at `pos` in the main menu, or withdraws the offer.
+    fn set_resume_offer(&self, pos: Option<f64>) {
+        self.st.borrow_mut().resume_offer = pos;
+        if pos.is_none() {
+            if let Some(t) = self.resume_toast.take() {
+                t.dismiss();
+            }
+        }
+        self.resume_section.remove_all();
+        if let Some(pos) = pos {
+            self.resume_section.append(
+                Some(&format!(
+                    "_Resume from {}",
+                    timefmt::format_secs(pos, false)
+                )),
+                Some("win.resume"),
+            );
+        }
+        self.update_action_states();
+    }
+
+    /// Jumps to the offered resume position.
+    fn resume(&self) {
+        let Some(pos) = self.st.borrow().resume_offer else {
+            return;
+        };
+        self.set_resume_offer(None);
+        self.player.seek(pos, true);
+        self.update_time_labels(pos);
     }
 
     fn refresh_duration(&self) {

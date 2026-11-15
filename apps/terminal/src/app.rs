@@ -233,6 +233,24 @@ impl App {
             .build();
         self.gtk.add_action_entries([prefs]);
 
+        // Main menu style switcher; choosing Dark keeps Hacker.
+        let style = gio::SimpleAction::new_stateful(
+            "style",
+            Some(glib::VariantTy::STRING),
+            &Self::style_choice(self.theme()).to_variant(),
+        );
+        let wk = self.this.clone();
+        style.connect_change_state(move |_, value| {
+            let (Some(app), Some(nick)) = (wk.upgrade(), value.and_then(|v| v.str())) else {
+                return;
+            };
+            let wanted = Theme::from_nick(nick);
+            if wanted.combo_index() != app.theme().combo_index() {
+                app.set_theme(wanted);
+            }
+        });
+        self.gtk.add_action(&style);
+
         for (action, keys) in ACCELS {
             self.gtk.set_accels_for_action(action, keys);
         }
@@ -277,6 +295,7 @@ impl App {
         } else {
             w.win.set_default_size(DEFAULT_SIZE.0, DEFAULT_SIZE.1);
         }
+        w.update_zoom(self.font_scale());
         self.windows.borrow_mut().push(w.clone());
         w
     }
@@ -305,7 +324,22 @@ impl App {
         self.refresh_all();
     }
 
+    /// The main menu's style choice for `theme`: "auto", "day" or "night"
+    /// (Hacker is a dark style).
+    fn style_choice(theme: Theme) -> &'static str {
+        Theme::from_combo_index(theme.combo_index()).nick()
+    }
+
     fn apply_style(&self) {
+        // Keep the main menu's style switcher in step (also when the
+        // style is changed in Preferences).
+        if let Some(a) = self
+            .gtk
+            .lookup_action("style")
+            .and_downcast::<gio::SimpleAction>()
+        {
+            a.set_state(&Self::style_choice(self.theme()).to_variant());
+        }
         let scheme = match self.theme() {
             Theme::Auto => adw::ColorScheme::Default,
             Theme::Day => adw::ColorScheme::ForceLight,
@@ -391,8 +425,10 @@ impl App {
 
     pub fn refresh_all(&self) {
         let windows = self.windows.borrow().clone();
+        let scale = self.font_scale();
         for w in windows {
             self.apply_to_window(&w.win);
+            w.update_zoom(scale);
             for t in w.tabs.borrow().iter() {
                 self.apply_to(&t.term);
             }

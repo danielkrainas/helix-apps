@@ -21,6 +21,43 @@ const APP_NAME: &str = "Maps";
 const COMMENTS: &str = "Find places around the world";
 const SCHEMA: &str = "org.gnome.Maps";
 const DEFAULT_MODE: &str = "pedestrian";
+const LOCATE_TOOLTIP: &str = "Current Location (Ctrl+L)";
+
+/// Window accelerators; every key here is listed in the shortcuts window
+/// (checked by a test in `shortcuts.rs`).
+pub const ACCELS: &[(&str, &[&str])] = &[
+    ("win.search", &["<Control>f"]),
+    ("win.locate", &["<Control>l"]),
+    ("win.directions", &["<Control>d"]),
+    (
+        "win.zoom-in",
+        &["<Control>equal", "<Control>plus", "<Control>KP_Add"],
+    ),
+    ("win.zoom-out", &["<Control>minus", "<Control>KP_Subtract"]),
+    ("win.preferences", &["<Control>comma"]),
+    ("win.shortcuts", &["<Control>question"]),
+];
+
+/// Keys handled by the map itself while it has focus (`map_key_action`);
+/// tests check each one does something and is in the shortcuts window.
+#[cfg(test)]
+pub const MAP_KEYS: &[&str] = &[
+    "Left",
+    "Right",
+    "Up",
+    "Down",
+    "<Shift>Left",
+    "<Shift>Right",
+    "<Shift>Up",
+    "<Shift>Down",
+    "plus",
+    "equal",
+    "KP_Add",
+    "minus",
+    "KP_Subtract",
+    "Menu",
+    "<Shift>F10",
+];
 
 pub fn run(target: Option<LaunchTarget>) -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
@@ -48,12 +85,23 @@ pub fn run(target: Option<LaunchTarget>) -> glib::ExitCode {
 fn load_css() {
     let css = gtk::CssProvider::new();
     css.load_from_string(
+        // Markers use the style's named colours: the dot borders are the
+        // foreground colour that goes with their fill, so they stand out on
+        // the (always light) tiles in every style. Start of a route is a
+        // ring, the destination and a selected place a pin, so they differ
+        // by shape as well as colour; high contrast adds a dark outline.
         ".maps-location-dot { min-width: 16px; min-height: 16px; border-radius: 50%;
-             background: @accent_bg_color; border: 3px solid white;
+             background: @accent_bg_color; border: 3px solid @accent_fg_color;
              box-shadow: 0 0 0 6px alpha(@accent_bg_color, 0.25); }
-         .maps-start-dot { min-width: 12px; min-height: 12px; border-radius: 50%;
-             background: @success_color; border: 3px solid white; }
-         .maps-pin { color: @destructive_color; -gtk-icon-shadow: 0 1px 2px alpha(black, 0.5); }
+         .maps-start-dot { min-width: 10px; min-height: 10px; border-radius: 50%;
+             background: @success_fg_color; border: 4px solid @success_bg_color;
+             box-shadow: 0 0 0 2px @success_fg_color; }
+         .maps-pin { color: @destructive_bg_color; -gtk-icon-shadow: 0 1px 2px @shade_color; }
+         @media (prefers-contrast: more) {
+             .maps-location-dot, .maps-start-dot { box-shadow: 0 0 0 2px @view_fg_color; }
+             .maps-pin { -gtk-icon-shadow: 0 0 1px @view_fg_color, 0 0 1px @view_fg_color; }
+         }
+         .maps-map-frame.map-focused { outline: 2px solid @accent_color; outline-offset: -2px; }
          .maps-sidebar { padding: 12px; }
          .maps-coords { font-family: monospace; }",
     );
@@ -131,7 +179,30 @@ pub struct Inner {
     locating: Cell<bool>,
     context_point: Cell<Option<LatLon>>,
     context_menu: gtk::PopoverMenu,
+    map_focus: Rc<MapFocus>,
     save_pending: Cell<bool>,
+}
+
+/// The map's keyboard-focus indication: a ring around the map and a
+/// crosshair at its centre, shown while the map has focus that came from
+/// the keyboard (Tab, or keys used on the map) rather than a click.
+struct MapFocus {
+    crosshair: gtk::DrawingArea,
+    /// Draws the ring, on top of the map's layers.
+    frame: gtk::Overlay,
+    keyboard: Cell<bool>,
+}
+
+impl MapFocus {
+    fn sync(&self, map: &impl IsA<gtk::Widget>) {
+        let shown = self.keyboard.get() && map.as_ref().has_focus();
+        self.crosshair.set_visible(shown);
+        if shown {
+            self.frame.add_css_class("map-focused");
+        } else {
+            self.frame.remove_css_class("map-focused");
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -254,13 +325,31 @@ impl Ui {
         helix_app_common::a11y::name_buttons_from_tooltips(&simple_map);
         let map = simple_map.map().expect("simple map has a map");
         let viewport = simple_map.viewport().expect("simple map has a viewport");
-        let route_layer = shumate::PathLayer::builder()
-            .viewport(&viewport)
-            .stroke_width(6.0)
-            .stroke_color(&gdk::RGBA::new(0.21, 0.52, 0.89, 0.9))
-            .outline_width(1.5)
-            .outline_color(&gdk::RGBA::new(1.0, 1.0, 1.0, 0.9))
-            .build();
+        let route_layer = shumate::PathLayer::builder().viewport(&viewport).build();
+        style_route(&route_layer);
+        {
+            // Follow the accent colour and dark / high-contrast styles.
+            let style = adw::StyleManager::default();
+            for prop in ["dark", "high-contrast", "accent-color"] {
+                if style.find_property(prop).is_none() {
+                    continue;
+                }
+                let layer = route_layer.downgrade();
+                let id = style.connect_notify_local(Some(prop), move |_, _| {
+                    if let Some(l) = layer.upgrade() {
+                        style_route(&l);
+                        l.queue_draw();
+                    }
+                });
+                let style = style.clone();
+                let id = RefCell::new(Some(id));
+                route_layer.connect_destroy(move |_| {
+                    if let Some(id) = id.take() {
+                        style.disconnect(id);
+                    }
+                });
+            }
+        }
         let route_markers = shumate::MarkerLayer::new(&viewport);
         let location_layer = shumate::MarkerLayer::new(&viewport);
         let pin_layer = shumate::MarkerLayer::new(&viewport);
@@ -271,6 +360,51 @@ impl Ui {
 
         let map_overlay = gtk::Overlay::new();
         map_overlay.set_child(Some(&simple_map));
+        // The map takes keyboard focus (Tab or a click), shows a focus ring
+        // and a crosshair at the point that keyboard context actions use.
+        map.set_focusable(true);
+        map.add_css_class("maps-map");
+        helix_app_common::set_accessible_label(&map, "Map");
+        let crosshair = build_crosshair();
+        map_overlay.add_overlay(&crosshair);
+        map_overlay.add_css_class("maps-map-frame");
+        let map_focus = Rc::new(MapFocus {
+            crosshair,
+            frame: map_overlay.clone(),
+            keyboard: Cell::new(false),
+        });
+        {
+            let focus = gtk::EventControllerFocus::new();
+            let (mf, win) = (Rc::downgrade(&map_focus), window.downgrade());
+            focus.connect_enter(move |c| {
+                if let (Some(mf), Some(win)) = (mf.upgrade(), win.upgrade()) {
+                    // Tab sets focus-visible before focus arrives; focus
+                    // coming back from a keyboard-opened menu keeps it.
+                    mf.keyboard
+                        .set(mf.keyboard.get() || win.gets_focus_visible());
+                    mf.sync(&c.widget().unwrap());
+                }
+            });
+            let mf = Rc::downgrade(&map_focus);
+            focus.connect_leave(move |c| {
+                if let Some(mf) = mf.upgrade() {
+                    mf.sync(&c.widget().unwrap());
+                }
+            });
+            map.add_controller(focus);
+            let click = gtk::GestureClick::builder().button(0).build();
+            click.set_propagation_phase(gtk::PropagationPhase::Capture);
+            let mf = Rc::downgrade(&map_focus);
+            click.connect_pressed(move |g, _, _, _| {
+                let map = g.widget().unwrap();
+                map.grab_focus();
+                if let Some(mf) = mf.upgrade() {
+                    mf.keyboard.set(false);
+                    mf.sync(&map);
+                }
+            });
+            map.add_controller(click);
+        }
 
         // Right-click / long-press context menu.
         let menu = gio::Menu::new();
@@ -285,7 +419,7 @@ impl Ui {
 
         // --- Header ----------------------------------------------------------
         let header = adw::HeaderBar::new();
-        let locate_button = icon_button("find-location-symbolic", "Current Location (Ctrl+L)");
+        let locate_button = icon_button("find-location-symbolic", LOCATE_TOOLTIP);
         locate_button.set_action_name(Some("win.locate"));
         header.pack_start(&locate_button);
 
@@ -450,6 +584,7 @@ impl Ui {
             locating: Cell::new(false),
             context_point: Cell::new(None),
             context_menu,
+            map_focus,
             save_pending: Cell::new(false),
         }));
 
@@ -642,6 +777,40 @@ impl Ui {
         });
         map_overlay.add_controller(long);
 
+        // When the context menu closes, focus returns to the map unless the
+        // chosen action moved it into the sidebar (directions entries).
+        let w = self.weak();
+        i.context_menu.connect_closed(move |_| {
+            let w = w.clone();
+            glib::idle_add_local_once(move || {
+                let Some(ui) = Ui::up(&w) else { return };
+                let in_sidebar = gtk::prelude::GtkWindowExt::focus(&ui.0.window)
+                    .is_some_and(|f| f.is_ancestor(&ui.0.stack));
+                if !in_sidebar {
+                    ui.0.map.grab_focus();
+                }
+                ui.0.map_focus.sync(&ui.0.map);
+            });
+        });
+
+        // Keyboard: arrows pan, +/- zoom, Menu or Shift+F10 open the
+        // context menu for the centre of the map.
+        let keys = gtk::EventControllerKey::new();
+        let w = self.weak();
+        keys.connect_key_pressed(move |_, keyval, _, state| {
+            let Some(ui) = Ui::up(&w) else {
+                return glib::Propagation::Proceed;
+            };
+            if ui.map_key(keyval, state) {
+                ui.0.map_focus.keyboard.set(true);
+                ui.0.map_focus.sync(&ui.0.map);
+                glib::Propagation::Stop
+            } else {
+                glib::Propagation::Proceed
+            }
+        });
+        i.map.add_controller(keys);
+
         // Place page buttons.
         let w = self.weak();
         i.place_page.favorite.connect_clicked(move |_| {
@@ -783,7 +952,10 @@ impl Ui {
             Box::new(|ui| ui.0.split.set_show_sidebar(false)),
         );
         add("preferences", Box::new(|ui| ui.show_preferences()));
-        add("shortcuts", Box::new(|ui| ui.show_shortcuts()));
+        add(
+            "shortcuts",
+            Box::new(|ui| crate::shortcuts::show(&ui.0.window)),
+        );
         add(
             "whats-here",
             Box::new(|ui| {
@@ -868,16 +1040,9 @@ impl Ui {
         );
 
         let app = win.application().expect("window has an application");
-        app.set_accels_for_action("win.search", &["<Control>f"]);
-        app.set_accels_for_action("win.locate", &["<Control>l"]);
-        app.set_accels_for_action("win.directions", &["<Control>d"]);
-        app.set_accels_for_action(
-            "win.zoom-in",
-            &["<Control>equal", "<Control>plus", "<Control>KP_Add"],
-        );
-        app.set_accels_for_action("win.zoom-out", &["<Control>minus", "<Control>KP_Subtract"]);
-        app.set_accels_for_action("win.preferences", &["<Control>comma"]);
-        app.set_accels_for_action("win.shortcuts", &["<Control>question"]);
+        for (action, keys) in ACCELS {
+            app.set_accels_for_action(action, keys);
+        }
 
         let esc = gtk::ShortcutController::new();
         esc.add_shortcut(gtk::Shortcut::new(
@@ -907,6 +1072,44 @@ impl Ui {
         let z = geo::zoom_for_bounds(south, north, west, east, w * 0.8, h * 0.8)
             .min(self.0.services.borrow().tile_max_zoom as f64);
         map.go_to_full((south + north) / 2.0, (west + east) / 2.0, z);
+    }
+
+    /// Handles a key pressed while the map has focus; returns whether it
+    /// was used.
+    fn map_key(&self, key: gdk::Key, state: gdk::ModifierType) -> bool {
+        match map_key_action(key, state) {
+            Some(MapKey::ContextMenu) => self.show_centre_context_menu(),
+            Some(MapKey::ZoomIn) => self.0.map.zoom_in(),
+            Some(MapKey::ZoomOut) => self.0.map.zoom_out(),
+            Some(MapKey::Pan(dx, dy)) => self.pan(dx, dy),
+            None => return false,
+        }
+        true
+    }
+
+    /// Moves the map centre by (`dx`, `dy`) pixels.
+    fn pan(&self, dx: f64, dy: f64) {
+        let map = &self.0.map;
+        let (w, h) = (map.width() as f64, map.height() as f64);
+        if w <= 0.0 || h <= 0.0 {
+            return;
+        }
+        let (lat, lon) = self
+            .0
+            .viewport
+            .widget_coords_to_location(map, w / 2.0 + dx, h / 2.0 + dy);
+        if let Some(p) = LatLon::new(lat.clamp(-85.0, 85.0), wrap_longitude(lon)) {
+            map.center_on(p.lat, p.lon);
+        }
+    }
+
+    /// Opens the context menu for the point under the crosshair.
+    fn show_centre_context_menu(&self) {
+        let overlay = self.0.context_menu.parent().expect("menu parented");
+        let map = &self.0.map;
+        let centre = gtk::graphene::Point::new(map.width() as f32 / 2.0, map.height() as f32 / 2.0);
+        let pt = map.compute_point(&overlay, &centre).unwrap_or(centre);
+        self.show_context_menu(pt.x() as f64, pt.y() as f64);
     }
 
     fn show_context_menu(&self, x: f64, y: f64) {
@@ -946,7 +1149,7 @@ impl Ui {
         );
     }
 
-    fn set_pin(&self, p: LatLon) {
+    fn set_pin(&self, p: LatLon, name: &str) {
         self.0.pin_layer.remove_all();
         let image = gtk::Image::builder()
             .icon_name("mark-location-symbolic")
@@ -954,6 +1157,7 @@ impl Ui {
             .margin_bottom(36)
             .css_classes(["maps-pin"])
             .build();
+        helix_app_common::set_accessible_label(&image, &format!("Selected place: {name}"));
         let marker = shumate::Marker::builder()
             .child(&image)
             .latitude(p.lat)
@@ -1059,7 +1263,7 @@ impl Ui {
 
     fn select_place(&self, place: Place, fly: bool) {
         let p = place.location();
-        self.set_pin(p);
+        self.set_pin(p, &place.name);
         if fly {
             match place.bbox {
                 Some([s, n, w, e]) if (n - s).abs() > 1e-4 || (e - w).abs() > 1e-4 => {
@@ -1083,11 +1287,14 @@ impl Ui {
         let Some(place) = place.as_ref() else { return };
         page.spinner.set_visible(loading);
         page.spinner.set_spinning(loading);
-        page.title.set_label(if place.name.is_empty() {
-            "Unnamed Place"
-        } else {
-            &place.name
-        });
+        // The pin's name follows the place (a dropped pin gets its address).
+        if let Some(pin) = self.0.pin_layer.markers().first().and_then(|m| m.child()) {
+            helix_app_common::set_accessible_label(
+                &pin,
+                &format!("Selected place: {}", place_title(place)),
+            );
+        }
+        page.title.set_label(place_title(place));
         page.category.set_label(&place.category);
         page.category.set_visible(!place.category.is_empty());
         page.address.set_label(&place.address);
@@ -1195,7 +1402,7 @@ impl Ui {
         if self.0.locating.replace(true) {
             return;
         }
-        self.0.locate_button.set_sensitive(false);
+        self.set_locating(true);
         let (tx, rx) = async_channel::bounded(1);
         std::thread::spawn(move || {
             let _ = tx.send_blocking(crate::location::locate());
@@ -1207,8 +1414,7 @@ impl Ui {
                 .await
                 .unwrap_or_else(|_| Err("Location unavailable".into()));
             let Some(ui) = Ui::up(&w) else { return };
-            ui.0.locating.set(false);
-            ui.0.locate_button.set_sensitive(true);
+            ui.set_locating(false);
             match result {
                 Ok(fix) => {
                     let Some(p) = LatLon::new(fix.lat, fix.lon) else {
@@ -1218,8 +1424,11 @@ impl Ui {
                     ui.0.location_layer.remove_all();
                     let dot = gtk::Box::builder()
                         .css_classes(["maps-location-dot"])
+                        .accessible_role(gtk::AccessibleRole::Img)
                         .build();
+                    helix_app_common::set_accessible_label(&dot, "Your location");
                     if fix.accuracy.is_finite() {
+                        // Also the accessible description.
                         dot.set_tooltip_text(Some(&format!(
                             "Your location (accuracy {})",
                             geo::format_distance(fix.accuracy, ui.units())
@@ -1231,6 +1440,11 @@ impl Ui {
                         .longitude(p.lon)
                         .build();
                     ui.0.location_layer.add_marker(&marker);
+                    helix_app_common::announce(
+                        &ui.0.locate_button,
+                        "Location found",
+                        helix_app_common::Urgency::Polite,
+                    );
                     if then_route {
                         ui.set_endpoint(true, Place::at(p, "My Location"));
                     } else {
@@ -1241,6 +1455,31 @@ impl Ui {
                 Err(e) => ui.toast(&e),
             }
         });
+    }
+
+    /// Shows that a location lookup (up to 30 s) is in progress: the
+    /// Current Location button turns into a spinner and the start is
+    /// announced.
+    fn set_locating(&self, on: bool) {
+        self.0.locating.set(on);
+        let b = &self.0.locate_button;
+        if on {
+            let spinner = gtk::Spinner::builder().spinning(true).build();
+            helix_app_common::set_accessible_label(&spinner, "Finding your location");
+            b.set_child(Some(&spinner));
+            b.set_tooltip_text(Some("Finding Your Location…"));
+            helix_app_common::announce(
+                b,
+                "Finding your location…",
+                helix_app_common::Urgency::Polite,
+            );
+        } else {
+            b.set_icon_name("find-location-symbolic");
+            b.set_tooltip_text(Some(LOCATE_TOOLTIP));
+        }
+        // The button keeps its name and stays focusable; a second press
+        // while locating is ignored.
+        b.update_state(&[gtk::accessible::State::Busy(on)]);
     }
 
     fn locate(&self) {
@@ -1342,6 +1581,12 @@ impl Ui {
         page.spinner.set_visible(true);
         page.spinner.set_spinning(true);
         page.find.set_sensitive(false);
+        page.summary.set_visible(false);
+        helix_app_common::announce(
+            &page.find,
+            "Finding route…",
+            helix_app_common::Urgency::Polite,
+        );
         self.0.service.submit(
             Job::Route {
                 id,
@@ -1357,6 +1602,7 @@ impl Ui {
         self.0.route_layer.remove_all();
         self.0.route_markers.remove_all();
         self.0.route_page.steps.remove_all();
+        self.0.route_page.steps.set_visible(false);
         self.0.route_page.summary.set_visible(false);
         self.0.route.borrow_mut().take();
     }
@@ -1376,7 +1622,15 @@ impl Ui {
                 .route_layer
                 .add_node(&shumate::Coordinate::new_full(p.lat, p.lon));
         }
-        let start = gtk::Box::builder().css_classes(["maps-start-dot"]).build();
+        let start = gtk::Box::builder()
+            .css_classes(["maps-start-dot"])
+            .accessible_role(gtk::AccessibleRole::Img)
+            .tooltip_text(format!("Start: {}", place_title(&from)))
+            .build();
+        helix_app_common::set_accessible_label(
+            &start,
+            &format!("Route start: {}", place_title(&from)),
+        );
         self.0.route_markers.add_marker(
             &shumate::Marker::builder()
                 .child(&start)
@@ -1389,7 +1643,12 @@ impl Ui {
             .pixel_size(32)
             .margin_bottom(32)
             .css_classes(["maps-pin"])
+            .tooltip_text(format!("Destination: {}", place_title(&to)))
             .build();
+        helix_app_common::set_accessible_label(
+            &pin,
+            &format!("Route destination: {}", place_title(&to)),
+        );
         self.0.route_markers.add_marker(
             &shumate::Marker::builder()
                 .child(&pin)
@@ -1398,6 +1657,7 @@ impl Ui {
                 .build(),
         );
         let units = self.units();
+        page.summary.remove_css_class("error");
         page.summary.set_label(&format!(
             "{} · {}",
             geo::format_distance(route.distance, units),
@@ -1419,6 +1679,7 @@ impl Ui {
             }
             page.steps.append(&row);
         }
+        page.steps.set_visible(!route.steps.is_empty());
         if let Some((s, n, w, e)) = route.bounds() {
             self.fly_to_bounds(s, n, w, e);
         }
@@ -1484,7 +1745,20 @@ impl Ui {
                     }
                     Err(e) => {
                         self.clear_route();
-                        self.toast(&e);
+                        // Shown in the sidebar (not a passing toast) and
+                        // spoken.
+                        page.summary.set_label(&e);
+                        page.summary.add_css_class("error");
+                        page.summary.set_visible(true);
+                        helix_app_common::announce(
+                            &page.summary,
+                            &if e.starts_with("No route") {
+                                e.clone()
+                            } else {
+                                format!("No route: {e}")
+                            },
+                            helix_app_common::Urgency::Assertive,
+                        );
                     }
                 }
             }
@@ -1492,39 +1766,6 @@ impl Ui {
     }
 
     // --- Dialogs -----------------------------------------------------------------
-
-    fn show_shortcuts(&self) {
-        let rows = [
-            ("Search", "Ctrl+F"),
-            ("Go to current location", "Ctrl+L"),
-            ("Directions", "Ctrl+D"),
-            ("Zoom in", "Ctrl+="),
-            ("Zoom out", "Ctrl+−"),
-            ("Close sidebar", "Escape"),
-            ("Preferences", "Ctrl+,"),
-            ("Keyboard shortcuts", "Ctrl+?"),
-            ("Close window", "Ctrl+W"),
-            ("Quit", "Ctrl+Q"),
-        ];
-        let group = adw::PreferencesGroup::new();
-        for (title, keys) in rows {
-            let row = adw::ActionRow::builder().title(title).build();
-            row.add_suffix(
-                &gtk::Label::builder()
-                    .label(keys)
-                    .css_classes(["dim-label"])
-                    .build(),
-            );
-            group.add(&row);
-        }
-        let page = adw::PreferencesPage::new();
-        page.add(&group);
-        let dialog = adw::PreferencesDialog::builder()
-            .title("Keyboard Shortcuts")
-            .build();
-        dialog.add(&page);
-        dialog.present(Some(&self.0.window));
-    }
 
     fn show_preferences(&self) {
         let s = self.0.services.borrow().clone();
@@ -1781,6 +2022,166 @@ impl Ui {
     }
 }
 
+/// A place's display name.
+fn place_title(place: &Place) -> &str {
+    if place.name.is_empty() {
+        "Unnamed Place"
+    } else {
+        &place.name
+    }
+}
+
+/// Colours of the route line: the accent colour, with an outline in the
+/// window background colour so it stands out from the tiles and from
+/// roads drawn in the accent's hue. High contrast makes it opaque, wider
+/// and outlined in the foreground colour.
+fn style_route(layer: &shumate::PathLayer) {
+    use helix_app_common::style::{accent_rgba, is_dark, is_high_contrast};
+    let accent = accent_rgba();
+    // Adwaita's window background (`@window_bg_color`) and foreground
+    // (`@window_fg_color`); PathLayer takes plain colours, not CSS names.
+    let (bg, fg) = if is_dark() {
+        (gdk::RGBA::new(0.133, 0.133, 0.149, 1.0), gdk::RGBA::WHITE)
+    } else {
+        (
+            gdk::RGBA::new(0.98, 0.98, 0.984, 1.0),
+            gdk::RGBA::new(0.0, 0.0, 0.024, 0.8),
+        )
+    };
+    if is_high_contrast() {
+        layer.set_stroke_color(Some(&gdk::RGBA::new(
+            accent.red(),
+            accent.green(),
+            accent.blue(),
+            1.0,
+        )));
+        layer.set_stroke_width(8.0);
+        layer.set_outline_color(Some(&fg));
+        layer.set_outline_width(2.5);
+    } else {
+        layer.set_stroke_color(Some(&gdk::RGBA::new(
+            accent.red(),
+            accent.green(),
+            accent.blue(),
+            0.9,
+        )));
+        layer.set_stroke_width(6.0);
+        layer.set_outline_color(Some(&bg));
+        layer.set_outline_width(1.5);
+    }
+}
+
+/// Pixels the map moves per arrow key press (four times that with Shift).
+const PAN_STEP: f64 = 64.0;
+
+/// What a key pressed on the focused map does.
+#[derive(Debug, PartialEq)]
+enum MapKey {
+    ContextMenu,
+    ZoomIn,
+    ZoomOut,
+    /// Pan by (dx, dy) pixels.
+    Pan(f64, f64),
+}
+
+/// The map's own keys ([`MAP_KEYS`]).
+fn map_key_action(key: gdk::Key, state: gdk::ModifierType) -> Option<MapKey> {
+    // The modifiers GTK accelerators use (Caps/Num Lock are ignored).
+    let mods = state
+        & (gdk::ModifierType::SHIFT_MASK
+            | gdk::ModifierType::CONTROL_MASK
+            | gdk::ModifierType::ALT_MASK
+            | gdk::ModifierType::SUPER_MASK
+            | gdk::ModifierType::HYPER_MASK
+            | gdk::ModifierType::META_MASK);
+    let plain = mods.is_empty();
+    let shift = mods == gdk::ModifierType::SHIFT_MASK;
+    match key {
+        gdk::Key::Menu if plain => Some(MapKey::ContextMenu),
+        gdk::Key::F10 if shift => Some(MapKey::ContextMenu),
+        // Shift is allowed: "+" needs it on many layouts.
+        gdk::Key::plus | gdk::Key::equal | gdk::Key::KP_Add if plain || shift => {
+            Some(MapKey::ZoomIn)
+        }
+        gdk::Key::minus | gdk::Key::KP_Subtract if plain => Some(MapKey::ZoomOut),
+        _ => {
+            let (dx, dy) = map_pan_step(key)?;
+            // Shift pans a larger step.
+            let step = match (plain, shift) {
+                (true, _) => PAN_STEP,
+                (_, true) => PAN_STEP * 4.0,
+                _ => return None,
+            };
+            Some(MapKey::Pan(dx * step, dy * step))
+        }
+    }
+}
+
+/// Direction an arrow key pans the map in, as a unit (dx, dy).
+fn map_pan_step(key: gdk::Key) -> Option<(f64, f64)> {
+    match key {
+        gdk::Key::Left | gdk::Key::KP_Left => Some((-1.0, 0.0)),
+        gdk::Key::Right | gdk::Key::KP_Right => Some((1.0, 0.0)),
+        gdk::Key::Up | gdk::Key::KP_Up => Some((0.0, -1.0)),
+        gdk::Key::Down | gdk::Key::KP_Down => Some((0.0, 1.0)),
+        _ => None,
+    }
+}
+
+/// Brings a longitude that panned past the antimeridian back to ±180°.
+fn wrap_longitude(lon: f64) -> f64 {
+    let l = (lon + 180.0).rem_euclid(360.0) - 180.0;
+    if l == -180.0 && lon > 0.0 {
+        180.0
+    } else {
+        l
+    }
+}
+
+/// A crosshair over the centre of the map, shown while the map has
+/// keyboard focus: it marks the point the context menu acts on. Drawn in
+/// the foreground colour over a background-coloured halo so it shows on
+/// light and dark tiles alike.
+fn build_crosshair() -> gtk::DrawingArea {
+    let area = gtk::DrawingArea::builder()
+        .content_width(24)
+        .content_height(24)
+        .halign(gtk::Align::Center)
+        .valign(gtk::Align::Center)
+        .can_target(false)
+        .visible(false)
+        .accessible_role(gtk::AccessibleRole::Presentation)
+        .build();
+    area.set_draw_func(|area, cr, w, h| {
+        let (cx, cy) = (w as f64 / 2.0, h as f64 / 2.0);
+        let r = (w.min(h) as f64 / 2.0) - 2.0;
+        let fg = area.color();
+        let halo = if helix_app_common::style::is_dark() {
+            (0.0, 0.0, 0.0)
+        } else {
+            (1.0, 1.0, 1.0)
+        };
+        let hc = helix_app_common::style::is_high_contrast();
+        for (width, (red, green, blue, alpha)) in [
+            (if hc { 5.0 } else { 4.0 }, (halo.0, halo.1, halo.2, 0.9)),
+            (
+                2.0,
+                (fg.red() as f64, fg.green() as f64, fg.blue() as f64, 1.0),
+            ),
+        ] {
+            cr.set_source_rgba(red, green, blue, alpha);
+            cr.set_line_width(width);
+            cr.move_to(cx - r, cy);
+            cr.line_to(cx + r, cy);
+            cr.move_to(cx, cy - r);
+            cr.line_to(cx, cy + r);
+            let _ = cr.stroke();
+        }
+    });
+    helix_app_common::style::redraw_on_style_change(&area);
+    area
+}
+
 fn build_place_page() -> (gtk::Widget, PlacePage) {
     let content = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
@@ -1796,6 +2197,7 @@ fn build_place_page() -> (gtk::Widget, PlacePage) {
         .css_classes(["title-2"])
         .build();
     let spinner = gtk::Spinner::builder().visible(false).build();
+    helix_app_common::set_accessible_label(&spinner, "Looking up address");
     let close = icon_button("window-close-symbolic", "Close");
     close.add_css_class("flat");
     close.set_valign(gtk::Align::Start);
@@ -1957,6 +2359,7 @@ fn build_route_page(current: Mode) -> (gtk::Widget, RoutePage) {
         .hexpand(true)
         .build();
     let spinner = gtk::Spinner::builder().visible(false).build();
+    helix_app_common::set_accessible_label(&spinner, "Finding route");
     action_box.append(&find);
     action_box.append(&spinner);
     content.append(&action_box);
@@ -1967,6 +2370,7 @@ fn build_route_page(current: Mode) -> (gtk::Widget, RoutePage) {
 
     let summary = gtk::Label::builder()
         .xalign(0.0)
+        .wrap(true)
         .visible(false)
         .css_classes(["title-4"])
         .build();
@@ -2000,6 +2404,47 @@ fn build_route_page(current: Mode) -> (gtk::Widget, RoutePage) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn every_map_key_does_something() {
+        for accel in MAP_KEYS {
+            // gtk::accelerator_parse needs an initialised GTK.
+            let (mods, name) = match accel.strip_prefix("<Shift>") {
+                Some(name) => (gdk::ModifierType::SHIFT_MASK, name),
+                None => (gdk::ModifierType::empty(), *accel),
+            };
+            let key = gdk::Key::from_name(name).expect(accel);
+            assert!(map_key_action(key, mods).is_some(), "{accel}");
+        }
+        assert_eq!(
+            map_key_action(gdk::Key::Left, gdk::ModifierType::empty()),
+            Some(MapKey::Pan(-PAN_STEP, 0.0))
+        );
+        assert_eq!(
+            map_key_action(gdk::Key::Down, gdk::ModifierType::SHIFT_MASK),
+            Some(MapKey::Pan(0.0, PAN_STEP * 4.0))
+        );
+        // Ctrl+- and friends are window accelerators, not map keys.
+        assert_eq!(
+            map_key_action(gdk::Key::minus, gdk::ModifierType::CONTROL_MASK),
+            None
+        );
+        assert_eq!(
+            map_key_action(gdk::Key::F10, gdk::ModifierType::empty()),
+            None
+        );
+    }
+
+    #[test]
+    fn arrow_keys_pan() {
+        assert_eq!(map_pan_step(gdk::Key::Left), Some((-1.0, 0.0)));
+        assert_eq!(map_pan_step(gdk::Key::KP_Down), Some((0.0, 1.0)));
+        assert_eq!(map_pan_step(gdk::Key::a), None);
+        assert_eq!(wrap_longitude(190.0), -170.0);
+        assert_eq!(wrap_longitude(-190.0), 170.0);
+        assert_eq!(wrap_longitude(180.0), 180.0);
+        assert_eq!(wrap_longitude(12.5), 12.5);
+    }
 
     #[test]
     fn link_buttons_say_what_they_open() {
