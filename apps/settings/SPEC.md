@@ -105,7 +105,7 @@ Primary configuration UI for the desktop and system.
 | `accessibility` | `universal-access`, `a11y` | yes |
 | `privacy` | `security`, `screen-lock`, `location` | yes |
 | `datetime` | `date-time`, `time` | yes |
-| `users` | `user-accounts` | no |
+| `users` | `user-accounts` | yes |
 | `about` | `info-overview`, `info`, `system` | yes |
 
 ### Settings bindings
@@ -475,6 +475,49 @@ live), and the network proxy.
   wired connections; the `nmcli` import path has not been tried against a
   real NetworkManager.
 
+#### Users
+AccountsService (`org.freedesktop.Accounts` on the system bus:
+`FindUserById` for this process's uid, `ListCachedUsers`, the users'
+`org.freedesktop.Accounts.User` properties and setters, `CreateUser`,
+`DeleteUser`), followed live through its signals (`accounts.rs`). Every
+change is sent with interactive authorization allowed, so polkit (the
+shell's agent) may ask for a password.
+
+- Until the first reading: *Loading Users…*; without the service, *Users
+  Are Not Available* / "The accounts service is not running."
+- The picture (`IconFile`, else initials of the name) is a button,
+  "Change Picture": a dialog with the pictures in `/usr/share/pixmaps/faces`
+  (each named "Use Picture “name”") and *Picture From a File* (a file
+  chooser for images); the choice goes to `SetIconFile` (AccountsService
+  copies it).
+- *Your Account*: *Name* (`RealName`, applied with its button),
+  *Password* / *Change…* (new password twice, at least 8 characters, a
+  hint below saying what is wrong; hashed here with the system's
+  `crypt(3)`, SHA-512 with a random salt, and sent with
+  `SetPassword(hash, "")` — the plain password never leaves the process),
+  *Automatic Login* (`SetAutomaticLogin`), *Language* (*System Default*
+  = empty, or one of the installed UTF-8 locales from `locale -a`,
+  `SetLanguage`).
+- *Other Users* (shown to administrators, `AccountType` 1): the other
+  non-system users with their pictures and "Administrator" / "Standard".
+  Until unlocked, the group says "Unlock to add, remove or change other
+  users." and has *Unlock…*: polkit `CheckAuthorization` for
+  `org.freedesktop.accounts.user-administration` (subject: this
+  connection's bus name, user interaction allowed). Unlocked, rows open a
+  dialog: *Account Type*, *Automatic Login*, *Password* (as above, set by
+  the administrator), *Parental Controls* (opens `malcontent-control
+  --user=NAME` when installed), *Remove User…* (confirmed: *Keep Files* or
+  *Delete Files*, `DeleteUser(uid, remove)`). *Add User…* (+): *Full
+  Name*, *Username* (made from the full name until edited; lower case
+  letters, digits, `-` and `_`, starting with a letter, at most 32;
+  marked invalid otherwise), *Account Type*, and *Set a Password Now*
+  (else `SetPasswordMode(1)`: they choose one at first login).
+- Tested against a fake AccountsService and polkit on a private bus
+  (`accounts.rs`, including that only a hash that verifies arrives). Not
+  yet: taking a picture with the camera, fingerprint login (fprintd),
+  changing one's own password by giving the current one (polkit asks
+  instead).
+
 #### Apps
 - *Default Apps*: *Web*, *Mail*, *Calendar*, *Music*, *Video*, *Photos*,
   each a choice of the apps GIO lists for its first content type
@@ -756,8 +799,7 @@ registered accelerators.
   status 2.
 - `-h` / `--help` prints usage.
 
-### Follow-up panels (listed, not yet available)
-- **Users**: `org.freedesktop.Accounts`.
+### Follow-up panels
 - Not listed yet: Region & Language, Online Accounts, Sharing, Printers,
   Search, Color, Wacom, power mode (`org.freedesktop.UPower.PowerProfiles`).
 

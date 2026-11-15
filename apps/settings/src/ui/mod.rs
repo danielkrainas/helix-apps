@@ -22,6 +22,7 @@ mod power;
 mod privacy;
 mod shortcuts;
 mod sound;
+mod users;
 mod widgets;
 mod wifi;
 
@@ -70,7 +71,7 @@ fn panel_impl(id: PanelId) -> Option<&'static dyn Panel> {
         PanelId::Sound => &sound::SoundPanel,
         PanelId::Display => &displays::DisplaysPanel,
         PanelId::Apps => &apps::AppsPanel,
-        PanelId::Users => return None,
+        PanelId::Users => &users::UsersPanel,
     })
 }
 

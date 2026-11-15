@@ -1,5 +1,6 @@
 //! Helix Settings.
 
+mod accounts;
 mod bluez;
 mod bus;
 mod dbus;

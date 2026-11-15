@@ -164,6 +164,7 @@ apps/settings/src/ui/power.rs
 apps/settings/src/ui/privacy.rs
 apps/settings/src/ui/shortcuts.rs
 apps/settings/src/ui/sound.rs
+apps/settings/src/ui/users.rs
 apps/settings/src/ui/widgets.rs
 apps/settings/src/ui/wifi.rs
 apps/settings/src/values.rs

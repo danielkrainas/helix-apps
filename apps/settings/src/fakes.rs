@@ -26,6 +26,8 @@ fn serve_fakes() {
     crate::bluez::tests::serve_send_to(&shell, &log);
     let nm = connect();
     crate::nm::tests::serve(&nm, &log);
+    let accounts = connect();
+    crate::accounts::tests::serve(&accounts, crate::accounts::my_uid(), true, &log);
     let store = connect();
     crate::permissions::tests::serve(&store);
     // Only when asked: the compositor normally serves it.

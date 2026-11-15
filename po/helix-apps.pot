@@ -308,7 +308,8 @@ msgstr ""
 #: apps/disk-usage/src/shortcuts.rs:30 apps/document-viewer/src/shortcuts.rs:11
 #: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:11
 #: apps/settings/src/ui/apps.rs:530 apps/settings/src/ui/bluetooth.rs:129
-#: apps/text-editor/src/shortcuts.rs:15 apps/web/src/window.rs:2222
+#: apps/settings/src/ui/users.rs:575 apps/text-editor/src/shortcuts.rs:15
+#: apps/web/src/window.rs:2222
 msgid "Open"
 msgstr ""
 
@@ -345,7 +346,7 @@ msgstr ""
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:488 apps/maps/src/ui.rs:490
 #: apps/music/src/ui.rs:316 apps/music/src/ui.rs:318
 #: apps/screenshot/src/ui.rs:287 apps/screenshot/src/ui.rs:289
-#: apps/settings/src/ui/mod.rs:203 apps/settings/src/ui/mod.rs:205
+#: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:291 apps/terminal/src/window.rs:295
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
@@ -1143,7 +1144,8 @@ msgstr ""
 #: apps/files/src/ui/sidebar.rs:626 apps/music/src/pages.rs:1523
 #: apps/music/src/pages.rs:1621 apps/music/src/pages.rs:1683
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
-#: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
+#: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
+#: apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1283
 #: apps/text-editor/src/window.rs:975 apps/web/src/dialogs.rs:413
 #: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
@@ -1770,7 +1772,7 @@ msgstr ""
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:24 apps/music/src/ui.rs:289
 #: apps/music/src/ui.rs:291 apps/settings/src/ui/apps.rs:439
-#: apps/settings/src/ui/mod.rs:188 apps/settings/src/ui/mod.rs:190
+#: apps/settings/src/ui/mod.rs:189 apps/settings/src/ui/mod.rs:191
 #: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
 #: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
 #: apps/web/src/dialogs.rs:142 apps/web/src/window.rs:47
@@ -1921,7 +1923,7 @@ msgstr ""
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:482
-#: apps/settings/src/ui/mod.rs:197 apps/terminal/src/window.rs:286
+#: apps/settings/src/ui/mod.rs:198 apps/terminal/src/window.rs:286
 #: apps/text-editor/src/window.rs:64 apps/web/src/window.rs:221
 #: apps/web/src/window.rs:264 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -1940,7 +1942,7 @@ msgid "Search Events"
 msgstr ""
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:961 apps/settings/src/ui/mod.rs:226
+#: apps/files/src/ui/tab.rs:961 apps/settings/src/ui/mod.rs:227
 #: apps/settings/src/ui/picker.rs:114 apps/web/src/dialogs.rs:739
 #: apps/web/src/window.rs:2372
 msgid "No Results Found"
@@ -1948,7 +1950,7 @@ msgstr ""
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:227
+#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:228
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:740
 #: apps/web/src/window.rs:2373
 msgid "Try a different search"
@@ -3040,7 +3042,7 @@ msgstr ""
 msgid "New Alarm"
 msgstr ""
 
-#: apps/clocks/src/ui.rs:1353
+#: apps/clocks/src/ui.rs:1353 apps/settings/src/ui/users.rs:702
 msgid "_Add"
 msgstr ""
 
@@ -3064,7 +3066,7 @@ msgstr ""
 #: apps/clocks/src/ui.rs:1460 apps/contacts/src/editor.rs:301
 #: apps/disk-usage/src/ui.rs:1002 apps/disks/src/ui.rs:1632
 #: apps/files/src/sorting.rs:43 apps/files/src/ui/tab.rs:190
-#: apps/settings/src/ui/netedit.rs:235
+#: apps/settings/src/ui/netedit.rs:235 apps/settings/src/ui/users.rs:81
 msgid "Name"
 msgstr ""
 
@@ -3468,11 +3470,12 @@ msgid "Anniversary"
 msgstr ""
 
 #: apps/contacts/src/editor.rs:458 apps/image-viewer/src/shortcuts.rs:8
-#: apps/settings/src/ui/appearance.rs:508
+#: apps/settings/src/ui/appearance.rs:508 apps/settings/src/ui/users.rs:441
 msgid "Images"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:463
+#: apps/contacts/src/editor.rs:463 apps/settings/src/ui/users.rs:389
+#: apps/settings/src/ui/users.rs:446
 msgid "Choose a Picture"
 msgstr ""
 
@@ -5269,6 +5272,7 @@ msgid "Bootable"
 msgstr ""
 
 #: apps/disks/src/ui.rs:1645 apps/disks/src/ui.rs:1702
+#: apps/settings/src/ui/users.rs:514
 msgid "C_hange"
 msgstr ""
 
@@ -6300,7 +6304,8 @@ msgstr ""
 msgid "Password Required"
 msgstr ""
 
-#: apps/document-viewer/src/dialogs.rs:166 apps/settings/src/ui/wifi.rs:128
+#: apps/document-viewer/src/dialogs.rs:166 apps/settings/src/ui/users.rs:85
+#: apps/settings/src/ui/users.rs:563 apps/settings/src/ui/wifi.rs:128
 #: apps/settings/src/ui/wifi.rs:579 apps/settings/src/ui/wifi.rs:808
 #: apps/settings/src/ui/wifi.rs:869 apps/settings/src/ui/wifi.rs:972
 msgid "Password"
@@ -6624,7 +6629,7 @@ msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr ""
 
 #: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1251
-#: apps/maps/src/ui.rs:1254 apps/settings/src/ui/mod.rs:424
+#: apps/maps/src/ui.rs:1254 apps/settings/src/ui/mod.rs:425
 #: apps/settings/src/ui/picker.rs:33
 msgid "No results found"
 msgstr ""
@@ -11953,7 +11958,8 @@ msgstr ""
 msgid "Restart {}"
 msgstr ""
 
-#: apps/settings/src/ui/extensions.rs:372
+#: apps/settings/src/ui/extensions.rs:372 apps/settings/src/ui/users.rs:85
+#: apps/settings/src/ui/users.rs:563
 msgid "Change…"
 msgstr ""
 
@@ -12149,46 +12155,46 @@ msgstr ""
 msgid "Remove {source}"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:159 apps/settings/src/ui/mod.rs:239
-#: apps/settings/src/ui/mod.rs:493
+#: apps/settings/src/ui/mod.rs:160 apps/settings/src/ui/mod.rs:240
+#: apps/settings/src/ui/mod.rs:494
 msgid "Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:177
+#: apps/settings/src/ui/mod.rs:178
 msgid "Search settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:180 apps/settings/src/ui/shortcuts.rs:10
+#: apps/settings/src/ui/mod.rs:181 apps/settings/src/ui/shortcuts.rs:10
 msgid "Search Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:198
+#: apps/settings/src/ui/mod.rs:199
 msgid "_About Settings"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:348 apps/settings/src/ui/mod.rs:361
+#: apps/settings/src/ui/mod.rs:349 apps/settings/src/ui/mod.rs:362
 msgid "Not yet available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:382
+#: apps/settings/src/ui/mod.rs:383
 msgid "Not Yet Available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:425
+#: apps/settings/src/ui/mod.rs:426
 msgid "{n} panel found"
 msgid_plural "{n} panels found"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/ui/mod.rs:462
+#: apps/settings/src/ui/mod.rs:463
 msgid "{} Is Not Yet Available"
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:463
+#: apps/settings/src/ui/mod.rs:464
 msgid "This panel will be added in a later version of Helix Settings."
 msgstr ""
 
-#: apps/settings/src/ui/mod.rs:494
+#: apps/settings/src/ui/mod.rs:495
 msgid "Configure the Helix desktop"
 msgstr ""
 
@@ -12364,7 +12370,7 @@ msgstr ""
 msgid "IPv6"
 msgstr ""
 
-#: apps/settings/src/ui/netedit.rs:277
+#: apps/settings/src/ui/netedit.rs:277 apps/settings/src/ui/users.rs:593
 msgid "Remove…"
 msgstr ""
 
@@ -12372,7 +12378,7 @@ msgstr ""
 msgid "Could not save the changes: {e}"
 msgstr ""
 
-#: apps/settings/src/ui/netedit.rs:384
+#: apps/settings/src/ui/netedit.rs:384 apps/settings/src/ui/users.rs:637
 msgid "Remove {name}?"
 msgstr ""
 
@@ -12890,6 +12896,212 @@ msgstr ""
 
 #: apps/settings/src/ui/sound.rs:778
 msgid "Could not change the alert sound: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:55
+msgid "Loading Users…"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:59
+msgid "Users Are Not Available"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:60
+msgid "The accounts service is not running."
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:72 apps/settings/src/ui/users.rs:74
+msgid "Change Picture"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:78
+msgid "Your Account"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:86
+msgid "Change Password"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:90 apps/settings/src/ui/users.rs:559
+msgid "Automatic Login"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:91
+msgid "Log in without a password when the computer starts"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:95
+msgid "System Default"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:99
+msgid "Language"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:108
+msgid "Other Users"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:111
+msgid "_Unlock…"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:115
+msgid "Unlock to Change Other Users"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:120 apps/settings/src/ui/users.rs:123
+msgid "Add User…"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:164
+msgid "Could not change the name"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:186 apps/settings/src/ui/users.rs:616
+msgid "Could not change automatic login"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:203
+msgid "Could not change the language"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:222
+msgid "Could not unlock: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:332
+msgid "Unlock to add, remove or change other users."
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:334
+msgid "No other users."
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:345 apps/settings/src/ui/users.rs:552
+#: apps/settings/src/ui/users.rs:685
+msgid "Administrator"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:347 apps/settings/src/ui/users.rs:551
+#: apps/settings/src/ui/users.rs:684
+msgid "Standard"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:410
+msgid "Could not change the picture"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:427
+msgid "Use Picture “{name}”"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:435
+msgid "Choose…"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:435
+msgid "Picture From a File"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:468
+msgid "New Password"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:471
+msgid "Confirm Password"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:488
+msgid "Use at least 8 characters."
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:490
+msgid "The passwords do not match."
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:508
+msgid "You may be asked for your current password or an administrator's."
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:524
+msgid "Password for {name}"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:538
+msgid "Could not change the password"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:549 apps/settings/src/ui/users.rs:682
+msgid "Account Type"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:566
+msgid "Change Password of {name}"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:573
+msgid "Parental Controls"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:574
+msgid "Limit what this user can use"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:585
+msgid "Could not open parental controls: {e}"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:591
+msgid "Remove User"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:606
+msgid "Could not change the account type"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:638
+msgid "Their files can be kept (in their home folder) or deleted."
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:643
+msgid "_Keep Files"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:644
+msgid "_Delete Files"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:662
+msgid "Could not remove the user"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:674
+msgid "Full Name"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:678
+msgid "Username"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:690
+msgid "Set a Password Now"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:691
+msgid "Otherwise they choose one when they first log in"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:715
+msgid "Add User"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:743
+msgid "Use lower case letters, digits, - and _, starting with a letter"
+msgstr ""
+
+#: apps/settings/src/ui/users.rs:799
+msgid "Could not add the user"
 msgstr ""
 
 #: apps/settings/src/ui/widgets.rs:13

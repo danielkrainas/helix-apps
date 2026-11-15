@@ -243,7 +243,7 @@ pub const PANELS: &[PanelInfo] = &[
         // by semicolons; add words people would search for in your language.
         keywords: n_("account;password;login;avatar;administrator;"),
         group: 5,
-        available: false,
+        available: true,
     },
     PanelInfo {
         id: PanelId::About,
@@ -383,7 +383,7 @@ mod tests {
     fn availability() {
         assert!(info(PanelId::Appearance).available);
         assert!(info(PanelId::About).available);
-        assert!(!info(PanelId::Users).available);
+        assert!(PANELS.iter().all(|p| p.available), "every panel works");
     }
 
     #[test]
@@ -408,12 +408,14 @@ mod tests {
     fn placeholders_listed_last() {
         let order = sidebar_order("");
         assert_eq!(order.len(), PANELS.len());
-        let first_placeholder = order.iter().position(|id| !info(*id).available).unwrap();
-        assert!(order[first_placeholder..]
-            .iter()
-            .all(|id| !info(*id).available));
+        if let Some(first_placeholder) = order.iter().position(|id| !info(*id).available) {
+            assert!(order[first_placeholder..]
+                .iter()
+                .all(|id| !info(*id).available));
+        }
         // Working panels keep their GNOME order.
         assert_eq!(order[0], PanelId::Wifi);
+        assert_eq!(order, search(""));
         // Searching keeps the rule: a working match before a placeholder.
         let r = sidebar_order("wireless");
         assert!(r.iter().all(|id| !info(*id).available) || info(r[0]).available);
