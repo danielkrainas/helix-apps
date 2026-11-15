@@ -1,17 +1,15 @@
 //! Human-readable formatting of sizes, dates and permissions.
 
 use gtk::glib;
+use helix_app_common::i18n::tr;
+use helix_app_common::trnf;
 
 pub fn size(bytes: u64) -> String {
     glib::format_size(bytes).to_string()
 }
 
 pub fn item_count(n: u64) -> String {
-    if n == 1 {
-        "1 item".into()
-    } else {
-        format!("{n} items")
-    }
+    trnf!("{n} item", "{n} items", n)
 }
 
 /// Formats `dt` relative to `now`. `detailed` gives the full date and time.
@@ -34,7 +32,7 @@ pub fn date(dt: &glib::DateTime, now: &glib::DateTime, detailed: bool) -> String
     if day(&dt) == day(&now) {
         f("%H:%M")
     } else if days_between == 1 {
-        "Yesterday".into()
+        tr("Yesterday").into()
     } else if (2..7).contains(&days_between) {
         f("%A")
     } else if dt.year() == now.year() {

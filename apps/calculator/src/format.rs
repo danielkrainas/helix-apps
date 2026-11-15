@@ -1,6 +1,7 @@
 //! Result formatting.
 
 use crate::engine::{to_signed, Value};
+use helix_app_common::i18n::tr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NumberFormat {
@@ -28,10 +29,10 @@ impl NumberFormat {
     }
     pub fn label(self) -> &'static str {
         match self {
-            NumberFormat::Automatic => "Automatic",
-            NumberFormat::Fixed => "Fixed",
-            NumberFormat::Scientific => "Scientific",
-            NumberFormat::Engineering => "Engineering",
+            NumberFormat::Automatic => tr("Automatic"),
+            NumberFormat::Fixed => tr("Fixed"),
+            NumberFormat::Scientific => tr("Scientific"),
+            NumberFormat::Engineering => tr("Engineering"),
         }
     }
     pub fn from_nick(s: &str) -> Self {

@@ -1,5 +1,6 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys, GENERAL};
 
 /// Accelerators registered on the application.
@@ -10,10 +11,10 @@ pub const ACCELS: &[(&str, &[&str])] = &[
 
 pub const GROUPS: &[Group] = &[
     (
-        "Fonts",
+        n_("Fonts"),
         &[
-            Keys("Open a Font File", "<Control>o"),
-            Keys("Search", "<Control>f"),
+            Keys(n_("Open a Font File"), "<Control>o"),
+            Keys(n_("Search"), "<Control>f"),
         ],
     ),
     GENERAL,

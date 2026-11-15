@@ -1,5 +1,7 @@
 //! Command-line parsing.
 
+use helix_app_common::trf;
+
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub new_window: bool,
@@ -32,7 +34,7 @@ pub fn parse<I: IntoIterator<Item = String>>(args: I) -> Result<Options, String>
             "-h" | "--help" => o.help = true,
             // Accepted for compatibility, no effect.
             "--no-desktop" | "-n" | "--no-default-window" => {}
-            _ => return Err(format!("Unknown option {arg}")),
+            _ => return Err(trf!("Unknown option {arg}", arg = arg)),
         }
     }
     Ok(o)

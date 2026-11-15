@@ -1,5 +1,6 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys};
 
 /// Accelerators registered on the application.
@@ -14,24 +15,24 @@ pub const ACCELS: &[(&str, &[&str])] = &[
 
 pub const GROUPS: &[Group] = &[
     (
-        "General",
+        n_("General"),
         &[
-            Keys("World", "<Alt>1"),
-            Keys("Alarms", "<Alt>2"),
-            Keys("Stopwatch", "<Alt>3"),
-            Keys("Timer", "<Alt>4"),
-            Keys("New Location, Alarm or Timer", "<Control>n"),
-            Keys("Keyboard Shortcuts", "<Control>question"),
-            Keys("Close Window", "<Control>w"),
-            Keys("Quit", "<Control>q"),
+            Keys(n_("World"), "<Alt>1"),
+            Keys(n_("Alarms"), "<Alt>2"),
+            Keys(n_("Stopwatch"), "<Alt>3"),
+            Keys(n_("Timer"), "<Alt>4"),
+            Keys(n_("New Location, Alarm or Timer"), "<Control>n"),
+            Keys(n_("Keyboard Shortcuts"), "<Control>question"),
+            Keys(n_("Close Window"), "<Control>w"),
+            Keys(n_("Quit"), "<Control>q"),
         ],
     ),
     (
-        "Stopwatch",
+        n_("Stopwatch"),
         &[
-            Keys("Start or Pause", "space"),
-            Keys("Lap", "l"),
-            Keys("Reset", "Delete BackSpace"),
+            Keys(n_("Start or Pause"), "space"),
+            Keys(n_("Lap"), "l"),
+            Keys(n_("Reset"), "Delete BackSpace"),
         ],
     ),
 ];

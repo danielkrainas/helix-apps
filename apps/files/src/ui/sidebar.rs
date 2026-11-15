@@ -7,6 +7,8 @@ use std::rc::{Rc, Weak};
 
 use super::{Window, OTHER_LOCATIONS};
 use crate::bookmarks;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 #[derive(Clone)]
 enum Kind {
@@ -147,7 +149,7 @@ impl Sidebar {
         let open_menu = gtk::CallbackAction::new(move |_, _| {
             weak.upgrade().is_some_and(|s| s.popup_focused()).into()
         });
-        for trigger in ["Menu", "<Shift>F10"] {
+        for trigger in [tr("Menu"), "<Shift>F10"] {
             keys.add_shortcut(gtk::Shortcut::new(
                 gtk::ShortcutTrigger::parse_string(trigger),
                 Some(open_menu.clone()),
@@ -300,13 +302,13 @@ impl Sidebar {
             icon: themed(icon),
         };
         v.push(loc(
-            "Home",
+            tr("Home"),
             "user-home-symbolic",
             gio::File::for_path(&home),
             0,
         ));
         v.push(loc(
-            "Recent",
+            tr("Recent"),
             "document-open-recent-symbolic",
             gio::File::for_uri("recent:///"),
             0,
@@ -316,7 +318,12 @@ impl Sidebar {
         } else {
             "user-trash-symbolic"
         };
-        v.push(loc("Trash", trash_icon, gio::File::for_uri("trash:///"), 0));
+        v.push(loc(
+            tr("Trash"),
+            trash_icon,
+            gio::File::for_uri("trash:///"),
+            0,
+        ));
 
         for (dir, icon) in [
             (glib::UserDirectory::Desktop, "user-desktop-symbolic"),
@@ -375,13 +382,13 @@ impl Sidebar {
             });
         }
         v.push(loc(
-            "Network",
+            tr("Network"),
             "network-workgroup-symbolic",
             gio::File::for_uri("network:///"),
             4,
         ));
         v.push(loc(
-            "Other Locations",
+            tr("Other Locations"),
             "list-add-symbolic",
             gio::File::for_uri(OTHER_LOCATIONS),
             4,
@@ -413,7 +420,11 @@ impl Sidebar {
             b.append(&label);
             if let Kind::Mount(m) = &p.kind {
                 if m.can_eject() || m.can_unmount() {
-                    let verb = if m.can_eject() { "Eject" } else { "Unmount" };
+                    let verb = if m.can_eject() {
+                        tr("Eject")
+                    } else {
+                        tr("Unmount")
+                    };
                     let btn = gtk::Button::builder()
                         .icon_name("media-eject-symbolic")
                         .tooltip_text(verb)
@@ -501,27 +512,29 @@ impl Sidebar {
         self.menu_target.set(Some(idx));
         let menu = gio::Menu::new();
         let sec = gio::Menu::new();
-        sec.append(Some("_Open"), Some("sidebar.open"));
-        sec.append(Some("Open in New _Tab"), Some("sidebar.open-tab"));
-        sec.append(Some("Open in New _Window"), Some("sidebar.open-window"));
+        sec.append(Some(tr("_Open")), Some("sidebar.open"));
+        sec.append(Some(tr("Open in New _Tab")), Some("sidebar.open-tab"));
+        sec.append(Some(tr("Open in New _Window")), Some("sidebar.open-window"));
         menu.append_section(None, &sec);
         let sec = gio::Menu::new();
         match &place.kind {
             Kind::Bookmark(..) => {
-                sec.append(Some("Rena_me…"), Some("sidebar.rename"));
-                sec.append(Some("_Remove from Bookmarks"), Some("sidebar.remove"));
+                sec.append(Some(tr("Rena_me…")), Some("sidebar.rename"));
+                sec.append(Some(tr("_Remove from Bookmarks")), Some("sidebar.remove"));
             }
-            Kind::Mount(m) if m.can_eject() => sec.append(Some("_Eject"), Some("sidebar.eject")),
+            Kind::Mount(m) if m.can_eject() => {
+                sec.append(Some(tr("_Eject")), Some("sidebar.eject"))
+            }
             Kind::Mount(m) if m.can_unmount() => {
-                sec.append(Some("_Unmount"), Some("sidebar.eject"))
+                sec.append(Some(tr("_Unmount")), Some("sidebar.eject"))
             }
             Kind::Location(f) if f.uri_scheme().as_deref() == Some("trash") => {
-                sec.append(Some("_Empty Trash…"), Some("sidebar.empty-trash"))
+                sec.append(Some(tr("_Empty Trash…")), Some("sidebar.empty-trash"))
             }
             _ => {}
         }
         if place.file().is_some_and(|f| f.uri() != OTHER_LOCATIONS) {
-            sec.append(Some("_Properties"), Some("sidebar.properties"));
+            sec.append(Some(tr("_Properties")), Some("sidebar.properties"));
         }
         menu.append_section(None, &sec);
         self.popover.set_menu_model(Some(&menu));
@@ -576,7 +589,7 @@ impl Sidebar {
             list.remove(bi);
             if let Err(e) = bookmarks::save(&list) {
                 if let Some(w) = self.win.upgrade() {
-                    w.toast(&format!("Could not save bookmarks: {e}"));
+                    w.toast(&trf!("Could not save bookmarks: {e}", e = e));
                 }
             }
         }
@@ -591,7 +604,7 @@ impl Sidebar {
         };
         let Some(w) = self.win.upgrade() else { return };
         let entry = adw::EntryRow::builder()
-            .title("Bookmark _Name")
+            .title(tr("Bookmark _Name"))
             .use_underline(true)
             .text(&place.label)
             .activates_default(true)
@@ -602,12 +615,12 @@ impl Sidebar {
             .build();
         list_box.append(&entry);
         let dialog = adw::AlertDialog::builder()
-            .heading("Rename Bookmark")
+            .heading(tr("Rename Bookmark"))
             .extra_child(&list_box)
             .default_response("rename")
             .close_response("cancel")
             .build();
-        dialog.add_responses(&[("cancel", "_Cancel"), ("rename", "_Rename")]);
+        dialog.add_responses(&[("cancel", tr("_Cancel")), ("rename", tr("_Rename"))]);
         dialog.set_response_appearance("rename", adw::ResponseAppearance::Suggested);
         let win = self.win.clone();
         let e = entry.clone();
@@ -618,7 +631,7 @@ impl Sidebar {
                 b.label = (!text.is_empty()).then_some(text);
                 if let Err(err) = bookmarks::save(&list) {
                     if let Some(w) = win.upgrade() {
-                        w.toast(&format!("Could not save bookmarks: {err}"));
+                        w.toast(&trf!("Could not save bookmarks: {err}", err = err));
                     }
                 }
             }

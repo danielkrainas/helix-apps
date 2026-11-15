@@ -1,5 +1,6 @@
 //! Sorting of folder entries.
 
+use helix_app_common::i18n::tr;
 use std::cmp::Ordering;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,10 +40,10 @@ impl SortKey {
 
     pub fn label(self) -> &'static str {
         match self {
-            SortKey::Name => "Name",
-            SortKey::Size => "Size",
-            SortKey::Type => "Type",
-            SortKey::Modified => "Modified",
+            SortKey::Name => tr("Name"),
+            SortKey::Size => tr("Size"),
+            SortKey::Type => tr("Type"),
+            SortKey::Modified => tr("Modified"),
         }
     }
 }

@@ -18,6 +18,7 @@ use gtk::{gio, glib};
 const USAGE: &str = "Usage: helix-video-player [FILE|URI]";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let mut target = None;
     let mut only_files = false;
     for arg in std::env::args_os().skip(1) {

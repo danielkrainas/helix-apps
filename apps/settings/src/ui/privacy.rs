@@ -6,6 +6,7 @@ use std::rc::Rc;
 use super::widgets::{self, days_label, preset_combo, seconds_label, switch, Num};
 use super::{Ctx, Panel};
 use crate::values;
+use helix_app_common::i18n::tr;
 
 pub const SESSION: &str = "org.gnome.desktop.session";
 const SCREENSAVER: &str = "org.gnome.desktop.screensaver";
@@ -24,10 +25,10 @@ impl Panel for PrivacyPanel {
         let location = ctx.prefs(LOCATION);
         let page = widgets::page();
 
-        let lock = widgets::group("Screen Lock");
-        lock.set_description(Some(
+        let lock = widgets::group(tr("Screen Lock"));
+        lock.set_description(Some(tr(
             "Automatically lock the screen when you are not using the device",
-        ));
+        )));
         let blank = preset_combo(
             &session,
             "idle-delay",
@@ -35,17 +36,19 @@ impl Panel for PrivacyPanel {
             300,
             values::blank_delays,
             seconds_label,
-            "Blank Screen Delay",
+            tr("Blank Screen Delay"),
         );
-        blank.set_subtitle("Period of inactivity after which the screen will go blank");
+        blank.set_subtitle(tr(
+            "Period of inactivity after which the screen will go blank",
+        ));
         lock.add(&blank);
         let auto = switch(
             &saver,
             "lock-enabled",
             true,
             false,
-            "Automatic Screen Lock",
-            "Locks the screen after it goes blank",
+            tr("Automatic Screen Lock"),
+            tr("Locks the screen after it goes blank"),
         );
         lock.add(&auto);
         let delay = preset_combo(
@@ -55,7 +58,7 @@ impl Panel for PrivacyPanel {
             0,
             values::lock_delays,
             seconds_label,
-            "Automatic Screen Lock Delay",
+            tr("Automatic Screen Lock Delay"),
         );
         auto.bind_property("active", &delay, "sensitive")
             .sync_create()
@@ -66,19 +69,19 @@ impl Panel for PrivacyPanel {
             "show-in-lock-screen",
             true,
             false,
-            "Lock Screen Notifications",
+            tr("Lock Screen Notifications"),
             "",
         ));
         page.add(&lock);
 
-        let files = widgets::group("File History & Trash");
+        let files = widgets::group(tr("File History & Trash"));
         let history = switch(
             &privacy,
             "remember-recent-files",
             true,
             false,
-            "File History",
-            "Remember recently used files",
+            tr("File History"),
+            tr("Remember recently used files"),
         );
         files.add(&history);
         let age = preset_combo(
@@ -88,7 +91,7 @@ impl Panel for PrivacyPanel {
             -1,
             values::recent_ages,
             days_label,
-            "File History Duration",
+            tr("File History Duration"),
         );
         history
             .bind_property("active", &age, "sensitive")
@@ -100,7 +103,7 @@ impl Panel for PrivacyPanel {
             "remove-old-trash-files",
             false,
             false,
-            "Automatically Delete Trash Content",
+            tr("Automatically Delete Trash Content"),
             "",
         ));
         files.add(&switch(
@@ -108,7 +111,7 @@ impl Panel for PrivacyPanel {
             "remove-old-temp-files",
             false,
             false,
-            "Automatically Delete Temporary Files",
+            tr("Automatically Delete Temporary Files"),
             "",
         ));
         files.add(&preset_combo(
@@ -118,48 +121,48 @@ impl Panel for PrivacyPanel {
             30,
             values::old_files_ages,
             days_label,
-            "Automatically Delete Period",
+            tr("Automatically Delete Period"),
         ));
         page.add(&files);
 
-        let loc = widgets::group("Location");
+        let loc = widgets::group(tr("Location"));
         loc.add(&switch(
             &location,
             "enabled",
             false,
             false,
-            "Location Services",
-            "Let apps determine your geographical location",
+            tr("Location Services"),
+            tr("Let apps determine your geographical location"),
         ));
         page.add(&loc);
 
-        let devices = widgets::group("Devices");
+        let devices = widgets::group(tr("Devices"));
         devices.add(&switch(
             &privacy,
             "disable-camera",
             false,
             true,
-            "Camera",
-            "Allow apps to use the camera",
+            tr("Camera"),
+            tr("Allow apps to use the camera"),
         ));
         devices.add(&switch(
             &privacy,
             "disable-microphone",
             false,
             true,
-            "Microphone",
-            "Allow apps to use the microphone",
+            tr("Microphone"),
+            tr("Allow apps to use the microphone"),
         ));
         page.add(&devices);
 
-        let diag = widgets::group("Diagnostics");
+        let diag = widgets::group(tr("Diagnostics"));
         diag.add(&switch(
             &privacy,
             "report-technical-problems",
             false,
             false,
-            "Automatic Problem Reporting",
-            "Send technical reports when problems occur",
+            tr("Automatic Problem Reporting"),
+            tr("Send technical reports when problems occur"),
         ));
         page.add(&diag);
         page.upcast()

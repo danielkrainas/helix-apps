@@ -1,49 +1,53 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys, GENERAL};
 
 pub const GROUPS: &[Group] = &[
     (
-        "Documents",
+        n_("Documents"),
         &[
-            Keys("New Window", "<Control>n"),
-            Keys("Open", "<Control>o"),
-            Keys("Print", "<Control>p"),
-            Keys("Properties", "<Alt>Return"),
-            Keys("Show Sidebar", "F9"),
+            Keys(n_("New Window"), "<Control>n"),
+            Keys(n_("Open"), "<Control>o"),
+            Keys(n_("Print"), "<Control>p"),
+            Keys(n_("Properties"), "<Alt>Return"),
+            Keys(n_("Show Sidebar"), "F9"),
         ],
     ),
     (
-        "Find and Select",
+        n_("Find and Select"),
         &[
-            Keys("Find", "<Control>f"),
-            Keys("Next Match", "<Control>g"),
-            Keys("Previous Match", "<Control><Shift>g"),
-            Keys("Copy the Selected Text", "<Control>c"),
-            Keys("Select All", "<Control>a"),
-            Keys("Caret Navigation", "F7"),
-            Keys("Context Menu", "Menu <Shift>F10"),
+            Keys(n_("Find"), "<Control>f"),
+            Keys(n_("Next Match"), "<Control>g"),
+            Keys(n_("Previous Match"), "<Control><Shift>g"),
+            Keys(n_("Copy the Selected Text"), "<Control>c"),
+            Keys(n_("Select All"), "<Control>a"),
+            Keys(n_("Caret Navigation"), "F7"),
+            Keys(n_("Context Menu"), "Menu <Shift>F10"),
         ],
     ),
     (
-        "Navigation",
+        n_("Navigation"),
         &[
-            Keys("Go to Page", "<Control>l"),
-            Keys("Back", "<Alt>Left"),
-            Keys("Forward", "<Alt>Right"),
+            Keys(n_("Go to Page"), "<Control>l"),
+            Keys(n_("Back"), "<Alt>Left"),
+            Keys(n_("Forward"), "<Alt>Right"),
         ],
     ),
     (
-        "View",
+        n_("View"),
         &[
-            Keys("Zoom In", "<Control>plus <Control>equal <Control>KP_Add"),
-            Keys("Zoom Out", "<Control>minus <Control>KP_Subtract"),
-            Keys("Automatic Zoom", "<Control>0 <Control>KP_0"),
-            Keys("Rotate Left", "<Control>Left"),
-            Keys("Rotate Right", "<Control>Right"),
-            Keys("Night Mode", "<Control>i"),
-            Keys("Presentation", "F5"),
-            Keys("Fullscreen", "F11"),
+            Keys(
+                n_("Zoom In"),
+                "<Control>plus <Control>equal <Control>KP_Add",
+            ),
+            Keys(n_("Zoom Out"), "<Control>minus <Control>KP_Subtract"),
+            Keys(n_("Automatic Zoom"), "<Control>0 <Control>KP_0"),
+            Keys(n_("Rotate Left"), "<Control>Left"),
+            Keys(n_("Rotate Right"), "<Control>Right"),
+            Keys(n_("Night Mode"), "<Control>i"),
+            Keys(n_("Presentation"), "F5"),
+            Keys(n_("Fullscreen"), "F11"),
         ],
     ),
     GENERAL,

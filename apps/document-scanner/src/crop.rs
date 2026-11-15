@@ -1,6 +1,8 @@
 //! Paper sizes, crop presets and interactive crop-rectangle editing.
 
 use crate::page::{clamp_rect, Rect};
+use helix_app_common::i18n::n_;
+use helix_app_common::trf;
 
 /// A named paper size in tenths of a millimetre (the unit of the
 /// `paper-width` / `paper-height` GSettings keys).
@@ -33,13 +35,13 @@ pub const PAPERS: &[Paper] = &[
     },
     Paper {
         id: "letter",
-        label: "US Letter",
+        label: n_("US Letter"),
         width: 2159,
         height: 2794,
     },
     Paper {
         id: "legal",
-        label: "US Legal",
+        label: n_("US Legal"),
         width: 2159,
         height: 3556,
     },
@@ -194,9 +196,68 @@ pub fn drag(start: Rect, handle: Handle, dx: f64, dy: f64, w: u32, h: u32, min: 
     Rect::new(l as u32, t as u32, (r - l) as u32, (b - t) as u32)
 }
 
+/// Image pixels in `mm` millimetres at `dpi` (at least one pixel).
+pub fn mm_to_px(mm: f64, dpi: f64) -> f64 {
+    (mm * dpi / 25.4).max(1.0)
+}
+
+/// Moves (or, with `resize`, grows/shrinks the bottom-right corner of)
+/// the crop by (`dx`, `dy`) image pixels: the keyboard counterpart of
+/// dragging the frame or its corner handle.
+pub fn nudge(r: Rect, dx: f64, dy: f64, resize: bool, w: u32, h: u32, min: u32) -> Rect {
+    let handle = if resize {
+        Handle::BottomRight
+    } else {
+        Handle::Move
+    };
+    drag(r, handle, dx, dy, w, h, min)
+}
+
+/// Spoken description of a crop rectangle in millimetres, for example
+/// "Crop area 210 × 297 mm at 0, 0 mm".
+pub fn describe(r: Rect, dpi: f64) -> String {
+    let mm = |px: u32| (px as f64 * 25.4 / dpi.max(1.0)).round() as i64;
+    trf!(
+        "Crop area {} × {} mm at {}, {} mm",
+        mm(r.width),
+        mm(r.height),
+        mm(r.x),
+        mm(r.y)
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn keyboard_nudges_stay_on_the_page() {
+        let r = Rect::new(10, 10, 100, 100);
+        assert_eq!(
+            nudge(r, -50.0, 0.0, false, 200, 200, 20),
+            Rect::new(0, 10, 100, 100)
+        );
+        assert_eq!(
+            nudge(r, 500.0, 5.0, false, 200, 200, 20),
+            Rect::new(100, 15, 100, 100)
+        );
+        assert_eq!(
+            nudge(r, 10.0, -95.0, true, 200, 200, 20),
+            Rect::new(10, 10, 110, 20)
+        );
+        assert_eq!(
+            nudge(r, 500.0, 0.0, true, 200, 200, 20),
+            Rect::new(10, 10, 190, 100)
+        );
+    }
+
+    #[test]
+    fn description_in_millimetres() {
+        // 300 dpi: 2480 × 3508 px is A4.
+        let r = Rect::new(0, 118, 2480, 3508);
+        assert_eq!(describe(r, 300.0), "Crop area 210 × 297 mm at 0, 10 mm");
+        assert!(mm_to_px(1.0, 300.0) > 11.0);
+    }
 
     #[test]
     fn paper_lookup() {

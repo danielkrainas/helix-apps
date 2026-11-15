@@ -1,37 +1,38 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys};
 
 pub const GROUPS: &[Group] = &[
     (
-        "Playback",
+        n_("Playback"),
         &[
-            Keys("Play or Pause", "space <Control>space"),
-            Keys("Previous Song", "<Control>b"),
-            Keys("Next Song", "<Control>n"),
-            Keys("Cycle Repeat Mode", "<Control>r"),
-            Keys("Shuffle", "<Control>s"),
+            Keys(n_("Play or Pause"), "space <Control>space"),
+            Keys(n_("Previous Song"), "<Control>b"),
+            Keys(n_("Next Song"), "<Control>n"),
+            Keys(n_("Cycle Repeat Mode"), "<Control>r"),
+            Keys(n_("Shuffle"), "<Control>s"),
         ],
     ),
     (
-        "Navigation",
+        n_("Navigation"),
         &[
-            Keys("Albums", "<Alt>1"),
-            Keys("Artists", "<Alt>2"),
-            Keys("Songs", "<Alt>3"),
-            Keys("Playlists", "<Alt>4"),
-            Keys("Search", "<Control>f"),
-            Keys("Go Back", "Escape <Alt>Left"),
+            Keys(n_("Albums"), "<Alt>1"),
+            Keys(n_("Artists"), "<Alt>2"),
+            Keys(n_("Songs"), "<Alt>3"),
+            Keys(n_("Playlists"), "<Alt>4"),
+            Keys(n_("Search"), "<Control>f"),
+            Keys(n_("Go Back"), "Escape <Alt>Left"),
         ],
     ),
     (
-        "General",
+        n_("General"),
         &[
-            Keys("Rescan Library", "F5"),
-            Keys("Preferences", "<Control>comma"),
-            Keys("Keyboard Shortcuts", "<Control>question"),
-            Keys("Close Window", "<Control>w"),
-            Keys("Quit", "<Control>q"),
+            Keys(n_("Rescan Library"), "F5"),
+            Keys(n_("Preferences"), "<Control>comma"),
+            Keys(n_("Keyboard Shortcuts"), "<Control>question"),
+            Keys(n_("Close Window"), "<Control>w"),
+            Keys(n_("Quit"), "<Control>q"),
         ],
     ),
 ];

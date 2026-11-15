@@ -7,6 +7,7 @@
 //! Helix itself.
 
 use crate::secrets::Login;
+use helix_app_common::trf;
 use serde::Deserialize;
 
 /// Isolated JavaScript world for Helix's own page scripts.
@@ -157,11 +158,15 @@ pub fn prompt_text(s: &Submission, kind: Offer) -> String {
     let who = if s.username.is_empty() {
         String::new()
     } else {
-        format!(" for “{}”", s.username)
+        trf!(" for “{}”", s.username)
     };
     match kind {
-        Offer::Update => format!("Update the saved password{who} on {host}?"),
-        _ => format!("Save password{who} on {host}?"),
+        Offer::Update => trf!(
+            "Update the saved password{who} on {host}?",
+            who = who,
+            host = host
+        ),
+        _ => trf!("Save password{who} on {host}?", who = who, host = host),
     }
 }
 

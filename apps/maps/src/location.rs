@@ -9,6 +9,8 @@ use std::collections::HashMap;
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use zbus::blocking::{Connection, Proxy};
 use zbus::zvariant::{OwnedObjectPath, OwnedValue, Value};
 
@@ -49,7 +51,7 @@ fn token(prefix: &str) -> String {
 /// Extracts a fix from a `LocationUpdated` dictionary.
 pub fn fix_from_dict(d: &Dict) -> Option<Fix> {
     let f = |k: &str| d.get(k).and_then(|v| f64::try_from(v).ok());
-    let (lat, lon) = (f("Latitude")?, f("Longitude")?);
+    let (lat, lon) = (f(tr("Latitude"))?, f(tr("Longitude"))?);
     if !(lat.is_finite()
         && lon.is_finite()
         && (-90.0..=90.0).contains(&lat)
@@ -64,7 +66,7 @@ pub fn fix_from_dict(d: &Dict) -> Option<Fix> {
     Some(Fix {
         lat,
         lon,
-        accuracy: f("Accuracy").unwrap_or(f64::NAN),
+        accuracy: f(tr("Accuracy")).unwrap_or(f64::NAN),
         description,
     })
 }
@@ -79,9 +81,9 @@ pub fn friendly_error(name: &str, detail: Option<&str>) -> String {
         "UnknownObject",
     ];
     if ABSENT.iter().any(|s| name.ends_with(s)) {
-        "The location portal is not available".to_string()
+        tr("The location portal is not available").to_string()
     } else if name.ends_with("AccessDenied") || name.ends_with("NotAllowed") {
-        "Location access was denied".to_string()
+        tr("Location access was denied").to_string()
     } else {
         detail
             .map(str::to_string)
@@ -96,7 +98,7 @@ fn friendly(e: zbus::Error) -> String {
             use zbus::DBusError;
             friendly_error(fdo.name().as_str(), fdo.description())
         }
-        _ => format!("Location unavailable: {e}"),
+        _ => trf!("Location unavailable: {e}", e = e),
     }
 }
 
@@ -119,7 +121,7 @@ fn run(conn: &Connection, accuracy: u32, events: &mpsc::Sender<Event>) -> Result
     let unique = conn
         .unique_name()
         .map(|n| n.to_string())
-        .ok_or("Not connected to a message bus")?;
+        .ok_or(tr("Not connected to a message bus"))?;
     let location = Proxy::new(conn, PORTAL_BUS, PORTAL_PATH, LOCATION_IFACE).map_err(friendly)?;
     let mut updates = location
         .receive_signal("LocationUpdated")
@@ -152,12 +154,12 @@ fn run(conn: &Connection, accuracy: u32, events: &mpsc::Sender<Event>) -> Result
 
     let msg = responses
         .next()
-        .ok_or("The location portal closed the request")?;
+        .ok_or(tr("The location portal closed the request"))?;
     let (code, _): (u32, Dict) = msg.body().deserialize().map_err(|e| e.to_string())?;
     match code {
         0 => {}
-        1 => return Err("Location access was denied".into()),
-        _ => return Err("The location request was cancelled".into()),
+        1 => return Err(tr("Location access was denied").into()),
+        _ => return Err(tr("The location request was cancelled").into()),
     }
     for msg in updates.by_ref() {
         let Ok((path, data)) = msg.body().deserialize::<(OwnedObjectPath, Dict)>() else {
@@ -170,7 +172,7 @@ fn run(conn: &Connection, accuracy: u32, events: &mpsc::Sender<Event>) -> Result
             return Ok(fix);
         }
     }
-    Err("No location received".into())
+    Err(tr("No location received").into())
 }
 
 /// Asks the portal on `conn` for one position fix, waiting up to `timeout`.
@@ -192,7 +194,7 @@ pub fn locate_on(conn: Connection, accuracy: u32, timeout: Duration) -> Result<F
             Ok(Event::Done(r)) => break r,
             // A timed-out worker stays blocked on the signal stream; closing
             // the session still stops the location service.
-            Err(_) => break Err("Timed out waiting for a location fix".into()),
+            Err(_) => break Err(tr("Timed out waiting for a location fix").into()),
         }
     };
     if let Some(s) = session {
@@ -203,7 +205,8 @@ pub fn locate_on(conn: Connection, accuracy: u32, timeout: Duration) -> Result<F
 
 /// Current location via the session bus portal.
 pub fn locate() -> Result<Fix, String> {
-    let conn = Connection::session().map_err(|e| format!("Cannot reach the session bus: {e}"))?;
+    let conn =
+        Connection::session().map_err(|e| trf!("Cannot reach the session bus: {e}", e = e))?;
     locate_on(conn, ACCURACY_EXACT, TIMEOUT)
 }
 

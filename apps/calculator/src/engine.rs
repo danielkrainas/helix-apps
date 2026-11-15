@@ -7,6 +7,9 @@ use std::collections::HashMap;
 use std::fmt;
 
 use crate::financial;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AngleUnit {
@@ -63,20 +66,21 @@ impl fmt::Display for CalcError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             CalcError::Syntax { msg, .. } => write!(f, "{msg}"),
-            CalcError::DivisionByZero => write!(f, "Division by zero is undefined"),
+            CalcError::DivisionByZero => f.write_str(tr("Division by zero is undefined")),
             CalcError::Domain(m) => write!(f, "{m}"),
-            CalcError::UnknownVariable(v) => write!(f, "Unknown variable “{v}”"),
-            CalcError::UnknownFunction(v) => write!(f, "Function “{v}” is not defined"),
-            CalcError::Arity { func, expected } => {
-                write!(
-                    f,
-                    "{func} takes {expected} argument{}",
-                    if *expected == 1 { "" } else { "s" }
-                )
+            CalcError::UnknownVariable(v) => f.write_str(&trf!("Unknown variable “{v}”", v = v)),
+            CalcError::UnknownFunction(v) => {
+                f.write_str(&trf!("Function “{v}” is not defined", v = v))
             }
-            CalcError::NotInteger => write!(f, "Programming mode only supports integers"),
-            CalcError::Overflow => write!(f, "Overflow: the result is too large"),
-            CalcError::Empty => write!(f, "No expression"),
+            CalcError::Arity { func, expected } => f.write_str(&trnf!(
+                "{func} takes {n} argument",
+                "{func} takes {n} arguments",
+                *expected,
+                func = func
+            )),
+            CalcError::NotInteger => f.write_str(tr("Programming mode only supports integers")),
+            CalcError::Overflow => f.write_str(tr("Overflow: the result is too large")),
+            CalcError::Empty => f.write_str(tr("No expression")),
         }
     }
 }
@@ -244,7 +248,7 @@ impl<'a> Lexer<'a> {
                     self.i += 1;
                 }
                 if s == "-" {
-                    return self.err(pos, "Malformed exponent");
+                    return self.err(pos, tr("Malformed exponent"));
                 }
                 let _ = d;
                 Tok::Sup(s)
@@ -284,7 +288,7 @@ impl<'a> Lexer<'a> {
                         self.i += 1;
                         Tok::Shr
                     }
-                    _ => return self.err(pos, &format!("Unexpected “{c}”")),
+                    _ => return self.err(pos, &trf!("Unexpected “{c}”", c = c)),
                 }
             };
             out.push(Token { tok, pos });
@@ -395,7 +399,7 @@ impl<'a> Lexer<'a> {
             }
         }
         if digits == "." {
-            return self.err(start, "Malformed number");
+            return self.err(start, tr("Malformed number"));
         }
         let base = self.subscript_base();
         Ok(Tok::Num { digits, base })
@@ -502,7 +506,7 @@ impl Parser {
                 || KEYWORDS.contains(&name.to_lowercase().as_str())
                 || is_builtin_const(&name)
             {
-                return self.err(&format!("Cannot assign to “{name}”"));
+                return self.err(&trf!("Cannot assign to “{name}”", name = name));
             }
             self.i = 2;
             let e = self.expr()?;
@@ -517,8 +521,8 @@ impl Parser {
     fn finish(&self) -> Result<()> {
         if self.i < self.toks.len() {
             let msg = match self.peek() {
-                Some(Tok::RParen) => "Unbalanced parenthesis",
-                _ => "Malformed expression",
+                Some(Tok::RParen) => tr("Unbalanced parenthesis"),
+                _ => tr("Malformed expression"),
             };
             return self.err(msg);
         }
@@ -686,7 +690,7 @@ impl Parser {
                 if !self.eat(&Tok::RParen) {
                     // Auto-close at end of input, otherwise it's an error.
                     if self.peek().is_some() {
-                        return self.err("Unbalanced parenthesis");
+                        return self.err(tr("Unbalanced parenthesis"));
                     }
                 }
                 Ok(e)
@@ -694,7 +698,7 @@ impl Parser {
             Some(Tok::Pipe) => {
                 let e = self.expr()?;
                 if !self.eat(&Tok::Pipe) {
-                    return self.err("Missing closing “|”");
+                    return self.err(tr("Missing closing “|”"));
                 }
                 Ok(Expr::Call {
                     name: "abs".into(),
@@ -728,7 +732,7 @@ impl Parser {
                 } else if KEYWORDS.contains(&lower.as_str()) {
                     Err(CalcError::Syntax {
                         pos,
-                        msg: format!("Unexpected “{name}”"),
+                        msg: trf!("Unexpected “{name}”", name = name),
                     })
                 } else {
                     Ok(match lower.as_str() {
@@ -741,11 +745,11 @@ impl Parser {
             }
             Some(_) => Err(CalcError::Syntax {
                 pos,
-                msg: "Malformed expression".into(),
+                msg: tr("Malformed expression").into(),
             }),
             None => Err(CalcError::Syntax {
                 pos,
-                msg: "Expression is incomplete".into(),
+                msg: tr("Expression is incomplete").into(),
             }),
         }
     }
@@ -768,7 +772,7 @@ impl Parser {
                 args.push(self.expr()?);
             }
             if !self.eat(&Tok::RParen) && self.peek().is_some() {
-                return self.err("Unbalanced parenthesis");
+                return self.err(tr("Unbalanced parenthesis"));
             }
             args
         } else {
@@ -904,7 +908,7 @@ impl Context {
             Mode::Real => {
                 let x = self.eval_real(&expr)?;
                 if x.is_nan() {
-                    return Err(CalcError::Domain("Result is undefined".into()));
+                    return Err(CalcError::Domain(tr("Result is undefined").into()));
                 }
                 if x.is_infinite() {
                     return Err(CalcError::Overflow);
@@ -945,7 +949,13 @@ impl Context {
         };
         crate::units::convert(value, from_unit, to_unit)
             .map(Some)
-            .ok_or_else(|| CalcError::Domain(format!("Cannot convert {from_unit} to {to_unit}")))
+            .ok_or_else(|| {
+                CalcError::Domain(trf!(
+                    "Cannot convert {from_unit} to {to_unit}",
+                    from_unit = from_unit,
+                    to_unit = to_unit
+                ))
+            })
     }
 
     fn lookup(&self, name: &str) -> Result<f64> {
@@ -967,7 +977,7 @@ impl Context {
             Expr::Neg(x) => -self.eval_real(x)?,
             Expr::Not(_) => {
                 return Err(CalcError::Domain(
-                    "Boolean NOT is only defined for integers".into(),
+                    tr("Boolean NOT is only defined for integers").into(),
                 ))
             }
             Expr::Factorial(x) => factorial(self.eval_real(x)?)?,
@@ -1007,7 +1017,7 @@ impl Context {
                                 return Ok(-(-a).powf(b));
                             }
                             return Err(CalcError::Domain(
-                                "Negative numbers have no real fractional powers".into(),
+                                tr("Negative numbers have no real fractional powers").into(),
                             ));
                         }
                         a.powf(b)
@@ -1068,7 +1078,12 @@ impl Context {
                 "cosh" => "acosh",
                 "tanh" => "atanh",
                 "ln" => "exp",
-                _ => return Err(CalcError::Domain(format!("{name} has no inverse"))),
+                _ => {
+                    return Err(CalcError::Domain(trf!(
+                        "{name} has no inverse",
+                        name = name
+                    )))
+                }
             }
         } else {
             name
@@ -1088,21 +1103,21 @@ impl Context {
                 let c = a.to_radians(x).cos();
                 domain(
                     c.abs() > 1e-15,
-                    "Tangent is undefined for angles that are multiples of π (180°) from π∕2 (90°)",
+                    tr("Tangent is undefined for angles that are multiples of π (180°) from π∕2 (90°)"),
                 )?;
                 a.to_radians(x).tan()
             }
             "asin" => {
                 domain(
                     (-1.0..=1.0).contains(&x),
-                    "Inverse sine is undefined for values outside [-1, 1]",
+                    tr("Inverse sine is undefined for values outside [-1, 1]"),
                 )?;
                 a.radians_to_unit(x.asin())
             }
             "acos" => {
                 domain(
                     (-1.0..=1.0).contains(&x),
-                    "Inverse cosine is undefined for values outside [-1, 1]",
+                    tr("Inverse cosine is undefined for values outside [-1, 1]"),
                 )?;
                 a.radians_to_unit(x.acos())
             }
@@ -1114,27 +1129,36 @@ impl Context {
             "acosh" => {
                 domain(
                     x >= 1.0,
-                    "Inverse hyperbolic cosine is undefined for values less than one",
+                    tr("Inverse hyperbolic cosine is undefined for values less than one"),
                 )?;
                 x.acosh()
             }
             "atanh" => {
                 domain(
                     x > -1.0 && x < 1.0,
-                    "Inverse hyperbolic tangent is undefined for values outside (-1, 1)",
+                    tr("Inverse hyperbolic tangent is undefined for values outside (-1, 1)"),
                 )?;
                 x.atanh()
             }
             "ln" => {
-                domain(x > 0.0, "Logarithm of zero or negative values is undefined")?;
+                domain(
+                    x > 0.0,
+                    tr("Logarithm of zero or negative values is undefined"),
+                )?;
                 x.ln()
             }
             "log" => {
-                domain(x > 0.0, "Logarithm of zero or negative values is undefined")?;
+                domain(
+                    x > 0.0,
+                    tr("Logarithm of zero or negative values is undefined"),
+                )?;
                 x.log10()
             }
             "log2" => {
-                domain(x > 0.0, "Logarithm of zero or negative values is undefined")?;
+                domain(
+                    x > 0.0,
+                    tr("Logarithm of zero or negative values is undefined"),
+                )?;
                 x.log2()
             }
             "exp" => x.exp(),
@@ -1154,8 +1178,9 @@ impl Context {
                 }
             }
             "ones" | "twos" => {
-                return Err(CalcError::Domain(format!(
-                    "{name} is only available in programming mode"
+                return Err(CalcError::Domain(trf!(
+                    "{name} is only available in programming mode",
+                    name = name
                 )))
             }
             _ => return Err(CalcError::UnknownFunction(name.into())),
@@ -1191,7 +1216,7 @@ impl Context {
                 let n = to_signed(self.eval_int(x, bits)?, bits);
                 if n < 0 {
                     return Err(CalcError::Domain(
-                        "Factorial is only defined for non-negative integers".into(),
+                        tr("Factorial is only defined for non-negative integers").into(),
                     ));
                 }
                 let mut acc: u64 = 1;
@@ -1264,7 +1289,7 @@ impl Context {
                     "sqrt" => {
                         if sx < 0 {
                             return Err(CalcError::Domain(
-                                "Square root of a negative number".into(),
+                                tr("Square root of a negative number").into(),
                             ));
                         }
                         let r = (sx as f64).sqrt();
@@ -1284,7 +1309,7 @@ impl Context {
 fn as_exact_int(x: f64) -> Result<i64> {
     if x.fract() != 0.0 || x.abs() > 9.0e15 {
         Err(CalcError::Domain(
-            "Boolean operations are only defined for integers".into(),
+            tr("Boolean operations are only defined for integers").into(),
         ))
     } else {
         Ok(x as i64)
@@ -1295,14 +1320,18 @@ fn parse_real(digits: &str, base: u32) -> Result<f64> {
     if base == 10 {
         digits.parse::<f64>().map_err(|_| CalcError::Syntax {
             pos: 0,
-            msg: "Malformed number".into(),
+            msg: tr("Malformed number").into(),
         })
     } else {
         let mut v = 0f64;
         for c in digits.chars() {
             let d = c.to_digit(base).ok_or(CalcError::Syntax {
                 pos: 0,
-                msg: format!("Digit “{c}” is not valid in base {base}"),
+                msg: trf!(
+                    "Digit “{c}” is not valid in base {base}",
+                    c = c,
+                    base = base
+                ),
             })?;
             v = v * base as f64 + d as f64;
         }
@@ -1319,7 +1348,7 @@ fn nth_root(x: f64, n: f64) -> Result<f64> {
             return Ok(-(-x).powf(1.0 / n));
         }
         return Err(CalcError::Domain(
-            "Even roots of negative numbers are undefined".into(),
+            tr("Even roots of negative numbers are undefined").into(),
         ));
     }
     Ok(x.powf(1.0 / n))
@@ -1329,7 +1358,7 @@ fn nth_root(x: f64, n: f64) -> Result<f64> {
 pub fn factorial(x: f64) -> Result<f64> {
     if x < 0.0 {
         return Err(CalcError::Domain(
-            "Factorial is only defined for non-negative numbers".into(),
+            tr("Factorial is only defined for non-negative numbers").into(),
         ));
     }
     if x.fract() == 0.0 {

@@ -25,6 +25,8 @@ pub struct Article {
     pub content: String,
     /// Length of the article text in characters.
     pub text_length: usize,
+    /// The source page's language (BCP 47), when it declares one.
+    pub lang: Option<String>,
 }
 
 impl Article {
@@ -656,6 +658,7 @@ pub fn extract(html: &str, base_url: &str) -> Option<Article> {
             .filter(|b| !b.is_empty() && b.chars().count() < 100);
     }
     let site_name = meta(&doc, &["og:site_name", "application-name"]);
+    let lang = page_lang(&doc);
 
     let mut ex = Extractor {
         doc: &doc,
@@ -685,7 +688,39 @@ pub fn extract(html: &str, base_url: &str) -> Option<Article> {
         site_name,
         content,
         text_length,
+        lang,
     })
+}
+
+/// `lang` if it looks like a language tag (letters, digits and hyphens,
+/// as in "en", "pt-BR", "zh-Hant-TW"); `None` otherwise.
+pub fn sanitize_lang(lang: &str) -> Option<String> {
+    let lang = lang.trim().replace('_', "-");
+    let ok = !lang.is_empty()
+        && lang.len() <= 35
+        && lang.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+        && lang.split('-').all(|p| !p.is_empty())
+        && lang.chars().next().is_some_and(|c| c.is_ascii_alphabetic());
+    ok.then_some(lang)
+}
+
+/// The language a page declares: `lang` (or `xml:lang`) on its root,
+/// else a `Content-Language` meta tag (its first entry).
+fn page_lang(doc: &Document) -> Option<String> {
+    let root = doc.find("html");
+    root.and_then(|h| doc.attr(h, "lang").or_else(|| doc.attr(h, "xml:lang")))
+        .and_then(sanitize_lang)
+        .or_else(|| {
+            doc.find_all("meta")
+                .into_iter()
+                .find(|&m| {
+                    doc.attr(m, "http-equiv")
+                        .is_some_and(|v| v.eq_ignore_ascii_case("content-language"))
+                })
+                .and_then(|m| doc.attr(m, "content"))
+                .and_then(|c| c.split(',').next())
+                .and_then(sanitize_lang)
+        })
 }
 
 const READER_CSS: &str = r#"
@@ -693,6 +728,10 @@ const READER_CSS: &str = r#"
 :root.dark { color-scheme: dark; --fg: #e8e8e8; --bg: #1e1e1e; --muted: #a8a8a8; --link: #78aeed; --rule: #3d3d3d; --code: #2a2a2a; }
 :root.hc { --fg: #000000; --bg: #ffffff; --muted: #1e1e1e; --link: #0b4fa8; --rule: #1e1e1e; }
 :root.hc.dark { --fg: #ffffff; --bg: #000000; --muted: #e8e8e8; --link: #a8cdff; --rule: #e8e8e8; }
+@media (prefers-contrast: more) {
+  :root { --fg: #000000; --bg: #ffffff; --muted: #1e1e1e; --link: #0b4fa8; --rule: #1e1e1e; }
+  :root.dark { --fg: #ffffff; --bg: #000000; --muted: #e8e8e8; --link: #a8cdff; --rule: #e8e8e8; }
+}
 html { background: var(--bg); color: var(--fg); }
 body { margin: 0 auto; max-width: 42em; padding: 2.5em 1.25em 4em; line-height: 1.6; font-size: 1.15rem; }
 body.sans { font-family: "Adwaita Sans", "Cantarell", "Inter", system-ui, sans-serif; }
@@ -708,7 +747,7 @@ figcaption { color: var(--muted); font-size: .85em; }
 pre, code { font-family: "Adwaita Mono", "Source Code Pro", monospace; font-size: .9em; background: var(--code); border-radius: 4px; }
 pre { padding: .8em; overflow-x: auto; }
 pre code { background: none; }
-blockquote { margin: 1em 0; padding-left: 1em; border-left: 3px solid var(--rule); color: var(--muted); }
+blockquote { margin: 1em 0; padding-inline-start: 1em; border-inline-start: 3px solid var(--rule); color: var(--muted); }
 table { border-collapse: collapse; }
 td, th { border: 1px solid var(--rule); padding: .3em .5em; }
 h2, h3, h4 { line-height: 1.3; }
@@ -718,13 +757,15 @@ h2, h3, h4 { line-height: 1.3; }
 /// page is inert even if the source contained something unexpected.
 /// The reader's palette is its own (it imitates paper, not the window);
 /// `high_contrast` switches it to black and white with full-strength
-/// secondary text and rules.
+/// secondary text and rules (as does `prefers-contrast: more`). The page
+/// is in the article's language, else in `fallback_lang`.
 pub fn render(
     article: &Article,
     source_url: &str,
     font: FontStyle,
     colors: ColorScheme,
     high_contrast: bool,
+    fallback_lang: &str,
 ) -> String {
     let host = url::Url::parse(source_url)
         .ok()
@@ -743,7 +784,7 @@ pub fn render(
         ));
     }
     format!(
-        "<!DOCTYPE html><html class=\"{scheme}\"><head><meta charset=\"utf-8\">\
+        "<!DOCTYPE html><html lang=\"{lang}\" class=\"{scheme}\"><head><meta charset=\"utf-8\">\
          <meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; img-src * data:; media-src *; style-src 'unsafe-inline'\">\
          <meta name=\"viewport\" content=\"width=device-width\">\
          <title>{title}</title><style>{css}</style></head>\
@@ -755,6 +796,7 @@ pub fn render(
             (true, true) => "dark hc",
             (false, true) => "light hc",
         },
+        lang = escape_attr(article.lang.as_deref().unwrap_or(fallback_lang)),
         title = escape(&article.title),
         css = READER_CSS,
         font = if font == FontStyle::Serif { "serif" } else { "sans" },
@@ -904,6 +946,7 @@ mod tests {
             site_name: None,
             content: "<p>x</p>".into(),
             text_length: 1,
+            lang: None,
         };
         let html = render(
             &a,
@@ -911,13 +954,55 @@ mod tests {
             FontStyle::Serif,
             ColorScheme::Dark,
             false,
+            "en",
         );
         assert!(html.contains("<h1>&lt;Title&gt;</h1>"));
         assert!(html.contains("Me &amp; You"));
         assert!(html.contains("site.example</a>"));
         assert!(html.contains("&quot;c&quot;"));
         assert!(html.contains("class=\"serif\""));
-        assert!(html.contains("<html class=\"dark\">"));
+        assert!(html.contains("<html lang=\"en\" class=\"dark\">"));
         assert!(html.contains("default-src 'none'"));
+        assert!(html.contains("prefers-contrast: more"));
+        let fr = Article {
+            lang: Some("fr-CA".into()),
+            ..a
+        };
+        let html = render(
+            &fr,
+            "https://e/",
+            FontStyle::Sans,
+            ColorScheme::Light,
+            true,
+            "en",
+        );
+        assert!(html.contains("<html lang=\"fr-CA\" class=\"light hc\">"));
+    }
+
+    #[test]
+    fn page_language_is_kept() {
+        let body = format!(
+            "<body><article><p>{}</p></article></body>",
+            "Word, ".repeat(200)
+        );
+        let a = extract(&format!("<html lang=\"de-AT\">{body}</html>"), "https://e/").unwrap();
+        assert_eq!(a.lang.as_deref(), Some("de-AT"));
+        let a = extract(
+            &format!(
+                "<html><head><meta http-equiv=\"Content-Language\" content=\"es, en\"></head>{body}</html>"
+            ),
+            "https://e/",
+        )
+        .unwrap();
+        assert_eq!(a.lang.as_deref(), Some("es"));
+        let a = extract(
+            &format!("<html lang='\"><script>'>{body}</html>"),
+            "https://e/",
+        )
+        .unwrap();
+        assert_eq!(a.lang, None);
+        assert_eq!(sanitize_lang("en_US").as_deref(), Some("en-US"));
+        assert_eq!(sanitize_lang("-x"), None);
+        assert_eq!(sanitize_lang(""), None);
     }
 }

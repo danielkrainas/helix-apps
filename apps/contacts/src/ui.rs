@@ -15,6 +15,9 @@ use crate::editor::{set_avatar_bytes, Editor};
 use crate::folks;
 use crate::individual::{self, Individual};
 use crate::links::{Key, Links};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 pub const APP_ID: &str = "org.helix.Contacts";
 const SCHEMA: &str = "org.gnome.Contacts";
@@ -41,7 +44,7 @@ pub const ACCELS: &[(&str, &[&str])] = &[
 
 pub fn run(opts: Options) -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
-    helix_app_common::install_standard_actions(&app, "Contacts", "Manage your contacts");
+    helix_app_common::install_standard_actions(&app, tr("Contacts"), tr("Manage your contacts"));
     let ui: Rc<RefCell<Option<Rc<Ui>>>> = Rc::default();
     let opts = RefCell::new(Some(opts));
     app.connect_activate(move |app| {
@@ -134,9 +137,9 @@ fn tristate(on: bool) -> gtk::AccessibleTristate {
 /// "1 Selected" / "N Selected".
 fn selection_title(selection_mode: bool, n: usize) -> String {
     match (selection_mode, n) {
-        (false, _) => "Contacts".into(),
-        (true, 0) => "Select Contacts".into(),
-        (true, n) => format!("{n} Selected"),
+        (false, _) => tr("Contacts").into(),
+        (true, 0) => tr("Select Contacts").into(),
+        (true, n) => trf!("{n} Selected", n = n),
     }
 }
 
@@ -158,7 +161,7 @@ impl Ui {
 
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title("Contacts")
+            .title(tr("Contacts"))
             .default_width(800)
             .default_height(600)
             .width_request(360)
@@ -180,35 +183,35 @@ impl Ui {
         // Sidebar.
         let new_button = gtk::Button::builder()
             .icon_name("list-add-symbolic")
-            .tooltip_text("New Contact")
+            .tooltip_text(tr("New Contact"))
             .build()
-            .labelled("New Contact");
+            .labelled(tr("New Contact"));
         new_button.set_action_name(Some("win.new-contact"));
         let select_button = gtk::ToggleButton::builder()
             .icon_name("selection-mode-symbolic")
-            .tooltip_text("Select Contacts")
+            .tooltip_text(tr("Select Contacts"))
             .build()
-            .labelled("Select Contacts");
+            .labelled(tr("Select Contacts"));
         let menu = gio::Menu::new();
         let sort = gio::Menu::new();
-        sort.append(Some("Sort by _First Name"), Some("win.sort::first"));
-        sort.append(Some("Sort by _Surname"), Some("win.sort::surname"));
+        sort.append(Some(tr("Sort by _First Name")), Some("win.sort::first"));
+        sort.append(Some(tr("Sort by _Surname")), Some("win.sort::surname"));
         menu.append_section(None, &sort);
         let book_menu = gio::Menu::new();
         let io = gio::Menu::new();
-        io.append(Some("_Import…"), Some("win.import"));
-        io.append_submenu(Some("Default _Address Book"), &book_menu);
+        io.append(Some(tr("_Import…")), Some("win.import"));
+        io.append_submenu(Some(tr("Default _Address Book")), &book_menu);
         menu.append_section(None, &io);
         let about = gio::Menu::new();
-        about.append(Some("_Keyboard Shortcuts"), Some("win.shortcuts"));
-        about.append(Some("_About Contacts"), Some("app.about"));
+        about.append(Some(tr("_Keyboard Shortcuts")), Some("win.shortcuts"));
+        about.append(Some(tr("_About Contacts")), Some("app.about"));
         menu.append_section(None, &about);
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         menu_button.set_primary(true);
         let side_header = adw::HeaderBar::new();
         side_header.pack_start(&new_button);
@@ -216,10 +219,10 @@ impl Ui {
         side_header.pack_end(&select_button);
 
         let search = gtk::SearchEntry::builder()
-            .placeholder_text("Search contacts")
+            .placeholder_text(tr("Search contacts"))
             .hexpand(true)
             .build()
-            .labelled("Search Contacts");
+            .labelled(tr("Search Contacts"));
         let search_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         search_box.set_margin_start(6);
         search_box.set_margin_end(6);
@@ -239,24 +242,24 @@ impl Ui {
         list_stack.add_named(
             &adw::StatusPage::builder()
                 .icon_name("system-search-symbolic")
-                .title("No Results")
+                .title(tr("No Results"))
                 .build(),
             Some("no-results"),
         );
         let empty = adw::StatusPage::builder()
             .icon_name("avatar-default-symbolic")
-            .title("No Contacts")
-            .description("Create a contact or import a vCard file")
+            .title(tr("No Contacts"))
+            .description(tr("Create a contact or import a vCard file"))
             .build();
         let empty_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
         empty_box.set_halign(gtk::Align::Center);
         let create = gtk::Button::builder()
-            .label("Create Contact")
+            .label(tr("Create Contact"))
             .css_classes(["pill", "suggested-action"])
             .build();
         create.set_action_name(Some("win.new-contact"));
         let import = gtk::Button::builder()
-            .label("Import…")
+            .label(tr("Import…"))
             .css_classes(["pill"])
             .build();
         import.set_action_name(Some("win.import"));
@@ -269,7 +272,7 @@ impl Ui {
             .width_request(32)
             .height_request(32)
             .build();
-        helix_app_common::set_accessible_label(&spinner, "Loading contacts");
+        helix_app_common::set_accessible_label(&spinner, tr("Loading contacts"));
         let loading = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
             .spacing(12)
@@ -279,7 +282,7 @@ impl Ui {
         loading.append(&spinner);
         loading.append(
             &gtk::Label::builder()
-                .label("Loading Contacts…")
+                .label(tr("Loading Contacts…"))
                 .css_classes(["dim-label"])
                 .build(),
         );
@@ -288,15 +291,15 @@ impl Ui {
 
         let action_bar = gtk::ActionBar::new();
         let link_button = gtk::Button::builder()
-            .label("Link")
+            .label(tr("Link"))
             .sensitive(false)
             .build();
         let export_button = gtk::Button::builder()
-            .label("Export…")
+            .label(tr("Export…"))
             .sensitive(false)
             .build();
         let delete_button = gtk::Button::builder()
-            .label("Delete")
+            .label(tr("Delete"))
             .css_classes(["destructive-action"])
             .sensitive(false)
             .build();
@@ -314,7 +317,7 @@ impl Ui {
         side_view.set_content(Some(&list_stack));
         side_view.add_bottom_bar(&action_bar);
         let side_page = adw::NavigationPage::builder()
-            .title("Contacts")
+            .title(tr("Contacts"))
             .child(&side_view)
             .tag("sidebar")
             .build();
@@ -323,26 +326,26 @@ impl Ui {
         let content_header = adw::HeaderBar::new();
         let edit_button = gtk::Button::builder()
             .icon_name("document-edit-symbolic")
-            .tooltip_text("Edit Contact")
+            .tooltip_text(tr("Edit Contact"))
             .visible(false)
             .build()
-            .labelled("Edit Contact");
+            .labelled(tr("Edit Contact"));
         edit_button.set_action_name(Some("win.edit"));
         let done_button = gtk::Button::builder()
-            .label("Done")
+            .label(tr("Done"))
             .css_classes(["suggested-action"])
             .visible(false)
             .build();
         let cancel_button = gtk::Button::builder()
-            .label("Cancel")
+            .label(tr("Cancel"))
             .visible(false)
             .build();
         let contact_menu = gtk::MenuButton::builder()
             .icon_name("view-more-symbolic")
-            .tooltip_text("Contact Menu")
+            .tooltip_text(tr("Contact Menu"))
             .visible(false)
             .build()
-            .labelled("Contact Menu");
+            .labelled(tr("Contact Menu"));
         content_header.pack_start(&cancel_button);
         content_header.pack_end(&contact_menu);
         content_header.pack_end(&edit_button);
@@ -352,7 +355,7 @@ impl Ui {
         content_view.add_top_bar(&content_header);
         content_view.set_content(Some(&content_body));
         let content_page = adw::NavigationPage::builder()
-            .title("Contact")
+            .title(tr("Contact"))
             .child(&content_view)
             .tag("content")
             .build();
@@ -366,10 +369,10 @@ impl Ui {
 
         let unavailable_page = adw::StatusPage::builder()
             .icon_name("dialog-warning-symbolic")
-            .title("Contacts Service Unavailable")
+            .title(tr("Contacts Service Unavailable"))
             .build();
         let retry = gtk::Button::builder()
-            .label("Retry")
+            .label(tr("Retry"))
             .css_classes(["pill"])
             .halign(gtk::Align::Center)
             .build();
@@ -443,7 +446,7 @@ impl Ui {
                 if stack.visible_child_name().as_deref() == Some("loading") {
                     helix_app_common::announce(
                         &stack,
-                        "Loading contacts",
+                        tr("Loading contacts"),
                         helix_app_common::Urgency::Polite,
                     );
                 }
@@ -648,7 +651,7 @@ impl Ui {
                         .unlink_members(&ind.members, &external);
                     ui.save_links();
                     ui.rebuild();
-                    ui.toast("Contacts unlinked");
+                    ui.toast(tr("Contacts unlinked"));
                 }
             }),
         );
@@ -847,10 +850,9 @@ impl Ui {
                     }
                 }
             }
-            Msg::Imported(n) => self.toast(&format!(
-                "Imported {n} contact{}",
-                if n == 1 { "" } else { "s" }
-            )),
+            Msg::Imported(n) => {
+                self.toast(&trnf!("Imported {n} contact", "Imported {n} contacts", n))
+            }
             Msg::Error(e) => self.toast(&e),
         }
     }
@@ -973,7 +975,7 @@ impl Ui {
                     .can_focus(false)
                     .can_target(false)
                     .build()
-                    .labelled(&format!("Select {name}"));
+                    .labelled(&trf!("Select {name}", name = name));
                 row.update_state(&[gtk::accessible::State::Checked(tristate(on))]);
                 let weak = Rc::downgrade(self);
                 let (id, r) = (ind.id(), row.clone());
@@ -1007,7 +1009,7 @@ impl Ui {
             l.set_ellipsize(gtk::pango::EllipsizeMode::End);
             hbox.append(&l);
             if !self.self_uid.is_empty() && ind.contains_uid(&self.self_uid) {
-                hbox.append(&label("Me", &["dim-label", "caption"]));
+                hbox.append(&label(tr("Me"), &["dim-label", "caption"]));
             }
             if ind.is_linked() {
                 // The row says it is linked; the icon only shows it.
@@ -1015,10 +1017,12 @@ impl Ui {
                     .icon_name("insert-link-symbolic")
                     .accessible_role(gtk::AccessibleRole::Presentation)
                     .build();
-                icon.set_tooltip_text(Some("Linked contact"));
+                icon.set_tooltip_text(Some(tr("Linked contact")));
                 icon.add_css_class("dim-label");
                 hbox.append(&icon);
-                row.update_property(&[gtk::accessible::Property::Description("Linked contact")]);
+                row.update_property(&[gtk::accessible::Property::Description(tr(
+                    "Linked contact",
+                ))]);
             }
             row.set_child(Some(&hbox));
             self.list.append(&row);
@@ -1075,22 +1079,19 @@ impl Ui {
             match (was.as_deref(), page) {
                 (_, "loading") => helix_app_common::announce(
                     &self.list_stack,
-                    "Loading contacts",
+                    tr("Loading contacts"),
                     helix_app_common::Urgency::Polite,
                 ),
                 (Some("loading"), "empty") => helix_app_common::announce(
                     &self.list_stack,
-                    "No contacts",
+                    tr("No contacts"),
                     helix_app_common::Urgency::Polite,
                 ),
                 (Some("loading"), "list") => {
                     let n = self.state.borrow().individuals.len();
                     helix_app_common::announce(
                         &self.list_stack,
-                        &match n {
-                            1 => "1 contact loaded".to_string(),
-                            n => format!("{n} contacts loaded"),
-                        },
+                        &trnf!("{n} contact loaded", "{n} contacts loaded", n),
                         helix_app_common::Urgency::Polite,
                     );
                 }
@@ -1099,9 +1100,8 @@ impl Ui {
         }
         if !query.trim().is_empty() {
             let text = match shown.len() {
-                0 => "No results".to_string(),
-                1 => "1 contact found".to_string(),
-                n => format!("{n} contacts found"),
+                0 => tr("No results").to_string(),
+                n => trnf!("{n} contact found", "{n} contacts found", n),
             };
             helix_app_common::announce_settled(&self.search, &text);
         }
@@ -1191,13 +1191,13 @@ impl Ui {
         if has_contacts {
             let page = adw::StatusPage::builder()
                 .icon_name("avatar-default-symbolic")
-                .title("Select a Contact")
+                .title(tr("Select a Contact"))
                 .build();
             self.content_body.set_child(Some(&page));
         } else {
             self.content_body.set_child(None::<&gtk::Widget>);
         }
-        self.content_page.set_title("Contact");
+        self.content_page.set_title(tr("Contact"));
         self.set_header_mode(false, None);
     }
 
@@ -1207,9 +1207,9 @@ impl Ui {
         self.content_page.set_title(&name);
         let menu = gio::Menu::new();
         if ind.is_linked() {
-            menu.append(Some("_Unlink"), Some("win.unlink"));
+            menu.append(Some(tr("_Unlink")), Some("win.unlink"));
         }
-        menu.append(Some("_Export…"), Some("win.export-contact"));
+        menu.append(Some(tr("_Export…")), Some("win.export-contact"));
         let writable_all = {
             let st = self.state.borrow();
             ind.members
@@ -1217,7 +1217,7 @@ impl Ui {
                 .all(|(b, _)| st.writable.get(b).copied().unwrap_or(false))
         };
         if writable_all {
-            menu.append(Some("_Delete Contact"), Some("win.delete-contact"));
+            menu.append(Some(tr("_Delete Contact")), Some("win.delete-contact"));
         }
         self.contact_menu.set_menu_model(Some(&menu));
         self.set_header_mode(false, Some(ind));
@@ -1257,7 +1257,7 @@ impl Ui {
 
         let group = |title: &str| adw::PreferencesGroup::builder().title(title).build();
         if !c.emails.is_empty() {
-            let g = group("Email");
+            let g = group(tr("Email"));
             for e in &c.emails {
                 g.add(&self.value_row(
                     &e.value,
@@ -1268,7 +1268,7 @@ impl Ui {
             page.append(&g);
         }
         if !c.phones.is_empty() {
-            let g = group("Phone");
+            let g = group(tr("Phone"));
             for p in &c.phones {
                 let tel: String = p
                     .value
@@ -1284,7 +1284,7 @@ impl Ui {
             page.append(&g);
         }
         if !c.addresses.is_empty() {
-            let g = group("Address");
+            let g = group(tr("Address"));
             for a in &c.addresses {
                 let q = glib::Uri::escape_string(&a.one_line(), None, false);
                 g.add(&self.value_row(
@@ -1296,7 +1296,7 @@ impl Ui {
             page.append(&g);
         }
         if !c.urls.is_empty() {
-            let g = group("Website");
+            let g = group(tr("Website"));
             for u in &c.urls {
                 let uri = if u.value.contains("://") {
                     u.value.clone()
@@ -1313,26 +1313,26 @@ impl Ui {
         }
         let mut personal = Vec::new();
         if let Some(d) = format_vcard_date(&c.birthday) {
-            personal.push(("Birthday", d));
+            personal.push((tr("Birthday"), d));
         }
         if let Some(d) = format_vcard_date(&c.anniversary) {
-            personal.push(("Anniversary", d));
+            personal.push((tr("Anniversary"), d));
         }
         if !c.org_unit.is_empty() {
-            personal.push(("Department", c.org_unit.clone()));
+            personal.push((tr("Department"), c.org_unit.clone()));
         }
         if !c.categories.is_empty() {
-            personal.push(("Groups", c.categories.join(", ")));
+            personal.push((tr("Groups"), c.categories.join(", ")));
         }
         if !personal.is_empty() {
-            let g = group("Personal");
+            let g = group(tr("Personal"));
             for (k, v) in personal {
                 g.add(&self.value_row(&v, k, None));
             }
             page.append(&g);
         }
         if !c.note.is_empty() {
-            let g = group("Notes");
+            let g = group(tr("Notes"));
             let l = label(&c.note, &[]);
             l.set_wrap(true);
             l.set_xalign(0.0);
@@ -1348,7 +1348,7 @@ impl Ui {
             g.add(&frame);
             page.append(&g);
         }
-        let g = group("Address Books");
+        let g = group(tr("Address Books"));
         for (b, _) in &ind.members {
             let row = adw::ActionRow::builder()
                 .title(glib::markup_escape_text(&self.book_name(b)).as_str())
@@ -1359,7 +1359,7 @@ impl Ui {
                 row.set_subtitle(&glib::markup_escape_text(&account));
             }
             if !st.writable.get(b).copied().unwrap_or(false) {
-                row.add_suffix(&label("Read-only", &["dim-label", "caption"]));
+                row.add_suffix(&label(tr("Read-only"), &["dim-label", "caption"]));
             }
             g.add(&row);
         }
@@ -1426,7 +1426,7 @@ impl Ui {
         }
         let copy = gtk::Button::builder()
             .icon_name("edit-copy-symbolic")
-            .tooltip_text("Copy")
+            .tooltip_text(tr("Copy"))
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
             .build()
@@ -1436,7 +1436,7 @@ impl Ui {
         let toasts = self.toasts.clone();
         copy.connect_clicked(move |_| {
             w.clipboard().set_text(&v);
-            toasts.add_toast(adw::Toast::new("Copied to clipboard"));
+            toasts.add_toast(adw::Toast::new(tr("Copied to clipboard")));
         });
         row.add_suffix(&copy);
         row
@@ -1448,7 +1448,7 @@ impl Ui {
         }
         let books = self.writable_books();
         if books.is_empty() {
-            self.toast("No writable address book is available");
+            self.toast(tr("No writable address book is available"));
             return;
         }
         if self.editor.borrow().is_some() {
@@ -1461,7 +1461,7 @@ impl Ui {
             c.emails.push(vcard::Typed::new(&["HOME"], e));
         }
         let ed = Editor::new(&c, &books, &self.default_book());
-        self.open_editor(ed, None, "New Contact");
+        self.open_editor(ed, None, tr("New Contact"));
     }
 
     fn start_edit(self: &Rc<Self>) {
@@ -1508,12 +1508,13 @@ impl Ui {
             }
             Some(true) => {
                 let dialog = adw::AlertDialog::builder()
-                    .heading("Discard Changes?")
-                    .body("Changes to this contact have not been saved.")
+                    .heading(tr("Discard Changes?"))
+                    .body(tr("Changes to this contact have not been saved."))
                     .default_response("cancel")
                     .close_response("cancel")
                     .build();
-                dialog.add_responses(&[("cancel", "_Keep Editing"), ("discard", "_Discard")]);
+                dialog
+                    .add_responses(&[("cancel", tr("_Keep Editing")), ("discard", tr("_Discard"))]);
                 dialog.set_response_appearance("discard", adw::ResponseAppearance::Destructive);
                 let weak = Rc::downgrade(self);
                 let then = RefCell::new(Some(then));
@@ -1578,7 +1579,7 @@ impl Ui {
 
     fn save_links(&self) {
         if let Err(e) = self.links.borrow().save(&self.links_path) {
-            self.toast(&format!("Could not save links: {e}"));
+            self.toast(&trf!("Could not save links: {e}", e = e));
         }
     }
 
@@ -1595,8 +1596,8 @@ impl Ui {
         self.rebuild();
         let weak = Rc::downgrade(self);
         let toast = adw::Toast::builder()
-            .title("Contacts linked")
-            .button_label("Undo")
+            .title(tr("Contacts linked"))
+            .button_label(tr("Undo"))
             .build();
         toast.connect_button_clicked(move |_| {
             if let Some(ui) = weak.upgrade() {
@@ -1616,7 +1617,7 @@ impl Ui {
                 .collect()
         };
         if writable.is_empty() {
-            self.toast("These contacts are read-only");
+            self.toast(tr("These contacts are read-only"));
             return;
         }
         // Count individuals, not raw members.
@@ -1634,11 +1635,11 @@ impl Ui {
         self.rebuild();
         let toast = adw::Toast::builder()
             .title(if n == 1 {
-                "Contact deleted".to_string()
+                tr("Contact deleted").to_string()
             } else {
-                format!("{n} contacts deleted")
+                trf!("{n} contacts deleted", n = n)
             })
-            .button_label("Undo")
+            .button_label(tr("Undo"))
             .timeout(5)
             .build();
         let undone = Rc::new(Cell::new(false));
@@ -1700,7 +1701,7 @@ impl Ui {
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&filter);
         let dialog = gtk::FileDialog::builder()
-            .title("Import Contacts")
+            .title(tr("Import Contacts"))
             .filters(&filters)
             .build();
         let weak = Rc::downgrade(self);
@@ -1717,7 +1718,11 @@ impl Ui {
         let text = match std::fs::read(&path) {
             Ok(b) => String::from_utf8_lossy(&b).into_owned(),
             Err(e) => {
-                self.toast(&format!("Could not read {}: {e}", path.display()));
+                self.toast(&trf!(
+                    "Could not read {path}: {e}",
+                    path = path.display(),
+                    e = e
+                ));
                 return;
             }
         };
@@ -1726,7 +1731,7 @@ impl Ui {
             .map(Contact::from_vcard)
             .collect();
         if contacts.is_empty() {
-            self.toast("No contacts found in the file");
+            self.toast(tr("No contacts found in the file"));
             return;
         }
         self.backend.send(Cmd::Import {
@@ -1745,7 +1750,7 @@ impl Ui {
             "contacts.vcf".to_string()
         };
         let dialog = gtk::FileDialog::builder()
-            .title("Export Contacts")
+            .title(tr("Export Contacts"))
             .initial_name(name)
             .build();
         let toasts = self.toasts.clone();
@@ -1767,12 +1772,12 @@ impl Ui {
                 })
                 .collect();
             let msg = match std::fs::write(&path, text) {
-                Ok(()) => format!(
-                    "Exported {} contact{}",
-                    contacts.len(),
-                    if contacts.len() == 1 { "" } else { "s" }
+                Ok(()) => trnf!(
+                    "Exported {n} contact",
+                    "Exported {n} contacts",
+                    contacts.len()
                 ),
-                Err(e) => format!("Export failed: {e}"),
+                Err(e) => trf!("Export failed: {e}", e = e),
             };
             toasts.add_toast(adw::Toast::new(&msg));
         });
@@ -1792,16 +1797,16 @@ impl Ui {
             return;
         }
         let dialog = adw::AlertDialog::new(
-            Some("Choose an Address Book"),
-            Some("New contacts will be saved in this address book. You can change it later from the main menu."),
+            Some(tr("Choose an Address Book")),
+            Some(tr("New contacts will be saved in this address book. You can change it later from the main menu.")),
         );
         let names: Vec<&str> = books.iter().map(|(_, n)| n.as_str()).collect();
         let dd = gtk::DropDown::from_strings(&names);
-        helix_app_common::set_accessible_label(&dd, "Address Book for New Contacts");
+        helix_app_common::set_accessible_label(&dd, tr("Address Book for New Contacts"));
         let current = self.default_book();
         dd.set_selected(books.iter().position(|(u, _)| *u == current).unwrap_or(0) as u32);
         dialog.set_extra_child(Some(&dd));
-        dialog.add_response("done", "_Done");
+        dialog.add_response("done", tr("_Done"));
         dialog.set_default_response(Some("done"));
         dialog.set_response_appearance("done", adw::ResponseAppearance::Suggested);
         let weak = Rc::downgrade(self);
@@ -1844,7 +1849,7 @@ impl Ui {
                     self.refresh_list();
                     self.split.set_show_content(true);
                 }
-                None => self.toast("Contact not found"),
+                None => self.toast(tr("Contact not found")),
             }
         }
         if let Some(email) = &opts.email {
@@ -1880,21 +1885,10 @@ impl Ui {
 /// Formats a vCard date for display ("17 May 1990" or "17 May").
 fn format_vcard_date(v: &str) -> Option<String> {
     let (y, m, d) = vcard::parse_date(v)?;
-    const MONTHS: [&str; 12] = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-    ];
-    let month = MONTHS.get(m as usize - 1)?;
+    if !(1..=12).contains(&m) {
+        return None;
+    }
+    let month = helix_app_common::i18n::month_name(m);
     Some(match y {
         Some(y) => format!("{d} {month} {y}"),
         None => format!("{d} {month}"),
@@ -1914,10 +1908,10 @@ impl RowAction {
     /// The button's name and tooltip, and the row's description.
     fn label(self) -> &'static str {
         match self {
-            RowAction::Email => "Send Email",
-            RowAction::Call => "Call",
-            RowAction::Map => "Show on Map",
-            RowAction::Website => "Open Website",
+            RowAction::Email => tr("Send Email"),
+            RowAction::Call => tr("Call"),
+            RowAction::Map => tr("Show on Map"),
+            RowAction::Website => tr("Open Website"),
         }
     }
 
@@ -1933,10 +1927,10 @@ impl RowAction {
     /// Toast shown when no application handles the link.
     fn failure(self) -> &'static str {
         match self {
-            RowAction::Email => "No app available to send email",
-            RowAction::Call => "No app available to make calls",
-            RowAction::Map => "No app available to show maps",
-            RowAction::Website => "No app available to open websites",
+            RowAction::Email => tr("No app available to send email"),
+            RowAction::Call => tr("No app available to make calls"),
+            RowAction::Map => tr("No app available to show maps"),
+            RowAction::Website => tr("No app available to open websites"),
         }
     }
 }
@@ -1949,7 +1943,7 @@ fn copy_name(value: &str) -> String {
         .map(str::trim)
         .filter(|l| !l.is_empty())
         .collect();
-    format!("Copy {}", one_line.join(", "))
+    trf!("Copy {}", one_line.join(", "))
 }
 
 #[cfg(test)]

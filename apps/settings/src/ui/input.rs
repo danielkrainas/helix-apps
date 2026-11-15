@@ -12,6 +12,8 @@ use super::widgets::{self, identity, scale_row, switch, watch, Num};
 use super::{spawn_worker, Ctx, Panel};
 use crate::values;
 use crate::xkb::{self, XkbInfo};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 const MOUSE: &str = "org.gnome.desktop.peripherals.mouse";
 const TOUCHPAD: &str = "org.gnome.desktop.peripherals.touchpad";
@@ -59,19 +61,19 @@ impl Panel for MousePanel {
         let tp = ctx.prefs(TOUCHPAD);
         let page = widgets::page();
 
-        let general = widgets::group("General");
+        let general = widgets::group(tr("General"));
         let primary = bool_combo(
             &mouse,
             "left-handed",
             false,
-            "Primary Button",
-            ("Left", "Right"),
+            tr("Primary Button"),
+            (tr("Left"), tr("Right")),
         );
-        primary.set_subtitle("Button order on mice and touchpads");
+        primary.set_subtitle(tr("Button order on mice and touchpads"));
         general.add(&primary);
         page.add(&general);
 
-        let m = widgets::group("Mouse");
+        let m = widgets::group(tr("Mouse"));
         m.add(&scale_row(
             &mouse,
             "speed",
@@ -80,35 +82,35 @@ impl Panel for MousePanel {
             (-1.0, 1.0, 0.05),
             identity,
             identity,
-            "Pointer Speed",
-            Some(("Slow", "Fast")),
+            tr("Pointer Speed"),
+            Some((tr("Slow"), tr("Fast"))),
         ));
         let accel = widgets::nick_switch(
             &mouse,
             "accel-profile",
             ("default", "flat"),
             "default",
-            "Mouse Acceleration",
+            tr("Mouse Acceleration"),
         );
-        accel.set_subtitle("Pointer speed increases with movement speed");
+        accel.set_subtitle(tr("Pointer speed increases with movement speed"));
         m.add(&accel);
         m.add(&switch(
             &mouse,
             "natural-scroll",
             false,
             false,
-            "Natural Scrolling",
-            "Scrolling moves the content, not the view",
+            tr("Natural Scrolling"),
+            tr("Scrolling moves the content, not the view"),
         ));
         page.add(&m);
 
-        let t = widgets::group("Touchpad");
+        let t = widgets::group(tr("Touchpad"));
         let enabled = widgets::nick_switch(
             &tp,
             "send-events",
             ("enabled", "disabled"),
             "enabled",
-            "Touchpad",
+            tr("Touchpad"),
         );
         t.add(&enabled);
         let rows: Vec<gtk::Widget> = vec![
@@ -117,7 +119,7 @@ impl Panel for MousePanel {
                 "disable-while-typing",
                 true,
                 false,
-                "Disable Touchpad While Typing",
+                tr("Disable Touchpad While Typing"),
                 "",
             )
             .upcast(),
@@ -129,16 +131,22 @@ impl Panel for MousePanel {
                 (-1.0, 1.0, 0.05),
                 identity,
                 identity,
-                "Pointer Speed",
-                Some(("Slow", "Fast")),
+                tr("Pointer Speed"),
+                Some((tr("Slow"), tr("Fast"))),
             )
             .upcast(),
             widgets::nick_combo(
                 &tp,
                 "click-method",
                 "fingers",
-                &[("fingers", "Two Finger Push"), ("areas", "Corner Push")],
-                "Secondary Click",
+                {
+                    const CHOICES: &[(&str, &str)] = &[
+                        ("fingers", n_("Two Finger Push")),
+                        ("areas", n_("Corner Push")),
+                    ];
+                    CHOICES
+                },
+                tr("Secondary Click"),
             )
             .upcast(),
             switch(
@@ -146,8 +154,8 @@ impl Panel for MousePanel {
                 "tap-to-click",
                 true,
                 false,
-                "Tap to Click",
-                "Tap the touchpad to click",
+                tr("Tap to Click"),
+                tr("Tap the touchpad to click"),
             )
             .upcast(),
             switch(
@@ -155,8 +163,8 @@ impl Panel for MousePanel {
                 "natural-scroll",
                 true,
                 false,
-                "Natural Scrolling",
-                "Scrolling moves the content, not the view",
+                tr("Natural Scrolling"),
+                tr("Scrolling moves the content, not the view"),
             )
             .upcast(),
         ];
@@ -166,7 +174,7 @@ impl Panel for MousePanel {
             "two-finger-scrolling-enabled",
             true,
             false,
-            "Two-Finger Scrolling",
+            tr("Two-Finger Scrolling"),
             "",
         );
         let edge = switch(
@@ -174,7 +182,7 @@ impl Panel for MousePanel {
             "edge-scrolling-enabled",
             false,
             false,
-            "Edge Scrolling",
+            tr("Edge Scrolling"),
             "",
         );
         two.connect_active_notify(glib::clone!(
@@ -214,27 +222,27 @@ impl Panel for KeyboardPanel {
     fn build(&self, ctx: &Rc<Ctx>) -> gtk::Widget {
         let page = widgets::page();
         page.add(&input_sources_group(ctx));
-        let switching = widgets::group("Input Source Switching");
+        let switching = widgets::group(tr("Input Source Switching"));
         let sources = ctx.prefs(INPUT_SOURCES);
         switching.add(&switch(
             &sources,
             "per-window",
             false,
             false,
-            "Switch Input Sources Individually for Each Window",
+            tr("Switch Input Sources Individually for Each Window"),
             "",
         ));
         page.add(&switching);
 
         let kb = ctx.prefs(KEYBOARD);
-        let typing = widgets::group("Typing");
+        let typing = widgets::group(tr("Typing"));
         let repeat = switch(
             &kb,
             "repeat",
             true,
             false,
-            "Repeat Keys",
-            "Key presses repeat when a key is held down",
+            tr("Repeat Keys"),
+            tr("Key presses repeat when a key is held down"),
         );
         typing.add(&repeat);
         let delay = scale_row(
@@ -245,8 +253,8 @@ impl Panel for KeyboardPanel {
             (100.0, 2000.0, 10.0),
             identity,
             identity,
-            "Delay",
-            Some(("Short", "Long")),
+            tr("Delay"),
+            Some((tr("Short"), tr("Long"))),
         );
         let speed = scale_row(
             &kb,
@@ -256,8 +264,8 @@ impl Panel for KeyboardPanel {
             (0.0, 1.0, 0.01),
             |ms| values::interval_to_speed(ms as u32),
             |p| values::speed_to_interval(p) as f64,
-            "Speed",
-            Some(("Slow", "Fast")),
+            tr("Speed"),
+            Some((tr("Slow"), tr("Fast"))),
         );
         for r in [&delay, &speed] {
             repeat
@@ -314,8 +322,8 @@ impl SourcesUi {
         let n = sources.len();
         if n == 0 {
             let row = adw::ActionRow::builder()
-                .title("No input sources")
-                .subtitle("The keyboard uses the system default layout")
+                .title(tr("No input sources"))
+                .subtitle(tr("The keyboard uses the system default layout"))
                 .build();
             self.group.add(&row);
             self.rows.borrow_mut().push(row);
@@ -331,8 +339,8 @@ impl SourcesUi {
             }
             helix_app_common::focus::set_key(&row, &format!("{kind}:{id}"));
             for (icon, tip, delta, enabled) in [
-                ("go-up-symbolic", "Move Up", -1isize, i > 0),
-                ("go-down-symbolic", "Move Down", 1, i + 1 < n),
+                ("go-up-symbolic", tr("Move Up"), -1isize, i > 0),
+                ("go-down-symbolic", tr("Move Down"), 1, i + 1 < n),
             ] {
                 let b = gtk::Button::builder()
                     .icon_name(icon)
@@ -356,11 +364,11 @@ impl SourcesUi {
             }
             let rm = gtk::Button::builder()
                 .icon_name("user-trash-symbolic")
-                .tooltip_text("Remove")
+                .tooltip_text(tr("Remove"))
                 .valign(gtk::Align::Center)
                 .css_classes(["flat"])
                 .build()
-                .labelled(&row_button_name("Remove", &name));
+                .labelled(&row_button_name(tr("Remove"), &name));
             helix_app_common::focus::set_part(&rm, "remove");
             let weak = Rc::downgrade(self);
             rm.connect_clicked(move |_| {
@@ -381,10 +389,10 @@ impl SourcesUi {
 
 fn input_sources_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
     let prefs = ctx.prefs(INPUT_SOURCES);
-    let group = widgets::group("Input Sources");
-    group.set_description(Some("Includes keyboard layouts and input methods"));
+    let group = widgets::group(tr("Input Sources"));
+    group.set_description(Some(tr("Includes keyboard layouts and input methods")));
     let add = gtk::Button::builder()
-        .label("Add Input Source…")
+        .label(tr("Add Input Source…"))
         .css_classes(["flat"])
         .build();
     group.set_header_suffix(Some(&add));
@@ -413,10 +421,10 @@ fn input_sources_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
 
 fn add_source_dialog(parent: &adw::ApplicationWindow, ui: &Rc<SourcesUi>) {
     let picker = Picker::new(
-        "Add Input Source",
-        "Search languages, layouts and input methods",
-        "Search Input Sources",
-        "Loading Input Sources…",
+        tr("Add Input Source"),
+        tr("Search languages, layouts and input methods"),
+        tr("Search Input Sources"),
+        tr("Loading Input Sources…"),
     );
     let engines: Rc<RefCell<Option<Vec<xkb::IbusEngine>>>> = Rc::default();
     let fill = {
@@ -443,7 +451,7 @@ fn add_source_dialog(parent: &adw::ApplicationWindow, ui: &Rc<SourcesUi>) {
                 (
                     format!("ibus\t{}", e.name),
                     e.longname.clone(),
-                    format!("Input method (IBus){lang}"),
+                    trf!("Input method (IBus){lang}", lang = lang),
                 )
             }));
             let total = all.len();
@@ -482,7 +490,11 @@ fn add_source_dialog(parent: &adw::ApplicationWindow, ui: &Rc<SourcesUi>) {
 /// "Move English (US) Up", "Remove English (US)".
 fn row_button_name(action: &str, source: &str) -> String {
     match action.strip_prefix("Move ") {
-        Some(direction) => format!("Move {source} {direction}"),
+        Some(direction) => trf!(
+            "Move {source} {direction}",
+            source = source,
+            direction = direction
+        ),
         None => format!("{action} {source}"),
     }
 }

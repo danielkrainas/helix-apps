@@ -12,6 +12,8 @@ use crate::layout::Rect;
 use crate::search::flip_rect;
 use gtk::glib;
 use gtk::glib::translate::{ToGlibPtr, ToGlibPtrMut};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use poppler::ffi;
 use std::ffi::CStr;
 
@@ -51,17 +53,17 @@ impl Target {
                     .get(*page)
                     .cloned()
                     .unwrap_or_else(|| (page + 1).to_string());
-                format!("Go to page {label}")
+                trf!("Go to page {label}", label = label)
             }
             Target::Uri(u) => u.clone(),
             Target::Remote { file, .. } => format!("Go to {file}"),
             Target::Named(n) => match n {
-                Named::NextPage => "Next page".into(),
-                Named::PrevPage => "Previous page".into(),
-                Named::FirstPage => "First page".into(),
-                Named::LastPage => "Last page".into(),
-                Named::GoBack => "Go back".into(),
-                Named::GoForward => "Go forward".into(),
+                Named::NextPage => tr("Next page").into(),
+                Named::PrevPage => tr("Previous page").into(),
+                Named::FirstPage => tr("First page").into(),
+                Named::LastPage => tr("Last page").into(),
+                Named::GoBack => tr("Go back").into(),
+                Named::GoForward => tr("Go forward").into(),
             },
         }
     }

@@ -14,6 +14,8 @@ use crate::dates;
 use crate::model::CompKey;
 use crate::recur::{self, Ends, Preset};
 use crate::ui::Ui;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 #[derive(Debug, Clone)]
 pub enum Target {
@@ -174,7 +176,7 @@ fn time_entry(t: NaiveTime, twelve: bool, name: &str) -> gtk::Entry {
 impl Form {
     fn read_time(&self, e: &gtk::Entry) -> Result<NaiveTime, FormError> {
         dates::parse_time_input(&e.text()).ok_or_else(|| FormError {
-            message: format!("“{}” is not a valid time", e.text()),
+            message: trf!("“{}” is not a valid time", e.text()),
             field: e.clone().upcast(),
         })
     }
@@ -183,7 +185,7 @@ impl Form {
         let all_day = self.all_day.is_active();
         let (sd, ed) = (self.start_date.date.get(), self.end_date.date.get());
         let ends_early = |field: gtk::Widget| FormError {
-            message: "The event ends before it starts".into(),
+            message: tr("The event ends before it starts").into(),
             field,
         };
         let (start, end) = if all_day {
@@ -327,11 +329,11 @@ impl Form {
             .build();
         let remove = gtk::Button::builder()
             .icon_name("window-close-symbolic")
-            .tooltip_text("Remove Reminder")
+            .tooltip_text(tr("Remove Reminder"))
             .css_classes(["flat", "circular"])
             .valign(gtk::Align::Center)
             .build()
-            .labelled(&format!(
+            .labelled(&trf!(
                 "Remove Reminder “{}”",
                 recur::describe_reminder(alarm.before_start)
             ));
@@ -404,7 +406,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         Target::New { .. } => None,
     };
     if matches!(target, Target::Existing { .. }) && existing.is_none() {
-        ui.toast("The event is no longer available");
+        ui.toast(tr("The event is no longer available"));
         return;
     }
     glib::g_debug!(
@@ -432,7 +434,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         .map(|(u, n, _)| (u.clone(), n.clone()))
         .collect();
     if selectable.is_empty() {
-        ui.toast("No writable calendar is available");
+        ui.toast(tr("No writable calendar is available"));
         return;
     }
     let event = existing.as_ref().map(|(_, e, _)| e.clone());
@@ -447,9 +449,9 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
 
     let dialog = adw::Dialog::builder()
         .title(if existing.is_some() {
-            "Edit Event"
+            tr("Edit Event")
         } else {
-            "New Event"
+            tr("New Event")
         })
         .content_width(460)
         .content_height(640)
@@ -458,9 +460,13 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         .show_end_title_buttons(false)
         .show_start_title_buttons(false)
         .build();
-    let cancel = gtk::Button::with_label("Cancel");
+    let cancel = gtk::Button::with_label(tr("Cancel"));
     let save = gtk::Button::builder()
-        .label(if existing.is_some() { "Save" } else { "Add" })
+        .label(if existing.is_some() {
+            tr("Save")
+        } else {
+            tr("Add")
+        })
         .css_classes(["suggested-action"])
         .build();
     header.pack_start(&cancel);
@@ -468,19 +474,19 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         header.pack_end(&save);
         dialog.set_default_widget(Some(&save));
     } else {
-        cancel.set_label("Close");
+        cancel.set_label(tr("Close"));
     }
     let page = adw::PreferencesPage::new();
 
     let main = adw::PreferencesGroup::new();
     let title = adw::EntryRow::builder()
-        .title("Title")
+        .title(tr("Title"))
         .activates_default(true)
         .text(event.as_ref().map(|e| e.summary.as_str()).unwrap_or(""))
         .build();
     let names: Vec<&str> = selectable.iter().map(|(_, n)| n.as_str()).collect();
     let cal = adw::ComboRow::builder()
-        .title("Calendar")
+        .title(tr("Calendar"))
         .model(&gtk::StringList::new(&names))
         .build();
     let cur_cal = existing
@@ -494,7 +500,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
             .unwrap_or(0) as u32,
     );
     let location = adw::EntryRow::builder()
-        .title("Location")
+        .title(tr("Location"))
         .activates_default(true)
         .text(event.as_ref().map(|e| e.location.as_str()).unwrap_or(""))
         .build();
@@ -503,9 +509,11 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     main.add(&location);
     page.add(&main);
 
-    let sched = adw::PreferencesGroup::builder().title("Schedule").build();
+    let sched = adw::PreferencesGroup::builder()
+        .title(tr("Schedule"))
+        .build();
     let all_day_row = adw::SwitchRow::builder()
-        .title("All Day")
+        .title(tr("All Day"))
         .active(all_day)
         .build();
     let end_display = if all_day {
@@ -513,14 +521,14 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     } else {
         end.date()
     };
-    let start_date = DateButton::new(start.date(), "Start Date");
-    let end_date = DateButton::new(end_display, "End Date");
-    let start_time = time_entry(start.time(), twelve, "Start Time");
-    let end_time = time_entry(end.time(), twelve, "End Time");
-    let start_row = adw::ActionRow::builder().title("Starts").build();
+    let start_date = DateButton::new(start.date(), tr("Start Date"));
+    let end_date = DateButton::new(end_display, tr("End Date"));
+    let start_time = time_entry(start.time(), twelve, tr("Start Time"));
+    let end_time = time_entry(end.time(), twelve, tr("End Time"));
+    let start_row = adw::ActionRow::builder().title(tr("Starts")).build();
     start_row.add_suffix(&start_date.button);
     start_row.add_suffix(&start_time);
-    let end_row = adw::ActionRow::builder().title("Ends").build();
+    let end_row = adw::ActionRow::builder().title(tr("Ends")).build();
     end_row.add_suffix(&end_date.button);
     end_row.add_suffix(&end_time);
     sched.add(&all_day_row);
@@ -536,26 +544,26 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     let preset_names: Vec<&str> = recur::PRESETS
         .iter()
         .filter(|(p, _)| presets.contains(p))
-        .map(|(_, n)| *n)
+        .map(|(_, n)| tr(n))
         .collect();
     let repeat = adw::ComboRow::builder()
-        .title("Repeat")
+        .title(tr("Repeat"))
         .model(&gtk::StringList::new(&preset_names))
         .build();
     repeat.set_selected(presets.iter().position(|p| *p == preset).unwrap_or(0) as u32);
     let ends = adw::ComboRow::builder()
-        .title("Ends")
+        .title(tr("Ends"))
         .model(&gtk::StringList::new(&[
-            "Never",
-            "After a Number of Times",
-            "On a Date",
+            tr("Never"),
+            tr("After a Number of Times"),
+            tr("On a Date"),
         ]))
         .build();
     let cur_ends = recur::ends_of(series_rule.as_ref());
     let count = adw::SpinRow::with_range(1.0, 999.0, 1.0);
-    count.set_title("Occurrences");
+    count.set_title(tr("Occurrences"));
     count.set_value(10.0);
-    let until = DateButton::new(start.date() + Duration::days(30), "Repeat Until");
+    let until = DateButton::new(start.date() + Duration::days(30), tr("Repeat Until"));
     match cur_ends {
         Ends::Forever => ends.set_selected(0),
         Ends::Count(c) => {
@@ -567,7 +575,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
             until.set(d);
         }
     }
-    let until_row = adw::ActionRow::builder().title("End Date").build();
+    let until_row = adw::ActionRow::builder().title(tr("End Date")).build();
     until_row.add_suffix(&until.button);
     sched.add(&repeat);
     sched.add(&ends);
@@ -583,18 +591,20 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     sched.add(&error);
     page.add(&sched);
 
-    let alarm_group = adw::PreferencesGroup::builder().title("Reminders").build();
+    let alarm_group = adw::PreferencesGroup::builder()
+        .title(tr("Reminders"))
+        .build();
     let add_alarm = gtk::MenuButton::builder()
         .icon_name("list-add-symbolic")
-        .tooltip_text("Add Reminder")
+        .tooltip_text(tr("Add Reminder"))
         .css_classes(["flat"])
         .valign(gtk::Align::Center)
         .build()
-        .labelled("Add Reminder");
+        .labelled(tr("Add Reminder"));
     alarm_group.set_header_suffix(Some(&add_alarm));
     page.add(&alarm_group);
 
-    let notes_group = adw::PreferencesGroup::builder().title("Notes").build();
+    let notes_group = adw::PreferencesGroup::builder().title(tr("Notes")).build();
     let notes = gtk::TextView::builder()
         .wrap_mode(gtk::WrapMode::WordChar)
         .top_margin(8)
@@ -603,7 +613,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
         .right_margin(8)
         .height_request(96)
         .build();
-    helix_app_common::set_accessible_label(&notes, "Notes");
+    helix_app_common::set_accessible_label(&notes, tr("Notes"));
     notes
         .buffer()
         .set_text(event.as_ref().map(|e| e.description.as_str()).unwrap_or(""));
@@ -616,7 +626,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     page.add(&notes_group);
 
     let delete = gtk::Button::builder()
-        .label("Delete Event")
+        .label(tr("Delete Event"))
         .css_classes(["destructive-action", "pill"])
         .halign(gtk::Align::Center)
         .margin_top(12)
@@ -649,7 +659,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
             w.set_sensitive(false);
         }
         let banner = adw::Banner::builder()
-            .title("This event is in a read-only calendar")
+            .title(tr("This event is in a read-only calendar"))
             .revealed(true)
             .build();
         view.add_top_bar(&banner);
@@ -697,7 +707,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     add_alarm.set_popover(Some(&pop));
     for (mins, label) in recur::REMINDERS {
         let b = gtk::Button::builder()
-            .label(label)
+            .label(tr(label))
             .css_classes(["flat"])
             .build();
         let weak = Rc::downgrade(&form);
@@ -870,7 +880,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
                     let series_rule = series_rule.clone();
                     move || {
                         let Some(mut m) = master.clone() else {
-                            ui.toast("The recurring event's series is not loaded");
+                            ui.toast(tr("The recurring event's series is not loaded"));
                             return;
                         };
                         m.summary = fields.0.clone();
@@ -925,7 +935,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
                         let mut e = comp.clone();
                         if e.recurrence_id.is_none() {
                             let Some(r) = rid_time(&rid, &e.start) else {
-                                ui.toast("Could not identify this occurrence");
+                                ui.toast(tr("Could not identify this occurrence"));
                                 return;
                             };
                             let occ_start = r.naive();
@@ -956,8 +966,8 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
                 let dialog = f.dialog.clone();
                 ask_scope(
                     &f.dialog,
-                    "Save Changes to Recurring Event?",
-                    "Save",
+                    tr("Save Changes to Recurring Event?"),
+                    tr("Save"),
                     move |this| {
                         if this {
                             save_this();
@@ -985,23 +995,28 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
             }
             let (ui2, cal2, rid3, d3) = (ui.clone(), cal.clone(), rid.clone(), dialog2.clone());
             let own_rid = comp.recurrence_id.as_ref().map(Time::value_string);
-            ask_scope(&dialog2, "Delete Recurring Event?", "Delete", move |this| {
-                if this {
-                    let r = own_rid.clone().unwrap_or_else(|| rid3.clone());
-                    ui2.backend.send(Cmd::Remove {
-                        cal: cal2.clone(),
-                        ids: vec![(uid.clone(), r)],
-                        mod_type: ModType::This,
-                    });
-                } else {
-                    ui2.backend.send(Cmd::Remove {
-                        cal: cal2.clone(),
-                        ids: vec![(uid.clone(), String::new())],
-                        mod_type: ModType::All,
-                    });
-                }
-                d3.close();
-            });
+            ask_scope(
+                &dialog2,
+                tr("Delete Recurring Event?"),
+                tr("Delete"),
+                move |this| {
+                    if this {
+                        let r = own_rid.clone().unwrap_or_else(|| rid3.clone());
+                        ui2.backend.send(Cmd::Remove {
+                            cal: cal2.clone(),
+                            ids: vec![(uid.clone(), r)],
+                            mod_type: ModType::This,
+                        });
+                    } else {
+                        ui2.backend.send(Cmd::Remove {
+                            cal: cal2.clone(),
+                            ids: vec![(uid.clone(), String::new())],
+                            mod_type: ModType::All,
+                        });
+                    }
+                    d3.close();
+                },
+            );
         });
     }
 
@@ -1013,10 +1028,10 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
 
 /// Asks whether a change applies to this occurrence or the whole series.
 fn ask_scope(parent: &adw::Dialog, heading: &str, verb: &str, f: impl Fn(bool) + 'static) {
-    let alert = adw::AlertDialog::new(Some(heading), Some("This event is part of a series."));
-    alert.add_response("cancel", "_Cancel");
-    alert.add_response("this", &format!("{verb} _Only This Event"));
-    alert.add_response("all", &format!("{verb} _All Events"));
+    let alert = adw::AlertDialog::new(Some(heading), Some(tr("This event is part of a series.")));
+    alert.add_response("cancel", tr("_Cancel"));
+    alert.add_response("this", &trf!("{verb} _Only This Event", verb = verb));
+    alert.add_response("all", &trf!("{verb} _All Events", verb = verb));
     alert.set_close_response("cancel");
     alert.set_default_response(Some("this"));
     alert.set_response_appearance("this", adw::ResponseAppearance::Suggested);

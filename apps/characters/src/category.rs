@@ -2,6 +2,7 @@
 
 use crate::charinfo::{is_displayable, unicode_name};
 use emojis::Group;
+use helix_app_common::i18n::tr;
 use unicode_general_category::{get_general_category, GeneralCategory as Gc};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -53,23 +54,23 @@ const EXTRA_BULLETS: &str = "·◦○●◘◙▪▫■□◆◇◉◎★☆✓�
 impl Category {
     pub fn label(self) -> &'static str {
         match self {
-            Category::Recent => "Recently Used",
-            Category::Smileys => "Smileys & People",
-            Category::Animals => "Animals & Nature",
-            Category::Food => "Food & Drink",
-            Category::Activities => "Activities",
-            Category::Travel => "Travel & Places",
-            Category::Objects => "Objects",
-            Category::Symbols => "Symbols",
-            Category::Flags => "Flags",
-            Category::Punctuation => "Punctuation",
-            Category::Arrows => "Arrows",
-            Category::Bullets => "Bullets",
-            Category::Pictures => "Pictures",
-            Category::Currency => "Currency",
-            Category::Math => "Math",
-            Category::Numbers => "Numbers",
-            Category::Letters => "Letters",
+            Category::Recent => tr("Recently Used"),
+            Category::Smileys => tr("Smileys & People"),
+            Category::Animals => tr("Animals & Nature"),
+            Category::Food => tr("Food & Drink"),
+            Category::Activities => tr("Activities"),
+            Category::Travel => tr("Travel & Places"),
+            Category::Objects => tr("Objects"),
+            Category::Symbols => tr("Symbols"),
+            Category::Flags => tr("Flags"),
+            Category::Punctuation => tr("Punctuation"),
+            Category::Arrows => tr("Arrows"),
+            Category::Bullets => tr("Bullets"),
+            Category::Pictures => tr("Pictures"),
+            Category::Currency => tr("Currency"),
+            Category::Math => tr("Math"),
+            Category::Numbers => tr("Numbers"),
+            Category::Letters => tr("Letters"),
         }
     }
 

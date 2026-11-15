@@ -10,6 +10,8 @@ use crate::scanner::{Capabilities, Cmd, Event, PageSide, ScanKind, ScanRequest, 
 use crate::settings::{ColorChoice, Private};
 use adw::prelude::*;
 use gtk::{cairo, gdk, gio, glib};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::{Cell, RefCell};
@@ -17,7 +19,7 @@ use std::path::PathBuf;
 use std::rc::{Rc, Weak};
 
 pub const APP_ID: &str = "org.helix.DocumentScanner";
-const APP_NAME: &str = "Document Scanner";
+const APP_NAME: &str = n_("Document Scanner");
 const SCHEMA: &str = "org.gnome.SimpleScan";
 const DEFAULT_DPI: [i32; 7] = [75, 150, 200, 300, 600, 1200, 2400];
 
@@ -48,8 +50,8 @@ pub fn run(device: Option<String>) -> glib::ExitCode {
         .build();
     helix_app_common::install_standard_actions(
         &app,
-        APP_NAME,
-        "Make a digital copy of your photos and documents",
+        tr(APP_NAME),
+        tr("Make a digital copy of your photos and documents"),
     );
     app.connect_startup(|app| {
         for (action, accels) in ACCELS {
@@ -126,7 +128,6 @@ struct State {
     unavailable: Option<String>,
     scanning: bool,
     insert_at: usize,
-    scan_page: usize,
     drag: Option<(Rect, Handle)>,
 }
 
@@ -157,16 +158,19 @@ struct Win {
 fn scan_menu() -> gio::Menu {
     let menu = gio::Menu::new();
     let kinds = gio::Menu::new();
-    kinds.append(Some("_Single Page"), Some("win.scan-single"));
-    kinds.append(Some("All Pages From _Feeder"), Some("win.scan-feeder"));
-    kinds.append(Some("_Multiple Pages From Flatbed"), Some("win.scan-batch"));
+    kinds.append(Some(tr("_Single Page")), Some("win.scan-single"));
+    kinds.append(Some(tr("All Pages From _Feeder")), Some("win.scan-feeder"));
+    kinds.append(
+        Some(tr("_Multiple Pages From Flatbed")),
+        Some("win.scan-batch"),
+    );
     menu.append_section(None, &kinds);
     let types = gio::Menu::new();
-    types.append(Some("_Text"), Some("win.document-type::text"));
-    types.append(Some("_Image"), Some("win.document-type::photo"));
+    types.append(Some(tr("_Text")), Some("win.document-type::text"));
+    types.append(Some(tr("_Image")), Some("win.document-type::photo"));
     menu.append_section(None, &types);
     let prefs = gio::Menu::new();
-    prefs.append(Some("_Preferences"), Some("win.preferences"));
+    prefs.append(Some(tr("_Preferences")), Some("win.preferences"));
     menu.append_section(None, &prefs);
     menu
 }
@@ -174,20 +178,22 @@ fn scan_menu() -> gio::Menu {
 fn main_menu() -> gio::Menu {
     let menu = gio::Menu::new();
     let doc = gio::Menu::new();
-    doc.append(Some("_New Document"), Some("win.new"));
-    doc.append(Some("_Reorder Pages…"), Some("win.reorder"));
-    doc.append(Some("_Copy Page"), Some("win.copy"));
-    doc.append(Some("_Print…"), Some("win.print"));
-    doc.append(Some("_Email…"), Some("win.email"));
+    doc.append(Some(tr("_New Document")), Some("win.new"));
+    doc.append(Some(tr("_Reorder Pages…")), Some("win.reorder"));
+    doc.append(Some(tr("_Copy Page")), Some("win.copy"));
+    doc.append(Some(tr("_Print…")), Some("win.print"));
+    doc.append(Some(tr("_Email…")), Some("win.email"));
     menu.append_section(None, &doc);
     let other = gio::Menu::new();
-    other.append(Some("_Refresh Scanners"), Some("win.refresh"));
-    other.append(Some("_Preferences"), Some("win.preferences"));
+    other.append(Some(tr("_Refresh Scanners")), Some("win.refresh"));
+    other.append(Some(tr("_Preferences")), Some("win.preferences"));
     other.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some("win.shortcuts"),
     );
-    other.append(Some("_About Document Scanner"), Some("app.about"));
+    other.append(Some(tr("_About Document Scanner")), Some("app.about"));
     menu.append_section(None, &other);
     menu
 }
@@ -195,14 +201,14 @@ fn main_menu() -> gio::Menu {
 fn crop_menu() -> gio::Menu {
     let menu = gio::Menu::new();
     let presets = gio::Menu::new();
-    presets.append(Some("_None"), Some("win.crop::none"));
-    presets.append(Some("_Custom"), Some("win.crop::custom"));
+    presets.append(Some(tr("_None")), Some("win.crop::none"));
+    presets.append(Some(tr("_Custom")), Some("win.crop::custom"));
     for p in PAPERS {
-        presets.append(Some(p.label), Some(&format!("win.crop::{}", p.id)));
+        presets.append(Some(tr(p.label)), Some(&format!("win.crop::{}", p.id)));
     }
     menu.append_section(None, &presets);
     let rot = gio::Menu::new();
-    rot.append(Some("_Rotate Crop"), Some("win.rotate-crop"));
+    rot.append(Some(tr("_Rotate Crop")), Some("win.rotate-crop"));
     menu.append_section(None, &rot);
     menu
 }
@@ -210,17 +216,51 @@ fn crop_menu() -> gio::Menu {
 fn page_menu() -> gio::Menu {
     let menu = gio::Menu::new();
     let a = gio::Menu::new();
-    a.append(Some("Rotate _Left"), Some("win.rotate-left"));
-    a.append(Some("Rotate _Right"), Some("win.rotate-right"));
-    a.append(Some("Move Left"), Some("win.move-left"));
-    a.append(Some("Move Right"), Some("win.move-right"));
+    a.append(Some(tr("Rotate _Left")), Some("win.rotate-left"));
+    a.append(Some(tr("Rotate _Right")), Some("win.rotate-right"));
+    a.append(Some(tr("Move Left")), Some("win.move-left"));
+    a.append(Some(tr("Move Right")), Some("win.move-right"));
     menu.append_section(None, &a);
-    menu.append_submenu(Some("_Crop"), &crop_menu());
+    menu.append_submenu(Some(tr("_Crop")), &crop_menu());
     let b = gio::Menu::new();
-    b.append(Some("_Copy"), Some("win.copy"));
-    b.append(Some("_Delete"), Some("win.delete"));
+    b.append(Some(tr("_Copy")), Some("win.copy"));
+    b.append(Some(tr("_Delete")), Some("win.delete"));
     menu.append_section(None, &b);
     menu
+}
+
+/// A page-list row: thumbnail and "Page N" caption, named "Page N".
+fn page_row(i: usize, tex: &gdk::Texture) -> gtk::ListBoxRow {
+    let pic = gtk::Picture::builder()
+        .paintable(tex)
+        .content_fit(gtk::ContentFit::Contain)
+        .can_shrink(true)
+        .width_request(110)
+        .height_request(140)
+        .build();
+    let label = gtk::Label::new(None);
+    label.add_css_class("caption");
+    let b = gtk::Box::new(gtk::Orientation::Vertical, 4);
+    b.add_css_class("page-thumb");
+    b.append(&pic);
+    b.append(&label);
+    let row = gtk::ListBoxRow::builder().child(&b).build();
+    name_page_row(&row, i);
+    row
+}
+
+/// Numbers row `i` (0-based) as "Page i+1": caption, thumbnail text
+/// alternative and the row's accessible name.
+fn name_page_row(row: &gtk::ListBoxRow, i: usize) {
+    let text = trf!("Page {}", i + 1);
+    let Some(b) = row.child() else { return };
+    if let Some(pic) = b.first_child().and_downcast::<gtk::Picture>() {
+        pic.set_alternative_text(Some(&text));
+    }
+    if let Some(label) = b.last_child().and_downcast::<gtk::Label>() {
+        label.set_label(&text);
+    }
+    helix_app_common::set_accessible_label(row, &text);
 }
 
 fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
@@ -236,7 +276,7 @@ impl Win {
     fn new(app: &adw::Application, device: Option<String>) -> Rc<Win> {
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .default_width(900)
             .default_height(680)
             .width_request(helix_app_common::MIN_WIDTH)
@@ -249,19 +289,19 @@ impl Win {
 
         // Header bar.
         let header = adw::HeaderBar::new();
-        let title = adw::WindowTitle::new(APP_NAME, "");
+        let title = adw::WindowTitle::new(tr(APP_NAME), "");
         header.set_title_widget(Some(&title));
         let scan_button = adw::SplitButton::builder()
-            .label("_Scan")
+            .label(tr("_Scan"))
             .use_underline(true)
             .menu_model(&scan_menu())
             .action_name("win.scan-single")
-            .tooltip_text("Scan a single page")
-            .dropdown_tooltip("Scan options")
+            .tooltip_text(tr("Scan a single page"))
+            .dropdown_tooltip(tr("Scan options"))
             .build();
         scan_button.add_css_class("suggested-action");
         let stop_button = gtk::Button::builder()
-            .label("_Stop")
+            .label(tr("_Stop"))
             .use_underline(true)
             .action_name("win.stop")
             .visible(false)
@@ -273,11 +313,15 @@ impl Win {
             .icon_name("open-menu-symbolic")
             .menu_model(&main_menu())
             .primary(true)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         header.pack_end(&menu_button);
-        header.pack_end(&icon_button("document-save-symbolic", "Save", "win.save"));
+        header.pack_end(&icon_button(
+            "document-save-symbolic",
+            tr("Save"),
+            "win.save",
+        ));
 
         // States.
         let stack = gtk::Stack::new();
@@ -289,13 +333,13 @@ impl Win {
             .build();
         stack.add_named(
             &adw::StatusPage::builder()
-                .title("Searching for Scanners…")
+                .title(tr("Searching for Scanners…"))
                 .child(&spinner)
                 .build(),
             Some("searching"),
         );
         let refresh = gtk::Button::builder()
-            .label("_Refresh")
+            .label(tr("_Refresh"))
             .use_underline(true)
             .halign(gtk::Align::Center)
             .action_name("win.refresh")
@@ -303,8 +347,8 @@ impl Win {
         refresh.add_css_class("pill");
         let none_page = adw::StatusPage::builder()
             .icon_name("scanner-symbolic")
-            .title("No Scanners Detected")
-            .description("Please check your scanner is connected and powered on.")
+            .title(tr("No Scanners Detected"))
+            .description(tr("Please check your scanner is connected and powered on."))
             .child(&refresh)
             .build();
         stack.add_named(&none_page, Some("none"));
@@ -314,9 +358,9 @@ impl Win {
             .model(&device_list)
             .halign(gtk::Align::Center)
             .build();
-        helix_app_common::set_accessible_label(&device_drop, "Scanner");
+        helix_app_common::set_accessible_label(&device_drop, tr("Scanner"));
         let big_scan = gtk::Button::builder()
-            .label("_Scan")
+            .label(tr("_Scan"))
             .use_underline(true)
             .halign(gtk::Align::Center)
             .action_name("win.scan-single")
@@ -329,7 +373,7 @@ impl Win {
         stack.add_named(
             &adw::StatusPage::builder()
                 .icon_name("scanner-symbolic")
-                .title("Ready to Scan")
+                .title(tr("Ready to Scan"))
                 .child(&ready_box)
                 .build(),
             Some("ready"),
@@ -351,7 +395,18 @@ impl Win {
         let crop_area = gtk::DrawingArea::builder()
             .hexpand(true)
             .vexpand(true)
+            .accessible_role(gtk::AccessibleRole::Img)
+            .focusable(false)
             .build();
+        crop_area.add_css_class("crop-area");
+        crop_area.update_property(&[gtk::accessible::Property::Description(tr(
+            "Arrow keys move the crop area, Shift+arrow keys resize it, \
+             Control makes the steps larger",
+        ))]);
+        helix_app_common::style::add_css(
+            ".crop-area:focus-visible { outline: 2px solid @accent_color; outline-offset: -2px; }",
+            ".crop-area:focus-visible { outline: 3px solid @accent_color; outline-offset: -3px; }",
+        );
         let overlay = gtk::Overlay::builder()
             .child(&picture)
             .margin_top(12)
@@ -377,6 +432,7 @@ impl Win {
             .valign(gtk::Align::Start)
             .visible(false)
             .build();
+        helix_app_common::set_accessible_label(&progress, tr("Scanning"));
         progress.add_css_class("osd");
         let content_overlay = gtk::Overlay::builder().child(&stack).build();
         content_overlay.add_overlay(&progress);
@@ -387,35 +443,35 @@ impl Win {
         let action_bar = gtk::ActionBar::new();
         action_bar.pack_start(&icon_button(
             "object-rotate-left-symbolic",
-            "Rotate Left",
+            tr("Rotate Left"),
             "win.rotate-left",
         ));
         action_bar.pack_start(&icon_button(
             "object-rotate-right-symbolic",
-            "Rotate Right",
+            tr("Rotate Right"),
             "win.rotate-right",
         ));
         let crop_button = gtk::MenuButton::builder()
             .icon_name("crop-symbolic")
-            .tooltip_text("Crop")
+            .tooltip_text(tr("Crop"))
             .menu_model(&crop_menu())
             .direction(gtk::ArrowType::Up)
             .build()
-            .labelled("Crop");
+            .labelled(tr("Crop"));
         action_bar.pack_start(&crop_button);
         action_bar.pack_start(&icon_button(
             "go-previous-symbolic",
-            "Move Left",
+            tr("Move Left"),
             "win.move-left",
         ));
         action_bar.pack_start(&icon_button(
             "go-next-symbolic",
-            "Move Right",
+            tr("Move Right"),
             "win.move-right",
         ));
         action_bar.pack_end(&icon_button(
             "user-trash-symbolic",
-            "Delete Page",
+            tr("Delete Page"),
             "win.delete",
         ));
         action_bar.set_revealed(false);
@@ -479,6 +535,70 @@ impl Win {
 
     fn toast(&self, text: &str) {
         self.toasts.add_toast(adw::Toast::new(text));
+    }
+
+    fn say(&self, text: &str) {
+        helix_app_common::announce(&self.window, text, helix_app_common::Urgency::Polite);
+    }
+
+    /// Redraws the crop overlay and keeps its keyboard focusability and
+    /// accessible name in step with the selected page's crop.
+    fn crop_changed(&self) {
+        let page = self.selected_page();
+        let rect = page.as_ref().and_then(|p| p.crop.map(|r| (r, p.dpi)));
+        match rect {
+            Some((r, dpi)) => {
+                self.crop_area.set_focusable(true);
+                helix_app_common::set_accessible_label(&self.crop_area, &crop::describe(r, dpi));
+            }
+            None => {
+                if self.crop_area.has_focus() {
+                    self.page_list.child_focus(gtk::DirectionType::TabForward);
+                }
+                self.crop_area.set_focusable(false);
+                helix_app_common::set_accessible_label(&self.crop_area, tr("No crop"));
+            }
+        }
+        self.crop_area.queue_draw();
+    }
+
+    /// Arrow-key crop editing; returns whether the key was used.
+    fn crop_key(&self, key: gdk::Key, mods: gdk::ModifierType) -> bool {
+        let (dx, dy) = match key {
+            gdk::Key::Left | gdk::Key::KP_Left => (-1.0, 0.0),
+            gdk::Key::Right | gdk::Key::KP_Right => (1.0, 0.0),
+            gdk::Key::Up | gdk::Key::KP_Up => (0.0, -1.0),
+            gdk::Key::Down | gdk::Key::KP_Down => (0.0, 1.0),
+            _ => return false,
+        };
+        let Some(page) = self.selected_page() else {
+            return false;
+        };
+        let Some(r) = page.crop else { return false };
+        let mm = if mods.contains(gdk::ModifierType::CONTROL_MASK) {
+            10.0
+        } else {
+            1.0
+        };
+        let step = crop::mm_to_px(mm, page.dpi);
+        let resize = mods.contains(gdk::ModifierType::SHIFT_MASK);
+        let min = crop::mm_to_px(5.0, page.dpi).ceil() as u32;
+        let n = crop::nudge(
+            r,
+            dx * step,
+            dy * step,
+            resize,
+            page.width,
+            page.height,
+            min,
+        );
+        {
+            let mut st = self.state.borrow_mut();
+            let Some(i) = st.selected else { return false };
+            st.doc.set_crop(i, Some(n));
+        }
+        self.crop_changed();
+        true
     }
 
     fn dialog_open(&self) -> bool {
@@ -630,7 +750,7 @@ impl Win {
             };
             st.doc.set_crop(i, rect);
         }
-        self.crop_area.queue_draw();
+        self.crop_changed();
         self.update();
     }
 
@@ -735,34 +855,43 @@ impl Win {
                 self.progress.set_fraction(0.0);
                 self.progress.set_visible(true);
             }
-            Event::PageStarted(n) => {
+            Event::PageStarted => {
                 self.progress.set_fraction(0.0);
                 self.progress.set_visible(true);
-                self.state.borrow_mut().scan_page = n;
+                // Numbered as the page will be in the document (its row
+                // name), not within this scan.
+                let number = self.state.borrow().insert_at + 1;
+                let text = trf!("Scanning page {number}", number = number);
+                helix_app_common::set_accessible_label(&self.progress, &text);
+                self.say(&format!("{text}…"));
             }
             Event::Progress(f) => {
                 self.progress.set_fraction(f);
                 return;
             }
             Event::Page(page) => {
-                {
+                let (i, number) = {
                     let mut st = self.state.borrow_mut();
                     let at = st.insert_at;
                     let i = st.doc.insert(at, page);
                     st.insert_at = i + 1;
                     st.selected = Some(i);
-                }
-                self.rebuild_pages();
+                    (i, i + 1)
+                };
+                self.insert_page_row(i);
+                self.say(&trf!("Page {number} scanned", number = number));
             }
             Event::ScanFinished { cancelled, error } => {
                 self.state.borrow_mut().scanning = false;
                 self.progress.set_visible(false);
                 if cancelled {
-                    self.toast("Scan stopped");
+                    self.toast(tr("Scan stopped"));
+                } else if error.is_none() {
+                    self.say(tr("Scan complete"));
                 }
                 if let Some(e) = error {
-                    let d = adw::AlertDialog::new(Some("Failed to Scan"), Some(&e));
-                    d.add_response("close", "_Close");
+                    let d = adw::AlertDialog::new(Some(tr("Failed to Scan")), Some(&e));
+                    d.add_response("close", tr("_Close"));
                     d.present(Some(&self.window));
                 }
             }
@@ -805,13 +934,12 @@ impl Win {
             return;
         }
         let Some(req) = self.scan_request(kind) else {
-            self.toast("No scanner selected");
+            self.toast(tr("No scanner selected"));
             return;
         };
         {
             let mut st = self.state.borrow_mut();
             st.scanning = true;
-            st.scan_page = 0;
             st.insert_at = st.selected.map_or(st.doc.len(), |i| i + 1);
         }
         self.scanner.send(Cmd::Scan(req));
@@ -831,20 +959,7 @@ impl Win {
         }
         let st = self.state.borrow();
         for (i, tex) in st.textures.iter().enumerate() {
-            let pic = gtk::Picture::builder()
-                .paintable(tex)
-                .content_fit(gtk::ContentFit::Contain)
-                .can_shrink(true)
-                .width_request(110)
-                .height_request(140)
-                .build();
-            let label = gtk::Label::new(Some(&format!("Page {}", i + 1)));
-            label.add_css_class("caption");
-            let b = gtk::Box::new(gtk::Orientation::Vertical, 4);
-            b.add_css_class("page-thumb");
-            b.append(&pic);
-            b.append(&label);
-            self.page_list.append(&b);
+            self.page_list.append(&page_row(i, tex));
         }
         if let Some(row) = st
             .selected
@@ -853,6 +968,34 @@ impl Win {
             self.page_list.select_row(Some(&row));
         }
         drop(st);
+        self.updating.set(false);
+        self.show_selected();
+        self.update();
+    }
+
+    /// Adds the row for newly inserted page `i` without recreating the
+    /// others (so keyboard focus stays where it was), renumbers the rows
+    /// after it and selects it.
+    fn insert_page_row(self: &Rc<Self>, i: usize) {
+        let tex = {
+            let mut st = self.state.borrow_mut();
+            let Some(tex) = st.doc.page(i).map(texture) else {
+                drop(st);
+                return self.rebuild_pages();
+            };
+            st.textures.insert(i, tex.clone());
+            tex
+        };
+        self.updating.set(true);
+        self.page_list.insert(&page_row(i, &tex), i as i32);
+        let mut n = i as i32 + 1;
+        while let Some(row) = self.page_list.row_at_index(n) {
+            name_page_row(&row, n as usize);
+            n += 1;
+        }
+        if let Some(row) = self.page_list.row_at_index(i as i32) {
+            self.page_list.select_row(Some(&row));
+        }
         self.updating.set(false);
         self.show_selected();
         self.update();
@@ -876,7 +1019,7 @@ impl Win {
                 a.set_state(&kind.to_variant());
             }
         }
-        self.crop_area.queue_draw();
+        self.crop_changed();
     }
 
     /// Displayed image rectangle (x, y, scale) inside the crop area.
@@ -986,7 +1129,7 @@ impl Win {
             );
             st.doc.set_crop(i, Some(r));
             drop(st);
-            w.crop_area.queue_draw();
+            w.crop_changed();
         });
         let w = self.weak();
         drag.connect_drag_end(move |_, _, _| {
@@ -1014,15 +1157,65 @@ impl Win {
             .button(gdk::BUTTON_SECONDARY)
             .build();
         let w = self.weak();
+        let p = popover.clone();
         click.connect_pressed(move |_, _, x, y| {
             let Some(w) = w.upgrade() else { return };
             if w.state.borrow().selected.is_none() {
                 return;
             }
-            popover.set_pointing_to(Some(&gdk::Rectangle::new(x as i32, y as i32, 1, 1)));
-            popover.popup();
+            p.set_pointing_to(Some(&gdk::Rectangle::new(x as i32, y as i32, 1, 1)));
+            p.popup();
         });
         overlay.add_controller(click);
+        // Touch: a long press opens the same menu.
+        let long = gtk::GestureLongPress::builder().touch_only(true).build();
+        let w = self.weak();
+        let p = popover.clone();
+        long.connect_pressed(move |_, x, y| {
+            let Some(w) = w.upgrade() else { return };
+            if w.state.borrow().selected.is_none() {
+                return;
+            }
+            p.set_pointing_to(Some(&gdk::Rectangle::new(x as i32, y as i32, 1, 1)));
+            p.popup();
+        });
+        overlay.add_controller(long);
+        // Keyboard: Menu or Shift+F10 in the page list or the page view.
+        let menu_keys = gtk::ShortcutController::new();
+        let w = self.weak();
+        let o = overlay.clone();
+        menu_keys.add_shortcut(gtk::Shortcut::new(
+            gtk::ShortcutTrigger::parse_string("<Shift>F10|Menu"),
+            Some(gtk::CallbackAction::new(move |_, _| {
+                let Some(w) = w.upgrade() else {
+                    return glib::Propagation::Proceed;
+                };
+                if w.state.borrow().selected.is_none() {
+                    return glib::Propagation::Proceed;
+                }
+                let (cx, cy) = (o.width() / 2, o.height() / 3);
+                popover.set_pointing_to(Some(&gdk::Rectangle::new(cx, cy, 1, 1)));
+                popover.popup();
+                glib::Propagation::Stop
+            })),
+        ));
+        if let Some(paned) = overlay.ancestor(gtk::Paned::static_type()) {
+            paned.add_controller(menu_keys);
+        }
+        // Keyboard crop editing.
+        let keys = gtk::EventControllerKey::new();
+        let w = self.weak();
+        keys.connect_key_pressed(move |_, key, _, mods| {
+            let Some(w) = w.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
+            if w.crop_key(key, mods) {
+                glib::Propagation::Stop
+            } else {
+                glib::Propagation::Proceed
+            }
+        });
+        self.crop_area.add_controller(keys);
 
         let w = self.weak();
         self.page_list.connect_row_selected(move |_, row| {
@@ -1065,13 +1258,13 @@ impl Win {
                 return glib::Propagation::Proceed;
             }
             let d = adw::AlertDialog::new(
-                Some("Save current document?"),
-                Some("Documents that are not saved will be permanently lost."),
+                Some(tr("Save current document?")),
+                Some(tr("Documents that are not saved will be permanently lost.")),
             );
             d.add_responses(&[
-                ("cancel", "_Cancel"),
-                ("discard", "_Discard"),
-                ("save", "_Save"),
+                ("cancel", tr("_Cancel")),
+                ("discard", tr("_Discard")),
+                ("save", tr("_Save")),
             ]);
             d.set_response_appearance("discard", adw::ResponseAppearance::Destructive);
             d.set_response_appearance("save", adw::ResponseAppearance::Suggested);
@@ -1126,12 +1319,12 @@ impl Win {
             .as_ref()
             .and_then(|n| st.devices.iter().position(|d| &d.name == n));
         let dirty = st.doc.is_dirty();
-        let subtitle = scanning.then(|| format!("Scanning page {}…", st.scan_page + 1));
+        let subtitle = scanning.then(|| trf!("Scanning page {}…", st.insert_at + 1));
         drop(st);
 
         if let Some(e) = unavailable {
             self.none_page
-                .set_description(Some(&format!("Scanning is unavailable: {e}")));
+                .set_description(Some(&trf!("Scanning is unavailable: {e}", e = e)));
         }
         let idle = !scanning;
         for a in ["scan-single", "scan-feeder", "scan-batch"] {
@@ -1162,8 +1355,11 @@ impl Win {
         self.updating.set(false);
         self.title
             .set_subtitle(&subtitle.unwrap_or_else(|| self.device_label()));
-        self.window
-            .set_title(Some(if dirty { "*Document Scanner" } else { APP_NAME }));
+        self.window.set_title(Some(if dirty {
+            "*Document Scanner"
+        } else {
+            tr(APP_NAME)
+        }));
     }
 
     // ---- document operations --------------------------------------------
@@ -1174,10 +1370,12 @@ impl Win {
             return;
         }
         let d = adw::AlertDialog::new(
-            Some("Discard Scanned Pages?"),
-            Some("The current document has not been saved. Its pages will be permanently lost."),
+            Some(tr("Discard Scanned Pages?")),
+            Some(tr(
+                "The current document has not been saved. Its pages will be permanently lost.",
+            )),
         );
-        d.add_responses(&[("cancel", "_Cancel"), ("discard", "_Discard")]);
+        d.add_responses(&[("cancel", tr("_Cancel")), ("discard", tr("_Discard"))]);
         d.set_response_appearance("discard", adw::ResponseAppearance::Destructive);
         d.set_close_response("cancel");
         let w = self.weak();
@@ -1205,15 +1403,17 @@ impl Win {
 
     fn reorder_dialog(self: &Rc<Self>) {
         let d = adw::AlertDialog::new(
-            Some("Reorder Pages"),
-            Some("Combine sides interleaves fronts (first half) with backs (second half)."),
+            Some(tr("Reorder Pages")),
+            Some(tr(
+                "Combine sides interleaves fronts (first half) with backs (second half).",
+            )),
         );
         d.add_responses(&[
-            ("combine", "Combine Sides"),
-            ("combine-reverse", "Combine Sides (Reverse)"),
-            ("reverse", "Reverse"),
-            ("flip-odd", "Flip Odd Pages Upside-Down"),
-            ("cancel", "_Cancel"),
+            ("combine", tr("Combine Sides")),
+            ("combine-reverse", tr("Combine Sides (Reverse)")),
+            ("reverse", tr("Reverse")),
+            ("flip-odd", tr("Flip Odd Pages Upside-Down")),
+            ("cancel", tr("_Cancel")),
         ]);
         d.set_close_response("cancel");
         let w = self.weak();
@@ -1238,7 +1438,7 @@ impl Win {
         }
         if let Some(p) = self.selected_page() {
             self.window.clipboard().set_texture(&texture(&p.cropped()));
-            self.toast("Page copied");
+            self.toast(tr("Page copied"));
         }
     }
 
@@ -1249,7 +1449,7 @@ impl Win {
         }
         let op = gtk::PrintOperation::new();
         op.set_n_pages(pages.len() as i32);
-        op.set_job_name("Scanned Document");
+        op.set_job_name(tr("Scanned Document"));
         op.connect_draw_page(move |_, ctx, n| {
             let Some(page) = pages.get(n as usize).map(|p| p.cropped()) else {
                 return;
@@ -1263,7 +1463,7 @@ impl Win {
             }
         });
         if let Err(e) = op.run(gtk::PrintOperationAction::PrintDialog, Some(&self.window)) {
-            self.toast(&format!("Failed to print: {e}"));
+            self.toast(&trf!("Failed to print: {e}", e = e));
         }
     }
 
@@ -1305,9 +1505,9 @@ impl Win {
             default_filter.get_or_insert(filter);
         }
         let dialog = gtk::FileDialog::builder()
-            .title("Save As…")
+            .title(tr("Save As…"))
             .modal(true)
-            .initial_name(format!("Scanned Document.{}", default.extension()))
+            .initial_name(trf!("Scanned Document.{}", default.extension()))
             .filters(&filters)
             .build();
         if let Some(f) = default_filter {
@@ -1335,7 +1535,7 @@ impl Win {
         let p = path.clone();
         let result = gio::spawn_blocking(move || export::save(&pages, &p, format, quality))
             .await
-            .unwrap_or_else(|_| Err("Saving failed".into()));
+            .unwrap_or_else(|_| Err(tr("Saving failed").into()));
         match result {
             Ok(files) => {
                 self.state.borrow_mut().doc.mark_saved();
@@ -1349,8 +1549,8 @@ impl Win {
                     .and_then(|f| f.file_name())
                     .map(|n| n.to_string_lossy().into_owned());
                 self.toast(&match (files.len(), name) {
-                    (1, Some(n)) => format!("Saved “{n}”"),
-                    (n, _) => format!("Saved {n} files"),
+                    (1, Some(n)) => trf!("Saved “{n}”", n = n),
+                    (n, _) => trf!("Saved {n} files", n = n),
                 });
                 self.post_process(format, files);
                 self.update();
@@ -1359,8 +1559,8 @@ impl Win {
                 }
             }
             Err(e) => {
-                let d = adw::AlertDialog::new(Some("Failed to Save File"), Some(&e));
-                d.add_response("close", "_Close");
+                let d = adw::AlertDialog::new(Some(tr("Failed to Save File")), Some(&e));
+                d.add_response("close", tr("_Close"));
                 d.present(Some(&self.window));
             }
         }
@@ -1387,7 +1587,7 @@ impl Win {
                 crate::postproc::run(&pp, format.mime(), &files, &glib::home_dir())
             })
             .await
-            .unwrap_or_else(|_| Err("The post-processing script crashed".into()));
+            .unwrap_or_else(|_| Err(tr("The post-processing script crashed").into()));
             if let (Some(w), Err(e)) = (w.upgrade(), res) {
                 w.toast(&e);
             }
@@ -1414,9 +1614,9 @@ impl Win {
                 crate::email::compose(&files, "")
             })
             .await
-            .unwrap_or_else(|_| Err("Sending failed".into()));
+            .unwrap_or_else(|_| Err(tr("Sending failed").into()));
             if let (Some(w), Err(e)) = (w.upgrade(), res) {
-                w.toast(&format!("Could not open the mail client: {e}"));
+                w.toast(&trf!("Could not open the mail client: {e}", e = e));
             }
         });
     }
@@ -1441,7 +1641,7 @@ impl Win {
                 st.caps.resolutions.clone()
             }
         };
-        let labels: Vec<String> = choices.iter().map(|d| format!("{d} dpi")).collect();
+        let labels: Vec<String> = choices.iter().map(|d| trf!("{d} dpi", d = d)).collect();
         let labels: Vec<&str> = labels.iter().map(|s| s.as_str()).collect();
         let row = adw::ComboRow::builder()
             .title(title)
@@ -1489,7 +1689,9 @@ impl Win {
     fn preferences(self: &Rc<Self>) {
         let dialog = adw::PreferencesDialog::new();
         let page = adw::PreferencesPage::new();
-        let scanning = adw::PreferencesGroup::builder().title("Scanning").build();
+        let scanning = adw::PreferencesGroup::builder()
+            .title(tr("Scanning"))
+            .build();
 
         // Scanner.
         let (names, labels, current, sources) = {
@@ -1506,7 +1708,7 @@ impl Win {
         };
         let label_refs: Vec<&str> = labels.iter().map(|s| s.as_str()).collect();
         let device_row = adw::ComboRow::builder()
-            .title("Scanner")
+            .title(tr("Scanner"))
             .model(&gtk::StringList::new(&label_refs))
             .sensitive(!names.is_empty() && !self.state.borrow().scanning)
             .build();
@@ -1522,7 +1724,7 @@ impl Win {
         scanning.add(&device_row);
 
         // Source.
-        let mut source_labels = vec!["Automatic".to_string()];
+        let mut source_labels = vec![tr("Automatic").to_string()];
         source_labels.extend(sources.iter().cloned());
         let saved = self.private.borrow().source.clone();
         if !saved.is_empty() && !sources.contains(&saved) {
@@ -1530,7 +1732,7 @@ impl Win {
         }
         let refs: Vec<&str> = source_labels.iter().map(|s| s.as_str()).collect();
         let source_row = adw::ComboRow::builder()
-            .title("Source")
+            .title(tr("Source"))
             .model(&gtk::StringList::new(&refs))
             .build();
         if let Some(i) = source_labels.iter().skip(1).position(|s| *s == saved) {
@@ -1552,8 +1754,8 @@ impl Win {
         // Colour mode.
         let refs: Vec<&str> = ColorChoice::ALL.iter().map(|c| c.label()).collect();
         let color_row = adw::ComboRow::builder()
-            .title("Color Mode")
-            .subtitle("Automatic uses grayscale for text and color for images")
+            .title(tr("Color Mode"))
+            .subtitle(tr("Automatic uses grayscale for text and color for images"))
             .model(&gtk::StringList::new(&refs))
             .build();
         let cur = self.private.borrow().color_mode;
@@ -1570,9 +1772,13 @@ impl Win {
         // Sides.
         let sides = [PageSide::Front, PageSide::Back, PageSide::Both];
         let side_row = adw::ComboRow::builder()
-            .title("Scan Sides")
-            .subtitle("For the document feeder")
-            .model(&gtk::StringList::new(&["Front", "Back", "Both"]))
+            .title(tr("Scan Sides"))
+            .subtitle(tr("For the document feeder"))
+            .model(&gtk::StringList::new(&[
+                tr("Front"),
+                tr("Back"),
+                tr("Both"),
+            ]))
             .build();
         let cur = PageSide::from_nick(&self.prefs.get_enum_nick("page-side", "both"));
         side_row.set_selected(sides.iter().position(|s| *s == cur).unwrap_or(2) as u32);
@@ -1585,10 +1791,10 @@ impl Win {
         scanning.add(&side_row);
 
         // Paper size.
-        let mut paper_labels = vec!["Automatic"];
-        paper_labels.extend(PAPERS.iter().map(|p| p.label));
+        let mut paper_labels = vec![tr("Automatic")];
+        paper_labels.extend(PAPERS.iter().map(|p| tr(p.label)));
         let paper_row = adw::ComboRow::builder()
-            .title("Page Size")
+            .title(tr("Page Size"))
             .model(&gtk::StringList::new(&paper_labels))
             .build();
         let cur = crop::paper_for_size(
@@ -1608,14 +1814,14 @@ impl Win {
         });
         scanning.add(&paper_row);
 
-        scanning.add(&self.resolution_row("Text Resolution", "text-dpi", 150));
-        scanning.add(&self.resolution_row("Image Resolution", "photo-dpi", 300));
-        scanning.add(&self.slider_row("Brightness", "brightness", -100.0, 100.0));
-        scanning.add(&self.slider_row("Contrast", "contrast", -100.0, 100.0));
+        scanning.add(&self.resolution_row(tr("Text Resolution"), "text-dpi", 150));
+        scanning.add(&self.resolution_row(tr("Image Resolution"), "photo-dpi", 300));
+        scanning.add(&self.slider_row(tr("Brightness"), "brightness", -100.0, 100.0));
+        scanning.add(&self.slider_row(tr("Contrast"), "contrast", -100.0, 100.0));
 
         let delay = adw::SpinRow::with_range(0.0, 15.0, 0.5);
-        delay.set_title("Delay Between Pages");
-        delay.set_subtitle("Seconds, when scanning multiple pages from the flatbed");
+        delay.set_title(tr("Delay Between Pages"));
+        delay.set_subtitle(tr("Seconds, when scanning multiple pages from the flatbed"));
         delay.set_digits(1);
         delay.set_value(self.prefs.get("page-delay", 1000) as f64 / 1000.0);
         let w = self.weak();
@@ -1628,8 +1834,8 @@ impl Win {
         scanning.add(&delay);
         page.add(&scanning);
 
-        let saving = adw::PreferencesGroup::builder().title("Saving").build();
-        saving.add(&self.slider_row("JPEG Quality", "jpeg-quality", 0.0, 100.0));
+        let saving = adw::PreferencesGroup::builder().title(tr("Saving")).build();
+        saving.add(&self.slider_row(tr("JPEG Quality"), "jpeg-quality", 0.0, 100.0));
         page.add(&saving);
         page.add(&self.postproc_group());
 
@@ -1640,15 +1846,15 @@ impl Win {
     /// Simple Scan's post-processing settings.
     fn postproc_group(self: &Rc<Self>) -> adw::PreferencesGroup {
         let group = adw::PreferencesGroup::builder()
-            .title("Post-processing")
-            .description(
+            .title(tr("Post-processing"))
+            .description(tr(
                 "After saving, run SCRIPT MIME-TYPE KEEP-ORIGINAL FILE [ARGUMENTS…] \
                  (no shell; arguments are split like shell words but not expanded)",
-            )
+            ))
             .build();
         let pp = self.postproc();
         let enabled = adw::SwitchRow::builder()
-            .title("Enable Post-processing")
+            .title(tr("Enable Post-processing"))
             .active(pp.enabled)
             .build();
         let w = self.weak();
@@ -1660,17 +1866,17 @@ impl Win {
         group.add(&enabled);
 
         let script = adw::EntryRow::builder()
-            .title("Script")
+            .title(tr("Script"))
             .text(&pp.script)
             .show_apply_button(true)
             .build();
         let pick = gtk::Button::builder()
             .icon_name("document-open-symbolic")
-            .tooltip_text("Choose Script…")
+            .tooltip_text(tr("Choose Script…"))
             .valign(gtk::Align::Center)
             .css_classes(["flat"])
             .build()
-            .labelled("Choose Script…");
+            .labelled(tr("Choose Script…"));
         script.add_suffix(&pick);
         let w = self.weak();
         script.connect_apply(move |e| {
@@ -1683,7 +1889,7 @@ impl Win {
         pick.connect_clicked(move |b| {
             let Some(w) = w.upgrade() else { return };
             let dialog = gtk::FileDialog::builder()
-                .title("Choose Script")
+                .title(tr("Choose Script"))
                 .modal(true)
                 .build();
             let parent = b.root().and_downcast::<gtk::Window>();
@@ -1703,7 +1909,7 @@ impl Win {
         group.add(&script);
 
         let args = adw::EntryRow::builder()
-            .title("Script Arguments")
+            .title(tr("Script Arguments"))
             .text(&pp.arguments)
             .show_apply_button(true)
             .build();
@@ -1732,8 +1938,10 @@ impl Win {
         group.add(&args);
 
         let keep = adw::SwitchRow::builder()
-            .title("Keep Original File")
-            .subtitle("Saves an unprocessed copy with “_orig” before the extension")
+            .title(tr("Keep Original File"))
+            .subtitle(tr(
+                "Saves an unprocessed copy with “_orig” before the extension",
+            ))
             .active(pp.keep_original)
             .build();
         let w = self.weak();

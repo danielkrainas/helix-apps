@@ -2,6 +2,9 @@
 
 use chrono::{DateTime, NaiveDate, NaiveTime, Offset, TimeZone, Timelike, Utc};
 use chrono_tz::Tz;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -141,7 +144,7 @@ pub fn load_locations() -> Vec<Location> {
             );
         if (extra || fallback) && !locs.iter().any(|l| l.zone == tz) {
             let city = if name == "UTC" {
-                "Coordinated Universal Time (UTC)".to_string()
+                tr("Coordinated Universal Time (UTC)").to_string()
             } else {
                 city_from_zone(name)
             };
@@ -306,9 +309,9 @@ pub enum RelativeDay {
 impl RelativeDay {
     pub fn label(self) -> &'static str {
         match self {
-            RelativeDay::Yesterday => "Yesterday",
-            RelativeDay::Today => "Today",
-            RelativeDay::Tomorrow => "Tomorrow",
+            RelativeDay::Yesterday => tr("Yesterday"),
+            RelativeDay::Today => tr("Today"),
+            RelativeDay::Tomorrow => tr("Tomorrow"),
         }
     }
 }
@@ -335,7 +338,7 @@ pub fn relative_day_at(zone: Tz, local: Tz, now: DateTime<Utc>) -> RelativeDay {
 /// "5 hours 45 minutes ahead", "Current time zone".
 pub fn describe_offset(diff: i32) -> String {
     if diff == 0 {
-        return "Current time zone".into();
+        return tr("Current time zone").into();
     }
     let dir = if diff > 0 { "ahead" } else { "behind" };
     let mins = diff.unsigned_abs() / 60;
@@ -349,12 +352,12 @@ pub fn describe_offset(diff: i32) -> String {
         format!("{n}{frac} {plural}")
     };
     let amount = match (h, m) {
-        (0, m) => format!("{m} minute{}", if m == 1 { "" } else { "s" }),
+        (0, m) => trnf!("{n} minute", "{n} minutes", m),
         (h, 0) => hours(h, ""),
         (h, 30) => hours(h, "½"),
         (h, 15) => hours(h, "¼"),
         (h, 45) => hours(h, "¾"),
-        (h, m) => format!("{} {m} minutes", hours(h, "")),
+        (h, m) => trf!("{hours} {m} minutes", hours = hours(h, ""), m = m),
     };
     format!("{amount} {dir}")
 }

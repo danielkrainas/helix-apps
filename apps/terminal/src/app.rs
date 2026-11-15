@@ -13,6 +13,7 @@ use crate::palette::{self, Palette, Theme};
 use crate::search;
 use crate::transparency::{self, Transparency};
 use crate::window::Window;
+use helix_app_common::i18n::tr;
 
 pub const APP_ID: &str = "org.helix.Terminal";
 pub const SCHEMA: &str = "org.gnome.Console";
@@ -223,7 +224,11 @@ impl App {
     }
 
     fn install_actions(&self) {
-        helix_app_common::install_standard_actions(&self.gtk, "Terminal", "Use the command line");
+        helix_app_common::install_standard_actions(
+            &self.gtk,
+            tr("Terminal"),
+            tr("Use the command line"),
+        );
         // Ctrl+W / Ctrl+Q belong to programs running in the terminal.
         self.gtk.set_accels_for_action("app.quit", &[]);
 

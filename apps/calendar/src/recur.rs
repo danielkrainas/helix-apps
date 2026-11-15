@@ -1,6 +1,9 @@
 //! Editor presets for recurrence rules and reminders.
 
 use chrono::{Duration, NaiveDate, Weekday};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
+use helix_app_common::trnf;
 use helix_eds::rrule::{Freq, RRule, Until};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -15,13 +18,13 @@ pub enum Preset {
 }
 
 pub const PRESETS: [(Preset, &str); 7] = [
-    (Preset::None, "No Repeat"),
-    (Preset::Daily, "Daily"),
-    (Preset::Weekdays, "Weekdays"),
-    (Preset::Weekly, "Weekly"),
-    (Preset::Monthly, "Monthly"),
-    (Preset::Yearly, "Yearly"),
-    (Preset::Custom, "Custom"),
+    (Preset::None, n_("No Repeat")),
+    (Preset::Daily, n_("Daily")),
+    (Preset::Weekdays, n_("Weekdays")),
+    (Preset::Weekly, n_("Weekly")),
+    (Preset::Monthly, n_("Monthly")),
+    (Preset::Yearly, n_("Yearly")),
+    (Preset::Custom, n_("Custom")),
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -135,41 +138,46 @@ pub fn build(preset: Preset, ends: Ends, existing: Option<&RRule>, all_day: bool
 
 /// Reminder offsets offered by the editor.
 pub const REMINDERS: [(i64, &str); 8] = [
-    (5, "5 minutes before"),
-    (10, "10 minutes before"),
-    (15, "15 minutes before"),
-    (30, "30 minutes before"),
-    (60, "1 hour before"),
-    (1440, "1 day before"),
-    (2880, "2 days before"),
-    (10080, "1 week before"),
+    (5, n_("5 minutes before")),
+    (10, n_("10 minutes before")),
+    (15, n_("15 minutes before")),
+    (30, n_("30 minutes before")),
+    (60, n_("1 hour before")),
+    (1440, n_("1 day before")),
+    (2880, n_("2 days before")),
+    (10080, n_("1 week before")),
 ];
 
 /// Human description of a reminder offset (time before start).
 pub fn describe_reminder(before: Option<Duration>) -> String {
     let Some(d) = before else {
-        return "Custom reminder".into();
+        return tr("Custom reminder").into();
     };
     let mins = d.num_minutes();
     if mins == 0 {
-        return "At the start".into();
+        return tr("At the start").into();
     }
     let (n, after) = if mins < 0 {
         (-mins, true)
     } else {
         (mins, false)
     };
-    let unit = |v: i64, s: &str| format!("{v} {s}{}", if v == 1 { "" } else { "s" });
     let text = if n % 10080 == 0 {
-        unit(n / 10080, "week")
+        trnf!("{n} week", "{n} weeks", n / 10080)
     } else if n % 1440 == 0 {
-        unit(n / 1440, "day")
+        trnf!("{n} day", "{n} days", n / 1440)
     } else if n % 60 == 0 {
-        unit(n / 60, "hour")
+        trnf!("{n} hour", "{n} hours", n / 60)
     } else {
-        unit(n, "minute")
+        trnf!("{n} minute", "{n} minutes", n)
     };
-    format!("{text} {}", if after { "after" } else { "before" })
+    if after {
+        // Translators: a reminder time, e.g. "10 minutes after".
+        trf!("{text} after", text = text)
+    } else {
+        // Translators: a reminder time, e.g. "10 minutes before".
+        trf!("{text} before", text = text)
+    }
 }
 
 #[cfg(test)]

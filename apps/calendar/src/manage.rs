@@ -10,6 +10,8 @@ use std::rc::Rc;
 use crate::backend::Cmd;
 use crate::colors;
 use crate::ui::Ui;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 fn rgba(hex: &str) -> gdk::RGBA {
     gdk::RGBA::parse(hex).unwrap_or(gdk::RGBA::BLUE)
@@ -21,7 +23,9 @@ fn hex(c: &gdk::RGBA) -> String {
 }
 
 pub fn open(ui: &Rc<Ui>) {
-    let dialog = adw::PreferencesDialog::builder().title("Calendars").build();
+    let dialog = adw::PreferencesDialog::builder()
+        .title(tr("Calendars"))
+        .build();
     let page = adw::PreferencesPage::new();
     let sources = ui.sources();
 
@@ -49,10 +53,10 @@ pub fn open(ui: &Rc<Ui>) {
 
     // New local calendar.
     let new_group = adw::PreferencesGroup::builder()
-        .title("New Calendar")
-        .description("Calendars from online accounts (Google, Nextcloud, Microsoft…) are added in Settings → Online Accounts.")
+        .title(tr("New Calendar"))
+        .description(tr("Calendars from online accounts (Google, Nextcloud, Microsoft…) are added in Settings → Online Accounts."))
         .build();
-    let name = adw::EntryRow::builder().title("Calendar Name").build();
+    let name = adw::EntryRow::builder().title(tr("Calendar Name")).build();
     let used: Vec<String> = sources
         .iter()
         .filter_map(|s| s.color().map(str::to_string))
@@ -61,10 +65,10 @@ pub fn open(ui: &Rc<Ui>) {
         gtk::ColorDialogButton::new(Some(gtk::ColorDialog::builder().with_alpha(false).build()));
     color.set_rgba(&rgba(colors::next_free(&used)));
     color.set_valign(gtk::Align::Center);
-    color.set_tooltip_text(Some("Calendar Colour"));
-    helix_app_common::set_accessible_label(&color, "New Calendar Colour");
+    color.set_tooltip_text(Some(tr("Calendar Colour")));
+    helix_app_common::set_accessible_label(&color, tr("New Calendar Colour"));
     let add = gtk::Button::builder()
-        .label("Add")
+        .label(tr("Add"))
         .css_classes(["suggested-action"])
         .valign(gtk::Align::Center)
         .sensitive(false)
@@ -86,7 +90,7 @@ pub fn open(ui: &Rc<Ui>) {
             let uid = source::new_uid();
             let data = source::new_local_calendar(&n, &hex(&color.rgba()));
             ui.backend.send(Cmd::CreateSource { uid, data });
-            dialog.add_toast(adw::Toast::new(&format!("Calendar “{n}” created")));
+            dialog.add_toast(adw::Toast::new(&trf!("Calendar “{n}” created", n = n)));
             name.set_text("");
         }
     };
@@ -109,20 +113,20 @@ fn url_group(
     used: &[String],
 ) -> adw::PreferencesGroup {
     let group = adw::PreferencesGroup::builder()
-        .title("New Calendar from URL")
-        .description("Subscribe to a published calendar (.ics). It is read-only and refreshed automatically.")
+        .title(tr("New Calendar from URL"))
+        .description(tr("Subscribe to a published calendar (.ics). It is read-only and refreshed automatically."))
         .build();
     let url = adw::EntryRow::builder()
         .title("Calendar Address (https:// or webcal://)")
         .input_purpose(gtk::InputPurpose::Url)
         .build();
-    let name = adw::EntryRow::builder().title("Calendar Name").build();
+    let name = adw::EntryRow::builder().title(tr("Calendar Name")).build();
     let color =
         gtk::ColorDialogButton::new(Some(gtk::ColorDialog::builder().with_alpha(false).build()));
     color.set_rgba(&rgba(colors::next_free(used)));
     color.set_valign(gtk::Align::Center);
-    color.set_tooltip_text(Some("Calendar Colour"));
-    helix_app_common::set_accessible_label(&color, "Subscribed Calendar Colour");
+    color.set_tooltip_text(Some(tr("Calendar Colour")));
+    helix_app_common::set_accessible_label(&color, tr("Subscribed Calendar Colour"));
     name.add_suffix(&color);
     let error = gtk::Label::builder()
         .css_classes(["error", "caption"])
@@ -132,7 +136,7 @@ fn url_group(
         .visible(false)
         .build();
     let add = gtk::Button::builder()
-        .label("Subscribe")
+        .label(tr("Subscribe"))
         .css_classes(["suggested-action", "pill"])
         .halign(gtk::Align::End)
         .margin_top(12)
@@ -190,7 +194,7 @@ fn url_group(
                 uid: source::new_uid(),
                 data,
             });
-            dialog.add_toast(adw::Toast::new(&format!("Subscribed to “{n}”")));
+            dialog.add_toast(adw::Toast::new(&trf!("Subscribed to “{n}”", n = n)));
             url.set_text("");
             name.set_text("");
             clear_error();
@@ -277,20 +281,20 @@ fn calendar_row(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gtk
     color.set_rgba(&rgba(&colors::normalize(s.color())));
     color.set_valign(gtk::Align::Center);
     color.set_sensitive(s.writable);
-    color.set_tooltip_text(Some("Calendar Colour"));
+    color.set_tooltip_text(Some(tr("Calendar Colour")));
     let display = s.display_name();
-    helix_app_common::set_accessible_label(&color, &format!("Colour of {display}"));
+    helix_app_common::set_accessible_label(&color, &trf!("Colour of {display}", display = display));
     let shown = gtk::Switch::builder()
         .active(s.selected())
         .valign(gtk::Align::Center)
         .sensitive(s.writable)
         .build();
-    shown.set_tooltip_text(Some("Show in Calendar"));
-    helix_app_common::set_accessible_label(&shown, &format!("Show {display}"));
+    shown.set_tooltip_text(Some(tr("Show in Calendar")));
+    helix_app_common::set_accessible_label(&shown, &trf!("Show {display}", display = display));
 
     let row: gtk::Widget = if s.writable && backend == "local" {
         let r = adw::EntryRow::builder()
-            .title("Name")
+            .title(tr("Name"))
             .text(s.display_name())
             .show_apply_button(true)
             .build();
@@ -301,12 +305,12 @@ fn calendar_row(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gtk
             let n = e.text().trim().to_string();
             if n.is_empty() {
                 // Shown inside the dialog, next to the field.
-                helix_app_common::set_input_error(e, None, Some("The name cannot be empty"));
+                helix_app_common::set_input_error(e, None, Some(tr("The name cannot be empty")));
                 if let Some(d) = e
                     .ancestor(adw::PreferencesDialog::static_type())
                     .and_downcast::<adw::PreferencesDialog>()
                 {
-                    d.add_toast(adw::Toast::new("The name cannot be empty"));
+                    d.add_toast(adw::Toast::new(tr("The name cannot be empty")));
                 }
             } else {
                 let mut s = src.clone();
@@ -354,19 +358,21 @@ fn calendar_row(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gtk
 fn remove_button(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gtk::Button {
     let b = gtk::Button::builder()
         .icon_name("user-trash-symbolic")
-        .tooltip_text("Remove Calendar")
+        .tooltip_text(tr("Remove Calendar"))
         .css_classes(["flat"])
         .valign(gtk::Align::Center)
         .build()
-        .labelled(&format!("Remove Calendar {}", s.display_name()));
+        .labelled(&trf!("Remove Calendar {}", s.display_name()));
     let (ui, src, dialog) = (ui.clone(), s.clone(), dialog.clone());
     b.connect_clicked(move |b| {
         let alert = adw::AlertDialog::new(
-            Some(&format!("Remove “{}”?", src.display_name())),
-            Some("The calendar and all its events will be deleted. This cannot be undone."),
+            Some(&trf!("Remove “{}”?", src.display_name())),
+            Some(tr(
+                "The calendar and all its events will be deleted. This cannot be undone.",
+            )),
         );
-        alert.add_response("cancel", "_Cancel");
-        alert.add_response("remove", "_Remove");
+        alert.add_response("cancel", tr("_Cancel"));
+        alert.add_response("remove", tr("_Remove"));
         alert.set_response_appearance("remove", adw::ResponseAppearance::Destructive);
         alert.set_close_response("cancel");
         let (ui2, src2, dialog2, b2) = (ui.clone(), src.clone(), dialog.clone(), b.clone());
@@ -375,7 +381,7 @@ fn remove_button(ui: &Rc<Ui>, dialog: &adw::PreferencesDialog, s: &Source) -> gt
             if let Some(row) = b2.ancestor(adw::PreferencesRow::static_type()) {
                 row.set_visible(false);
             }
-            dialog2.add_toast(adw::Toast::new("Calendar removed"));
+            dialog2.add_toast(adw::Toast::new(tr("Calendar removed")));
         });
         alert.present(Some(&dialog));
     });

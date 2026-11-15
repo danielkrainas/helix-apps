@@ -1,5 +1,9 @@
 //! Human-readable formatting of sizes, durations and temperatures.
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
+
 const UNITS: [&str; 6] = ["kB", "MB", "GB", "TB", "PB", "EB"];
 
 /// Short decimal (SI) size: `512 bytes`, `1.0 kB`, `60 GB`, `2.0 TB`.
@@ -8,11 +12,7 @@ const UNITS: [&str; 6] = ["kB", "MB", "GB", "TB", "PB", "EB"];
 /// has two or three significant digits.
 pub fn size(bytes: u64) -> String {
     if bytes < 1000 {
-        return if bytes == 1 {
-            "1 byte".into()
-        } else {
-            format!("{bytes} bytes")
-        };
+        return trnf!("{n} byte", "{n} bytes", bytes);
     }
     let mut value = bytes as f64 / 1000.0;
     let mut unit = 0;
@@ -53,7 +53,7 @@ pub fn size_long(bytes: u64) -> String {
     if bytes < 1000 {
         return size(bytes);
     }
-    format!("{} ({} bytes)", size(bytes), group_thousands(bytes))
+    trf!("{} ({} bytes)", size(bytes), group_thousands(bytes))
 }
 
 fn plural(n: u64, one: &str, many: &str) -> String {
@@ -108,9 +108,9 @@ pub fn temperature_kelvin(k: f64) -> String {
 /// Relative time of a past event: `Less than a minute ago`, `5 minutes ago`.
 pub fn ago(secs: u64) -> String {
     if secs < 60 {
-        "Less than a minute ago".into()
+        tr("Less than a minute ago").into()
     } else {
-        format!("{} ago", duration(secs))
+        trf!("{} ago", duration(secs))
     }
 }
 

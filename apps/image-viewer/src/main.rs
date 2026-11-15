@@ -20,6 +20,7 @@ use gtk::{gio, glib};
 const USAGE: &str = "Usage: helix-image-viewer [FILE|DIR|URI ...]";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let mut paths = Vec::new();
     let mut only_files = false;
     for arg in std::env::args_os().skip(1) {

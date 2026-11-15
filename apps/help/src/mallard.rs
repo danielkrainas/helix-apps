@@ -4,6 +4,8 @@ use crate::html::{self, escape, escape_attr, LinkItem};
 use crate::search;
 use crate::uri::DocRef;
 use crate::xmlutil;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use roxmltree::Node;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -172,7 +174,7 @@ pub fn parse_page(source: String, path: PathBuf) -> Result<Page, String> {
     let doc = xmlutil::parse(&source).map_err(|e| format!("{}: {e}", path.display()))?;
     let root = doc.root_element();
     if root.tag_name().name() != "page" {
-        return Err(format!("{}: not a Mallard page", path.display()));
+        return Err(trf!("{}: not a Mallard page", path.display()));
     }
     let id = root
         .attribute("id")
@@ -223,7 +225,7 @@ impl MallardDoc {
             }
         }
         if doc.pages.is_empty() {
-            return Err(format!("{}: no Mallard pages", dir.display()));
+            return Err(trf!("{}: no Mallard pages", dir.display()));
         }
         Ok(doc)
     }
@@ -508,7 +510,7 @@ impl MallardDoc {
                 .iter()
                 .filter_map(|x| self.link_item(docref, x))
                 .collect();
-            body.push_str(&html::link_list("seealso", Some("See Also"), &items));
+            body.push_str(&html::link_list("seealso", Some(tr("See Also")), &items));
         }
         if !r.placed.contains(&format!("guide:{page_id}")) {
             let guides = self.sorted_by_title(self.guide_links(page_id));
@@ -519,7 +521,11 @@ impl MallardDoc {
                         .map(|i| LinkItem { desc: None, ..i })
                 })
                 .collect();
-            body.push_str(&html::link_list("guides", Some("More Information"), &items));
+            body.push_str(&html::link_list(
+                "guides",
+                Some(tr("More Information")),
+                &items,
+            ));
         }
         let title = xmlutil::child(root, "title")
             .map(xmlutil::text_of)
@@ -1023,7 +1029,7 @@ impl Renderer<'_> {
                     .collect();
                 html::link_list(
                     "seealso",
-                    Some(heading.as_deref().unwrap_or("See Also")),
+                    Some(heading.as_deref().unwrap_or(tr("See Also"))),
                     &items,
                 )
             }
@@ -1039,7 +1045,7 @@ impl Renderer<'_> {
                     .collect();
                 html::link_list(
                     "guides",
-                    Some(heading.as_deref().unwrap_or("More Information")),
+                    Some(heading.as_deref().unwrap_or(tr("More Information"))),
                     &items,
                 )
             }

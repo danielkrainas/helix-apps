@@ -1,5 +1,7 @@
 //! Reading metadata out of a font file (name table, format, coverage).
 
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 use std::path::Path;
 use ttf_parser::{name_id, Face, PlatformId};
 
@@ -31,7 +33,7 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::Io(e) => write!(f, "{e}"),
-            Error::Parse => f.write_str("Not a supported font file"),
+            Error::Parse => f.write_str(tr("Not a supported font file")),
         }
     }
 }
@@ -75,7 +77,7 @@ pub fn face_info(data: &[u8], index: u32) -> Option<FaceInfo> {
         .unwrap_or_default();
     let style = name_string(&face, name_id::TYPOGRAPHIC_SUBFAMILY)
         .or_else(|| name_string(&face, name_id::SUBFAMILY))
-        .unwrap_or_else(|| "Regular".into());
+        .unwrap_or_else(|| tr("Regular").into());
     Some(FaceInfo {
         index,
         family,
@@ -97,16 +99,20 @@ pub fn face_info(data: &[u8], index: u32) -> Option<FaceInfo> {
 pub fn format_name(face: &Face, collection: bool) -> String {
     let t = face.tables();
     let base = if t.cff2.is_some() {
-        "OpenType (CFF2)"
+        tr("OpenType (CFF2)")
     } else if t.cff.is_some() {
-        "OpenType (CFF)"
+        tr("OpenType (CFF)")
     } else if t.glyf.is_some() {
         "TrueType"
     } else {
-        "OpenType (bitmap)"
+        tr("OpenType (bitmap)")
     };
-    let variable = if face.is_variable() { "Variable " } else { "" };
-    let coll = if collection { " Collection" } else { "" };
+    let variable = if face.is_variable() {
+        tr("Variable ")
+    } else {
+        ""
+    };
+    let coll = if collection { tr(" Collection") } else { "" };
     format!("{variable}{base}{coll}")
 }
 
@@ -186,7 +192,7 @@ pub fn coverage(face: &Face) -> Vec<char> {
     out
 }
 
-pub const PANGRAM: &str = "The quick brown fox jumps over the lazy dog.";
+pub const PANGRAM: &str = n_("The quick brown fox jumps over the lazy dog.");
 pub const ALPHABET: &str = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789";
 
 /// Whether `face_chars` (sorted) covers at least 90% of the non-space
@@ -206,8 +212,8 @@ pub fn covers(face_chars: &[char], text: &str) -> bool {
 /// Picks the default preview sentence: the pangram if covered, otherwise
 /// a run of characters the font actually has (skipping ASCII punctuation).
 pub fn sample_text(face_chars: &[char]) -> String {
-    if face_chars.is_empty() || covers(face_chars, PANGRAM) {
-        return PANGRAM.to_string();
+    if face_chars.is_empty() || covers(face_chars, tr(PANGRAM)) {
+        return tr(PANGRAM).to_string();
     }
     let interesting: Vec<char> = face_chars
         .iter()
@@ -242,37 +248,37 @@ pub fn info_rows(
     match info {
         Some(i) => {
             rows.extend([
-                ("Family", i.family.clone()),
-                ("Style", i.style.clone()),
-                ("Full name", i.full_name.clone()),
-                ("Version", i.version.clone()),
-                ("Copyright", i.copyright.clone()),
-                ("Designer", i.designer.clone()),
-                ("Manufacturer", i.manufacturer.clone()),
-                ("Description", i.description.clone()),
-                ("License", i.license.clone()),
-                ("License URL", i.license_url.clone()),
-                ("Glyphs", i.glyph_count.to_string()),
+                (tr("Family"), i.family.clone()),
+                (tr("Style"), i.style.clone()),
+                (tr("Full name"), i.full_name.clone()),
+                (tr("Version"), i.version.clone()),
+                (tr("Copyright"), i.copyright.clone()),
+                (tr("Designer"), i.designer.clone()),
+                (tr("Manufacturer"), i.manufacturer.clone()),
+                (tr("Description"), i.description.clone()),
+                (tr("License"), i.license.clone()),
+                (tr("License URL"), i.license_url.clone()),
+                (tr("Glyphs"), i.glyph_count.to_string()),
                 (
-                    "Characters",
+                    tr("Characters"),
                     if chars > 0 {
                         chars.to_string()
                     } else {
                         String::new()
                     },
                 ),
-                ("Format", i.format.clone()),
+                (tr("Format"), i.format.clone()),
             ]);
         }
         None => rows.extend([
-            ("Family", facts.family.to_string()),
-            ("Style", facts.style.to_string()),
-            ("Format", facts.format.to_string()),
+            (tr("Family"), facts.family.to_string()),
+            (tr("Style"), facts.style.to_string()),
+            (tr("Format"), facts.format.to_string()),
         ]),
     }
-    rows.push(("File", facts.path.to_string()));
+    rows.push((tr("File"), facts.path.to_string()));
     if let Some(sz) = facts.size {
-        rows.push(("Size", human_size(sz)));
+        rows.push((tr("Size"), human_size(sz)));
     }
     rows.retain(|(_, v)| !v.trim().is_empty());
     rows
@@ -281,7 +287,7 @@ pub fn info_rows(
 /// Formats a byte count like "1.2 MB" (SI units, as GNOME does).
 pub fn human_size(bytes: u64) -> String {
     if bytes < 1000 {
-        return format!("{bytes} bytes");
+        return trf!("{bytes} bytes", bytes = bytes);
     }
     let units = ["kB", "MB", "GB", "TB"];
     let mut v = bytes as f64 / 1000.0;
@@ -368,7 +374,7 @@ pub(crate) mod tests {
         let cov = coverage(&face);
         assert!(cov.binary_search(&'A').is_ok());
         assert!(cov.windows(2).all(|w| w[0] < w[1]));
-        assert_eq!(sample_text(&cov), PANGRAM);
+        assert_eq!(sample_text(&cov), tr(PANGRAM));
     }
 
     #[test]
@@ -461,14 +467,14 @@ pub(crate) mod tests {
     fn sample_text_falls_back_to_covered_chars() {
         let cjk: Vec<char> = ('一'..='丿').collect();
         let s = sample_text(&cjk);
-        assert_ne!(s, PANGRAM);
+        assert_ne!(s, tr(PANGRAM));
         assert!(s.chars().all(|c| cjk.contains(&c)));
         assert_eq!(s.chars().count(), 36);
-        assert_eq!(sample_text(&[]), PANGRAM);
-        let mut latin: Vec<char> = PANGRAM.chars().collect();
+        assert_eq!(sample_text(&[]), tr(PANGRAM));
+        let mut latin: Vec<char> = tr(PANGRAM).chars().collect();
         latin.sort_unstable();
         latin.dedup();
-        assert!(covers(&latin, PANGRAM));
-        assert_eq!(sample_text(&latin), PANGRAM);
+        assert!(covers(&latin, tr(PANGRAM)));
+        assert_eq!(sample_text(&latin), tr(PANGRAM));
     }
 }

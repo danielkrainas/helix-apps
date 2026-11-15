@@ -2,6 +2,8 @@
 
 use crate::journal::{Boot, Entry};
 use gtk::glib::{DateTime, TimeZone};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 fn datetime(usec: i64, tz: &TimeZone) -> Option<DateTime> {
     DateTime::from_unix_utc(usec.div_euclid(1_000_000))
@@ -80,8 +82,8 @@ pub fn export_text<'a>(entries: impl IntoIterator<Item = &'a Entry>, tz: &TimeZo
 /// Label for the boot selector.
 pub fn boot_label(b: &Boot, tz: &TimeZone) -> String {
     match b.index {
-        0 => return "Current Boot".into(),
-        -1 => return "Previous Boot".into(),
+        0 => return tr("Current Boot").into(),
+        -1 => return tr("Previous Boot").into(),
         _ => {}
     }
     let range = match (
@@ -98,7 +100,7 @@ pub fn boot_label(b: &Boot, tz: &TimeZone) -> String {
     };
     range
         .map(|r| r.split_whitespace().collect::<Vec<_>>().join(" "))
-        .unwrap_or_else(|| format!("Boot {}", b.index))
+        .unwrap_or_else(|| trf!("Boot {}", b.index))
 }
 
 /// A message squashed to a single line for list rows.

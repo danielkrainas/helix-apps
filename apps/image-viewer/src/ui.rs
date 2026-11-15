@@ -19,9 +19,11 @@ use crate::thumbs::{self, RawThumb};
 use crate::trash;
 use crate::view;
 use crate::wallpaper;
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 pub const APP_ID: &str = "org.helix.ImageViewer";
-const APP_NAME: &str = "Image Viewer";
+const APP_NAME: &str = n_("Image Viewer");
 const CONTROLS_TIMEOUT: Duration = Duration::from_secs(2);
 const SLIDESHOW_INTERVAL: Duration = Duration::from_secs(5);
 const LOADING_DELAY: Duration = Duration::from_millis(200);
@@ -44,7 +46,7 @@ pub fn run(paths: Vec<PathBuf>) -> glib::ExitCode {
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::NON_UNIQUE)
         .build();
-    helix_app_common::install_standard_actions(&app, APP_NAME, "View images");
+    helix_app_common::install_standard_actions(&app, tr(APP_NAME), tr("View images"));
     app.connect_startup(|app| {
         load_css();
         let new_window = gio::ActionEntry::builder("new-window")
@@ -258,7 +260,7 @@ impl Viewer {
     fn new(app: &adw::Application) -> Rc<Viewer> {
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .default_width(1000)
             .default_height(700)
             .width_request(360)
@@ -271,59 +273,61 @@ impl Viewer {
 
         // Header.
         let header = adw::HeaderBar::new();
-        let title = adw::WindowTitle::new(APP_NAME, "");
+        let title = adw::WindowTitle::new(tr(APP_NAME), "");
         header.set_title_widget(Some(&title));
         let open_btn = gtk::Button::builder()
-            .label("Open…")
+            .label(tr("Open…"))
             .action_name("win.open")
-            .tooltip_text("Open Images (Ctrl+O)")
+            .tooltip_text(tr("Open Images (Ctrl+O)"))
             .build();
         header.pack_start(&open_btn);
         let menu = gio::Menu::new();
         let s1 = gio::Menu::new();
-        s1.append(Some("_Open…"), Some("win.open"));
-        s1.append(Some("Open _With…"), Some("win.open-with"));
-        s1.append(Some("_New Window"), Some("app.new-window"));
+        s1.append(Some(tr("_Open…")), Some("win.open"));
+        s1.append(Some(tr("Open _With…")), Some("win.open-with"));
+        s1.append(Some(tr("_New Window")), Some("app.new-window"));
         menu.append_section(None, &s1);
         let s2 = gio::Menu::new();
-        s2.append(Some("_Copy"), Some("win.copy"));
-        s2.append(Some("Set as _Background…"), Some("win.set-background"));
-        s2.append(Some("Move to _Trash"), Some("win.trash"));
+        s2.append(Some(tr("_Copy")), Some("win.copy"));
+        s2.append(Some(tr("Set as _Background…")), Some("win.set-background"));
+        s2.append(Some(tr("Move to _Trash")), Some("win.trash"));
         menu.append_section(None, &s2);
         let zoom = gio::Menu::new();
-        zoom.append(Some("Zoom _In"), Some("win.zoom-in"));
-        zoom.append(Some("Zoom O_ut"), Some("win.zoom-out"));
-        zoom.append(Some("_Best Fit"), Some("win.zoom-fit"));
+        zoom.append(Some(tr("Zoom _In")), Some("win.zoom-in"));
+        zoom.append(Some(tr("Zoom O_ut")), Some("win.zoom-out"));
+        zoom.append(Some(tr("_Best Fit")), Some("win.zoom-fit"));
         zoom.append(Some("100 %"), Some("win.zoom-100"));
         zoom.append(Some("200 %"), Some("win.zoom-200"));
         menu.append_section(None, &zoom);
         let s3 = gio::Menu::new();
-        s3.append(Some("Rotate _Left"), Some("win.rotate-left"));
-        s3.append(Some("Rotate _Right"), Some("win.rotate-right"));
-        s3.append(Some("_Save Rotation"), Some("win.save"));
-        s3.append(Some("_Fullscreen"), Some("win.fullscreen"));
-        s3.append(Some("_Slideshow"), Some("win.slideshow"));
+        s3.append(Some(tr("Rotate _Left")), Some("win.rotate-left"));
+        s3.append(Some(tr("Rotate _Right")), Some("win.rotate-right"));
+        s3.append(Some(tr("_Save Rotation")), Some("win.save"));
+        s3.append(Some(tr("_Fullscreen")), Some("win.fullscreen"));
+        s3.append(Some(tr("_Slideshow")), Some("win.slideshow"));
         menu.append_section(None, &s3);
         let s4 = gio::Menu::new();
         s4.append(
-            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some(helix_app_common::i18n::tr(
+                helix_app_common::shortcuts::MENU_LABEL,
+            )),
             Some(helix_app_common::shortcuts::ACTION),
         );
-        s4.append(Some("_About Image Viewer"), Some("app.about"));
+        s4.append(Some(tr("_About Image Viewer")), Some("app.about"));
         menu.append_section(None, &s4);
         let menu_btn = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
             .primary(true)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         header.pack_end(&menu_btn);
         let props_btn = gtk::ToggleButton::builder()
             .icon_name("dialog-information-symbolic")
-            .tooltip_text("Image Properties (F9)")
+            .tooltip_text(tr("Image Properties (F9)"))
             .build()
-            .labelled("Image Properties");
+            .labelled(tr("Image Properties"));
         header.pack_end(&props_btn);
 
         // Image area.
@@ -355,13 +359,13 @@ impl Viewer {
         let (prev_btn, prev_rev) = nav_button(
             "go-previous-symbolic",
             "win.prev",
-            "Previous Image",
+            tr("Previous Image"),
             gtk::Align::Start,
         );
         let (next_btn, next_rev) = nav_button(
             "go-next-symbolic",
             "win.next",
-            "Next Image",
+            tr("Next Image"),
             gtk::Align::End,
         );
         overlay.add_overlay(&prev_rev);
@@ -384,17 +388,17 @@ impl Viewer {
         controls.append(&tool(
             "object-rotate-left-symbolic",
             "win.rotate-left",
-            "Rotate Left (Ctrl+Shift+R)",
+            tr("Rotate Left (Ctrl+Shift+R)"),
         ));
         controls.append(&tool(
             "object-rotate-right-symbolic",
             "win.rotate-right",
-            "Rotate Right (Ctrl+R)",
+            tr("Rotate Right (Ctrl+R)"),
         ));
         let save_btn = tool(
             "document-save-symbolic",
             "win.save",
-            "Save Rotation (Ctrl+S)",
+            tr("Save Rotation (Ctrl+S)"),
         );
         save_btn.set_visible(false);
         controls.append(&save_btn);
@@ -402,26 +406,30 @@ impl Viewer {
         controls.append(&tool(
             "zoom-out-symbolic",
             "win.zoom-out",
-            "Zoom Out (Ctrl+−)",
+            tr("Zoom Out (Ctrl+−)"),
         ));
         let zoom_menu = gio::Menu::new();
-        zoom_menu.append(Some("Best Fit"), Some("win.zoom-fit"));
+        zoom_menu.append(Some(tr("Best Fit")), Some("win.zoom-fit"));
         zoom_menu.append(Some("100 %"), Some("win.zoom-100"));
         zoom_menu.append(Some("200 %"), Some("win.zoom-200"));
         let zoom_btn = gtk::MenuButton::builder()
             .label("100 %")
             .menu_model(&zoom_menu)
             .direction(gtk::ArrowType::Up)
-            .tooltip_text("Zoom Level")
+            .tooltip_text(tr("Zoom Level"))
             .build();
         zoom_btn.add_css_class("flat");
         controls.append(&zoom_btn);
-        controls.append(&tool("zoom-in-symbolic", "win.zoom-in", "Zoom In (Ctrl++)"));
+        controls.append(&tool(
+            "zoom-in-symbolic",
+            "win.zoom-in",
+            tr("Zoom In (Ctrl++)"),
+        ));
         controls.append(&gtk::Separator::new(gtk::Orientation::Vertical));
         controls.append(&tool(
             "view-fullscreen-symbolic",
             "win.fullscreen",
-            "Fullscreen (F11)",
+            tr("Fullscreen (F11)"),
         ));
         let controls_rev = gtk::Revealer::builder()
             .transition_type(gtk::RevealerTransitionType::Crossfade)
@@ -435,11 +443,11 @@ impl Viewer {
         // Pages.
         let empty = adw::StatusPage::builder()
             .icon_name("image-x-generic-symbolic")
-            .title("View Images")
-            .description("Drag and drop images here")
+            .title(tr("View Images"))
+            .description(tr("Drag and drop images here"))
             .build();
         let empty_btn = gtk::Button::builder()
-            .label("_Open Files…")
+            .label(tr("_Open Files…"))
             .use_underline(true)
             .action_name("win.open")
             .halign(gtk::Align::Center)
@@ -456,7 +464,7 @@ impl Viewer {
             .build();
         let error_page = adw::StatusPage::builder()
             .icon_name("dialog-error-symbolic")
-            .title("Could Not Load Image")
+            .title(tr("Could Not Load Image"))
             .build();
         let stack = gtk::Stack::builder()
             .transition_type(gtk::StackTransitionType::Crossfade)
@@ -482,7 +490,7 @@ impl Viewer {
             .single_click_activate(false)
             .css_classes(["iv-strip"])
             .build()
-            .labelled("Images in Folder");
+            .labelled(tr("Images in Folder"));
         let bar = gtk::ScrolledWindow::builder()
             .child(&view)
             .vscrollbar_policy(gtk::PolicyType::Never)
@@ -534,47 +542,47 @@ impl Viewer {
 
         // Properties sidebar.
         let props_page = adw::PreferencesPage::new();
-        let image_group = adw::PreferencesGroup::builder().title("Image").build();
-        let exif_group = adw::PreferencesGroup::builder().title("Camera").build();
+        let image_group = adw::PreferencesGroup::builder().title(tr("Image")).build();
+        let exif_group = adw::PreferencesGroup::builder().title(tr("Camera")).build();
         props_page.add(&image_group);
         props_page.add(&exif_group);
         let props = Props {
-            dimensions: prop_row(&image_group, "Dimensions"),
-            format: prop_row(&image_group, "Format"),
-            size: prop_row(&image_group, "File Size"),
-            folder: prop_row(&image_group, "Folder"),
-            created: prop_row(&image_group, "Created"),
-            modified: prop_row(&image_group, "Modified"),
-            taken: prop_row(&exif_group, "Date Taken"),
-            camera: prop_row(&exif_group, "Camera"),
-            exposure: prop_row(&exif_group, "Exposure"),
-            aperture: prop_row(&exif_group, "Aperture"),
+            dimensions: prop_row(&image_group, tr("Dimensions")),
+            format: prop_row(&image_group, tr("Format")),
+            size: prop_row(&image_group, tr("File Size")),
+            folder: prop_row(&image_group, tr("Folder")),
+            created: prop_row(&image_group, tr("Created")),
+            modified: prop_row(&image_group, tr("Modified")),
+            taken: prop_row(&exif_group, tr("Date Taken")),
+            camera: prop_row(&exif_group, tr("Camera")),
+            exposure: prop_row(&exif_group, tr("Exposure")),
+            aperture: prop_row(&exif_group, tr("Aperture")),
             iso: prop_row(&exif_group, "ISO"),
-            focal: prop_row(&exif_group, "Focal Length"),
-            gps: prop_row(&exif_group, "Location"),
+            focal: prop_row(&exif_group, tr("Focal Length")),
+            gps: prop_row(&exif_group, tr("Location")),
             exif_group,
             gps_uri: Rc::default(),
         };
         let folder_btn = gtk::Button::builder()
             .icon_name("folder-open-symbolic")
             .valign(gtk::Align::Center)
-            .tooltip_text("Open Folder")
+            .tooltip_text(tr("Open Folder"))
             .build()
-            .labelled("Open Folder");
+            .labelled(tr("Open Folder"));
         folder_btn.add_css_class("flat");
         props.folder.add_suffix(&folder_btn);
         let gps_btn = gtk::Button::builder()
             .icon_name("mark-location-symbolic")
             .valign(gtk::Align::Center)
-            .tooltip_text("Show on Map")
+            .tooltip_text(tr("Show on Map"))
             .build()
-            .labelled("Show on Map");
+            .labelled(tr("Show on Map"));
         gps_btn.add_css_class("flat");
         props.gps.add_suffix(&gps_btn);
         let sidebar_toolbar = adw::ToolbarView::new();
         let sidebar_header = adw::HeaderBar::builder()
             .show_title(true)
-            .title_widget(&adw::WindowTitle::new("Properties", ""))
+            .title_widget(&adw::WindowTitle::new(tr("Properties"), ""))
             .build();
         sidebar_toolbar.add_top_bar(&sidebar_header);
         sidebar_toolbar.set_content(Some(&props_page));
@@ -849,7 +857,7 @@ impl Viewer {
             let toasts = v.toasts.clone();
             launcher.open_containing_folder(Some(&v.window), gio::Cancellable::NONE, move |r| {
                 if let Err(e) = r {
-                    toasts.add_toast(toast(&format!("Could not open folder: {}", e.message())));
+                    toasts.add_toast(toast(&trf!("Could not open folder: {}", e.message())));
                 }
             });
         });
@@ -862,7 +870,7 @@ impl Viewer {
             let toasts = v.toasts.clone();
             gtk::UriLauncher::new(&u).launch(Some(&v.window), gio::Cancellable::NONE, move |r| {
                 if let Err(e) = r {
-                    toasts.add_toast(toast(&format!("Could not open map: {}", e.message())));
+                    toasts.add_toast(toast(&trf!("Could not open map: {}", e.message())));
                 }
             });
         });
@@ -915,7 +923,7 @@ impl Viewer {
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&filter);
         let dialog = gtk::FileDialog::builder()
-            .title("Open Images")
+            .title(tr("Open Images"))
             .modal(true)
             .filters(&filters)
             .default_filter(&filter)
@@ -992,7 +1000,7 @@ impl Viewer {
             match result {
                 Ok((Ok(decoded), details)) => v.show_decoded(gen, &path, decoded, details),
                 Ok((Err(e), details)) => v.show_error(&path, &e, details),
-                Err(_) => v.show_error(&path, "The decoder crashed", file_details(&path)),
+                Err(_) => v.show_error(&path, tr("The decoder crashed"), file_details(&path)),
             }
         });
     }
@@ -1157,7 +1165,7 @@ impl Viewer {
             .current()
             .and_then(Path::file_name)
             .map(|n| n.to_string_lossy().into_owned())
-            .unwrap_or_else(|| "No Image".into());
+            .unwrap_or_else(|| tr("No Image").into());
         let size = st.textures.first().map(|t| (t.width(), t.height()));
         let description = view::canvas_description(
             st.playlist.index().map(|i| (i, st.playlist.len())),
@@ -1193,8 +1201,8 @@ impl Viewer {
                 });
             }
             None => {
-                self.window.set_title(Some(APP_NAME));
-                self.title.set_title(APP_NAME);
+                self.window.set_title(Some(tr(APP_NAME)));
+                self.title.set_title(tr(APP_NAME));
                 self.title.set_subtitle("");
             }
         }
@@ -1372,7 +1380,7 @@ impl Viewer {
         set_row(&p.dimensions, dims.as_deref());
         let format = decoded.map(|d| {
             if d.is_animated() {
-                format!("{} (animated)", d.format)
+                trf!("{} (animated)", d.format)
             } else {
                 d.format.clone()
             }
@@ -1427,7 +1435,7 @@ impl Viewer {
                 if !e.matches(gtk::DialogError::Dismissed)
                     && !e.matches(gtk::DialogError::Cancelled)
                 {
-                    toasts.add_toast(toast(&format!("Could not open: {}", e.message())));
+                    toasts.add_toast(toast(&trf!("Could not open: {}", e.message())));
                 }
             }
         });
@@ -1438,7 +1446,8 @@ impl Viewer {
             return;
         };
         self.window.clipboard().set_texture(&texture);
-        self.toasts.add_toast(toast("Image copied to clipboard"));
+        self.toasts
+            .add_toast(toast(tr("Image copied to clipboard")));
     }
 
     fn set_background(&self) {
@@ -1449,13 +1458,13 @@ impl Viewer {
             let result = gio::spawn_blocking(move || wallpaper::set_wallpaper(&uri, "")).await;
             let Some(v) = weak.upgrade() else { return };
             let msg = match result {
-                Ok(Ok(wallpaper::Outcome::Set)) => Some("Background set".to_string()),
+                Ok(Ok(wallpaper::Outcome::Set)) => Some(tr("Background set").to_string()),
                 Ok(Ok(wallpaper::Outcome::Cancelled)) => None,
                 Ok(Ok(wallpaper::Outcome::Failed)) => {
-                    Some("Could not set the background".to_string())
+                    Some(tr("Could not set the background").to_string())
                 }
-                Ok(Err(e)) => Some(format!("Could not set the background: {e}")),
-                Err(_) => Some("Could not set the background".to_string()),
+                Ok(Err(e)) => Some(trf!("Could not set the background: {e}", e = e)),
+                Err(_) => Some(tr("Could not set the background").to_string()),
             };
             if let Some(m) = msg {
                 v.toasts.add_toast(toast(&m));
@@ -1479,8 +1488,8 @@ impl Viewer {
                         i
                     };
                     v.load_current();
-                    let t = toast("Image moved to trash");
-                    t.set_button_label(Some("_Undo"));
+                    let t = toast(tr("Image moved to trash"));
+                    t.set_button_label(Some(tr("_Undo")));
                     let weak = v.weak();
                     t.connect_button_clicked(move |_| {
                         if let Some(v) = weak.upgrade() {
@@ -1491,8 +1500,8 @@ impl Viewer {
                 }
                 Ok(Err(e)) => v
                     .toasts
-                    .add_toast(toast(&format!("Could not move to trash: {e}"))),
-                Err(_) => v.toasts.add_toast(toast("Could not move to trash")),
+                    .add_toast(toast(&trf!("Could not move to trash: {e}", e = e))),
+                Err(_) => v.toasts.add_toast(toast(tr("Could not move to trash"))),
             }
         });
     }
@@ -1516,8 +1525,8 @@ impl Viewer {
                 }
                 Ok(Err(e)) => v
                     .toasts
-                    .add_toast(toast(&format!("Could not restore: {e}"))),
-                Err(_) => v.toasts.add_toast(toast("Could not restore")),
+                    .add_toast(toast(&trf!("Could not restore: {e}", e = e))),
+                Err(_) => v.toasts.add_toast(toast(tr("Could not restore"))),
             }
         });
     }
@@ -1541,7 +1550,7 @@ impl Viewer {
             match result {
                 Ok(Ok(())) => {
                     v.invalidate_thumbnail(&path);
-                    v.toasts.add_toast(toast("Image saved"));
+                    v.toasts.add_toast(toast(tr("Image saved")));
                     if v.current().as_deref() == Some(path.as_path()) {
                         v.load_current();
                     } else {
@@ -1550,11 +1559,11 @@ impl Viewer {
                 }
                 Ok(Err(e)) => {
                     v.toasts
-                        .add_toast(toast(&format!("Could not save image: {e}")));
+                        .add_toast(toast(&trf!("Could not save image: {e}", e = e)));
                     v.update_ui();
                 }
                 Err(_) => {
-                    v.toasts.add_toast(toast("Could not save image"));
+                    v.toasts.add_toast(toast(tr("Could not save image")));
                     v.update_ui();
                 }
             }

@@ -10,6 +10,8 @@ use super::{Shared, ViewSettings, Window, FILE_ATTRS, GRID_ZOOM, LIST_ZOOM, OTHE
 use crate::history::History;
 use crate::search;
 use crate::sorting::{self, SortKey};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 const ITEM_KEY: &str = "helix-files-item";
 const INVALID: u32 = u32::MAX;
@@ -47,9 +49,9 @@ pub fn type_description(info: &gio::FileInfo) -> String {
     let ct = content_type(info);
     if ct.is_empty() {
         if info_is_dir(info) {
-            return "Folder".into();
+            return tr("Folder").into();
         }
-        return "Unknown".into();
+        return tr("Unknown").into();
     }
     gio::content_type_get_description(&ct).to_string()
 }
@@ -97,7 +99,7 @@ fn mark_cut(item: &impl IsA<gtk::Widget>, cut: bool) {
     let item = item.as_ref();
     if cut {
         item.add_css_class("cut-item");
-        item.update_property(&[gtk::accessible::Property::Description("Cut")]);
+        item.update_property(&[gtk::accessible::Property::Description(tr("Cut"))]);
     } else if item.has_css_class("cut-item") {
         item.remove_css_class("cut-item");
         item.reset_property(gtk::AccessibleProperty::Description);
@@ -185,10 +187,10 @@ impl Tab {
         list.add_css_class("data-table");
         let mut columns = Vec::new();
         for (id, title, key) in [
-            ("name", "Name", SortKey::Name),
-            ("size", "Size", SortKey::Size),
-            ("type", "Type", SortKey::Type),
-            ("date_modified", "Modified", SortKey::Modified),
+            ("name", tr("Name"), SortKey::Name),
+            ("size", tr("Size"), SortKey::Size),
+            ("type", tr("Type"), SortKey::Type),
+            ("date_modified", tr("Modified"), SortKey::Modified),
         ] {
             let col = gtk::ColumnViewColumn::new(Some(title), None::<gtk::ListItemFactory>);
             col.set_id(Some(id));
@@ -228,7 +230,7 @@ impl Tab {
         status.set_can_target(false);
         // Shown (and the page made clickable) only for a folder error.
         let retry = gtk::Button::builder()
-            .label("_Try Again")
+            .label(tr("_Try Again"))
             .use_underline(true)
             .action_name("win.reload")
             .halign(gtk::Align::Center)
@@ -238,7 +240,7 @@ impl Tab {
         status.set_child(Some(&retry));
         root.add_overlay(&status);
         let spinner = gtk::Spinner::new();
-        helix_app_common::set_accessible_label(&spinner, "Loading folder");
+        helix_app_common::set_accessible_label(&spinner, tr("Loading folder"));
         spinner.set_halign(gtk::Align::End);
         spinner.set_valign(gtk::Align::End);
         spinner.set_margin_end(18);
@@ -907,7 +909,7 @@ impl Tab {
                     Err(e) if e.matches(gio::IOErrorEnum::FailedHandled) => t.update_status(),
                     Err(e) => {
                         if let Some(w) = t.window() {
-                            w.toast(&format!("Unable to access location: {}", e.message()));
+                            w.toast(&trf!("Unable to access location: {}", e.message()));
                         }
                         t.update_status();
                     }
@@ -937,14 +939,14 @@ impl Tab {
         if let (Some(err), false) = (self.dir_list.error(), self.is_searching()) {
             if !self.dir_list.is_loading() {
                 self.status.set_icon_name(Some("dialog-error-symbolic"));
-                self.status.set_title("Unable to Open Folder");
+                self.status.set_title(tr("Unable to Open Folder"));
                 self.status.set_description(Some(err.message()));
                 self.set_status_retry(true);
                 self.status.set_visible(true);
                 if !self.error_shown.replace(true) {
                     helix_app_common::announce(
                         &self.root,
-                        &format!("Unable to open folder: {}", err.message()),
+                        &trf!("Unable to open folder: {}", err.message()),
                         helix_app_common::Urgency::Assertive,
                     );
                 }
@@ -956,15 +958,16 @@ impl Tab {
         if empty && !loading {
             if self.is_searching() {
                 self.status.set_icon_name(Some("system-search-symbolic"));
-                self.status.set_title("No Results Found");
-                self.status.set_description(Some("Try a different search."));
+                self.status.set_title(tr("No Results Found"));
+                self.status
+                    .set_description(Some(tr("Try a different search.")));
             } else if self.is_trash() {
                 self.status.set_icon_name(Some("user-trash-symbolic"));
-                self.status.set_title("Trash is Empty");
+                self.status.set_title(tr("Trash is Empty"));
                 self.status.set_description(None);
             } else {
                 self.status.set_icon_name(Some("folder-symbolic"));
-                self.status.set_title("Folder is Empty");
+                self.status.set_title(tr("Folder is Empty"));
                 self.status.set_description(None);
             }
             self.status.set_visible(true);
@@ -1186,9 +1189,9 @@ impl Tab {
                         t.searching.set(false);
                         let n = t.search_store.n_items();
                         let found = if n == 0 {
-                            "No results".to_string()
+                            tr("No results").to_string()
                         } else {
-                            format!(
+                            trf!(
                                 "Search finished: {} found",
                                 crate::fmt::item_count(n as u64)
                             )
@@ -1213,7 +1216,7 @@ impl Tab {
     fn build_other_locations(self: &Rc<Self>) {
         let page = adw::PreferencesPage::new();
         let computer = adw::PreferencesGroup::builder()
-            .title("On This Computer")
+            .title(tr("On This Computer"))
             .build();
         let monitor = gio::VolumeMonitor::get();
         let weak = Rc::downgrade(self);
@@ -1239,16 +1242,18 @@ impl Tab {
         };
         add_row(
             &computer,
-            "Computer",
+            tr("Computer"),
             "/",
             &gio::ThemedIcon::new("drive-harddisk-symbolic").upcast(),
             gio::File::for_path("/"),
         );
-        let remote = adw::PreferencesGroup::builder().title("Networks").build();
+        let remote = adw::PreferencesGroup::builder()
+            .title(tr("Networks"))
+            .build();
         add_row(
             &remote,
-            "Network",
-            "Browse the local network",
+            tr("Network"),
+            tr("Browse the local network"),
             &gio::ThemedIcon::new("network-workgroup-symbolic").upcast(),
             gio::File::for_uri("network:///"),
         );
@@ -1276,7 +1281,7 @@ impl Tab {
             }
             let row = adw::ActionRow::builder()
                 .title(vol.name())
-                .subtitle("Not mounted")
+                .subtitle(tr("Not mounted"))
                 .activatable(true)
                 .build();
             row.add_prefix(&gtk::Image::from_gicon(&vol.symbolic_icon()));
@@ -1289,11 +1294,11 @@ impl Tab {
             computer.add(&row);
         }
         let connect = adw::PreferencesGroup::builder()
-            .title("Connect to Server")
+            .title(tr("Connect to Server"))
             .description("For example sftp://host/, smb://server/share, ftp://host/, dav://host/")
             .build();
         let entry = adw::EntryRow::builder()
-            .title("Server Address")
+            .title(tr("Server Address"))
             .show_apply_button(true)
             .build();
         entry.set_input_purpose(gtk::InputPurpose::Url);

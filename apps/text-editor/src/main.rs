@@ -22,6 +22,7 @@ Options:
   -V, --version      Show the version";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let mut standalone = false;
     let mut files = Vec::new();
     let mut only_files = false;

@@ -9,6 +9,8 @@ use crate::sink::Frame;
 use crate::{screenshot, subtitles, timefmt};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
@@ -16,7 +18,7 @@ use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 pub const APP_ID: &str = "org.helix.VideoPlayer";
-const APP_NAME: &str = "Video Player";
+const APP_NAME: &str = n_("Video Player");
 const HIDE_DELAY: Duration = Duration::from_secs(2);
 const SEEK_STEP: f64 = 10.0;
 const VOLUME_STEP: f64 = 0.05;
@@ -43,7 +45,7 @@ pub fn run(target: Option<String>) -> glib::ExitCode {
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::HANDLES_OPEN)
         .build();
-    helix_app_common::install_standard_actions(&app, APP_NAME, "Play videos");
+    helix_app_common::install_standard_actions(&app, tr(APP_NAME), tr("Play videos"));
     app.connect_startup(|app| {
         load_css();
         for (action, accels) in ACCELS {
@@ -141,38 +143,38 @@ const SHORTCUT_GROUPS: &[helix_app_common::shortcuts::Group] = {
     use helix_app_common::shortcuts::Item::Keys;
     &[
         (
-            "Playback",
+            n_("Playback"),
             &[
-                Keys("Play or Pause", "space KP_Space AudioPlay AudioPause"),
-                Keys("Back 10 Seconds", "Left KP_Left"),
-                Keys("Forward 10 Seconds", "Right KP_Right"),
-                Keys("Previous Frame (paused)", "comma"),
-                Keys("Next Frame (paused)", "period"),
+                Keys(n_("Play or Pause"), "space KP_Space AudioPlay AudioPause"),
+                Keys(n_("Back 10 Seconds"), "Left KP_Left"),
+                Keys(n_("Forward 10 Seconds"), "Right KP_Right"),
+                Keys(n_("Previous Frame (paused)"), "comma"),
+                Keys(n_("Next Frame (paused)"), "period"),
             ],
         ),
         (
-            "Volume",
+            n_("Volume"),
             &[
-                Keys("Volume Up", "Up KP_Up"),
-                Keys("Volume Down", "Down KP_Down"),
-                Keys("Mute or Unmute", "m AudioMute"),
+                Keys(n_("Volume Up"), "Up KP_Up"),
+                Keys(n_("Volume Down"), "Down KP_Down"),
+                Keys(n_("Mute or Unmute"), "m AudioMute"),
             ],
         ),
         (
-            "View",
+            n_("View"),
             &[
-                Keys("Fullscreen", "f F11"),
-                Keys("Leave Fullscreen", "Escape"),
+                Keys(n_("Fullscreen"), "f F11"),
+                Keys(n_("Leave Fullscreen"), "Escape"),
             ],
         ),
         (
-            "General",
+            n_("General"),
             &[
-                Keys("Open File", "<Control>o"),
-                Keys("Take Screenshot", "<Control><Alt>s"),
-                Keys("Keyboard Shortcuts", "<Control>question"),
-                Keys("Close Window", "<Control>w"),
-                Keys("Quit", "<Control>q"),
+                Keys(n_("Open File"), "<Control>o"),
+                Keys(n_("Take Screenshot"), "<Control><Alt>s"),
+                Keys(n_("Keyboard Shortcuts"), "<Control>question"),
+                Keys(n_("Close Window"), "<Control>w"),
+                Keys(n_("Quit"), "<Control>q"),
             ],
         ),
     ]
@@ -284,15 +286,17 @@ fn primary_menu() -> (gio::Menu, gio::Menu) {
     let resume = gio::Menu::new();
     menu.append_section(None, &resume);
     let s1 = gio::Menu::new();
-    s1.append(Some("_Open…"), Some("win.open"));
-    s1.append(Some("Take _Screenshot"), Some("win.screenshot"));
+    s1.append(Some(tr("_Open…")), Some("win.open"));
+    s1.append(Some(tr("Take _Screenshot")), Some("win.screenshot"));
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
     s2.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some("win.show-help-overlay"),
     );
-    s2.append(Some("_About Video Player"), Some("app.about"));
+    s2.append(Some(tr("_About Video Player")), Some("app.about"));
     menu.append_section(None, &s2);
     (menu, resume)
 }
@@ -305,18 +309,18 @@ fn header(menu: &gio::Menu) -> (adw::HeaderBar, gtk::MenuButton) {
     let header = adw::HeaderBar::new();
     let open = gtk::Button::builder()
         .icon_name("document-open-symbolic")
-        .tooltip_text("Open…")
+        .tooltip_text(tr("Open…"))
         .action_name("win.open")
         .build()
-        .labelled("Open…");
+        .labelled(tr("Open…"));
     header.pack_start(&open);
     let menu_button = gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
-        .tooltip_text("Main Menu")
+        .tooltip_text(tr("Main Menu"))
         .menu_model(menu)
         .primary(true)
         .build()
-        .labelled("Main Menu");
+        .labelled(tr("Main Menu"));
     header.pack_end(&menu_button);
     (header, menu_button)
 }
@@ -346,7 +350,7 @@ impl Ui {
 
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .default_width(960)
             .default_height(600)
             .width_request(360)
@@ -363,7 +367,7 @@ impl Ui {
 
         // Empty state.
         let open_btn = gtk::Button::builder()
-            .label("_Open…")
+            .label(tr("_Open…"))
             .use_underline(true)
             .action_name("win.open")
             .halign(gtk::Align::Center)
@@ -371,8 +375,8 @@ impl Ui {
             .build();
         let empty_page = adw::StatusPage::builder()
             .icon_name("video-x-generic-symbolic")
-            .title("Watch Videos")
-            .description("Drag and drop videos here")
+            .title(tr("Watch Videos"))
+            .description(tr("Drag and drop videos here"))
             .child(&open_btn)
             .build();
         let (empty_view, mb) = status_view(&menu, &empty_page);
@@ -380,7 +384,7 @@ impl Ui {
 
         // Error state.
         let err_open = gtk::Button::builder()
-            .label("_Open Another File…")
+            .label(tr("_Open Another File…"))
             .use_underline(true)
             .action_name("win.open")
             .halign(gtk::Align::Center)
@@ -388,7 +392,7 @@ impl Ui {
             .build();
         let error_page = adw::StatusPage::builder()
             .icon_name("dialog-error-symbolic")
-            .title("Cannot Play File")
+            .title(tr("Cannot Play File"))
             .child(&err_open)
             .build();
         let (error_view, mb) = status_view(&menu, &error_page);
@@ -403,13 +407,13 @@ impl Ui {
             .hexpand(true)
             .vexpand(true)
             .build();
-        helix_app_common::set_accessible_label(&picture, "Video");
+        helix_app_common::set_accessible_label(&picture, tr("Video"));
         let video_page = gtk::Overlay::builder()
             .child(&picture)
             .css_classes(["vp-video"])
             .build();
 
-        let title = adw::WindowTitle::new(APP_NAME, "");
+        let title = adw::WindowTitle::new(tr(APP_NAME), "");
         let (video_header, mb) = header(&menu);
         menu_buttons.push(mb);
         video_header.set_title_widget(Some(&title));
@@ -429,10 +433,14 @@ impl Ui {
             .valign(gtk::Align::Center)
             .can_target(false)
             .build();
-        helix_app_common::set_accessible_label(&spinner, "Loading");
+        helix_app_common::set_accessible_label(&spinner, tr("Loading"));
         video_page.add_overlay(&spinner);
 
-        let play_button = icon_button("media-playback-start-symbolic", "Play", "win.play-pause");
+        let play_button = icon_button(
+            "media-playback-start-symbolic",
+            tr("Play"),
+            "win.play-pause",
+        );
         let elapsed = gtk::Label::builder()
             .label("0:00")
             .css_classes(["vp-time", "numeric"])
@@ -451,7 +459,7 @@ impl Ui {
             .focus_on_click(false)
             .css_classes(["vp-seek"])
             .build();
-        helix_app_common::set_accessible_label(&seek, "Position");
+        helix_app_common::set_accessible_label(&seek, tr("Position"));
         let seek_label = gtk::Label::builder().css_classes(["numeric"]).build();
         let seek_popover = gtk::Popover::builder()
             .autohide(false)
@@ -469,28 +477,28 @@ impl Ui {
 
         let mute_button = gtk::ToggleButton::builder()
             .icon_name("audio-volume-muted-symbolic")
-            .tooltip_text("Mute")
+            .tooltip_text(tr("Mute"))
             .build()
-            .labelled("Mute");
+            .labelled(tr("Mute"));
         let volume_scale = gtk::Scale::builder()
             .orientation(gtk::Orientation::Horizontal)
             .adjustment(&gtk::Adjustment::new(1.0, 0.0, 1.0, 0.05, 0.1, 0.0))
             .width_request(160)
             .draw_value(false)
             .build();
-        helix_app_common::set_accessible_label(&volume_scale, "Volume");
+        helix_app_common::set_accessible_label(&volume_scale, tr("Volume"));
         let vol_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         vol_box.append(&mute_button);
         vol_box.append(&volume_scale);
         let volume_button = gtk::MenuButton::builder()
             .icon_name("audio-volume-high-symbolic")
-            .tooltip_text("Volume")
+            .tooltip_text(tr("Volume"))
             .popover(&gtk::Popover::builder().child(&vol_box).build())
             .focus_on_click(false)
             .css_classes(["flat"])
             .direction(gtk::ArrowType::Up)
             .build()
-            .labelled("Volume");
+            .labelled(tr("Volume"));
 
         let speed_menu = gio::Menu::new();
         for (value, label) in SPEEDS {
@@ -500,24 +508,24 @@ impl Ui {
         }
         let speed_button = gtk::MenuButton::builder()
             .label("1×")
-            .tooltip_text("Playback Speed")
+            .tooltip_text(tr("Playback Speed"))
             .menu_model(&speed_menu)
             .focus_on_click(false)
             .css_classes(["flat"])
             .direction(gtk::ArrowType::Up)
             .build()
-            .labelled("Playback Speed: 1×");
+            .labelled(tr("Playback Speed: 1×"));
         let tracks_button = gtk::MenuButton::builder()
             .icon_name("media-view-subtitles-symbolic")
-            .tooltip_text("Audio and Subtitles")
+            .tooltip_text(tr("Audio and Subtitles"))
             .focus_on_click(false)
             .css_classes(["flat"])
             .direction(gtk::ArrowType::Up)
             .build()
-            .labelled("Audio and Subtitles");
+            .labelled(tr("Audio and Subtitles"));
         let fullscreen_button = icon_button(
             "view-fullscreen-symbolic",
-            "Enter Fullscreen",
+            tr("Enter Fullscreen"),
             "win.fullscreen",
         );
 
@@ -832,9 +840,9 @@ impl Ui {
                     "view-fullscreen-symbolic"
                 });
                 ui.fullscreen_button.set_tooltip_text(Some(if fs {
-                    "Leave Fullscreen"
+                    tr("Leave Fullscreen")
                 } else {
-                    "Enter Fullscreen"
+                    tr("Enter Fullscreen")
                 }));
                 helix_app_common::set_accessible_label(
                     &ui.fullscreen_button,
@@ -1036,7 +1044,7 @@ impl Ui {
         filters.append(&videos);
         filters.append(&all);
         let dialog = gtk::FileDialog::builder()
-            .title("Open Video")
+            .title(tr("Open Video"))
             .modal(true)
             .filters(&filters)
             .build();
@@ -1064,7 +1072,7 @@ impl Ui {
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&subs);
         let dialog = gtk::FileDialog::builder()
-            .title("Load Subtitle File")
+            .title(tr("Load Subtitle File"))
             .modal(true)
             .filters(&filters)
             .build();
@@ -1165,9 +1173,9 @@ impl Ui {
         self.spinner.set_spinning(false);
         self.stack.set_visible_child_name("error");
         let spoken = if missing.is_empty() {
-            format!("Cannot play file. {detail}")
+            trf!("Cannot play file. {detail}", detail = detail)
         } else {
-            format!(
+            trf!(
                 "Cannot play file. The required codec is not installed: {}",
                 missing.join(", ")
             )
@@ -1181,7 +1189,7 @@ impl Ui {
         self.update_action_states();
         self.mpris.update(|s| {
             s.has_media = false;
-            s.status = "Stopped";
+            s.status = tr("Stopped");
         });
         self.mpris.changed(&[Prop::Metadata, Prop::PlaybackStatus]);
     }
@@ -1307,7 +1315,7 @@ impl Ui {
         // its audio plays; name the missing codec on the error page.
         let no_video = self.player.playbin.property::<i32>("n-video") == 0;
         if no_video && !self.st.borrow().missing.is_empty() {
-            self.show_error("No decodable video stream");
+            self.show_error(tr("No decodable video stream"));
             return;
         }
         // Missing codec for a secondary stream (e.g. audio): warn once.
@@ -1318,7 +1326,7 @@ impl Ui {
         };
         if let Some(m) = missing {
             self.toasts
-                .add_toast(adw::Toast::new(&format!("Missing codec: {m}")));
+                .add_toast(adw::Toast::new(&trf!("Missing codec: {m}", m = m)));
         }
         let uri = self.st.borrow().uri.clone();
         if let Some(pos) = uri.and_then(|u| self.resume.borrow().lookup(&u)) {
@@ -1326,8 +1334,8 @@ impl Ui {
             // stays, so resuming is not a race against the toast.
             self.set_resume_offer(Some(pos));
             let toast = adw::Toast::builder()
-                .title(format!("Resume from {}?", timefmt::format_secs(pos, false)))
-                .button_label("_Resume")
+                .title(trf!("Resume from {}?", timefmt::format_secs(pos, false)))
+                .button_label(tr("_Resume"))
                 .action_name("win.resume")
                 .use_markup(false)
                 .timeout(RESUME_TOAST_SECS)
@@ -1348,10 +1356,7 @@ impl Ui {
         self.resume_section.remove_all();
         if let Some(pos) = pos {
             self.resume_section.append(
-                Some(&format!(
-                    "_Resume from {}",
-                    timefmt::format_secs(pos, false)
-                )),
+                Some(&trf!("_Resume from {}", timefmt::format_secs(pos, false))),
                 Some("win.resume"),
             );
         }
@@ -1386,7 +1391,7 @@ impl Ui {
             "media-playback-start-symbolic"
         });
         self.play_button
-            .set_tooltip_text(Some(if playing { "Pause" } else { "Play" }));
+            .set_tooltip_text(Some(if playing { tr("Pause") } else { tr("Play") }));
         helix_app_common::set_accessible_label(
             &self.play_button,
             &self.play_button.tooltip_text().unwrap_or_default(),
@@ -1394,9 +1399,9 @@ impl Ui {
         self.set_inhibit(playing);
         let has_media = self.st.borrow().uri.is_some() && !self.st.borrow().error;
         let status = match (playing, has_media) {
-            (true, _) => "Playing",
-            (false, true) => "Paused",
-            (false, false) => "Stopped",
+            (true, _) => tr("Playing"),
+            (false, true) => tr("Paused"),
+            (false, false) => tr("Stopped"),
         };
         self.mpris.update(|s| s.status = status);
         self.mpris.changed(&[Prop::PlaybackStatus]);
@@ -1646,7 +1651,7 @@ impl Ui {
         self.speed_button.set_label(&format!("{key}×"));
         helix_app_common::set_accessible_label(
             &self.speed_button,
-            &format!("Playback Speed: {key}×"),
+            &trf!("Playback Speed: {key}×", key = key),
         );
     }
 
@@ -1675,7 +1680,7 @@ impl Ui {
         self.mute_button.set_active(muted);
         self.updating.set(false);
         let percent = if muted {
-            "Muted".to_string()
+            tr("Muted").to_string()
         } else {
             format!("{}%", (v.cbrt() * 100.0).round() as i32)
         };
@@ -1700,7 +1705,7 @@ impl Ui {
                 let cookie = self.app.inhibit(
                     Some(&self.window),
                     gtk::ApplicationInhibitFlags::IDLE,
-                    Some("Playing video"),
+                    Some(tr("Playing video")),
                 );
                 if cookie != 0 {
                     st.inhibit = Some(cookie);
@@ -1727,10 +1732,10 @@ impl Ui {
                 );
                 section.append_item(&item);
             }
-            menu.append_section(Some("Audio"), &section);
+            menu.append_section(Some(tr("Audio")), &section);
         }
         let section = gio::Menu::new();
-        let none = gio::MenuItem::new(Some("None"), None);
+        let none = gio::MenuItem::new(Some(tr("None")), None);
         none.set_action_and_target_value(Some("win.subtitle-track"), Some(&(-1i32).to_variant()));
         section.append_item(&none);
         for t in self.player.text_tracks() {
@@ -1741,8 +1746,8 @@ impl Ui {
             );
             section.append_item(&item);
         }
-        section.append(Some("Load Subtitle File…"), Some("win.load-subtitle"));
-        menu.append_section(Some("Subtitles"), &section);
+        section.append(Some(tr("Load Subtitle File…")), Some("win.load-subtitle"));
+        menu.append_section(Some(tr("Subtitles")), &section);
         self.tracks_button.set_menu_model(Some(&menu));
         if let Some(a) = self.action("audio-track") {
             a.set_state(&self.player.current_audio().max(0).to_variant());
@@ -1834,14 +1839,14 @@ impl Ui {
             self,
             async move {
                 let msg = match handle.await {
-                    Ok(Ok(path)) => format!(
+                    Ok(Ok(path)) => trf!(
                         "Screenshot saved as “{}”",
                         path.file_name()
                             .map(|n| n.to_string_lossy().into_owned())
                             .unwrap_or_default()
                     ),
-                    Ok(Err(err)) => format!("Could not save screenshot: {err}"),
-                    Err(_) => "Could not save screenshot".to_string(),
+                    Ok(Err(err)) => trf!("Could not save screenshot: {err}", err = err),
+                    Err(_) => tr("Could not save screenshot").to_string(),
                 };
                 ui.toasts.add_toast(adw::Toast::new(&msg));
             }

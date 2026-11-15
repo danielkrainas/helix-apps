@@ -1,5 +1,8 @@
 //! Helix Maps.
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+
 mod favorites;
 mod geo;
 mod http;
@@ -22,6 +25,7 @@ fn usage_error(msg: &str) -> glib::ExitCode {
 }
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let mut args = std::env::args().skip(1);
     let mut target = None;
     while let Some(arg) = args.next() {
@@ -38,11 +42,11 @@ fn main() -> glib::ExitCode {
                 Some(q) if !q.trim().is_empty() => {
                     target = Some(geo::LaunchTarget::Search(q.trim().to_string()))
                 }
-                _ => return usage_error("--search needs a query"),
+                _ => return usage_error(tr("--search needs a query")),
             },
             other => match geo::parse_launch_arg(other) {
                 Some(t) => target = Some(t),
-                None => return usage_error(&format!("Unrecognised argument: {other}")),
+                None => return usage_error(&trf!("Unrecognised argument: {other}", other = other)),
             },
         }
     }

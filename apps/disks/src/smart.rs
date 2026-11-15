@@ -1,6 +1,9 @@
 //! SMART assessment and attribute presentation.
 
 use crate::format;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 /// SMART state of an ATA drive (`org.freedesktop.UDisks2.Drive.Ata`).
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -23,42 +26,42 @@ impl Smart {
     /// One-line overall assessment, e.g. `Disk is OK (30° C / 86° F)`.
     pub fn assessment(&self) -> String {
         if !self.supported {
-            return "SMART is not supported".into();
+            return tr("SMART is not supported").into();
         }
         if !self.enabled {
-            return "SMART is not enabled".into();
+            return tr("SMART is not enabled").into();
         }
         if self.updated == 0 {
-            return "SMART data not yet available".into();
+            return tr("SMART data not yet available").into();
         }
         let base = if self.failing {
-            "DISK IS LIKELY TO FAIL SOON".to_string()
+            tr("DISK IS LIKELY TO FAIL SOON").to_string()
         } else if self.num_bad_sectors > 0 {
             if self.num_bad_sectors == 1 {
-                "Disk is OK, one bad sector".into()
+                tr("Disk is OK, one bad sector").into()
             } else {
-                format!("Disk is OK, {} bad sectors", self.num_bad_sectors)
+                trf!("Disk is OK, {} bad sectors", self.num_bad_sectors)
             }
         } else if self.attrs_failing > 0 {
             if self.attrs_failing == 1 {
-                "Disk is OK, one attribute is exceeding its threshold".into()
+                tr("Disk is OK, one attribute is exceeding its threshold").into()
             } else {
-                format!(
+                trf!(
                     "Disk is OK, {} attributes are exceeding their thresholds",
                     self.attrs_failing
                 )
             }
         } else if self.attrs_failed_in_past > 0 {
             if self.attrs_failed_in_past == 1 {
-                "Disk is OK, one attribute failed in the past".into()
+                tr("Disk is OK, one attribute failed in the past").into()
             } else {
-                format!(
+                trf!(
                     "Disk is OK, {} attributes failed in the past",
                     self.attrs_failed_in_past
                 )
             }
         } else {
-            "Disk is OK".into()
+            tr("Disk is OK").into()
         };
         if self.temperature_k > 0.0 {
             format!(
@@ -77,20 +80,20 @@ impl Smart {
 
     pub fn selftest_description(&self) -> String {
         match self.selftest_status.as_str() {
-            "success" => "Last self-test completed successfully".into(),
-            "aborted" => "Last self-test was aborted".into(),
-            "interrupted" => "Last self-test was interrupted".into(),
-            "fatal" => "Last self-test did not complete".into(),
-            "error_unknown" => "Last self-test failed".into(),
-            "error_electrical" => "Last self-test failed (electrical)".into(),
-            "error_servo" => "Last self-test failed (servo)".into(),
-            "error_read" => "Last self-test failed (read)".into(),
-            "error_handling" => "Last self-test failed (damage)".into(),
-            "inprogress" => format!(
+            "success" => tr("Last self-test completed successfully").into(),
+            "aborted" => tr("Last self-test was aborted").into(),
+            "interrupted" => tr("Last self-test was interrupted").into(),
+            "fatal" => tr("Last self-test did not complete").into(),
+            "error_unknown" => tr("Last self-test failed").into(),
+            "error_electrical" => tr("Last self-test failed (electrical)").into(),
+            "error_servo" => tr("Last self-test failed (servo)").into(),
+            "error_read" => tr("Last self-test failed (read)").into(),
+            "error_handling" => tr("Last self-test failed (damage)").into(),
+            "inprogress" => trf!(
                 "Self-test in progress — {}% remaining",
                 self.selftest_percent_remaining
             ),
-            "" => "Unknown".into(),
+            "" => tr("Unknown").into(),
             other => other.to_string(),
         }
     }
@@ -115,18 +118,18 @@ impl Attribute {
     /// "Pre-Fail" when flags bit 0 is set, else "Old-Age".
     pub fn kind(&self) -> &'static str {
         if self.flags & 0x0001 != 0 {
-            "Pre-Fail"
+            tr("Pre-Fail")
         } else {
-            "Old-Age"
+            tr("Old-Age")
         }
     }
 
     /// "Online" when flags bit 1 is set, else "Offline".
     pub fn updates(&self) -> &'static str {
         if self.flags & 0x0002 != 0 {
-            "Online"
+            tr("Online")
         } else {
-            "Offline"
+            tr("Offline")
         }
     }
 
@@ -144,7 +147,7 @@ impl Attribute {
         } else if self.failing() {
             "FAILING"
         } else if self.failed_in_past() {
-            "Failed in the past"
+            tr("Failed in the past")
         } else {
             "OK"
         }
@@ -153,7 +156,7 @@ impl Attribute {
     /// Title-cased name: `power-on-hours` → `Power On Hours`.
     pub fn pretty_name(&self) -> String {
         if self.name.is_empty() {
-            return format!("Unknown Attribute {}", self.id);
+            return trf!("Unknown Attribute {}", self.id);
         }
         self.name
             .split(['-', '_'])
@@ -181,20 +184,19 @@ impl Attribute {
             2 => {
                 let secs = self.pretty.max(0) as u64 / 1000;
                 if secs == 0 {
-                    format!("{} msec", self.pretty)
+                    trf!("{} msec", self.pretty)
                 } else {
                     format::duration(secs)
                 }
             }
             3 => {
-                if self.pretty == 1 {
-                    "1 sector".into()
-                } else {
-                    format!(
-                        "{} sectors",
-                        format::group_thousands(self.pretty.max(0) as u64)
-                    )
-                }
+                let n = self.pretty.max(0) as u64;
+                trnf!(
+                    "{count} sector",
+                    "{count} sectors",
+                    n,
+                    count = format::group_thousands(n)
+                )
             }
             4 => format::temperature_kelvin(self.pretty as f64 / 1000.0),
             _ => "N/A".into(),

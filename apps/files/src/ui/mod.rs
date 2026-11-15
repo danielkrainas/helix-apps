@@ -1,5 +1,7 @@
 //! GTK user interface.
 
+use helix_app_common::i18n::tr;
+
 mod dbus;
 mod dialogs;
 mod jobs;
@@ -335,7 +337,7 @@ pub fn run() -> glib::ExitCode {
         b'w'.into(),
         glib::OptionFlags::NONE,
         glib::OptionArg::None,
-        "Always open a new window",
+        tr("Always open a new window"),
         None,
     );
     app.add_main_option(
@@ -343,7 +345,7 @@ pub fn run() -> glib::ExitCode {
         b's'.into(),
         glib::OptionFlags::NONE,
         glib::OptionArg::None,
-        "Select the given items in their parent folders",
+        tr("Select the given items in their parent folders"),
         None,
     );
     app.add_main_option(
@@ -351,10 +353,10 @@ pub fn run() -> glib::ExitCode {
         b'q'.into(),
         glib::OptionFlags::NONE,
         glib::OptionArg::None,
-        "Quit the running instance",
+        tr("Quit the running instance"),
         None,
     );
-    helix_app_common::install_standard_actions(&app, "Files", "Access and organize files");
+    helix_app_common::install_standard_actions(&app, tr("Files"), tr("Access and organize files"));
     // Ctrl+W closes a tab instead of the whole window.
     app.set_accels_for_action("window.close", &[]);
 

@@ -3,6 +3,8 @@
 use crate::render::DocInfo;
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -11,8 +13,8 @@ const PAPERS: &[(&str, f64, f64)] = &[
     ("A3", 297.0, 420.0),
     ("A4", 210.0, 297.0),
     ("A5", 148.0, 210.0),
-    ("US Letter", 215.9, 279.4),
-    ("US Legal", 215.9, 355.6),
+    (n_("US Letter"), 215.9, 279.4),
+    (n_("US Legal"), 215.9, 355.6),
 ];
 
 /// Formats a page size in points as millimetres plus a paper name.
@@ -21,9 +23,9 @@ pub fn page_size_text(w_pt: f64, h_pt: f64) -> String {
     let name = PAPERS.iter().find_map(|(n, pw, ph)| {
         let fits = |a: f64, b: f64| (a - pw).abs() < 2.0 && (b - ph).abs() < 2.0;
         if fits(w, h) {
-            Some(format!("{n}, Portrait"))
+            Some(trf!("{n}, Portrait", n = tr(n)))
         } else if fits(h, w) {
-            Some(format!("{n}, Landscape"))
+            Some(trf!("{n}, Landscape", n = tr(n)))
         } else {
             None
         }
@@ -75,9 +77,9 @@ pub fn show_properties(parent: &impl IsA<gtk::Widget>, info: &DocInfo) {
         .unwrap_or_else(|| info.uri.clone());
     let security = {
         let mut s = if info.encrypted {
-            "Password protected".to_string()
+            tr("Password protected").to_string()
         } else {
-            "None".to_string()
+            tr("None").to_string()
         };
         let r = restrictions(info.permissions);
         if !r.is_empty() {
@@ -86,26 +88,26 @@ pub fn show_properties(parent: &impl IsA<gtk::Widget>, info: &DocInfo) {
         s
     };
     let rows: Vec<(&str, Option<String>)> = vec![
-        ("Title", info.title.clone()),
-        ("Subject", info.subject.clone()),
-        ("Author", info.author.clone()),
-        ("Keywords", info.keywords.clone()),
-        ("Producer", info.producer.clone()),
-        ("Creator", info.creator.clone()),
-        ("Created", date_text(info.created)),
-        ("Modified", date_text(info.modified)),
-        ("Pages", Some(info.sizes.len().to_string())),
+        (tr("Title"), info.title.clone()),
+        (tr("Subject"), info.subject.clone()),
+        (tr("Author"), info.author.clone()),
+        (tr("Keywords"), info.keywords.clone()),
+        (tr("Producer"), info.producer.clone()),
+        (tr("Creator"), info.creator.clone()),
+        (tr("Created"), date_text(info.created)),
+        (tr("Modified"), date_text(info.modified)),
+        (tr("Pages"), Some(info.sizes.len().to_string())),
         (
-            "Page Size",
+            tr("Page Size"),
             info.sizes.first().map(|(w, h)| page_size_text(*w, *h)),
         ),
-        ("File Size", size),
-        ("PDF Version", info.pdf_version.clone()),
-        ("Location", Some(location)),
-        ("Security", Some(security)),
+        (tr("File Size"), size),
+        (tr("PDF Version"), info.pdf_version.clone()),
+        (tr("Location"), Some(location)),
+        (tr("Security"), Some(security)),
         (
-            "Fast Web View",
-            Some(if info.linearized { "Yes" } else { "No" }.into()),
+            tr("Fast Web View"),
+            Some(if info.linearized { tr("Yes") } else { tr("No") }.into()),
         ),
     ];
     let group = adw::PreferencesGroup::new();
@@ -124,7 +126,7 @@ pub fn show_properties(parent: &impl IsA<gtk::Widget>, info: &DocInfo) {
     tv.add_top_bar(&adw::HeaderBar::new());
     tv.set_content(Some(&page));
     let dialog = adw::Dialog::builder()
-        .title("Properties")
+        .title(tr("Properties"))
         .content_width(420)
         .content_height(640)
         .child(&tv)
@@ -142,17 +144,20 @@ pub fn ask_password(
     let body = if wrong {
         format!("Incorrect password. “{name}” is locked; enter its password to open it.")
     } else {
-        format!("“{name}” is password protected. Enter its password to open it.")
+        trf!(
+            "“{name}” is password protected. Enter its password to open it.",
+            name = name
+        )
     };
-    let dialog = adw::AlertDialog::new(Some("Password Required"), Some(&body));
+    let dialog = adw::AlertDialog::new(Some(tr("Password Required")), Some(&body));
     let entry = gtk::PasswordEntry::builder()
         .show_peek_icon(true)
         .activates_default(true)
         .build();
-    helix_app_common::set_accessible_label(&entry, "Password");
+    helix_app_common::set_accessible_label(&entry, tr("Password"));
     entry.update_property(&[gtk::accessible::Property::Description(&body)]);
     dialog.set_extra_child(Some(&entry));
-    dialog.add_responses(&[("cancel", "_Cancel"), ("unlock", "_Unlock")]);
+    dialog.add_responses(&[("cancel", tr("_Cancel")), ("unlock", tr("_Unlock"))]);
     dialog.set_response_appearance("unlock", adw::ResponseAppearance::Suggested);
     dialog.set_default_response(Some("unlock"));
     dialog.set_close_response("cancel");

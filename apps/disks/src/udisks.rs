@@ -16,6 +16,7 @@ use crate::model::iface;
 use crate::ops::{Op, OpOutput};
 use crate::props::{Interfaces, Prop, Props, Snapshot};
 use crate::smart::Attribute;
+use helix_app_common::i18n::tr;
 
 pub const SERVICE: &str = "org.freedesktop.UDisks2";
 pub const ROOT: &str = "/org/freedesktop/UDisks2";
@@ -25,7 +26,7 @@ pub fn error_text(e: &zbus::Error) -> String {
     match e {
         zbus::Error::MethodError(name, Some(msg), _) => {
             if name.as_str().ends_with("NotAuthorizedDismissed") {
-                "Authentication was dismissed.".into()
+                tr("Authentication was dismissed.").into()
             } else {
                 msg.clone()
             }
@@ -342,9 +343,9 @@ pub fn run(conn: &Connection, op: &Op) -> Result<OpOutput, String> {
         )),
         Op::Check { block } | Op::Repair { block } => {
             let method = if matches!(op, Op::Check { .. }) {
-                "Check"
+                tr("Check")
             } else {
-                "Repair"
+                tr("Repair")
             };
             let r = call(conn, block, FILESYSTEM, method, &(opts(),))?;
             let ok: bool = r.body().deserialize().map_err(|e| e.to_string())?;
@@ -432,7 +433,7 @@ pub fn copy_with_progress<R: Read, W: Write>(
         if cancel.load(Ordering::Relaxed) {
             return Err(io::Error::new(
                 io::ErrorKind::Interrupted,
-                "Operation was cancelled",
+                tr("Operation was cancelled"),
             ));
         }
         let want = buf.len().min((total - done) as usize);

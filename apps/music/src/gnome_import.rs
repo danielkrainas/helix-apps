@@ -18,6 +18,9 @@
 //! is percent-encoded and can therefore contain neither `|` nor a newline.
 
 use crate::tracker;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -135,7 +138,7 @@ pub fn parse_playlists(output: &str) -> Vec<GnomePlaylist> {
         let pos = row[2].parse::<f64>().unwrap_or(f64::MAX);
         if out.last().is_none_or(|(p, _)| p.id != row[0]) {
             let title = if row[1].trim().is_empty() {
-                "Playlist".to_string()
+                tr("Playlist").to_string()
             } else {
                 row[1].clone()
             };
@@ -175,7 +178,7 @@ pub fn run_query(db: &Path, query: &str, timeout: Duration) -> Result<String, St
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .map_err(|e| format!("cannot run tracker3: {e}"))?;
+        .map_err(|e| trf!("cannot run tracker3: {e}", e = e))?;
     let mut stdout = child.stdout.take().expect("piped");
     let mut stderr = child.stderr.take().expect("piped");
     let out = std::thread::spawn(move || {
@@ -204,7 +207,7 @@ pub fn run_query(db: &Path, query: &str, timeout: Duration) -> Result<String, St
     let out = out.join().unwrap_or_default();
     let err = err.join().unwrap_or_default();
     if !status.success() {
-        return Err(format!("tracker3 failed: {}", err.trim()));
+        return Err(trf!("tracker3 failed: {}", err.trim()));
     }
     Ok(out)
 }
@@ -236,7 +239,7 @@ fn snapshot(db: &Path) -> Result<PathBuf, String> {
         if src.is_file() {
             if let Err(e) = std::fs::copy(&src, dir.join(f)) {
                 let _ = std::fs::remove_dir_all(&dir);
-                return Err(format!("cannot copy {}: {e}", src.display()));
+                return Err(trf!("cannot copy {src}: {e}", src = src.display(), e = e));
             }
         }
     }
@@ -338,18 +341,16 @@ pub struct Found {
 pub fn summary(favorites: usize, playlists: usize) -> String {
     let f = match favorites {
         0 => None,
-        1 => Some("1 favorite song".to_string()),
-        n => Some(format!("{n} favorite songs")),
+        n => Some(trnf!("{n} favorite song", "{n} favorite songs", n)),
     };
     let p = match playlists {
         0 => None,
-        1 => Some("1 playlist".to_string()),
-        n => Some(format!("{n} playlists")),
+        n => Some(trnf!("{n} playlist", "{n} playlists", n)),
     };
     match (f, p) {
-        (Some(f), Some(p)) => format!("Imported {f} and {p} from GNOME Music"),
-        (Some(x), None) | (None, Some(x)) => format!("Imported {x} from GNOME Music"),
-        (None, None) => "Nothing to import from GNOME Music".to_string(),
+        (Some(f), Some(p)) => trf!("Imported {f} and {p} from GNOME Music", f = f, p = p),
+        (Some(x), None) | (None, Some(x)) => trf!("Imported {x} from GNOME Music", x = x),
+        (None, None) => tr("Nothing to import from GNOME Music").to_string(),
     }
 }
 

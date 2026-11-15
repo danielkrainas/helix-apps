@@ -25,6 +25,7 @@ Options:
   -h, --help       Show this help and exit";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let mut device = None;
     for arg in std::env::args().skip(1) {
         match arg.as_str() {

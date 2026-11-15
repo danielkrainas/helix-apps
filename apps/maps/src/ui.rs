@@ -9,6 +9,9 @@ use crate::settings::{self, gnome, Services, SystemConfig, UserSettings};
 use crate::tiles::{self, TileSource};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
+use helix_app_common::trnf;
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use shumate::prelude::*;
@@ -17,11 +20,11 @@ use std::path::PathBuf;
 use std::rc::{Rc, Weak};
 
 const APP_ID: &str = "org.helix.Maps";
-const APP_NAME: &str = "Maps";
-const COMMENTS: &str = "Find places around the world";
+const APP_NAME: &str = n_("Maps");
+const COMMENTS: &str = n_("Find places around the world");
 const SCHEMA: &str = "org.gnome.Maps";
 const DEFAULT_MODE: &str = "pedestrian";
-const LOCATE_TOOLTIP: &str = "Current Location (Ctrl+L)";
+const LOCATE_TOOLTIP: &str = n_("Current Location (Ctrl+L)");
 
 /// Window accelerators; every key here is listed in the shortcuts window
 /// (checked by a test in `shortcuts.rs`).
@@ -61,7 +64,7 @@ pub const MAP_KEYS: &[&str] = &[
 
 pub fn run(target: Option<LaunchTarget>) -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
-    helix_app_common::install_standard_actions(&app, APP_NAME, COMMENTS);
+    helix_app_common::install_standard_actions(&app, tr(APP_NAME), tr(COMMENTS));
     app.connect_startup(|_| load_css());
     let target = RefCell::new(target);
     app.connect_activate(move |app| {
@@ -241,10 +244,10 @@ fn set_pressed(button: &gtk::Button, pressed: bool) {
 /// "Open Website", "Open Wikipedia Article", "Call +49 30 1234".
 fn link_name(label: &str, value: &str) -> String {
     match label {
-        "Website" => "Open Website".into(),
-        "Wikipedia" => "Open Wikipedia Article".into(),
-        "Phone" => format!("Call {}", value.split(';').next().unwrap_or(value).trim()),
-        other => format!("Open {other}"),
+        "Website" => tr("Open Website").into(),
+        "Wikipedia" => tr("Open Wikipedia Article").into(),
+        "Phone" => trf!("Call {}", value.split(';').next().unwrap_or(value).trim()),
+        other => trf!("Open {other}", other = other),
     }
 }
 
@@ -273,15 +276,23 @@ fn wikipedia_url(tag: &str) -> Option<String> {
 }
 
 fn link_for(label: &str, value: &str) -> Option<String> {
-    match label {
-        "Website" if settings::is_http_url(value) => Some(value.to_string()),
-        "Website" => Some(format!("https://{value}")),
-        "Wikipedia" => wikipedia_url(value),
-        "Phone" => Some(format!(
+    // Labels arrive translated (see nominatim::details); accept both.
+    let is = |msgid: &'static str| label == msgid || label == tr(msgid);
+    if is(tr("Website")) {
+        if settings::is_http_url(value) {
+            Some(value.to_string())
+        } else {
+            Some(format!("https://{value}"))
+        }
+    } else if is(tr("Wikipedia")) {
+        wikipedia_url(value)
+    } else if is(tr("Phone")) {
+        Some(format!(
             "tel:{}",
             value.split(';').next().unwrap_or(value).replace(' ', "")
-        )),
-        _ => None,
+        ))
+    } else {
+        None
     }
 }
 
@@ -306,7 +317,7 @@ impl Ui {
         let (width, height) = gnome::window_size(&[]);
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .default_width(width)
             .default_height(height)
             .width_request(360)
@@ -373,7 +384,7 @@ impl Ui {
         // and a crosshair at the point that keyboard context actions use.
         map.set_focusable(true);
         map.add_css_class("maps-map");
-        helix_app_common::set_accessible_label(&map, "Map");
+        helix_app_common::set_accessible_label(&map, tr("Map"));
         let crosshair = build_crosshair();
         map_overlay.add_overlay(&crosshair);
         map_overlay.add_css_class("maps-map-frame");
@@ -417,10 +428,13 @@ impl Ui {
 
         // Right-click / long-press context menu.
         let menu = gio::Menu::new();
-        menu.append(Some("What's Here?"), Some("win.whats-here"));
-        menu.append(Some("Directions From Here"), Some("win.route-from-here"));
-        menu.append(Some("Directions To Here"), Some("win.route-to-here"));
-        menu.append(Some("Copy Location"), Some("win.copy-here"));
+        menu.append(Some(tr("What's Here?")), Some("win.whats-here"));
+        menu.append(
+            Some(tr("Directions From Here")),
+            Some("win.route-from-here"),
+        );
+        menu.append(Some(tr("Directions To Here")), Some("win.route-to-here"));
+        menu.append(Some(tr("Copy Location")), Some("win.copy-here"));
         let context_menu = gtk::PopoverMenu::from_model(Some(&menu));
         context_menu.set_parent(&map_overlay);
         context_menu.set_has_arrow(false);
@@ -428,15 +442,15 @@ impl Ui {
 
         // --- Header ----------------------------------------------------------
         let header = adw::HeaderBar::new();
-        let locate_button = icon_button("find-location-symbolic", LOCATE_TOOLTIP);
+        let locate_button = icon_button("find-location-symbolic", tr(LOCATE_TOOLTIP));
         locate_button.set_action_name(Some("win.locate"));
         header.pack_start(&locate_button);
 
         let search = gtk::SearchEntry::builder()
-            .placeholder_text("Search for places or coordinates")
+            .placeholder_text(tr("Search for places or coordinates"))
             .hexpand(true)
             .build()
-            .labelled("Search for Places");
+            .labelled(tr("Search for Places"));
         search.set_key_capture_widget(None::<&gtk::Widget>);
         let clamp = adw::Clamp::builder()
             .maximum_size(480)
@@ -464,16 +478,16 @@ impl Ui {
         results_popover.set_parent(&search);
 
         let menu_model = gio::Menu::new();
-        menu_model.append(Some("_Preferences"), Some("win.preferences"));
-        menu_model.append(Some("_Keyboard Shortcuts"), Some("win.shortcuts"));
-        menu_model.append(Some("_About Maps"), Some("app.about"));
+        menu_model.append(Some(tr("_Preferences")), Some("win.preferences"));
+        menu_model.append(Some(tr("_Keyboard Shortcuts")), Some("win.shortcuts"));
+        menu_model.append(Some(tr("_About Maps")), Some("app.about"));
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu_model)
             .primary(true)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         header.pack_end(&menu_button);
 
         let favorites_list = gtk::ListBox::builder()
@@ -491,11 +505,11 @@ impl Ui {
         let fav_button = gtk::MenuButton::builder()
             .icon_name("starred-symbolic")
             .popover(&fav_popover)
-            .tooltip_text("Favorites")
+            .tooltip_text(tr("Favorites"))
             .build()
-            .labelled("Favorites");
+            .labelled(tr("Favorites"));
         header.pack_end(&fav_button);
-        let directions_button = icon_toggle("go-jump-symbolic", "Directions (Ctrl+D)");
+        let directions_button = icon_toggle("go-jump-symbolic", tr("Directions (Ctrl+D)"));
         directions_button.set_action_name(Some("win.directions"));
         header.pack_end(&directions_button);
 
@@ -627,7 +641,7 @@ impl Ui {
     fn launch(&self, target: LaunchTarget) {
         match target {
             LaunchTarget::Point { at, zoom, label } => {
-                let name = label.unwrap_or_else(|| "Dropped Pin".to_string());
+                let name = label.unwrap_or_else(|| tr("Dropped Pin").to_string());
                 self.select_place(Place::at(at, &name), false);
                 self.0.viewport.set_location(at.lat, at.lon);
                 self.0.viewport.set_zoom_level(zoom.unwrap_or(15.0));
@@ -680,7 +694,7 @@ impl Ui {
         let source = TileSource::new(&s.tile_url_template);
         let renderer = shumate::RasterRenderer::new_full(
             &format!("helix-{:016x}", settings::fnv1a(&s.tile_url_template)),
-            "Map",
+            tr("Map"),
             &s.tile_attribution,
             &s.tile_attribution_url,
             0,
@@ -987,7 +1001,7 @@ impl Ui {
             "copy-here",
             Box::new(|ui| {
                 if let Some(p) = ui.0.context_point.get() {
-                    ui.copy(&geo::format_coordinates(p), "Location copied");
+                    ui.copy(&geo::format_coordinates(p), tr("Location copied"));
                 }
             }),
         );
@@ -1003,7 +1017,10 @@ impl Ui {
             "place-copy",
             Box::new(|ui| {
                 if let Some(p) = ui.0.place.borrow().as_ref() {
-                    ui.copy(&geo::format_coordinates(p.location()), "Location copied");
+                    ui.copy(
+                        &geo::format_coordinates(p.location()),
+                        tr("Location copied"),
+                    );
                 }
             }),
         );
@@ -1011,7 +1028,7 @@ impl Ui {
             "place-share",
             Box::new(|ui| {
                 if let Some(p) = ui.0.place.borrow().as_ref() {
-                    ui.copy(&geo::geo_uri(p.location()), "Location link copied");
+                    ui.copy(&geo::geo_uri(p.location()), tr("Location link copied"));
                 }
             }),
         );
@@ -1036,7 +1053,7 @@ impl Ui {
                     lon: m.longitude(),
                 });
                 match loc {
-                    Some(p) => ui.set_endpoint(true, Place::at(p, "My Location")),
+                    Some(p) => ui.set_endpoint(true, Place::at(p, tr("My Location"))),
                     None => ui.locate_then_route(),
                 }
             }),
@@ -1049,7 +1066,7 @@ impl Ui {
 
         let esc = gtk::ShortcutController::new();
         esc.add_shortcut(gtk::Shortcut::new(
-            gtk::ShortcutTrigger::parse_string("Escape"),
+            gtk::ShortcutTrigger::parse_string(tr("Escape")),
             Some(gtk::NamedAction::new("win.close-sidebar")),
         ));
         win.add_controller(esc);
@@ -1146,7 +1163,7 @@ impl Ui {
             None::<&gio::Cancellable>,
             move |r| {
                 if let (Err(e), Some(ui)) = (r, Ui::up(&w)) {
-                    ui.toast(&format!("Could not open link: {e}"));
+                    ui.toast(&trf!("Could not open link: {e}", e = e));
                 }
             },
         );
@@ -1160,7 +1177,10 @@ impl Ui {
             .margin_bottom(36)
             .css_classes(["maps-pin"])
             .build();
-        helix_app_common::set_accessible_label(&image, &format!("Selected place: {name}"));
+        helix_app_common::set_accessible_label(
+            &image,
+            &trf!("Selected place: {name}", name = name),
+        );
         let marker = shumate::Marker::builder()
             .child(&image)
             .latitude(p.lat)
@@ -1195,7 +1215,7 @@ impl Ui {
         };
         let id = self.next_id();
         self.0.search_id.set(id);
-        self.show_results_message("Searching…");
+        self.show_results_message(tr("Searching…"));
         let limit = self.max_search_results();
         self.0.service.submit(
             Job::Search {
@@ -1228,18 +1248,15 @@ impl Ui {
 
     fn show_results(&self, places: Vec<Place>) {
         if places.is_empty() {
-            self.show_results_message("No results found");
+            self.show_results_message(tr("No results found"));
             helix_app_common::announce(
                 &self.0.window,
-                "No results found",
+                tr("No results found"),
                 helix_app_common::Urgency::Polite,
             );
             return;
         }
-        let found = match places.len() {
-            1 => "1 place found".to_string(),
-            n => format!("{n} places found"),
-        };
+        let found = trnf!("{n} place found", "{n} places found", places.len());
         helix_app_common::announce(&self.0.window, &found, helix_app_common::Urgency::Polite);
         self.0.results_list.remove_all();
         for p in &places {
@@ -1294,7 +1311,7 @@ impl Ui {
         if let Some(pin) = self.0.pin_layer.markers().first().and_then(|m| m.child()) {
             helix_app_common::set_accessible_label(
                 &pin,
-                &format!("Selected place: {}", place_title(place)),
+                &trf!("Selected place: {}", place_title(place)),
             );
         }
         page.title.set_label(place_title(place));
@@ -1336,16 +1353,16 @@ impl Ui {
             "non-starred-symbolic"
         });
         page.favorite.set_tooltip_text(Some(if fav {
-            "Remove from Favorites"
+            tr("Remove from Favorites")
         } else {
-            "Add to Favorites"
+            tr("Add to Favorites")
         }));
         // The name stays "Favorite"; the pressed state says whether it is.
         set_pressed(&page.favorite, fav);
     }
 
     fn whats_here(&self, p: LatLon) {
-        self.select_place(Place::at(p, "Dropped Pin"), false);
+        self.select_place(Place::at(p, tr("Dropped Pin")), false);
         self.update_place_page(true);
         let id = self.next_id();
         self.0.reverse_id.set(id);
@@ -1360,9 +1377,9 @@ impl Ui {
         let Some(place) = place else { return };
         let now = self.0.favorites.borrow_mut().toggle(&place);
         self.toast(if now {
-            "Added to favorites"
+            tr("Added to favorites")
         } else {
-            "Removed from favorites"
+            tr("Removed from favorites")
         });
         self.update_place_page(false);
         self.refresh_favorites();
@@ -1374,7 +1391,7 @@ impl Ui {
         let favs = self.0.favorites.borrow();
         if favs.places.is_empty() {
             let label = gtk::Label::builder()
-                .label("No favorites yet.\nStar a place to add it here.")
+                .label(tr("No favorites yet.\nStar a place to add it here."))
                 .justify(gtk::Justification::Center)
                 .margin_top(12)
                 .margin_bottom(12)
@@ -1415,13 +1432,13 @@ impl Ui {
             let result = rx
                 .recv()
                 .await
-                .unwrap_or_else(|_| Err("Location unavailable".into()));
+                .unwrap_or_else(|_| Err(tr("Location unavailable").into()));
             let Some(ui) = Ui::up(&w) else { return };
             ui.set_locating(false);
             match result {
                 Ok(fix) => {
                     let Some(p) = LatLon::new(fix.lat, fix.lon) else {
-                        ui.toast("Location unavailable");
+                        ui.toast(tr("Location unavailable"));
                         return;
                     };
                     ui.0.location_layer.remove_all();
@@ -1429,10 +1446,10 @@ impl Ui {
                         .css_classes(["maps-location-dot"])
                         .accessible_role(gtk::AccessibleRole::Img)
                         .build();
-                    helix_app_common::set_accessible_label(&dot, "Your location");
+                    helix_app_common::set_accessible_label(&dot, tr("Your location"));
                     if fix.accuracy.is_finite() {
                         // Also the accessible description.
-                        dot.set_tooltip_text(Some(&format!(
+                        dot.set_tooltip_text(Some(&trf!(
                             "Your location (accuracy {})",
                             geo::format_distance(fix.accuracy, ui.units())
                         )));
@@ -1445,11 +1462,11 @@ impl Ui {
                     ui.0.location_layer.add_marker(&marker);
                     helix_app_common::announce(
                         &ui.0.locate_button,
-                        "Location found",
+                        tr("Location found"),
                         helix_app_common::Urgency::Polite,
                     );
                     if then_route {
-                        ui.set_endpoint(true, Place::at(p, "My Location"));
+                        ui.set_endpoint(true, Place::at(p, tr("My Location")));
                     } else {
                         ui.0.map
                             .go_to_full(p.lat, p.lon, geo::zoom_for_accuracy(fix.accuracy));
@@ -1468,17 +1485,17 @@ impl Ui {
         let b = &self.0.locate_button;
         if on {
             let spinner = gtk::Spinner::builder().spinning(true).build();
-            helix_app_common::set_accessible_label(&spinner, "Finding your location");
+            helix_app_common::set_accessible_label(&spinner, tr("Finding your location"));
             b.set_child(Some(&spinner));
-            b.set_tooltip_text(Some("Finding Your Location…"));
+            b.set_tooltip_text(Some(tr("Finding Your Location…")));
             helix_app_common::announce(
                 b,
-                "Finding your location…",
+                tr("Finding your location…"),
                 helix_app_common::Urgency::Polite,
             );
         } else {
             b.set_icon_name("find-location-symbolic");
-            b.set_tooltip_text(Some(LOCATE_TOOLTIP));
+            b.set_tooltip_text(Some(tr(LOCATE_TOOLTIP)));
         }
         // The button keeps its name and stays focusable; a second press
         // while locating is ignored.
@@ -1560,7 +1577,7 @@ impl Ui {
         let demo = self.0.services.borrow().uses_demo_router();
         let note = &self.0.route_page.note;
         note.set_visible(demo && self.current_mode() != Mode::Car);
-        note.set_label("The public demo routing server may only provide car routes. Configure a routing server in Preferences for other modes.");
+        note.set_label(tr("The public demo routing server may only provide car routes. Configure a routing server in Preferences for other modes."));
     }
 
     fn find_route(&self) {
@@ -1576,7 +1593,7 @@ impl Ui {
             endpoint(&page.from, &self.0.from_place),
             endpoint(&page.to, &self.0.to_place),
         ) else {
-            self.toast("Enter a start and a destination");
+            self.toast(tr("Enter a start and a destination"));
             return;
         };
         let id = self.next_id();
@@ -1587,7 +1604,7 @@ impl Ui {
         page.summary.set_visible(false);
         helix_app_common::announce(
             &page.find,
-            "Finding route…",
+            tr("Finding route…"),
             helix_app_common::Urgency::Polite,
         );
         self.0.service.submit(
@@ -1628,11 +1645,11 @@ impl Ui {
         let start = gtk::Box::builder()
             .css_classes(["maps-start-dot"])
             .accessible_role(gtk::AccessibleRole::Img)
-            .tooltip_text(format!("Start: {}", place_title(&from)))
+            .tooltip_text(trf!("Start: {}", place_title(&from)))
             .build();
         helix_app_common::set_accessible_label(
             &start,
-            &format!("Route start: {}", place_title(&from)),
+            &trf!("Route start: {}", place_title(&from)),
         );
         self.0.route_markers.add_marker(
             &shumate::Marker::builder()
@@ -1646,11 +1663,11 @@ impl Ui {
             .pixel_size(32)
             .margin_bottom(32)
             .css_classes(["maps-pin"])
-            .tooltip_text(format!("Destination: {}", place_title(&to)))
+            .tooltip_text(trf!("Destination: {}", place_title(&to)))
             .build();
         helix_app_common::set_accessible_label(
             &pin,
-            &format!("Route destination: {}", place_title(&to)),
+            &trf!("Route destination: {}", place_title(&to)),
         );
         self.0.route_markers.add_marker(
             &shumate::Marker::builder()
@@ -1669,7 +1686,7 @@ impl Ui {
         page.summary.set_visible(true);
         helix_app_common::announce(
             &page.summary,
-            &format!("Route found: {}", page.summary.label()),
+            &trf!("Route found: {}", page.summary.label()),
             helix_app_common::Urgency::Polite,
         );
         for s in &route.steps {
@@ -1703,7 +1720,7 @@ impl Ui {
                         self.show_results_message(&e);
                         helix_app_common::announce(
                             &self.0.window,
-                            &format!("Search failed: {e}"),
+                            &trf!("Search failed: {e}", e = e),
                             helix_app_common::Urgency::Assertive,
                         );
                     }
@@ -1758,7 +1775,7 @@ impl Ui {
                             &if e.starts_with("No route") {
                                 e.clone()
                             } else {
-                                format!("No route: {e}")
+                                trf!("No route: {e}", e = e)
                             },
                             helix_app_common::Urgency::Assertive,
                         );
@@ -1775,34 +1792,34 @@ impl Ui {
         let max_results = self.max_search_results();
         let imperial = self.0.user.borrow().units == "imperial";
         let dialog = adw::PreferencesDialog::builder()
-            .title("Preferences")
+            .title(tr("Preferences"))
             .build();
         let page = adw::PreferencesPage::new();
 
         let tiles = adw::PreferencesGroup::builder()
-            .title("Map Tiles")
+            .title(tr("Map Tiles"))
             .description(
-                "The default OpenStreetMap tile server is run by volunteers and has a usage policy. \
-                 Production use needs a commercial or self-hosted provider.",
+                tr("The default OpenStreetMap tile server is run by volunteers and has a usage policy. \
+                 Production use needs a commercial or self-hosted provider."),
             )
             .build();
         let tile_url = adw::EntryRow::builder()
-            .title("Tile URL ({z}, {x}, {y}, optional {s})")
+            .title(tr("Tile URL ({z}, {x}, {y}, optional {s})"))
             .show_apply_button(true)
             .build();
         tile_url.set_text(&s.tile_url_template);
         let attribution = adw::EntryRow::builder()
-            .title("Attribution")
+            .title(tr("Attribution"))
             .show_apply_button(true)
             .build();
         attribution.set_text(&s.tile_attribution);
         let attribution_url = adw::EntryRow::builder()
-            .title("Attribution link")
+            .title(tr("Attribution link"))
             .show_apply_button(true)
             .build();
         attribution_url.set_text(&s.tile_attribution_url);
         let max_zoom = adw::SpinRow::with_range(2.0, 22.0, 1.0);
-        max_zoom.set_title("Maximum zoom level");
+        max_zoom.set_title(tr("Maximum zoom level"));
         max_zoom.set_value(s.tile_max_zoom as f64);
         tiles.add(&tile_url);
         tiles.add(&attribution);
@@ -1810,66 +1827,65 @@ impl Ui {
         tiles.add(&max_zoom);
 
         let services = adw::PreferencesGroup::builder()
-            .title("Services")
-            .description(
+            .title(tr("Services"))
+            .description(tr(
                 "Search uses a Nominatim-compatible server, directions an OSRM-compatible server. \
                  The public defaults allow at most one request per second.",
-            )
+            ))
             .build();
         let geocoder = adw::EntryRow::builder()
-            .title("Search server")
+            .title(tr("Search server"))
             .show_apply_button(true)
             .build();
         geocoder.set_text(&s.geocoder_url);
         let router = adw::EntryRow::builder()
-            .title("Routing server")
+            .title(tr("Routing server"))
             .show_apply_button(true)
             .build();
         router.set_text(&s.router_url);
         let results = adw::SpinRow::with_range(1.0, 50.0, 1.0);
-        results.set_title("Maximum search results");
+        results.set_title(tr("Maximum search results"));
         results.set_value(max_results as f64);
         services.add(&geocoder);
         services.add(&router);
         services.add(&results);
 
-        let general = adw::PreferencesGroup::builder().title("General").build();
+        let general = adw::PreferencesGroup::builder()
+            .title(tr("General"))
+            .build();
         let units = adw::ComboRow::builder()
-            .title("Units")
-            .model(&gtk::StringList::new(&["Metric", "Imperial"]))
+            .title(tr("Units"))
+            .model(&gtk::StringList::new(&[tr("Metric"), tr("Imperial")]))
             .selected(if imperial { 1 } else { 0 })
             .build();
         general.add(&units);
         let show_scale = adw::SwitchRow::builder()
-            .title("Show scale")
+            .title(tr("Show scale"))
             .active(self.0.prefs.get("show-scale", true))
             .build();
         general.add(&show_scale);
         let clear = gtk::Button::builder()
-            .label("Clear")
+            .label(tr("Clear"))
             .valign(gtk::Align::Center)
             .build();
         let clear_row = adw::ActionRow::builder()
-            .title("Tile cache")
-            .subtitle("Downloaded map tiles are kept for 7 days")
+            .title(tr("Tile cache"))
+            .subtitle(tr("Downloaded map tiles are kept for 7 days"))
             .build();
         clear_row.add_suffix(&clear);
         general.add(&clear_row);
         let reset = gtk::Button::builder()
-            .label("Reset")
+            .label(tr("Reset"))
             .valign(gtk::Align::Center)
             .css_classes(["destructive-action"])
             .build();
         let files = self.0.system.files();
         let reset_row = adw::ActionRow::builder()
-            .title("Reset service settings to defaults")
+            .title(tr("Reset service settings to defaults"))
             .subtitle(if files.is_empty() {
-                "Built-in defaults; administrators can set them in /etc/xdg/helix-maps/endpoints.toml".to_string()
+                tr("Built-in defaults; administrators can set them in /etc/xdg/helix-maps/endpoints.toml").to_string()
             } else {
-                format!(
-                    "System defaults from {}",
-                    files.iter().map(|p| p.display().to_string()).collect::<Vec<_>>().join(", ")
-                )
+                trf!("System defaults from {}", files.iter().map(|p| p.display().to_string()).collect::<Vec<_>>().join(", "))
             })
             .build();
         reset_row.add_suffix(&reset);
@@ -1956,7 +1972,7 @@ impl Ui {
             let t = r.text().trim().to_string();
             a(r.upcast_ref(), &move |s: &mut Services| {
                 s.geocoder_url = settings::normalize_base_url(&t)
-                    .ok_or("The search server must be an http(s) URL")?;
+                    .ok_or(tr("The search server must be an http(s) URL"))?;
                 Ok(false)
             });
         });
@@ -1965,7 +1981,7 @@ impl Ui {
             let t = r.text().trim().to_string();
             a(r.upcast_ref(), &move |s: &mut Services| {
                 s.router_url = settings::normalize_base_url(&t)
-                    .ok_or("The routing server must be an http(s) URL")?;
+                    .ok_or(tr("The routing server must be an http(s) URL"))?;
                 Ok(false)
             });
         });
@@ -2004,9 +2020,9 @@ impl Ui {
             let b = b.clone();
             glib::spawn_future_local(async move {
                 let msg = match rx.recv().await {
-                    Ok(Ok(())) => "Tile cache cleared".to_string(),
-                    Ok(Err(e)) => format!("Could not clear the cache: {e}"),
-                    Err(_) => "Could not clear the cache".to_string(),
+                    Ok(Ok(())) => tr("Tile cache cleared").to_string(),
+                    Ok(Err(e)) => trf!("Could not clear the cache: {e}", e = e),
+                    Err(_) => tr("Could not clear the cache").to_string(),
                 };
                 b.set_sensitive(true);
                 d.add_toast(adw::Toast::new(&msg));
@@ -2036,7 +2052,7 @@ impl Ui {
 /// A place's display name.
 fn place_title(place: &Place) -> &str {
     if place.name.is_empty() {
-        "Unnamed Place"
+        tr("Unnamed Place")
     } else {
         &place.name
     }
@@ -2208,8 +2224,8 @@ fn build_place_page() -> (gtk::Widget, PlacePage) {
         .css_classes(["title-2"])
         .build();
     let spinner = gtk::Spinner::builder().visible(false).build();
-    helix_app_common::set_accessible_label(&spinner, "Looking up address");
-    let close = icon_button("window-close-symbolic", "Close");
+    helix_app_common::set_accessible_label(&spinner, tr("Looking up address"));
+    let close = icon_button("window-close-symbolic", tr("Close"));
     close.add_css_class("flat");
     close.set_valign(gtk::Align::Start);
     close.set_action_name(Some("win.place-close"));
@@ -2233,21 +2249,25 @@ fn build_place_page() -> (gtk::Widget, PlacePage) {
         .margin_bottom(6)
         .build();
     let directions = gtk::Button::builder()
-        .label("Directions")
+        .label(tr("Directions"))
         .action_name("win.place-directions")
         .css_classes(["suggested-action", "pill"])
         .build();
     buttons.append(&directions);
-    let favorite = icon_toggle("non-starred-symbolic", "Add to Favorites");
-    helix_app_common::set_accessible_label(&favorite, "Favorite");
+    let favorite = icon_toggle("non-starred-symbolic", tr("Add to Favorites"));
+    helix_app_common::set_accessible_label(&favorite, tr("Favorite"));
     favorite.add_css_class("circular");
     buttons.append(&favorite);
     for (icon, tip, action) in [
-        ("edit-copy-symbolic", "Copy Location", "win.place-copy"),
-        ("send-to-symbolic", "Share Location Link", "win.place-share"),
+        ("edit-copy-symbolic", tr("Copy Location"), "win.place-copy"),
+        (
+            "send-to-symbolic",
+            tr("Share Location Link"),
+            "win.place-share",
+        ),
         (
             "web-browser-symbolic",
-            "Open in OpenStreetMap",
+            tr("Open in OpenStreetMap"),
             "win.place-open",
         ),
     ] {
@@ -2303,13 +2323,13 @@ fn build_route_page(current: Mode) -> (gtk::Widget, RoutePage) {
     let top = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     top.append(
         &gtk::Label::builder()
-            .label("Directions")
+            .label(tr("Directions"))
             .xalign(0.0)
             .hexpand(true)
             .css_classes(["title-2"])
             .build(),
     );
-    let close = icon_button("window-close-symbolic", "Close");
+    let close = icon_button("window-close-symbolic", tr("Close"));
     close.add_css_class("flat");
     close.set_action_name(Some("win.place-close"));
     top.append(&close);
@@ -2341,20 +2361,20 @@ fn build_route_page(current: Mode) -> (gtk::Widget, RoutePage) {
         .column_spacing(6)
         .build();
     let from = gtk::Entry::builder()
-        .placeholder_text("From")
+        .placeholder_text(tr("From"))
         .hexpand(true)
         .build()
-        .labelled("From");
+        .labelled(tr("From"));
     let to = gtk::Entry::builder()
-        .placeholder_text("To")
+        .placeholder_text(tr("To"))
         .hexpand(true)
         .build()
-        .labelled("To");
-    let my_loc = icon_button("find-location-symbolic", "Start at My Location");
+        .labelled(tr("To"));
+    let my_loc = icon_button("find-location-symbolic", tr("Start at My Location"));
     my_loc.set_action_name(Some("win.route-my-location"));
     let swap = icon_button(
         "object-flip-vertical-symbolic",
-        "Swap Start and Destination",
+        tr("Swap Start and Destination"),
     );
     swap.set_action_name(Some("win.route-swap"));
     entries.attach(&from, 0, 0, 1, 1);
@@ -2365,12 +2385,12 @@ fn build_route_page(current: Mode) -> (gtk::Widget, RoutePage) {
 
     let action_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     let find = gtk::Button::builder()
-        .label("Find Route")
+        .label(tr("Find Route"))
         .css_classes(["suggested-action"])
         .hexpand(true)
         .build();
     let spinner = gtk::Spinner::builder().visible(false).build();
-    helix_app_common::set_accessible_label(&spinner, "Finding route");
+    helix_app_common::set_accessible_label(&spinner, tr("Finding route"));
     action_box.append(&find);
     action_box.append(&spinner);
     content.append(&action_box);

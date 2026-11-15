@@ -1,5 +1,6 @@
 //! Screenshot file naming.
 
+use helix_app_common::i18n::tr;
 use std::path::{Path, PathBuf};
 
 /// Directory screenshots go to: XDG Pictures, else the home directory.
@@ -15,7 +16,7 @@ pub fn base_name(video_name: &str, secs: f64) -> String {
         .file_stem()
         .and_then(|s| s.to_str())
         .filter(|s| !s.is_empty())
-        .unwrap_or("Video");
+        .unwrap_or(tr("Video"));
     // Keep the name a single path component.
     let stem: String = stem
         .chars()

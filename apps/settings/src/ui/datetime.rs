@@ -9,6 +9,8 @@ use super::picker::{self, Picker};
 use super::widgets::{self, switch, watch};
 use super::{spawn_worker, Ctx, Panel};
 use crate::{dbus, values};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 const INTERFACE: &str = "org.gnome.desktop.interface";
 const DATETIME: &str = "org.gnome.desktop.datetime";
@@ -66,9 +68,9 @@ impl State {
                     this.ntp.set_active(td.ntp);
                     this.ntp.set_sensitive(td.can_ntp);
                     let sync = if td.ntp_synchronized {
-                        "Synchronized with network time servers"
+                        tr("Synchronized with network time servers")
                     } else {
-                        "Requires internet access"
+                        tr("Requires internet access")
                     };
                     // Speak a change of sync state (not the first reading).
                     let before = this.ntp.subtitle();
@@ -88,12 +90,12 @@ impl State {
                 Err(e) => {
                     this.ntp.set_sensitive(false);
                     this.tz_row.set_sensitive(false);
-                    this.tz_row.set_subtitle("Unavailable");
+                    this.tz_row.set_subtitle(tr("Unavailable"));
                     eprintln!("helix-settings-app: timedate1: {e}");
                     // Report once, not on every reload.
                     if !this.reported_unavailable.replace(true) {
                         if let Some(ctx) = this.ctx.upgrade() {
-                            ctx.toast("Date and time settings are unavailable");
+                            ctx.toast(tr("Date and time settings are unavailable"));
                         }
                     }
                 }
@@ -105,7 +107,7 @@ impl State {
     fn report(&self, what: &str, res: Result<(), String>) {
         if let Err(e) = res {
             if let Some(ctx) = self.ctx.upgrade() {
-                ctx.toast(&format!("Could not change {what}: {e}"));
+                ctx.toast(&trf!("Could not change {what}: {e}", what = what, e = e));
             }
         }
     }
@@ -120,7 +122,7 @@ impl Panel for DateTimePanel {
 
         let group = widgets::group("");
         let ntp = adw::SwitchRow::builder()
-            .title("Automatic Date &amp; Time")
+            .title(tr("Automatic Date &amp; Time"))
             .sensitive(false)
             .build();
         group.add(&ntp);
@@ -129,14 +131,16 @@ impl Panel for DateTimePanel {
             "automatic-timezone",
             false,
             false,
-            "Automatic Time Zone",
-            "Requires location services",
+            tr("Automatic Time Zone"),
+            tr("Requires location services"),
         ));
-        let time_row = adw::ActionRow::builder().title("Date &amp; Time").build();
+        let time_row = adw::ActionRow::builder()
+            .title(tr("Date &amp; Time"))
+            .build();
         group.add(&time_row);
         let tz_row = adw::ActionRow::builder()
-            .title("Time Zone")
-            .subtitle("Loading…")
+            .title(tr("Time Zone"))
+            .subtitle(tr("Loading…"))
             .activatable(true)
             .sensitive(false)
             .build();
@@ -146,30 +150,40 @@ impl Panel for DateTimePanel {
             &iface,
             "clock-format",
             "24h",
-            &[("24h", "24-hour"), ("12h", "AM / PM")],
-            "Time Format",
+            {
+                const CHOICES: &[(&str, &str)] = &[("24h", n_("24-hour")), ("12h", n_("AM / PM"))];
+                CHOICES
+            },
+            tr("Time Format"),
         ));
         page.add(&group);
 
-        let clock = widgets::group("Clock & Calendar");
-        clock.set_description(Some(
+        let clock = widgets::group(tr("Clock & Calendar"));
+        clock.set_description(Some(tr(
             "Control how the time and date are shown in the top bar",
-        ));
+        )));
         clock.add(&switch(
             &iface,
             "clock-show-weekday",
             false,
             false,
-            "Week Day",
+            tr("Week Day"),
             "",
         ));
-        clock.add(&switch(&iface, "clock-show-date", true, false, "Date", ""));
+        clock.add(&switch(
+            &iface,
+            "clock-show-date",
+            true,
+            false,
+            tr("Date"),
+            "",
+        ));
         clock.add(&switch(
             &iface,
             "clock-show-seconds",
             false,
             false,
-            "Seconds",
+            tr("Seconds"),
             "",
         ));
         clock.add(&switch(
@@ -177,8 +191,8 @@ impl Panel for DateTimePanel {
             "show-weekdate",
             false,
             false,
-            "Week Numbers",
-            "Show week numbers in the calendar",
+            tr("Week Numbers"),
+            tr("Show week numbers in the calendar"),
         ));
         page.add(&clock);
 
@@ -246,10 +260,10 @@ impl Panel for DateTimePanel {
 
 fn timezone_dialog(parent: &adw::ApplicationWindow, state: &Rc<State>) {
     let picker = Picker::new(
-        "Select Time Zone",
-        "Search for a city, country or region",
-        "Search Time Zones",
-        "Loading Time Zones…",
+        tr("Select Time Zone"),
+        tr("Search for a city, country or region"),
+        tr("Search Time Zones"),
+        tr("Loading Time Zones…"),
     );
     // (zone id, label), sorted by label.
     let zones: Rc<RefCell<Vec<(String, String)>>> = Rc::default();

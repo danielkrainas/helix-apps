@@ -1,6 +1,7 @@
 //! Journal entries as emitted by `journalctl -o json`, boot lists, and the
 //! journalctl command line.
 
+use helix_app_common::i18n::tr;
 use serde_json::Value;
 
 /// Placeholder shown for fields journalctl did not serialise (`null`).
@@ -194,14 +195,14 @@ impl Entry {
 /// Human name of a syslog priority.
 pub fn priority_name(p: u8) -> &'static str {
     match p {
-        0 => "Emergency",
-        1 => "Alert",
-        2 => "Critical",
-        3 => "Error",
-        4 => "Warning",
-        5 => "Notice",
-        6 => "Info",
-        _ => "Debug",
+        0 => tr("Emergency"),
+        1 => tr("Alert"),
+        2 => tr("Critical"),
+        3 => tr("Error"),
+        4 => tr("Warning"),
+        5 => tr("Notice"),
+        6 => tr("Info"),
+        _ => tr("Debug"),
     }
 }
 

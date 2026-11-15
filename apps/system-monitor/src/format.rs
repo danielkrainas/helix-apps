@@ -1,14 +1,28 @@
 //! Human-readable formatting of sizes, rates, states and priorities.
 
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
+
 /// Formats a byte count, SI (kB = 1000) or IEC (KiB = 1024).
 pub fn size(bytes: u64, iec: bool) -> String {
     let (base, units): (f64, [&str; 7]) = if iec {
-        (1024.0, ["bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"])
+        (
+            1024.0,
+            [
+                "bytes",
+                tr("KiB"),
+                tr("MiB"),
+                tr("GiB"),
+                tr("TiB"),
+                tr("PiB"),
+                tr("EiB"),
+            ],
+        )
     } else {
         (1000.0, ["bytes", "kB", "MB", "GB", "TB", "PB", "EB"])
     };
     if (bytes as f64) < base {
-        return format!("{bytes} bytes");
+        return trf!("{bytes} bytes", bytes = bytes);
     }
     let mut v = bytes as f64;
     let mut i = 0;
@@ -57,39 +71,39 @@ pub fn cpu_time(ticks: u64, hz: u64) -> String {
 /// Process state letter → user-visible label.
 pub fn state(c: char) -> &'static str {
     match c {
-        'R' => "Running",
-        'S' => "Sleeping",
-        'D' => "Uninterruptible",
-        'T' => "Stopped",
-        't' => "Tracing Stop",
-        'Z' => "Zombie",
-        'X' | 'x' => "Dead",
-        'I' => "Idle",
-        'W' => "Paging",
-        'K' => "Wakekill",
-        'P' => "Parked",
-        _ => "Unknown",
+        'R' => tr("Running"),
+        'S' => tr("Sleeping"),
+        'D' => tr("Uninterruptible"),
+        'T' => tr("Stopped"),
+        't' => tr("Tracing Stop"),
+        'Z' => tr("Zombie"),
+        'X' | 'x' => tr("Dead"),
+        'I' => tr("Idle"),
+        'W' => tr("Paging"),
+        'K' => tr("Wakekill"),
+        'P' => tr("Parked"),
+        _ => tr("Unknown"),
     }
 }
 
 /// Nice value → priority label.
 pub fn priority(nice: i32) -> &'static str {
     match nice {
-        i32::MIN..=-15 => "Very High",
-        -14..=-5 => "High",
-        -4..=4 => "Normal",
-        5..=14 => "Low",
-        _ => "Very Low",
+        i32::MIN..=-15 => tr("Very High"),
+        -14..=-5 => tr("High"),
+        -4..=4 => tr("Normal"),
+        5..=14 => tr("Low"),
+        _ => tr("Very Low"),
     }
 }
 
 /// Preset priorities offered by the Change Priority dialog.
 pub const PRIORITY_PRESETS: [(&str, i32); 5] = [
-    ("Very High", -20),
-    ("High", -5),
-    ("Normal", 0),
-    ("Low", 5),
-    ("Very Low", 19),
+    (n_("Very High"), -20),
+    (n_("High"), -5),
+    (n_("Normal"), 0),
+    (n_("Low"), 5),
+    (n_("Very Low"), 19),
 ];
 
 /// Formats a percentage with one decimal.

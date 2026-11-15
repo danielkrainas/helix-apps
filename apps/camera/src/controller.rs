@@ -7,6 +7,8 @@ use crate::naming::{self, CaptureKind};
 use crate::pipeline::{self, AudioInput, Camera, Frame, RecordSpec, Session, SourceSpec};
 use crate::portal;
 use gst::prelude::*;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use std::os::fd::{AsRawFd, OwnedFd};
 use std::path::PathBuf;
 use std::sync::{mpsc, Arc};
@@ -182,7 +184,7 @@ fn to_cameras(devs: Vec<gst::Device>, fd: Option<i32>) -> Vec<Camera> {
 pub fn test_cameras() -> Vec<Camera> {
     vec![
         Camera {
-            name: "Test Camera (Front)".into(),
+            name: tr("Test Camera (Front)").into(),
             location: Location::Front,
             spec: SourceSpec::Test {
                 pattern: "ball",
@@ -191,7 +193,7 @@ pub fn test_cameras() -> Vec<Camera> {
             },
         },
         Camera {
-            name: "Test Camera (Back)".into(),
+            name: tr("Test Camera (Back)").into(),
             location: Location::Back,
             spec: SourceSpec::Test {
                 pattern: "smpte",
@@ -373,7 +375,7 @@ impl Worker {
 
     fn take_photo(&mut self) {
         let Some(sample) = self.session.as_ref().and_then(|s| s.last_sample()) else {
-            self.emit(Event::Failed("No camera image available".into()));
+            self.emit(Event::Failed(tr("No camera image available").into()));
             return;
         };
         let path = {
@@ -392,7 +394,7 @@ impl Worker {
     fn start_recording(&mut self, fmt: VideoFormat) {
         let Some(idx) = self.active else { return };
         let Some(plan) = encoders::choose(fmt, &encoders::gst_has) else {
-            self.emit(Event::Failed("No video encoder is available".into()));
+            self.emit(Event::Failed(tr("No video encoder is available").into()));
             return;
         };
         if let Err(e) = std::fs::create_dir_all(&self.config.output_dir) {
@@ -431,7 +433,7 @@ impl Worker {
             }
             Err(e) => {
                 let _ = std::fs::remove_file(&path);
-                self.emit(Event::Failed(format!("Could not start recording: {e}")));
+                self.emit(Event::Failed(trf!("Could not start recording: {e}", e = e)));
                 self.open(idx);
             }
         }
@@ -447,7 +449,7 @@ impl Worker {
                 self.emit(Event::RecordingSaved { path, thumb });
             }
             Ok(None) => {}
-            Err(e) => self.emit(Event::Failed(format!("Recording failed: {e}"))),
+            Err(e) => self.emit(Event::Failed(trf!("Recording failed: {e}", e = e))),
         }
         if let Some(i) = self.active {
             self.open(i);
@@ -504,7 +506,7 @@ impl Worker {
                     let thumb = self.record_thumb.take();
                     self.emit(Event::RecordingSaved { path, thumb });
                 }
-                _ => self.emit(Event::Failed("Recording interrupted".into())),
+                _ => self.emit(Event::Failed(tr("Recording interrupted").into())),
             }
         }
     }
@@ -529,7 +531,7 @@ impl Worker {
         let was_recording = self.session.as_ref().is_some_and(|s| s.is_recording());
         self.session = None;
         if was_recording {
-            self.emit(Event::Failed(format!("Recording failed: {err}")));
+            self.emit(Event::Failed(trf!("Recording failed: {err}", err = err)));
         }
         self.emit(Event::Status(Status::Error(err)));
     }

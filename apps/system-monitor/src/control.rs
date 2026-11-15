@@ -3,6 +3,8 @@
 //! which needs CAP_SYS_NICE) go through the privileged helper run with
 //! `pkexec` under the polkit action `org.helix.SystemMonitor.manage-processes`.
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,10 +41,10 @@ impl Action {
 
     pub fn verb(self) -> &'static str {
         match self {
-            Action::Stop => "Stop",
-            Action::Continue => "Continue",
-            Action::End => "End",
-            Action::Kill => "Kill",
+            Action::Stop => tr("Stop"),
+            Action::Continue => tr("Continue"),
+            Action::End => tr("End"),
+            Action::Kill => tr("Kill"),
         }
     }
 }
@@ -58,9 +60,9 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::NoSuchProcess => write!(f, "The process no longer exists"),
-            Error::NotOwner => write!(f, "You do not own this process"),
-            Error::PermissionDenied => write!(f, "Permission denied"),
+            Error::NoSuchProcess => f.write_str(tr("The process no longer exists")),
+            Error::NotOwner => f.write_str(tr("You do not own this process")),
+            Error::PermissionDenied => f.write_str(tr("Permission denied")),
             Error::Other(s) => write!(f, "{s}"),
         }
     }
@@ -152,9 +154,11 @@ pub fn pkexec_argv(
 pub fn interpret_exit(code: Option<i32>, stderr: &str) -> Result<(), Error> {
     match code {
         Some(0) => Ok(()),
-        Some(126) => Err(Error::Other("Authorization was denied or cancelled".into())),
+        Some(126) => Err(Error::Other(
+            tr("Authorization was denied or cancelled").into(),
+        )),
         Some(127) => Err(Error::Other(
-            "Not authorized to control this process".into(),
+            tr("Not authorized to control this process").into(),
         )),
         Some(3) => Err(Error::NoSuchProcess),
         _ => {
@@ -162,7 +166,7 @@ pub fn interpret_exit(code: Option<i32>, stderr: &str) -> Result<(), Error> {
                 .lines()
                 .rev()
                 .find(|l| !l.trim().is_empty())
-                .unwrap_or("The privileged helper failed");
+                .unwrap_or(tr("The privileged helper failed"));
             Err(Error::Other(
                 msg.trim()
                     .trim_start_matches("helix-system-monitor-helper: ")
@@ -177,7 +181,7 @@ pub fn interpret_exit(code: Option<i32>, stderr: &str) -> Result<(), Error> {
 pub fn run_privileged(command: crate::helper_args::Command) -> Result<(), Error> {
     let helper = helper_path();
     if !helper.exists() {
-        return Err(Error::Other(format!(
+        return Err(Error::Other(trf!(
             "Administrator privileges are required, but the helper {} is not installed",
             helper.display()
         )));
@@ -187,7 +191,7 @@ pub fn run_privileged(command: crate::helper_args::Command) -> Result<(), Error>
         .args(&argv[1..])
         .stdin(std::process::Stdio::null())
         .output()
-        .map_err(|e| Error::Other(format!("Cannot run pkexec: {e}")))?;
+        .map_err(|e| Error::Other(trf!("Cannot run pkexec: {e}", e = e)))?;
     interpret_exit(out.status.code(), &String::from_utf8_lossy(&out.stderr))
 }
 

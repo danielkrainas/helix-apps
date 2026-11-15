@@ -17,6 +17,7 @@
 // Compiled into both binaries; each uses a different half.
 #![allow(dead_code)]
 
+use helix_app_common::trf;
 use std::fmt;
 
 /// Kernel upper bound for PIDs (`PID_MAX_LIMIT` on 64-bit).
@@ -89,9 +90,17 @@ impl Command {
     pub fn describe(self) -> String {
         match self {
             Command::Signal { signal, pid } => {
-                format!("send SIG{} to process {pid}", signal.name())
+                trf!(
+                    "send SIG{name} to process {pid}",
+                    name = signal.name(),
+                    pid = pid
+                )
             }
-            Command::Renice { nice, pid } => format!("set nice value of process {pid} to {nice}"),
+            Command::Renice { nice, pid } => trf!(
+                "set nice value of process {pid} to {nice}",
+                pid = pid,
+                nice = nice
+            ),
         }
     }
 }

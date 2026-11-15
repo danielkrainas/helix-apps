@@ -5,6 +5,7 @@ use gtk::glib;
 use std::rc::Rc;
 
 use crate::app::App;
+use helix_app_common::i18n::tr;
 
 fn switch_row(
     app: &Rc<App>,
@@ -49,21 +50,21 @@ fn spin_row(
 pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     let s = app.settings.borrow().clone();
     let dialog = adw::PreferencesDialog::new();
-    dialog.set_title("Preferences");
+    dialog.set_title(tr("Preferences"));
 
     // Appearance.
     let page = adw::PreferencesPage::builder()
-        .title("Appearance")
+        .title(tr("Appearance"))
         .icon_name("applications-graphics-symbolic")
         .build();
-    let style = adw::PreferencesGroup::builder().title("Style").build();
+    let style = adw::PreferencesGroup::builder().title(tr("Style")).build();
     let variants = [
-        ("follow", "Follow System"),
-        ("light", "Light"),
-        ("dark", "Dark"),
+        ("follow", tr("Follow System")),
+        ("light", tr("Light")),
+        ("dark", tr("Dark")),
     ];
     let combo = adw::ComboRow::builder()
-        .title("Color Scheme")
+        .title(tr("Color Scheme"))
         .model(&gtk::StringList::new(&variants.map(|v| v.1)))
         .selected(
             variants
@@ -84,16 +85,16 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     style.add(&combo);
     page.add(&style);
 
-    let font = adw::PreferencesGroup::builder().title("Font").build();
+    let font = adw::PreferencesGroup::builder().title(tr("Font")).build();
     let system = switch_row(
         app,
         &font,
-        "Use System Font",
+        tr("Use System Font"),
         "use-system-font",
         s.use_system_font,
     );
     let font_btn = gtk::FontDialogButton::new(Some(
-        gtk::FontDialog::builder().title("Editor Font").build(),
+        gtk::FontDialog::builder().title(tr("Editor Font")).build(),
     ));
     font_btn.set_font_desc(&gtk::pango::FontDescription::from_string(&s.custom_font));
     font_btn.set_valign(gtk::Align::Center);
@@ -103,7 +104,7 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
             app.set_pref("custom-font", desc.to_str().to_string());
         }
     });
-    let font_row = adw::ActionRow::builder().title("Custom Font").build();
+    let font_row = adw::ActionRow::builder().title(tr("Custom Font")).build();
     font_row.add_suffix(&font_btn);
     font_row.set_activatable_widget(Some(&font_btn));
     system
@@ -114,32 +115,34 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     font.add(&font_row);
     page.add(&font);
 
-    let display = adw::PreferencesGroup::builder().title("Display").build();
+    let display = adw::PreferencesGroup::builder()
+        .title(tr("Display"))
+        .build();
     switch_row(
         app,
         &display,
-        "Show Line Numbers",
+        tr("Show Line Numbers"),
         "show-line-numbers",
         s.show_line_numbers,
     );
     switch_row(
         app,
         &display,
-        "Highlight Current Line",
+        tr("Highlight Current Line"),
         "highlight-current-line",
         s.highlight_current_line,
     );
     let margin = switch_row(
         app,
         &display,
-        "Show Right Margin",
+        tr("Show Right Margin"),
         "show-right-margin",
         s.show_right_margin,
     );
     let margin_pos = spin_row(
         app,
         &display,
-        "Right Margin Position",
+        tr("Right Margin Position"),
         "right-margin-position",
         s.right_margin_position,
         1.0,
@@ -149,29 +152,29 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
         .bind_property("active", &margin_pos, "sensitive")
         .sync_create()
         .build();
-    switch_row(app, &display, "Wrap Text", "wrap-text", s.wrap_text);
+    switch_row(app, &display, tr("Wrap Text"), "wrap-text", s.wrap_text);
     page.add(&display);
     dialog.add(&page);
 
     // Editor.
     let page = adw::PreferencesPage::builder()
-        .title("Editor")
+        .title(tr("Editor"))
         .icon_name("document-edit-symbolic")
         .build();
     let indent = adw::PreferencesGroup::builder()
-        .title("Indentation")
+        .title(tr("Indentation"))
         .build();
     spin_row(
         app,
         &indent,
-        "Tab Width",
+        tr("Tab Width"),
         "tab-width",
         s.tab_width,
         1.0,
         32.0,
     );
     let spaces = adw::SwitchRow::builder()
-        .title("Insert Spaces Instead of Tabs")
+        .title(tr("Insert Spaces Instead of Tabs"))
         .active(s.indent_spaces)
         .build();
     let w = Rc::downgrade(app);
@@ -184,21 +187,25 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     switch_row(
         app,
         &indent,
-        "Automatic Indentation",
+        tr("Automatic Indentation"),
         "auto-indent",
         s.auto_indent,
     );
     page.add(&indent);
 
-    let session = adw::PreferencesGroup::builder().title("Session").build();
+    let session = adw::PreferencesGroup::builder()
+        .title(tr("Session"))
+        .build();
     let restore = switch_row(
         app,
         &session,
-        "Restore Session",
+        tr("Restore Session"),
         "restore-session",
         s.restore_session,
     );
-    restore.set_subtitle("Reopen documents and unsaved changes from the previous session");
+    restore.set_subtitle(tr(
+        "Reopen documents and unsaved changes from the previous session",
+    ));
     page.add(&session);
 
     if !app.prefs.is_persistent() {

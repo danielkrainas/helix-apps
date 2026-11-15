@@ -4,6 +4,8 @@
 use crate::options::{self, ColorMode, SourceKind};
 use crate::page::{FrameFormat, FrameParams, Page, PageBuilder};
 use crate::sane::{self, Constraint, Device, DeviceHandle, OptionDesc, Sane};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc};
 use std::time::{Duration, Instant};
@@ -104,8 +106,8 @@ pub enum Event {
         error: String,
     },
     ScanStarted,
-    /// A new page is being scanned (0-based count within this scan).
-    PageStarted(usize),
+    /// A new page is being scanned.
+    PageStarted,
     /// Progress of the current page, 0…1.
     Progress(f64),
     Page(Page),
@@ -232,7 +234,7 @@ fn ensure_open<'a, 'b>(
         debug!("opening {name}");
         let h = sane
             .open(name)
-            .map_err(|e| format!("Unable to connect to scanner: {e}"))?;
+            .map_err(|e| trf!("Unable to connect to scanner: {e}", e = e))?;
         *current = Some((name.to_string(), h));
     }
     Ok(&current.as_ref().unwrap().1)
@@ -416,7 +418,7 @@ fn scan(
         if cancel.load(Ordering::SeqCst) {
             break Ok(true);
         }
-        send(Event::PageStarted(count));
+        send(Event::PageStarted);
         match scan_page(h, dpi, cancel, send) {
             Ok(PageResult::Page(mut page)) => {
                 page.text = req.text;
@@ -426,7 +428,7 @@ fn scan(
             Ok(PageResult::Cancelled) => break Ok(true),
             Ok(PageResult::NoDocs) => {
                 break if count == 0 {
-                    Err("Document feeder empty".to_string())
+                    Err(tr("Document feeder empty").to_string())
                 } else {
                     Ok(false)
                 };
@@ -463,15 +465,15 @@ fn scan_page(
             Ok(()) => {}
             Err(e) if e.0 == sane::STATUS_NO_DOCS && first => return Ok(PageResult::NoDocs),
             Err(e) if e.0 == sane::STATUS_CANCELLED => return Ok(PageResult::Cancelled),
-            Err(e) => return Err(format!("Unable to start scan: {e}")),
+            Err(e) => return Err(trf!("Unable to start scan: {e}", e = e)),
         }
         first = false;
         let p = h
             .parameters()
-            .map_err(|e| format!("Error communicating with scanner: {e}"))?;
+            .map_err(|e| trf!("Error communicating with scanner: {e}", e = e))?;
         debug!("frame {:?}", p);
-        let format = frame_format(p.format)
-            .ok_or_else(|| format!("Unsupported frame format {}", p.format))?;
+        let format =
+            frame_format(p.format).ok_or_else(|| trf!("Unsupported frame format {}", p.format))?;
         let expected = if p.lines > 0 {
             (p.bytes_per_line as usize) * p.lines as usize
         } else {
@@ -488,7 +490,7 @@ fn scan_page(
                 Ok(n) => data.extend_from_slice(&buf[..n]),
                 Err(e) if e.0 == sane::STATUS_EOF => break,
                 Err(e) if e.0 == sane::STATUS_CANCELLED => return Ok(PageResult::Cancelled),
-                Err(e) => return Err(format!("Error communicating with scanner: {e}")),
+                Err(e) => return Err(trf!("Error communicating with scanner: {e}", e = e)),
             }
             if expected > 0 {
                 let progress = (data.len() as f64 / expected as f64).min(1.0);

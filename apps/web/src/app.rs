@@ -18,6 +18,7 @@ use crate::tab::{Change, Tab};
 use crate::urlinput;
 use crate::webapp::WebApp;
 use crate::window::Window;
+use helix_app_common::i18n::tr;
 
 pub const APP_ID: &str = "org.helix.Web";
 pub const APP_DIR: &str = "helix-web";
@@ -35,13 +36,17 @@ pub const ACCELS: &[(&str, &[&str])] = &[
     ("win.new-tab", &["<Control>t"]),
     ("win.close-tab", &["<Control>w"]),
     ("win.reopen-tab", &["<Control><Shift>t"]),
-    ("win.location", &["<Control>l", "F6", "<Alt>d"]),
+    ("win.mute", &["<Control>m"]),
+    ("win.location", &["<Control>l", "<Alt>d"]),
+    ("win.next-pane", &["F6"]),
+    ("win.previous-pane", &["<Shift>F6"]),
     ("win.back", &["<Alt>Left", "Back"]),
     ("win.forward", &["<Alt>Right", "Forward"]),
     ("win.reload", &["<Control>r", "F5", "Reload"]),
     ("win.reload-bypass", &["<Control><Shift>r", "<Shift>F5"]),
     ("win.home", &["<Alt>Home", "HomePage"]),
     ("win.bookmark", &["<Control>d"]),
+    ("win.site-info", &["<Control>i"]),
     ("win.overview", &["<Control><Shift>o"]),
     ("win.find", &["<Control>f"]),
     ("win.find-next", &["<Control>g"]),
@@ -118,7 +123,7 @@ fn show_blocked(gtk_app: &adw::Application, cause: crate::sandbox::Cause) {
     match gtk_app.windows().first() {
         Some(w) => w.present(),
         None => {
-            crate::sandbox::failure_window(gtk_app, "Web", APP_DIR, cause).present();
+            crate::sandbox::failure_window(gtk_app, tr("Web"), APP_DIR, cause).present();
         }
     }
 }
@@ -142,7 +147,7 @@ pub fn run(web_app: Option<WebApp>) -> glib::ExitCode {
             let state = match crate::sandbox::check() {
                 Some(cause) => {
                     eprintln!("helix-web: WebKit sandbox unavailable ({cause:?}); not showing web content");
-                    helix_app_common::install_standard_actions(gtk_app, "Web", "Browse the web");
+                    helix_app_common::install_standard_actions(gtk_app, tr("Web"), tr("Browse the web"));
                     State::Blocked(cause)
                 }
                 None => State::Running(App::new(gtk_app, web_app.clone())),
@@ -790,7 +795,7 @@ impl App {
                     },
                 );
             }
-            None if !types.is_empty() => done(Err("No website data store".into())),
+            None if !types.is_empty() => done(Err(tr("No website data store").into())),
             _ => done(Ok(())),
         }
     }
@@ -815,7 +820,12 @@ impl App {
                 Some(app) if !private => app.history.borrow().most_visited(12, store::now()),
                 _ => Vec::new(),
             };
-            let html = crate::overview::html(&most, private);
+            let html = crate::overview::html(
+                &most,
+                private,
+                &crate::overview::ui_lang(),
+                helix_app_common::style::is_high_contrast(),
+            );
             let bytes = glib::Bytes::from_owned(html.into_bytes());
             let len = bytes.len() as i64;
             let stream = gio::MemoryInputStream::from_bytes(&bytes);
@@ -891,7 +901,7 @@ impl App {
     // ---- actions ----------------------------------------------------------
 
     fn install_actions(&self) {
-        helix_app_common::install_standard_actions(&self.gtk, "Web", "Browse the web");
+        helix_app_common::install_standard_actions(&self.gtk, tr("Web"), tr("Browse the web"));
         let weak = self.this.clone();
         let action = |name: &str, f: fn(&Rc<App>)| {
             let a = gio::SimpleAction::new(name, None);

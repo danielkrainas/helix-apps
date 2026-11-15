@@ -10,11 +10,12 @@
 //!   ([`resolve`]).
 //! * Other Helix-only settings (units) also live in `settings.json`.
 
+use helix_app_common::i18n::{n_, tr};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
 pub const DEFAULT_TILE_URL: &str = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-pub const DEFAULT_ATTRIBUTION: &str = "© OpenStreetMap contributors";
+pub const DEFAULT_ATTRIBUTION: &str = n_("© OpenStreetMap contributors");
 pub const DEFAULT_ATTRIBUTION_URL: &str = "https://www.openstreetmap.org/copyright";
 pub const DEFAULT_GEOCODER: &str = "https://nominatim.openstreetmap.org";
 pub const DEFAULT_ROUTER: &str = "https://router.project-osrm.org";
@@ -41,7 +42,7 @@ impl Default for Services {
     fn default() -> Self {
         Services {
             tile_url_template: DEFAULT_TILE_URL.into(),
-            tile_attribution: DEFAULT_ATTRIBUTION.into(),
+            tile_attribution: tr(DEFAULT_ATTRIBUTION).into(),
             tile_attribution_url: DEFAULT_ATTRIBUTION_URL.into(),
             tile_max_zoom: DEFAULT_MAX_ZOOM,
             geocoder_url: DEFAULT_GEOCODER.into(),
@@ -403,7 +404,7 @@ pub fn validate_tile_template(t: &str) -> Result<(), &'static str> {
     }
     for p in ["{z}", "{x}", "{y}"] {
         if !t.contains(p) {
-            return Err("The tile URL must contain {z}, {x} and {y}");
+            return Err(tr("The tile URL must contain {z}, {x} and {y}"));
         }
     }
     Ok(())

@@ -1,5 +1,6 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys};
 
 /// Accelerators registered on the application.
@@ -21,34 +22,34 @@ pub const ACCELS: &[(&str, &[&str])] = &[
 
 pub const GROUPS: &[Group] = &[
     (
-        "General",
+        n_("General"),
         &[
-            Keys("Processes", "<Control>1"),
-            Keys("Resources", "<Control>2"),
-            Keys("File Systems", "<Control>3"),
-            Keys("Refresh", "<Control>r F5"),
-            Keys("Search", "<Control>f"),
-            Keys("Preferences", "<Control>comma"),
-            Keys("Keyboard Shortcuts", "<Control>question"),
-            Keys("Close Window", "<Control>w"),
-            Keys("Quit", "<Control>q"),
+            Keys(n_("Processes"), "<Control>1"),
+            Keys(n_("Resources"), "<Control>2"),
+            Keys(n_("File Systems"), "<Control>3"),
+            Keys(n_("Refresh"), "<Control>r F5"),
+            Keys(n_("Search"), "<Control>f"),
+            Keys(n_("Preferences"), "<Control>comma"),
+            Keys(n_("Keyboard Shortcuts"), "<Control>question"),
+            Keys(n_("Close Window"), "<Control>w"),
+            Keys(n_("Quit"), "<Control>q"),
         ],
     ),
     (
-        "Process",
+        n_("Process"),
         &[
-            Keys("Properties", "<Alt>Return"),
-            Keys("Context Menu", "Menu <Shift>F10"),
-            Keys("Change Priority", "<Control>n"),
+            Keys(n_("Properties"), "<Alt>Return"),
+            Keys(n_("Context Menu"), "Menu <Shift>F10"),
+            Keys(n_("Change Priority"), "<Control>n"),
         ],
     ),
     (
-        "Signals",
+        n_("Signals"),
         &[
-            Keys("Stop", "<Control>s"),
-            Keys("Continue", "<Control>c"),
-            Keys("End", "<Control>e"),
-            Keys("Kill", "<Control>k"),
+            Keys(n_("Stop"), "<Control>s"),
+            Keys(n_("Continue"), "<Control>c"),
+            Keys(n_("End"), "<Control>e"),
+            Keys(n_("Kill"), "<Control>k"),
         ],
     ),
 ];

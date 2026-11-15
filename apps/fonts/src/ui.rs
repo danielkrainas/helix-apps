@@ -13,6 +13,9 @@ use crate::fclist::{self, Family};
 use crate::fontinfo::{self, FaceFacts, FaceInfo};
 use crate::install;
 use crate::render::{self, FontData};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 pub const APP_ID: &str = "org.helix.Fonts";
 const PREVIEW_SIZES: [u32; 8] = [8, 10, 12, 18, 24, 36, 48, 72];
@@ -63,7 +66,7 @@ pub fn run(files: Vec<PathBuf>) -> glib::ExitCode {
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::NON_UNIQUE)
         .build();
-    helix_app_common::install_standard_actions(&app, "Fonts", "View and install fonts");
+    helix_app_common::install_standard_actions(&app, tr("Fonts"), tr("View and install fonts"));
     app.connect_startup(|_| load_css());
     let files = RefCell::new(files);
     app.connect_activate(move |app| {
@@ -104,27 +107,29 @@ fn load_css() {
 
 fn main_menu() -> gtk::MenuButton {
     let menu = gio::Menu::new();
-    menu.append(Some("_Open…"), Some("win.open"));
+    menu.append(Some(tr("_Open…")), Some("win.open"));
     let section = gio::Menu::new();
     section.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some(helix_app_common::shortcuts::ACTION),
     );
-    section.append(Some("_About Fonts"), Some("app.about"));
+    section.append(Some(tr("_About Fonts")), Some("app.about"));
     menu.append_section(None, &section);
     gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
         .menu_model(&menu)
-        .tooltip_text("Main Menu")
+        .tooltip_text(tr("Main Menu"))
         .primary(true)
         .build()
-        .labelled("Main Menu")
+        .labelled(tr("Main Menu"))
 }
 
 fn new_window(app: &adw::Application, file: Option<PathBuf>) -> Rc<Win> {
     let window = adw::ApplicationWindow::builder()
         .application(app)
-        .title("Fonts")
+        .title(tr("Fonts"))
         .default_width(900)
         .default_height(680)
         .width_request(helix_app_common::MIN_WIDTH)
@@ -168,7 +173,7 @@ fn new_window(app: &adw::Application, file: Option<PathBuf>) -> Rc<Win> {
         }
         Some(path) => {
             let page = adw::NavigationPage::builder()
-                .title("Fonts")
+                .title(tr("Fonts"))
                 .tag("loading")
                 .build();
             let tv = adw::ToolbarView::new();
@@ -193,7 +198,7 @@ fn new_window(app: &adw::Application, file: Option<PathBuf>) -> Rc<Win> {
                     Err(e) => {
                         let status = adw::StatusPage::builder()
                             .icon_name("dialog-error-symbolic")
-                            .title("Could Not Open Font")
+                            .title(tr("Could Not Open Font"))
                             .description(
                                 glib::markup_escape_text(&format!("{}: {e}", path.display()))
                                     .as_str(),
@@ -247,7 +252,7 @@ fn open_dialog(win: &Rc<Win>) {
     let filters = gio::ListStore::new::<gtk::FileFilter>();
     filters.append(&filter);
     let dialog = gtk::FileDialog::builder()
-        .title("Open Font")
+        .title(tr("Open Font"))
         .modal(true)
         .filters(&filters)
         .default_filter(&filter)
@@ -258,7 +263,7 @@ fn open_dialog(win: &Rc<Win>) {
             return;
         };
         let Some(path) = file.path() else {
-            win.toast("Only local files can be opened");
+            win.toast(tr("Only local files can be opened"));
             return;
         };
         match read_faces(path.clone()).await {
@@ -266,9 +271,10 @@ fn open_dialog(win: &Rc<Win>) {
                 let page = font_page(&win, faces, 0, Some(path), false);
                 win.nav.push(&page);
             }
-            Err(e) => win.toast(&format!(
-                "Could not open “{}”: {e}",
-                path.file_name().unwrap_or_default().to_string_lossy()
+            Err(e) => win.toast(&trf!(
+                "Could not open “{file_name}”: {e}",
+                file_name = path.file_name().unwrap_or_default().to_string_lossy(),
+                e = e
             )),
         }
     });
@@ -281,21 +287,21 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
     let header = adw::HeaderBar::new();
     let search_btn = gtk::ToggleButton::builder()
         .icon_name("system-search-symbolic")
-        .tooltip_text("Search")
+        .tooltip_text(tr("Search"))
         .build()
-        .labelled("Search");
+        .labelled(tr("Search"));
     let open_btn = gtk::Button::builder()
         .icon_name("document-open-symbolic")
-        .tooltip_text("Open Font File")
+        .tooltip_text(tr("Open Font File"))
         .action_name("win.open")
         .build()
-        .labelled("Open Font File");
+        .labelled(tr("Open Font File"));
     header.pack_start(&open_btn);
     header.pack_end(&main_menu());
     header.pack_end(&search_btn);
 
     let entry = gtk::SearchEntry::builder()
-        .placeholder_text("Search fonts")
+        .placeholder_text(tr("Search fonts"))
         .hexpand(true)
         .build();
     let clamp = adw::Clamp::builder()
@@ -379,11 +385,7 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
         name.set_label(&fam.name);
         child.set_tooltip_text(Some(&fam.name));
         let n = fam.faces.len();
-        let count = if n == 1 {
-            "1 style".to_string()
-        } else {
-            format!("{n} styles")
-        };
+        let count = trnf!("{n} style", "{n} styles", n);
         item.set_accessible_label(&format!("{}, {count}", fam.name));
         styles.set_label(&count);
     });
@@ -425,19 +427,19 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
     stack.add_named(&scrolled, Some("grid"));
     let empty = adw::StatusPage::builder()
         .icon_name("system-search-symbolic")
-        .title("No Fonts Found")
-        .description("Try a different search")
+        .title(tr("No Fonts Found"))
+        .description(tr("Try a different search"))
         .build();
     stack.add_named(&empty, Some("empty"));
     let retry = gtk::Button::builder()
-        .label("_Retry")
+        .label(tr("_Retry"))
         .use_underline(true)
         .halign(gtk::Align::Center)
         .css_classes(["pill", "suggested-action"])
         .build();
     let failed = adw::StatusPage::builder()
         .icon_name("dialog-error-symbolic")
-        .title("Could Not List Fonts")
+        .title(tr("Could Not List Fonts"))
         .child(&retry)
         .build();
     stack.add_named(&failed, Some("failed"));
@@ -478,7 +480,7 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
             stack.set_visible_child_name("failed");
             helix_app_common::announce(
                 &failed,
-                "Could not list fonts",
+                tr("Could not list fonts"),
                 helix_app_common::Urgency::Assertive,
             );
         }
@@ -499,7 +501,7 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
                     if generation.get() == gen
                         && stack.visible_child_name().as_deref() == Some("loading")
                     {
-                        show_failure("Listing the installed fonts took too long.");
+                        show_failure(tr("Listing the installed fonts took too long."));
                     }
                 });
             }
@@ -524,7 +526,7 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
                         uv();
                     }
                     Ok(Err(why)) => show_failure(&why),
-                    Err(_) => show_failure("Listing the installed fonts failed unexpectedly."),
+                    Err(_) => show_failure(tr("Listing the installed fonts failed unexpectedly.")),
                 }
             });
         })
@@ -541,7 +543,7 @@ fn list_page(win: &Rc<Win>) -> adw::NavigationPage {
     tv.add_top_bar(&bar);
     tv.set_content(Some(&stack));
     adw::NavigationPage::builder()
-        .title("Fonts")
+        .title(tr("Fonts"))
         .tag("list")
         .child(&tv)
         .build()
@@ -625,10 +627,10 @@ fn font_page(
     if root {
         let open_btn = gtk::Button::builder()
             .icon_name("document-open-symbolic")
-            .tooltip_text("Open Font File")
+            .tooltip_text(tr("Open Font File"))
             .action_name("win.open")
             .build()
-            .labelled("Open Font File");
+            .labelled(tr("Open Font File"));
         header.pack_start(&open_btn);
     }
     header.pack_end(&main_menu());
@@ -646,8 +648,8 @@ fn font_page(
         let refs: Vec<&str> = labels.iter().map(String::as_str).collect();
         let dd = gtk::DropDown::from_strings(&refs);
         dd.set_selected(initial as u32);
-        dd.set_tooltip_text(Some("Style"));
-        helix_app_common::set_accessible_label(&dd, "Style");
+        dd.set_tooltip_text(Some(tr("Style")));
+        helix_app_common::set_accessible_label(&dd, tr("Style"));
         header.pack_end(&dd);
         Some(dd)
     } else {
@@ -655,7 +657,7 @@ fn font_page(
     };
     if let Some(path) = install_path.clone() {
         let btn = gtk::Button::builder()
-            .label("Install")
+            .label(tr("Install"))
             .css_classes(["suggested-action"])
             .build();
         header.pack_end(&btn);
@@ -679,7 +681,7 @@ fn font_page(
         let w = Rc::downgrade(win);
         btn.connect_clicked(move |b| {
             b.set_sensitive(false);
-            b.set_label("Installing…");
+            b.set_label(tr("Installing…"));
             let p = path.clone();
             let b = b.clone();
             let w = w.clone();
@@ -702,9 +704,11 @@ fn font_page(
                             .to_string_lossy()
                             .to_string();
                         match cache_err {
-                            None => win.toast(&format!("Installed “{name}”")),
-                            Some(e) => win.toast(&format!(
-                                "Installed “{name}”, but updating the font cache failed: {e}"
+                            None => win.toast(&trf!("Installed “{name}”", name = name)),
+                            Some(e) => win.toast(&trf!(
+                                "Installed “{name}”, but updating the font cache failed: {e}",
+                                name = name,
+                                e = e
                             )),
                         }
                         let reload = win.reload.borrow().clone();
@@ -713,14 +717,14 @@ fn font_page(
                         }
                     }
                     Ok(Err(e)) => {
-                        b.set_label("Install");
+                        b.set_label(tr("Install"));
                         b.set_sensitive(true);
-                        win.toast(&format!("Could not install font: {e}"));
+                        win.toast(&trf!("Could not install font: {e}", e = e));
                     }
                     Err(_) => {
-                        b.set_label("Install");
+                        b.set_label(tr("Install"));
                         b.set_sensitive(true);
-                        win.toast("Could not install font");
+                        win.toast(tr("Could not install font"));
                     }
                 }
             });
@@ -742,11 +746,11 @@ fn font_page(
     // Preview view.
     let entry = gtk::Entry::builder()
         .text(fontinfo::PANGRAM)
-        .placeholder_text("Preview text")
+        .placeholder_text(tr("Preview text"))
         .hexpand(true)
         .build();
-    entry.set_tooltip_text(Some("Preview text"));
-    helix_app_common::set_accessible_label(&entry, "Preview Text");
+    entry.set_tooltip_text(Some(tr("Preview text")));
+    helix_app_common::set_accessible_label(&entry, tr("Preview Text"));
     let preview_box = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
         .spacing(6)
@@ -863,7 +867,7 @@ fn font_page(
     stack.add_titled_with_icon(
         &preview_scroll,
         Some("preview"),
-        "Preview",
+        tr("Preview"),
         "font-x-generic-symbolic",
     );
 
@@ -950,20 +954,20 @@ fn font_page(
     cstack.add_named(&cbox, Some("grid"));
     let cunavailable = adw::StatusPage::builder()
         .icon_name("font-x-generic-symbolic")
-        .title("Characters Unavailable")
-        .description("The character map of this font format cannot be shown")
+        .title(tr("Characters Unavailable"))
+        .description(tr("The character map of this font format cannot be shown"))
         .build();
     cstack.add_named(&cunavailable, Some("none"));
     stack.add_titled_with_icon(
         &cstack,
         Some("characters"),
-        "Characters",
+        tr("Characters"),
         "accessories-character-map-symbolic",
     );
 
     // Info view.
     let info_bin = adw::Bin::new();
-    stack.add_titled_with_icon(&info_bin, Some("info"), "Info", "help-about-symbolic");
+    stack.add_titled_with_icon(&info_bin, Some("info"), tr("Info"), "help-about-symbolic");
 
     // Preview text editing.
     {
@@ -1055,10 +1059,11 @@ fn font_page(
                 let strs: Vec<String> = loaded.coverage.iter().map(|c| c.to_string()).collect();
                 let refs: Vec<&str> = strs.iter().map(String::as_str).collect();
                 chars_model.splice(0, chars_model.n_items(), &refs);
-                chars_count.set_label(&match loaded.coverage.len() {
-                    1 => "1 character".to_string(),
-                    n => format!("{n} characters"),
-                });
+                chars_count.set_label(&trnf!(
+                    "{n} character",
+                    "{n} characters",
+                    loaded.coverage.len()
+                ));
                 cstack.set_visible_child_name(if has_font { "grid" } else { "none" });
 
                 let path_str = src.file.display().to_string();
@@ -1135,7 +1140,7 @@ fn tile_sample() -> gtk::DrawingArea {
                 .map(|f| f.as_ref().clone())
         };
         let Some(family) = family else { return };
-        let layout = area.create_pango_layout(Some("Aa"));
+        let layout = area.create_pango_layout(Some(tr("Aa")));
         let mut desc = pango::FontDescription::new();
         desc.set_family(&family);
         desc.set_size((TILE_SAMPLE_PT * pango::SCALE as f64) as i32);
@@ -1175,7 +1180,7 @@ fn set_tile_family(area: &gtk::DrawingArea, family: &str) {
 
 /// Accessible name of a drawn sample: "The quick brown fox… at 12 points".
 fn sample_name(text: &str, pt: u32) -> String {
-    format!("{text} at {pt} points")
+    trf!("{text} at {pt} points", text = text, pt = pt)
 }
 
 /// Accessible name of a glyph cell: "U+0041 LATIN CAPITAL LETTER A".
@@ -1187,7 +1192,7 @@ fn glyph_name(ch: char) -> String {
 }
 
 fn mark_installed(b: &gtk::Button) {
-    b.set_label("Installed");
+    b.set_label(tr("Installed"));
     b.set_sensitive(false);
     b.remove_css_class("suggested-action");
 }
@@ -1246,11 +1251,11 @@ fn info_page(rows: &[(&'static str, String)]) -> adw::PreferencesPage {
         if *k == "License URL" && v.starts_with("http") {
             let open = gtk::Button::builder()
                 .icon_name("web-browser-symbolic")
-                .tooltip_text("Open License Web Page")
+                .tooltip_text(tr("Open License Web Page"))
                 .valign(gtk::Align::Center)
                 .css_classes(["flat"])
                 .build()
-                .labelled("Open License Web Page");
+                .labelled(tr("Open License Web Page"));
             let url = v.clone();
             open.connect_clicked(move |b| {
                 let win = b.root().and_downcast::<gtk::Window>();

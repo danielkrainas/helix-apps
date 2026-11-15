@@ -6,6 +6,7 @@ use std::rc::Rc;
 
 use super::widgets::{self, switch, watch};
 use super::{Ctx, Panel};
+use helix_app_common::i18n::tr;
 
 const INTERFACE: &str = "org.gnome.desktop.interface";
 const MUTTER: &str = "org.gnome.mutter";
@@ -22,43 +23,43 @@ impl Panel for MultitaskingPanel {
         let switcher = ctx.prefs(APP_SWITCHER);
         let page = widgets::page();
 
-        let general = widgets::group("General");
+        let general = widgets::group(tr("General"));
         general.add(&switch(
             &iface,
             "enable-hot-corners",
             true,
             false,
-            "Hot Corner",
-            "Touch the top-left corner to open the Activities Overview",
+            tr("Hot Corner"),
+            tr("Touch the top-left corner to open the Activities Overview"),
         ));
         general.add(&switch(
             &mutter,
             "edge-tiling",
             true,
             false,
-            "Active Screen Edges",
-            "Drag windows against the top, left, and right screen edges to resize them",
+            tr("Active Screen Edges"),
+            tr("Drag windows against the top, left, and right screen edges to resize them"),
         ));
         page.add(&general);
 
-        let ws = widgets::group("Workspaces");
+        let ws = widgets::group(tr("Workspaces"));
         let dynamic = gtk::CheckButton::new();
         let fixed = gtk::CheckButton::new();
         fixed.set_group(Some(&dynamic));
         let dyn_row = adw::ActionRow::builder()
-            .title("Dynamic Workspaces")
-            .subtitle("Automatically removes empty workspaces")
+            .title(tr("Dynamic Workspaces"))
+            .subtitle(tr("Automatically removes empty workspaces"))
             .activatable_widget(&dynamic)
             .build();
         dyn_row.add_prefix(&dynamic);
         let fixed_row = adw::ActionRow::builder()
-            .title("Fixed Number of Workspaces")
-            .subtitle("Specify a number of permanent workspaces")
+            .title(tr("Fixed Number of Workspaces"))
+            .subtitle(tr("Specify a number of permanent workspaces"))
             .activatable_widget(&fixed)
             .build();
         fixed_row.add_prefix(&fixed);
         let count = adw::SpinRow::with_range(1.0, 36.0, 1.0);
-        count.set_title("Number of Workspaces");
+        count.set_title(tr("Number of Workspaces"));
         count.set_value(wm.get::<i32>("num-workspaces", 4) as f64);
         count.connect_value_notify(glib::clone!(
             #[strong]
@@ -111,25 +112,25 @@ impl Panel for MultitaskingPanel {
         ws.add(&count);
         page.add(&ws);
 
-        let multi = widgets::group("Multi-Monitor");
+        let multi = widgets::group(tr("Multi-Monitor"));
         multi.add(&switch(
             &mutter,
             "workspaces-only-on-primary",
             true,
             false,
-            "Workspaces on Primary Display Only",
-            "Other displays show the same windows on every workspace",
+            tr("Workspaces on Primary Display Only"),
+            tr("Other displays show the same windows on every workspace"),
         ));
         page.add(&multi);
 
-        let apps = widgets::group("App Switching");
+        let apps = widgets::group(tr("App Switching"));
         apps.add(&switch(
             &switcher,
             "current-workspace-only",
             false,
             false,
-            "Include Apps From the Current Workspace Only",
-            "Otherwise apps from all workspaces are included",
+            tr("Include Apps From the Current Workspace Only"),
+            tr("Otherwise apps from all workspaces are included"),
         ));
         page.add(&apps);
         page.upcast()

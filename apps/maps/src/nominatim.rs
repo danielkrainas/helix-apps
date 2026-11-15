@@ -1,6 +1,7 @@
 //! Nominatim-compatible geocoding: request URLs and response parsing.
 
 use crate::geo::{percent_encode, LatLon};
+use helix_app_common::i18n::tr;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -147,16 +148,16 @@ fn parse_place(v: &Value) -> Option<Place> {
     let mut extras = Vec::new();
     if let Some(Value::Object(tags)) = v.get("extratags") {
         for (key, label) in [
-            ("opening_hours", "Opening hours"),
-            ("phone", "Phone"),
-            ("contact:phone", "Phone"),
-            ("website", "Website"),
-            ("contact:website", "Website"),
-            ("wikipedia", "Wikipedia"),
-            ("cuisine", "Cuisine"),
-            ("wheelchair", "Wheelchair access"),
-            ("population", "Population"),
-            ("ele", "Elevation"),
+            ("opening_hours", tr("Opening hours")),
+            ("phone", tr("Phone")),
+            ("contact:phone", tr("Phone")),
+            ("website", tr("Website")),
+            ("contact:website", tr("Website")),
+            ("wikipedia", tr("Wikipedia")),
+            ("cuisine", tr("Cuisine")),
+            ("wheelchair", tr("Wheelchair access")),
+            ("population", tr("Population")),
+            ("ele", tr("Elevation")),
         ] {
             if let Some(val) = tags.get(key).and_then(Value::as_str) {
                 if !extras.iter().any(|(l, _): &(String, String)| l == label) {
@@ -204,17 +205,17 @@ fn address_title(addr: Option<&Value>) -> Option<String> {
 
 pub fn parse_search(json: &str) -> Result<Vec<Place>, String> {
     let v: Value = serde_json::from_str(json)
-        .map_err(|_| "Invalid response from the search service".to_string())?;
+        .map_err(|_| tr("Invalid response from the search service").to_string())?;
     match v {
         Value::Array(items) => Ok(items.iter().filter_map(parse_place).collect()),
         Value::Object(_) if v.get("error").is_some() => Err(error_text(&v)),
-        _ => Err("Invalid response from the search service".into()),
+        _ => Err(tr("Invalid response from the search service").into()),
     }
 }
 
 pub fn parse_reverse(json: &str) -> Result<Option<Place>, String> {
     let v: Value = serde_json::from_str(json)
-        .map_err(|_| "Invalid response from the search service".to_string())?;
+        .map_err(|_| tr("Invalid response from the search service").to_string())?;
     if v.get("error").is_some() {
         // "Unable to geocode" means open sea etc.: not an error for the user.
         return Ok(None);
@@ -228,24 +229,24 @@ fn error_text(v: &Value) -> String {
         Some(e) => e
             .get("message")
             .and_then(Value::as_str)
-            .unwrap_or("Search failed")
+            .unwrap_or(tr("Search failed"))
             .to_string(),
-        None => "Search failed".into(),
+        None => tr("Search failed").into(),
     }
 }
 
 /// Turns an OSM class/type pair into a readable label.
 pub fn humanize_category(class: &str, kind: &str) -> String {
     let special = match (class, kind) {
-        ("railway", "station") => Some("Railway station"),
-        ("railway", "halt") => Some("Railway stop"),
-        ("highway", "bus_stop") => Some("Bus stop"),
-        ("amenity", "fuel") => Some("Gas station"),
-        ("amenity", "place_of_worship") => Some("Place of worship"),
-        ("boundary", "administrative") => Some("Administrative area"),
-        ("place", "house") => Some("Address"),
-        ("building", "yes") => Some("Building"),
-        ("highway", k) if !k.is_empty() => Some("Road"),
+        ("railway", "station") => Some(tr("Railway station")),
+        ("railway", "halt") => Some(tr("Railway stop")),
+        ("highway", "bus_stop") => Some(tr("Bus stop")),
+        ("amenity", "fuel") => Some(tr("Gas station")),
+        ("amenity", "place_of_worship") => Some(tr("Place of worship")),
+        ("boundary", "administrative") => Some(tr("Administrative area")),
+        ("place", "house") => Some(tr("Address")),
+        ("building", "yes") => Some(tr("Building")),
+        ("highway", k) if !k.is_empty() => Some(tr("Road")),
         _ => None,
     };
     if let Some(s) = special {

@@ -10,6 +10,8 @@ use std::rc::Rc;
 use crate::illustrations::{self, Art};
 use crate::pages::{self, PAGES};
 use crate::state::{self, Outcome};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 pub const APP_ID: &str = "org.helix.Tour";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -37,7 +39,11 @@ impl Session {
 
 pub fn run(state_path: PathBuf) -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
-    helix_app_common::install_standard_actions(&app, "Tour", "Get to know the Helix desktop");
+    helix_app_common::install_standard_actions(
+        &app,
+        tr("Tour"),
+        tr("Get to know the Helix desktop"),
+    );
     let session = Rc::new(Session {
         state_path,
         shown: Cell::new(false),
@@ -88,8 +94,13 @@ fn load_css() {
 
 /// What is announced when tour page `idx` comes into view.
 fn page_announcement(idx: usize) -> String {
-    let title = PAGES.get(idx).map_or("", |p| p.title);
-    format!("{title}, page {} of {}", idx + 1, PAGES.len())
+    let title = PAGES.get(idx).map_or("", |p| tr(p.title));
+    trf!(
+        "{title}, page {idx} of {PAGES}",
+        title = title,
+        idx = idx + 1,
+        PAGES = PAGES.len()
+    )
 }
 
 fn illustration(art: Art, areas: &mut Vec<gtk::DrawingArea>) -> gtk::DrawingArea {
@@ -111,7 +122,7 @@ fn illustration(art: Art, areas: &mut Vec<gtk::DrawingArea>) -> gtk::DrawingArea
 
 fn title_label(text: &str) -> gtk::Label {
     gtk::Label::builder()
-        .label(text)
+        .label(helix_app_common::i18n::tr_dyn(text))
         .wrap(true)
         .justify(gtk::Justification::Center)
         .css_classes(["title-1"])
@@ -120,7 +131,7 @@ fn title_label(text: &str) -> gtk::Label {
 
 fn body_label(markup: &str) -> gtk::Label {
     gtk::Label::builder()
-        .label(markup)
+        .label(helix_app_common::i18n::tr_dyn(markup))
         .use_markup(true)
         .wrap(true)
         .justify(gtk::Justification::Center)
@@ -188,7 +199,7 @@ fn scrollable(page: &gtk::Box) -> gtk::ScrolledWindow {
 fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow {
     let window = adw::ApplicationWindow::builder()
         .application(app)
-        .title("Tour")
+        .title(tr("Tour"))
         .default_width(800)
         .default_height(640)
         .width_request(360)
@@ -218,8 +229,8 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
         .margin_top(12)
         .homogeneous(true)
         .build();
-    let no_thanks = pill("No Thanks", false);
-    let start = pill("Start Tour", true);
+    let no_thanks = pill(tr("No Thanks"), false);
+    let start = pill(tr("Start Tour"), true);
     buttons.append(&no_thanks);
     buttons.append(&start);
     welcome.append(&buttons);
@@ -236,7 +247,7 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
         b.append(&title_label(page.title));
         b.append(&body_label(page.body));
         if i == pages::HELP_PAGE {
-            let learn = pill("Learn More About Helix", false);
+            let learn = pill(tr("Learn More About Helix"), false);
             learn.set_tooltip_text(Some(pages::PROJECT_URL));
             let win = window.downgrade();
             learn.connect_clicked(move |_| {
@@ -250,7 +261,7 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
             b.append(&learn);
         }
         if i == PAGES.len() - 1 {
-            let close = pill("Close", true);
+            let close = pill(tr("Close"), true);
             let session = session.clone();
             let win = window.downgrade();
             close.connect_clicked(move |_| {
@@ -266,22 +277,22 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
 
     let prev = gtk::Button::builder()
         .icon_name("go-previous-symbolic")
-        .tooltip_text("Previous")
+        .tooltip_text(tr("Previous"))
         .halign(gtk::Align::Start)
         .valign(gtk::Align::Center)
         .margin_start(18)
         .css_classes(["circular", "tour-nav"])
         .build()
-        .labelled("Previous");
+        .labelled(tr("Previous"));
     let next = gtk::Button::builder()
         .icon_name("go-next-symbolic")
-        .tooltip_text("Next")
+        .tooltip_text(tr("Next"))
         .halign(gtk::Align::End)
         .valign(gtk::Align::Center)
         .margin_end(18)
         .css_classes(["circular", "tour-nav", "suggested-action"])
         .build()
-        .labelled("Next");
+        .labelled(tr("Next"));
     let overlay = gtk::Overlay::builder().child(&carousel).build();
     overlay.add_overlay(&prev);
     overlay.add_overlay(&next);
@@ -302,18 +313,20 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
     let header = adw::HeaderBar::builder().show_title(false).build();
     let menu = gio::Menu::new();
     menu.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some(helix_app_common::shortcuts::ACTION),
     );
-    menu.append(Some("_About Tour"), Some("app.about"));
+    menu.append(Some(tr("_About Tour")), Some("app.about"));
     header.pack_end(
         &gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
             .primary(true)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu"),
+            .labelled(tr("Main Menu")),
     );
     let toolbar = adw::ToolbarView::new();
     toolbar.add_top_bar(&header);

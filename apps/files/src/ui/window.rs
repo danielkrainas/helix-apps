@@ -14,6 +14,8 @@ use super::{
 use crate::ops::Job;
 use crate::pathbar::{self, Target};
 use crate::sorting::SortKey;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum OpenIn {
@@ -125,14 +127,14 @@ fn home() -> gio::File {
 pub fn location_title(file: &gio::File) -> String {
     let uri = file.uri();
     if uri == OTHER_LOCATIONS {
-        return "Other Locations".into();
+        return tr("Other Locations").into();
     }
     if let Some(p) = file.path() {
         if p == glib::home_dir() {
-            return "Home".into();
+            return tr("Home").into();
         }
         if p == std::path::Path::new("/") {
-            return "Computer".into();
+            return tr("Computer").into();
         }
     }
     match pathbar::crumbs_for_uri(&uri) {
@@ -149,7 +151,7 @@ impl Window {
     ) -> Rc<Window> {
         let window = adw::ApplicationWindow::builder()
             .application(&shared.app)
-            .title("Files")
+            .title(tr("Files"))
             .default_width(890)
             .default_height(550)
             .icon_name("system-file-manager")
@@ -173,21 +175,21 @@ impl Window {
         let header = adw::HeaderBar::new();
         let sidebar_btn = gtk::ToggleButton::builder()
             .icon_name("sidebar-show-symbolic")
-            .tooltip_text("Show Sidebar")
+            .tooltip_text(tr("Show Sidebar"))
             .build()
-            .labelled("Show Sidebar");
+            .labelled(tr("Show Sidebar"));
         let back_btn = gtk::Button::builder()
             .icon_name("go-previous-symbolic")
-            .tooltip_text("Back")
+            .tooltip_text(tr("Back"))
             .action_name("win.back")
             .build()
-            .labelled("Back");
+            .labelled(tr("Back"));
         let forward_btn = gtk::Button::builder()
             .icon_name("go-next-symbolic")
-            .tooltip_text("Forward")
+            .tooltip_text(tr("Forward"))
             .action_name("win.forward")
             .build()
-            .labelled("Forward");
+            .labelled(tr("Forward"));
         header.pack_start(&sidebar_btn);
         header.pack_start(&back_btn);
         header.pack_start(&forward_btn);
@@ -202,9 +204,9 @@ impl Window {
             .build();
         let location_entry = gtk::Entry::builder()
             .hexpand(true)
-            .placeholder_text("Enter a location")
+            .placeholder_text(tr("Enter a location"))
             .build()
-            .labelled("Location");
+            .labelled(tr("Location"));
         location_entry.set_input_purpose(gtk::InputPurpose::Url);
         let path_stack = gtk::Stack::new();
         path_stack.set_hhomogeneous(false);
@@ -217,24 +219,24 @@ impl Window {
 
         let main_menu = gio::Menu::new();
         let sec = gio::Menu::new();
-        sec.append(Some("New _Window"), Some("app.new-window"));
-        sec.append(Some("New _Tab"), Some("win.new-tab"));
+        sec.append(Some(tr("New _Window")), Some("app.new-window"));
+        sec.append(Some(tr("New _Tab")), Some("win.new-tab"));
         main_menu.append_section(None, &sec);
         let sec = gio::Menu::new();
-        sec.append(Some("_Undo"), Some("win.undo"));
+        sec.append(Some(tr("_Undo")), Some("win.undo"));
         main_menu.append_section(None, &sec);
         let sec = gio::Menu::new();
-        sec.append(Some("_Preferences"), Some("app.preferences"));
-        sec.append(Some("_Keyboard Shortcuts"), Some("win.show-shortcuts"));
-        sec.append(Some("_About Files"), Some("app.about"));
+        sec.append(Some(tr("_Preferences")), Some("app.preferences"));
+        sec.append(Some(tr("_Keyboard Shortcuts")), Some("win.show-shortcuts"));
+        sec.append(Some(tr("_About Files")), Some("app.about"));
         main_menu.append_section(None, &sec);
         let menu_btn = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&main_menu)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .primary(true)
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         header.pack_end(&menu_btn);
 
         let view_menu = gio::Menu::new();
@@ -244,22 +246,22 @@ impl Window {
             item.set_action_and_target_value(Some("win.sort"), Some(&key.nick().to_variant()));
             sort.append_item(&item);
         }
-        sort.append(Some("_Reversed Order"), Some("win.sort-reversed"));
-        view_menu.append_section(Some("Sort"), &sort);
+        sort.append(Some(tr("_Reversed Order")), Some("win.sort-reversed"));
+        view_menu.append_section(Some(tr("Sort")), &sort);
         let zoom = gio::Menu::new();
-        zoom.append(Some("Zoom _In"), Some("win.zoom-in"));
-        zoom.append(Some("Zoom _Out"), Some("win.zoom-out"));
-        zoom.append(Some("_Reset Size"), Some("win.zoom-reset"));
+        zoom.append(Some(tr("Zoom _In")), Some("win.zoom-in"));
+        zoom.append(Some(tr("Zoom _Out")), Some("win.zoom-out"));
+        zoom.append(Some(tr("_Reset Size")), Some("win.zoom-reset"));
         view_menu.append_section(None, &zoom);
         let misc = gio::Menu::new();
-        misc.append(Some("Show _Hidden Files"), Some("win.show-hidden"));
+        misc.append(Some(tr("Show _Hidden Files")), Some("win.show-hidden"));
         view_menu.append_section(None, &misc);
         let view_menu_btn = gtk::MenuButton::builder()
             .icon_name("view-sort-descending-symbolic")
             .menu_model(&view_menu)
-            .tooltip_text("View Options")
+            .tooltip_text(tr("View Options"))
             .build()
-            .labelled("View Options");
+            .labelled(tr("View Options"));
         header.pack_end(&view_menu_btn);
         let view_btn = gtk::Button::builder()
             .action_name("win.toggle-view")
@@ -267,9 +269,9 @@ impl Window {
         header.pack_end(&view_btn);
         let search_btn = gtk::ToggleButton::builder()
             .icon_name("system-search-symbolic")
-            .tooltip_text("Search")
+            .tooltip_text(tr("Search"))
             .build()
-            .labelled("Search");
+            .labelled(tr("Search"));
         header.pack_end(&search_btn);
 
         let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
@@ -297,18 +299,18 @@ impl Window {
         let jobs_button = gtk::MenuButton::builder()
             .child(&jobs_icon)
             .popover(&jobs_popover)
-            .tooltip_text("File Operations")
+            .tooltip_text(tr("File Operations"))
             .visible(false)
             .build()
-            .labelled("File Operations");
+            .labelled(tr("File Operations"));
         header.pack_end(&jobs_button);
 
         // ----- search bar -----
         let search_entry = gtk::SearchEntry::builder()
-            .placeholder_text("Search current folder")
+            .placeholder_text(tr("Search current folder"))
             .hexpand(true)
             .build()
-            .labelled("Search Current Folder");
+            .labelled(tr("Search Current Folder"));
         // The clamp sizes the entry; a wide minimum would stop the window
         // from shrinking (the hidden search bar still counts).
         search_entry.set_width_chars(10);
@@ -333,8 +335,8 @@ impl Window {
             .autohide(true)
             .build();
         let banner = adw::Banner::builder()
-            .title("Trash")
-            .button_label("_Empty…")
+            .title(tr("Trash"))
+            .button_label(tr("_Empty…"))
             .action_name("win.empty-trash")
             .build();
 
@@ -372,16 +374,16 @@ impl Window {
         // Narrow windows: back/forward and the view controls move from the
         // header to a bottom bar so the path bar keeps room.
         let nav_bar = gtk::ActionBar::builder().visible(false).build();
-        let back_btn2 = helix_app_common::a11y::icon_button("go-previous-symbolic", "Back");
+        let back_btn2 = helix_app_common::a11y::icon_button("go-previous-symbolic", tr("Back"));
         back_btn2.set_action_name(Some("win.back"));
-        let forward_btn2 = helix_app_common::a11y::icon_button("go-next-symbolic", "Forward");
+        let forward_btn2 = helix_app_common::a11y::icon_button("go-next-symbolic", tr("Forward"));
         forward_btn2.set_action_name(Some("win.forward"));
         let view_btn2 = gtk::Button::builder()
             .action_name("win.toggle-view")
             .build();
         let view_menu_btn2 = helix_app_common::a11y::icon_menu_button(
             "view-sort-descending-symbolic",
-            "View Options",
+            tr("View Options"),
         );
         view_menu_btn2.set_menu_model(Some(&view_menu));
         view_menu_btn2.set_direction(gtk::ArrowType::Up);
@@ -449,7 +451,7 @@ impl Window {
         let sidebar = Sidebar::new(&win);
         let sidebar_page = adw::ToolbarView::new();
         let sh = adw::HeaderBar::builder().show_title(true).build();
-        sh.set_title_widget(Some(&adw::WindowTitle::new("Files", "")));
+        sh.set_title_widget(Some(&adw::WindowTitle::new(tr("Files"), "")));
         sidebar_page.add_top_bar(&sh);
         sidebar_page.set_content(Some(&sidebar.widget));
         win.split.set_sidebar(Some(&sidebar_page));
@@ -624,7 +626,7 @@ impl Window {
     pub fn tab_changed(self: &Rc<Self>, tab: &Rc<Tab>) {
         let loc = tab.location();
         let title = if tab.is_searching() {
-            format!("Search: {}", tab.search_text())
+            trf!("Search: {}", tab.search_text())
         } else {
             location_title(&loc)
         };
@@ -713,9 +715,9 @@ impl Window {
                 let base = crate::fmt::item_count(n);
                 if tab.is_loading() {
                     if tab.is_searching() {
-                        format!("{base} — Searching…")
+                        trf!("{base} — Searching…", base = base)
                     } else {
-                        format!("{base} — Loading…")
+                        trf!("{base} — Loading…", base = base)
                     }
                 } else {
                     base
@@ -724,9 +726,9 @@ impl Window {
             1 => {
                 let i = &infos[0];
                 if info_is_dir(i) {
-                    format!("“{}” selected", i.display_name())
+                    trf!("“{}” selected", i.display_name())
                 } else {
-                    format!(
+                    trf!(
                         "“{}” selected ({})",
                         i.display_name(),
                         crate::fmt::size(i.size().max(0) as u64)
@@ -741,9 +743,13 @@ impl Window {
                     .sum();
                 let dirs = infos.iter().filter(|i| info_is_dir(i)).count();
                 if dirs == n {
-                    format!("{n} folders selected")
+                    trf!("{n} folders selected", n = n)
                 } else {
-                    format!("{n} items selected ({})", crate::fmt::size(bytes))
+                    trf!(
+                        "{n} items selected ({bytes})",
+                        n = n,
+                        bytes = crate::fmt::size(bytes)
+                    )
                 }
             }
         };
@@ -772,9 +778,9 @@ impl Window {
             if s.list_view { "list" } else { "grid" }.to_variant(),
         );
         let (icon, label) = if s.list_view {
-            ("view-grid-symbolic", "Grid View")
+            ("view-grid-symbolic", tr("Grid View"))
         } else {
-            ("view-list-symbolic", "List View")
+            ("view-list-symbolic", tr("List View"))
         };
         for b in &self.view_btns {
             helix_app_common::a11y::set_icon_and_label(b, icon, label);
@@ -801,7 +807,7 @@ impl Window {
     fn path_roots(&self) -> Vec<pathbar::Root> {
         let mut roots = vec![pathbar::Root {
             path: glib::home_dir(),
-            label: "Home".into(),
+            label: tr("Home").into(),
             icon: "user-home-symbolic",
         }];
         for m in gio::VolumeMonitor::get().mounts() {
@@ -1050,7 +1056,7 @@ impl Window {
                         || e.matches(gtk::DialogError::Cancelled) => {}
                 Err(e) => {
                     if let Some(w) = weak.upgrade() {
-                        w.toast(&format!("Could not open file: {}", e.message()));
+                        w.toast(&trf!("Could not open file: {}", e.message()));
                     }
                 }
             },
@@ -1078,7 +1084,7 @@ impl Window {
                         }
                     }
                     Err(e) if e.matches(gio::IOErrorEnum::FailedHandled) => {}
-                    Err(e) => w.toast(&format!("Unable to mount “{}”: {}", v.name(), e.message())),
+                    Err(e) => w.toast(&trf!("Unable to mount “{}”: {}", v.name(), e.message())),
                 }
             },
         );
@@ -1099,7 +1105,11 @@ impl Window {
         let cb = move |res: Result<(), glib::Error>| {
             if let (Some(w), Err(e)) = (weak.upgrade(), res) {
                 if !e.matches(gio::IOErrorEnum::FailedHandled) {
-                    w.toast(&format!("Unable to eject “{name}”: {}", e.message()));
+                    w.toast(&trf!(
+                        "Unable to eject “{name}”: {error}",
+                        name = name,
+                        error = e.message()
+                    ));
                 }
             }
         };
@@ -1210,7 +1220,7 @@ impl Window {
         glib::spawn_future_local(async move {
             let Some(w) = weak.upgrade() else { return };
             let Some(clip) = w.read_clipboard().await else {
-                w.toast("Nothing to paste");
+                w.toast(tr("Nothing to paste"));
                 return;
             };
             if clip.cut {
@@ -1267,19 +1277,19 @@ impl Window {
                     .borrow_mut()
                     .push(Undo::Trash(out.trashed.clone()));
                 let msg = if out.trashed.len() == 1 {
-                    format!(
+                    trf!(
                         "“{}” moved to Trash",
                         crate::ops::display_name(&out.trashed[0])
                     )
                 } else {
-                    format!(
+                    trf!(
                         "{} moved to Trash",
                         crate::fmt::item_count(out.trashed.len() as u64)
                     )
                 };
                 let toast = adw::Toast::builder()
                     .title(msg)
-                    .button_label("_Undo")
+                    .button_label(tr("_Undo"))
                     .action_name("win.undo")
                     .use_markup(false)
                     .build();
@@ -1349,12 +1359,12 @@ impl Window {
         }
         let weak = Rc::downgrade(self);
         let heading = if files.len() == 1 {
-            format!(
+            trf!(
                 "Permanently Delete “{}”?",
                 crate::ops::display_name(&files[0])
             )
         } else {
-            format!(
+            trf!(
                 "Permanently Delete {}?",
                 crate::fmt::item_count(files.len() as u64)
             )
@@ -1362,8 +1372,8 @@ impl Window {
         dialogs::confirm(
             &self.window,
             &heading,
-            "If you delete an item, it will be permanently lost.",
-            "_Delete",
+            tr("If you delete an item, it will be permanently lost."),
+            tr("_Delete"),
             move || {
                 if let Some(w) = weak.upgrade() {
                     w.start_job(Job::Delete(files.clone()), None);
@@ -1376,9 +1386,9 @@ impl Window {
         let weak = Rc::downgrade(self);
         dialogs::confirm(
             &self.window,
-            "Empty Trash?",
-            "All items in the Trash will be permanently deleted.",
-            "_Empty Trash",
+            tr("Empty Trash?"),
+            tr("All items in the Trash will be permanently deleted."),
+            tr("_Empty Trash"),
             move || {
                 if let Some(w) = weak.upgrade() {
                     w.start_job(Job::EmptyTrash, None);
@@ -1389,7 +1399,7 @@ impl Window {
 
     fn undo(self: &Rc<Self>) {
         let Some(u) = self.shared.undo.borrow_mut().pop() else {
-            self.toast("Nothing to undo");
+            self.toast(tr("Nothing to undo"));
             return;
         };
         match u {
@@ -1404,7 +1414,7 @@ impl Window {
                         .set_display_name_future(&old_name, glib::Priority::DEFAULT)
                         .await;
                     if let (Some(w), Err(e)) = (weak.upgrade(), res) {
-                        w.toast(&format!("Could not undo rename: {}", e.message()));
+                        w.toast(&trf!("Could not undo rename: {}", e.message()));
                     }
                 });
             }
@@ -1428,11 +1438,11 @@ impl Window {
         dialogs::name_dialog(
             &self.window,
             if is_dir {
-                "Rename Folder"
+                tr("Rename Folder")
             } else {
-                "Rename File"
+                tr("Rename File")
             },
-            "_Rename",
+            tr("_Rename"),
             &old,
             is_dir,
             parent,
@@ -1453,7 +1463,7 @@ impl Window {
                             });
                             tab.select_when_listed(vec![new_file]);
                         }
-                        Err(e) => w.toast(&format!("Could not rename: {}", e.message())),
+                        Err(e) => w.toast(&trf!("Could not rename: {}", e.message())),
                     }
                 });
             },
@@ -1469,8 +1479,8 @@ impl Window {
         let d = dir.clone();
         dialogs::name_dialog(
             &self.window,
-            "New Folder",
-            "_Create",
+            tr("New Folder"),
+            tr("_Create"),
             "",
             true,
             Some(dir),
@@ -1481,7 +1491,7 @@ impl Window {
                 glib::spawn_future_local(async move {
                     match f.make_directory_future(glib::Priority::DEFAULT).await {
                         Ok(()) => tab.select_when_listed(vec![f]),
-                        Err(e) => w.toast(&format!("Could not create folder: {}", e.message())),
+                        Err(e) => w.toast(&trf!("Could not create folder: {}", e.message())),
                     }
                 });
             },
@@ -1499,13 +1509,13 @@ impl Window {
         let uri = loc.uri().to_string();
         let mut list = crate::bookmarks::load();
         if list.iter().any(|b| b.uri == uri) {
-            self.toast("Location is already bookmarked");
+            self.toast(tr("Location is already bookmarked"));
             return;
         }
         list.push(crate::bookmarks::Bookmark { uri, label: None });
         match crate::bookmarks::save(&list) {
-            Ok(()) => self.toast(&format!("“{}” added to bookmarks", location_title(&loc))),
-            Err(e) => self.toast(&format!("Could not save bookmarks: {e}")),
+            Ok(()) => self.toast(&trf!("“{}” added to bookmarks", location_title(&loc))),
+            Err(e) => self.toast(&trf!("Could not save bookmarks: {e}", e = e)),
         }
         self.shared.windows.borrow().iter().for_each(|w| {
             if let Some(s) = w.sidebar.borrow().as_ref() {
@@ -1523,46 +1533,46 @@ impl Window {
         let dirs = !infos.is_empty() && infos.iter().all(info_is_dir);
         if tab.is_trash() {
             let sec = gio::Menu::new();
-            sec.append(Some("_Restore From Trash"), Some("win.restore"));
-            sec.append(Some("_Delete From Trash…"), Some("win.delete"));
+            sec.append(Some(tr("_Restore From Trash")), Some("win.restore"));
+            sec.append(Some(tr("_Delete From Trash…")), Some("win.delete"));
             menu.append_section(None, &sec);
             let sec = gio::Menu::new();
-            sec.append(Some("_Properties"), Some("win.properties"));
+            sec.append(Some(tr("_Properties")), Some("win.properties"));
             menu.append_section(None, &sec);
             return menu;
         }
         let sec = gio::Menu::new();
-        sec.append(Some("_Open"), Some("win.open"));
+        sec.append(Some(tr("_Open")), Some("win.open"));
         if dirs {
-            sec.append(Some("Open in New _Tab"), Some("win.open-new-tab"));
-            sec.append(Some("Open in New _Window"), Some("win.open-new-window"));
+            sec.append(Some(tr("Open in New _Tab")), Some("win.open-new-tab"));
+            sec.append(Some(tr("Open in New _Window")), Some("win.open-new-window"));
         } else {
-            sec.append(Some("Open _With…"), Some("win.open-with"));
+            sec.append(Some(tr("Open _With…")), Some("win.open-with"));
         }
         if tab.is_searching() || tab.location().uri_scheme().as_deref() == Some("recent") {
-            sec.append(Some("Open Item _Location"), Some("win.open-location"));
+            sec.append(Some(tr("Open Item _Location")), Some("win.open-location"));
         }
         menu.append_section(None, &sec);
         let sec = gio::Menu::new();
-        sec.append(Some("Cu_t"), Some("win.cut"));
-        sec.append(Some("_Copy"), Some("win.copy"));
+        sec.append(Some(tr("Cu_t")), Some("win.cut"));
+        sec.append(Some(tr("_Copy")), Some("win.copy"));
         if dirs && infos.len() == 1 {
-            sec.append(Some("Paste Into Folder"), Some("win.paste-into"));
+            sec.append(Some(tr("Paste Into Folder")), Some("win.paste-into"));
         }
         menu.append_section(None, &sec);
         let sec = gio::Menu::new();
-        sec.append(Some("Rena_me…"), Some("win.rename"));
+        sec.append(Some(tr("Rena_me…")), Some("win.rename"));
         if s.show_link {
-            sec.append(Some("Create _Link"), Some("win.create-link"));
+            sec.append(Some(tr("Create _Link")), Some("win.create-link"));
         }
-        sec.append(Some("Mo_ve to Trash"), Some("win.trash"));
+        sec.append(Some(tr("Mo_ve to Trash")), Some("win.trash"));
         if s.show_delete {
-            sec.append(Some("_Delete Permanently…"), Some("win.delete"));
+            sec.append(Some(tr("_Delete Permanently…")), Some("win.delete"));
         }
         menu.append_section(None, &sec);
         let sec = gio::Menu::new();
-        sec.append(Some("Copy Location"), Some("win.copy-location"));
-        sec.append(Some("_Properties"), Some("win.properties"));
+        sec.append(Some(tr("Copy Location")), Some("win.copy-location"));
+        sec.append(Some(tr("_Properties")), Some("win.properties"));
         menu.append_section(None, &sec);
         menu
     }
@@ -1571,22 +1581,22 @@ impl Window {
         let menu = gio::Menu::new();
         if tab.is_trash() {
             let sec = gio::Menu::new();
-            sec.append(Some("_Empty Trash…"), Some("win.empty-trash"));
-            sec.append(Some("Select _All"), Some("win.select-all"));
+            sec.append(Some(tr("_Empty Trash…")), Some("win.empty-trash"));
+            sec.append(Some(tr("Select _All")), Some("win.select-all"));
             menu.append_section(None, &sec);
             return menu;
         }
         let sec = gio::Menu::new();
-        sec.append(Some("New _Folder…"), Some("win.new-folder"));
+        sec.append(Some(tr("New _Folder…")), Some("win.new-folder"));
         menu.append_section(None, &sec);
         let sec = gio::Menu::new();
-        sec.append(Some("_Paste"), Some("win.paste"));
-        sec.append(Some("Select _All"), Some("win.select-all"));
+        sec.append(Some(tr("_Paste")), Some("win.paste"));
+        sec.append(Some(tr("Select _All")), Some("win.select-all"));
         menu.append_section(None, &sec);
         let sec = gio::Menu::new();
-        sec.append(Some("Add to _Bookmarks"), Some("win.bookmark"));
-        sec.append(Some("Show _Hidden Files"), Some("win.show-hidden"));
-        sec.append(Some("_Properties"), Some("win.folder-properties"));
+        sec.append(Some(tr("Add to _Bookmarks")), Some("win.bookmark"));
+        sec.append(Some(tr("Show _Hidden Files")), Some("win.show-hidden"));
+        sec.append(Some(tr("_Properties")), Some("win.folder-properties"));
         menu.append_section(None, &sec);
         menu
     }

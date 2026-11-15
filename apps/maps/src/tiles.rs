@@ -5,6 +5,7 @@
 use crate::http::{self, Cached, TileCache};
 use crate::settings::expand_tile_url;
 use gtk::{gio, glib};
+use helix_app_common::i18n::tr;
 use shumate::prelude::*;
 use shumate::subclass::prelude::*;
 use std::cell::RefCell;
@@ -81,7 +82,7 @@ impl Pool {
                     job.cache.store(job.z, job.x, job.y, &data);
                     Ok(data)
                 }
-                Ok(_) => Err("The tile server did not return an image".to_string()),
+                Ok(_) => Err(tr("The tile server did not return an image").to_string()),
                 Err(e) => Err(e),
             };
             let result = match (result, job.stale) {

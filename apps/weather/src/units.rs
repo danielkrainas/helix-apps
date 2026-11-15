@@ -1,6 +1,8 @@
 //! Unit handling: GWeather unit preferences, locale defaults, conversion and
 //! formatting. Raw data is always metric (°C, km/h, hPa).
 
+use helix_app_common::trf;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Temperature {
     Celsius,
@@ -126,9 +128,9 @@ impl Speed {
         match self {
             Speed::MetersPerSecond => format!("{v:.1} m/s"),
             Speed::Kph => format!("{} km/h", v.round() as i64),
-            Speed::Mph => format!("{} mph", v.round() as i64),
+            Speed::Mph => trf!("{} mph", v.round() as i64),
             Speed::Knots => format!("{} kn", v.round() as i64),
-            Speed::Beaufort => format!("Beaufort {}", v as i64),
+            Speed::Beaufort => trf!("Beaufort {}", v as i64),
         }
     }
 }
@@ -168,12 +170,12 @@ impl Pressure {
     pub fn format(self, hpa: f64) -> String {
         let v = self.convert(hpa);
         match self {
-            Pressure::Kpa => format!("{v:.1} kPa"),
-            Pressure::Hpa => format!("{v:.0} hPa"),
+            Pressure::Kpa => trf!("{v} kPa", v = helix_app_common::i18n::format_number(v, 1)),
+            Pressure::Hpa => trf!("{v} hPa", v = helix_app_common::i18n::format_number(v, 0)),
             Pressure::Mb => format!("{v:.0} mb"),
-            Pressure::MmHg => format!("{v:.0} mmHg"),
-            Pressure::InHg => format!("{v:.2} inHg"),
-            Pressure::Atm => format!("{v:.3} atm"),
+            Pressure::MmHg => trf!("{v} mmHg", v = helix_app_common::i18n::format_number(v, 0)),
+            Pressure::InHg => trf!("{v} inHg", v = helix_app_common::i18n::format_number(v, 2)),
+            Pressure::Atm => trf!("{v} atm", v = helix_app_common::i18n::format_number(v, 3)),
         }
     }
 }

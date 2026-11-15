@@ -10,6 +10,8 @@ use crate::app::App;
 use crate::doc::Doc;
 use crate::encoding::LineEnding;
 use crate::textops;
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 pub struct Window {
     app: Weak<App>,
@@ -33,22 +35,22 @@ pub struct Window {
 }
 
 /// How documents with unsaved changes are described.
-const UNSAVED: &str = "Unsaved Changes";
+const UNSAVED: &str = n_("Unsaved Changes");
 
 /// Shown under the Go to Line entry for input it cannot use.
-const GOTO_ERROR: &str = "Enter a line number, or line:column";
+const GOTO_ERROR: &str = n_("Enter a line number, or line:column");
 
 fn primary_menu() -> gio::Menu {
     let menu = gio::Menu::new();
     let s1 = gio::Menu::new();
-    s1.append(Some("New _Tab"), Some("win.new-tab"));
-    s1.append(Some("New _Window"), Some("app.new-window"));
-    s1.append(Some("Save _As…"), Some("win.save-as"));
+    s1.append(Some(tr("New _Tab")), Some("win.new-tab"));
+    s1.append(Some(tr("New _Window")), Some("app.new-window"));
+    s1.append(Some(tr("Save _As…")), Some("win.save-as"));
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
-    s2.append(Some("_Find…"), Some("win.find"));
-    s2.append(Some("Find and _Replace…"), Some("win.replace"));
-    s2.append(Some("_Go to Line…"), Some("win.goto-line"));
+    s2.append(Some(tr("_Find…")), Some("win.find"));
+    s2.append(Some(tr("Find and _Replace…")), Some("win.replace"));
+    s2.append(Some(tr("_Go to Line…")), Some("win.goto-line"));
     menu.append_section(None, &s2);
     let s3 = gio::Menu::new();
     // A row of Zoom Out / level (resets) / Zoom In, added by `Window::new`.
@@ -57,9 +59,12 @@ fn primary_menu() -> gio::Menu {
     s3.append_item(&zoom);
     menu.append_section(None, &s3);
     let s4 = gio::Menu::new();
-    s4.append(Some("_Preferences"), Some("app.preferences"));
-    s4.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
-    s4.append(Some("_About Text Editor"), Some("app.about"));
+    s4.append(Some(tr("_Preferences")), Some("app.preferences"));
+    s4.append(
+        Some(tr("_Keyboard Shortcuts")),
+        Some("win.show-help-overlay"),
+    );
+    s4.append(Some(tr("_About Text Editor")), Some("app.about"));
     menu.append_section(None, &s4);
     menu
 }
@@ -72,7 +77,7 @@ fn line_ending_menu() -> gio::Menu {
         item.set_action_and_target_value(Some("win.line-ending"), Some(&le.nick().to_variant()));
         section.append_item(&item);
     }
-    menu.append_section(Some("Line Ending"), &section);
+    menu.append_section(Some(tr("Line Ending")), &section);
     menu
 }
 
@@ -80,7 +85,7 @@ impl Window {
     pub fn new(app: &Rc<App>) -> Rc<Window> {
         let win = adw::ApplicationWindow::builder()
             .application(&app.gtk)
-            .title("Text Editor")
+            .title(tr("Text Editor"))
             .default_width(900)
             .default_height(700)
             .width_request(360)
@@ -94,14 +99,14 @@ impl Window {
 
         // Recent documents popover.
         let recent_search = gtk::SearchEntry::builder()
-            .placeholder_text("Search documents")
+            .placeholder_text(tr("Search documents"))
             .build()
-            .labelled("Search Recent Documents");
+            .labelled(tr("Search Recent Documents"));
         let recent_list = gtk::ListBox::new();
         recent_list.add_css_class("navigation-sidebar");
         recent_list.set_placeholder(Some(
             &gtk::Label::builder()
-                .label("No Recent Documents")
+                .label(tr("No Recent Documents"))
                 .margin_top(12)
                 .margin_bottom(12)
                 .css_classes(["dim-label"])
@@ -114,7 +119,7 @@ impl Window {
             .max_content_height(360)
             .min_content_width(320)
             .build();
-        let browse = gtk::Button::with_mnemonic("_Browse Files…");
+        let browse = gtk::Button::with_mnemonic(tr("_Browse Files…"));
         browse.set_action_name(Some("win.open"));
         let recent_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
         recent_box.append(&recent_search);
@@ -122,38 +127,38 @@ impl Window {
         recent_box.append(&browse);
         let recent_popover = gtk::Popover::builder().child(&recent_box).build();
         let open_btn = adw::SplitButton::builder()
-            .label("_Open")
+            .label(tr("_Open"))
             .use_underline(true)
             .action_name("win.open")
             .popover(&recent_popover)
-            .tooltip_text("Open a File (Ctrl+O)")
-            .dropdown_tooltip("Recent Documents")
+            .tooltip_text(tr("Open a File (Ctrl+O)"))
+            .dropdown_tooltip(tr("Recent Documents"))
             .build();
 
         let new_tab_btn = gtk::Button::from_icon_name("tab-new-symbolic");
         new_tab_btn.set_action_name(Some("win.new-tab"));
-        new_tab_btn.set_tooltip_text(Some("New Tab (Ctrl+T)"));
-        helix_app_common::set_accessible_label(&new_tab_btn, "New Tab");
-        let save_btn = gtk::Button::with_mnemonic("_Save");
+        new_tab_btn.set_tooltip_text(Some(tr("New Tab (Ctrl+T)")));
+        helix_app_common::set_accessible_label(&new_tab_btn, tr("New Tab"));
+        let save_btn = gtk::Button::with_mnemonic(tr("_Save"));
         save_btn.set_action_name(Some("win.save"));
-        save_btn.set_tooltip_text(Some("Save (Ctrl+S)"));
+        save_btn.set_tooltip_text(Some(tr("Save (Ctrl+S)")));
         let menu_btn = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&primary_menu())
             .primary(true)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu");
-        let zoom_out = helix_app_common::icon_button("zoom-out-symbolic", "Zoom Out");
+            .labelled(tr("Main Menu"));
+        let zoom_out = helix_app_common::icon_button("zoom-out-symbolic", tr("Zoom Out"));
         zoom_out.set_action_name(Some("app.zoom-out"));
         let zoom_level = gtk::Button::builder()
             .label("100%")
             .action_name("app.zoom-reset")
-            .tooltip_text("Reset Zoom")
+            .tooltip_text(tr("Reset Zoom"))
             .hexpand(true)
             .build();
         zoom_level.add_css_class("flat");
-        let zoom_in = helix_app_common::icon_button("zoom-in-symbolic", "Zoom In");
+        let zoom_in = helix_app_common::icon_button("zoom-in-symbolic", tr("Zoom In"));
         zoom_in.set_action_name(Some("app.zoom-in"));
         for b in [&zoom_out, &zoom_in] {
             b.add_css_class("flat");
@@ -166,16 +171,16 @@ impl Window {
         if let Some(pm) = menu_btn.popover().and_downcast::<gtk::PopoverMenu>() {
             pm.add_child(&zoom_row, "zoom");
         }
-        let title = adw::WindowTitle::new("Text Editor", "");
+        let title = adw::WindowTitle::new(tr("Text Editor"), "");
         let header = adw::HeaderBar::new();
         header.pack_start(&open_btn);
         header.pack_start(&new_tab_btn);
         header.set_title_widget(Some(&title));
         header.pack_end(&menu_btn);
         header.pack_end(&save_btn);
-        let save_icon_btn = helix_app_common::icon_button("document-save-symbolic", "Save");
+        let save_icon_btn = helix_app_common::icon_button("document-save-symbolic", tr("Save"));
         save_icon_btn.set_action_name(Some("win.save"));
-        save_icon_btn.set_tooltip_text(Some("Save (Ctrl+S)"));
+        save_icon_btn.set_tooltip_text(Some(tr("Save (Ctrl+S)")));
         save_icon_btn.set_visible(false);
         header.pack_end(&save_icon_btn);
 
@@ -189,17 +194,17 @@ impl Window {
 
         // Status bar.
         let goto_entry = gtk::Entry::builder()
-            .placeholder_text("Line or Line:Column")
+            .placeholder_text(tr("Line or Line:Column"))
             .input_purpose(gtk::InputPurpose::Digits)
             .build();
         let goto_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
         let goto_heading = gtk::Label::builder()
-            .label("Go to Line")
+            .label(tr("Go to Line"))
             .css_classes(["heading"])
             .xalign(0.0)
             .build();
         let goto_error = gtk::Label::builder()
-            .label(GOTO_ERROR)
+            .label(tr(GOTO_ERROR))
             .css_classes(["error", "caption"])
             .xalign(0.0)
             .wrap(true)
@@ -212,16 +217,16 @@ impl Window {
         helix_app_common::label_widget(&goto_entry, &goto_heading);
         let goto_popover = gtk::Popover::builder().child(&goto_box).build();
         let pos_btn = gtk::MenuButton::builder()
-            .label("Ln 1, Col 1")
+            .label(tr("Ln 1, Col 1"))
             .popover(&goto_popover)
-            .tooltip_text("Go to Line (Ctrl+I)")
+            .tooltip_text(tr("Go to Line (Ctrl+I)"))
             .css_classes(["flat"])
             .build();
         let indent_label = gtk::Label::new(None);
         indent_label.add_css_class("dim-label");
         let enc_btn = gtk::MenuButton::builder()
             .menu_model(&line_ending_menu())
-            .tooltip_text("Encoding and Line Ending")
+            .tooltip_text(tr("Encoding and Line Ending"))
             .css_classes(["flat"])
             .always_show_arrow(false)
             .build();
@@ -537,7 +542,11 @@ impl Window {
                 }
                 None => {
                     goto_error.set_visible(true);
-                    helix_app_common::a11y::set_input_error(e, Some(&goto_error), Some(GOTO_ERROR));
+                    helix_app_common::a11y::set_input_error(
+                        e,
+                        Some(&goto_error),
+                        Some(tr(GOTO_ERROR)),
+                    );
                 }
             }
         });
@@ -687,7 +696,11 @@ impl Window {
                 }
                 Err(e) => {
                     let name = file.parse_name();
-                    w.toast(&format!("Could not open “{name}”: {}", e.message()));
+                    w.toast(&trf!(
+                        "Could not open “{name}”: {error}",
+                        name = name,
+                        error = e.message()
+                    ));
                     if fresh {
                         w.tab_view.close_page(&w.tab_view.page(&doc.root));
                     }
@@ -713,7 +726,7 @@ impl Window {
 
     fn open_dialog(self: &Rc<Self>) {
         let dialog = gtk::FileDialog::builder()
-            .title("Open Files")
+            .title(tr("Open Files"))
             .modal(true)
             .build();
         if let Some(dir) = self
@@ -737,7 +750,7 @@ impl Window {
 
     async fn choose_save_file(&self, doc: &Doc) -> Option<gio::File> {
         let dialog = gtk::FileDialog::builder()
-            .title("Save As")
+            .title(tr("Save As"))
             .modal(true)
             .initial_name(doc.title())
             .build();
@@ -766,18 +779,14 @@ impl Window {
         match doc.save_to(file.clone()).await {
             Ok(fell_back) => {
                 if fell_back {
-                    self.toast("The document could not be saved in its original encoding and was saved as UTF-8");
+                    self.toast(tr("The document could not be saved in its original encoding and was saved as UTF-8"));
                 }
                 self.app().add_recent(&file.uri());
                 self.app().schedule_autosave();
                 true
             }
             Err(e) => {
-                self.toast(&format!(
-                    "Could not save “{}”: {}",
-                    doc.title(),
-                    e.message()
-                ));
+                self.toast(&trf!("Could not save “{}”: {}", doc.title(), e.message()));
                 false
             }
         }
@@ -802,7 +811,7 @@ impl Window {
         let modified = doc.is_modified();
         let icon = modified.then(|| gio::ThemedIcon::new("document-edit-symbolic"));
         page.set_indicator_icon(icon.as_ref());
-        page.set_indicator_tooltip(if modified { UNSAVED } else { "" });
+        page.set_indicator_tooltip(if modified { tr(UNSAVED) } else { "" });
         let tip = if modified {
             format!("{UNSAVED}\n{}", doc.subtitle())
         } else {
@@ -822,21 +831,21 @@ impl Window {
                 if d.is_modified() {
                     self.title
                         .set_subtitle(&format!("{UNSAVED} · {}", d.subtitle()));
-                    self.win.set_title(Some(&format!(
+                    self.win.set_title(Some(&trf!(
                         "{} ({}) — Text Editor",
                         d.title(),
-                        UNSAVED.to_lowercase()
+                        tr(UNSAVED).to_lowercase()
                     )));
                 } else {
                     self.title.set_subtitle(&d.subtitle());
                     self.win
-                        .set_title(Some(&format!("{} — Text Editor", d.title())));
+                        .set_title(Some(&trf!("{} — Text Editor", d.title())));
                 }
             }
             None => {
-                self.title.set_title("Text Editor");
+                self.title.set_title(tr("Text Editor"));
                 self.title.set_subtitle("");
-                self.win.set_title(Some("Text Editor"));
+                self.win.set_title(Some(tr("Text Editor")));
             }
         }
     }
@@ -845,22 +854,23 @@ impl Window {
         let app = self.app();
         let s = app.settings.borrow();
         self.indent_label.set_text(&if s.indent_spaces {
-            format!("Spaces: {}", s.tab_width)
+            trf!("Spaces: {}", s.tab_width)
         } else {
-            format!("Tab Width: {}", s.tab_width)
+            trf!("Tab Width: {}", s.tab_width)
         });
         drop(s);
         let zoom = format!("{}%", app.zoom_percent());
         self.zoom_level.set_label(&zoom);
         helix_app_common::set_accessible_label(
             &self.zoom_level,
-            &format!("Reset Zoom, now {zoom}"),
+            &trf!("Reset Zoom, now {zoom}", zoom = zoom),
         );
         let Some(d) = self.current_doc() else { return };
         let (l, c) = d.cursor_display();
-        self.pos_btn.set_label(&format!("Ln {l}, Col {c}"));
+        self.pos_btn
+            .set_label(&trf!("Ln {l}, Col {c}", l = l, c = c));
         let fmt = d.format.get();
-        let bom = if fmt.bom { " (BOM)" } else { "" };
+        let bom = if fmt.bom { tr(" (BOM)") } else { "" };
         self.enc_btn.set_label(&format!(
             "{}{bom} · {}",
             fmt.encoding_name(),
@@ -946,22 +956,29 @@ impl Window {
 async fn confirm_close(win: &adw::ApplicationWindow, docs: &[Rc<Doc>]) -> String {
     let (heading, body) = if docs.len() == 1 {
         (
-            format!("Save Changes to “{}”?", docs[0].title()),
-            "Unsaved changes will be permanently lost.".to_string(),
+            trf!("Save Changes to “{}”?", docs[0].title()),
+            tr("Unsaved changes will be permanently lost.").to_string(),
         )
     } else {
         let names: Vec<String> = docs.iter().map(|d| format!("• {}", d.title())).collect();
         (
-            "Save Changes?".to_string(),
+            tr("Save Changes?").to_string(),
             format!("These documents have unsaved changes:\n{}\nUnsaved changes will be permanently lost.", names.join("\n")),
         )
     };
     let dialog = adw::AlertDialog::new(Some(&heading), Some(&body));
     let multi = docs.len() > 1;
     dialog.add_responses(&[
-        ("cancel", "_Cancel"),
-        ("discard", if multi { "_Discard All" } else { "_Discard" }),
-        ("save", if multi { "_Save All" } else { "_Save" }),
+        ("cancel", tr("_Cancel")),
+        (
+            "discard",
+            if multi {
+                tr("_Discard All")
+            } else {
+                tr("_Discard")
+            },
+        ),
+        ("save", if multi { tr("_Save All") } else { tr("_Save") }),
     ]);
     dialog.set_response_appearance("discard", adw::ResponseAppearance::Destructive);
     dialog.set_response_appearance("save", adw::ResponseAppearance::Suggested);

@@ -1,5 +1,7 @@
 //! Helix Calendar.
 
+use helix_app_common::trf;
+
 mod backend;
 mod colors;
 mod dates;
@@ -20,16 +22,19 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<ui::Options, Str
     let mut opts = ui::Options::default();
     let mut it = args.into_iter();
     while let Some(a) = it.next() {
-        let mut value = |name: &str| it.next().ok_or_else(|| format!("{name} needs a value"));
+        let mut value = |name: &str| {
+            it.next()
+                .ok_or_else(|| trf!("{name} needs a value", name = name))
+        };
         match a.as_str() {
             "-d" | "--date" => {
                 let v = value(&a)?;
                 opts.date =
-                    Some(dates::parse_date(&v).ok_or_else(|| format!("invalid date “{v}”"))?);
+                    Some(dates::parse_date(&v).ok_or_else(|| trf!("invalid date “{v}”", v = v))?);
             }
             "-u" | "--uuid" => opts.uuid = Some(value(&a)?),
             "-h" | "--help" => return Err(String::new()),
-            s if s.starts_with('-') => return Err(format!("unknown option {s}")),
+            s if s.starts_with('-') => return Err(trf!("unknown option {s}", s = s)),
             s => opts.files.push(s.into()),
         }
     }
@@ -37,6 +42,7 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<ui::Options, Str
 }
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     match parse_args(std::env::args().skip(1)) {
         Ok(opts) => ui::run(opts),
         Err(e) if e.is_empty() => {

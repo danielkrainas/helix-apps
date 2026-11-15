@@ -7,8 +7,10 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use crate::values::{self, Choice};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trnf;
 
-pub const UNSUPPORTED: &str = "Not supported by this system";
+pub const UNSUPPORTED: &str = n_("Not supported by this system");
 
 /// Whether `key` is stored in an installed schema (vs. memory only).
 pub fn has_key(prefs: &Prefs, key: &str) -> bool {
@@ -29,7 +31,7 @@ pub fn watch(prefs: &Prefs, key: &str, f: impl Fn() + 'static) {
 
 fn mark(row: &impl IsA<adw::ActionRow>, prefs: &Prefs, key: &str) {
     if !has_key(prefs, key) {
-        row.as_ref().set_subtitle(UNSUPPORTED);
+        row.as_ref().set_subtitle(tr(UNSUPPORTED));
     }
 }
 
@@ -94,7 +96,7 @@ pub fn expander(
         row.set_subtitle(&glib::markup_escape_text(subtitle));
     }
     if !has_key(prefs, key) {
-        row.set_subtitle(UNSUPPORTED);
+        row.set_subtitle(tr(UNSUPPORTED));
     }
     row.set_enable_expansion(prefs.get::<bool>(key, default));
     row.connect_enable_expansion_notify(glib::clone!(
@@ -219,7 +221,9 @@ pub fn nick_combo(
 ) -> adw::ComboRow {
     let row = adw::ComboRow::builder()
         .title(title)
-        .model(&string_list(choices.iter().map(|c| c.1.to_string())))
+        .model(&string_list(
+            choices.iter().map(|c| helix_app_common::i18n::tr_dyn(c.1)),
+        ))
         .build();
     mark(&row, prefs, key);
     let index = move |p: &Prefs| {
@@ -336,11 +340,9 @@ pub fn seconds_label(v: i64) -> String {
 
 pub fn days_label(v: i64) -> String {
     if v < 0 {
-        "Forever".into()
-    } else if v == 1 {
-        "1 day".into()
+        tr("Forever").into()
     } else {
-        format!("{v} days")
+        trnf!("{n} day", "{n} days", v)
     }
 }
 
@@ -404,7 +406,7 @@ pub fn value_label(value: &str) -> gtk::Label {
         .selectable(true)
         .wrap(true)
         .xalign(1.0)
-        .justify(gtk::Justification::Right)
+        .justify(helix_app_common::i18n::justify_end())
         .css_classes(["dim-label"])
         .build()
 }

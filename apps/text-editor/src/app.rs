@@ -11,6 +11,8 @@ use crate::encoding::{LineEnding, TextFormat};
 use crate::session::{self, Session, Store, TabState, WindowState};
 use crate::settings::{self, FontSpec, Settings, SCHEMA};
 use crate::window::Window;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 pub const APP_ID: &str = "org.helix.TextEditor";
 pub const APP_DIR: &str = "helix-text-editor";
@@ -150,7 +152,8 @@ impl App {
                 ".change-banner { background: alpha(@accent_bg_color, 0.3); }
                  .find-bar { border-bottom-color: alpha(currentColor, 0.6); }
                  .statusbar { border-top-color: alpha(currentColor, 0.6); }
-                 linegutter { background: none; border-right: 1px solid alpha(currentColor, 0.6); }",
+                 linegutter { background: none; border-right: 1px solid alpha(currentColor, 0.6); }
+                 linegutter:dir(rtl) { border-right: none; border-left: 1px solid alpha(currentColor, 0.6); }",
             );
         }
         let app = Rc::new_cyclic(|this| App {
@@ -194,7 +197,11 @@ impl App {
     }
 
     fn install_actions(&self) {
-        helix_app_common::install_standard_actions(&self.gtk, "Text Editor", "Edit text files");
+        helix_app_common::install_standard_actions(
+            &self.gtk,
+            tr("Text Editor"),
+            tr("Edit text files"),
+        );
         // Replace the standard quit so sessions are saved and prompts shown.
         let w = self.this.clone();
         let quit = gio::SimpleAction::new("quit", None);
@@ -320,7 +327,10 @@ impl App {
         self.zoom.set(z);
         self.apply_settings();
         if let Some(w) = self.active_window() {
-            w.toast(&format!("Zoom {:.0}%", settings::zoom_factor(z) * 100.0));
+            w.toast(&trf!(
+                "Zoom {z}%",
+                z = helix_app_common::i18n::format_number(settings::zoom_factor(z) * 100.0, 0)
+            ));
         }
     }
 

@@ -1,39 +1,25 @@
 //! Date arithmetic and formatting for the calendar views.
 
 use chrono::{Datelike, Duration, NaiveDate, NaiveTime, Timelike, Weekday};
-
-pub const MONTHS: [&str; 12] = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-];
+use helix_app_common::i18n::tr;
 
 pub fn month_name(m: u32) -> &'static str {
-    MONTHS[(m as usize + 11) % 12]
+    helix_app_common::i18n::month_name(m)
 }
 
 pub fn month_short(m: u32) -> &'static str {
-    &month_name(m)[..3]
+    helix_app_common::i18n::month_abbr(m)
 }
 
 pub fn weekday_short(w: Weekday) -> &'static str {
     match w {
-        Weekday::Mon => "Mon",
-        Weekday::Tue => "Tue",
-        Weekday::Wed => "Wed",
-        Weekday::Thu => "Thu",
-        Weekday::Fri => "Fri",
-        Weekday::Sat => "Sat",
-        Weekday::Sun => "Sun",
+        Weekday::Mon => tr("Mon"),
+        Weekday::Tue => tr("Tue"),
+        Weekday::Wed => tr("Wed"),
+        Weekday::Thu => tr("Thu"),
+        Weekday::Fri => tr("Fri"),
+        Weekday::Sat => tr("Sat"),
+        Weekday::Sun => tr("Sun"),
     }
 }
 

@@ -1,6 +1,7 @@
 //! Search filtering.
 
 use crate::journal::Entry;
+use helix_app_common::i18n::tr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SearchField {
@@ -21,10 +22,10 @@ impl SearchField {
 
     pub fn label(self) -> &'static str {
         match self {
-            SearchField::All => "All Fields",
-            SearchField::Message => "Message",
-            SearchField::Process => "Process",
-            SearchField::Unit => "Unit",
+            SearchField::All => tr("All Fields"),
+            SearchField::Message => tr("Message"),
+            SearchField::Process => tr("Process"),
+            SearchField::Unit => tr("Unit"),
         }
     }
 }

@@ -13,6 +13,7 @@ use super::widgets::{
 };
 use super::{Ctx, Panel};
 use crate::values::{self, CURSOR_SIZES};
+use helix_app_common::i18n::{n_, tr};
 
 const INTERFACE: &str = "org.gnome.desktop.interface";
 const A11Y: &str = "org.gnome.desktop.a11y";
@@ -26,21 +27,21 @@ const SOUND: &str = "org.gnome.desktop.sound";
 const WM: &str = "org.gnome.desktop.wm.preferences";
 
 const VISUAL_BELL_TYPES: &[(&str, &str)] = &[
-    ("fullscreen-flash", "Flash Entire Screen"),
-    ("frame-flash", "Flash Focused Window"),
+    ("fullscreen-flash", n_("Flash Entire Screen")),
+    ("frame-flash", n_("Flash Focused Window")),
 ];
 const SCREEN_POSITIONS: &[(&str, &str)] = &[
-    ("full-screen", "Full Screen"),
-    ("top-half", "Top Half"),
-    ("bottom-half", "Bottom Half"),
-    ("left-half", "Left Half"),
-    ("right-half", "Right Half"),
+    ("full-screen", n_("Full Screen")),
+    ("top-half", n_("Top Half")),
+    ("bottom-half", n_("Bottom Half")),
+    ("left-half", n_("Left Half")),
+    ("right-half", n_("Right Half")),
 ];
 const MOUSE_TRACKING: &[(&str, &str)] = &[
-    ("proportional", "Proportionally"),
-    ("centered", "Keep Pointer Centered"),
-    ("push", "Push at Screen Edges"),
-    ("none", "Do Not Follow"),
+    ("proportional", n_("Proportionally")),
+    ("centered", n_("Keep Pointer Centered")),
+    ("push", n_("Push at Screen Edges")),
+    ("none", n_("Do Not Follow")),
 ];
 
 pub struct AccessibilityPanel;
@@ -58,46 +59,46 @@ impl Panel for AccessibilityPanel {
         let a11y = ctx.prefs(A11Y);
         let page = widgets::page();
 
-        let general = widgets::group("General");
+        let general = widgets::group(tr("General"));
         general.add(&switch(
             &a11y,
             "always-show-universal-access-status",
             false,
             false,
-            "Always Show Accessibility Menu",
-            "Show the accessibility menu in the top bar",
+            tr("Always Show Accessibility Menu"),
+            tr("Show the accessibility menu in the top bar"),
         ));
         page.add(&general);
 
         let subpages = widgets::group("");
         let entries: [(&str, &str, &str, SubpageFn); 5] = [
             (
-                "Seeing",
-                "Contrast, text size, cursor, motion and screen reader",
+                tr("Seeing"),
+                tr("Contrast, text size, cursor, motion and screen reader"),
                 "view-reveal-symbolic",
                 seeing_page,
             ),
             (
-                "Hearing",
-                "Overamplification and visual alerts",
+                tr("Hearing"),
+                tr("Overamplification and visual alerts"),
                 "audio-volume-high-symbolic",
                 hearing_page,
             ),
             (
-                "Typing",
-                "Screen keyboard and typing assistance",
+                tr("Typing"),
+                tr("Screen keyboard and typing assistance"),
                 "input-keyboard-symbolic",
                 typing_page,
             ),
             (
-                "Pointing & Clicking",
-                "Mouse keys, click assist and double-click delay",
+                tr("Pointing & Clicking"),
+                tr("Mouse keys, click assist and double-click delay"),
                 "input-mouse-symbolic",
                 pointing_page,
             ),
             (
-                "Zoom",
-                "Magnify part of the screen",
+                tr("Zoom"),
+                tr("Magnify part of the screen"),
                 "zoom-in-symbolic",
                 zoom_page,
             ),
@@ -115,7 +116,7 @@ impl Panel for AccessibilityPanel {
         }
         page.add(&subpages);
 
-        nav.add(&subpage("Accessibility", &page));
+        nav.add(&subpage(tr("Accessibility"), &page));
         nav.upcast()
     }
 }
@@ -142,16 +143,16 @@ fn seeing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         "high-contrast",
         false,
         false,
-        "High Contrast",
-        "Increase the contrast of interface elements",
+        tr("High Contrast"),
+        tr("Increase the contrast of interface elements"),
     ));
     group.add(&switch(
         &a11y_iface,
         "show-status-shapes",
         false,
         false,
-        "Show Status Shapes",
-        "Use shapes as well as colour to show the state of switches and other controls",
+        tr("Show Status Shapes"),
+        tr("Use shapes as well as colour to show the state of switches and other controls"),
     ));
     group.add(&large_text_row(&iface));
     group.add(&cursor_size_row(&iface));
@@ -160,26 +161,26 @@ fn seeing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         "enable-animations",
         true,
         true,
-        "Reduce Animation",
-        "Turn off animations in the interface",
+        tr("Reduce Animation"),
+        tr("Turn off animations in the interface"),
     ));
     group.add(&switch(
         &iface,
         "overlay-scrolling",
         true,
         true,
-        "Always Show Scrollbars",
+        tr("Always Show Scrollbars"),
         "",
     ));
     page.add(&group);
-    let reader = widgets::group("Screen Reader");
+    let reader = widgets::group(tr("Screen Reader"));
     reader.add(&switch(
         &apps,
         "screen-reader-enabled",
         false,
         false,
-        "Screen Reader",
-        "Read the screen aloud",
+        tr("Screen Reader"),
+        tr("Read the screen aloud"),
     ));
     page.add(&reader);
     page
@@ -195,22 +196,22 @@ fn hearing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         "allow-volume-above-100-percent",
         false,
         false,
-        "Overamplification",
-        "Allow volume above 100 %, which can reduce sound quality",
+        tr("Overamplification"),
+        tr("Allow volume above 100 %, which can reduce sound quality"),
     ));
     let visual = expander(
         &wm,
         "visual-bell",
         false,
-        "Visual Alerts",
-        "Flash the screen or window when an alert sound plays",
+        tr("Visual Alerts"),
+        tr("Flash the screen or window when an alert sound plays"),
     );
     visual.add_row(&nick_combo(
         &wm,
         "visual-bell-type",
         "fullscreen-flash",
         VISUAL_BELL_TYPES,
-        "Flash Area",
+        tr("Flash Area"),
     ));
     group.add(&visual);
     page.add(&group);
@@ -227,7 +228,7 @@ fn delay_row(prefs: &Prefs, key: &'static str, title: &str) -> adw::ActionRow {
         identity,
         identity,
         title,
-        Some(("Short", "Long")),
+        Some((tr("Short"), tr("Long"))),
     )
 }
 
@@ -248,15 +249,15 @@ fn typing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         "screen-keyboard-enabled",
         false,
         false,
-        "Screen Keyboard",
-        "Use an on-screen keyboard to type",
+        tr("Screen Keyboard"),
+        tr("Use an on-screen keyboard to type"),
     ));
     let blink = expander(
         &iface,
         "cursor-blink",
         true,
-        "Cursor Blinking",
-        "Text cursor blinks in text fields",
+        tr("Cursor Blinking"),
+        tr("Text cursor blinks in text fields"),
     );
     blink.add_row(&scale_row(
         &iface,
@@ -266,8 +267,8 @@ fn typing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         (100.0, 2500.0, 10.0),
         blink_to_ui,
         blink_to_ui,
-        "Blink Speed",
-        Some(("Slow", "Fast")),
+        tr("Blink Speed"),
+        Some((tr("Slow"), tr("Fast"))),
     ));
     general.add(&blink);
     general.add(&switch(
@@ -275,33 +276,33 @@ fn typing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         "togglekeys-enable",
         false,
         false,
-        "Sound Keys",
-        "Beep when Num Lock or Caps Lock are turned on or off",
+        tr("Sound Keys"),
+        tr("Beep when Num Lock or Caps Lock are turned on or off"),
     ));
     page.add(&general);
 
-    let assist = widgets::group("Typing Assist");
+    let assist = widgets::group(tr("Typing Assist"));
     assist.add(&switch(
         &kb,
         "enable",
         false,
         false,
-        "Enable by Keyboard",
-        "Turn accessibility features on and off using the keyboard",
+        tr("Enable by Keyboard"),
+        tr("Turn accessibility features on and off using the keyboard"),
     ));
     let sticky = expander(
         &kb,
         "stickykeys-enable",
         false,
-        "Sticky Keys",
-        "Treat a sequence of modifier keys as a key combination",
+        tr("Sticky Keys"),
+        tr("Treat a sequence of modifier keys as a key combination"),
     );
     sticky.add_row(&switch(
         &kb,
         "stickykeys-two-key-off",
         false,
         false,
-        "Disable if Two Keys Are Pressed Together",
+        tr("Disable if Two Keys Are Pressed Together"),
         "",
     ));
     sticky.add_row(&switch(
@@ -309,7 +310,7 @@ fn typing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         "stickykeys-modifier-beep",
         false,
         false,
-        "Beep When a Modifier Key Is Pressed",
+        tr("Beep When a Modifier Key Is Pressed"),
         "",
     ));
     assist.add(&sticky);
@@ -317,14 +318,14 @@ fn typing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         &kb,
         "slowkeys-enable",
         false,
-        "Slow Keys",
-        "Put a delay between when a key is pressed and when it is accepted",
+        tr("Slow Keys"),
+        tr("Put a delay between when a key is pressed and when it is accepted"),
     );
-    slow.add_row(&delay_row(&kb, "slowkeys-delay", "Acceptance Delay"));
+    slow.add_row(&delay_row(&kb, "slowkeys-delay", tr("Acceptance Delay")));
     for (key, title) in [
-        ("slowkeys-beep-press", "Beep When a Key Is Pressed"),
-        ("slowkeys-beep-accept", "Beep When a Key Is Accepted"),
-        ("slowkeys-beep-reject", "Beep When a Key Is Rejected"),
+        ("slowkeys-beep-press", tr("Beep When a Key Is Pressed")),
+        ("slowkeys-beep-accept", tr("Beep When a Key Is Accepted")),
+        ("slowkeys-beep-reject", tr("Beep When a Key Is Rejected")),
     ] {
         slow.add_row(&switch(&kb, key, false, false, title, ""));
     }
@@ -333,16 +334,16 @@ fn typing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         &kb,
         "bouncekeys-enable",
         false,
-        "Bounce Keys",
-        "Ignore fast duplicate key presses",
+        tr("Bounce Keys"),
+        tr("Ignore fast duplicate key presses"),
     );
-    bounce.add_row(&delay_row(&kb, "bouncekeys-delay", "Acceptance Delay"));
+    bounce.add_row(&delay_row(&kb, "bouncekeys-delay", tr("Acceptance Delay")));
     bounce.add_row(&switch(
         &kb,
         "bouncekeys-beep-reject",
         false,
         false,
-        "Beep When a Key Is Rejected",
+        tr("Beep When a Key Is Rejected"),
         "",
     ));
     assist.add(&bounce);
@@ -363,16 +364,16 @@ fn pointing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         "mousekeys-enable",
         false,
         false,
-        "Mouse Keys",
-        "Control the pointer using the keypad",
+        tr("Mouse Keys"),
+        tr("Control the pointer using the keypad"),
     ));
     group.add(&switch(
         &iface,
         "locate-pointer",
         false,
         false,
-        "Locate Pointer",
-        "Highlight the pointer when the Control key is pressed",
+        tr("Locate Pointer"),
+        tr("Highlight the pointer when the Control key is pressed"),
     ));
     group.add(&scale_row(
         &mouse,
@@ -382,18 +383,18 @@ fn pointing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         (100.0, 1000.0, 10.0),
         identity,
         identity,
-        "Double-Click Delay",
-        Some(("Short", "Long")),
+        tr("Double-Click Delay"),
+        Some((tr("Short"), tr("Long"))),
     ));
     page.add(&group);
 
-    let assist = widgets::group("Click Assist");
+    let assist = widgets::group(tr("Click Assist"));
     let secondary = expander(
         &a11y_mouse,
         "secondary-click-enabled",
         false,
-        "Simulated Secondary Click",
-        "Trigger a secondary click by holding down the primary button",
+        tr("Simulated Secondary Click"),
+        tr("Trigger a secondary click by holding down the primary button"),
     );
     secondary.add_row(&scale_row(
         &a11y_mouse,
@@ -403,16 +404,16 @@ fn pointing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         (0.5, 3.0, 0.1),
         identity,
         identity,
-        "Delay",
-        Some(("Short", "Long")),
+        tr("Delay"),
+        Some((tr("Short"), tr("Long"))),
     ));
     assist.add(&secondary);
     let hover = expander(
         &a11y_mouse,
         "dwell-click-enabled",
         false,
-        "Hover Click",
-        "Trigger a click when the pointer hovers",
+        tr("Hover Click"),
+        tr("Trigger a click when the pointer hovers"),
     );
     hover.add_row(&scale_row(
         &a11y_mouse,
@@ -422,8 +423,8 @@ fn pointing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         (0.2, 3.0, 0.1),
         identity,
         identity,
-        "Delay",
-        Some(("Short", "Long")),
+        tr("Delay"),
+        Some((tr("Short"), tr("Long"))),
     ));
     hover.add_row(&scale_row(
         &a11y_mouse,
@@ -433,8 +434,8 @@ fn pointing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         (0.0, 30.0, 1.0),
         identity,
         identity,
-        "Motion Threshold",
-        Some(("Small", "Large")),
+        tr("Motion Threshold"),
+        Some((tr("Small"), tr("Large"))),
     ));
     assist.add(&hover);
     page.add(&assist);
@@ -452,46 +453,46 @@ fn zoom_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         "screen-magnifier-enabled",
         false,
         false,
-        "Zoom",
-        "Magnify part of the screen",
+        tr("Zoom"),
+        tr("Magnify part of the screen"),
     ));
     group.add(&spin_row(
         &mag,
         "mag-factor",
         2.0,
         (1.0, 20.0, 0.25),
-        "Magnification",
+        tr("Magnification"),
     ));
     group.add(&nick_combo(
         &mag,
         "screen-position",
         "full-screen",
         SCREEN_POSITIONS,
-        "Magnifier Position",
+        tr("Magnifier Position"),
     ));
     group.add(&nick_combo(
         &mag,
         "mouse-tracking",
         "proportional",
         MOUSE_TRACKING,
-        "Follow the Pointer",
+        tr("Follow the Pointer"),
     ));
     page.add(&group);
 
-    let cross = widgets::group("Crosshairs");
+    let cross = widgets::group(tr("Crosshairs"));
     let show = expander(
         &mag,
         "show-cross-hairs",
         false,
-        "Crosshairs",
-        "Show lines through the pointer",
+        tr("Crosshairs"),
+        tr("Show lines through the pointer"),
     );
     show.add_row(&switch(
         &mag,
         "cross-hairs-clip",
         false,
         true,
-        "Overlap Pointer",
+        tr("Overlap Pointer"),
         "",
     ));
     show.add_row(&scale_row(
@@ -502,8 +503,8 @@ fn zoom_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         (1.0, 100.0, 1.0),
         identity,
         identity,
-        "Thickness",
-        Some(("Thin", "Thick")),
+        tr("Thickness"),
+        Some((tr("Thin"), tr("Thick"))),
     ));
     show.add_row(&scale_row(
         &mag,
@@ -513,28 +514,33 @@ fn zoom_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         (20.0, 4096.0, 4.0),
         identity,
         identity,
-        "Length",
-        Some(("Short", "Long")),
+        tr("Length"),
+        Some((tr("Short"), tr("Long"))),
     ));
     cross.add(&show);
     page.add(&cross);
 
-    let color = widgets::group("Color Effects");
+    let color = widgets::group(tr("Color Effects"));
     color.add(&switch(
         &mag,
         "invert-lightness",
         false,
         false,
-        "Invert Colors",
+        tr("Invert Colors"),
         "",
     ));
     color.add(&rgb_scale(
         &mag,
         "brightness",
-        "Brightness",
-        ("Low", "High"),
+        tr("Brightness"),
+        (tr("Low"), tr("High")),
     ));
-    color.add(&rgb_scale(&mag, "contrast", "Contrast", ("Low", "High")));
+    color.add(&rgb_scale(
+        &mag,
+        "contrast",
+        tr("Contrast"),
+        (tr("Low"), tr("High")),
+    ));
     color.add(&scale_row(
         &mag,
         "color-saturation",
@@ -543,8 +549,8 @@ fn zoom_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {
         (0.0, 1.0, 0.05),
         identity,
         identity,
-        "Color",
-        Some(("Grayscale", "Full Color")),
+        tr("Color"),
+        Some((tr("Grayscale"), tr("Full Color"))),
     ));
     page.add(&color);
     page
@@ -594,8 +600,8 @@ fn rgb_scale(prefs: &Prefs, prefix: &str, title: &str, marks: (&str, &str)) -> a
 /// Large text: `text-scaling-factor` 1.25 vs 1.0.
 fn large_text_row(iface: &Prefs) -> adw::SwitchRow {
     let large = adw::SwitchRow::builder()
-        .title("Large Text")
-        .subtitle("Increase the size of text")
+        .title(tr("Large Text"))
+        .subtitle(tr("Increase the size of text"))
         .build();
     large.set_active(values::large_text_enabled(
         iface.get::<f64>("text-scaling-factor", 1.0),
@@ -624,11 +630,11 @@ fn large_text_row(iface: &Prefs) -> adw::SwitchRow {
 fn cursor_size_row(iface: &Prefs) -> adw::ComboRow {
     let labels: Vec<String> = CURSOR_SIZES
         .iter()
-        .map(|(s, l)| format!("{l} ({s} px)"))
+        .map(|(s, l)| format!("{} ({s} px)", tr(l)))
         .collect();
     let refs: Vec<&str> = labels.iter().map(String::as_str).collect();
     let row = adw::ComboRow::builder()
-        .title("Cursor Size")
+        .title(tr("Cursor Size"))
         .model(&gtk::StringList::new(&refs))
         .build();
     row.set_selected(values::cursor_size_index(iface.get::<i32>("cursor-size", 24)) as u32);

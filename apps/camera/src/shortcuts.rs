@@ -1,5 +1,6 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys, GENERAL};
 
 /// Accelerators registered on the application.
@@ -15,17 +16,17 @@ pub const ACCELS: &[(&str, &[&str])] = &[
 
 pub const GROUPS: &[Group] = &[
     (
-        "Capture",
+        n_("Capture"),
         &[
             Keys(
-                "Take a Photo or Start or Stop Recording",
+                n_("Take a Photo or Start or Stop Recording"),
                 "space Return KP_Enter",
             ),
-            Keys("Cancel the Countdown", "Escape"),
-            Keys("Photo Mode", "<Control>1"),
-            Keys("Video Mode", "<Control>2"),
-            Keys("Switch Camera", "<Control>Tab"),
-            Keys("Open the Last Capture", "<Control>g"),
+            Keys(n_("Cancel the Countdown"), "Escape"),
+            Keys(n_("Photo Mode"), "<Control>1"),
+            Keys(n_("Video Mode"), "<Control>2"),
+            Keys(n_("Switch Camera"), "<Control>Tab"),
+            Keys(n_("Open the Last Capture"), "<Control>g"),
         ],
     ),
     GENERAL,

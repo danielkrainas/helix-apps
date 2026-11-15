@@ -97,7 +97,7 @@ pub fn css(accent: Rgb, high_contrast: bool) -> String {
              html a, html a:visited {{ text-decoration: underline; }}\n\
              html pre, html code, html .note, html .figure, html blockquote {{ \
              border: 2px solid var(--fg); }}\n\
-             html .note {{ border-left-width: 4px; }}\n\
+             html .note {{ border-inline-start-width: 4px; }}\n\
              html h2 {{ border-bottom-width: 2px; }}\n\
              html :focus-visible {{ outline: 3px solid var(--accent); outline-offset: 2px; }}\n",
             lb = light_bg.hex(),

@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use crate::shell::Mode;
+use helix_app_common::trf;
 
 pub const MAX_DELAY: u32 = 99;
 
@@ -62,8 +63,10 @@ impl Args {
 fn parse_delay(value: &str) -> Result<u32, String> {
     match value.trim().parse::<u32>() {
         Ok(d) if d <= MAX_DELAY => Ok(d),
-        _ => Err(format!(
-            "invalid delay “{value}”: expected a number of seconds from 0 to {MAX_DELAY}"
+        _ => Err(trf!(
+            "invalid delay “{value}”: expected a number of seconds from 0 to {MAX_DELAY}",
+            value = value,
+            MAX_DELAY = MAX_DELAY
         )),
     }
 }
@@ -82,7 +85,7 @@ where
     let mut only_files = false;
     while let Some(arg) = iter.next() {
         if only_files || !arg.starts_with('-') || arg == "-" {
-            return Err(format!("unexpected argument “{arg}”"));
+            return Err(trf!("unexpected argument “{arg}”", arg = arg));
         }
         if arg == "--" {
             only_files = true;
@@ -97,11 +100,11 @@ where
                 inline
                     .clone()
                     .or_else(|| iter.next())
-                    .ok_or_else(|| format!("option --{what} needs a value"))
+                    .ok_or_else(|| trf!("option --{what} needs a value", what = what))
             };
             let takes_value = matches!(name, "delay" | "file");
             if inline.is_some() && !takes_value {
-                return Err(format!("option --{name} takes no value"));
+                return Err(trf!("option --{name} takes no value", name = name));
             }
             match name {
                 "window" => out.mode = Some(Mode::Window),
@@ -115,7 +118,7 @@ where
                 "interactive" => out.interactive = true,
                 "help" => return Ok(Command::Help),
                 "version" => return Ok(Command::Version),
-                _ => return Err(format!("unknown option --{name}")),
+                _ => return Err(trf!("unknown option --{name}", name = name)),
             }
             continue;
         }
@@ -139,7 +142,7 @@ where
                     i = shorts.len();
                     let v = if rest.is_empty() {
                         iter.next()
-                            .ok_or_else(|| format!("option -{c} needs a value"))?
+                            .ok_or_else(|| trf!("option -{c} needs a value", c = c))?
                     } else {
                         rest
                     };
@@ -149,7 +152,7 @@ where
                         out.file = Some(PathBuf::from(v));
                     }
                 }
-                _ => return Err(format!("unknown option -{c}")),
+                _ => return Err(trf!("unknown option -{c}", c = c)),
             }
         }
     }

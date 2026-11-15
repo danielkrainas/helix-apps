@@ -12,6 +12,7 @@ use crate::search::Results;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{gdk, glib, graphene, gsk};
+use helix_app_common::trf;
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
@@ -2037,9 +2038,14 @@ impl DocView {
 pub fn page_description(label: &str, page: usize, n: usize) -> String {
     let num = (page + 1).to_string();
     if label == num {
-        format!("Page {num} of {n}")
+        trf!("Page {num} of {n}", num = num, n = n)
     } else {
-        format!("Page {label} ({num} of {n})")
+        trf!(
+            "Page {label} ({num} of {n})",
+            label = label,
+            num = num,
+            n = n
+        )
     }
 }
 

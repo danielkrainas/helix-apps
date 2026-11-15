@@ -9,6 +9,7 @@
 pub mod a11y;
 pub mod about;
 pub mod focus;
+pub mod i18n;
 pub mod keys;
 pub mod shortcuts;
 pub mod style;
@@ -19,6 +20,7 @@ pub use a11y::{
     icon_menu_button, icon_toggle_button, label_widget, set_accessible_label, set_icon_and_label,
     set_input_error, set_minimum_size, Labelled, Urgency, MIN_HEIGHT, MIN_WIDTH,
 };
+pub use i18n::{n_, tr, trc, trn};
 pub use keys::add_bubble_shortcuts;
 
 use gio::prelude::*;

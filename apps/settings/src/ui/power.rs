@@ -8,6 +8,8 @@ use super::widgets::{self, preset_combo, seconds_label, switch, Num};
 use super::{spawn_worker, Ctx, Panel};
 use crate::dbus;
 use crate::values::{self, POWER_BUTTON_ACTIONS};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 const POWER: &str = "org.gnome.settings-daemon.plugins.power";
 const INTERFACE: &str = "org.gnome.desktop.interface";
@@ -35,7 +37,7 @@ impl BatteryUi {
             // Read as "Battery Level, 57 %".
             self.level
                 .update_property(&[gtk::accessible::Property::ValueText(&percent)]);
-            self.row.set_title("Battery");
+            self.row.set_title(tr("Battery"));
             let mut subtitle = format!("{percent} · {}", values::battery_state_label(b.state));
             if let Some(t) = values::battery_time_label(b.state, b.time_to_empty, b.time_to_full) {
                 subtitle = format!("{subtitle} — {t}");
@@ -65,7 +67,7 @@ impl Panel for PowerPanel {
         let page = widgets::page();
 
         // Battery (hidden until UPower reports one).
-        let battery = widgets::group("Battery");
+        let battery = widgets::group(tr("Battery"));
         battery.set_visible(false);
         let level = gtk::LevelBar::builder()
             .min_value(0.0)
@@ -73,20 +75,20 @@ impl Panel for PowerPanel {
             .valign(gtk::Align::Center)
             .width_request(160)
             .build();
-        helix_app_common::set_accessible_label(&level, "Battery Level");
-        let row = adw::ActionRow::builder().title("Battery").build();
+        helix_app_common::set_accessible_label(&level, tr("Battery Level"));
+        let row = adw::ActionRow::builder().title(tr("Battery")).build();
         row.add_suffix(&level);
         battery.add(&row);
         page.add(&battery);
 
-        let saving = widgets::group("Power Saving");
+        let saving = widgets::group(tr("Power Saving"));
         saving.add(&switch(
             &power,
             "idle-dim",
             true,
             false,
-            "Dim Screen",
-            "Reduces the screen brightness when the computer is inactive",
+            tr("Dim Screen"),
+            tr("Reduces the screen brightness when the computer is inactive"),
         ));
         let blank = preset_combo(
             &session,
@@ -95,12 +97,15 @@ impl Panel for PowerPanel {
             300,
             values::blank_delays,
             seconds_label,
-            "Screen Blank",
+            tr("Screen Blank"),
         );
-        blank.set_subtitle("Turns the screen off after a period of inactivity");
+        blank.set_subtitle(tr("Turns the screen off after a period of inactivity"));
         saving.add(&blank);
         let mut battery_rows = Vec::new();
-        for (source, label) in [("ac", "When Plugged In"), ("battery", "On Battery Power")] {
+        for (source, label) in [
+            ("ac", tr("When Plugged In")),
+            ("battery", tr("On Battery Power")),
+        ] {
             let type_key: &'static str = if source == "ac" {
                 "sleep-inactive-ac-type"
             } else {
@@ -116,9 +121,9 @@ impl Panel for PowerPanel {
                 type_key,
                 ("suspend", "nothing"),
                 "suspend",
-                &format!("Automatic Suspend {label}"),
+                &trf!("Automatic Suspend {label}", label = label),
             );
-            sw.set_subtitle("Pauses the computer after a period of inactivity");
+            sw.set_subtitle(tr("Pauses the computer after a period of inactivity"));
             let delay = preset_combo(
                 &power,
                 timeout_key,
@@ -126,10 +131,13 @@ impl Panel for PowerPanel {
                 900,
                 values::suspend_delays,
                 seconds_label,
-                "Delay",
+                tr("Delay"),
             );
             // Both rows read "Delay"; say which suspend each belongs to.
-            helix_app_common::set_accessible_label(&delay, &format!("Suspend Delay {label}"));
+            helix_app_common::set_accessible_label(
+                &delay,
+                &trf!("Suspend Delay {label}", label = label),
+            );
             sw.bind_property("active", &delay, "sensitive")
                 .sync_create()
                 .build();
@@ -144,15 +152,15 @@ impl Panel for PowerPanel {
         }
         page.add(&saving);
 
-        let general = widgets::group("General");
+        let general = widgets::group(tr("General"));
         general.add(&power_button_row(&power));
         general.add(&switch(
             &iface,
             "show-battery-percentage",
             false,
             false,
-            "Show Battery Percentage",
-            "Show the exact charge level in the top bar",
+            tr("Show Battery Percentage"),
+            tr("Show the exact charge level in the top bar"),
         ));
         page.add(&general);
 
@@ -185,6 +193,6 @@ fn power_button_row(power: &helix_app_common::Prefs) -> adw::ComboRow {
         "power-button-action",
         "suspend",
         POWER_BUTTON_ACTIONS,
-        "Power Button Behavior",
+        tr("Power Button Behavior"),
     )
 }

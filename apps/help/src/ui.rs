@@ -5,6 +5,7 @@ use crate::textsize;
 use crate::uri::{self, DocRef, Location};
 use adw::prelude::*;
 use gtk::{gio, glib};
+use helix_app_common::i18n::tr;
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::RefCell;
@@ -41,7 +42,7 @@ pub fn run(initial: Option<String>) -> glib::ExitCode {
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::NON_UNIQUE)
         .build();
-    helix_app_common::install_standard_actions(&app, "Help", "View help documentation");
+    helix_app_common::install_standard_actions(&app, tr("Help"), tr("View help documentation"));
     let library = Arc::new(Library::from_env());
     let initial = RefCell::new(initial);
     let context_slot: Rc<RefCell<Option<webkit6::WebContext>>> = Rc::default();
@@ -55,7 +56,7 @@ pub fn run(initial: Option<String>) -> glib::ExitCode {
                 Some(w) => w.present(),
                 None => {
                     eprintln!("helix-help: WebKit sandbox unavailable ({cause:?}); not showing help pages");
-                    crate::sandbox::failure_window(app, "Help", "helix-help", cause).present();
+                    crate::sandbox::failure_window(app, tr("Help"), "helix-help", cause).present();
                 }
             }
             return;
@@ -270,7 +271,7 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
 
     // Shown over the view if its web process dies.
     let crash_reload = gtk::Button::builder()
-        .label("_Reload")
+        .label(tr("_Reload"))
         .use_underline(true)
         .halign(gtk::Align::Center)
         .build();
@@ -306,57 +307,59 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
 
     let back = gtk::Button::builder()
         .icon_name("go-previous-symbolic")
-        .tooltip_text("Back")
+        .tooltip_text(tr("Back"))
         .action_name("win.back")
         .build()
-        .labelled("Back");
+        .labelled(tr("Back"));
     let forward = gtk::Button::builder()
         .icon_name("go-next-symbolic")
-        .tooltip_text("Forward")
+        .tooltip_text(tr("Forward"))
         .action_name("win.forward")
         .build()
-        .labelled("Forward");
+        .labelled(tr("Forward"));
     let home = gtk::Button::builder()
         .icon_name("go-home-symbolic")
-        .tooltip_text("All Help")
+        .tooltip_text(tr("All Help"))
         .action_name("win.home")
         .build()
-        .labelled("All Help");
+        .labelled(tr("All Help"));
     let sidebar_btn = gtk::ToggleButton::builder()
         .icon_name("sidebar-show-symbolic")
-        .tooltip_text("Show Sidebar")
+        .tooltip_text(tr("Show Sidebar"))
         .action_name("win.sidebar")
         .build()
-        .labelled("Show Sidebar");
+        .labelled(tr("Show Sidebar"));
     let search_btn = gtk::ToggleButton::builder()
         .icon_name("system-search-symbolic")
-        .tooltip_text("Search")
+        .tooltip_text(tr("Search"))
         .build()
-        .labelled("Search");
+        .labelled(tr("Search"));
 
     let menu = gio::Menu::new();
     let sec1 = gio::Menu::new();
-    sec1.append(Some("_Print…"), Some("win.print"));
+    sec1.append(Some(tr("_Print…")), Some("win.print"));
     menu.append_section(None, &sec1);
     let zoom = gio::Menu::new();
-    zoom.append(Some("_Larger Text"), Some("win.zoom-in"));
-    zoom.append(Some("_Smaller Text"), Some("win.zoom-out"));
-    zoom.append(Some("_Normal Size"), Some("win.zoom-reset"));
+    zoom.append(Some(tr("_Larger Text")), Some("win.zoom-in"));
+    zoom.append(Some(tr("_Smaller Text")), Some("win.zoom-out"));
+    zoom.append(Some(tr("_Normal Size")), Some("win.zoom-reset"));
     menu.append_section(None, &zoom);
     let sec3 = gio::Menu::new();
-    sec3.append(Some("_Caret Browsing"), Some("win.caret"));
+    sec3.append(Some(tr("_Caret Browsing")), Some("win.caret"));
     sec3.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some("win.show-help-overlay"),
     );
-    sec3.append(Some("_About Help"), Some("app.about"));
+    sec3.append(Some(tr("_About Help")), Some("app.about"));
     menu.append_section(None, &sec3);
     let menu_btn = gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
         .menu_model(&menu)
-        .tooltip_text("Main Menu")
+        .tooltip_text(tr("Main Menu"))
         .build()
-        .labelled("Main Menu");
+        .labelled(tr("Main Menu"));
 
     let header = adw::HeaderBar::new();
     header.pack_start(&back);
@@ -365,11 +368,11 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     header.pack_start(&sidebar_btn);
     header.pack_end(&menu_btn);
     header.pack_end(&search_btn);
-    let title = adw::WindowTitle::new("Help", "");
+    let title = adw::WindowTitle::new(tr("Help"), "");
     header.set_title_widget(Some(&title));
 
     let search_entry = gtk::SearchEntry::builder()
-        .placeholder_text("Search help")
+        .placeholder_text(tr("Search help"))
         .hexpand(true)
         .build();
     let clamp = adw::Clamp::builder()
@@ -394,7 +397,7 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     let sidebar_header = adw::HeaderBar::builder()
         .show_end_title_buttons(false)
         .build();
-    sidebar_header.set_title_widget(Some(&adw::WindowTitle::new("Contents", "")));
+    sidebar_header.set_title_widget(Some(&adw::WindowTitle::new(tr("Contents"), "")));
     let sidebar_view = adw::ToolbarView::new();
     sidebar_view.add_top_bar(&sidebar_header);
     sidebar_view.set_content(Some(&sidebar_scroll));
@@ -413,7 +416,7 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
 
     let window = adw::ApplicationWindow::builder()
         .application(app)
-        .title("Help")
+        .title(tr("Help"))
         .default_width(900)
         .default_height(700)
         .content(&split)
@@ -463,7 +466,7 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
                 .title()
                 .map(|t| t.to_string())
                 .filter(|t| !t.is_empty())
-                .unwrap_or_else(|| "Help".into());
+                .unwrap_or_else(|| tr("Help").into());
             title.set_title(&t);
             window.set_title(Some(&t));
         }

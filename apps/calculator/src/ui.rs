@@ -11,6 +11,8 @@ use std::rc::Rc;
 use crate::engine::{to_signed, AngleUnit, Context, Mode, Value};
 use crate::financial;
 use crate::format::{self, NumberFormat, Options};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 pub const APP_ID: &str = "org.helix.Calculator";
 const SCHEMA: &str = "org.gnome.calculator";
@@ -27,9 +29,9 @@ enum Pane {
 impl Pane {
     fn label(self) -> &'static str {
         match self {
-            Pane::Numbers => "Numbers",
-            Pane::Functions => "Functions",
-            Pane::Bits => "Bits",
+            Pane::Numbers => tr("Numbers"),
+            Pane::Functions => tr("Functions"),
+            Pane::Bits => tr("Bits"),
         }
     }
 }
@@ -59,10 +61,10 @@ impl ButtonMode {
     }
     fn label(self) -> &'static str {
         match self {
-            ButtonMode::Basic => "Basic",
-            ButtonMode::Advanced => "Advanced",
-            ButtonMode::Financial => "Financial",
-            ButtonMode::Programming => "Programming",
+            ButtonMode::Basic => tr("Basic"),
+            ButtonMode::Advanced => tr("Advanced"),
+            ButtonMode::Financial => tr("Financial"),
+            ButtonMode::Programming => tr("Programming"),
         }
     }
     fn from_nick(s: &str) -> Self {
@@ -178,8 +180,8 @@ fn key_name(label: &str, tooltip: Option<&str>) -> Option<String> {
         return Some(name.trim().to_string());
     }
     let spelled = match label {
-        "(" => "Open parenthesis",
-        ")" => "Close parenthesis",
+        "(" => tr("Open parenthesis"),
+        ")" => tr("Close parenthesis"),
         _ => return None,
     };
     Some(spelled.to_string())
@@ -215,17 +217,17 @@ fn basic_keys(programming: bool) -> Vec<Vec<Key>> {
             k("7", "7"),
             k("8", "8"),
             k("9", "9"),
-            op("÷", "÷", "Divide [/]"),
+            op("÷", "÷", tr("Divide [/]")),
             Key {
                 label: "⌫",
                 act: Act::Backspace,
-                tooltip: Some("Backspace"),
+                tooltip: Some(tr("Backspace")),
                 class: None,
             },
             Key {
                 label: "C",
                 act: Act::Clear,
-                tooltip: Some("Clear [Escape]"),
+                tooltip: Some(tr("Clear [Escape]")),
                 class: Some("destructive-action"),
             },
         ],
@@ -233,7 +235,7 @@ fn basic_keys(programming: bool) -> Vec<Vec<Key>> {
             k("4", "4"),
             k("5", "5"),
             k("6", "6"),
-            op("×", "×", "Multiply [*]"),
+            op("×", "×", tr("Multiply [*]")),
             k("(", "("),
             k(")", ")"),
         ],
@@ -241,27 +243,27 @@ fn basic_keys(programming: bool) -> Vec<Vec<Key>> {
             k("1", "1"),
             k("2", "2"),
             k("3", "3"),
-            op("−", "−", "Subtract [-]"),
-            kt("x²", "²", "Square [Ctrl+2]"),
-            kt("√", "√", "Square root [Ctrl+R]"),
+            op("−", "−", tr("Subtract [-]")),
+            kt("x²", "²", tr("Square [Ctrl+2]")),
+            kt("√", "√", tr("Square root [Ctrl+R]")),
         ],
         vec![
             k("0", "0"),
             if programming {
-                kt("mod", " mod ", "Modulus divide")
+                kt("mod", " mod ", tr("Modulus divide"))
             } else {
-                kt(".", ".", "Decimal point")
+                kt(".", ".", tr("Decimal point"))
             },
             if programming {
-                kt("x!", "!", "Factorial")
+                kt("x!", "!", tr("Factorial"))
             } else {
-                kt("%", "%", "Percentage [%]")
+                kt("%", "%", tr("Percentage [%]"))
             },
-            op("+", "+", "Add [+]"),
+            op("+", "+", tr("Add [+]")),
             Key {
                 label: "=",
                 act: Act::Eval,
-                tooltip: Some("Calculate result [Enter]"),
+                tooltip: Some(tr("Calculate result [Enter]")),
                 class: Some("suggested-action"),
             },
         ],
@@ -271,34 +273,34 @@ fn basic_keys(programming: bool) -> Vec<Vec<Key>> {
 fn advanced_keys() -> Vec<Vec<Key>> {
     vec![
         vec![
-            kt("sin", "sin ", "Sine"),
-            kt("cos", "cos ", "Cosine"),
-            kt("tan", "tan ", "Tangent"),
-            kt("xʸ", "^", "Exponent [^]"),
+            kt("sin", "sin ", tr("Sine")),
+            kt("cos", "cos ", tr("Cosine")),
+            kt("tan", "tan ", tr("Tangent")),
+            kt("xʸ", "^", tr("Exponent [^]")),
         ],
         vec![
-            kt("sin⁻¹", "sin⁻¹ ", "Inverse sine"),
-            kt("cos⁻¹", "cos⁻¹ ", "Inverse cosine"),
-            kt("tan⁻¹", "tan⁻¹ ", "Inverse tangent"),
-            kt("x⁻¹", "⁻¹", "Inverse"),
+            kt("sin⁻¹", "sin⁻¹ ", tr("Inverse sine")),
+            kt("cos⁻¹", "cos⁻¹ ", tr("Inverse cosine")),
+            kt("tan⁻¹", "tan⁻¹ ", tr("Inverse tangent")),
+            kt("x⁻¹", "⁻¹", tr("Inverse")),
         ],
         vec![
-            kt("ln", "ln ", "Natural logarithm"),
-            kt("log", "log ", "Logarithm"),
-            kt("eˣ", "e^", "Exponential"),
-            kt("x!", "!", "Factorial [!]"),
+            kt("ln", "ln ", tr("Natural logarithm")),
+            kt("log", "log ", tr("Logarithm")),
+            kt("eˣ", "e^", tr("Exponential")),
+            kt("x!", "!", tr("Factorial [!]")),
         ],
         vec![
-            kt("π", "π", "Pi [Ctrl+P]"),
-            kt("e", "e", "Euler's number"),
-            kt("|x|", "|", "Absolute value [|]"),
-            kt("mod", " mod ", "Modulus divide"),
+            kt("π", "π", tr("Pi [Ctrl+P]")),
+            kt("e", "e", tr("Euler's number")),
+            kt("|x|", "|", tr("Absolute value [|]")),
+            kt("mod", " mod ", tr("Modulus divide")),
         ],
         vec![
-            kt("ans", "ans", "Last answer"),
-            kt("×10ʸ", "×10^", "Scientific exponent"),
-            kt("∛", "∛", "Cube root"),
-            kt("rand", "rand", "Random number"),
+            kt("ans", "ans", tr("Last answer")),
+            kt("×10ʸ", "×10^", tr("Scientific exponent")),
+            kt("∛", "∛", tr("Cube root")),
+            kt("rand", "rand", tr("Random number")),
         ],
     ]
 }
@@ -308,26 +310,26 @@ fn programming_keys() -> Vec<Vec<Key>> {
         vec![
             k("A", "A"),
             k("B", "B"),
-            kt("and", " and ", "Boolean AND"),
-            kt("<<", "<<", "Shift left"),
+            kt("and", " and ", tr("Boolean AND")),
+            kt("<<", "<<", tr("Shift left")),
         ],
         vec![
             k("C", "C"),
             k("D", "D"),
-            kt("or", " or ", "Boolean OR"),
-            kt(">>", ">>", "Shift right"),
+            kt("or", " or ", tr("Boolean OR")),
+            kt(">>", ">>", tr("Shift right")),
         ],
         vec![
             k("E", "E"),
             k("F", "F"),
-            kt("xor", " xor ", "Boolean exclusive OR"),
-            kt("not", "not ", "Boolean NOT"),
+            kt("xor", " xor ", tr("Boolean exclusive OR")),
+            kt("not", "not ", tr("Boolean NOT")),
         ],
         vec![
-            kt("ones", "ones ", "One's complement"),
-            kt("twos", "twos ", "Two's complement"),
-            kt("xʸ", "^", "Exponent"),
-            kt("ans", "ans", "Last answer"),
+            kt("ones", "ones ", tr("One's complement")),
+            kt("twos", "twos ", tr("Two's complement")),
+            kt("xʸ", "^", tr("Exponent")),
+            kt("ans", "ans", tr("Last answer")),
         ],
     ]
 }
@@ -343,7 +345,11 @@ fn financial_keys() -> Vec<Vec<Key>> {
         vec![f(0), f(1), f(2)],
         vec![f(3), f(4), f(5)],
         vec![f(6), f(7), f(8)],
-        vec![f(9), kt("%", "%", "Percentage"), kt("xʸ", "^", "Exponent")],
+        vec![
+            f(9),
+            kt("%", "%", tr("Percentage")),
+            kt("xʸ", "^", tr("Exponent")),
+        ],
     ]
 }
 
@@ -393,83 +399,118 @@ const fn sc(
 }
 
 const SHORTCUTS: &[Shortcut] = &[
-    sc("Calculation", "Calculate result", "", How::Entry("Return")),
-    sc("Calculation", "Clear", "win.clear", How::Bubble("Escape")),
     sc(
-        "Calculation",
-        "Undo last calculation",
+        n_("Calculation"),
+        n_("Calculate result"),
+        "",
+        How::Entry("Return"),
+    ),
+    sc(
+        n_("Calculation"),
+        n_("Clear"),
+        "win.clear",
+        How::Bubble("Escape"),
+    ),
+    sc(
+        n_("Calculation"),
+        n_("Undo last calculation"),
         "",
         How::Entry("<Control>z"),
     ),
-    sc("Calculation", "Add", "", How::Entry("plus")),
-    sc("Calculation", "Subtract", "", How::Entry("minus")),
-    sc("Calculation", "Multiply", "", How::Entry("asterisk")),
-    sc("Calculation", "Divide", "", How::Entry("slash")),
-    sc("Calculation", "Exponent", "", How::Entry("asciicircum")),
-    sc("Calculation", "Percentage", "", How::Entry("percent")),
-    sc("Calculation", "Factorial", "", How::Entry("exclam")),
-    sc("Calculation", "Absolute value", "", How::Entry("bar")),
+    sc(n_("Calculation"), n_("Add"), "", How::Entry("plus")),
+    sc(n_("Calculation"), n_("Subtract"), "", How::Entry("minus")),
     sc(
-        "Calculation",
-        "Square",
+        n_("Calculation"),
+        n_("Multiply"),
+        "",
+        How::Entry("asterisk"),
+    ),
+    sc(n_("Calculation"), n_("Divide"), "", How::Entry("slash")),
+    sc(
+        n_("Calculation"),
+        n_("Exponent"),
+        "",
+        How::Entry("asciicircum"),
+    ),
+    sc(
+        n_("Calculation"),
+        n_("Percentage"),
+        "",
+        How::Entry("percent"),
+    ),
+    sc(n_("Calculation"), n_("Factorial"), "", How::Entry("exclam")),
+    sc(
+        n_("Calculation"),
+        n_("Absolute value"),
+        "",
+        How::Entry("bar"),
+    ),
+    sc(
+        n_("Calculation"),
+        n_("Square"),
         "win.insert::²",
         How::Accel("<Control>2"),
     ),
     sc(
-        "Calculation",
-        "Square root",
+        n_("Calculation"),
+        n_("Square root"),
         "win.insert::√",
         How::Accel("<Control>r"),
     ),
     sc(
-        "Calculation",
-        "Pi",
+        n_("Calculation"),
+        n_("Pi"),
         "win.insert::π",
         How::Accel("<Control>p"),
     ),
     sc(
-        "Modes",
-        "Basic mode",
+        n_("Modes"),
+        n_("Basic mode"),
         "win.mode::basic",
         How::Accel("<Alt>1"),
     ),
     sc(
-        "Modes",
-        "Advanced mode",
+        n_("Modes"),
+        n_("Advanced mode"),
         "win.mode::advanced",
         How::Accel("<Alt>2"),
     ),
     sc(
-        "Modes",
-        "Financial mode",
+        n_("Modes"),
+        n_("Financial mode"),
         "win.mode::financial",
         How::Accel("<Alt>3"),
     ),
     sc(
-        "Modes",
-        "Programming mode",
+        n_("Modes"),
+        n_("Programming mode"),
         "win.mode::programming",
         How::Accel("<Alt>4"),
     ),
     sc(
-        "General",
-        "Preferences",
+        n_("General"),
+        n_("Preferences"),
         "win.preferences",
         How::Accel("<Control>comma"),
     ),
     sc(
-        "General",
-        "Keyboard shortcuts",
+        n_("General"),
+        n_("Keyboard shortcuts"),
         "win.shortcuts",
         How::Accel("<Control>question"),
     ),
     sc(
-        "General",
-        "Close window",
+        n_("General"),
+        n_("Close window"),
         "window.close",
         How::Accel("<Control>w"),
     ),
-    sc("General", "Quit", "app.quit", How::Accel("<Control>q")),
+    sc(
+        n_("General"),
+        n_("Quit"),
+        "app.quit",
+        How::Accel("<Control>q"),
+    ),
 ];
 
 /// How a GTK trigger is written for people: "<Control>comma" → "Ctrl+,".
@@ -542,8 +583,8 @@ pub fn run(initial_expr: Option<String>) -> glib::ExitCode {
         .build();
     helix_app_common::install_standard_actions(
         &app,
-        "Calculator",
-        "Perform arithmetic, scientific, financial and programming calculations",
+        tr("Calculator"),
+        tr("Perform arithmetic, scientific, financial and programming calculations"),
     );
     let initial = RefCell::new(initial_expr);
     app.connect_startup(|_| load_css());
@@ -609,7 +650,7 @@ fn build(app: &adw::Application) -> Ui {
 
     let window = adw::ApplicationWindow::builder()
         .application(app)
-        .title("Calculator")
+        .title(tr("Calculator"))
         .default_width(420)
         .default_height(560)
         .width_request(360)
@@ -632,28 +673,30 @@ fn build(app: &adw::Application) -> Ui {
     let header = adw::HeaderBar::new();
     let modes = gtk::DropDown::from_strings(&ButtonMode::ALL.map(|m| m.label()));
     modes.set_selected(ButtonMode::ALL.iter().position(|m| *m == mode).unwrap_or(0) as u32);
-    modes.set_tooltip_text(Some("Calculator mode"));
-    helix_app_common::set_accessible_label(&modes, "Calculator mode");
+    modes.set_tooltip_text(Some(tr("Calculator mode")));
+    helix_app_common::set_accessible_label(&modes, tr("Calculator mode"));
     header.set_title_widget(Some(&modes));
     let menu = gio::Menu::new();
     let section = gio::Menu::new();
-    section.append(Some("_Clear History"), Some("win.clear-history"));
+    section.append(Some(tr("_Clear History")), Some("win.clear-history"));
     menu.append_section(None, &section);
     let section = gio::Menu::new();
-    section.append(Some("_Preferences"), Some("win.preferences"));
+    section.append(Some(tr("_Preferences")), Some("win.preferences"));
     section.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some("win.shortcuts"),
     );
-    section.append(Some("_About Calculator"), Some("app.about"));
+    section.append(Some(tr("_About Calculator")), Some("app.about"));
     menu.append_section(None, &section);
     let menu_button = gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
         .menu_model(&menu)
         .primary(true)
-        .tooltip_text("Main Menu")
+        .tooltip_text(tr("Main Menu"))
         .build()
-        .labelled("Main Menu");
+        .labelled(tr("Main Menu"));
     header.pack_end(&menu_button);
 
     // History.
@@ -674,7 +717,7 @@ fn build(app: &adw::Application) -> Ui {
         .xalign(1.0)
         .build();
     entry.set_input_hints(gtk::InputHints::NO_EMOJI);
-    helix_app_common::set_accessible_label(&entry, "Expression");
+    helix_app_common::set_accessible_label(&entry, tr("Expression"));
     let error = gtk::Label::builder()
         .xalign(1.0)
         .css_classes(["error", "caption"])
@@ -685,7 +728,8 @@ fn build(app: &adw::Application) -> Ui {
     // Programming bar: base + word size + bit panel.
     let prog_bar = gtk::Box::new(gtk::Orientation::Vertical, 6);
     let prog_row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-    let base_dd = gtk::DropDown::from_strings(&["Binary", "Octal", "Decimal", "Hexadecimal"]);
+    let base_dd =
+        gtk::DropDown::from_strings(&[tr("Binary"), tr("Octal"), tr("Decimal"), tr("Hexadecimal")]);
     let bases = [2u32, 8, 10, 16];
     base_dd.set_selected(
         bases
@@ -693,8 +737,8 @@ fn build(app: &adw::Application) -> Ui {
             .position(|b| *b == state.borrow().prefs.get::<i32>("base", 10) as u32)
             .unwrap_or(2) as u32,
     );
-    base_dd.set_tooltip_text(Some("Number base"));
-    helix_app_common::set_accessible_label(&base_dd, "Number base");
+    base_dd.set_tooltip_text(Some(tr("Number base")));
+    helix_app_common::set_accessible_label(&base_dd, tr("Number base"));
     let word_dd = gtk::DropDown::from_strings(&["8-bit", "16-bit", "32-bit", "64-bit"]);
     let words = [8u32, 16, 32, 64];
     word_dd.set_selected(
@@ -703,8 +747,8 @@ fn build(app: &adw::Application) -> Ui {
             .position(|b| *b == options.word_size)
             .unwrap_or(3) as u32,
     );
-    word_dd.set_tooltip_text(Some("Word size"));
-    helix_app_common::set_accessible_label(&word_dd, "Word size");
+    word_dd.set_tooltip_text(Some(tr("Word size")));
+    helix_app_common::set_accessible_label(&word_dd, tr("Word size"));
     prog_row.append(&base_dd);
     prog_row.append(&word_dd);
     let bits = gtk::Grid::builder()
@@ -1231,13 +1275,13 @@ impl Ui {
             .css_classes(["flat"])
             .hexpand(true)
             .halign(gtk::Align::End)
-            .tooltip_text("Insert expression")
+            .tooltip_text(tr("Insert expression"))
             .build();
         let eq = gtk::Label::new(Some("="));
         let res = gtk::Button::builder()
             .label(&e.result)
             .css_classes(["flat", "calc-history-result"])
-            .tooltip_text("Insert result")
+            .tooltip_text(tr("Insert result"))
             .build();
         for (b, text) in [(&expr, e.expression.clone()), (&res, e.result.clone())] {
             let ui = self.clone();
@@ -1407,11 +1451,11 @@ impl Ui {
             let b = gtk::ToggleButton::builder()
                 .label("0")
                 .css_classes(["flat", "calc-bit"])
-                .tooltip_text(format!("Bit {bit}"))
+                .tooltip_text(trf!("Bit {bit}", bit = bit))
                 .build();
             // "Bit 5, toggle button, pressed": the pressed state is the
             // bit's value.
-            helix_app_common::set_accessible_label(&b, &format!("Bit {bit}"));
+            helix_app_common::set_accessible_label(&b, &trf!("Bit {bit}", bit = bit));
             if col % 4 == 0 && col > 0 {
                 // A gap before each nibble.
                 b.set_margin_start(8);
@@ -1478,7 +1522,7 @@ impl Ui {
             })
             .collect();
         dialog.set_extra_child(Some(&group));
-        dialog.add_responses(&[("cancel", "_Cancel"), ("calculate", "C_alculate")]);
+        dialog.add_responses(&[("cancel", tr("_Cancel")), ("calculate", tr("C_alculate"))]);
         dialog.set_response_appearance("calculate", adw::ResponseAppearance::Suggested);
         dialog.set_default_response(Some("calculate"));
         dialog.set_close_response("cancel");
@@ -1507,15 +1551,17 @@ impl Ui {
 
     fn show_preferences(&self) {
         let dialog = adw::PreferencesDialog::builder()
-            .title("Preferences")
+            .title(tr("Preferences"))
             .build();
         let page = adw::PreferencesPage::new();
-        let group = adw::PreferencesGroup::builder().title("Results").build();
+        let group = adw::PreferencesGroup::builder()
+            .title(tr("Results"))
+            .build();
         let opts = self.state.borrow().options;
         let angle = self.state.borrow().ctx.angle;
 
         let format_row = adw::ComboRow::builder()
-            .title("Number _Format")
+            .title(tr("Number _Format"))
             .use_underline(true)
             .model(&gtk::StringList::new(&NumberFormat::ALL.map(|f| f.label())))
             .build();
@@ -1526,16 +1572,16 @@ impl Ui {
                 .unwrap_or(0) as u32,
         );
         let accuracy = adw::SpinRow::with_range(0.0, 15.0, 1.0);
-        accuracy.set_title("_Decimal Places");
+        accuracy.set_title(tr("_Decimal Places"));
         accuracy.set_use_underline(true);
         accuracy.set_value(opts.accuracy as f64);
         let thousands = adw::SwitchRow::builder()
-            .title("_Thousands Separators")
+            .title(tr("_Thousands Separators"))
             .use_underline(true)
             .active(opts.thousands)
             .build();
         let zeroes = adw::SwitchRow::builder()
-            .title("_Trailing Zeroes")
+            .title(tr("_Trailing Zeroes"))
             .use_underline(true)
             .active(opts.show_zeroes)
             .build();
@@ -1545,13 +1591,17 @@ impl Ui {
         group.add(&zeroes);
 
         let group2 = adw::PreferencesGroup::builder()
-            .title("Calculation")
+            .title(tr("Calculation"))
             .build();
         let angles = [AngleUnit::Degrees, AngleUnit::Radians, AngleUnit::Gradians];
         let angle_row = adw::ComboRow::builder()
-            .title("_Angle Units")
+            .title(tr("_Angle Units"))
             .use_underline(true)
-            .model(&gtk::StringList::new(&["Degrees", "Radians", "Gradians"]))
+            .model(&gtk::StringList::new(&[
+                tr("Degrees"),
+                tr("Radians"),
+                tr("Gradians"),
+            ]))
             .build();
         angle_row.set_selected(angles.iter().position(|a| *a == angle).unwrap_or(0) as u32);
         group2.add(&angle_row);
@@ -1610,7 +1660,7 @@ impl Ui {
 
 /// How a calculation is spoken: "12×3+4 equals 40".
 fn spoken_result(expression: &str, result: &str) -> String {
-    format!("{} equals {}", expression.trim(), result)
+    trf!("{} equals {}", expression.trim(), result)
 }
 
 #[cfg(test)]

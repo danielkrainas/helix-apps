@@ -1,5 +1,6 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys};
 
 /// Accelerators registered on the application.
@@ -16,39 +17,39 @@ pub const ACCELS: &[(&str, &[&str])] = &[
 
 pub const GROUPS: &[Group] = &[
     (
-        "Scanning",
+        n_("Scanning"),
         &[
-            Keys("Scan a Folder", "<Control>o"),
-            Keys("Scan Again", "<Control>r F5"),
-            Keys("Stop Scanning", "Escape"),
+            Keys(n_("Scan a Folder"), "<Control>o"),
+            Keys(n_("Scan Again"), "<Control>r F5"),
+            Keys(n_("Stop Scanning"), "Escape"),
         ],
     ),
     (
-        "Items",
+        n_("Items"),
         &[
-            Keys("Open", "<Control>Return <Control>KP_Enter"),
-            Keys("Copy Path", "<Control><Shift>c"),
-            Keys("Move to Trash", "Delete"),
-            Keys("Show the Item Menu", "Menu <Shift>F10"),
+            Keys(n_("Open"), "<Control>Return <Control>KP_Enter"),
+            Keys(n_("Copy Path"), "<Control><Shift>c"),
+            Keys(n_("Move to Trash"), "Delete"),
+            Keys(n_("Show the Item Menu"), "Menu <Shift>F10"),
         ],
     ),
     (
-        "Chart",
+        n_("Chart"),
         &[
-            Keys("Previous or Next Item", "Left Right"),
-            Keys("Towards the Centre or Outwards", "Up Down"),
-            Keys("First or Last Item", "Home End"),
-            Keys("Open the Folder", "Return"),
-            Keys("Parent Folder", "BackSpace <Alt>Up"),
+            Keys(n_("Previous or Next Item"), "Left Right"),
+            Keys(n_("Towards the Centre or Outwards"), "Up Down"),
+            Keys(n_("First or Last Item"), "Home End"),
+            Keys(n_("Open the Folder"), "Return"),
+            Keys(n_("Parent Folder"), "BackSpace <Alt>Up"),
         ],
     ),
     (
-        "General",
+        n_("General"),
         &[
-            Keys("Preferences", "<Control>comma"),
-            Keys("Keyboard Shortcuts", "<Control>question"),
-            Keys("Close Window", "<Control>w"),
-            Keys("Quit", "<Control>q"),
+            Keys(n_("Preferences"), "<Control>comma"),
+            Keys(n_("Keyboard Shortcuts"), "<Control>question"),
+            Keys(n_("Close Window"), "<Control>w"),
+            Keys(n_("Quit"), "<Control>q"),
         ],
     ),
 ];

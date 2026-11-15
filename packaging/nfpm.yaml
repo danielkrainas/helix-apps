@@ -42,6 +42,9 @@ contents:
     dst: /usr/share/metainfo/
   - src: ./stage/usr/share/helix-apps/schemas/*
     dst: /usr/share/helix-apps/schemas/
+  # One entry per message catalogue, filled in by packaging/nfpm-locales.sh
+  # (a glob here fails when po/LINGUAS is empty).
+  # @LOCALES@
   - src: ./stage/usr/share/doc/helix-apps/README.md
     dst: /usr/share/doc/helix-apps/README.md
   - src: ./stage/usr/share/licenses/helix-apps/LICENSE

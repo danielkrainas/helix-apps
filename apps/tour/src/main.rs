@@ -16,6 +16,7 @@ const USAGE: &str = "Usage: helix-tour [--autostart]\n\n  \
     -h, --help       Show this help";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let mut autostart = false;
     for arg in std::env::args().skip(1) {
         match arg.as_str() {

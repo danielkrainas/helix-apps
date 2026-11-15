@@ -1,5 +1,6 @@
 //! Command-line parsing.
 
+use helix_app_common::trf;
 use std::path::{Path, PathBuf};
 
 pub const USAGE: &str = "Usage: helix-terminal [--working-directory DIR] [--tab] [-- COMMAND ARGS…]
@@ -42,20 +43,20 @@ where
             "-w" | "--working-directory" => {
                 let dir = args
                     .next()
-                    .ok_or_else(|| format!("{arg} needs a directory"))?;
+                    .ok_or_else(|| trf!("{arg} needs a directory", arg = arg))?;
                 opts.working_directory = Some(cwd.join(dir));
             }
             "--" | "-e" | "-x" | "--command" => {
                 opts.command = args.by_ref().collect();
                 if opts.command.is_empty() {
-                    return Err(format!("{arg} needs a command"));
+                    return Err(trf!("{arg} needs a command", arg = arg));
                 }
             }
             s => {
                 if let Some(dir) = s.strip_prefix("--working-directory=") {
                     opts.working_directory = Some(cwd.join(dir));
                 } else {
-                    return Err(format!("unknown option {s}"));
+                    return Err(trf!("unknown option {s}", s = s));
                 }
             }
         }

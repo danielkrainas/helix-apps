@@ -1,5 +1,7 @@
 //! Style (`theme` key) and built-in colour palettes.
 
+use helix_app_common::i18n::n_;
+
 /// Values of the `org.gnome.Console` `theme` key.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Theme {
@@ -74,7 +76,7 @@ pub struct Palette {
 }
 
 pub const LIGHT: Palette = Palette {
-    name: "Helix Light",
+    name: n_("Helix Light"),
     foreground: "#2b2b30",
     background: "#fbfbfc",
     cursor: "#2b2b30",
@@ -88,7 +90,7 @@ pub const LIGHT: Palette = Palette {
 };
 
 pub const DARK: Palette = Palette {
-    name: "Helix Dark",
+    name: n_("Helix Dark"),
     foreground: "#e6e6ea",
     background: "#1e1e22",
     cursor: "#e6e6ea",
@@ -119,7 +121,7 @@ pub const HACKER: Palette = Palette {
 /// for 4.5:1 on the background (the bright white entries stay light, as
 /// programs use them as backgrounds).
 pub const HIGH_CONTRAST_LIGHT: Palette = Palette {
-    name: "Helix High Contrast Light",
+    name: n_("Helix High Contrast Light"),
     foreground: "#000000",
     background: "#ffffff",
     cursor: "#000000",
@@ -135,7 +137,7 @@ pub const HIGH_CONTRAST_LIGHT: Palette = Palette {
 /// High contrast, dark: white on black, every ANSI colour light enough
 /// for 4.5:1 on the background (black stays black).
 pub const HIGH_CONTRAST_DARK: Palette = Palette {
-    name: "Helix High Contrast Dark",
+    name: n_("Helix High Contrast Dark"),
     foreground: "#ffffff",
     background: "#000000",
     cursor: "#ffffff",

@@ -1,5 +1,6 @@
 //! Path bar segmentation: turns a location into breadcrumbs.
 
+use helix_app_common::i18n::tr;
 use std::path::{Path, PathBuf};
 
 /// Where a breadcrumb leads.
@@ -21,7 +22,7 @@ impl Crumb {
     /// "Computer" for the file-system root, which shows only an icon.
     pub fn name(&self) -> String {
         if self.label.is_empty() {
-            "Computer".into()
+            tr("Computer").into()
         } else {
             self.label.clone()
         }
@@ -104,13 +105,13 @@ pub fn percent_decode(s: &str) -> String {
 /// Friendly label for the root of a non-file URI scheme.
 pub fn scheme_root_label(scheme: &str, authority: &str) -> String {
     match scheme {
-        "trash" => "Trash".into(),
-        "recent" => "Recent".into(),
-        "network" => "Network".into(),
-        "starred" => "Starred".into(),
-        "computer" => "Computer".into(),
-        "other-locations" => "Other Locations".into(),
-        "admin" => "Administrator Root".into(),
+        "trash" => tr("Trash").into(),
+        "recent" => tr("Recent").into(),
+        "network" => tr("Network").into(),
+        "starred" => tr("Starred").into(),
+        "computer" => tr("Computer").into(),
+        "other-locations" => tr("Other Locations").into(),
+        "admin" => tr("Administrator Root").into(),
         _ if !authority.is_empty() => {
             // Drop user info and port for display.
             let host = authority.rsplit('@').next().unwrap_or(authority);

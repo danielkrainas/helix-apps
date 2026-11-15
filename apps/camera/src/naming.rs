@@ -1,5 +1,6 @@
 //! Output directory and capture file naming.
 
+use helix_app_common::i18n::tr;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -11,8 +12,8 @@ pub enum CaptureKind {
 impl CaptureKind {
     fn prefix(self) -> &'static str {
         match self {
-            CaptureKind::Photo => "Photo from",
-            CaptureKind::Video => "Video from",
+            CaptureKind::Photo => tr("Photo from"),
+            CaptureKind::Video => tr("Video from"),
         }
     }
 }

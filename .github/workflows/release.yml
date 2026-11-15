@@ -61,7 +61,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
-            build-essential git curl ca-certificates jq \
+            build-essential git curl ca-certificates jq gettext \
             pkg-config libglib2.0-dev libglib2.0-bin libgtk-4-dev libadwaita-1-dev \
             libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
             libvte-2.91-gtk4-dev libwebkitgtk-6.0-dev libpoppler-glib-dev \
@@ -71,7 +71,7 @@ jobs:
         if: matrix.family == 'redhat'
         run: |
           dnf install -y --setopt=install_weak_deps=False \
-            gcc pkgconf-pkg-config git curl tar gzip jq \
+            gcc pkgconf-pkg-config git curl tar gzip jq gettext \
             glib2-devel gtk4-devel libadwaita-devel \
             gstreamer1-devel gstreamer1-plugins-base-devel \
             vte291-gtk4-devel webkitgtk6.0-devel poppler-glib-devel \
@@ -81,7 +81,7 @@ jobs:
         if: matrix.family == 'arch'
         run: |
           pacman -Syu --noconfirm --needed \
-            base-devel git curl jq \
+            base-devel git curl jq gettext \
             glib2 gtk4 libadwaita gstreamer gst-plugins-base-libs \
             vte4 webkitgtk-6.0 poppler-glib libshumate sane
 
@@ -121,7 +121,8 @@ jobs:
             aarch64) arch=arm64 ;;
           esac
           mkdir -p dist
-          sed -e "s/@VERSION@/${VERSION}/" -e "s/@ARCH@/${arch}/" packaging/nfpm.yaml > nfpm.yaml
+          sed -e "s/@VERSION@/${VERSION}/" -e "s/@ARCH@/${arch}/" packaging/nfpm.yaml \
+            | packaging/nfpm-locales.sh stage > nfpm.yaml
           case "${{ matrix.family }}" in
             debian)
               nfpm package --config nfpm.yaml --packager deb --target dist/

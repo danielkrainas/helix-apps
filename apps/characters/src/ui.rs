@@ -12,6 +12,8 @@ use crate::category::{self, Category};
 use crate::charinfo;
 use crate::recent;
 use crate::search;
+use helix_app_common::i18n::tr;
+use helix_app_common::trnf;
 
 pub const APP_ID: &str = "org.helix.Characters";
 const SCHEMA: &str = "org.gnome.Characters";
@@ -49,8 +51,8 @@ pub fn run(initial_search: Option<String>) -> glib::ExitCode {
         .build();
     helix_app_common::install_standard_actions(
         &app,
-        "Characters",
-        "Character map and emoji picker",
+        tr("Characters"),
+        tr("Character map and emoji picker"),
     );
     let initial = RefCell::new(initial_search);
     app.connect_startup(|_| {
@@ -165,7 +167,7 @@ impl App {
             self.show_category(self.current.get());
             return;
         }
-        self.title.set_title("Search");
+        self.title.set_title(tr("Search"));
         self.title.set_subtitle(&query);
         // Search results are not a category: nothing in the sidebar is
         // current while they are shown.
@@ -194,9 +196,8 @@ impl App {
             if app.generation.get() == generation {
                 app.set_items(&results, "no-results");
                 let text = match results.len() {
-                    0 => "No results".to_string(),
-                    1 => "1 character found".to_string(),
-                    n => format!("{n} characters found"),
+                    0 => tr("No results").to_string(),
+                    n => trnf!("{n} character found", "{n} characters found", n),
                 };
                 helix_app_common::announce_settled(&app.stack, &text);
             }
@@ -212,7 +213,7 @@ impl App {
         }
         self.toasts.add_toast(
             adw::Toast::builder()
-                .title("Character copied to clipboard")
+                .title(tr("Character copied to clipboard"))
                 .timeout(2)
                 .build(),
         );
@@ -291,7 +292,7 @@ fn build(gapp: &adw::Application) -> Rc<App> {
 
     let window = adw::ApplicationWindow::builder()
         .application(gapp)
-        .title("Characters")
+        .title(tr("Characters"))
         .default_width(860)
         .default_height(620)
         .width_request(360)
@@ -317,8 +318,8 @@ fn build(gapp: &adw::Application) -> Rc<App> {
     let letters_start = 1 + category::EMOJI.len() as i32;
     sidebar.set_header_func(move |row, _| {
         let heading = match row.index() {
-            i if i == emoji_start => Some("Emoji"),
-            i if i == letters_start => Some("Letters & Symbols"),
+            i if i == emoji_start => Some(tr("Emoji")),
+            i if i == letters_start => Some(tr("Letters & Symbols")),
             _ => None,
         };
         row.set_header(
@@ -348,37 +349,39 @@ fn build(gapp: &adw::Application) -> Rc<App> {
             .build(),
     ));
     let sidebar_page = adw::NavigationPage::builder()
-        .title("Characters")
+        .title(tr("Characters"))
         .child(&sidebar_toolbar)
         .build();
 
     // Content.
-    let title = adw::WindowTitle::new("Characters", "");
+    let title = adw::WindowTitle::new(tr("Characters"), "");
     let header = adw::HeaderBar::new();
     header.set_title_widget(Some(&title));
     let search_button = gtk::ToggleButton::builder()
         .icon_name("system-search-symbolic")
-        .tooltip_text("Search")
+        .tooltip_text(tr("Search"))
         .build()
-        .labelled("Search");
+        .labelled(tr("Search"));
     header.pack_start(&search_button);
     let menu = gio::Menu::new();
     menu.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some(helix_app_common::shortcuts::ACTION),
     );
-    menu.append(Some("_About Characters"), Some("app.about"));
+    menu.append(Some(tr("_About Characters")), Some("app.about"));
     header.pack_end(
         &gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu"),
+            .labelled(tr("Main Menu")),
     );
 
     let search_entry = gtk::SearchEntry::builder()
-        .placeholder_text("Search characters")
+        .placeholder_text(tr("Search characters"))
         .hexpand(true)
         .build();
     let clamp = adw::Clamp::builder()
@@ -428,7 +431,7 @@ fn build(gapp: &adw::Application) -> Rc<App> {
         .min_columns(3)
         .build();
     grid.add_css_class("char-grid");
-    helix_app_common::set_accessible_label(&grid, "Characters");
+    helix_app_common::set_accessible_label(&grid, tr("Characters"));
 
     let stack = gtk::Stack::new();
     stack.add_named(
@@ -441,16 +444,16 @@ fn build(gapp: &adw::Application) -> Rc<App> {
     stack.add_named(
         &adw::StatusPage::builder()
             .icon_name("document-open-recent-symbolic")
-            .title("No Recent Characters")
-            .description("Characters you copy will appear here")
+            .title(tr("No Recent Characters"))
+            .description(tr("Characters you copy will appear here"))
             .build(),
         Some("empty-recent"),
     );
     stack.add_named(
         &adw::StatusPage::builder()
             .icon_name("system-search-symbolic")
-            .title("No Results")
-            .description("Try a different search")
+            .title(tr("No Results"))
+            .description(tr("Try a different search"))
             .build(),
         Some("no-results"),
     );
@@ -461,7 +464,7 @@ fn build(gapp: &adw::Application) -> Rc<App> {
         .halign(gtk::Align::Center)
         .valign(gtk::Align::Center)
         .build()
-        .labelled("Loading Characters");
+        .labelled(tr("Loading Characters"));
     stack.add_named(&spinner, Some("loading"));
     // A search just started: empty until results come or the spinner shows.
     stack.add_named(
@@ -476,7 +479,7 @@ fn build(gapp: &adw::Application) -> Rc<App> {
     content_toolbar.add_top_bar(&search_bar);
     content_toolbar.set_content(Some(&toasts));
     let content_page = adw::NavigationPage::builder()
-        .title("Characters")
+        .title(tr("Characters"))
         .child(&content_toolbar)
         .build();
 
@@ -581,7 +584,7 @@ fn show_details(app: &Rc<App>, text: String) {
     name.add_css_class("title-3");
     let group = adw::PreferencesGroup::new();
     let cp_row = adw::ActionRow::builder()
-        .title("Code point")
+        .title(tr("Code point"))
         .subtitle_selectable(true)
         .build();
     cp_row.add_css_class("property");
@@ -593,7 +596,10 @@ fn show_details(app: &Rc<App>, text: String) {
     group.add(&cp_row);
     group.add(&utf8_row);
 
-    let see_also_label = gtk::Label::builder().label("See Also").xalign(0.0).build();
+    let see_also_label = gtk::Label::builder()
+        .label(tr("See Also"))
+        .xalign(0.0)
+        .build();
     see_also_label.add_css_class("heading");
     let see_also = gtk::FlowBox::builder()
         .selection_mode(gtk::SelectionMode::None)
@@ -604,7 +610,7 @@ fn show_details(app: &Rc<App>, text: String) {
         .build();
 
     let copy_button = gtk::Button::builder()
-        .label("_Copy Character")
+        .label(tr("_Copy Character"))
         .use_underline(true)
         .halign(gtk::Align::Center)
         .build();

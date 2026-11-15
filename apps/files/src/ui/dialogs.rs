@@ -7,6 +7,9 @@ use std::rc::Rc;
 use super::Window;
 use crate::naming;
 use crate::ops::{Choice, Conflict, Resolution};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 /// Destructive confirmation; `on_confirm` runs if accepted.
 pub fn confirm(
@@ -22,7 +25,7 @@ pub fn confirm(
         .default_response("cancel")
         .close_response("cancel")
         .build();
-    dialog.add_responses(&[("cancel", "_Cancel"), ("accept", accept)]);
+    dialog.add_responses(&[("cancel", tr("_Cancel")), ("accept", accept)]);
     dialog.set_response_appearance("accept", adw::ResponseAppearance::Destructive);
     dialog.connect_response(Some("accept"), move |_, _| on_confirm());
     dialog.present(Some(parent));
@@ -44,7 +47,11 @@ pub fn name_dialog(
         .width_chars(30)
         .build();
     let field = gtk::Label::builder()
-        .label(if is_dir { "Folder _Name" } else { "File _Name" })
+        .label(if is_dir {
+            tr("Folder _Name")
+        } else {
+            tr("File _Name")
+        })
         .use_underline(true)
         .mnemonic_widget(&entry)
         .xalign(0.0)
@@ -64,7 +71,7 @@ pub fn name_dialog(
         .default_response("accept")
         .close_response("cancel")
         .build();
-    dialog.add_responses(&[("cancel", "_Cancel"), ("accept", accept)]);
+    dialog.add_responses(&[("cancel", tr("_Cancel")), ("accept", accept)]);
     dialog.set_response_appearance("accept", adw::ResponseAppearance::Suggested);
 
     let initial = initial.to_string();
@@ -81,9 +88,9 @@ pub fn name_dialog(
                 Ok(()) => match &dir {
                     Some(d) if d.child(text).query_exists(None::<&gio::Cancellable>) => Some(
                         if is_dir {
-                            "A folder with that name already exists."
+                            tr("A folder with that name already exists.")
                         } else {
-                            "A file with that name already exists."
+                            tr("A file with that name already exists.")
                         }
                         .to_string(),
                     ),
@@ -101,14 +108,14 @@ pub fn name_dialog(
                 msg.as_deref().filter(|m| !m.is_empty()),
             );
             if text.starts_with('.') && msg.is_none() {
-                const HIDDEN: &str = "Names starting with “.” are hidden.";
-                error.set_text(HIDDEN);
+                const HIDDEN: &str = n_("Names starting with “.” are hidden.");
+                error.set_text(tr(HIDDEN));
                 error.remove_css_class("error");
                 error.set_visible(true);
-                entry.update_property(&[gtk::accessible::Property::Description(HIDDEN)]);
+                entry.update_property(&[gtk::accessible::Property::Description(tr(HIDDEN))]);
                 helix_app_common::a11y::announce_change(
                     &error,
-                    HIDDEN,
+                    tr(HIDDEN),
                     helix_app_common::a11y::Urgency::Polite,
                 );
             } else {
@@ -154,8 +161,8 @@ fn describe(info: Option<&gio::FileInfo>) -> String {
         })
         .unwrap_or_default();
     match (size.is_empty(), date.is_empty()) {
-        (false, false) => format!("{size}, last modified {date}"),
-        (true, false) => format!("Last modified {date}"),
+        (false, false) => trf!("{size}, last modified {date}", size = size, date = date),
+        (true, false) => trf!("Last modified {date}", date = date),
         (false, true) => size,
         _ => String::new(),
     }
@@ -183,16 +190,14 @@ pub async fn conflict(parent: &adw::ApplicationWindow, c: &Conflict) -> Resoluti
         .unwrap_or_default();
     let merge = c.source_is_dir && c.dest_is_dir;
     let heading = if merge {
-        format!("Merge Folder “{name}”?")
+        trf!("Merge Folder “{name}”?", name = name)
     } else {
-        format!("Replace “{name}”?")
+        trf!("Replace “{name}”?", name = name)
     };
     let mut body = if merge {
-        format!("A folder with the same name already exists in “{folder}”. Merging will ask before replacing any files in the folder that conflict with the files being copied.")
+        trf!("A folder with the same name already exists in “{folder}”. Merging will ask before replacing any files in the folder that conflict with the files being copied.", folder = folder)
     } else {
-        format!(
-            "Another file with the same name already exists in “{folder}”. Replacing it will overwrite its content."
-        )
+        trf!("Another file with the same name already exists in “{folder}”. Replacing it will overwrite its content.", folder = folder)
     };
     let (o, n) = (describe(dst.as_ref()), describe(src.as_ref()));
     if !o.is_empty() {
@@ -201,7 +206,7 @@ pub async fn conflict(parent: &adw::ApplicationWindow, c: &Conflict) -> Resoluti
     if !n.is_empty() {
         body.push_str(&format!("\nReplace with: {n}"));
     }
-    let all = gtk::CheckButton::with_label("Apply this action to all conflicts");
+    let all = gtk::CheckButton::with_label(tr("Apply this action to all conflicts"));
     let dialog = adw::AlertDialog::builder()
         .heading(heading)
         .body(body)
@@ -210,10 +215,10 @@ pub async fn conflict(parent: &adw::ApplicationWindow, c: &Conflict) -> Resoluti
         .close_response("cancel")
         .build();
     dialog.add_responses(&[
-        ("cancel", "_Cancel"),
-        ("skip", "_Skip"),
-        ("rename", "Keep _Both"),
-        ("replace", if merge { "_Merge" } else { "_Replace" }),
+        ("cancel", tr("_Cancel")),
+        ("skip", tr("_Skip")),
+        ("rename", tr("Keep _Both")),
+        ("replace", if merge { tr("_Merge") } else { tr("_Replace") }),
     ]);
     dialog.set_response_appearance(
         "replace",
@@ -259,9 +264,9 @@ enum AppGroup {
 impl AppGroup {
     fn title(self) -> &'static str {
         match self {
-            AppGroup::Recommended => "Recommended Applications",
-            AppGroup::Other => "Other Applications",
-            AppGroup::All => "All Applications",
+            AppGroup::Recommended => tr("Recommended Applications"),
+            AppGroup::Other => tr("Other Applications"),
+            AppGroup::All => tr("All Applications"),
         }
     }
 }
@@ -339,7 +344,7 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
     let list = gtk::ListBox::new();
     list.add_css_class("boxed-list");
     list.set_selection_mode(gtk::SelectionMode::Single);
-    list.update_property(&[gtk::accessible::Property::Label("Applications")]);
+    list.update_property(&[gtk::accessible::Property::Label(tr("Applications"))]);
     for (_, app) in &apps {
         let row = adw::ActionRow::builder()
             .title(app.display_name().as_str())
@@ -354,7 +359,7 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
             row.add_prefix(&img);
         }
         if default.as_ref().is_some_and(|d| d.id() == app.id()) {
-            row.set_subtitle("Default");
+            row.set_subtitle(tr("Default"));
         }
         list.append(&row);
     }
@@ -392,9 +397,9 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
         }
     };
     let search = gtk::SearchEntry::builder()
-        .placeholder_text("Search applications")
+        .placeholder_text(tr("Search applications"))
         .build();
-    search.update_property(&[gtk::accessible::Property::Label("Search Applications")]);
+    search.update_property(&[gtk::accessible::Property::Label(tr("Search Applications"))]);
     {
         let names = names.clone();
         let search = search.clone();
@@ -417,14 +422,14 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
     let empty = adw::StatusPage::builder()
         .icon_name("system-search-symbolic")
         .title(if apps.is_empty() {
-            "No Applications Found"
+            tr("No Applications Found")
         } else {
-            "No Results Found"
+            tr("No Results Found")
         })
         .description(if apps.is_empty() {
-            "No installed application can open this file"
+            tr("No installed application can open this file")
         } else {
-            "Try a different search"
+            tr("Try a different search")
         })
         .vexpand(true)
         .build();
@@ -434,7 +439,7 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
     stack.add_named(&empty, Some("empty"));
     stack.set_visible_child_name(if apps.is_empty() { "empty" } else { "list" });
 
-    let always = gtk::CheckButton::with_label(&format!("Always use for “{desc}” files"));
+    let always = gtk::CheckButton::with_label(&trf!("Always use for “{desc}” files", desc = desc));
     let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
     content.set_margin_top(12);
     content.set_margin_bottom(12);
@@ -445,7 +450,7 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
     content.append(&always);
 
     let header = adw::HeaderBar::new();
-    let open_btn = gtk::Button::with_mnemonic("_Open");
+    let open_btn = gtk::Button::with_mnemonic(tr("_Open"));
     open_btn.add_css_class("suggested-action");
     open_btn.set_sensitive(!apps.is_empty());
     header.pack_end(&open_btn);
@@ -453,7 +458,7 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
     tv.add_top_bar(&header);
     tv.set_content(Some(&content));
     let dialog = adw::Dialog::builder()
-        .title("Open With")
+        .title(tr("Open With"))
         .content_width(420)
         .content_height(560)
         .child(&tv)
@@ -478,9 +483,8 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
             stack.set_visible_child_name(if shown.is_empty() { "empty" } else { "list" });
             open_btn.set_sensitive(!shown.is_empty());
             let msg = match shown.len() {
-                0 => "No applications found".to_string(),
-                1 => "1 application".to_string(),
-                n => format!("{n} applications"),
+                0 => tr("No applications found").to_string(),
+                n => trnf!("{n} application", "{n} applications", n),
             };
             helix_app_common::announce_settled(e, &msg);
         });
@@ -505,7 +509,7 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
             if let Some(w) = win.upgrade() {
                 let ctx = gtk::prelude::WidgetExt::display(&w.window).app_launch_context();
                 if let Err(e) = app.launch(&files, Some(&ctx)) {
-                    w.toast(&format!("Could not open: {}", e.message()));
+                    w.toast(&trf!("Could not open: {}", e.message()));
                 } else {
                     for f in &files {
                         gtk::RecentManager::default().add_item(&f.uri());
@@ -551,7 +555,7 @@ pub fn preferences(win: &Rc<Window>) {
     let shared = win.shared.clone();
     let dialog = adw::PreferencesDialog::new();
     let page = adw::PreferencesPage::builder()
-        .title("General")
+        .title(tr("General"))
         .icon_name("preferences-system-symbolic")
         .build();
 
@@ -604,87 +608,92 @@ pub fn preferences(win: &Rc<Window>) {
     };
     let p = &shared.prefs;
 
-    let general = adw::PreferencesGroup::builder().title("General").build();
+    let general = adw::PreferencesGroup::builder()
+        .title(tr("General"))
+        .build();
     general.add(&switch(
-        "Sort Folders Before Files",
+        tr("Sort Folders Before Files"),
         "",
         shared.chooser_prefs.get("sort-directories-first", true),
         bool_setter(shared.chooser_prefs.clone(), "sort-directories-first"),
     ));
     general.add(&combo(
-        "Open Action",
+        tr("Open Action"),
         "",
-        &[("double", "Double Click"), ("single", "Single Click")],
+        &[
+            ("double", tr("Double Click")),
+            ("single", tr("Single Click")),
+        ],
         &p.get_enum_nick("click-policy", "double"),
         enum_setter("click-policy"),
     ));
     general.add(&switch(
-        "Show Hidden Files",
+        tr("Show Hidden Files"),
         "",
         p.get("show-hidden-files", false),
         bool_setter(p.clone(), "show-hidden-files"),
     ));
     general.add(&switch(
-        "Always Show the Location Entry",
-        "Instead of the path bar",
+        tr("Always Show the Location Entry"),
+        tr("Instead of the path bar"),
         p.get("always-use-location-entry", false),
         bool_setter(p.clone(), "always-use-location-entry"),
     ));
     page.add(&general);
 
-    let views = adw::PreferencesGroup::builder().title("Views").build();
+    let views = adw::PreferencesGroup::builder().title(tr("Views")).build();
     views.add(&combo(
-        "Default View",
+        tr("Default View"),
         "",
-        &[("icon-view", "Grid"), ("list-view", "List")],
+        &[("icon-view", tr("Grid")), ("list-view", tr("List"))],
         &p.get_enum_nick("default-folder-viewer", "icon-view"),
         enum_setter("default-folder-viewer"),
     ));
     views.add(&combo(
-        "Show Thumbnails",
+        tr("Show Thumbnails"),
         "",
         &[
-            ("local-only", "On This Computer Only"),
-            ("always", "All Files"),
-            ("never", "Never"),
+            ("local-only", tr("On This Computer Only")),
+            ("always", tr("All Files")),
+            ("never", tr("Never")),
         ],
         &p.get_enum_nick("show-image-thumbnails", "local-only"),
         enum_setter("show-image-thumbnails"),
     ));
     views.add(&combo(
-        "Date and Time Format",
+        tr("Date and Time Format"),
         "",
-        &[("simple", "Simple"), ("detailed", "Detailed")],
+        &[("simple", tr("Simple")), ("detailed", tr("Detailed"))],
         &p.get_enum_nick("date-time-format", "simple"),
         enum_setter("date-time-format"),
     ));
     page.add(&views);
 
     let menu = adw::PreferencesGroup::builder()
-        .title("Context Menu")
+        .title(tr("Context Menu"))
         .build();
     menu.add(&switch(
-        "Create Link",
-        "Show an action to create symbolic links",
+        tr("Create Link"),
+        tr("Show an action to create symbolic links"),
         p.get("show-create-link", false),
         bool_setter(p.clone(), "show-create-link"),
     ));
     menu.add(&switch(
-        "Delete Permanently",
-        "Show an action to bypass the Trash",
+        tr("Delete Permanently"),
+        tr("Show an action to bypass the Trash"),
         p.get("show-delete-permanently", false),
         bool_setter(p.clone(), "show-delete-permanently"),
     ));
     page.add(&menu);
 
-    let search = adw::PreferencesGroup::builder().title("Search").build();
+    let search = adw::PreferencesGroup::builder().title(tr("Search")).build();
     search.add(&combo(
-        "Search in Subfolders",
+        tr("Search in Subfolders"),
         "",
         &[
-            ("local-only", "On This Computer Only"),
-            ("always", "All Locations"),
-            ("never", "Never"),
+            ("local-only", tr("On This Computer Only")),
+            ("always", tr("All Locations")),
+            ("never", tr("Never")),
         ],
         &p.get_enum_nick("recursive-search", "local-only"),
         enum_setter("recursive-search"),

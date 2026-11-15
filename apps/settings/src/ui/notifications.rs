@@ -6,6 +6,7 @@ use std::rc::Rc;
 
 use super::widgets::{self, switch};
 use super::{Ctx, Panel};
+use helix_app_common::i18n::tr;
 
 const NOTIFICATIONS: &str = "org.gnome.desktop.notifications";
 const APP_SCHEMA: &str = "org.gnome.desktop.notifications.application";
@@ -27,23 +28,23 @@ impl Panel for NotificationsPanel {
             "show-banners",
             true,
             true,
-            "Do Not Disturb",
-            "Notification banners are hidden",
+            tr("Do Not Disturb"),
+            tr("Notification banners are hidden"),
         ));
         general.add(&switch(
             &prefs,
             "show-in-lock-screen",
             true,
             false,
-            "Lock Screen Notifications",
-            "Show notifications on the lock screen",
+            tr("Lock Screen Notifications"),
+            tr("Show notifications on the lock screen"),
         ));
         page.add(&general);
 
         let schema = helix_app_common::lookup_schema(APP_SCHEMA);
         let children: Vec<String> = prefs.get::<Vec<String>>("application-children", Vec::new());
         if let Some(schema) = schema.filter(|_| !children.is_empty()) {
-            let apps = widgets::group("Apps");
+            let apps = widgets::group(tr("Apps"));
             let mut entries: Vec<(String, String, Option<gio::Icon>)> = children
                 .iter()
                 .map(|id| {

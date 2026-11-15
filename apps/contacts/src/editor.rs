@@ -11,6 +11,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::datefield::DateField;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 type Choices = &'static [(&'static str, &'static [&'static str])];
 
@@ -36,9 +38,9 @@ struct TypedList {
 fn remove_name(kind: &str, value: &str) -> String {
     let value = value.trim();
     if value.is_empty() {
-        format!("Remove {kind}")
+        trf!("Remove {kind}", kind = kind)
     } else {
-        format!("Remove {kind} {value}")
+        trf!("Remove {kind} {value}", kind = kind, value = value)
     }
 }
 
@@ -91,7 +93,7 @@ impl TypedList {
         let types = gtk::DropDown::from_strings(&labels);
         types.set_valign(gtk::Align::Center);
         types.add_css_class("flat");
-        helix_app_common::set_accessible_label(&types, &format!("{} Type", self.kind));
+        helix_app_common::set_accessible_label(&types, &trf!("{} Type", self.kind));
         let idx = self.index_for(t);
         types.set_selected(idx);
         let row = adw::EntryRow::builder()
@@ -105,7 +107,7 @@ impl TypedList {
                 r.set_title(l);
             }
         });
-        let remove_label = format!("Remove {}", self.kind);
+        let remove_label = trf!("Remove {}", self.kind);
         let remove = gtk::Button::builder()
             .icon_name("user-trash-symbolic")
             .tooltip_text(&remove_label)
@@ -228,8 +230,8 @@ impl Editor {
         }
         let pic_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         pic_box.set_halign(gtk::Align::Center);
-        let change = gtk::Button::with_label("Change Picture…");
-        let clear = gtk::Button::with_label("Remove Picture");
+        let change = gtk::Button::with_label(tr("Change Picture…"));
+        let clear = gtk::Button::with_label(tr("Remove Picture"));
         pic_box.append(&change);
         pic_box.append(&clear);
         page.append(&avatar);
@@ -244,8 +246,8 @@ impl Editor {
                 .position(|(u, _)| u == default_book)
                 .unwrap_or(0);
             dd.set_selected(idx as u32);
-            helix_app_common::set_accessible_label(&dd, "Address Book");
-            let row = adw::ActionRow::builder().title("Address Book").build();
+            helix_app_common::set_accessible_label(&dd, tr("Address Book"));
+            let row = adw::ActionRow::builder().title(tr("Address Book")).build();
             row.add_suffix(&dd);
             let g = adw::PreferencesGroup::new();
             g.add(&row);
@@ -261,13 +263,13 @@ impl Editor {
         };
 
         let n = &contact.name;
-        let name_group = adw::PreferencesGroup::builder().title("Name").build();
-        let prefix = entry("Prefix", &n.prefix);
-        let given = entry("First Name", &n.given);
-        let additional = entry("Middle Name", &n.additional);
-        let family = entry("Last Name", &n.family);
-        let suffix = entry("Suffix", &n.suffix);
-        let nickname = entry("Nickname", &contact.nickname);
+        let name_group = adw::PreferencesGroup::builder().title(tr("Name")).build();
+        let prefix = entry(tr("Prefix"), &n.prefix);
+        let given = entry(tr("First Name"), &n.given);
+        let additional = entry(tr("Middle Name"), &n.additional);
+        let family = entry(tr("Last Name"), &n.family);
+        let suffix = entry(tr("Suffix"), &n.suffix);
+        let nickname = entry(tr("Nickname"), &contact.nickname);
         // A contact with only FN (no N) gets the name split for editing.
         if n.is_empty() && !contact.full_name.is_empty() {
             let guess = StructuredName::guess_from(&contact.full_name);
@@ -281,25 +283,30 @@ impl Editor {
         page.append(&name_group);
 
         let org_group = adw::PreferencesGroup::builder()
-            .title("Organization")
+            .title(tr("Organization"))
             .build();
-        let org = entry("Organization", &contact.org);
-        let org_unit = entry("Department", &contact.org_unit);
-        let title = entry("Job Title", &contact.title);
+        let org = entry(tr("Organization"), &contact.org);
+        let org_unit = entry(tr("Department"), &contact.org_unit);
+        let title = entry(tr("Job Title"), &contact.title);
         for r in [&org, &org_unit, &title] {
             org_group.add(r);
         }
         page.append(&org_group);
 
-        let emails = TypedList::new("Email Addresses", "Add Email", GENERIC_TYPES, false);
+        let emails = TypedList::new(tr("Email Addresses"), tr("Add Email"), GENERIC_TYPES, false);
         for e in &contact.emails {
             emails.add(e);
         }
-        let phones = TypedList::new("Phone Numbers", "Add Phone Number", PHONE_TYPES, true);
+        let phones = TypedList::new(
+            tr("Phone Numbers"),
+            tr("Add Phone Number"),
+            PHONE_TYPES,
+            true,
+        );
         for p in &contact.phones {
             phones.add(p);
         }
-        let urls = TypedList::new("Websites", "Add Website", GENERIC_TYPES, false);
+        let urls = TypedList::new(tr("Websites"), tr("Add Website"), GENERIC_TYPES, false);
         for u in &contact.urls {
             urls.add(u);
         }
@@ -307,27 +314,29 @@ impl Editor {
         page.append(&phones.group);
 
         let address_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
-        let addr_header = adw::PreferencesGroup::builder().title("Addresses").build();
+        let addr_header = adw::PreferencesGroup::builder()
+            .title(tr("Addresses"))
+            .build();
         let add_addr = gtk::Button::builder()
             .icon_name("list-add-symbolic")
-            .tooltip_text("Add Address")
+            .tooltip_text(tr("Add Address"))
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
             .build()
-            .labelled("Add Address");
+            .labelled(tr("Add Address"));
         addr_header.set_header_suffix(Some(&add_addr));
         page.append(&addr_header);
         page.append(&address_box);
         page.append(&urls.group);
 
-        let misc = adw::PreferencesGroup::builder().title("Other").build();
-        let birthday = DateField::new("Birthday", &contact.birthday);
-        let anniversary = DateField::new("Anniversary", &contact.anniversary);
+        let misc = adw::PreferencesGroup::builder().title(tr("Other")).build();
+        let birthday = DateField::new(tr("Birthday"), &contact.birthday);
+        let anniversary = DateField::new(tr("Anniversary"), &contact.anniversary);
         misc.add(&birthday.row);
         misc.add(&anniversary.row);
         page.append(&misc);
 
-        let notes_group = adw::PreferencesGroup::builder().title("Notes").build();
+        let notes_group = adw::PreferencesGroup::builder().title(tr("Notes")).build();
         let note = gtk::TextView::builder()
             .wrap_mode(gtk::WrapMode::WordChar)
             .top_margin(8)
@@ -336,7 +345,7 @@ impl Editor {
             .right_margin(8)
             .height_request(96)
             .build();
-        helix_app_common::set_accessible_label(&note, "Notes");
+        helix_app_common::set_accessible_label(&note, tr("Notes"));
         note.buffer().set_text(&contact.note);
         let frame = gtk::Frame::builder()
             .child(&note)
@@ -403,7 +412,7 @@ impl Editor {
             let filters = gio::ListStore::new::<gtk::FileFilter>();
             filters.append(&filter);
             let dialog = gtk::FileDialog::builder()
-                .title("Choose a Picture")
+                .title(tr("Choose a Picture"))
                 .filters(&filters)
                 .build();
             let win = b.root().and_downcast::<gtk::Window>();
@@ -429,7 +438,7 @@ impl Editor {
         let labels: Vec<&str> = GENERIC_TYPES.iter().map(|(l, _)| *l).collect();
         let types = gtk::DropDown::from_strings(&labels);
         types.set_valign(gtk::Align::Center);
-        helix_app_common::set_accessible_label(&types, "Address Type");
+        helix_app_common::set_accessible_label(&types, tr("Address Type"));
         let idx = if a.is_empty() && a.types.is_empty() {
             0
         } else {
@@ -438,12 +447,12 @@ impl Editor {
         types.set_selected(idx);
         let remove = gtk::Button::builder()
             .icon_name("user-trash-symbolic")
-            .tooltip_text("Remove Address")
+            .tooltip_text(tr("Remove Address"))
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
             .build()
             .labelled(&remove_name(
-                "Address",
+                tr("Address"),
                 &address_summary(&a.street, &a.locality),
             ));
         let suffix = gtk::Box::new(gtk::Orientation::Horizontal, 6);
@@ -456,13 +465,13 @@ impl Editor {
             types,
             orig: a.clone(),
             orig_index: idx,
-            street: entry("Street", &a.street),
-            extended: entry("Extended Address", &a.extended),
-            po_box: entry("PO Box", &a.po_box),
-            locality: entry("City", &a.locality),
+            street: entry(tr("Street"), &a.street),
+            extended: entry(tr("Extended Address"), &a.extended),
+            po_box: entry(tr("PO Box"), &a.po_box),
+            locality: entry(tr("City"), &a.locality),
             region: entry("State/Province", &a.region),
-            postal_code: entry("Postal Code", &a.postal_code),
-            country: entry("Country", &a.country),
+            postal_code: entry(tr("Postal Code"), &a.postal_code),
+            country: entry(tr("Country"), &a.country),
         };
         for e in [
             &row.street,
@@ -481,7 +490,7 @@ impl Editor {
             let (rm, street, city) = (remove.clone(), row.street.clone(), row.locality.clone());
             e.connect_changed(move |_| {
                 let summary = address_summary(&street.text(), &city.text());
-                helix_app_common::set_accessible_label(&rm, &remove_name("Address", &summary));
+                helix_app_common::set_accessible_label(&rm, &remove_name(tr("Address"), &summary));
             });
         }
         let weak = Rc::downgrade(self);
@@ -556,7 +565,7 @@ impl Editor {
             && c.addresses.is_empty()
             && c.urls.is_empty();
         if empty {
-            return Err("Enter a name or some details first".into());
+            return Err(tr("Enter a name or some details first").into());
         }
         Ok(c)
     }

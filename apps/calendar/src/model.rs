@@ -2,6 +2,7 @@
 //! their expansion into displayable items.
 
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use helix_app_common::i18n::tr;
 use helix_eds::ical::{expand, Event, Zones};
 use std::collections::HashMap;
 
@@ -41,7 +42,7 @@ impl Item {
 
     pub fn title(&self) -> &str {
         if self.summary.trim().is_empty() {
-            "(No title)"
+            tr("(No title)")
         } else {
             &self.summary
         }

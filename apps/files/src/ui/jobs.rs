@@ -10,6 +10,8 @@ use std::rc::Rc;
 
 use super::{dialogs, Window};
 use crate::ops::{self, Conflict, Job, Outcome, Progress, Resolution};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 enum Msg {
     Progress(Progress),
@@ -55,7 +57,7 @@ fn details(p: &Progress) -> String {
             crate::fmt::item_count(p.total_items)
         )
     } else {
-        "Preparing…".into()
+        tr("Preparing…").into()
     }
 }
 
@@ -83,7 +85,7 @@ fn mean(v: &[f64]) -> Option<f64> {
 
 /// The header button's tooltip and description for `fraction`.
 fn progress_text(fraction: f64) -> String {
-    format!(
+    trf!(
         "File Operations — {} % done",
         (fraction.clamp(0.0, 1.0) * 100.0).floor()
     )
@@ -94,7 +96,7 @@ fn progress_text(fraction: f64) -> String {
 fn update_indicator(w: &Window) {
     w.jobs_icon.queue_draw();
     let text = overall_fraction(&w.jobs_box).map(progress_text);
-    let text = text.as_deref().unwrap_or("File Operations");
+    let text = text.as_deref().unwrap_or(tr("File Operations"));
     if w.jobs_button.tooltip_text().as_deref() != Some(text) {
         w.jobs_button.set_tooltip_text(Some(text));
         w.jobs_button
@@ -133,7 +135,7 @@ pub fn draw_indicator(area: &gtk::DrawingArea, cr: &gtk::cairo::Context, jobs_bo
 
 /// Accessible name of a job's Cancel button: "Cancel Copying 3 files".
 fn cancel_name(title: &str) -> String {
-    format!("Cancel {title}")
+    trf!("Cancel {title}", title = title)
 }
 
 /// Starts `job` on a worker thread; `done` runs on the main thread after it
@@ -151,7 +153,7 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
         .build();
     let cancel_btn = gtk::Button::builder()
         .icon_name("process-stop-symbolic")
-        .tooltip_text("Cancel")
+        .tooltip_text(tr("Cancel"))
         .valign(gtk::Align::Center)
         .build()
         .labelled(&cancel_name(&title));
@@ -162,7 +164,7 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
     let bar = gtk::ProgressBar::new();
     helix_app_common::label_widget(&bar, &label);
     let info = gtk::Label::builder()
-        .label("Preparing…")
+        .label(tr("Preparing…"))
         .xalign(0.0)
         .ellipsize(gtk::pango::EllipsizeMode::Middle)
         .build();
@@ -230,7 +232,7 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
                     if !out.errors.is_empty() {
                         report_errors(&w, &title, &out.errors);
                     } else if out.cancelled {
-                        w.toast("Operation cancelled");
+                        w.toast(tr("Operation cancelled"));
                     } else if let Some(text) = summary.finished(out.created.len()) {
                         // Toasts are spoken by libadwaita.
                         w.toast(&text);
@@ -248,13 +250,13 @@ pub fn start(win: &Rc<Window>, job: Job, done: impl FnOnce(&Outcome) + 'static) 
 fn report_errors(w: &Window, title: &str, errors: &[String]) {
     let mut body: Vec<String> = errors.iter().take(8).cloned().collect();
     if errors.len() > 8 {
-        body.push(format!("…and {} more", errors.len() - 8));
+        body.push(trf!("…and {} more", errors.len() - 8));
     }
     let dialog = adw::AlertDialog::builder()
-        .heading("Some Items Could Not Be Processed")
+        .heading(tr("Some Items Could Not Be Processed"))
         .body(format!("{title}:\n{}", body.join("\n")))
         .build();
-    dialog.add_response("close", "_Close");
+    dialog.add_response("close", tr("_Close"));
     dialog.present(Some(&w.window));
 }
 

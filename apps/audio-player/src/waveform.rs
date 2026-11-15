@@ -8,6 +8,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use crate::peaks::PeakAccumulator;
+use helix_app_common::i18n::tr;
 
 /// How often partial results are reported.
 const PROGRESS_INTERVAL: Duration = Duration::from_millis(250);
@@ -91,9 +92,9 @@ fn run(
     cancel: &AtomicBool,
     progress: &mut dyn FnMut(&[f32]),
 ) -> Result<Vec<f32>, DecodeError> {
-    pipeline
-        .set_state(gst::State::Playing)
-        .map_err(|_| bus_error(pipeline).unwrap_or_else(|| gst_err("Could not start decoder")))?;
+    pipeline.set_state(gst::State::Playing).map_err(|_| {
+        bus_error(pipeline).unwrap_or_else(|| gst_err(tr("Could not start decoder")))
+    })?;
     let mut acc: Option<PeakAccumulator> = None;
     let mut last_report = Instant::now();
     loop {
@@ -135,7 +136,7 @@ fn run(
                     }
                     return match acc {
                         Some(acc) => Ok(acc.finish()),
-                        None => Err(gst_err("No audio stream")),
+                        None => Err(gst_err(tr("No audio stream"))),
                     };
                 }
             }

@@ -11,10 +11,12 @@ use crate::args::{Args, MAX_DELAY};
 use crate::naming::{self, Stamp};
 use crate::settings::Settings;
 use crate::shell::{self, CaptureError, Mode, Request};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 pub const APP_ID: &str = "org.helix.Screenshot";
-const APP_NAME: &str = "Screenshot";
-const COMMENTS: &str = "Save images of your screen or individual windows";
+const APP_NAME: &str = n_("Screenshot");
+const COMMENTS: &str = n_("Save images of your screen or individual windows");
 
 /// Exit status shared between the callbacks and `run`.
 type Status = Rc<Cell<u8>>;
@@ -24,7 +26,7 @@ pub fn run(args: Args) -> glib::ExitCode {
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::NON_UNIQUE)
         .build();
-    helix_app_common::install_standard_actions(&app, APP_NAME, COMMENTS);
+    helix_app_common::install_standard_actions(&app, tr(APP_NAME), tr(COMMENTS));
     // Quit closes the windows instead, so that a screenshot on the
     // clipboard is kept (see `keep_clipboard`).
     let quit = gio::ActionEntry::builder("quit")
@@ -98,7 +100,8 @@ fn keep_clipboard(app: &adw::Application) {
 }
 
 fn write_file(path: &std::path::Path, png: &[u8]) -> Result<(), String> {
-    std::fs::write(path, png).map_err(|e| format!("Could not save {}: {e}", path.display()))
+    std::fs::write(path, png)
+        .map_err(|e| trf!("Could not save {path}: {e}", path = path.display(), e = e))
 }
 
 /// `--clipboard` (maybe with `--file`): capture, deliver, no main window.
@@ -143,7 +146,7 @@ fn clipboard_only(app: &adw::Application, args: &Args, status: Status) {
         // Only the focused client may set the Wayland selection, so show a
         // small window for a moment and copy once it is active.
         let label = gtk::Label::builder()
-            .label("Copying screenshot…")
+            .label(tr("Copying screenshot…"))
             .margin_top(24)
             .margin_bottom(24)
             .margin_start(24)
@@ -151,7 +154,7 @@ fn clipboard_only(app: &adw::Application, args: &Args, status: Status) {
             .build();
         let win = adw::Window::builder()
             .application(&app)
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .resizable(false)
             .content(&label)
             .build();
@@ -198,7 +201,12 @@ fn preview_text(mode: Mode, width: i32, height: i32) -> String {
         Mode::Window => "a window",
         Mode::Area => "a selected area",
     };
-    format!("Screenshot of {what}, {width} × {height}")
+    trf!(
+        "Screenshot of {what}, {width} × {height}",
+        what = what,
+        width = width,
+        height = height
+    )
 }
 
 struct Win {
@@ -258,25 +266,27 @@ impl Win {
         // Options page.
         let menu = gio::Menu::new();
         menu.append(
-            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some(helix_app_common::i18n::tr(
+                helix_app_common::shortcuts::MENU_LABEL,
+            )),
             Some(helix_app_common::shortcuts::ACTION),
         );
-        menu.append(Some("_About Screenshot"), Some("app.about"));
+        menu.append(Some(tr("_About Screenshot")), Some("app.about"));
         let header = adw::HeaderBar::new();
         header.pack_end(
             &gtk::MenuButton::builder()
                 .icon_name("open-menu-symbolic")
                 .menu_model(&menu)
                 .primary(true)
-                .tooltip_text("Main Menu")
+                .tooltip_text(tr("Main Menu"))
                 .build()
-                .labelled("Main Menu"),
+                .labelled(tr("Main Menu")),
         );
 
         let modes = [
-            mode_button("_Screen", "video-single-display-symbolic"),
-            mode_button("_Window", "focus-windows-symbolic"),
-            mode_button("_Area", "edit-select-all-symbolic"),
+            mode_button(tr("_Screen"), "video-single-display-symbolic"),
+            mode_button(tr("_Window"), "focus-windows-symbolic"),
+            mode_button(tr("_Area"), "edit-select-all-symbolic"),
         ];
         for b in &modes[1..] {
             b.set_group(Some(&modes[0]));
@@ -288,27 +298,29 @@ impl Win {
             .css_classes(["linked"])
             .accessible_role(gtk::AccessibleRole::Group)
             .build()
-            .labelled("Take");
+            .labelled(tr("Take"));
         for b in &modes {
             mode_box.append(b);
         }
-        let mode_group = adw::PreferencesGroup::builder().title("Take").build();
+        let mode_group = adw::PreferencesGroup::builder().title(tr("Take")).build();
         mode_group.add(&mode_box);
 
         let delay = adw::SpinRow::with_range(0.0, MAX_DELAY as f64, 1.0);
-        delay.set_title("_Delay in Seconds");
+        delay.set_title(tr("_Delay in Seconds"));
         delay.set_use_underline(true);
         delay.set_digits(0);
         let pointer = adw::SwitchRow::builder()
-            .title("Show _Pointer")
+            .title(tr("Show _Pointer"))
             .use_underline(true)
             .build();
-        let options_group = adw::PreferencesGroup::builder().title("Options").build();
+        let options_group = adw::PreferencesGroup::builder()
+            .title(tr("Options"))
+            .build();
         options_group.add(&delay);
         options_group.add(&pointer);
 
         let take_button = gtk::Button::builder()
-            .label("_Take Screenshot")
+            .label(tr("_Take Screenshot"))
             .use_underline(true)
             .halign(gtk::Align::Center)
             .css_classes(["pill", "suggested-action"])
@@ -339,11 +351,11 @@ impl Win {
         // Preview page.
         let back = gtk::Button::builder()
             .icon_name("go-previous-symbolic")
-            .tooltip_text("New Screenshot")
+            .tooltip_text(tr("New Screenshot"))
             .action_name("win.new")
             .build()
-            .labelled("New Screenshot");
-        let preview_title = adw::WindowTitle::new("Screenshot", "");
+            .labelled(tr("New Screenshot"));
+        let preview_title = adw::WindowTitle::new(tr("Screenshot"), "");
         let preview_header = adw::HeaderBar::builder()
             .title_widget(&preview_title)
             .build();
@@ -363,13 +375,13 @@ impl Win {
             .css_classes(["card"])
             .build();
         let copy_button = gtk::Button::builder()
-            .label("_Copy to Clipboard")
+            .label(tr("_Copy to Clipboard"))
             .use_underline(true)
             .action_name("win.copy")
             .css_classes(["pill"])
             .build();
         let save_button = gtk::Button::builder()
-            .label("_Save…")
+            .label(tr("_Save…"))
             .use_underline(true)
             .action_name("win.save")
             .css_classes(["pill", "suggested-action"])
@@ -396,7 +408,7 @@ impl Win {
 
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .default_width(560)
             .default_height(520)
             .width_request(360)
@@ -565,7 +577,11 @@ impl Win {
             let _hold = hold;
             let result = gio::spawn_blocking(move || shell::take(&req))
                 .await
-                .unwrap_or_else(|_| Err(CaptureError::Failed("The capture thread failed.".into())));
+                .unwrap_or_else(|_| {
+                    Err(CaptureError::Failed(
+                        tr("The capture thread failed.").into(),
+                    ))
+                });
             w.busy.set(false);
             let exit_on_cancel = w.exit_on_cancel.replace(false);
             match result.and_then(|png| {
@@ -578,7 +594,7 @@ impl Win {
                         mode,
                     })
                     .map_err(|e| {
-                        CaptureError::Failed(format!("Could not load the screenshot: {e}"))
+                        CaptureError::Failed(trf!("Could not load the screenshot: {e}", e = e))
                     })
             }) {
                 Ok(shot) => {
@@ -594,8 +610,8 @@ impl Win {
                     w.show_options();
                     w.window.present();
                     let dialog =
-                        adw::AlertDialog::new(Some("Could Not Take Screenshot"), Some(&reason));
-                    dialog.add_response("close", "_Close");
+                        adw::AlertDialog::new(Some(tr("Could Not Take Screenshot")), Some(&reason));
+                    dialog.add_response("close", tr("_Close"));
                     dialog.present(Some(&w.window));
                 }
             }
@@ -608,7 +624,7 @@ impl Win {
         };
         self.window.clipboard().set_texture(&shot.texture);
         self.toasts
-            .add_toast(adw::Toast::new("Screenshot copied to clipboard"));
+            .add_toast(adw::Toast::new(tr("Screenshot copied to clipboard")));
     }
 
     fn save(self: &Rc<Self>) {
@@ -622,12 +638,12 @@ impl Win {
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&filter);
         let dialog = gtk::FileDialog::builder()
-            .title("Save Screenshot")
+            .title(tr("Save Screenshot"))
             .modal(true)
             .initial_folder(&gio::File::for_path(&folder))
             .initial_name(naming::default_file_name(stamp))
             .filters(&filters)
-            .accept_label("_Save")
+            .accept_label(tr("_Save"))
             .build();
         let w = self.clone();
         dialog.save(Some(&self.window), gio::Cancellable::NONE, move |res| {
@@ -642,12 +658,12 @@ impl Win {
                     let folder: Option<PathBuf> = path.parent().map(Into::into);
                     w.settings.borrow_mut().last_folder = folder;
                     w.store_settings();
-                    w.toasts.add_toast(adw::Toast::new("Screenshot saved"));
+                    w.toasts.add_toast(adw::Toast::new(tr("Screenshot saved")));
                 }
                 Err(reason) => {
                     let dialog =
-                        adw::AlertDialog::new(Some("Could Not Save Screenshot"), Some(&reason));
-                    dialog.add_response("close", "_Close");
+                        adw::AlertDialog::new(Some(tr("Could Not Save Screenshot")), Some(&reason));
+                    dialog.add_response("close", tr("_Close"));
                     dialog.present(Some(&w.window));
                 }
             }

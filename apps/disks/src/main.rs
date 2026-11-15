@@ -17,6 +17,7 @@ use gtk::glib;
 const USAGE: &str = "Usage: helix-disks [--block-device DEVICE | --list]";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let mut args = std::env::args().skip(1);
     let mut block_device = None;
     while let Some(arg) = args.next() {

@@ -2,6 +2,8 @@
 
 use crate::page::Page;
 use crate::pdf::{self, Filter, PdfImage};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use image::codecs::jpeg::{JpegEncoder, PixelDensity};
 use image::codecs::png::PngEncoder;
 use image::{ExtendedColorType, ImageEncoder};
@@ -36,9 +38,9 @@ impl Format {
 
     pub fn label(self) -> &'static str {
         match self {
-            Format::Pdf => "PDF (multi-page document)",
-            Format::Png => "PNG (lossless image)",
-            Format::Jpeg => "JPEG (compressed image)",
+            Format::Pdf => tr("PDF (multi-page document)"),
+            Format::Png => tr("PNG (lossless image)"),
+            Format::Jpeg => tr("JPEG (compressed image)"),
         }
     }
 
@@ -146,7 +148,7 @@ pub fn encode_pdf(pages: &[Page], quality: u8) -> Result<Vec<u8>, String> {
     }
     Ok(pdf::build(
         &images,
-        "Helix Document Scanner",
+        tr("Helix Document Scanner"),
         Some(&pdf_date_now()),
     ))
 }
@@ -159,11 +161,12 @@ pub fn save(
     quality: u8,
 ) -> Result<Vec<PathBuf>, String> {
     if pages.is_empty() {
-        return Err("The document has no pages".into());
+        return Err(tr("The document has no pages").into());
     }
     let paths = output_paths(path, pages.len(), format);
     let write = |p: &Path, data: &[u8]| {
-        std::fs::write(p, data).map_err(|e| format!("Could not write {}: {e}", p.display()))
+        std::fs::write(p, data)
+            .map_err(|e| trf!("Could not write {path}: {e}", path = p.display(), e = e))
     };
     match format {
         Format::Pdf => write(path, &encode_pdf(pages, quality)?)?,

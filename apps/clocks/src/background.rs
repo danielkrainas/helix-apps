@@ -6,6 +6,7 @@
 
 use std::collections::HashMap;
 
+use helix_app_common::i18n::tr;
 use zbus::zvariant::{OwnedValue, Value};
 
 const PORTAL_BUS: &str = "org.freedesktop.portal.Desktop";
@@ -35,7 +36,7 @@ pub fn options(token: &str, autostart: bool) -> HashMap<&'static str, Value<'sta
         ("handle_token", Value::from(token.to_string())),
         (
             "reason",
-            Value::from("Ring alarms when Clocks is closed".to_string()),
+            Value::from(tr("Ring alarms when Clocks is closed").to_string()),
         ),
         ("autostart", Value::from(autostart)),
         (

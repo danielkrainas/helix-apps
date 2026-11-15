@@ -9,6 +9,8 @@ use gtk::gio::prelude::*;
 use gtk::glib;
 
 use crate::naming;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 #[derive(Debug, Clone)]
 pub enum Job {
@@ -41,16 +43,16 @@ impl Job {
         let dest_name = |d: &gio::File| display_name(d);
         match self {
             Job::Copy { sources, dest } => {
-                format!("Copying {} to “{}”", n(sources), dest_name(dest))
+                trf!("Copying {} to “{}”", n(sources), dest_name(dest))
             }
             Job::Move { sources, dest } => {
-                format!("Moving {} to “{}”", n(sources), dest_name(dest))
+                trf!("Moving {} to “{}”", n(sources), dest_name(dest))
             }
-            Job::Link { sources, .. } => format!("Creating links to {}", n(sources)),
-            Job::Trash(v) => format!("Moving {} to Trash", n(v)),
-            Job::Delete(v) => format!("Deleting {}", n(v)),
-            Job::Restore(v) | Job::Untrash(v) => format!("Restoring {}", n(v)),
-            Job::EmptyTrash => "Emptying Trash".into(),
+            Job::Link { sources, .. } => trf!("Creating links to {}", n(sources)),
+            Job::Trash(v) => trf!("Moving {} to Trash", n(v)),
+            Job::Delete(v) => trf!("Deleting {}", n(v)),
+            Job::Restore(v) | Job::Untrash(v) => trf!("Restoring {}", n(v)),
+            Job::EmptyTrash => tr("Emptying Trash").into(),
         }
     }
 }
@@ -65,22 +67,22 @@ impl Job {
         };
         Some(match self {
             Job::Copy { sources, dest } => {
-                format!("Copied {} to “{}”", count(sources), display_name(dest))
+                trf!("Copied {} to “{}”", count(sources), display_name(dest))
             }
             Job::Move { sources, dest } => {
-                format!("Moved {} to “{}”", count(sources), display_name(dest))
+                trf!("Moved {} to “{}”", count(sources), display_name(dest))
             }
             Job::Link { sources, .. } => {
                 let n = if created > 0 { created } else { sources.len() };
                 if n == 1 {
-                    "Created 1 link".into()
+                    tr("Created 1 link").into()
                 } else {
-                    format!("Created {n} links")
+                    trf!("Created {n} links", n = n)
                 }
             }
-            Job::Restore(v) | Job::Untrash(v) => format!("Restored {}", count(v)),
-            Job::Delete(v) => format!("Deleted {}", count(v)),
-            Job::EmptyTrash => "Trash emptied".into(),
+            Job::Restore(v) | Job::Untrash(v) => trf!("Restored {}", count(v)),
+            Job::Delete(v) => trf!("Deleted {}", count(v)),
+            Job::EmptyTrash => tr("Trash emptied").into(),
             Job::Trash(_) => return None,
         })
     }
@@ -98,7 +100,7 @@ pub fn display_name(f: &gio::File) -> String {
             let uri = f.uri().to_string();
             let label = crate::bookmarks::default_label(&uri);
             if uri == "trash:///" {
-                "Trash".into()
+                tr("Trash").into()
             } else {
                 label
             }
@@ -238,10 +240,11 @@ impl Runner<'_> {
         if is_cancelled(e) {
             self.out.cancelled = true;
         } else {
-            self.out.errors.push(format!(
-                "Could not {verb} “{}”: {}",
-                display_name(f),
-                e.message()
+            self.out.errors.push(trf!(
+                "Could not {verb} “{file}”: {error}",
+                verb = verb,
+                file = display_name(f),
+                error = e.message()
             ));
         }
     }
@@ -292,7 +295,10 @@ impl Runner<'_> {
             drop(en);
             for c in children {
                 if self.stopped() {
-                    return Err(glib::Error::new(gio::IOErrorEnum::Cancelled, "Cancelled"));
+                    return Err(glib::Error::new(
+                        gio::IOErrorEnum::Cancelled,
+                        tr("Cancelled"),
+                    ));
                 }
                 self.delete_recursive(&c)?;
             }
@@ -313,12 +319,12 @@ impl Runner<'_> {
         if src_type == gio::FileType::Unknown {
             self.out
                 .errors
-                .push(format!("“{}” no longer exists", display_name(src)));
+                .push(trf!("“{}” no longer exists", display_name(src)));
             return None;
         }
         let src_is_dir = src_type == gio::FileType::Directory;
         if src_is_dir && (target.equal(src) || target.has_prefix(src)) {
-            self.out.errors.push(format!(
+            self.out.errors.push(trf!(
                 "Cannot {} “{}” into itself",
                 if is_move { "move" } else { "copy" },
                 display_name(src)
@@ -508,7 +514,7 @@ impl Runner<'_> {
                 break;
             }
             let Some(path) = src.path() else {
-                self.out.errors.push(format!(
+                self.out.errors.push(trf!(
                     "Cannot create a link to “{}”: not a local file",
                     display_name(src)
                 ));
@@ -582,7 +588,7 @@ impl Runner<'_> {
         let Some(orig) = info.attribute_byte_string("trash::orig-path") else {
             self.out
                 .errors
-                .push(format!("“{}” has no original location", display_name(item)));
+                .push(trf!("“{}” has no original location", display_name(item)));
             return;
         };
         let orig = gio::File::for_path(orig.as_str());
@@ -641,7 +647,7 @@ impl Runner<'_> {
             })
             .collect();
         if items.len() < originals.len() {
-            self.out.errors.push(format!(
+            self.out.errors.push(trf!(
                 "{} could not be found in the Trash",
                 crate::fmt::item_count((originals.len() - items.len()) as u64)
             ));

@@ -1,56 +1,57 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys};
 
 const GROUPS: &[Group] = &[
     (
-        "Events",
+        n_("Events"),
         &[
-            Keys("New Event on the Selected Day", "<Control>n"),
-            Keys("Import", "<Control>i"),
-            Keys("Search", "<Control>f"),
+            Keys(n_("New Event on the Selected Day"), "<Control>n"),
+            Keys(n_("Import"), "<Control>i"),
+            Keys(n_("Search"), "<Control>f"),
         ],
     ),
     (
-        "Navigation",
+        n_("Navigation"),
         &[
-            Keys("Go to Today", "<Control>t"),
-            Keys("Previous Week or Month", "<Alt>Left"),
-            Keys("Next Week or Month", "<Alt>Right"),
-            Keys("Week View", "<Control>1"),
-            Keys("Month View", "<Control>2"),
-            Keys("Show Sidebar", "F9"),
+            Keys(n_("Go to Today"), "<Control>t"),
+            Keys(n_("Previous Week or Month"), "<Alt>Left"),
+            Keys(n_("Next Week or Month"), "<Alt>Right"),
+            Keys(n_("Week View"), "<Control>1"),
+            Keys(n_("Month View"), "<Control>2"),
+            Keys(n_("Show Sidebar"), "F9"),
         ],
     ),
     (
-        "Month View and Day Headers",
+        n_("Month View and Day Headers"),
         &[
-            Keys("Move Between Days", "Left Right Up Down"),
-            Keys("First or Last Day of the Week", "Home End"),
+            Keys(n_("Move Between Days"), "Left Right Up Down"),
+            Keys(n_("First or Last Day of the Week"), "Home End"),
             Keys(
-                "Previous or Next Month (Week in Week View)",
+                n_("Previous or Next Month (Week in Week View)"),
                 "Page_Up Page_Down",
             ),
-            Keys("Select the Focused Day", "Return"),
+            Keys(n_("Select the Focused Day"), "Return"),
         ],
     ),
     (
-        "Week Grid",
+        n_("Week Grid"),
         &[
-            Keys("Move the Time Cursor", "Up Down Left Right"),
-            Keys("Start or End of the Day", "Home End"),
-            Keys("Previous or Next Week", "Page_Up Page_Down"),
-            Keys("New Event at the Time Cursor", "Return"),
-            Keys("Zoom In", "<Control>plus <Control>equal"),
-            Keys("Zoom Out", "<Control>minus"),
-            Keys("Reset Zoom", "<Control>0"),
+            Keys(n_("Move the Time Cursor"), "Up Down Left Right"),
+            Keys(n_("Start or End of the Day"), "Home End"),
+            Keys(n_("Previous or Next Week"), "Page_Up Page_Down"),
+            Keys(n_("New Event at the Time Cursor"), "Return"),
+            Keys(n_("Zoom In"), "<Control>plus <Control>equal"),
+            Keys(n_("Zoom Out"), "<Control>minus"),
+            Keys(n_("Reset Zoom"), "<Control>0"),
         ],
     ),
     (
-        "General",
+        n_("General"),
         &[
-            Keys("Keyboard Shortcuts", "<Control>question"),
-            Keys("Quit", "<Control>q"),
+            Keys(n_("Keyboard Shortcuts"), "<Control>question"),
+            Keys(n_("Quit"), "<Control>q"),
         ],
     ),
 ];

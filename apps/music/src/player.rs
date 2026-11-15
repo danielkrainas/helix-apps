@@ -1,6 +1,7 @@
 //! GStreamer `playbin` wrapper with gapless track changes.
 
 use gst::prelude::*;
+use helix_app_common::i18n::tr;
 use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -49,9 +50,9 @@ impl ReplayGain {
 
     pub fn label(self) -> &'static str {
         match self {
-            ReplayGain::Off => "Off",
-            ReplayGain::Track => "Track",
-            ReplayGain::Album => "Album",
+            ReplayGain::Off => tr("Off"),
+            ReplayGain::Track => tr("Track"),
+            ReplayGain::Album => tr("Album"),
         }
     }
 

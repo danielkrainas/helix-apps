@@ -18,9 +18,11 @@ use crate::player::{self, Event, Player};
 use crate::playlist::{self, Playlist, Stats};
 use crate::queue::{Queue, Repeat, Rng};
 use crate::tracker;
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 pub const APP_ID: &str = "org.helix.Music";
-pub const APP_NAME: &str = "Music";
+pub const APP_NAME: &str = n_("Music");
 pub const DATA: &str = "helix-music";
 const SCHEMA: &str = "org.gnome.Music";
 const MAX_MONITORS: usize = 2000;
@@ -29,8 +31,8 @@ pub fn run() -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
     helix_app_common::install_standard_actions(
         &app,
-        APP_NAME,
-        "Play and organize your music collection",
+        tr(APP_NAME),
+        tr("Play and organize your music collection"),
     );
     app.connect_startup(|app| {
         load_css();
@@ -256,7 +258,7 @@ impl App {
 
         let window = adw::ApplicationWindow::builder()
             .application(application)
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .build();
         window.set_default_size(1000, 700);
         window.set_width_request(360);
@@ -284,38 +286,40 @@ impl App {
         header.set_title_widget(Some(&switcher));
         let search_btn = gtk::ToggleButton::builder()
             .icon_name("system-search-symbolic")
-            .tooltip_text("Search")
+            .tooltip_text(tr("Search"))
             .build()
-            .labelled("Search");
+            .labelled(tr("Search"));
         header.pack_start(&search_btn);
         let menu = gio::Menu::new();
         let s1 = gio::Menu::new();
-        s1.append(Some("_Rescan Library"), Some("win.rescan"));
-        s1.append(Some("_Import Playlist…"), Some("win.import-playlist"));
+        s1.append(Some(tr("_Rescan Library")), Some("win.rescan"));
+        s1.append(Some(tr("_Import Playlist…")), Some("win.import-playlist"));
         s1.append(
-            Some("Import Playlists from _Search Index"),
+            Some(tr("Import Playlists from _Search Index")),
             Some("win.import-index-playlists"),
         );
         menu.append_section(None, &s1);
         let s2 = gio::Menu::new();
-        s2.append(Some("_Preferences"), Some("win.preferences"));
+        s2.append(Some(tr("_Preferences")), Some("win.preferences"));
         s2.append(
-            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some(helix_app_common::i18n::tr(
+                helix_app_common::shortcuts::MENU_LABEL,
+            )),
             Some("win.show-help-overlay"),
         );
-        s2.append(Some("_About Music"), Some("app.about"));
+        s2.append(Some(tr("_About Music")), Some("app.about"));
         menu.append_section(None, &s2);
         let menu_btn = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
             .primary(true)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         header.pack_end(&menu_btn);
 
         let search_entry = gtk::SearchEntry::builder()
-            .placeholder_text("Search songs, albums and artists")
+            .placeholder_text(tr("Search songs, albums and artists"))
             .hexpand(true)
             .build();
         let clamp = adw::Clamp::builder()
@@ -343,10 +347,10 @@ impl App {
 
         let empty_page = adw::StatusPage::builder()
             .icon_name("folder-music-symbolic")
-            .title("No Music Found")
+            .title(tr("No Music Found"))
             .build();
         let scanning_page = adw::StatusPage::builder()
-            .title("Scanning Library…")
+            .title(tr("Scanning Library…"))
             .build();
         let spinner = gtk::Spinner::builder()
             .spinning(true)
@@ -372,7 +376,7 @@ impl App {
         root_tv.add_bottom_bar(&switcher_bar);
         let root_page = adw::NavigationPage::builder()
             .child(&root_tv)
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .tag("root")
             .build();
         let nav = adw::NavigationView::new();
@@ -392,7 +396,7 @@ impl App {
             NARROW_SP,
             adw::LengthUnit::Sp,
         ));
-        let narrow_title = adw::WindowTitle::new(APP_NAME, "");
+        let narrow_title = adw::WindowTitle::new(tr(APP_NAME), "");
         narrow.add_setter(&header, "title-widget", Some(&narrow_title.to_value()));
         narrow.add_setter(&switcher_bar, "reveal", Some(&true.to_value()));
         bar.add_narrow_setters(&narrow);
@@ -483,9 +487,9 @@ impl App {
             }
         });
         if app.player.is_none() {
-            app.toasts.add_toast(toast(
+            app.toasts.add_toast(toast(tr(
                 "Playback is unavailable (GStreamer could not be initialised)",
-            ));
+            )));
         }
 
         for applied in [true, false] {
@@ -638,8 +642,8 @@ impl App {
                 // A rescan found changes while the user may be listening
                 // or browsing; say so without moving focus.
                 let text = match tracks.len() {
-                    1 => "Library updated: 1 song".to_string(),
-                    n => format!("Library updated: {n} songs"),
+                    1 => tr("Library updated: 1 song").to_string(),
+                    n => trf!("Library updated: {n} songs", n = n),
                 };
                 helix_app_common::announce(
                     &app.main_stack,
@@ -800,7 +804,7 @@ impl App {
             None => n.set_icon(&gio::ThemedIcon::new("audio-x-generic")),
         }
         n.set_priority(gio::NotificationPriority::Low);
-        n.add_button("Next", "app.next-track");
+        n.add_button(tr("Next"), "app.next-track");
         self.app.send_notification(Some(NOTIFICATION_ID), &n);
     }
 
@@ -930,7 +934,7 @@ impl App {
                 let name = self.current_track().map(|t| t.title).unwrap_or_default();
                 // The toast is spoken by libadwaita; say it urgently as well,
                 // since playback stopped or skipped without any action.
-                let text = format!("Cannot play “{name}”");
+                let text = trf!("Cannot play “{name}”", name = name);
                 helix_app_common::announce(
                     &self.bar.title,
                     &text,
@@ -959,7 +963,7 @@ impl App {
         });
         self.bar
             .play
-            .set_tooltip_text(Some(if playing { "Pause" } else { "Play" }));
+            .set_tooltip_text(Some(if playing { tr("Pause") } else { tr("Play") }));
         helix_app_common::set_accessible_label(
             &self.bar.play,
             &self.bar.play.tooltip_text().unwrap_or_default(),
@@ -972,15 +976,15 @@ impl App {
             self.update_inhibit();
         }
         let status = if playing {
-            "Playing"
+            tr("Playing")
         } else if self
             .player
             .as_ref()
             .is_some_and(|p| p.state() == player::State::Paused)
         {
-            "Paused"
+            tr("Paused")
         } else {
-            "Stopped"
+            tr("Stopped")
         };
         if let Some(m) = &self.mpris {
             m.update(|s| s.status = status);
@@ -994,7 +998,7 @@ impl App {
             let c = self.app.inhibit(
                 Some(&self.window),
                 gtk::ApplicationInhibitFlags::SUSPEND,
-                Some("Playing music"),
+                Some(tr("Playing music")),
             );
             self.inhibit_cookie.set(c);
         } else if !want && cookie != 0 {
@@ -1067,9 +1071,13 @@ impl App {
         if let Some(t) = self.current_track() {
             let artist = t.artist_name();
             let text = if artist.is_empty() {
-                format!("Now playing: {}", t.title)
+                trf!("Now playing: {}", t.title)
             } else {
-                format!("Now playing: {} by {artist}", t.title)
+                trf!(
+                    "Now playing: {title} by {artist}",
+                    title = t.title,
+                    artist = artist
+                )
             };
             helix_app_common::announce_change(
                 &self.bar.title,
@@ -1102,7 +1110,7 @@ impl App {
                     .cover
                     .set_icon_name(Some("audio-x-generic-symbolic"));
                 self.bar.heart.set_sensitive(false);
-                self.window.set_title(Some(APP_NAME));
+                self.window.set_title(Some(tr(APP_NAME)));
             }
         }
         let (can_next, can_prev) = {
@@ -1148,9 +1156,9 @@ impl App {
         self.bar.shuffle.set_active(shuffle);
         self.suppress_ui.set(false);
         let (icon, tip) = match repeat {
-            Repeat::None => ("media-playlist-consecutive-symbolic", "Repeat: Off"),
-            Repeat::All => ("media-playlist-repeat-symbolic", "Repeat: All"),
-            Repeat::One => ("media-playlist-repeat-song-symbolic", "Repeat: Song"),
+            Repeat::None => ("media-playlist-consecutive-symbolic", tr("Repeat: Off")),
+            Repeat::All => ("media-playlist-repeat-symbolic", tr("Repeat: All")),
+            Repeat::One => ("media-playlist-repeat-song-symbolic", tr("Repeat: Song")),
         };
         self.bar.repeat.set_icon_name(icon);
         self.bar.repeat.set_tooltip_text(Some(tip));
@@ -1402,7 +1410,7 @@ impl App {
                 app.update_next_uri();
                 app.update_now_playing();
             }
-            app.toasts.add_toast(toast("Added to queue"));
+            app.toasts.add_toast(toast(tr("Added to queue")));
         });
         track_action("play-next", |app, i| {
             let path = app.lib().tracks[i].path.clone();
@@ -1413,7 +1421,7 @@ impl App {
             } else {
                 app.update_next_uri();
                 app.update_now_playing();
-                app.toasts.add_toast(toast("Will play next"));
+                app.toasts.add_toast(toast(tr("Will play next")));
             }
         });
         track_action("add-to-playlist", |app, i| {
@@ -1528,7 +1536,7 @@ impl App {
             "scanning"
         };
         self.main_stack.set_visible_child_name(name);
-        self.empty_page.set_description(Some(&format!(
+        self.empty_page.set_description(Some(&trf!(
             "Music files in {} will appear here.",
             glib::markup_escape_text(&friendly_folder_name(&music_dir(), &glib::home_dir()))
         )));
@@ -1577,7 +1585,7 @@ impl App {
 
     pub fn add_folder_dialog(self: &Rc<Self>) {
         let dialog = gtk::FileDialog::builder()
-            .title("Add Music Folder")
+            .title(tr("Add Music Folder"))
             .modal(true)
             .build();
         let w = Rc::downgrade(self);
@@ -1612,7 +1620,7 @@ pub fn show_playing(indicator: &gtk::Stack, playing: bool) {
     indicator.set_visible_child_name(if playing { "playing" } else { "number" });
     if let Some(row) = indicator.ancestor(gtk::ListBoxRow::static_type()) {
         if playing {
-            row.update_property(&[gtk::accessible::Property::Description("Now playing")]);
+            row.update_property(&[gtk::accessible::Property::Description(tr("Now playing"))]);
         } else {
             row.reset_property(gtk::AccessibleProperty::Description);
         }
@@ -1634,9 +1642,9 @@ pub fn set_heart_icon(btn: &gtk::ToggleButton) {
         "non-starred-symbolic"
     });
     btn.set_tooltip_text(Some(if on {
-        "Remove from Favorites"
+        tr("Remove from Favorites")
     } else {
-        "Add to Favorites"
+        tr("Add to Favorites")
     }));
     helix_app_common::set_accessible_label(btn, &btn.tooltip_text().unwrap_or_default());
 }
@@ -1736,20 +1744,20 @@ fn build_player_bar() -> PlayerBar {
     let info_button = gtk::Button::builder()
         .child(&left)
         .action_name("win.now-playing")
-        .tooltip_text("Show Now Playing")
+        .tooltip_text(tr("Show Now Playing"))
         .css_classes(["flat"])
         .build()
-        .labelled("Show Now Playing");
+        .labelled(tr("Show Now Playing"));
 
-    let prev = flat_button("media-skip-backward-symbolic", "Previous");
+    let prev = flat_button("media-skip-backward-symbolic", tr("Previous"));
     let play = gtk::Button::builder()
         .icon_name("media-playback-start-symbolic")
-        .tooltip_text("Play")
+        .tooltip_text(tr("Play"))
         .valign(gtk::Align::Center)
         .css_classes(["circular", "suggested-action"])
         .build()
-        .labelled("Play");
-    let next = flat_button("media-skip-forward-symbolic", "Next");
+        .labelled(tr("Play"));
+    let next = flat_button("media-skip-forward-symbolic", tr("Next"));
     let controls = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     controls.append(&prev);
     controls.append(&play);
@@ -1768,8 +1776,8 @@ fn build_player_bar() -> PlayerBar {
     let scale = gtk::Scale::with_range(gtk::Orientation::Horizontal, 0.0, 1.0, 1000.0);
     scale.set_hexpand(true);
     scale.set_draw_value(false);
-    scale.set_tooltip_text(Some("Position"));
-    helix_app_common::set_accessible_label(&scale, "Position");
+    scale.set_tooltip_text(Some(tr("Position")));
+    helix_app_common::set_accessible_label(&scale, tr("Position"));
     let seek = gtk::Box::new(gtk::Orientation::Horizontal, 4);
     seek.set_hexpand(true);
     seek.append(&elapsed);
@@ -1781,32 +1789,32 @@ fn build_player_bar() -> PlayerBar {
         .valign(gtk::Align::Center)
         .css_classes(["flat"])
         .build()
-        .labelled("Add to Favorites");
+        .labelled(tr("Add to Favorites"));
     let shuffle = gtk::ToggleButton::builder()
         .icon_name("media-playlist-shuffle-symbolic")
-        .tooltip_text("Shuffle")
+        .tooltip_text(tr("Shuffle"))
         .valign(gtk::Align::Center)
         .css_classes(["flat"])
         .build()
-        .labelled("Shuffle");
-    let repeat = flat_button("media-playlist-consecutive-symbolic", "Repeat");
+        .labelled(tr("Shuffle"));
+    let repeat = flat_button("media-playlist-consecutive-symbolic", tr("Repeat"));
     let volume = gtk::Scale::with_range(gtk::Orientation::Vertical, 0.0, 1.0, 0.05);
     volume.set_inverted(true);
     volume.set_size_request(-1, 140);
     volume.set_draw_value(false);
-    helix_app_common::set_accessible_label(&volume, "Volume");
+    helix_app_common::set_accessible_label(&volume, tr("Volume"));
     volume.update_property(&[gtk::accessible::Property::ValueText(&model::volume_text(
         volume.value(),
     ))]);
     let vol_pop = gtk::Popover::builder().child(&volume).build();
     let vol_btn = gtk::MenuButton::builder()
         .icon_name("audio-volume-high-symbolic")
-        .tooltip_text("Volume")
+        .tooltip_text(tr("Volume"))
         .popover(&vol_pop)
         .valign(gtk::Align::Center)
         .css_classes(["flat"])
         .build()
-        .labelled("Volume");
+        .labelled(tr("Volume"));
     let vb = vol_btn.clone();
     volume.connect_value_changed(move |s| {
         let v = s.value();
@@ -1820,12 +1828,12 @@ fn build_player_bar() -> PlayerBar {
     });
     let queue_btn = gtk::Button::builder()
         .icon_name("view-list-symbolic")
-        .tooltip_text("Now Playing")
+        .tooltip_text(tr("Now Playing"))
         .action_name("win.now-playing")
         .valign(gtk::Align::Center)
         .css_classes(["flat"])
         .build()
-        .labelled("Now Playing");
+        .labelled(tr("Now Playing"));
     let right = gtk::Box::new(gtk::Orientation::Horizontal, 2);
     for w in [
         heart.upcast_ref::<gtk::Widget>(),

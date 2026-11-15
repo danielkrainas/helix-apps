@@ -26,7 +26,7 @@ jobs:
             libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
             libvte-2.91-gtk4-dev libwebkitgtk-6.0-dev libpoppler-glib-dev \
             libshumate-dev libsane-dev \
-            dbus dbus-daemon libglib2.0-bin desktop-file-utils \
+            dbus dbus-daemon libglib2.0-bin desktop-file-utils gettext \
             gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
             libsane1 tracker evolution-data-server \
             fontconfig fonts-dejavu-core
@@ -51,6 +51,10 @@ jobs:
       # private bus with scratch data.
       - name: Test against Evolution Data Server
         run: crates/helix-eds/tests/run-private-eds.sh cargo test -p helix-eds --test private_bus --locked
+
+      # po/POTFILES and the template must match the sources.
+      - name: Check translation template
+        run: tools/i18n/update-pot.sh --check
 
       - name: Check schemas
         run: |

@@ -23,6 +23,7 @@ Environment:
   HELIX_CAMERA_SMOKE=1                   with SOURCE=test: scripted UI walk-through";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     if let Some(arg) = std::env::args().nth(1) {
         match arg.as_str() {
             "-h" | "--help" => {

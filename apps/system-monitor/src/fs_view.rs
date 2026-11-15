@@ -7,6 +7,7 @@ use std::rc::Rc;
 use crate::format;
 use crate::model::{self, FsColumn};
 use crate::sampler::FsEntry;
+use helix_app_common::i18n::{n_, tr};
 
 pub struct FsView {
     pub page: gtk::ScrolledWindow,
@@ -19,13 +20,13 @@ fn entry(obj: &glib::Object) -> Option<FsEntry> {
 }
 
 const COLUMNS: [(&str, FsColumn, bool); 7] = [
-    ("Device", FsColumn::Device, false),
-    ("Directory", FsColumn::Directory, true),
-    ("Type", FsColumn::Type, false),
-    ("Total", FsColumn::Total, false),
-    ("Free", FsColumn::Free, false),
-    ("Available", FsColumn::Available, false),
-    ("Used", FsColumn::Used, true),
+    (n_("Device"), FsColumn::Device, false),
+    (n_("Directory"), FsColumn::Directory, true),
+    (n_("Type"), FsColumn::Type, false),
+    (n_("Total"), FsColumn::Total, false),
+    (n_("Free"), FsColumn::Free, false),
+    (n_("Available"), FsColumn::Available, false),
+    (n_("Used"), FsColumn::Used, true),
 ];
 
 fn cell_text(e: &FsEntry, col: FsColumn) -> String {
@@ -120,7 +121,7 @@ impl FsView {
                 _ => gtk::Ordering::Equal,
             });
             let column = gtk::ColumnViewColumn::builder()
-                .title(title)
+                .title(tr(title))
                 .factory(&factory)
                 .sorter(&sorter)
                 .resizable(true)

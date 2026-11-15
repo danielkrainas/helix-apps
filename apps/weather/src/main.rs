@@ -17,6 +17,7 @@ use gtk::glib;
 const USAGE: &str = "Usage: helix-weather";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     if let Some(arg) = std::env::args().nth(1) {
         if arg == "-h" || arg == "--help" {
             println!("{USAGE}");

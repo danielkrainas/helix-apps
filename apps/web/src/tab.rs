@@ -13,6 +13,8 @@ use crate::permissions::{self, Decision, Kind};
 use crate::reader::{self, Article};
 use crate::secrets;
 use crate::urlinput;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 /// Whether a key press on the page should stop loading: a bare Escape
 /// while the page loads. Any other time Escape belongs to the page.
@@ -92,6 +94,8 @@ pub struct Tab {
     pub reader_active: Cell<bool>,
     /// The next load is the reader page replacing the original.
     entering_reader: Cell<bool>,
+    /// Rows of the prompt bars (message beside or above the buttons).
+    bar_rows: [gtk::Box; 3],
 }
 
 /// Display form of a URI for the address bar and tab titles.
@@ -103,7 +107,35 @@ pub fn display_uri(uri: &str) -> String {
     }
 }
 
-fn bar(css: &str) -> (gtk::Revealer, gtk::Box, gtk::Label) {
+/// What is spoken when a prompt bar appears: its text and how to reach
+/// its buttons from the page (F6 cycles address bar, prompts and page).
+pub fn prompt_announcement(text: &str) -> String {
+    let text = text.trim();
+    let stop = if text.ends_with(['.', '?', '!']) {
+        ""
+    } else {
+        "."
+    };
+    trf!("{text}{stop} Press F6 to answer.", text = text, stop = stop)
+}
+
+/// Makes each button of a prompt bar described by the bar's message, so
+/// screen readers say what is being answered when a button gets focus.
+fn describe_buttons(row: &gtk::Box, label: &gtk::Label) {
+    let mut child = row.first_child();
+    while let Some(w) = child {
+        if w.is::<gtk::Button>() {
+            w.update_relation(&[gtk::accessible::Relation::DescribedBy(&[label
+                .upcast_ref::<gtk::Accessible>(
+            )])]);
+        }
+        child = w.next_sibling();
+    }
+}
+
+/// A prompt bar: (revealer, box for its buttons, message label, the row
+/// holding message and buttons, which stacks them in narrow windows).
+fn bar(css: &str) -> (gtk::Revealer, gtk::Box, gtk::Label, gtk::Box) {
     let label = gtk::Label::builder()
         .hexpand(true)
         .xalign(0.0)
@@ -116,7 +148,13 @@ fn bar(css: &str) -> (gtk::Revealer, gtk::Box, gtk::Label) {
         .margin_top(6)
         .margin_bottom(6)
         .build();
+    let buttons = gtk::Box::builder()
+        .spacing(6)
+        .halign(gtk::Align::End)
+        .valign(gtk::Align::Center)
+        .build();
     row.append(&label);
+    row.append(&buttons);
     let frame = gtk::Box::new(gtk::Orientation::Vertical, 0);
     frame.add_css_class(css);
     frame.append(&row);
@@ -124,7 +162,7 @@ fn bar(css: &str) -> (gtk::Revealer, gtk::Box, gtk::Label) {
         .child(&frame)
         .reveal_child(false)
         .build();
-    (revealer, row, label)
+    (revealer, buttons, label, row)
 }
 
 impl Tab {
@@ -133,29 +171,32 @@ impl Tab {
         view.set_hexpand(true);
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
-        let (perm_revealer, perm_row, perm_label) = bar("permission-bar");
-        let deny = gtk::Button::with_label("Deny");
-        let allow = gtk::Button::with_label("Allow");
+        let (perm_revealer, perm_row, perm_label, perm_layout) = bar("permission-bar");
+        let deny = gtk::Button::with_label(tr("Deny"));
+        let allow = gtk::Button::with_label(tr("Allow"));
         allow.add_css_class("suggested-action");
         perm_row.append(&deny);
         perm_row.append(&allow);
+        describe_buttons(&perm_row, &perm_label);
 
-        let (tls_revealer, tls_row, tls_label) = bar("tls-bar");
-        let accept = gtk::Button::with_label("Accept Risk and Continue");
+        let (tls_revealer, tls_row, tls_label, tls_layout) = bar("tls-bar");
+        let accept = gtk::Button::with_label(tr("Accept Risk and Continue"));
         accept.add_css_class("destructive-action");
         tls_row.append(&accept);
+        describe_buttons(&tls_row, &tls_label);
 
-        let (pw_revealer, pw_row, pw_label) = bar("permission-bar");
-        let pw_never = gtk::Button::with_label("Never for This Site");
-        let pw_later = gtk::Button::with_label("Not Now");
-        let pw_save = gtk::Button::with_label("Save");
+        let (pw_revealer, pw_row, pw_label, pw_layout) = bar("permission-bar");
+        let pw_never = gtk::Button::with_label(tr("Never for This Site"));
+        let pw_later = gtk::Button::with_label(tr("Not Now"));
+        let pw_save = gtk::Button::with_label(tr("Save"));
         pw_save.add_css_class("suggested-action");
         pw_row.append(&pw_never);
         pw_row.append(&pw_later);
         pw_row.append(&pw_save);
+        describe_buttons(&pw_row, &pw_label);
 
         let crash_reload = gtk::Button::builder()
-            .label("_Reload")
+            .label(tr("_Reload"))
             .use_underline(true)
             .halign(gtk::Align::Center)
             .build();
@@ -211,6 +252,7 @@ impl Tab {
             reader_article: RefCell::new(None),
             reader_active: Cell::new(false),
             entering_reader: Cell::new(false),
+            bar_rows: [perm_layout, tls_layout, pw_layout],
         });
 
         let weak = Rc::downgrade(&tab);
@@ -258,6 +300,28 @@ impl Tab {
         self.this.upgrade()
     }
 
+    /// In narrow windows the prompt bars put their buttons below the
+    /// message, so they fit 360 px.
+    pub fn set_narrow(&self, narrow: bool) {
+        for row in &self.bar_rows {
+            row.set_orientation(if narrow {
+                gtk::Orientation::Vertical
+            } else {
+                gtk::Orientation::Horizontal
+            });
+        }
+    }
+
+    /// The prompt bars currently shown above the page (certificate,
+    /// permission, password), top to bottom: stops for F6 focus cycling.
+    pub fn prompt_bars(&self) -> Vec<gtk::Widget> {
+        [&self.tls_revealer, &self.perm_revealer, &self.pw_revealer]
+            .into_iter()
+            .filter(|r| r.reveals_child())
+            .filter_map(|r| r.child())
+            .collect()
+    }
+
     fn changed(&self, what: Change) {
         if let (Some(app), Some(tab)) = (self.app.upgrade(), self.rc()) {
             app.tab_changed(&tab, what);
@@ -285,7 +349,7 @@ impl Tab {
         }
         let uri = display_uri(&self.uri());
         if uri.is_empty() {
-            "New Tab".into()
+            tr("New Tab").into()
         } else {
             uri
         }
@@ -405,7 +469,15 @@ impl Tab {
             let Some(t) = w() else { return };
             match event {
                 webkit6::LoadEvent::Started => {
-                    t.deny_all_permissions();
+                    if t.deny_all_permissions() > 0 {
+                        // Unanswered requests do not survive navigation;
+                        // say so, as the bar just disappears.
+                        helix_app_common::announce(
+                            &t.perm_label,
+                            tr("Permission request denied: the page changed"),
+                            helix_app_common::Urgency::Polite,
+                        );
+                    }
                     t.tls_revealer.set_reveal_child(false);
                     t.crash_page.set_visible(false);
                     if t.entering_reader.replace(false) {
@@ -450,14 +522,12 @@ impl Tab {
             let Some(t) = w() else { return false };
             let host = urlinput::host_of(uri).unwrap_or_else(|| uri.to_string());
             let host_only = host.split(':').next().unwrap_or(&host).to_string();
-            t.tls_label.set_text(&format!(
-                "The identity of {host} could not be verified. Its security certificate is not trusted."
-            ));
+            t.tls_label.set_text(&trf!("The identity of {host} could not be verified. Its security certificate is not trusted.", host = host));
             t.tls_pending.replace(Some((cert.clone(), host_only, uri.to_string())));
             t.tls_revealer.set_reveal_child(true);
             helix_app_common::announce(
                 &t.tls_label,
-                &t.tls_label.text(),
+                &prompt_announcement(&t.tls_label.text()),
                 helix_app_common::Urgency::Assertive,
             );
             t.security.set(Security::Broken);
@@ -473,6 +543,32 @@ impl Tab {
             let page = crate::sandbox::crashed_page(reason);
             t.crash_page.set_description(page.description().as_deref());
             t.crash_page.set_visible(true);
+            helix_app_common::announce(
+                &t.crash_page,
+                &format!(
+                    "{}. {}",
+                    t.crash_page.title(),
+                    t.crash_page.description().unwrap_or_default()
+                ),
+                helix_app_common::Urgency::Assertive,
+            );
+        }));
+
+        // WebKit shows its own error page; say that the load failed.
+        view.connect_load_failed(with_tab!(w, move |_, _, _, err| {
+            let Some(t) = w() else { return false };
+            let quiet = err.matches(webkit6::NetworkError::Cancelled)
+                || err.matches(webkit6::PolicyError::FrameLoadInterruptedByPolicyChange)
+                // Certificate problems have their own bar and announcement.
+                || t.tls_pending.borrow().is_some();
+            if !quiet {
+                helix_app_common::announce(
+                    &t.root,
+                    &trf!("Could not load the page: {}", err.message()),
+                    helix_app_common::Urgency::Assertive,
+                );
+            }
+            false
         }));
 
         if let Some(ucm) = view.user_content_manager() {
@@ -733,6 +829,7 @@ impl Tab {
             font,
             colors,
             helix_app_common::style::is_high_contrast(),
+            &crate::overview::ui_lang(),
         );
         self.entering_reader.set(true);
         self.view.load_alternate_html(&html, &source, Some(&source));
@@ -827,6 +924,11 @@ impl Tab {
             t.pw_label.set_text(&passwords::prompt_text(&sub, kind));
             t.pw_pending.replace(Some(sub));
             t.pw_revealer.set_reveal_child(true);
+            helix_app_common::announce(
+                &t.pw_label,
+                &prompt_announcement(&t.pw_label.text()),
+                helix_app_common::Urgency::Assertive,
+            );
         });
     }
 
@@ -846,9 +948,9 @@ impl Tab {
                     })
                     .await;
                     let text = match r {
-                        Ok(Ok(())) => "Password saved".to_string(),
-                        Ok(Err(e)) => format!("Could not save the password: {e}"),
-                        Err(_) => "Could not save the password".to_string(),
+                        Ok(Ok(())) => tr("Password saved").to_string(),
+                        Ok(Err(e)) => trf!("Could not save the password: {e}", e = e),
+                        Err(_) => tr("Could not save the password").to_string(),
                     };
                     if let Some(app) = app.upgrade() {
                         app.toast_for(&root, &text);
@@ -932,6 +1034,11 @@ impl Tab {
                 self.perm_label
                     .set_text(&permissions::request_text(host, &p.kinds));
                 self.perm_revealer.set_reveal_child(true);
+                helix_app_common::announce(
+                    &self.perm_label,
+                    &prompt_announcement(&self.perm_label.text()),
+                    helix_app_common::Urgency::Assertive,
+                );
             }
             None => self.perm_revealer.set_reveal_child(false),
         }
@@ -957,13 +1064,16 @@ impl Tab {
         self.show_next_permission();
     }
 
-    /// Denies every queued request (navigation away or tab closing).
-    pub fn deny_all_permissions(&self) {
+    /// Denies every queued request (navigation away or tab closing) and
+    /// returns how many there were.
+    pub fn deny_all_permissions(&self) -> usize {
         let drained: Vec<PendingPermission> = self.perm_queue.borrow_mut().drain(..).collect();
+        let n = drained.len();
         for p in drained {
             p.request.deny();
         }
         self.perm_revealer.set_reveal_child(false);
+        n
     }
 
     fn accept_tls(&self) {
@@ -981,8 +1091,8 @@ impl Tab {
 
     fn show_script_dialog(&self, dialog: &webkit6::ScriptDialog) {
         let message = dialog.message().map(|s| s.to_string()).unwrap_or_default();
-        let host = urlinput::host_of(&self.uri()).unwrap_or_else(|| "This page".into());
-        let ad = adw::AlertDialog::new(Some(&format!("{host} says")), Some(&message));
+        let host = urlinput::host_of(&self.uri()).unwrap_or_else(|| tr("This page").into());
+        let ad = adw::AlertDialog::new(Some(&trf!("{host} says", host = host)), Some(&message));
         let kind = dialog.dialog_type();
         let entry = gtk::Entry::new();
         match kind {
@@ -990,7 +1100,7 @@ impl Tab {
                 ad.add_response("ok", "_OK");
             }
             webkit6::ScriptDialogType::Confirm => {
-                ad.add_responses(&[("cancel", "_Cancel"), ("ok", "_OK")]);
+                ad.add_responses(&[("cancel", tr("_Cancel")), ("ok", "_OK")]);
                 ad.set_response_appearance("ok", adw::ResponseAppearance::Suggested);
             }
             webkit6::ScriptDialogType::Prompt => {
@@ -1000,16 +1110,16 @@ impl Tab {
                 let name = message.trim();
                 helix_app_common::set_accessible_label(
                     &entry,
-                    if name.is_empty() { "Answer" } else { name },
+                    if name.is_empty() { tr("Answer") } else { name },
                 );
                 ad.set_extra_child(Some(&entry));
-                ad.add_responses(&[("cancel", "_Cancel"), ("ok", "_OK")]);
+                ad.add_responses(&[("cancel", tr("_Cancel")), ("ok", "_OK")]);
                 ad.set_response_appearance("ok", adw::ResponseAppearance::Suggested);
             }
             webkit6::ScriptDialogType::BeforeUnloadConfirm => {
-                ad.set_heading(Some("Leave Page?"));
-                ad.set_body("Changes you made may not be saved.");
-                ad.add_responses(&[("cancel", "_Stay"), ("ok", "_Leave")]);
+                ad.set_heading(Some(tr("Leave Page?")));
+                ad.set_body(tr("Changes you made may not be saved."));
+                ad.add_responses(&[("cancel", tr("_Stay")), ("ok", tr("_Leave"))]);
                 ad.set_response_appearance("ok", adw::ResponseAppearance::Destructive);
             }
             _ => ad.add_response("ok", "_OK"),

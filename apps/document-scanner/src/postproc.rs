@@ -17,6 +17,7 @@
 //! `NAME_orig.EXT` (the schema documents the `_orig` suffix). Multi-page
 //! image saves run the script once per file.
 
+use helix_app_common::trf;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -57,7 +58,7 @@ pub fn split_arguments(args: &str) -> Result<Vec<String>, String> {
                 .map(|s| s.to_string_lossy().into_owned())
                 .collect()
         })
-        .map_err(|e| format!("Invalid post-processing arguments: {e}"))
+        .map_err(|e| trf!("Invalid post-processing arguments: {e}", e = e))
 }
 
 impl PostProc {
@@ -101,16 +102,30 @@ pub fn run(pp: &PostProc, mime: &str, files: &[PathBuf], home: &Path) -> Result<
     for file in files {
         let inv = pp.invocation(mime, file, home)?;
         if pp.keep_original {
-            std::fs::copy(file, original_path(file))
-                .map_err(|e| format!("Could not keep the original of {}: {e}", file.display()))?;
+            std::fs::copy(file, original_path(file)).map_err(|e| {
+                trf!(
+                    "Could not keep the original of {file}: {e}",
+                    file = file.display(),
+                    e = e
+                )
+            })?;
         }
         let status = Command::new(&inv.program)
             .args(&inv.args)
             .stdin(Stdio::null())
             .status()
-            .map_err(|e| format!("Could not run {}: {e}", inv.program.display()))?;
+            .map_err(|e| {
+                trf!(
+                    "Could not run {program}: {e}",
+                    program = inv.program.display(),
+                    e = e
+                )
+            })?;
         if !status.success() {
-            return Err(format!("The post-processing script failed ({status})"));
+            return Err(trf!(
+                "The post-processing script failed ({status})",
+                status = status
+            ));
         }
     }
     Ok(())

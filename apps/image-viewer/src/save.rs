@@ -20,6 +20,8 @@ use gtk::glib;
 
 use crate::metadata;
 use crate::orientation::{self, Orientation};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 /// Format labels (as shown by the decoder) that can be saved.
 pub fn can_save(format_label: &str) -> bool {
@@ -220,7 +222,7 @@ pub fn save_rotated(path: &Path, degrees: u32) -> Result<(), String> {
         "tiff" => "TIFF",
         "bmp" => "BMP",
         other => {
-            return Err(format!(
+            return Err(trf!(
                 "Saving {} images is not supported",
                 other.to_uppercase()
             ))
@@ -231,7 +233,7 @@ pub fn save_rotated(path: &Path, degrees: u32) -> Result<(), String> {
     let pb = Pixbuf::from_file(path).map_err(|e| e.message().to_string())?;
     let bpp = pb.n_channels() as usize;
     if pb.bits_per_sample() != 8 || bpp != if pb.has_alpha() { 4 } else { 3 } {
-        return Err("Unsupported pixel layout".into());
+        return Err(tr("Unsupported pixel layout").into());
     }
     let exif_o = metadata::read_exif(path)
         .map(|e| e.orientation)
@@ -287,8 +289,11 @@ pub fn save_rotated(path: &Path, degrees: u32) -> Result<(), String> {
 /// Writes `bytes` to a temporary file in the same folder and renames it over
 /// `path`, keeping the original permissions.
 fn write_replacing(path: &Path, bytes: &[u8]) -> Result<(), String> {
-    let dir = path.parent().ok_or("No parent folder")?;
-    let file_name = path.file_name().ok_or("No file name")?.to_string_lossy();
+    let dir = path.parent().ok_or(tr("No parent folder"))?;
+    let file_name = path
+        .file_name()
+        .ok_or(tr("No file name"))?
+        .to_string_lossy();
     let tmp = dir.join(format!(".{file_name}.helix-save-{}", std::process::id()));
     let result = (|| {
         std::fs::write(&tmp, bytes)?;

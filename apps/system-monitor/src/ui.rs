@@ -16,14 +16,15 @@ use crate::model::Whose;
 use crate::proc_view::{DisplayOpts, ProcView};
 use crate::res_view::{parse_color, Colors, ResView};
 use crate::sampler::{self, clamp_interval, Config, Control, Msg};
+use helix_app_common::i18n::{n_, tr};
 
 pub const APP_ID: &str = "org.helix.SystemMonitor";
 const SCHEMA: &str = "org.gnome.gnome-system-monitor";
 
 pub(crate) const PAGES: [(&str, &str, &str); 3] = [
-    ("processes", "Processes", "view-list-symbolic"),
-    ("resources", "Resources", "speedometer-symbolic"),
-    ("disks", "File Systems", "drive-harddisk-symbolic"),
+    ("processes", n_("Processes"), "view-list-symbolic"),
+    ("resources", n_("Resources"), "speedometer-symbolic"),
+    ("disks", n_("File Systems"), "drive-harddisk-symbolic"),
 ];
 
 /// Strong references that keep each window's context alive.
@@ -127,8 +128,8 @@ pub fn run(initial_page: Option<&'static str>) -> glib::ExitCode {
         .build();
     helix_app_common::install_standard_actions(
         &app,
-        "System Monitor",
-        "View current processes and monitor system state",
+        tr("System Monitor"),
+        tr("View current processes and monitor system state"),
     );
     app.connect_activate(move |app| {
         // `build` registers the window context, so it outlives this scope.
@@ -151,7 +152,7 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
 
     let window = adw::ApplicationWindow::builder()
         .application(app)
-        .title("System Monitor")
+        .title(tr("System Monitor"))
         .default_width(700)
         .default_height(500)
         .width_request(helix_app_common::MIN_WIDTH)
@@ -202,7 +203,7 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
         fs.page.clone().upcast(),
     ];
     for ((name, title, icon), w) in PAGES.iter().zip(widgets) {
-        stack.add_titled_with_icon(&w, Some(name), title, icon);
+        stack.add_titled_with_icon(&w, Some(name), tr(title), icon);
     }
     let start_page = initial_page
         .map(str::to_string)
@@ -219,9 +220,9 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
     header.set_title_widget(Some(&switcher));
     let search_button = gtk::ToggleButton::builder()
         .icon_name("system-search-symbolic")
-        .tooltip_text("Search")
+        .tooltip_text(tr("Search"))
         .build()
-        .labelled("Search");
+        .labelled(tr("Search"));
     procs
         .search_bar
         .bind_property("search-mode-enabled", &search_button, "active")
@@ -232,28 +233,33 @@ fn build(app: &adw::Application, initial_page: Option<&'static str>) -> Rc<Win> 
 
     let menu = gio::Menu::new();
     let show = gio::Menu::new();
-    show.append(Some("_My Processes"), Some("win.show-whose::user"));
-    show.append(Some("_All Processes"), Some("win.show-whose::all"));
-    show.append(Some("A_ctive Processes"), Some("win.show-whose::active"));
+    show.append(Some(tr("_My Processes")), Some("win.show-whose::user"));
+    show.append(Some(tr("_All Processes")), Some("win.show-whose::all"));
+    show.append(
+        Some(tr("A_ctive Processes")),
+        Some("win.show-whose::active"),
+    );
     menu.append_section(None, &show);
     let s = gio::Menu::new();
-    s.append(Some("_Refresh"), Some("win.refresh"));
+    s.append(Some(tr("_Refresh")), Some("win.refresh"));
     menu.append_section(None, &s);
     let s = gio::Menu::new();
-    s.append(Some("_Preferences"), Some("win.preferences"));
+    s.append(Some(tr("_Preferences")), Some("win.preferences"));
     s.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some(helix_app_common::shortcuts::ACTION),
     );
-    s.append(Some("_About System Monitor"), Some("app.about"));
+    s.append(Some(tr("_About System Monitor")), Some("app.about"));
     menu.append_section(None, &s);
     let menu_button = gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
         .menu_model(&menu)
         .primary(true)
-        .tooltip_text("Main Menu")
+        .tooltip_text(tr("Main Menu"))
         .build()
-        .labelled("Main Menu");
+        .labelled(tr("Main Menu"));
     header.pack_end(&menu_button);
 
     let toolbar = adw::ToolbarView::new();
@@ -463,7 +469,7 @@ fn install_actions(win: &Rc<Win>, whose: Whose) {
 
 fn show_preferences(w: &Rc<Win>) {
     let dialog = adw::PreferencesDialog::builder()
-        .title("Preferences")
+        .title(tr("Preferences"))
         .build();
 
     let switch =
@@ -486,7 +492,7 @@ fn show_preferences(w: &Rc<Win>) {
         let ms = clamp_interval(w.prefs.get::<i32>(key, default).max(0) as u32);
         let row = adw::SpinRow::with_range(1.0, 100.0, 0.25);
         row.set_title(title);
-        row.set_subtitle("Seconds");
+        row.set_subtitle(tr("Seconds"));
         row.set_digits(2);
         row.set_value(ms as f64 / 1000.0);
         let weak = Rc::downgrade(w);
@@ -501,13 +507,15 @@ fn show_preferences(w: &Rc<Win>) {
     };
 
     let page = adw::PreferencesPage::builder()
-        .title("General")
+        .title(tr("General"))
         .icon_name("preferences-system-symbolic")
         .build();
 
-    let g = adw::PreferencesGroup::builder().title("Processes").build();
+    let g = adw::PreferencesGroup::builder()
+        .title(tr("Processes"))
+        .build();
     g.add(&spin(
-        "Update Interval",
+        tr("Update Interval"),
         "update-interval",
         3000,
         Box::new(|w, ms| {
@@ -517,8 +525,8 @@ fn show_preferences(w: &Rc<Win>) {
         }),
     ));
     g.add(&switch(
-        "Divide CPU Usage by CPU Count",
-        "“Solaris mode”: a process using every core shows 100 %",
+        tr("Divide CPU Usage by CPU Count"),
+        tr("“Solaris mode”: a process using every core shows 100 %"),
         "solaris-mode",
         true,
         Box::new(|w, v| {
@@ -527,15 +535,15 @@ fn show_preferences(w: &Rc<Win>) {
         }),
     ));
     g.add(&switch(
-        "Alert Before Ending or Killing Processes",
+        tr("Alert Before Ending or Killing Processes"),
         "",
         "kill-dialog",
         true,
         Box::new(|_, _| {}),
     ));
     g.add(&switch(
-        "Show Memory in IEC Units",
-        "KiB, MiB, GiB instead of kB, MB, GB",
+        tr("Show Memory in IEC Units"),
+        tr("KiB, MiB, GiB instead of kB, MB, GB"),
         "process-memory-in-iec",
         false,
         Box::new(|w, v| {
@@ -545,16 +553,18 @@ fn show_preferences(w: &Rc<Win>) {
     ));
     page.add(&g);
 
-    let g = adw::PreferencesGroup::builder().title("Resources").build();
+    let g = adw::PreferencesGroup::builder()
+        .title(tr("Resources"))
+        .build();
     g.add(&switch(
-        "Show Memory in IEC Units",
+        tr("Show Memory in IEC Units"),
         "",
         "resources-memory-in-iec",
         false,
         Box::new(|w, v| w.res.iec.set(v)),
     ));
     g.add(&switch(
-        "Show Network Speed in Bits",
+        tr("Show Network Speed in Bits"),
         "",
         "network-in-bits",
         false,
@@ -563,10 +573,10 @@ fn show_preferences(w: &Rc<Win>) {
     page.add(&g);
 
     let g = adw::PreferencesGroup::builder()
-        .title("File Systems")
+        .title(tr("File Systems"))
         .build();
     g.add(&spin(
-        "Update Interval",
+        tr("Update Interval"),
         "disks-interval",
         5000,
         Box::new(|w, ms| {
@@ -574,8 +584,8 @@ fn show_preferences(w: &Rc<Win>) {
         }),
     ));
     g.add(&switch(
-        "Show All File Systems",
-        "Include virtual and duplicate mounts",
+        tr("Show All File Systems"),
+        tr("Include virtual and duplicate mounts"),
         "show-all-fs",
         false,
         Box::new(|w, v| {

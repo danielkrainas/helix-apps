@@ -14,6 +14,7 @@ use image::AnimationDecoder;
 use crate::folder::Extensions;
 use crate::metadata::{self, ExifInfo};
 use crate::orientation::{self, Orientation};
+use helix_app_common::i18n::tr;
 
 /// Decoded animations larger than this only keep their first frame.
 const MAX_ANIMATION_BYTES: usize = 512 * 1024 * 1024;
@@ -101,7 +102,7 @@ fn format_label(name: &str) -> String {
         "jpeg" => "JPEG".into(),
         "png" => "PNG".into(),
         "gif" => "GIF".into(),
-        "webp" => "WebP".into(),
+        "webp" => tr("WebP").into(),
         "tiff" => "TIFF".into(),
         "svg" => "SVG".into(),
         "heif" => "HEIF".into(),
@@ -168,7 +169,7 @@ fn collect_frames<'a>(frames: image::Frames<'a>) -> Result<Vec<Frame>, String> {
         out.push(rgba_frame(buf, delay));
     }
     if out.is_empty() {
-        return Err("No frames".into());
+        return Err(tr("No frames").into());
     }
     Ok(out)
 }
@@ -213,7 +214,7 @@ fn decode_pixbuf(path: &Path) -> Result<(Frame, String), String> {
         PixelFormat::Rgb8
     };
     if pb.bits_per_sample() != 8 || pb.n_channels() as usize != format.bpp() {
-        return Err("Unsupported pixel layout".into());
+        return Err(tr("Unsupported pixel layout").into());
     }
     let frame = Frame {
         bytes: pb.read_pixel_bytes(),

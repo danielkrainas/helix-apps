@@ -17,9 +17,11 @@ use crate::player::{Event, Player};
 use crate::seek::{self, SKIP_NS};
 use crate::timefmt;
 use crate::waveform;
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 pub const APP_ID: &str = "org.helix.AudioPlayer";
-const APP_NAME: &str = "Audio Player";
+const APP_NAME: &str = n_("Audio Player");
 const STATE_DIR: &str = "helix-audio-player";
 const TICK: Duration = Duration::from_millis(50);
 const COVER_SIZE: i32 = 160;
@@ -44,7 +46,7 @@ pub fn run(target: Option<String>) -> glib::ExitCode {
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::NON_UNIQUE)
         .build();
-    helix_app_common::install_standard_actions(&app, APP_NAME, "Play audio files");
+    helix_app_common::install_standard_actions(&app, tr(APP_NAME), tr("Play audio files"));
     app.connect_startup(|app| {
         load_css();
         for (action, accels) in ACCELS {
@@ -165,21 +167,21 @@ const SHORTCUT_GROUPS: &[helix_app_common::shortcuts::Group] = {
     use helix_app_common::shortcuts::Item::Keys;
     &[
         (
-            "Playback",
+            n_("Playback"),
             &[
-                Keys("Play or Pause", "space AudioPlay"),
-                Keys("Back 10 Seconds", "Left"),
-                Keys("Forward 10 Seconds", "Right"),
-                Keys("Mute or Unmute", "m"),
+                Keys(n_("Play or Pause"), "space AudioPlay"),
+                Keys(n_("Back 10 Seconds"), "Left"),
+                Keys(n_("Forward 10 Seconds"), "Right"),
+                Keys(n_("Mute or Unmute"), "m"),
             ],
         ),
         (
-            "General",
+            n_("General"),
             &[
-                Keys("Open File", "<Control>o"),
-                Keys("Keyboard Shortcuts", "<Control>question"),
-                Keys("Close Window", "<Control>w"),
-                Keys("Quit", "<Control>q"),
+                Keys(n_("Open File"), "<Control>o"),
+                Keys(n_("Keyboard Shortcuts"), "<Control>question"),
+                Keys(n_("Close Window"), "<Control>w"),
+                Keys(n_("Quit"), "<Control>q"),
             ],
         ),
     ]
@@ -196,7 +198,7 @@ impl Ui {
         };
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .default_width(600)
             .default_height(420)
             .width_request(360)
@@ -212,32 +214,34 @@ impl Ui {
         // Header bar.
         let header = adw::HeaderBar::builder().show_title(false).build();
         let open_button = gtk::Button::builder()
-            .label("Open")
+            .label(tr("Open"))
             .action_name("win.open")
-            .tooltip_text("Open a File")
+            .tooltip_text(tr("Open a File"))
             .build();
         header.pack_start(&open_button);
         let menu = gio::Menu::new();
-        menu.append(Some("_Open…"), Some("win.open"));
+        menu.append(Some(tr("_Open…")), Some("win.open"));
         let section = gio::Menu::new();
         section.append(
-            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some(helix_app_common::i18n::tr(
+                helix_app_common::shortcuts::MENU_LABEL,
+            )),
             Some("win.show-help-overlay"),
         );
-        section.append(Some("_About Audio Player"), Some("app.about"));
+        section.append(Some(tr("_About Audio Player")), Some("app.about"));
         menu.append_section(None, &section);
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
             .primary(true)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         header.pack_end(&menu_button);
 
         // Empty page.
         let empty_open = gtk::Button::builder()
-            .label("_Open…")
+            .label(tr("_Open…"))
             .use_underline(true)
             .action_name("win.open")
             .halign(gtk::Align::Center)
@@ -246,14 +250,14 @@ impl Ui {
         empty_open.add_css_class("suggested-action");
         let empty = adw::StatusPage::builder()
             .icon_name("audio-x-generic-symbolic")
-            .title("Open an Audio File")
-            .description("Drag and drop a file here")
+            .title(tr("Open an Audio File"))
+            .description(tr("Drag and drop a file here"))
             .child(&empty_open)
             .build();
 
         // Error page.
         let error_open = gtk::Button::builder()
-            .label("Open _Another File…")
+            .label(tr("Open _Another File…"))
             .use_underline(true)
             .action_name("win.open")
             .halign(gtk::Align::Center)
@@ -261,7 +265,7 @@ impl Ui {
         error_open.add_css_class("pill");
         let error_page = adw::StatusPage::builder()
             .icon_name("dialog-error-symbolic")
-            .title("Unable to Play File")
+            .title(tr("Unable to Play File"))
             .child(&error_open)
             .build();
 
@@ -290,14 +294,14 @@ impl Ui {
         // colour the accent colour, for the played bars.
         let waveform = gtk::DrawingArea::builder()
             .accessible_role(gtk::AccessibleRole::Slider)
-            .tooltip_text("Position")
+            .tooltip_text(tr("Position"))
             .hexpand(true)
             .content_height(96)
             .focusable(true)
             .css_classes(["ap-waveform", "accent"])
             .build();
         waveform.set_cursor_from_name(Some("pointer"));
-        helix_app_common::set_accessible_label(&waveform, "Position");
+        helix_app_common::set_accessible_label(&waveform, tr("Position"));
 
         let elapsed = gtk::Label::builder()
             .label("0:00")
@@ -329,9 +333,9 @@ impl Ui {
             .label(seek::rate_label(1.0))
             .menu_model(&rate_menu)
             .tooltip_text(if player.pitch_corrected {
-                "Playback Speed"
+                tr("Playback Speed")
             } else {
-                "Playback Speed (pitch not preserved)"
+                tr("Playback Speed (pitch not preserved)")
             })
             .valign(gtk::Align::Center)
             .build();
@@ -341,45 +345,45 @@ impl Ui {
         let play = gtk::Button::builder()
             .icon_name("media-playback-start-symbolic")
             .action_name("win.play-pause")
-            .tooltip_text("Play")
+            .tooltip_text(tr("Play"))
             .valign(gtk::Align::Center)
             .build()
-            .labelled("Play");
+            .labelled(tr("Play"));
         play.add_css_class("circular");
         play.add_css_class("suggested-action");
         play.add_css_class("ap-play");
         let back = button(
             "media-seek-backward-symbolic",
-            "Back 10 Seconds",
+            tr("Back 10 Seconds"),
             "win.seek-back",
         );
         let forward = button(
             "media-seek-forward-symbolic",
-            "Forward 10 Seconds",
+            tr("Forward 10 Seconds"),
             "win.seek-forward",
         );
         let repeat = gtk::ToggleButton::builder()
             .icon_name("media-playlist-repeat-symbolic")
             .action_name("win.repeat")
-            .tooltip_text("Repeat")
+            .tooltip_text(tr("Repeat"))
             .valign(gtk::Align::Center)
             .build()
-            .labelled("Repeat");
+            .labelled(tr("Repeat"));
         repeat.add_css_class("flat");
 
         // Volume popover.
         let mute = gtk::ToggleButton::builder()
             .icon_name("audio-volume-muted-symbolic")
             .action_name("win.mute")
-            .tooltip_text("Mute")
+            .tooltip_text(tr("Mute"))
             .build()
-            .labelled("Mute");
+            .labelled(tr("Mute"));
         mute.add_css_class("flat");
         let volume_scale = gtk::Scale::with_range(gtk::Orientation::Horizontal, 0.0, 1.0, 0.05);
         volume_scale.set_width_request(180);
         volume_scale.set_hexpand(true);
         volume_scale.set_value(1.0);
-        helix_app_common::set_accessible_label(&volume_scale, "Volume");
+        helix_app_common::set_accessible_label(&volume_scale, tr("Volume"));
         let vbox = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         vbox.append(&mute);
         vbox.append(&volume_scale);
@@ -387,10 +391,10 @@ impl Ui {
         let volume_button = gtk::MenuButton::builder()
             .icon_name("audio-volume-high-symbolic")
             .popover(&popover)
-            .tooltip_text("Volume")
+            .tooltip_text(tr("Volume"))
             .valign(gtk::Align::Center)
             .build()
-            .labelled("Volume");
+            .labelled(tr("Volume"));
         volume_button.add_css_class("flat");
 
         let controls = gtk::CenterBox::new();
@@ -752,7 +756,7 @@ impl Ui {
         all.add_pattern("*");
         filters.append(&all);
         let dialog = gtk::FileDialog::builder()
-            .title("Open Audio File")
+            .title(tr("Open Audio File"))
             .modal(true)
             .filters(&filters)
             .default_filter(&audio)
@@ -795,7 +799,7 @@ impl Ui {
         let title = self.title.label();
         helix_app_common::announce(
             &self.title,
-            &format!("Playing {title}"),
+            &trf!("Playing {title}", title = title),
             helix_app_common::Urgency::Polite,
         );
         self.player.load(uri);
@@ -825,10 +829,10 @@ impl Ui {
         }
         helix_app_common::announce(
             &self.error_page,
-            &format!("Unable to play file. {message}"),
+            &trf!("Unable to play file. {message}", message = message),
             helix_app_common::Urgency::Assertive,
         );
-        self.window.set_title(Some(APP_NAME));
+        self.window.set_title(Some(tr(APP_NAME)));
         self.sync_controls();
         self.publish();
     }
@@ -1166,7 +1170,7 @@ impl Ui {
                     self.publish();
                 }
                 if n_audio == 0 {
-                    self.show_error("The file contains no audio stream");
+                    self.show_error(tr("The file contains no audio stream"));
                     return;
                 }
                 self.update_duration();
@@ -1273,9 +1277,9 @@ impl Ui {
             }
         }
         let (icon, tip) = if playing {
-            ("media-playback-pause-symbolic", "Pause")
+            ("media-playback-pause-symbolic", tr("Pause"))
         } else {
-            ("media-playback-start-symbolic", "Play")
+            ("media-playback-start-symbolic", tr("Play"))
         };
         helix_app_common::set_icon_and_label(&self.play, icon, tip);
         if !has {

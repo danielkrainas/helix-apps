@@ -1,5 +1,7 @@
 //! Panel registry and sidebar search (pure logic, no GTK).
 
+use helix_app_common::i18n::n_;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PanelId {
     Wifi,
@@ -41,7 +43,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Wifi,
         name: "wifi",
         aliases: &["wi-fi", "wireless"],
-        title: "Wi-Fi",
+        title: n_("Wi-Fi"),
         icon: "network-wireless-symbolic",
         keywords: &[
             "network", "wireless", "wlan", "hotspot", "internet", "airplane",
@@ -53,7 +55,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Network,
         name: "network",
         aliases: &["wired"],
-        title: "Network",
+        title: n_("Network"),
         icon: "network-wired-symbolic",
         keywords: &["ethernet", "wired", "vpn", "proxy", "ip", "dns", "internet"],
         group: 0,
@@ -63,7 +65,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Bluetooth,
         name: "bluetooth",
         aliases: &[],
-        title: "Bluetooth",
+        title: n_("Bluetooth"),
         icon: "bluetooth-symbolic",
         keywords: &["share", "devices", "pair", "headset", "wireless"],
         group: 0,
@@ -73,7 +75,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Display,
         name: "display",
         aliases: &["displays", "screen"],
-        title: "Displays",
+        title: n_("Displays"),
         icon: "video-display-symbolic",
         keywords: &[
             "monitor",
@@ -92,7 +94,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Sound,
         name: "sound",
         aliases: &["audio"],
-        title: "Sound",
+        title: n_("Sound"),
         icon: "audio-speakers-symbolic",
         keywords: &[
             "volume",
@@ -111,7 +113,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Power,
         name: "power",
         aliases: &[],
-        title: "Power",
+        title: n_("Power"),
         icon: "battery-full-symbolic",
         keywords: &[
             "battery",
@@ -130,7 +132,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Multitasking,
         name: "multitasking",
         aliases: &["workspaces"],
-        title: "Multitasking",
+        title: n_("Multitasking"),
         icon: "view-grid-symbolic",
         keywords: &[
             "hot corner",
@@ -147,7 +149,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Appearance,
         name: "appearance",
         aliases: &["background", "wallpaper"],
-        title: "Appearance",
+        title: n_("Appearance"),
         icon: "preferences-desktop-appearance-symbolic",
         keywords: &[
             "dark",
@@ -169,7 +171,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Apps,
         name: "apps",
         aliases: &["applications", "default-apps"],
-        title: "Apps",
+        title: n_("Apps"),
         icon: "view-app-grid-symbolic",
         keywords: &[
             "default",
@@ -185,7 +187,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Notifications,
         name: "notifications",
         aliases: &[],
-        title: "Notifications",
+        title: n_("Notifications"),
         icon: "preferences-system-notifications-symbolic",
         keywords: &[
             "do not disturb",
@@ -202,7 +204,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Extensions,
         name: "extensions",
         aliases: &["shell-extensions", "add-ons"],
-        title: "Extensions",
+        title: n_("Extensions"),
         icon: "application-x-addon-symbolic",
         keywords: &[
             "add-on",
@@ -221,7 +223,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Mouse,
         name: "mouse",
         aliases: &["touchpad", "mouse-touchpad"],
-        title: "Mouse & Touchpad",
+        title: n_("Mouse & Touchpad"),
         icon: "input-mouse-symbolic",
         keywords: &[
             "touchpad",
@@ -242,7 +244,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Keyboard,
         name: "keyboard",
         aliases: &["input-sources"],
-        title: "Keyboard",
+        title: n_("Keyboard"),
         icon: "input-keyboard-symbolic",
         keywords: &[
             "layout",
@@ -260,7 +262,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Accessibility,
         name: "accessibility",
         aliases: &["universal-access", "a11y"],
-        title: "Accessibility",
+        title: n_("Accessibility"),
         icon: "preferences-desktop-accessibility-symbolic",
         keywords: &[
             "high contrast",
@@ -286,7 +288,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Privacy,
         name: "privacy",
         aliases: &["security", "screen-lock", "location"],
-        title: "Privacy & Security",
+        title: n_("Privacy & Security"),
         icon: "preferences-system-privacy-symbolic",
         keywords: &[
             "screen lock",
@@ -309,7 +311,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::DateTime,
         name: "datetime",
         aliases: &["date-time", "time"],
-        title: "Date & Time",
+        title: n_("Date & Time"),
         icon: "preferences-system-time-symbolic",
         keywords: &[
             "clock",
@@ -328,7 +330,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::Users,
         name: "users",
         aliases: &["user-accounts"],
-        title: "Users",
+        title: n_("Users"),
         icon: "system-users-symbolic",
         keywords: &["account", "password", "login", "avatar", "administrator"],
         group: 5,
@@ -338,7 +340,7 @@ pub const PANELS: &[PanelInfo] = &[
         id: PanelId::About,
         name: "about",
         aliases: &["info-overview", "info", "system"],
-        title: "About",
+        title: n_("About"),
         icon: "help-about-symbolic",
         keywords: &[
             "device name",
@@ -400,7 +402,7 @@ pub fn sidebar_order(query: &str) -> Vec<PanelId> {
 
 /// Lower rank is a better match; `None` means no match.
 fn rank(p: &PanelInfo, query: &str, terms: &[&str]) -> Option<u8> {
-    let title = p.title.to_lowercase();
+    let title = helix_app_common::i18n::tr(p.title).to_lowercase();
     let all_match = terms
         .iter()
         .all(|t| title.contains(t) || p.keywords.iter().any(|k| k.contains(t)));

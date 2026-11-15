@@ -3,6 +3,7 @@
 //! Pure std code (no GTK) so it can run on a worker thread and be unit
 //! tested on temporary directory trees.
 
+use helix_app_common::i18n::tr;
 use std::collections::HashSet;
 use std::fs;
 use std::os::unix::fs::MetadataExt;
@@ -211,9 +212,9 @@ pub enum ScanError {
 impl std::fmt::Display for ScanError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ScanError::Cancelled => write!(f, "Scan cancelled"),
+            ScanError::Cancelled => f.write_str(tr("Scan cancelled")),
             ScanError::Io(e) => write!(f, "{e}"),
-            ScanError::NotADirectory => write!(f, "Not a folder"),
+            ScanError::NotADirectory => f.write_str(tr("Not a folder")),
         }
     }
 }

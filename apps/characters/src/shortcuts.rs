@@ -1,5 +1,6 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys, GENERAL};
 
 /// Accelerators registered on the application.
@@ -7,11 +8,11 @@ pub const ACCELS: &[(&str, &[&str])] = &[("win.search", &["<Control>f"])];
 
 pub const GROUPS: &[Group] = &[
     (
-        "Characters",
+        n_("Characters"),
         &[
-            Keys("Search", "<Control>f"),
-            Keys("Show the Character's Details", "Return"),
-            Keys("Copy the Character (in its details)", "<Control>c"),
+            Keys(n_("Search"), "<Control>f"),
+            Keys(n_("Show the Character's Details"), "Return"),
+            Keys(n_("Copy the Character (in its details)"), "<Control>c"),
         ],
     ),
     GENERAL,

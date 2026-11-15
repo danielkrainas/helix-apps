@@ -22,31 +22,34 @@ use crate::store::{self, WorldClock};
 use crate::sun::{self, SunTimes};
 use crate::timer::{self, Timer};
 use crate::tz::{self, Location};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 pub const APP_ID: &str = "org.helix.Clocks";
 const SCHEMA: &str = "org.gnome.clocks";
 const WINDOW_SCHEMA: &str = "org.gnome.clocks.state.window";
 const IFACE_SCHEMA: &str = "org.gnome.desktop.interface";
 pub(crate) const PAGES: [(&str, &str, &str); 4] = [
-    ("world", "World", "globe-symbolic"),
-    ("alarm", "Alarms", "alarm-symbolic"),
-    ("stopwatch", "Stopwatch", "stopwatch-symbolic"),
-    ("timer", "Timer", "timer-symbolic"),
+    ("world", n_("World"), "globe-symbolic"),
+    ("alarm", n_("Alarms"), "alarm-symbolic"),
+    ("stopwatch", n_("Stopwatch"), "stopwatch-symbolic"),
+    ("timer", n_("Timer"), "timer-symbolic"),
 ];
 
 pub fn run() -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
     helix_app_common::install_standard_actions(
         &app,
-        "Clocks",
-        "World clocks, alarms, a stopwatch and timers",
+        tr("Clocks"),
+        tr("World clocks, alarms, a stopwatch and timers"),
     );
     app.add_main_option(
         "hidden",
         glib::Char::from(0),
         glib::OptionFlags::NONE,
         glib::OptionArg::None,
-        "Run in the background to ring alarms, without opening a window",
+        tr("Run in the background to ring alarms, without opening a window"),
         None,
     );
     let hidden = Rc::new(Cell::new(false));
@@ -139,7 +142,7 @@ struct WorldRow {
 /// (shown only as an icon) and the subtitle — "10:30 PM, Night, Japan •
 /// Tomorrow • +8 hours".
 fn world_row_description(time: &str, day: bool, subtitle: &str) -> String {
-    let when = if day { "Day" } else { "Night" };
+    let when = if day { tr("Day") } else { tr("Night") };
     if subtitle.is_empty() {
         format!("{time}, {when}")
     } else {
@@ -275,7 +278,7 @@ impl Ui {
 
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title("Clocks")
+            .title(tr("Clocks"))
             .width_request(360)
             .height_request(294)
             .build();
@@ -304,23 +307,25 @@ impl Ui {
         let add_button = gtk::Button::from_icon_name("list-add-symbolic");
         header.pack_start(&add_button);
         let back_button = gtk::Button::from_icon_name("go-previous-symbolic");
-        back_button.set_tooltip_text(Some("Back"));
-        helix_app_common::set_accessible_label(&back_button, "Back");
+        back_button.set_tooltip_text(Some(tr("Back")));
+        helix_app_common::set_accessible_label(&back_button, tr("Back"));
         back_button.set_visible(false);
         header.pack_start(&back_button);
         let menu = gio::Menu::new();
         menu.append(
-            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some(helix_app_common::i18n::tr(
+                helix_app_common::shortcuts::MENU_LABEL,
+            )),
             Some("win.show-help-overlay"),
         );
-        menu.append(Some("_About Clocks"), Some("app.about"));
+        menu.append(Some(tr("_About Clocks")), Some("app.about"));
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
             .primary(true)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         header.pack_end(&menu_button);
 
         // World page
@@ -328,12 +333,12 @@ impl Ui {
         let world_stack = gtk::Stack::new();
         let world_empty = adw::StatusPage::builder()
             .icon_name("globe-symbolic")
-            .title("Add World Clocks")
-            .description("Use the + button to add world clocks")
+            .title(tr("Add World Clocks"))
+            .description(tr("Use the + button to add world clocks"))
             .vexpand(true)
             .build();
         let empty_add = gtk::Button::builder()
-            .label("_Add Location")
+            .label(tr("_Add Location"))
             .use_underline(true)
             .halign(gtk::Align::Center)
             .build();
@@ -343,19 +348,19 @@ impl Ui {
         world_stack.add_named(&world_empty, Some("empty"));
         world_stack.add_named(&scrolled_clamped(&world_list), Some("list"));
         let world_nav = adw::NavigationView::new();
-        world_nav.add(&adw::NavigationPage::new(&world_stack, "World"));
+        world_nav.add(&adw::NavigationPage::new(&world_stack, tr("World")));
 
         // Alarms page
         let alarm_list = boxed_list();
         let alarm_stack = gtk::Stack::new();
         let alarm_empty = adw::StatusPage::builder()
             .icon_name("alarm-symbolic")
-            .title("No Alarms")
-            .description("Use the + button to add alarms")
+            .title(tr("No Alarms"))
+            .description(tr("Use the + button to add alarms"))
             .vexpand(true)
             .build();
         let alarm_add = gtk::Button::builder()
-            .label("_Add Alarm")
+            .label(tr("_Add Alarm"))
             .use_underline(true)
             .halign(gtk::Align::Center)
             .build();
@@ -366,7 +371,7 @@ impl Ui {
         let alarm_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
         alarm_box.append(&alarm_list);
         let note = label(
-            "Alarms only ring while Clocks is running.",
+            tr("Alarms only ring while Clocks is running."),
             &["dim-label", "caption"],
         );
         note.set_visible(false);
@@ -376,8 +381,8 @@ impl Ui {
         // Stopwatch page
         let sw_time = label("00:00.0", &["stopwatch-time", "clock-time", "numeric"]);
         let sw_split = label("", &["dim-label", "clock-time", "numeric", "title-4"]);
-        let sw_primary = gtk::Button::with_label("Start");
-        let sw_secondary = gtk::Button::with_label("Lap");
+        let sw_primary = gtk::Button::with_label(tr("Start"));
+        let sw_secondary = gtk::Button::with_label(tr("Lap"));
         for b in [&sw_primary, &sw_secondary] {
             b.add_css_class("pill");
             b.set_width_request(120);
@@ -402,16 +407,16 @@ impl Ui {
         let timer_list = boxed_list();
         let timer_stack = gtk::Stack::new();
         let timer_cancel = gtk::Button::builder()
-            .label("_Cancel")
+            .label(tr("_Cancel"))
             .use_underline(true)
             .halign(gtk::Align::Center)
             .build();
         timer_cancel.add_css_class("pill");
 
-        stack.add_titled_with_icon(&world_nav, Some(PAGES[0].0), PAGES[0].1, PAGES[0].2);
-        stack.add_titled_with_icon(&alarm_stack, Some(PAGES[1].0), PAGES[1].1, PAGES[1].2);
-        stack.add_titled_with_icon(&sw_page, Some(PAGES[2].0), PAGES[2].1, PAGES[2].2);
-        stack.add_titled_with_icon(&timer_stack, Some(PAGES[3].0), PAGES[3].1, PAGES[3].2);
+        stack.add_titled_with_icon(&world_nav, Some(PAGES[0].0), tr(PAGES[0].1), PAGES[0].2);
+        stack.add_titled_with_icon(&alarm_stack, Some(PAGES[1].0), tr(PAGES[1].1), PAGES[1].2);
+        stack.add_titled_with_icon(&sw_page, Some(PAGES[2].0), tr(PAGES[2].1), PAGES[2].2);
+        stack.add_titled_with_icon(&timer_stack, Some(PAGES[3].0), tr(PAGES[3].1), PAGES[3].2);
 
         let switcher_bar = adw::ViewSwitcherBar::builder().stack(&stack).build();
         let toolbar = adw::ToolbarView::new();
@@ -576,9 +581,9 @@ impl Ui {
         self.add_button
             .set_visible(!in_details && page != "stopwatch");
         let add_label = match page.as_str() {
-            "world" => "Add Location",
-            "alarm" => "Add Alarm",
-            _ => "Add Timer",
+            "world" => tr("Add Location"),
+            "alarm" => tr("Add Alarm"),
+            _ => tr("Add Timer"),
         };
         self.add_button.set_tooltip_text(Some(add_label));
         helix_app_common::set_accessible_label(&self.add_button, add_label);
@@ -634,7 +639,7 @@ impl Ui {
 
         // Stopwatch keys, active only on the stopwatch page.
         let ctl = gtk::ShortcutController::new();
-        for (trigger, which) in [("space", 0), ("l", 1), ("Delete", 2), ("BackSpace", 2)] {
+        for (trigger, which) in [("space", 0), ("l", 1), (tr("Delete"), 2), ("BackSpace", 2)] {
             let weak = Rc::downgrade(self);
             let action = gtk::CallbackAction::new(move |_, _| {
                 let Some(ui) = weak.upgrade() else {
@@ -802,7 +807,7 @@ impl Ui {
                     country: None,
                     station: None,
                 });
-            wc.country = Some("Current Location".into());
+            wc.country = Some(tr("Current Location").into());
             entries.push((wc, false));
         }
         entries.extend(self.world.borrow().iter().cloned().map(|c| (c, true)));
@@ -827,8 +832,8 @@ impl Ui {
                 let remove = gtk::Button::from_icon_name("user-trash-symbolic");
                 remove.set_valign(gtk::Align::Center);
                 remove.add_css_class("flat");
-                remove.set_tooltip_text(Some("Remove"));
-                helix_app_common::set_accessible_label(&remove, &format!("Remove {}", wc.name));
+                remove.set_tooltip_text(Some(tr("Remove")));
+                helix_app_common::set_accessible_label(&remove, &trf!("Remove {}", wc.name));
                 helix_app_common::focus::set_part(&remove, "remove");
                 let weak = Rc::downgrade(self);
                 let idx = i - (self.prefs.get("geolocation", true) as usize);
@@ -896,7 +901,7 @@ impl Ui {
                 "weather-clear-night-symbolic"
             }));
             r.icon
-                .set_tooltip_text(Some(if day { "Day" } else { "Night" }));
+                .set_tooltip_text(Some(if day { tr("Day") } else { tr("Night") }));
             let rel = tz::relative_day_at(r.zone, self.local, now);
             let diff = tz::describe_offset(tz::utc_offset(r.zone, now) - local_off);
             let mut parts: Vec<String> = Vec::new();
@@ -940,12 +945,12 @@ impl Ui {
         group.set_margin_top(18);
         let mut rows = Vec::new();
         for (key, title) in [
-            ("zone", "Time Zone"),
-            ("offset", "UTC Offset"),
-            ("diff", "Difference"),
-            ("rise", "Sunrise"),
-            ("set", "Sunset"),
-            ("length", "Day Length"),
+            ("zone", tr("Time Zone")),
+            ("offset", tr("UTC Offset")),
+            ("diff", tr("Difference")),
+            ("rise", tr("Sunrise")),
+            ("set", tr("Sunset")),
+            ("length", tr("Day Length")),
         ] {
             if wc.coords.is_none() && matches!(key, "rise" | "set" | "length") {
                 continue;
@@ -995,11 +1000,11 @@ impl Ui {
                         "set" => fmt(set),
                         _ => {
                             let m = (set - rise).num_minutes();
-                            format!("{} h {} min", m / 60, m % 60)
+                            trf!("{} h {} min", m / 60, m % 60)
                         }
                     },
-                    Some(SunTimes::PolarDay) => "Polar day".into(),
-                    Some(SunTimes::PolarNight) => "Polar night".into(),
+                    Some(SunTimes::PolarDay) => tr("Polar day").into(),
+                    Some(SunTimes::PolarNight) => tr("Polar night").into(),
                     None => String::new(),
                 },
                 _ => String::new(),
@@ -1010,13 +1015,13 @@ impl Ui {
 
     fn show_add_location(self: &Rc<Self>) {
         let dialog = adw::Dialog::builder()
-            .title("Add a New World Clock")
+            .title(tr("Add a New World Clock"))
             .content_width(420)
             .content_height(520)
             .build();
         let header = adw::HeaderBar::new();
         let search = gtk::SearchEntry::builder()
-            .placeholder_text("Search for a city or time zone")
+            .placeholder_text(tr("Search for a city or time zone"))
             .hexpand(true)
             .build();
         let search_bar = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -1028,12 +1033,12 @@ impl Ui {
         let results = gtk::Stack::new();
         let hint = adw::StatusPage::builder()
             .icon_name("system-search-symbolic")
-            .title("Search for a City")
+            .title(tr("Search for a City"))
             .build();
         hint.add_css_class("compact");
         let none = adw::StatusPage::builder()
             .icon_name("system-search-symbolic")
-            .title("No Results")
+            .title(tr("No Results"))
             .build();
         none.add_css_class("compact");
         results.add_named(&hint, Some("hint"));
@@ -1092,11 +1097,12 @@ impl Ui {
                             .icon_name("object-select-symbolic")
                             .accessible_role(gtk::AccessibleRole::Presentation)
                             .build();
-                        check.set_tooltip_text(Some("Already added"));
+                        check.set_tooltip_text(Some(tr("Already added")));
                         row.add_suffix(&check);
                         let subtitle = row.subtitle().unwrap_or_default();
-                        row.update_property(&[gtk::accessible::Property::Description(&format!(
-                            "{subtitle} • Already added"
+                        row.update_property(&[gtk::accessible::Property::Description(&trf!(
+                            "{subtitle} • Already added",
+                            subtitle = subtitle
                         ))]);
                     }
                     list.append(&row);
@@ -1189,11 +1195,11 @@ impl Ui {
             parts.push(summary);
         }
         match e.state {
-            RingState::Snoozed { until } => parts.push(format!(
+            RingState::Snoozed { until } => parts.push(trf!(
                 "Snoozed until {}",
                 tz::format_time(until.with_timezone(&self.local).time(), twelve)
             )),
-            RingState::Ringing { .. } => parts.push("Ringing".into()),
+            RingState::Ringing { .. } => parts.push(tr("Ringing").into()),
             RingState::Idle => {}
         }
         row.sub.set_label(&parts.join(" • "));
@@ -1201,7 +1207,7 @@ impl Ui {
         if row.switch.is_active() != a.active {
             row.switch.set_active(a.active);
         }
-        helix_app_common::set_accessible_label(&row.switch, &format!("Enable alarm {}", a.name));
+        helix_app_common::set_accessible_label(&row.switch, &trf!("Enable alarm {}", a.name));
         if a.active {
             row.row.remove_css_class("alarm-inactive");
             row.time.remove_css_class("dim-label");
@@ -1317,7 +1323,11 @@ impl Ui {
         });
         let twelve = self.twelve.get();
         let dialog = adw::Dialog::builder()
-            .title(if editing { "Edit Alarm" } else { "New Alarm" })
+            .title(if editing {
+                tr("Edit Alarm")
+            } else {
+                tr("New Alarm")
+            })
             .content_width(420)
             // Needed by the breakpoint below; fits a 360×294 window.
             .width_request(300)
@@ -1327,8 +1337,8 @@ impl Ui {
             .show_end_title_buttons(false)
             .show_start_title_buttons(false)
             .build();
-        let cancel = gtk::Button::with_mnemonic("_Cancel");
-        let save = gtk::Button::with_mnemonic(if editing { "_Done" } else { "_Add" });
+        let cancel = gtk::Button::with_mnemonic(tr("_Cancel"));
+        let save = gtk::Button::with_mnemonic(if editing { tr("_Done") } else { tr("_Add") });
         save.add_css_class("suggested-action");
         header.pack_start(&cancel);
         header.pack_end(&save);
@@ -1352,14 +1362,14 @@ impl Ui {
             (0.0, 23.0, a.hour as f64)
         };
         let hour = time_spin(hmin, hmax, hval);
-        helix_app_common::set_accessible_label(&hour, "Hour");
+        helix_app_common::set_accessible_label(&hour, tr("Hour"));
         let minute = time_spin(0.0, 59.0, a.minute as f64);
-        helix_app_common::set_accessible_label(&minute, "Minute");
+        helix_app_common::set_accessible_label(&minute, tr("Minute"));
         time_box.append(&hour);
         time_box.append(&label(":", &["alarm-time"]));
         time_box.append(&minute);
         let ampm = gtk::DropDown::from_strings(&["AM", "PM"]);
-        helix_app_common::set_accessible_label(&ampm, "AM or PM");
+        helix_app_common::set_accessible_label(&ampm, tr("AM or PM"));
         ampm.set_valign(gtk::Align::Center);
         ampm.set_selected(if a.hour >= 12 { 1 } else { 0 });
         ampm.set_visible(twelve);
@@ -1397,7 +1407,7 @@ impl Ui {
                 (*d, b)
             })
             .collect();
-        let repeat_label = label("Repeat", &["heading"]);
+        let repeat_label = label(tr("Repeat"), &["heading"]);
         repeat_label.set_xalign(0.0);
         let repeat_hint = label(&alarm::repeat_hint(a.days), &["dim-label", "caption"]);
         repeat_hint.set_wrap(true);
@@ -1434,11 +1444,14 @@ impl Ui {
         }
 
         let group = adw::PreferencesGroup::new();
-        let name = adw::EntryRow::builder().title("Name").text(&a.name).build();
+        let name = adw::EntryRow::builder()
+            .title(tr("Name"))
+            .text(&a.name)
+            .build();
         group.add(&name);
         let labels: Vec<String> = alarm::DURATION_CHOICES
             .iter()
-            .map(|m| format!("{m} minute{}", if *m == 1 { "" } else { "s" }))
+            .map(|m| trnf!("{n} minute", "{n} minutes", *m))
             .collect();
         let label_refs: Vec<&str> = labels.iter().map(String::as_str).collect();
         let pick = |v: u32| {
@@ -1448,12 +1461,12 @@ impl Ui {
                 .unwrap_or(3) as u32
         };
         let ring = adw::ComboRow::builder()
-            .title("Ring Duration")
+            .title(tr("Ring Duration"))
             .model(&gtk::StringList::new(&label_refs))
             .selected(pick(a.ring_minutes))
             .build();
         let snooze = adw::ComboRow::builder()
-            .title("Snooze Duration")
+            .title(tr("Snooze Duration"))
             .model(&gtk::StringList::new(&label_refs))
             .selected(pick(a.snooze_minutes))
             .build();
@@ -1462,7 +1475,7 @@ impl Ui {
         content.append(&group);
 
         if editing {
-            let delete = gtk::Button::with_mnemonic("_Delete Alarm");
+            let delete = gtk::Button::with_mnemonic(tr("_Delete Alarm"));
             delete.add_css_class("destructive-action");
             delete.add_css_class("pill");
             delete.set_halign(gtk::Align::Center);
@@ -1534,7 +1547,7 @@ impl Ui {
             let edited = Alarm {
                 id: a.id.clone(),
                 name: if text.is_empty() {
-                    "Alarm".into()
+                    tr("Alarm").into()
                 } else {
                     text
                 },
@@ -1593,7 +1606,7 @@ impl Ui {
                 Event::Ring => self.show_ringing(&a),
                 Event::Timeout => self.dismiss_ringing(&a.id),
                 Event::Missed => {
-                    let n = gio::Notification::new("Missed Alarm");
+                    let n = gio::Notification::new(tr("Missed Alarm"));
                     let t = NaiveTime::from_hms_opt(a.hour, a.minute, 0).unwrap_or_default();
                     n.set_body(Some(&format!(
                         "{} ({})",
@@ -1618,8 +1631,8 @@ impl Ui {
         n.set_body(Some(&t));
         n.set_priority(gio::NotificationPriority::Urgent);
         n.set_icon(&gio::ThemedIcon::new("alarm-symbolic"));
-        n.add_button_with_target_value("Snooze", "app.alarm-snooze", Some(&a.id.to_variant()));
-        n.add_button_with_target_value("Stop", "app.alarm-stop", Some(&a.id.to_variant()));
+        n.add_button_with_target_value(tr("Snooze"), "app.alarm-snooze", Some(&a.id.to_variant()));
+        n.add_button_with_target_value(tr("Stop"), "app.alarm-stop", Some(&a.id.to_variant()));
         n.set_default_action("app.activate");
         self.app
             .send_notification(Some(&format!("alarm-{}", a.id)), &n);
@@ -1634,7 +1647,7 @@ impl Ui {
         }
         self.window.present();
         let dialog = adw::AlertDialog::new(Some(&a.name), Some(&t));
-        dialog.add_responses(&[("snooze", "_Snooze"), ("stop", "_Stop")]);
+        dialog.add_responses(&[("snooze", tr("_Snooze")), ("stop", tr("_Stop"))]);
         dialog.set_response_appearance("stop", adw::ResponseAppearance::Suggested);
         dialog.set_default_response(Some("stop"));
         dialog.set_close_response("stop");
@@ -1722,16 +1735,16 @@ impl Ui {
         let laps = sw.laps().len();
         self.sw_split.set_visible(laps > 0);
         if laps > 0 {
-            self.sw_split.set_text(&format!(
+            self.sw_split.set_text(&trf!(
                 "Lap {}  {}",
                 laps + 1,
                 stopwatch::format_elapsed(sw.current_split(mono), false)
             ));
         }
         let (primary, secondary, sec_sensitive) = match sw.state {
-            stopwatch::State::Reset => ("Start", "Lap", false),
-            stopwatch::State::Running { .. } => ("Pause", "Lap", true),
-            stopwatch::State::Paused { .. } => ("Resume", "Reset", true),
+            stopwatch::State::Reset => (tr("Start"), tr("Lap"), false),
+            stopwatch::State::Running { .. } => (tr("Pause"), tr("Lap"), true),
+            stopwatch::State::Paused { .. } => (tr("Resume"), tr("Reset"), true),
         };
         if self.sw_primary.label().as_deref() != Some(primary) {
             self.sw_primary.set_label(primary);
@@ -1774,16 +1787,16 @@ impl Ui {
             });
             presets.insert(&b, -1);
         }
-        setup.append(&label("Presets", &["heading"]));
+        setup.append(&label(tr("Presets"), &["heading"]));
         setup.append(&presets);
 
-        setup.append(&label("Custom", &["heading"]));
+        setup.append(&label(tr("Custom"), &["heading"]));
         let spins = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         spins.set_halign(gtk::Align::Center);
         let h = time_spin(0.0, 99.0, 0.0);
         let m = time_spin(0.0, 59.0, 5.0);
         let s = time_spin(0.0, 59.0, 0.0);
-        for (i, (spin, name)) in [(&h, "Hours"), (&m, "Minutes"), (&s, "Seconds")]
+        for (i, (spin, name)) in [(&h, tr("Hours")), (&m, tr("Minutes")), (&s, tr("Seconds"))]
             .into_iter()
             .enumerate()
         {
@@ -1795,10 +1808,12 @@ impl Ui {
         }
         setup.append(&spins);
         let name_group = adw::PreferencesGroup::new();
-        let name = adw::EntryRow::builder().title("Name (optional)").build();
+        let name = adw::EntryRow::builder()
+            .title(tr("Name (optional)"))
+            .build();
         name_group.add(&name);
         setup.append(&name_group);
-        let start = gtk::Button::with_mnemonic("_Start");
+        let start = gtk::Button::with_mnemonic(tr("_Start"));
         start.add_css_class("pill");
         start.add_css_class("suggested-action");
         start.set_halign(gtk::Align::Center);
@@ -1840,8 +1855,8 @@ impl Ui {
             timer::timer_labels(&named).remove(0)
         };
         let toast = adw::Toast::builder()
-            .title(format!("{label} deleted"))
-            .button_label("_Undo")
+            .title(trf!("{label} deleted", label = label))
+            .button_label(tr("_Undo"))
             .build();
         let weak = Rc::downgrade(self);
         let timer = RefCell::new(Some(timer));
@@ -1870,15 +1885,15 @@ impl Ui {
             return;
         };
         let dialog = adw::Dialog::builder()
-            .title("Edit Timer")
+            .title(tr("Edit Timer"))
             .content_width(420)
             .build();
         let header = adw::HeaderBar::builder()
             .show_end_title_buttons(false)
             .show_start_title_buttons(false)
             .build();
-        let cancel = gtk::Button::with_mnemonic("_Cancel");
-        let save = gtk::Button::with_mnemonic("_Done");
+        let cancel = gtk::Button::with_mnemonic(tr("_Cancel"));
+        let save = gtk::Button::with_mnemonic(tr("_Done"));
         save.add_css_class("suggested-action");
         header.pack_start(&cancel);
         header.pack_end(&save);
@@ -1894,7 +1909,7 @@ impl Ui {
         let h = time_spin(0.0, 99.0, (secs / 3600) as f64);
         let m = time_spin(0.0, 59.0, ((secs / 60) % 60) as f64);
         let s = time_spin(0.0, 59.0, (secs % 60) as f64);
-        for (i, (spin, name)) in [(&h, "Hours"), (&m, "Minutes"), (&s, "Seconds")]
+        for (i, (spin, name)) in [(&h, tr("Hours")), (&m, tr("Minutes")), (&s, tr("Seconds"))]
             .into_iter()
             .enumerate()
         {
@@ -1907,7 +1922,7 @@ impl Ui {
         content.append(&spins);
         if t.state != timer::State::Stopped {
             let note = label(
-                "Changing the duration resets the timer.",
+                tr("Changing the duration resets the timer."),
                 &["dim-label", "caption"],
             );
             note.set_wrap(true);
@@ -1919,7 +1934,7 @@ impl Ui {
         content.append(&error);
         let group = adw::PreferencesGroup::new();
         let name = adw::EntryRow::builder()
-            .title("Name (optional)")
+            .title(tr("Name (optional)"))
             .text(&t.name)
             .build();
         group.add(&name);
@@ -1958,7 +1973,7 @@ impl Ui {
             let Some(ui) = weak.upgrade() else { return };
             let secs = h.value() as u64 * 3600 + m.value() as u64 * 60 + s.value() as u64;
             if secs == 0 {
-                let message = "A timer needs a duration of at least one second";
+                let message = tr("A timer needs a duration of at least one second");
                 error.set_label(message);
                 error.set_visible(true);
                 helix_app_common::a11y::set_input_error(&s, Some(&error), Some(message));
@@ -2056,22 +2071,31 @@ impl Ui {
             start.add_css_class("circular");
             start.set_valign(gtk::Align::Center);
             let reset = gtk::Button::from_icon_name("view-refresh-symbolic");
-            reset.set_tooltip_text(Some("Reset"));
-            helix_app_common::set_accessible_label(&reset, &format!("Reset {timer_label}"));
+            reset.set_tooltip_text(Some(tr("Reset")));
+            helix_app_common::set_accessible_label(
+                &reset,
+                &trf!("Reset {timer_label}", timer_label = timer_label),
+            );
             reset.add_css_class("circular");
             reset.set_valign(gtk::Align::Center);
             let delete = gtk::Button::from_icon_name("user-trash-symbolic");
-            delete.set_tooltip_text(Some("Delete"));
-            helix_app_common::set_accessible_label(&delete, &format!("Delete {timer_label}"));
+            delete.set_tooltip_text(Some(tr("Delete")));
+            helix_app_common::set_accessible_label(
+                &delete,
+                &trf!("Delete {timer_label}", timer_label = timer_label),
+            );
             delete.add_css_class("circular");
             delete.add_css_class("flat");
             delete.set_valign(gtk::Align::Center);
-            let dismiss = gtk::Button::with_mnemonic("_Dismiss");
+            let dismiss = gtk::Button::with_mnemonic(tr("_Dismiss"));
             dismiss.add_css_class("pill");
             dismiss.add_css_class("suggested-action");
             dismiss.set_valign(gtk::Align::Center);
             dismiss.set_visible(false);
-            helix_app_common::set_accessible_label(&dismiss, &format!("Dismiss {timer_label}"));
+            helix_app_common::set_accessible_label(
+                &dismiss,
+                &trf!("Dismiss {timer_label}", timer_label = timer_label),
+            );
             helix_app_common::focus::set_part(&start, "start");
             helix_app_common::focus::set_part(&reset, "reset");
             helix_app_common::focus::set_part(&delete, "delete");
@@ -2201,10 +2225,12 @@ impl Ui {
                     .update_property(&[gtk::accessible::Property::Label(&name)]);
             }
             let (icon, tip) = match t.state {
-                timer::State::Running { .. } => ("media-playback-pause-symbolic", "Pause"),
-                timer::State::Paused { .. } => ("media-playback-start-symbolic", "Resume"),
-                timer::State::Stopped if t.finished => ("media-playback-start-symbolic", "Restart"),
-                timer::State::Stopped => ("media-playback-start-symbolic", "Start"),
+                timer::State::Running { .. } => ("media-playback-pause-symbolic", tr("Pause")),
+                timer::State::Paused { .. } => ("media-playback-start-symbolic", tr("Resume")),
+                timer::State::Stopped if t.finished => {
+                    ("media-playback-start-symbolic", tr("Restart"))
+                }
+                timer::State::Stopped => ("media-playback-start-symbolic", tr("Start")),
             };
             r.start.set_icon_name(icon);
             r.start.set_tooltip_text(Some(tip));
@@ -2241,15 +2267,15 @@ impl Ui {
             self.update_timers(mono);
         }
         for (name, dur) in finished {
-            let n = gio::Notification::new("Time is up!");
+            let n = gio::Notification::new(tr("Time is up!"));
             let body = if name.is_empty() {
-                format!("{} timer", timer::describe_duration(dur.as_secs()))
+                trf!("{} timer", timer::describe_duration(dur.as_secs()))
             } else {
                 name
             };
             helix_app_common::announce(
                 &self.window,
-                &format!("Time is up: {body}"),
+                &trf!("Time is up: {body}", body = body),
                 helix_app_common::Urgency::Assertive,
             );
             n.set_body(Some(&body));
@@ -2324,7 +2350,7 @@ fn time_spin(min: f64, max: f64, value: f64) -> gtk::SpinButton {
 
 fn lap_row(lap: &stopwatch::Lap) -> adw::ActionRow {
     let row = adw::ActionRow::builder()
-        .title(format!("Lap {}", lap.number))
+        .title(trf!("Lap {}", lap.number))
         .build();
     if let Some(d) = lap.delta_ms {
         row.set_subtitle(&stopwatch::format_delta(d));
@@ -2348,14 +2374,14 @@ fn lap_row(lap: &stopwatch::Lap) -> adw::ActionRow {
 /// What a lap row says to assistive technology: "Lap 3, lap time
 /// 00:12.40, total 01:02.00, +0:01.23 compared with the previous lap".
 fn lap_description(lap: &stopwatch::Lap) -> String {
-    let mut text = format!(
+    let mut text = trf!(
         "Lap {}, lap time {}, total {}",
         lap.number,
         stopwatch::format_elapsed(lap.split, true),
         stopwatch::format_elapsed(lap.total, true)
     );
     if let Some(d) = lap.delta_ms {
-        text.push_str(&format!(
+        text.push_str(&trf!(
             ", {} compared with the previous lap",
             stopwatch::format_delta(d)
         ));

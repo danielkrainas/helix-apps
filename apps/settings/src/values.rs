@@ -1,5 +1,9 @@
 //! Value mappings between GSettings keys and what the panels show.
 
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
+use helix_app_common::trnf;
+
 /// A preset choice: stored value and its label.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Choice<T> {
@@ -52,7 +56,7 @@ fn duration_choices(secs: &[u32], zero_label: Option<&str>) -> Vec<Choice<i64>> 
 pub fn blank_delays() -> Vec<Choice<i64>> {
     duration_choices(
         &[60, 120, 180, 240, 300, 480, 600, 720, 900, 0],
-        Some("Never"),
+        Some(tr("Never")),
     )
 }
 
@@ -60,7 +64,7 @@ pub fn blank_delays() -> Vec<Choice<i64>> {
 pub fn lock_delays() -> Vec<Choice<i64>> {
     duration_choices(
         &[0, 30, 60, 120, 180, 300, 1800, 3600],
-        Some("Screen Turns Off"),
+        Some(tr("Screen Turns Off")),
     )
 }
 
@@ -73,11 +77,7 @@ pub fn suspend_delays() -> Vec<Choice<i64>> {
 }
 
 fn days_label(d: i64) -> String {
-    if d == 1 {
-        "1 day".into()
-    } else {
-        format!("{d} days")
-    }
+    trnf!("{n} day", "{n} days", d)
 }
 
 /// `org.gnome.desktop.privacy recent-files-max-age` presets (days; -1 = forever).
@@ -87,7 +87,7 @@ pub fn recent_ages() -> Vec<Choice<i64>> {
         .map(|d| Choice {
             value: d,
             label: if d < 0 {
-                "Forever".into()
+                tr("Forever").into()
             } else {
                 days_label(d)
             },
@@ -135,15 +135,15 @@ pub fn with_current(
 
 /// Accent colours of `org.gnome.desktop.interface accent-color`.
 pub const ACCENT_COLORS: &[(&str, &str, &str)] = &[
-    ("blue", "Blue", "#3584e4"),
-    ("teal", "Teal", "#2190a4"),
-    ("green", "Green", "#3a944a"),
-    ("yellow", "Yellow", "#c88800"),
-    ("orange", "Orange", "#ed5b00"),
-    ("red", "Red", "#e62d42"),
-    ("pink", "Pink", "#d56199"),
-    ("purple", "Purple", "#9141ac"),
-    ("slate", "Slate", "#6f8396"),
+    ("blue", n_("Blue"), "#3584e4"),
+    ("teal", n_("Teal"), "#2190a4"),
+    ("green", n_("Green"), "#3a944a"),
+    ("yellow", n_("Yellow"), "#c88800"),
+    ("orange", n_("Orange"), "#ed5b00"),
+    ("red", n_("Red"), "#e62d42"),
+    ("pink", n_("Pink"), "#d56199"),
+    ("purple", n_("Purple"), "#9141ac"),
+    ("slate", n_("Slate"), "#6f8396"),
 ];
 
 /// Normalises an `accent-color` nick; unknown values become `blue`.
@@ -193,11 +193,11 @@ pub fn text_factor(large: bool) -> f64 {
 }
 
 pub const CURSOR_SIZES: &[(i32, &str)] = &[
-    (24, "Default"),
-    (32, "Medium"),
-    (48, "Large"),
-    (64, "Larger"),
-    (96, "Largest"),
+    (24, n_("Default")),
+    (32, n_("Medium")),
+    (48, n_("Large")),
+    (64, n_("Larger")),
+    (96, n_("Largest")),
 ];
 
 /// Index of the closest cursor size preset.
@@ -211,10 +211,10 @@ pub fn cursor_size_index(size: i32) -> usize {
 }
 
 pub const POWER_BUTTON_ACTIONS: &[(&str, &str)] = &[
-    ("suspend", "Suspend"),
-    ("interactive", "Power Off"),
-    ("hibernate", "Hibernate"),
-    ("nothing", "Nothing"),
+    ("suspend", n_("Suspend")),
+    ("interactive", n_("Power Off")),
+    ("hibernate", n_("Hibernate")),
+    ("nothing", n_("Nothing")),
 ];
 
 /// Keyboard repeat interval bounds (ms) for the speed slider.
@@ -266,13 +266,13 @@ pub fn pretty_to_static_hostname(pretty: &str) -> String {
 /// UPower device state → label.
 pub fn battery_state_label(state: u32) -> &'static str {
     match state {
-        1 => "Charging",
-        2 => "Discharging",
-        3 => "Empty",
-        4 => "Fully Charged",
-        5 => "Pending Charge",
-        6 => "Pending Discharge",
-        _ => "Unknown",
+        1 => tr("Charging"),
+        2 => tr("Discharging"),
+        3 => tr("Empty"),
+        4 => tr("Fully Charged"),
+        5 => tr("Pending Charge"),
+        6 => tr("Pending Discharge"),
+        _ => tr("Unknown"),
     }
 }
 
@@ -283,8 +283,8 @@ pub fn battery_time_label(state: u32, time_to_empty: i64, time_to_full: i64) -> 
         format_duration(mins.max(1) * 60)
     };
     match state {
-        1 if time_to_full > 0 => Some(format!("{} until fully charged", fmt(time_to_full))),
-        2 if time_to_empty > 0 => Some(format!("{} remaining", fmt(time_to_empty))),
+        1 if time_to_full > 0 => Some(trf!("{} until fully charged", fmt(time_to_full))),
+        2 if time_to_empty > 0 => Some(trf!("{} remaining", fmt(time_to_empty))),
         _ => None,
     }
 }

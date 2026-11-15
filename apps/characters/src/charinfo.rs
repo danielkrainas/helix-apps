@@ -1,5 +1,6 @@
 //! Information about a single character or emoji sequence.
 
+use helix_app_common::i18n::tr;
 use unicode_general_category::{get_general_category, GeneralCategory as Gc};
 
 /// Whether a code point is worth showing in a grid: assigned, not a control,
@@ -42,10 +43,10 @@ fn sentence_case(s: &str) -> String {
 fn fallback_name(c: char) -> String {
     match get_general_category(c) {
         Gc::Control => "<control>".into(),
-        Gc::PrivateUse => "Private use character".into(),
-        Gc::Surrogate => "Surrogate".into(),
-        Gc::Unassigned => "Unassigned code point".into(),
-        _ => "Unknown character".into(),
+        Gc::PrivateUse => tr("Private use character").into(),
+        Gc::Surrogate => tr("Surrogate").into(),
+        Gc::Unassigned => tr("Unassigned code point").into(),
+        _ => tr("Unknown character").into(),
     }
 }
 

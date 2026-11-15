@@ -13,5 +13,6 @@ mod sorting;
 mod ui;
 
 fn main() -> gtk::glib::ExitCode {
+    helix_app_common::i18n::init();
     ui::run()
 }

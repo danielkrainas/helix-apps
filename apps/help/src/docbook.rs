@@ -313,7 +313,7 @@ impl DocBookDoc {
                     body.push_str("<div class=\"toc\"><h2>Contents</h2><ul>");
                     for c in &self.chunks {
                         let pad = if c.depth > 0 {
-                            " style=\"margin-left:1.2em\""
+                            " style=\"margin-inline-start:1.2em\""
                         } else {
                             ""
                         };

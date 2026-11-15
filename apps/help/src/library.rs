@@ -7,6 +7,8 @@ use crate::html::{self, escape, escape_attr};
 use crate::mallard::MallardDoc;
 use crate::search;
 use crate::uri::{self, DocRef, Location};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -123,7 +125,7 @@ impl Library {
         }
         let found = self.resolve(doc).ok_or_else(|| match doc {
             DocRef::Id(id) => format!("The help document \u{201C}{id}\u{201D} is not installed."),
-            DocRef::Path(p) => format!("No help document was found at {}.", p.display()),
+            DocRef::Path(p) => trf!("No help document was found at {}.", p.display()),
         })?;
         let mut start_page = None;
         let content = match found.format {
@@ -191,7 +193,7 @@ impl Library {
             Location::Doc {
                 doc, page, search, ..
             } => match self.load(doc) {
-                Err(e) => Response::html(html::error_page("Document Not Found", &e)),
+                Err(e) => Response::html(html::error_page(tr("Document Not Found"), &e)),
                 Ok(d) => match search {
                     Some(q) => Response::html(search_page(doc, &d, q)),
                     None => Response::html(self.render(doc, &d, page.as_deref())),
@@ -204,7 +206,7 @@ impl Library {
                     body: b"Not found".to_vec(),
                 },
             },
-            Location::External(u) => Response::html(html::error_page("External Link", u)),
+            Location::External(u) => Response::html(html::error_page(tr("External Link"), u)),
         }
     }
 
@@ -234,7 +236,7 @@ impl Library {
         match rendered {
             Some((_, h)) => h,
             None => html::error_page(
-                "Page Not Found",
+                tr("Page Not Found"),
                 &format!(
                     "The page \u{201C}{}\u{201D} was not found in this document.",
                     page.unwrap_or("index")
@@ -274,7 +276,7 @@ impl Library {
             }
             body.push_str("</ul>");
         }
-        html::page("Help", &body)
+        html::page(tr("Help"), &body)
     }
 
     fn search_all(&self, q: &str) -> String {
@@ -315,7 +317,7 @@ fn mallard_listing(docref: &DocRef, m: &MallardDoc) -> (String, String) {
         "<h1>Pages</h1>{}",
         html::link_list("links-topic", None, &items)
     );
-    ("Pages".into(), html::page("Pages", &body))
+    (tr("Pages").into(), html::page(tr("Pages"), &body))
 }
 
 fn result_item(docref: &DocRef, e: &search::Entry, q: &str, doc_title: Option<&str>) -> String {
@@ -356,7 +358,7 @@ fn results_page(q: &str, items: &[String], back: Option<(String, String)>) -> St
             items.concat()
         ));
     }
-    html::page(&format!("Search: {q}"), &body)
+    html::page(&trf!("Search: {q}", q = q), &body)
 }
 
 fn search_page(docref: &DocRef, d: &LoadedDoc, q: &str) -> String {

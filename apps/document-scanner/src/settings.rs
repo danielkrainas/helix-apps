@@ -1,6 +1,7 @@
 //! Helix-private settings that have no `org.gnome.SimpleScan` key.
 
 use crate::options::ColorMode;
+use helix_app_common::i18n::tr;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -25,10 +26,10 @@ impl ColorChoice {
 
     pub fn label(self) -> &'static str {
         match self {
-            ColorChoice::Auto => "Automatic",
-            ColorChoice::Color => "Color",
-            ColorChoice::Gray => "Grayscale",
-            ColorChoice::Lineart => "Black & White",
+            ColorChoice::Auto => tr("Automatic"),
+            ColorChoice::Color => tr("Color"),
+            ColorChoice::Gray => tr("Grayscale"),
+            ColorChoice::Lineart => tr("Black & White"),
         }
     }
 

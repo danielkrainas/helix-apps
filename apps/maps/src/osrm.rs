@@ -1,6 +1,8 @@
 //! OSRM-compatible routing: request URL and response parsing.
 
 use crate::geo::LatLon;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use serde_json::Value;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -32,9 +34,9 @@ impl Mode {
     }
     pub fn label(self) -> &'static str {
         match self {
-            Mode::Car => "Car",
-            Mode::Bike => "Bike",
-            Mode::Walk => "Walk",
+            Mode::Car => tr("Car"),
+            Mode::Bike => tr("Bike"),
+            Mode::Walk => tr("Walk"),
         }
     }
     pub fn profile(self) -> &'static str {
@@ -95,24 +97,24 @@ fn lonlat(v: &Value) -> Option<LatLon> {
 
 pub fn parse_route(json: &str) -> Result<Route, String> {
     let v: Value = serde_json::from_str(json)
-        .map_err(|_| "Invalid response from the routing service".to_string())?;
+        .map_err(|_| tr("Invalid response from the routing service").to_string())?;
     let code = v.get("code").and_then(Value::as_str).unwrap_or("");
     if code != "Ok" {
         return Err(match code {
-            "NoRoute" => "No route found".to_string(),
-            "NoSegment" => "One of the points is too far from any road".to_string(),
+            "NoRoute" => tr("No route found").to_string(),
+            "NoSegment" => tr("One of the points is too far from any road").to_string(),
             _ => v
                 .get("message")
                 .and_then(Value::as_str)
                 .map(String::from)
-                .unwrap_or_else(|| "Routing failed".to_string()),
+                .unwrap_or_else(|| tr("Routing failed").to_string()),
         });
     }
     let r = v
         .get("routes")
         .and_then(Value::as_array)
         .and_then(|a| a.first())
-        .ok_or("No route found")?;
+        .ok_or(tr("No route found"))?;
     let path: Vec<LatLon> = r
         .pointer("/geometry/coordinates")
         .and_then(Value::as_array)
@@ -172,7 +174,7 @@ pub fn instruction(kind: &str, modifier: &str, name: &str, exit: Option<u64>) ->
     let onto = if name.is_empty() {
         String::new()
     } else {
-        format!(" onto {name}")
+        trf!(" onto {name}", name = name)
     };
     let on = if name.is_empty() {
         String::new()
@@ -183,43 +185,47 @@ pub fn instruction(kind: &str, modifier: &str, name: &str, exit: Option<u64>) ->
     match kind {
         "depart" => {
             if name.is_empty() {
-                "Start".to_string()
+                tr("Start").to_string()
             } else {
-                format!("Start on {name}")
+                trf!("Start on {name}", name = name)
             }
         }
-        "arrive" => "Arrive at destination".to_string(),
+        "arrive" => tr("Arrive at destination").to_string(),
         "roundabout" | "rotary" => match exit {
-            Some(n) => format!("At the roundabout, take exit {n}{onto}"),
-            None => format!("Enter the roundabout{onto}"),
+            Some(n) => trf!("At the roundabout, take exit {n}{onto}", n = n, onto = onto),
+            None => trf!("Enter the roundabout{onto}", onto = onto),
         },
-        "exit roundabout" | "exit rotary" => format!("Exit the roundabout{onto}"),
-        "merge" => format!("Merge{onto}"),
-        "on ramp" => format!("Take the ramp{onto}"),
-        "off ramp" => format!("Take the exit{onto}"),
+        "exit roundabout" | "exit rotary" => trf!("Exit the roundabout{onto}", onto = onto),
+        "merge" => trf!("Merge{onto}", onto = onto),
+        "on ramp" => trf!("Take the ramp{onto}", onto = onto),
+        "off ramp" => trf!("Take the exit{onto}", onto = onto),
         "fork" => {
             let side = if modifier.contains("left") {
                 "left"
             } else {
                 "right"
             };
-            format!("Keep {side} at the fork{onto}")
+            trf!("Keep {side} at the fork{onto}", side = side, onto = onto)
         }
-        "end of road" if !dir.is_empty() => format!("At the end of the road, turn {dir}{onto}"),
+        "end of road" if !dir.is_empty() => trf!(
+            "At the end of the road, turn {dir}{onto}",
+            dir = dir,
+            onto = onto
+        ),
         "continue" | "new name" => {
             if modifier == "straight" || dir.is_empty() {
-                format!("Continue{on}")
+                trf!("Continue{on}", on = on)
             } else {
-                format!("Keep {dir}{onto}")
+                trf!("Keep {dir}{onto}", dir = dir, onto = onto)
             }
         }
         _ => {
             if modifier == "uturn" {
-                format!("Make a U-turn{onto}")
+                trf!("Make a U-turn{onto}", onto = onto)
             } else if modifier == "straight" || dir.is_empty() {
-                format!("Continue straight{onto}")
+                trf!("Continue straight{onto}", onto = onto)
             } else {
-                format!("Turn {dir}{onto}")
+                trf!("Turn {dir}{onto}", dir = dir, onto = onto)
             }
         }
     }

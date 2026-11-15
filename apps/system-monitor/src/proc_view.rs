@@ -12,6 +12,7 @@ use crate::columns;
 use crate::format;
 use crate::model::{self, ProcColumn, Whose};
 use crate::sampler::ProcessInfo;
+use helix_app_common::i18n::{n_, tr};
 use helix_app_common::Prefs;
 
 mod imp {
@@ -126,35 +127,41 @@ pub struct ProcView {
 
 /// Title, row property, column, expand, xalign.
 const COLUMNS: [(&str, &str, ProcColumn, bool, f32); 8] = [
-    ("Process Name", "name", ProcColumn::Name, true, 0.0),
-    ("User", "user", ProcColumn::User, false, 0.0),
+    (n_("Process Name"), "name", ProcColumn::Name, true, 0.0),
+    (n_("User"), "user", ProcColumn::User, false, 0.0),
     ("% CPU", "cpu-text", ProcColumn::Cpu, false, 1.0),
-    ("Memory", "memory-text", ProcColumn::Memory, false, 1.0),
+    (n_("Memory"), "memory-text", ProcColumn::Memory, false, 1.0),
     ("ID", "pid-text", ProcColumn::Pid, false, 1.0),
     (
-        "Priority",
+        n_("Priority"),
         "priority-text",
         ProcColumn::Priority,
         false,
         0.0,
     ),
-    ("State", "state-text", ProcColumn::State, false, 0.0),
-    ("Command Line", "cmdline", ProcColumn::Command, true, 0.0),
+    (n_("State"), "state-text", ProcColumn::State, false, 0.0),
+    (
+        n_("Command Line"),
+        "cmdline",
+        ProcColumn::Command,
+        true,
+        0.0,
+    ),
 ];
 
 pub fn context_menu_model() -> gio::Menu {
     let menu = gio::Menu::new();
     let s = gio::Menu::new();
-    s.append(Some("_Properties"), Some("win.proc-properties"));
-    s.append(Some("Change _Priority…"), Some("win.proc-priority"));
+    s.append(Some(tr("_Properties")), Some("win.proc-properties"));
+    s.append(Some(tr("Change _Priority…")), Some("win.proc-priority"));
     menu.append_section(None, &s);
     let s = gio::Menu::new();
-    s.append(Some("_Stop"), Some("win.proc-stop"));
-    s.append(Some("_Continue"), Some("win.proc-continue"));
+    s.append(Some(tr("_Stop")), Some("win.proc-stop"));
+    s.append(Some(tr("_Continue")), Some("win.proc-continue"));
     menu.append_section(None, &s);
     let s = gio::Menu::new();
-    s.append(Some("_End"), Some("win.proc-end"));
-    s.append(Some("_Kill"), Some("win.proc-kill"));
+    s.append(Some(tr("_End")), Some("win.proc-end"));
+    s.append(Some(tr("_Kill")), Some("win.proc-kill"));
     menu.append_section(None, &s);
     menu
 }
@@ -275,7 +282,7 @@ impl ProcView {
             });
             let column = gtk::ColumnViewColumn::builder()
                 .id(col.id())
-                .title(title)
+                .title(tr(title))
                 .factory(&factory)
                 .sorter(&sorter)
                 .resizable(true)
@@ -299,7 +306,7 @@ impl ProcView {
                 .into_iter()
                 .find(|c| c.2 == col)
                 .expect("column spec");
-            header_menu.append(Some(title), Some(&format!("proccol.{}", col.id())));
+            header_menu.append(Some(tr(title)), Some(&format!("proccol.{}", col.id())));
         }
         for (col, column) in &columns {
             let action =
@@ -410,7 +417,7 @@ impl ProcView {
             .build();
 
         let search_entry = gtk::SearchEntry::builder()
-            .placeholder_text("Search processes")
+            .placeholder_text(tr("Search processes"))
             .hexpand(true)
             .build();
         let clamp = adw::Clamp::builder()
@@ -421,16 +428,16 @@ impl ProcView {
         search_bar.connect_entry(&search_entry);
 
         let end_button = gtk::Button::builder()
-            .label("End Process")
+            .label(tr("End Process"))
             .action_name("win.proc-end")
             .build();
         end_button.add_css_class("destructive-action");
         let props_button = gtk::Button::builder()
             .icon_name("document-properties-symbolic")
-            .tooltip_text("Properties")
+            .tooltip_text(tr("Properties"))
             .action_name("win.proc-properties")
             .build()
-            .labelled("Properties");
+            .labelled(tr("Properties"));
         let action_bar = gtk::ActionBar::new();
         action_bar.pack_end(&end_button);
         action_bar.pack_end(&props_button);

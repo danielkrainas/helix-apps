@@ -17,6 +17,9 @@ use crate::store::{self, CachedForecast, Locations, Place};
 use crate::timefmt::{self, DateTime};
 use crate::units::{self, Pressure, Speed, Temperature};
 use crate::wmo;
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 pub const APP_ID: &str = "org.helix.Weather";
 const SCHEMA: &str = "org.gnome.Weather";
@@ -124,9 +127,9 @@ pub fn run() -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
     helix_app_common::install_standard_actions(
         &app,
-        "Weather",
-        "Show weather conditions and forecast\n\nWeather data by Open-Meteo.com (CC BY 4.0, non-commercial use). \
-         Place names may come from © OpenStreetMap contributors (Nominatim).",
+        tr("Weather"),
+        tr("Show weather conditions and forecast\n\nWeather data by Open-Meteo.com (CC BY 4.0, non-commercial use). \
+         Place names may come from © OpenStreetMap contributors (Nominatim)."),
     );
     app.connect_startup(|_| load_css());
     app.connect_activate(|app| {
@@ -175,7 +178,7 @@ fn build(app: &adw::Application) -> Ui {
 
     let window = adw::ApplicationWindow::builder()
         .application(app)
-        .title("Weather")
+        .title(tr("Weather"))
         .default_width(900)
         .default_height(700)
         .width_request(360)
@@ -195,12 +198,12 @@ fn build(app: &adw::Application) -> Ui {
     }
 
     // ---- header ----
-    let title = adw::WindowTitle::new("Weather", "");
+    let title = adw::WindowTitle::new(tr("Weather"), "");
     let header = adw::HeaderBar::new();
     header.set_title_widget(Some(&title));
 
     let search_entry = gtk::SearchEntry::builder()
-        .placeholder_text("Search for a city")
+        .placeholder_text(tr("Search for a city"))
         .search_delay(300)
         .build();
     let search_status = gtk::Label::builder()
@@ -221,7 +224,7 @@ fn build(app: &adw::Application) -> Ui {
         .visible(false)
         .build();
     let saved_header = gtk::Label::builder()
-        .label("Saved Locations")
+        .label(tr("Saved Locations"))
         .xalign(0.0)
         .css_classes(["heading"])
         .margin_top(6)
@@ -242,8 +245,8 @@ fn build(app: &adw::Application) -> Ui {
         .width_request(300)
         .build();
     let auto_row = adw::SwitchRow::builder()
-        .title("Automatic Location")
-        .subtitle("Show the weather where you are")
+        .title(tr("Automatic Location"))
+        .subtitle(tr("Show the weather where you are"))
         .build();
     let auto_list = gtk::ListBox::builder()
         .selection_mode(gtk::SelectionMode::None)
@@ -260,50 +263,55 @@ fn build(app: &adw::Application) -> Ui {
     let popover = gtk::Popover::builder().child(&pop_box).build();
     let places_button = gtk::MenuButton::builder()
         .icon_name("find-location-symbolic")
-        .tooltip_text("Places (Ctrl+L)")
+        .tooltip_text(tr("Places (Ctrl+L)"))
         .popover(&popover)
         .build()
-        .labelled("Places");
+        .labelled(tr("Places"));
     header.pack_start(&places_button);
 
     let menu = gio::Menu::new();
     let units_section = gio::Menu::new();
-    units_section.append(Some("_Celsius"), Some("app.temperature-unit::centigrade"));
     units_section.append(
-        Some("_Fahrenheit"),
+        Some(tr("_Celsius")),
+        Some("app.temperature-unit::centigrade"),
+    );
+    units_section.append(
+        Some(tr("_Fahrenheit")),
         Some("app.temperature-unit::fahrenheit"),
     );
-    menu.append_section(Some("Temperature Unit"), &units_section);
+    menu.append_section(Some(tr("Temperature Unit")), &units_section);
     let misc = gio::Menu::new();
-    misc.append(Some("_Refresh"), Some("app.refresh"));
+    misc.append(Some(tr("_Refresh")), Some("app.refresh"));
     menu.append_section(None, &misc);
     // HIG primary menu: no Quit (Ctrl+Q still works).
     let help = gio::Menu::new();
     help.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some("win.show-help-overlay"),
     );
-    help.append(Some("_About Weather"), Some("app.about"));
+    help.append(Some(tr("_About Weather")), Some("app.about"));
     menu.append_section(None, &help);
     let menu_button = gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
         .menu_model(&menu)
-        .tooltip_text("Main Menu")
+        .tooltip_text(tr("Main Menu"))
         .build()
-        .labelled("Main Menu");
+        .labelled(tr("Main Menu"));
     menu_button.set_primary(true);
     header.pack_end(&menu_button);
     let refresh_button = gtk::Button::builder()
         .icon_name("view-refresh-symbolic")
-        .tooltip_text("Refresh (F5)")
+        .tooltip_text(tr("Refresh (F5)"))
         .action_name("app.refresh")
         .build()
-        .labelled("Refresh");
+        .labelled(tr("Refresh"));
     header.pack_end(&refresh_button);
     let header_spinner = gtk::Spinner::builder()
         .visible(false)
         .build()
-        .labelled("Updating Forecast");
+        .labelled(tr("Updating Forecast"));
     header.pack_end(&header_spinner);
 
     // ---- pages ----
@@ -313,12 +321,12 @@ fn build(app: &adw::Application) -> Ui {
         .build();
 
     let empty_button = gtk::Button::builder()
-        .label("Search Locations")
+        .label(tr("Search Locations"))
         .css_classes(["pill", "suggested-action"])
         .halign(gtk::Align::Center)
         .build();
     let here_button = gtk::Button::builder()
-        .label("Use Current Location")
+        .label(tr("Use Current Location"))
         .css_classes(["pill"])
         .halign(gtk::Align::Center)
         .build();
@@ -331,8 +339,8 @@ fn build(app: &adw::Application) -> Ui {
     empty_buttons.append(&here_button);
     let empty_page = adw::StatusPage::builder()
         .icon_name("weather-few-clouds-symbolic")
-        .title("Add a Location")
-        .description("Search for a city to see its weather.")
+        .title(tr("Add a Location"))
+        .description(tr("Search for a city to see its weather."))
         .child(&empty_buttons)
         .build();
     stack.add_named(&empty_page, Some("empty"));
@@ -344,18 +352,18 @@ fn build(app: &adw::Application) -> Ui {
         .halign(gtk::Align::Center)
         .valign(gtk::Align::Center)
         .build()
-        .labelled("Loading Forecast");
+        .labelled(tr("Loading Forecast"));
     stack.add_named(&loading, Some("loading"));
 
     let retry = gtk::Button::builder()
-        .label("Retry")
+        .label(tr("Retry"))
         .css_classes(["pill", "suggested-action"])
         .halign(gtk::Align::Center)
         .action_name("app.refresh")
         .build();
     // When the current location cannot be found: pick a place by hand.
     let error_search = gtk::Button::builder()
-        .label("Search Locations")
+        .label(tr("Search Locations"))
         .css_classes(["pill"])
         .halign(gtk::Align::Center)
         .action_name("app.search")
@@ -377,14 +385,14 @@ fn build(app: &adw::Application) -> Ui {
         .css_classes(["dim-label", "caption"])
         .build();
     let details = gtk::Expander::builder()
-        .label("Details")
+        .label(tr("Details"))
         .child(&error_details)
         .margin_top(12)
         .build();
     error_buttons.append(&details);
     let error_page = adw::StatusPage::builder()
         .icon_name("network-offline-symbolic")
-        .title("Could Not Load the Forecast")
+        .title(tr("Could Not Load the Forecast"))
         .child(&error_buttons)
         .build();
     stack.add_named(&error_page, Some("error"));
@@ -424,7 +432,7 @@ fn build(app: &adw::Application) -> Ui {
         .build();
     stack.add_named(&scroller, Some("weather"));
 
-    let banner = adw::Banner::builder().button_label("Retry").build();
+    let banner = adw::Banner::builder().button_label(tr("Retry")).build();
     banner.set_action_name(Some("app.refresh"));
 
     let toolbar = adw::ToolbarView::new();
@@ -757,7 +765,7 @@ impl Ui {
                 ui.select_current();
                 return;
             }
-            match res.unwrap_or_else(|_| Err("Location lookup failed".into())) {
+            match res.unwrap_or_else(|_| Err(tr("Location lookup failed").into())) {
                 Ok(place) => {
                     let before = ui.0.locations.borrow().selected_place().cloned();
                     ui.0.locations.borrow_mut().set_automatic(Some(place));
@@ -771,12 +779,13 @@ impl Ui {
                 Err(e) => {
                     eprintln!("helix-weather: current location unavailable: {e}");
                     if ui.0.locations.borrow().selected_place().is_none() {
-                        ui.0.error_page.set_title("Could Not Find Your Location");
+                        ui.0.error_page
+                            .set_title(tr("Could Not Find Your Location"));
                         ui.0.error_page
                             .set_icon_name(Some("find-location-symbolic"));
                         ui.0.error_search.set_visible(true);
                         ui.show_error(
-                            "Turn on location services, or search for a place instead.",
+                            tr("Turn on location services, or search for a place instead."),
                             &e,
                         );
                     }
@@ -839,8 +848,8 @@ impl Ui {
         s.saved_list.set_visible(!locs.locations.is_empty());
         for (i, p) in locs.locations.iter().enumerate() {
             let subtitle = match (p.automatic, p.subtitle()) {
-                (true, sub) if sub.is_empty() => "Current location".to_string(),
-                (true, sub) => format!("Current location • {sub}"),
+                (true, sub) if sub.is_empty() => tr("Current location").to_string(),
+                (true, sub) => trf!("Current location • {sub}", sub = sub),
                 (false, sub) => sub,
             };
             let row = adw::ActionRow::builder()
@@ -862,7 +871,7 @@ impl Ui {
             row.update_state(&[gtk::accessible::State::Selected(Some(selected))]);
             let remove = gtk::Button::builder()
                 .icon_name("user-trash-symbolic")
-                .tooltip_text("Remove")
+                .tooltip_text(tr("Remove"))
                 .valign(gtk::Align::Center)
                 .css_classes(["flat"])
                 .build()
@@ -887,7 +896,7 @@ impl Ui {
             self.show_results(None);
             return;
         }
-        s.search_status.set_label("Searching…");
+        s.search_status.set_label(tr("Searching…"));
         s.search_status.set_visible(true);
         let query = query.to_string();
         let lang = api::ui_language(&messages_locale());
@@ -910,7 +919,7 @@ impl Ui {
                 }
                 Err(_) => {
                     ui.0.search_results.borrow_mut().clear();
-                    ui.show_results(Some("Search failed"));
+                    ui.show_results(Some(tr("Search failed")));
                 }
             }
         });
@@ -940,16 +949,15 @@ impl Ui {
                 e.to_string()
             }
             None if results.is_empty() && query_len >= 2 => {
-                s.search_status.set_label("No locations found");
+                s.search_status.set_label(tr("No locations found"));
                 s.search_status.set_visible(true);
-                "No locations found".to_string()
+                tr("No locations found").to_string()
             }
             None => {
                 s.search_status.set_visible(false);
                 match results.len() {
                     0 => String::new(),
-                    1 => "1 location found".to_string(),
-                    n => format!("{n} locations found"),
+                    n => trnf!("{n} location found", "{n} locations found", n),
                 }
             }
         };
@@ -968,7 +976,7 @@ impl Ui {
         let place = s.locations.borrow().selected_place().cloned();
         let Some(place) = place else {
             *s.forecast.borrow_mut() = None;
-            s.title.set_title("Weather");
+            s.title.set_title(tr("Weather"));
             s.title.set_subtitle("");
             s.stack.set_visible_child_name("empty");
             return;
@@ -1021,7 +1029,7 @@ impl Ui {
             ui.set_fetching(false);
             let manual = ui.0.manual_refresh.replace(false);
             let res =
-                res.unwrap_or_else(|_| Err("The forecast request failed unexpectedly".into()));
+                res.unwrap_or_else(|_| Err(tr("The forecast request failed unexpectedly").into()));
             match res.and_then(|body| api::parse_forecast(&body).map(|f| (f, body))) {
                 Ok((forecast, body)) => {
                     let fetched = now_unix();
@@ -1036,13 +1044,13 @@ impl Ui {
                     if was_offline {
                         helix_app_common::announce(
                             &ui.0.updated_label,
-                            "Back online, forecast updated",
+                            tr("Back online, forecast updated"),
                             helix_app_common::Urgency::Polite,
                         );
                     } else if manual {
                         helix_app_common::announce(
                             &ui.0.updated_label,
-                            "Forecast updated",
+                            tr("Forecast updated"),
                             helix_app_common::Urgency::Polite,
                         );
                     }
@@ -1055,12 +1063,12 @@ impl Ui {
                         if manual {
                             helix_app_common::announce(
                                 &ui.0.banner,
-                                &format!("Could not update the forecast. {}", friendly_error(&e)),
+                                &trf!("Could not update the forecast. {}", friendly_error(&e)),
                                 helix_app_common::Urgency::Polite,
                             );
                         }
                     } else {
-                        ui.0.error_page.set_title("Could Not Load the Forecast");
+                        ui.0.error_page.set_title(tr("Could Not Load the Forecast"));
                         ui.0.error_page
                             .set_icon_name(Some("network-offline-symbolic"));
                         ui.0.error_search.set_visible(false);
@@ -1082,14 +1090,14 @@ impl Ui {
         let text = timefmt::updated_text(*fetched, now_unix(), &local, s.use_12h);
         s.updated_label.set_label(&text);
         if s.offline.get() {
-            s.banner.set_title(&format!(
+            s.banner.set_title(&trf!(
                 "Offline — showing the last forecast ({})",
                 text.to_lowercase()
             ));
             s.banner.set_revealed(true);
             helix_app_common::announce_change(
                 &s.banner,
-                "Offline, showing the last forecast",
+                tr("Offline, showing the last forecast"),
                 helix_app_common::Urgency::Polite,
             );
         } else {
@@ -1151,13 +1159,13 @@ impl Ui {
 
         let hours = f.hours_from(&local_now, HOURS);
         if !hours.is_empty() {
-            s.content.append(&heading("Hourly Forecast"));
+            s.content.append(&heading(tr("Hourly Forecast")));
             s.content.append(&hourly_section(hours, &units, s.use_12h));
         }
 
         let days = f.days_from(&local_now);
         if !days.is_empty() {
-            s.content.append(&heading("Daily Forecast"));
+            s.content.append(&heading(tr("Daily Forecast")));
             s.content
                 .append(&daily_section(days, &local_now, &units, s.narrow.get()));
         }
@@ -1268,14 +1276,14 @@ fn current_section(
             .justify(if narrow {
                 gtk::Justification::Center
             } else {
-                gtk::Justification::Left
+                helix_app_common::i18n::justify_start()
             })
             .build(),
     );
     if let Some(a) = c.apparent {
         text.append(
             &gtk::Label::builder()
-                .label(format!("Feels like {}", units.temperature.format_short(a)))
+                .label(trf!("Feels like {}", units.temperature.format_short(a)))
                 .css_classes(["dim-label"])
                 .xalign(xalign)
                 .build(),
@@ -1297,13 +1305,13 @@ fn current_section(
         (Some(s), None) => units.speed.format(s),
         _ => "—".into(),
     };
-    flow.append(&detail_card("Wind", &wind, "weather-windy-symbolic"));
+    flow.append(&detail_card(tr("Wind"), &wind, "weather-windy-symbolic"));
     let humidity = c
         .humidity
         .map(|h| format!("{}%", h.round() as i64))
         .unwrap_or_else(|| "—".into());
     flow.append(&detail_card(
-        "Humidity",
+        tr("Humidity"),
         &humidity,
         "weather-showers-scattered-symbolic",
     ));
@@ -1311,19 +1319,23 @@ fn current_section(
         .pressure
         .map(|p| units.pressure.format(p))
         .unwrap_or_else(|| "—".into());
-    flow.append(&detail_card("Pressure", &pressure, "speedometer-symbolic"));
+    flow.append(&detail_card(
+        tr("Pressure"),
+        &pressure,
+        "speedometer-symbolic",
+    ));
     let today = f.today(local_now).or_else(|| f.today(&c.time));
     let fmt = |t: Option<DateTime>| {
         t.map(|t| timefmt::format_time(&t, use_12h))
             .unwrap_or_else(|| "—".into())
     };
     flow.append(&detail_card(
-        "Sunrise",
+        tr("Sunrise"),
         &fmt(today.and_then(|d| d.sunrise)),
         "daytime-sunrise-symbolic",
     ));
     flow.append(&detail_card(
-        "Sunset",
+        tr("Sunset"),
         &fmt(today.and_then(|d| d.sunset)),
         "daytime-sunset-symbolic",
     ));
@@ -1360,7 +1372,7 @@ fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool) -> gtk::Wid
         .column_spacing(0)
         .css_classes(["weather-hours"])
         .build();
-    helix_app_common::set_accessible_label(&top, "Hourly Forecast");
+    helix_app_common::set_accessible_label(&top, tr("Hourly Forecast"));
     let bottom = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .homogeneous(true)
@@ -1373,7 +1385,7 @@ fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool) -> gtk::Wid
             .width_request(COL_W)
             .build();
         let label = if i == 0 {
-            "Now".to_string()
+            tr("Now").to_string()
         } else {
             timefmt::format_hour(&h.time, use_12h)
         };
@@ -1402,7 +1414,10 @@ fn hourly_section(hours: &[api::Hour], units: &Units, use_12h: bool) -> gtk::Wid
         );
         item.update_property(&[gtk::accessible::Property::Label(&name)]);
         // Keeps focus on the same hour when a refresh rebuilds the page.
-        helix_app_common::focus::set_key(&item, &format!("hour {:?}", h.time));
+        helix_app_common::focus::set_key(
+            &item,
+            &trf!("hour {time}", time = format!("{:?}", h.time)),
+        );
         top.insert(&item, -1);
 
         let precip = h
@@ -1516,13 +1531,13 @@ fn hourly_adjustment(root: &gtk::Widget) -> Option<gtk::Adjustment> {
 /// text stays available under "Details" and in the log.
 fn friendly_error(raw: &str) -> &'static str {
     if raw.starts_with("Could not connect") || raw.starts_with("Could not read response") {
-        "Could not reach the weather service. Check your internet connection and try again."
+        tr("Could not reach the weather service. Check your internet connection and try again.")
     } else if raw.contains("returned HTTP 5") {
-        "The weather service is having problems. Try again later."
+        tr("The weather service is having problems. Try again later.")
     } else if raw.starts_with("Unexpected") {
-        "The weather service sent data that could not be read. Try again later."
+        tr("The weather service sent data that could not be read. Try again later.")
     } else {
-        "The weather service could not answer this request. Try again later."
+        tr("The weather service could not answer this request. Try again later.")
     }
 }
 
@@ -1540,7 +1555,7 @@ fn hour_description(
 ) -> String {
     let mut text = format!("{time}, {temperature}, {sky}");
     if let Some(p) = precipitation.filter(|p| *p >= 10.0) {
-        text.push_str(&format!(", {}% chance of precipitation", p.round() as i64));
+        text.push_str(&trf!(", {}% chance of precipitation", p.round() as i64));
     }
     text
 }
@@ -1556,9 +1571,9 @@ fn day_description(
 ) -> String {
     let mut text = format!("{day}, {sky}");
     if let Some(p) = precipitation.filter(|p| *p >= 10.0) {
-        text.push_str(&format!(", {}% chance of precipitation", p.round() as i64));
+        text.push_str(&trf!(", {}% chance of precipitation", p.round() as i64));
     }
-    text.push_str(&format!(", low {low}, high {high}"));
+    text.push_str(&trf!(", low {low}, high {high}", low = low, high = high));
     text
 }
 
@@ -1697,7 +1712,7 @@ fn decorative_icon(name: &str) -> gtk::Image {
 }
 /// Accessible name of a saved place's Remove button: "Remove Berlin".
 fn remove_place_name(place: &str) -> String {
-    format!("Remove {place}")
+    trf!("Remove {place}", place = place)
 }
 
 /// Accelerators registered on the application.
@@ -1711,20 +1726,20 @@ const SHORTCUT_GROUPS: &[helix_app_common::shortcuts::Group] = {
     use helix_app_common::shortcuts::Item::Keys;
     &[
         (
-            "General",
+            n_("General"),
             &[
-                Keys("Search for a Place", "<Control>l <Control>f"),
-                Keys("Refresh", "F5 <Control>r"),
-                Keys("Keyboard Shortcuts", "<Control>question"),
-                Keys("Close Window", "<Control>w"),
-                Keys("Quit", "<Control>q"),
+                Keys(n_("Search for a Place"), "<Control>l <Control>f"),
+                Keys(n_("Refresh"), "F5 <Control>r"),
+                Keys(n_("Keyboard Shortcuts"), "<Control>question"),
+                Keys(n_("Close Window"), "<Control>w"),
+                Keys(n_("Quit"), "<Control>q"),
             ],
         ),
         (
-            "Hourly Forecast",
+            n_("Hourly Forecast"),
             &[
-                Keys("Previous or Next Hour", "Left Right"),
-                Keys("First or Last Hour", "Home End"),
+                Keys(n_("Previous or Next Hour"), "Left Right"),
+                Keys(n_("First or Last Hour"), "Home End"),
             ],
         ),
     ]

@@ -12,6 +12,7 @@ mod worker;
 use gtk::glib;
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     if let Some(arg) = std::env::args().nth(1) {
         match arg.as_str() {
             "-h" | "--help" => {

@@ -10,6 +10,8 @@ use crate::format;
 use crate::helper_args::Command;
 use crate::proc_view::ProcessObject;
 use crate::sampler::{self, ProcessInfo};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 fn opt_size(v: Option<u64>, iec: bool) -> String {
     v.map(|b| format::size(b, iec))
@@ -23,25 +25,25 @@ fn property_rows(p: &ProcessInfo, iec: bool) -> Vec<(&'static str, String)> {
         .map(|s| s.to_string())
         .unwrap_or_default();
     vec![
-        ("Process Name", p.name.clone()),
-        ("User", format!("{} ({})", p.user, p.uid)),
-        ("Status", format::state(p.state).to_string()),
-        ("Memory", opt_size(p.memory, iec)),
-        ("Virtual Memory", opt_size(p.vm_size, iec)),
-        ("Resident Memory", opt_size(p.vm_rss, iec)),
-        ("Shared Memory", opt_size(p.shared, iec)),
+        (tr("Process Name"), p.name.clone()),
+        (tr("User"), format!("{} ({})", p.user, p.uid)),
+        (tr("Status"), format::state(p.state).to_string()),
+        (tr("Memory"), opt_size(p.memory, iec)),
+        (tr("Virtual Memory"), opt_size(p.vm_size, iec)),
+        (tr("Resident Memory"), opt_size(p.vm_rss, iec)),
+        (tr("Shared Memory"), opt_size(p.shared, iec)),
         ("CPU", format::percent(p.cpu)),
         (
-            "CPU Time",
+            tr("CPU Time"),
             format::cpu_time(p.cpu_ticks, sampler::clock_ticks()),
         ),
-        ("Started", started),
-        ("Nice", p.nice.to_string()),
-        ("Priority", format::priority(p.nice).to_string()),
+        (tr("Started"), started),
+        (tr("Nice"), p.nice.to_string()),
+        (tr("Priority"), format::priority(p.nice).to_string()),
         ("ID", p.pid.to_string()),
-        ("Parent ID", p.ppid.to_string()),
-        ("Threads", p.threads.to_string()),
-        ("Command Line", p.cmdline.clone()),
+        (tr("Parent ID"), p.ppid.to_string()),
+        (tr("Threads"), p.threads.to_string()),
+        (tr("Command Line"), p.cmdline.clone()),
     ]
 }
 
@@ -71,7 +73,7 @@ pub fn show_properties(parent: &impl IsA<gtk::Widget>, obj: &ProcessObject, iec:
     toolbar.add_top_bar(&adw::HeaderBar::new());
     toolbar.set_content(Some(&page));
     let dialog = adw::Dialog::builder()
-        .title(format!("{} (PID {})", info.name, info.pid))
+        .title(trf!("{} (PID {})", info.name, info.pid))
         .content_width(460)
         .content_height(620)
         .child(&toolbar)
@@ -111,7 +113,9 @@ fn escalate_if_needed(
             });
             glib::MainContext::default().spawn_local(async move {
                 let res = rx.recv().await.unwrap_or_else(|_| {
-                    Err(control::Error::Other("The privileged helper failed".into()))
+                    Err(control::Error::Other(
+                        tr("The privileged helper failed").into(),
+                    ))
                 });
                 on_done(res);
             });
@@ -131,10 +135,13 @@ pub fn change_priority(
         (i.pid, i.name.clone(), i.nice)
     };
     let dialog = adw::AlertDialog::builder()
-        .heading(format!("Change Priority of “{name}” (PID {pid})"))
-        .body("Lower nice values mean higher priority. Raising a process's priority usually requires administrator privileges.")
+        .heading(trf!("Change Priority of “{name}” (PID {pid})", name = name, pid = pid))
+        .body(tr("Lower nice values mean higher priority. Raising a process's priority usually requires administrator privileges."))
         .build();
-    dialog.add_responses(&[("cancel", "_Cancel"), ("change", "Change _Priority")]);
+    dialog.add_responses(&[
+        ("cancel", tr("_Cancel")),
+        ("change", tr("Change _Priority")),
+    ]);
     dialog.set_response_appearance("change", adw::ResponseAppearance::Suggested);
     dialog.set_default_response(Some("change"));
     dialog.set_close_response("cancel");
@@ -142,7 +149,7 @@ pub fn change_priority(
     let content = gtk::Box::new(gtk::Orientation::Vertical, 6);
     // The presets are a radio group labelled "Priority".
     let heading = gtk::Label::builder()
-        .label("Priority")
+        .label(tr("Priority"))
         .xalign(0.0)
         .css_classes(["heading"])
         .build();
@@ -155,7 +162,7 @@ pub fn change_priority(
     content.append(&heading);
     content.append(&options);
     let scale = gtk::Scale::with_range(gtk::Orientation::Horizontal, -20.0, 19.0, 1.0);
-    helix_app_common::set_accessible_label(&scale, "Nice Value");
+    helix_app_common::set_accessible_label(&scale, tr("Nice Value"));
     scale.set_value(nice as f64);
     scale.set_digits(0);
     scale.set_draw_value(true);
@@ -164,7 +171,7 @@ pub fn change_priority(
     let mut custom_selected = true;
     let mut checks = Vec::new();
     for (label, value) in format::PRIORITY_PRESETS {
-        let check = gtk::CheckButton::with_label(&format!("{label} ({value})"));
+        let check = gtk::CheckButton::with_label(&format!("{} ({value})", tr(label)));
         if let Some(f) = &first {
             check.set_group(Some(f));
         } else {
@@ -183,7 +190,7 @@ pub fn change_priority(
         options.append(&check);
         checks.push(check);
     }
-    let custom = gtk::CheckButton::with_label("Custom");
+    let custom = gtk::CheckButton::with_label(tr("Custom"));
     custom.set_group(first.as_ref());
     custom.set_active(custom_selected);
     options.append(&custom);
@@ -216,7 +223,11 @@ pub fn change_priority(
             },
             move |res| {
                 if let Err(e) = res {
-                    on_error(format!("Cannot change priority of “{name}”: {e}"));
+                    on_error(trf!(
+                        "Cannot change priority of “{name}”: {e}",
+                        name = name,
+                        e = e
+                    ));
                 }
             },
         );
@@ -244,9 +255,14 @@ pub fn signal_process(
             pid,
         };
         escalate_if_needed(control::send(pid, action), command, move |res| {
-            on_done(
-                res.map_err(|e| format!("Cannot {} “{name}”: {e}", action.verb().to_lowercase())),
-            );
+            on_done(res.map_err(|e| {
+                trf!(
+                    "Cannot {to_lowercase} “{name}”: {e}",
+                    to_lowercase = action.verb().to_lowercase(),
+                    name = name,
+                    e = e
+                )
+            }));
         });
     };
     if !(confirm && action.needs_confirmation()) {
@@ -255,21 +271,21 @@ pub fn signal_process(
     }
     let (heading, body, button) = match action {
         Action::Kill => (
-            format!("Kill “{}”?", obj.info().name),
-            "Killing a process stops it immediately without letting it save its work. Unsaved data may be lost.",
-            "_Kill Process",
+            trf!("Kill “{}”?", obj.info().name),
+            tr("Killing a process stops it immediately without letting it save its work. Unsaved data may be lost."),
+            tr("_Kill Process"),
         ),
         _ => (
-            format!("End “{}”?", obj.info().name),
-            "Ending a process asks it to quit. Unsaved data may be lost, and ending system processes can make the session unstable.",
-            "_End Process",
+            trf!("End “{}”?", obj.info().name),
+            tr("Ending a process asks it to quit. Unsaved data may be lost, and ending system processes can make the session unstable."),
+            tr("_End Process"),
         ),
     };
     let dialog = adw::AlertDialog::builder()
         .heading(heading)
         .body(body)
         .build();
-    dialog.add_responses(&[("cancel", "_Cancel"), ("ok", button)]);
+    dialog.add_responses(&[("cancel", tr("_Cancel")), ("ok", button)]);
     dialog.set_response_appearance("ok", adw::ResponseAppearance::Destructive);
     dialog.set_default_response(Some("cancel"));
     dialog.set_close_response("cancel");

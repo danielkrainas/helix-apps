@@ -6,6 +6,7 @@ use crate::geo::LatLon;
 use crate::http::{self, RateLimiter};
 use crate::nominatim::{self, Place};
 use crate::osrm::{self, Mode, Route};
+use helix_app_common::trf;
 use std::sync::mpsc;
 use std::time::Duration;
 
@@ -215,11 +216,9 @@ fn run(
                         let url = nominatim::search_url(&ep.geocoder, &t, 1, None);
                         let places = http::get(agent, &url, lang)
                             .and_then(|b| nominatim::parse_search(&String::from_utf8_lossy(&b)))?;
-                        places
-                            .into_iter()
-                            .next()
-                            .map(Some)
-                            .ok_or_else(|| format!("Could not find the {which} “{t}”"))
+                        places.into_iter().next().map(Some).ok_or_else(|| {
+                            trf!("Could not find the {which} “{t}”", which = which, t = t)
+                        })
                     }
                 }
             };

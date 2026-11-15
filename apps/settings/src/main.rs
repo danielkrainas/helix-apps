@@ -15,6 +15,7 @@ use gtk::glib;
 const USAGE: &str = "Usage: helix-settings-app [PANEL]\n       helix-settings-app --list\n\nOpens Settings, optionally on PANEL (see --list).";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let args: Vec<String> = std::env::args().collect();
     match args.get(1).map(String::as_str) {
         None => {}

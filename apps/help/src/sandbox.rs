@@ -12,6 +12,8 @@
 
 use adw::prelude::*;
 use gtk::glib;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
@@ -167,7 +169,7 @@ pub fn profile_text(binary: &str, paths: &[String]) -> String {
 pub fn fix_commands(binary: &str, profile_installed: bool) -> String {
     let target = format!("/etc/apparmor.d/{binary}");
     if profile_installed {
-        format!("sudo apparmor_parser -r {target}")
+        trf!("sudo apparmor_parser -r {target}", target = target)
     } else {
         format!(
             "sudo tee {target} < {binary}.apparmor >/dev/null\nsudo apparmor_parser -r {target}"
@@ -177,9 +179,7 @@ pub fn fix_commands(binary: &str, profile_installed: bool) -> String {
 
 /// Body text for the status page.
 pub fn explanation(app_name: &str, cause: Cause, exe: &str, profile_installed: bool) -> String {
-    let lead = format!(
-        "{app_name} shows help pages only inside WebKit’s sandbox, which needs unprivileged user namespaces."
-    );
+    let lead = trf!("{app_name} shows help pages only inside WebKit’s sandbox, which needs unprivileged user namespaces.", app_name = app_name);
     match cause {
         Cause::AppArmor if profile_installed => format!(
             "{lead} This system’s AppArmor policy restricts them (kernel.apparmor_restrict_unprivileged_userns = 1). \
@@ -226,7 +226,7 @@ fn copy_button(label: &str, text: String) -> gtk::Button {
     b.add_css_class("pill");
     b.connect_clicked(move |b| {
         b.clipboard().set_text(&text);
-        b.set_label("Copied");
+        b.set_label(tr("Copied"));
     });
     b
 }
@@ -244,7 +244,7 @@ pub fn failure_window(
     let installed = Path::new("/etc/apparmor.d").join(binary).exists();
     let page = adw::StatusPage::builder()
         .icon_name("computer-fail-symbolic")
-        .title("Help Content Sandbox Unavailable")
+        .title(tr("Help Content Sandbox Unavailable"))
         .description(
             glib::markup_escape_text(&explanation(app_name, cause, &exe, installed)).as_str(),
         )
@@ -259,18 +259,21 @@ pub fn failure_window(
         let profile = profile_text(binary, &paths);
         if !installed {
             let heading = gtk::Label::builder()
-                .label(format!("Profile ({binary}.apparmor)"))
+                .label(trf!("Profile ({binary}.apparmor)", binary = binary))
                 .xalign(0.0)
                 .build();
             heading.add_css_class("heading");
             content.append(&heading);
             let expander = gtk::Expander::builder()
-                .label("Show profile")
+                .label(tr("Show profile"))
                 .child(&mono_box(&profile))
                 .build();
             content.append(&expander);
         }
-        let heading = gtk::Label::builder().label("Commands").xalign(0.0).build();
+        let heading = gtk::Label::builder()
+            .label(tr("Commands"))
+            .xalign(0.0)
+            .build();
         heading.add_css_class("heading");
         content.append(&heading);
         let commands = fix_commands(binary, installed);
@@ -281,13 +284,13 @@ pub fn failure_window(
             .margin_top(6)
             .build();
         if !installed {
-            buttons.append(&copy_button("Copy Profile", profile));
+            buttons.append(&copy_button(tr("Copy Profile"), profile));
         }
-        buttons.append(&copy_button("Copy Commands", commands));
+        buttons.append(&copy_button(tr("Copy Commands"), commands));
         content.append(&buttons);
     }
     let quit = gtk::Button::builder()
-        .label("_Quit")
+        .label(tr("_Quit"))
         .use_underline(true)
         .halign(gtk::Align::Center)
         .margin_top(12)
@@ -323,13 +326,13 @@ pub fn failure_window(
 pub fn crashed_page(reason: webkit6::WebProcessTerminationReason) -> adw::StatusPage {
     let description = match reason {
         webkit6::WebProcessTerminationReason::ExceededMemoryLimit => {
-            "The page used too much memory and was stopped."
+            tr("The page used too much memory and was stopped.")
         }
-        _ => "The process showing this page stopped unexpectedly.",
+        _ => tr("The process showing this page stopped unexpectedly."),
     };
     adw::StatusPage::builder()
         .icon_name("computer-fail-symbolic")
-        .title("Page Crashed")
+        .title(tr("Page Crashed"))
         .description(description)
         .build()
 }

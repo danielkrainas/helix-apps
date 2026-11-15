@@ -5,6 +5,7 @@ use gtk::{gio, glib};
 use std::rc::Rc;
 
 use super::Shared;
+use helix_app_common::i18n::tr;
 
 const XML: &str = r#"<node>
   <interface name="org.freedesktop.FileManager1">
@@ -47,14 +48,14 @@ pub fn register(shared: &Rc<Shared>) {
             let Some((uris, startup)) = params.get::<(Vec<String>, String)>() else {
                 invocation.return_dbus_error(
                     "org.freedesktop.DBus.Error.InvalidArgs",
-                    "Expected (as, s)",
+                    tr("Expected (as, s)"),
                 );
                 return;
             };
             if !matches!(method, "ShowFolders" | "ShowItems" | "ShowItemProperties") {
                 invocation.return_dbus_error(
                     "org.freedesktop.DBus.Error.UnknownMethod",
-                    "Unknown method",
+                    tr("Unknown method"),
                 );
                 return;
             }

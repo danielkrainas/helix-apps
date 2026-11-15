@@ -8,6 +8,8 @@ use std::rc::Rc;
 use crate::format;
 use crate::history::{nice_ceiling, History};
 use crate::sampler::ResourceSample;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 /// Distinct colours for per-CPU lines (GNOME palette hues).
 /// Adwaita's caption text is 82 % of the body size.
@@ -125,7 +127,13 @@ impl Graph {
         let span_s =
             history.capacity().saturating_sub(1) as f64 * self.interval_ms.get() as f64 / 1000.0;
         let time_labels: Vec<(f64, pango::Layout)> = [
-            (0.0, format!("{span_s:.0} seconds")),
+            (
+                0.0,
+                trf!(
+                    "{span_s} seconds",
+                    span_s = helix_app_common::i18n::format_number(span_s, 0)
+                ),
+            ),
             (0.5, format!("{:.0}", span_s / 2.0)),
             (1.0, "0".to_string()),
         ]
@@ -284,7 +292,13 @@ fn cpu_description(cpus: &[f64]) -> String {
     let each: Vec<String> = cpus
         .iter()
         .enumerate()
-        .map(|(i, v)| format!("CPU{} {:.1} %", i + 1, v * 100.0))
+        .map(|(i, v)| {
+            trf!(
+                "CPU{i} {v} %",
+                i = i + 1,
+                v = helix_app_common::i18n::format_number(v * 100.0, 1)
+            )
+        })
         .collect();
     format!("Average {:.1} %; {}", avg * 100.0, each.join(", "))
 }
@@ -316,9 +330,9 @@ pub struct ResView {
 
 impl ResView {
     pub fn new(points: usize, colors: Colors) -> Rc<Self> {
-        let cpu = Graph::new(Scale::Percent, points, "CPU History");
-        let mem = Graph::new(Scale::Percent, points, "Memory and Swap History");
-        let net = Graph::new(Scale::Rate, points, "Network History");
+        let cpu = Graph::new(Scale::Percent, points, tr("CPU History"));
+        let mem = Graph::new(Scale::Percent, points, tr("Memory and Swap History"));
+        let net = Graph::new(Scale::Rate, points, tr("Network History"));
         *mem.colors.borrow_mut() = vec![colors.mem, colors.swap];
         *net.colors.borrow_mut() = vec![colors.net_in, colors.net_out];
 
@@ -342,15 +356,15 @@ impl ResView {
                 .build()
         };
         let mem_legend = pair_legend();
-        let (e, mem_label) = legend_entry(colors.mem, "Memory");
+        let (e, mem_label) = legend_entry(colors.mem, tr("Memory"));
         mem_legend.insert(&e, -1);
-        let (e, swap_label) = legend_entry(colors.swap, "Swap");
+        let (e, swap_label) = legend_entry(colors.swap, tr("Swap"));
         mem_legend.insert(&e, -1);
 
         let net_legend = pair_legend();
-        let (e, rx_label) = legend_entry(colors.net_in, "Receiving");
+        let (e, rx_label) = legend_entry(colors.net_in, tr("Receiving"));
         net_legend.insert(&e, -1);
-        let (e, tx_label) = legend_entry(colors.net_out, "Sending");
+        let (e, tx_label) = legend_entry(colors.net_out, tr("Sending"));
         net_legend.insert(&e, -1);
 
         let content = gtk::Box::builder()
@@ -362,8 +376,8 @@ impl ResView {
             .margin_end(18)
             .build();
         content.append(&section("CPU", &cpu.area, &cpu_legend));
-        content.append(&section("Memory and Swap", &mem.area, &mem_legend));
-        content.append(&section("Network", &net.area, &net_legend));
+        content.append(&section(tr("Memory and Swap"), &mem.area, &mem_legend));
+        content.append(&section(tr("Network"), &net.area, &net_legend));
         let page = gtk::ScrolledWindow::builder()
             .child(&content)
             .hscrollbar_policy(gtk::PolicyType::Never)
@@ -446,7 +460,7 @@ impl ResView {
             format::size(m.mem_total, iec)
         );
         let swap_text = if m.swap_total == 0 {
-            "Not available".to_string()
+            tr("Not available").to_string()
         } else {
             format!(
                 "{} ({:.1} %) of {}",
@@ -459,15 +473,15 @@ impl ResView {
         set_legend_value(&self.swap_label, &swap_text);
         self.mem.describe(&format!(
             "{}, {}",
-            legend_text("Memory", &mem_text),
-            legend_text("Swap", &swap_text)
+            legend_text(tr("Memory"), &mem_text),
+            legend_text(tr("Swap"), &swap_text)
         ));
 
         self.net.history.borrow_mut().push(&[r.rx_rate, r.tx_rate]);
         let bits = self.bits.get();
         set_legend_value(
             &self.rx_label,
-            &format!(
+            &trf!(
                 "{}   Total received {}",
                 format::rate(r.rx_rate, bits),
                 format::size(r.rx_total, false)
@@ -475,13 +489,13 @@ impl ResView {
         );
         set_legend_value(
             &self.tx_label,
-            &format!(
+            &trf!(
                 "{}   Total sent {}",
                 format::rate(r.tx_rate, bits),
                 format::size(r.tx_total, false)
             ),
         );
-        self.net.describe(&format!(
+        self.net.describe(&trf!(
             "Receiving {}, Sending {}",
             format::rate(r.rx_rate, bits),
             format::rate(r.tx_rate, bits)

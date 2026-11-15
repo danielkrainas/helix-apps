@@ -5,6 +5,7 @@
 //! state into a shared [`State`] and asks the worker to emit
 //! `PropertiesChanged` / `Seeked` through [`Mpris::changed`] / [`Mpris::seeked`].
 
+use helix_app_common::i18n::tr;
 use std::collections::HashMap;
 use std::sync::{mpsc, Arc, Mutex};
 use zbus::object_server::SignalEmitter;
@@ -61,7 +62,7 @@ pub struct State {
 impl Default for State {
     fn default() -> Self {
         State {
-            status: "Stopped",
+            status: tr("Stopped"),
             rate: 1.0,
             volume: 1.0,
             position_us: 0,
@@ -148,7 +149,7 @@ impl Root {
     }
     #[zbus(property)]
     fn identity(&self) -> &str {
-        "Video Player"
+        tr("Video Player")
     }
     #[zbus(property)]
     fn desktop_entry(&self) -> &str {

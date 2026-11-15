@@ -1,5 +1,6 @@
 //! XKB layout names from the rules `.lst` file, and input source helpers.
 
+use helix_app_common::trf;
 use std::collections::HashMap;
 
 pub const EVDEV_LST: &str = "/usr/share/X11/xkb/rules/evdev.lst";
@@ -74,7 +75,7 @@ pub fn source_name(info: &XkbInfo, kind: &str, id: &str) -> String {
                     .map(|d| format!("{d} ({})", id.split('+').nth(1).unwrap_or("")))
             })
             .unwrap_or_else(|| id.to_string()),
-        "ibus" => format!("{id} (IBus)"),
+        "ibus" => trf!("{id} (IBus)", id = id),
         _ => id.to_string(),
     }
 }

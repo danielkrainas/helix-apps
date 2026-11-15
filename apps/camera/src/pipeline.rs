@@ -3,6 +3,8 @@
 use crate::devices::Location;
 use crate::encoders::EncoderPlan;
 use gst::prelude::*;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use std::os::fd::RawFd;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -64,7 +66,7 @@ pub struct RecordSpec {
 fn make(factory: &str) -> Result<gst::Element> {
     gst::ElementFactory::make(factory)
         .build()
-        .map_err(|_| format!("Missing GStreamer element “{factory}”"))
+        .map_err(|_| trf!("Missing GStreamer element “{factory}”", factory = factory))
 }
 
 /// Sets a property only if the element has it (encoders differ between
@@ -105,7 +107,7 @@ fn source_element(spec: &SourceSpec) -> Result<gst::Element> {
         SourceSpec::Device { device, fd } => {
             let e = device
                 .create_element(None)
-                .map_err(|_| format!("Could not open camera “{}”", device.display_name()))?;
+                .map_err(|_| trf!("Could not open camera “{}”", device.display_name()))?;
             if let Some(fd) = fd {
                 if e.find_property("fd").is_some() {
                     e.set_property("fd", *fd);
@@ -176,7 +178,7 @@ impl Session {
             .map_err(|e| e.to_string())?;
         pipeline.add(&appsink).map_err(|e| e.to_string())?;
         src.link(&decode)
-            .map_err(|_| "Could not link the camera source".to_string())?;
+            .map_err(|_| tr("Could not link the camera source").to_string())?;
         gst::Element::link_many([&convert, &tee]).map_err(|e| e.to_string())?;
         gst::Element::link_many([&tee, &pq, &flip, &pconv, &pcaps, appsink.upcast_ref()])
             .map_err(|e| e.to_string())?;
@@ -227,7 +229,7 @@ impl Session {
         if session.pipeline.set_state(gst::State::Playing).is_err() {
             let err = session
                 .pop_error()
-                .unwrap_or_else(|| "Could not start the camera".into());
+                .unwrap_or_else(|| tr("Could not start the camera").into());
             session.stop();
             return Err(err);
         }
@@ -272,7 +274,7 @@ impl Session {
                 gst::MessageView::Error(e) => Err(e.error().to_string()),
                 _ => Ok(()),
             },
-            None => Err("Timed out finishing the recording".into()),
+            None => Err(tr("Timed out finishing the recording").into()),
         };
         let path = self.recording.clone();
         self.stop();
@@ -380,8 +382,8 @@ pub fn frame_from_sample(sample: &gst::Sample) -> Option<Frame> {
 pub fn save_jpeg(sample: &gst::Sample, path: &Path) -> Result<()> {
     let caps = gst::Caps::builder("image/jpeg").build();
     let jpeg = gst_video::convert_sample(sample, &caps, gst::ClockTime::from_seconds(10))
-        .map_err(|e| format!("Could not encode the photo: {e}"))?;
-    let buffer = jpeg.buffer().ok_or("Empty photo")?;
+        .map_err(|e| trf!("Could not encode the photo: {e}", e = e))?;
+    let buffer = jpeg.buffer().ok_or(tr("Empty photo"))?;
     let map = buffer.map_readable().map_err(|e| e.to_string())?;
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;

@@ -15,6 +15,8 @@ use crate::app::{App, Launch};
 use crate::paths;
 use crate::process::{self, Tint};
 use crate::search;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 pub struct Tab {
     pub root: gtk::Box,
@@ -75,7 +77,7 @@ impl Tab {
     fn busy_name(&self) -> String {
         self.foreground()
             .and_then(process::command_name)
-            .unwrap_or_else(|| "A process".into())
+            .unwrap_or_else(|| tr("A process").into())
     }
 
     /// Current working directory: OSC 7 if reported, else the shell's cwd.
@@ -119,7 +121,7 @@ impl Tab {
             }
             Err(_) => {
                 self.term.search_set_regex(None, 0);
-                self.set_search_error(Some("Invalid regular expression"));
+                self.set_search_error(Some(tr("Invalid regular expression")));
                 false
             }
         }
@@ -135,7 +137,7 @@ impl Tab {
         } else {
             self.term.search_find_next()
         };
-        self.set_search_error((!found).then_some("No matches"));
+        self.set_search_error((!found).then_some(tr("No matches")));
     }
 
     /// Shows `title` in the tab's banner and tells screen readers.
@@ -159,9 +161,9 @@ fn style_switcher() -> gtk::Box {
         .accessible_role(gtk::AccessibleRole::Group)
         .build();
     for (label, name, target) in [
-        ("System", "Follow System Style", "auto"),
-        ("Light", "Light Style", "day"),
-        ("Dark", "Dark Style", "night"),
+        (tr("System"), tr("Follow System Style"), "auto"),
+        (tr("Light"), tr("Light Style"), "day"),
+        (tr("Dark"), tr("Dark Style"), "night"),
     ] {
         let b = gtk::ToggleButton::builder()
             .label(label)
@@ -172,15 +174,15 @@ fn style_switcher() -> gtk::Box {
         a11y::set_accessible_label(&b, name);
         row.append(&b);
     }
-    a11y::set_accessible_label(&row, "Style");
+    a11y::set_accessible_label(&row, tr("Style"));
     row
 }
 
 /// The main menu's Zoom Out / level (resets) / Zoom In row.
 fn zoom_row(level: &gtk::Button) -> gtk::Box {
-    let zoom_out = a11y::icon_button("zoom-out-symbolic", "Zoom Out");
+    let zoom_out = a11y::icon_button("zoom-out-symbolic", tr("Zoom Out"));
     zoom_out.set_action_name(Some("win.zoom-out"));
-    let zoom_in = a11y::icon_button("zoom-in-symbolic", "Zoom In");
+    let zoom_in = a11y::icon_button("zoom-in-symbolic", tr("Zoom In"));
     zoom_in.set_action_name(Some("win.zoom-in"));
     for b in [&zoom_out, &zoom_in] {
         b.add_css_class("flat");
@@ -224,13 +226,16 @@ impl Window {
     pub fn update_zoom(&self, scale: f64) {
         let text = zoom_percent(scale);
         self.zoom_level.set_label(&text);
-        a11y::set_accessible_label(&self.zoom_level, &format!("Reset Zoom, now {text}"));
+        a11y::set_accessible_label(
+            &self.zoom_level,
+            &trf!("Reset Zoom, now {text}", text = text),
+        );
     }
 
     pub fn new(app: &Rc<App>) -> Rc<Window> {
         let win = adw::ApplicationWindow::builder()
             .application(&app.gtk)
-            .title("Terminal")
+            .title(tr("Terminal"))
             .width_request(helix_app_common::MIN_WIDTH)
             .height_request(helix_app_common::MIN_HEIGHT)
             .build();
@@ -243,7 +248,7 @@ impl Window {
         let header = adw::HeaderBar::new();
         // Title, plus an icon and subtitle that say (not only tint) when
         // the tab runs as root or on another host.
-        let title = adw::WindowTitle::new("Terminal", "");
+        let title = adw::WindowTitle::new(tr("Terminal"), "");
         win.bind_property("title", &title, "title")
             .sync_create()
             .build();
@@ -257,10 +262,10 @@ impl Window {
         header.set_title_widget(Some(&title_box));
         let new_tab = gtk::Button::builder()
             .icon_name("tab-new-symbolic")
-            .tooltip_text("New Tab")
+            .tooltip_text(tr("New Tab"))
             .action_name("win.new-tab")
             .build()
-            .labelled("New Tab");
+            .labelled(tr("New Tab"));
         header.pack_start(&new_tab);
 
         let menu = gio::Menu::new();
@@ -273,25 +278,25 @@ impl Window {
         }
         menu.append_section(None, &s0);
         let s1 = gio::Menu::new();
-        s1.append(Some("_New Window"), Some("win.new-window"));
-        s1.append(Some("_Show All Tabs"), Some("win.tab-overview"));
+        s1.append(Some(tr("_New Window")), Some("win.new-window"));
+        s1.append(Some(tr("_Show All Tabs")), Some("win.tab-overview"));
         menu.append_section(None, &s1);
         let s2 = gio::Menu::new();
-        s2.append(Some("_Preferences"), Some("app.preferences"));
-        s2.append(Some("_Keyboard Shortcuts"), Some("win.show-shortcuts"));
-        s2.append(Some("_About Terminal"), Some("app.about"));
+        s2.append(Some(tr("_Preferences")), Some("app.preferences"));
+        s2.append(Some(tr("_Keyboard Shortcuts")), Some("win.show-shortcuts"));
+        s2.append(Some(tr("_About Terminal")), Some("app.about"));
         menu.append_section(None, &s2);
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .menu_model(&menu)
             .primary(true)
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         let zoom_level = gtk::Button::builder()
             .label("100%")
             .action_name("win.zoom-reset")
-            .tooltip_text("Reset Zoom")
+            .tooltip_text(tr("Reset Zoom"))
             .hexpand(true)
             .css_classes(["flat"])
             .build();
@@ -307,7 +312,7 @@ impl Window {
         header.pack_end(&tab_button);
         // Shows and hides the current tab's find bar; its pressed state
         // follows that bar.
-        let find = a11y::icon_toggle_button("edit-find-symbolic", "Find");
+        let find = a11y::icon_toggle_button("edit-find-symbolic", tr("Find"));
         header.pack_end(&find);
 
         let toolbar = adw::ToolbarView::new();
@@ -419,31 +424,31 @@ impl Window {
 
         // Find bar.
         let search_entry = gtk::SearchEntry::builder()
-            .placeholder_text("Find")
+            .placeholder_text(tr("Find"))
             .hexpand(true)
             .build()
-            .labelled("Find");
+            .labelled(tr("Find"));
         let prev = gtk::Button::builder()
             .icon_name("go-up-symbolic")
-            .tooltip_text("Previous Match (older output)")
+            .tooltip_text(tr("Previous Match (older output)"))
             .build()
-            .labelled("Previous Match (older output)");
+            .labelled(tr("Previous Match (older output)"));
         let next = gtk::Button::builder()
             .icon_name("go-down-symbolic")
-            .tooltip_text("Next Match (newer output)")
+            .tooltip_text(tr("Next Match (newer output)"))
             .build()
-            .labelled("Next Match (newer output)");
+            .labelled(tr("Next Match (newer output)"));
         // The glyphs are only the visible face; the names are spoken.
         let match_case = gtk::ToggleButton::builder()
-            .label("Aa")
-            .tooltip_text("Match Case")
+            .label(tr("Aa"))
+            .tooltip_text(tr("Match Case"))
             .build()
-            .labelled("Match Case");
+            .labelled(tr("Match Case"));
         let use_regex = gtk::ToggleButton::builder()
             .label(".*")
-            .tooltip_text("Regular Expression")
+            .tooltip_text(tr("Regular Expression"))
             .build()
-            .labelled("Regular Expression");
+            .labelled(tr("Regular Expression"));
         let nav = gtk::Box::builder().css_classes(["linked"]).build();
         nav.append(&prev);
         nav.append(&next);
@@ -462,7 +467,7 @@ impl Window {
             .build();
         search_bar.connect_entry(&search_entry);
 
-        let banner = adw::Banner::builder().button_label("_Close").build();
+        let banner = adw::Banner::builder().button_label(tr("_Close")).build();
 
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
         root.append(&banner);
@@ -486,7 +491,7 @@ impl Window {
         self.setup_tab(&tab, &prev, &next);
 
         let page = self.tab_view.append(&tab.root);
-        page.set_title("Terminal");
+        page.set_title(tr("Terminal"));
         self.tab_view.set_selected_page(&page);
         self.spawn(&tab, launch);
         tab.term.grab_focus();
@@ -537,7 +542,10 @@ impl Window {
                             e.message()
                         );
                         tab.term.feed(msg.as_bytes());
-                        tab.show_banner(&format!("Could not start “{what}”"), Urgency::Assertive);
+                        tab.show_banner(
+                            &trf!("Could not start “{what}”", what = what),
+                            Urgency::Assertive,
+                        );
                     }
                 }
             },
@@ -559,7 +567,7 @@ impl Window {
                     status
                 };
                 tab.show_banner(
-                    &format!("Process exited with status {code}"),
+                    &trf!("Process exited with status {code}", code = code),
                     Urgency::Polite,
                 );
             } else {
@@ -703,17 +711,17 @@ impl Window {
 
         let ctx = gio::Menu::new();
         let a = gio::Menu::new();
-        a.append(Some("_Open Link"), Some("win.open-link"));
-        a.append(Some("Copy _Link"), Some("win.copy-link"));
+        a.append(Some(tr("_Open Link")), Some("win.open-link"));
+        a.append(Some(tr("Copy _Link")), Some("win.copy-link"));
         ctx.append_section(None, &a);
         let b = gio::Menu::new();
-        b.append(Some("_Copy"), Some("win.copy"));
-        b.append(Some("_Paste"), Some("win.paste"));
-        b.append(Some("Select _All"), Some("win.select-all"));
+        b.append(Some(tr("_Copy")), Some("win.copy"));
+        b.append(Some(tr("_Paste")), Some("win.paste"));
+        b.append(Some(tr("Select _All")), Some("win.select-all"));
         ctx.append_section(None, &b);
         let c = gio::Menu::new();
-        c.append(Some("_Find…"), Some("win.find"));
-        c.append(Some("New _Tab"), Some("win.new-tab"));
+        c.append(Some(tr("_Find…")), Some("win.find"));
+        c.append(Some(tr("New _Tab")), Some("win.new-tab"));
         ctx.append_section(None, &c);
         term.set_context_menu_model(Some(&ctx));
 
@@ -889,7 +897,7 @@ impl Window {
         let title = self
             .current_tab()
             .map(|t| t.title())
-            .unwrap_or_else(|| "Terminal".into());
+            .unwrap_or_else(|| tr("Terminal").into());
         self.win.set_title(Some(&title));
     }
 
@@ -915,12 +923,12 @@ impl Window {
             _ => (Tint::None, None),
         };
         let status = match tint {
-            Tint::Root => "Running as root".to_string(),
+            Tint::Root => tr("Running as root").to_string(),
             Tint::Remote => pgrp
                 .and_then(|pg| process::remote_host(&process::command_line(pg)))
                 .map_or_else(
-                    || "Connected to a remote host".to_string(),
-                    |host| format!("Connected to {host}"),
+                    || tr("Connected to a remote host").to_string(),
+                    |host| trf!("Connected to {host}", host = host),
                 ),
             Tint::None => String::new(),
         };
@@ -941,8 +949,8 @@ impl Window {
         }
         self.tint_icon.set_visible(tint != Tint::None);
         let spoken = match (tint, was) {
-            (Tint::None, Tint::Root) => "No longer running as root",
-            (Tint::None, Tint::Remote) => "Remote session ended",
+            (Tint::None, Tint::Root) => tr("No longer running as root"),
+            (Tint::None, Tint::Remote) => tr("Remote session ended"),
             (Tint::None, Tint::None) => "",
             _ => &status,
         };
@@ -1254,12 +1262,12 @@ impl Window {
 /// Asks whether to close despite running programs. Returns true to close.
 async fn confirm_close(win: &adw::ApplicationWindow, names: &[String], window: bool) -> bool {
     let heading = if window {
-        "Close Window?"
+        tr("Close Window?")
     } else {
-        "Close Tab?"
+        tr("Close Tab?")
     };
     let body = if names.len() == 1 {
-        format!("“{}” is still running. Closing will stop it.", names[0])
+        trf!("“{}” is still running. Closing will stop it.", names[0])
     } else {
         let list: Vec<String> = names.iter().map(|n| format!("• {n}")).collect();
         format!(
@@ -1268,7 +1276,7 @@ async fn confirm_close(win: &adw::ApplicationWindow, names: &[String], window: b
         )
     };
     let dialog = adw::AlertDialog::new(Some(heading), Some(&body));
-    dialog.add_responses(&[("cancel", "_Cancel"), ("close", "C_lose")]);
+    dialog.add_responses(&[("cancel", tr("_Cancel")), ("close", tr("C_lose"))]);
     dialog.set_response_appearance("close", adw::ResponseAppearance::Destructive);
     dialog.set_default_response(Some("cancel"));
     dialog.set_close_response("cancel");

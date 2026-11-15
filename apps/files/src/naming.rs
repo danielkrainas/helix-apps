@@ -1,5 +1,8 @@
 //! File name helpers: extension splitting, copy/link naming, validation.
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+
 /// Compound extensions that are kept together ("x.tar.gz" → ".tar.gz").
 const COMPOUND: &[&str] = &[
     "gz", "bz2", "xz", "zst", "lz", "lzma", "lz4", "z", "7z", "br",
@@ -53,9 +56,9 @@ fn strip_copy_suffix(stem: &str) -> (&str, u32) {
 /// Name for the `n`-th copy of `stem` + `ext` (n ≥ 1).
 fn nth_copy(stem: &str, ext: &str, n: u32) -> String {
     if n <= 1 {
-        format!("{stem} (copy){ext}")
+        trf!("{stem} (copy){ext}", stem = stem, ext = ext)
     } else {
-        format!("{stem} (copy {n}){ext}")
+        trf!("{stem} (copy {n}){ext}", stem = stem, n = n, ext = ext)
     }
 }
 
@@ -76,14 +79,14 @@ pub fn copy_name(name: &str, exists: impl Fn(&str) -> bool) -> String {
 
 /// Returns a free name for a symbolic link to `name`.
 pub fn link_name(name: &str, exists: impl Fn(&str) -> bool) -> String {
-    let first = format!("Link to {name}");
+    let first = trf!("Link to {name}", name = name);
     if !exists(&first) {
         return first;
     }
     let (stem, ext) = split_extension(name);
     let mut n = 2;
     loop {
-        let candidate = format!("Link to {stem} ({n}){ext}");
+        let candidate = trf!("Link to {stem} ({n}){ext}", stem = stem, n = n, ext = ext);
         if !exists(&candidate) {
             return candidate;
         }
@@ -94,19 +97,19 @@ pub fn link_name(name: &str, exists: impl Fn(&str) -> bool) -> String {
 /// Checks a name typed for a new or renamed file.
 pub fn validate_name(name: &str) -> Result<(), &'static str> {
     if name.is_empty() {
-        return Err("The name cannot be empty.");
+        return Err(tr("The name cannot be empty."));
     }
     if name.contains('/') {
-        return Err("File names cannot contain “/”.");
+        return Err(tr("File names cannot contain “/”."));
     }
     if name == "." {
-        return Err("A file cannot be called “.”.");
+        return Err(tr("A file cannot be called “.”."));
     }
     if name == ".." {
-        return Err("A file cannot be called “..”.");
+        return Err(tr("A file cannot be called “..”."));
     }
     if name.len() > 255 {
-        return Err("The name is too long.");
+        return Err(tr("The name is too long."));
     }
     Ok(())
 }

@@ -1,6 +1,7 @@
 //! Sidebar categories and entry classification.
 
 use crate::journal::{Entry, QueryArgs};
+use helix_app_common::i18n::tr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Category {
@@ -24,12 +25,12 @@ impl Category {
 
     pub fn label(self) -> &'static str {
         match self {
-            Category::Important => "Important",
-            Category::All => "All",
-            Category::Applications => "Applications",
-            Category::System => "System",
-            Category::Security => "Security",
-            Category::Hardware => "Hardware",
+            Category::Important => tr("Important"),
+            Category::All => tr("All"),
+            Category::Applications => tr("Applications"),
+            Category::System => tr("System"),
+            Category::Security => tr("Security"),
+            Category::Hardware => tr("Hardware"),
         }
     }
 

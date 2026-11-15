@@ -1,5 +1,6 @@
 //! Keyboard shortcuts window.
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{
     Group,
     Item::{Keys, Pointer},
@@ -7,56 +8,59 @@ use helix_app_common::shortcuts::{
 
 const GROUPS: &[Group] = &[
     (
-        "Tabs and Windows",
+        n_("Tabs and Windows"),
         &[
-            Keys("New Tab", "<Control><Shift>t"),
-            Keys("New Window", "<Control><Shift>n"),
-            Keys("Close Tab", "<Control><Shift>w"),
-            Keys("Close Window", "<Control><Shift>q"),
-            Keys("Show All Tabs", "<Control><Shift>o"),
-            Keys("Next Tab", "<Control>Page_Down"),
-            Keys("Previous Tab", "<Control>Page_Up"),
-            Keys("Switch to Tab 1–9", "<Alt>1...<Alt>9"),
-            Keys("Move Tab Right", "<Control><Shift>Page_Down"),
-            Keys("Move Tab Left", "<Control><Shift>Page_Up"),
-            Keys("Fullscreen", "F11"),
+            Keys(n_("New Tab"), "<Control><Shift>t"),
+            Keys(n_("New Window"), "<Control><Shift>n"),
+            Keys(n_("Close Tab"), "<Control><Shift>w"),
+            Keys(n_("Close Window"), "<Control><Shift>q"),
+            Keys(n_("Show All Tabs"), "<Control><Shift>o"),
+            Keys(n_("Next Tab"), "<Control>Page_Down"),
+            Keys(n_("Previous Tab"), "<Control>Page_Up"),
+            Keys(n_("Switch to Tab 1–9"), "<Alt>1...<Alt>9"),
+            Keys(n_("Move Tab Right"), "<Control><Shift>Page_Down"),
+            Keys(n_("Move Tab Left"), "<Control><Shift>Page_Up"),
+            Keys(n_("Fullscreen"), "F11"),
         ],
     ),
     (
-        "Terminal",
+        n_("Terminal"),
         &[
-            Keys("Copy", "<Control><Shift>c"),
-            Keys("Paste", "<Control><Shift>v"),
-            Keys("Select All", "<Control><Shift>a"),
-            Keys("Context Menu", "Menu <Shift>F10"),
-            Pointer("Open Link", "Ctrl + click", "input-mouse-symbolic"),
+            Keys(n_("Copy"), "<Control><Shift>c"),
+            Keys(n_("Paste"), "<Control><Shift>v"),
+            Keys(n_("Select All"), "<Control><Shift>a"),
+            Keys(n_("Context Menu"), "Menu <Shift>F10"),
+            Pointer(n_("Open Link"), n_("Ctrl + click"), "input-mouse-symbolic"),
         ],
     ),
     (
-        "Find",
+        n_("Find"),
         &[
-            Keys("Find", "<Control><Shift>f"),
-            Keys("Find Next", "<Control><Shift>g"),
-            Keys("Find Previous", "<Control><Shift>h"),
-            Keys("Find Next from the Find Bar", "Return"),
-            Keys("Find Previous from the Find Bar", "<Shift>Return"),
-            Keys("Close Find Bar", "Escape"),
+            Keys(n_("Find"), "<Control><Shift>f"),
+            Keys(n_("Find Next"), "<Control><Shift>g"),
+            Keys(n_("Find Previous"), "<Control><Shift>h"),
+            Keys(n_("Find Next from the Find Bar"), "Return"),
+            Keys(n_("Find Previous from the Find Bar"), "<Shift>Return"),
+            Keys(n_("Close Find Bar"), "Escape"),
         ],
     ),
     (
-        "View",
+        n_("View"),
         &[
-            Keys("Zoom In", "<Control>plus <Control>equal <Control>KP_Add"),
-            Keys("Zoom Out", "<Control>minus <Control>KP_Subtract"),
-            Keys("Reset Zoom", "<Control>0 <Control>KP_0"),
-            Pointer("Zoom", "Ctrl + scroll", "input-mouse-symbolic"),
+            Keys(
+                n_("Zoom In"),
+                "<Control>plus <Control>equal <Control>KP_Add",
+            ),
+            Keys(n_("Zoom Out"), "<Control>minus <Control>KP_Subtract"),
+            Keys(n_("Reset Zoom"), "<Control>0 <Control>KP_0"),
+            Pointer(n_("Zoom"), n_("Ctrl + scroll"), "input-mouse-symbolic"),
         ],
     ),
     (
-        "General",
+        n_("General"),
         &[
-            Keys("Preferences", "<Control>comma"),
-            Keys("Keyboard Shortcuts", "<Control>question"),
+            Keys(n_("Preferences"), "<Control>comma"),
+            Keys(n_("Keyboard Shortcuts"), "<Control>question"),
         ],
     ),
 ];

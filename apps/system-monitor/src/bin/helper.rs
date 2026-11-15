@@ -5,6 +5,8 @@
 //! Exit status: 0 success, 2 invalid arguments, 3 no such process,
 //! 4 operation failed (including "not running as root").
 
+use helix_app_common::trf;
+
 #[path = "../helper_args.rs"]
 mod helper_args;
 
@@ -64,7 +66,7 @@ fn main() -> ExitCode {
         return fail(EXIT_USAGE, "refusing to act on the helper itself");
     }
     if !process_exists(pid) {
-        return fail(EXIT_NO_PROCESS, format!("no process with ID {pid}"));
+        return fail(EXIT_NO_PROCESS, trf!("no process with ID {pid}", pid = pid));
     }
     if dry_run {
         println!("dry run: would {}", command.describe());
@@ -77,8 +79,15 @@ fn main() -> ExitCode {
     match execute(command) {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) if e.raw_os_error() == Some(libc::ESRCH) => {
-            fail(EXIT_NO_PROCESS, format!("no process with ID {pid}"))
+            fail(EXIT_NO_PROCESS, trf!("no process with ID {pid}", pid = pid))
         }
-        Err(e) => fail(EXIT_FAILED, format!("cannot {}: {e}", command.describe())),
+        Err(e) => fail(
+            EXIT_FAILED,
+            trf!(
+                "cannot {describe}: {e}",
+                describe = command.describe(),
+                e = e
+            ),
+        ),
     }
 }

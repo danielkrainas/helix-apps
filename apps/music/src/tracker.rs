@@ -8,6 +8,7 @@
 //! integers in host byte order. Type 0 means "unbound".
 
 use crate::model::Track;
+use helix_app_common::trf;
 use std::collections::HashMap;
 use std::io::Read;
 use std::os::fd::{AsFd, OwnedFd};
@@ -36,7 +37,7 @@ pub fn parse_cursor(mut data: &[u8]) -> Result<Vec<Row>, String> {
     while !data.is_empty() {
         let n = take_i32(&mut data)?;
         if !(0..=4096).contains(&n) {
-            return Err(format!("bad column count {n}"));
+            return Err(trf!("bad column count {n}", n = n));
         }
         let n = n as usize;
         let mut types = Vec::with_capacity(n);

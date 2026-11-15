@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::sync::mpsc;
 use std::time::Duration;
 
+use helix_app_common::i18n::tr;
 use zbus::zvariant::{OwnedObjectPath, OwnedValue, Value};
 
 const PORTAL_BUS: &str = "org.freedesktop.portal.Desktop";
@@ -50,11 +51,11 @@ fn token(prefix: &str) -> String {
 /// Extracts a fix from a portal `LocationUpdated` dictionary.
 pub fn fix_from_portal(d: &Dict) -> Option<Fix> {
     let f = |k: &str| d.get(k).and_then(|v| f64::try_from(v).ok());
-    let (latitude, longitude) = (f("Latitude")?, f("Longitude")?);
+    let (latitude, longitude) = (f(tr("Latitude"))?, f(tr("Longitude"))?);
     valid(latitude, longitude).then_some(Fix {
         latitude,
         longitude,
-        accuracy: f("Accuracy"),
+        accuracy: f(tr("Accuracy")),
     })
 }
 
@@ -106,11 +107,11 @@ fn via_portal() -> Result<Fix, String> {
     }
     let msg = responses
         .next()
-        .ok_or("The location portal closed the request")?;
+        .ok_or(tr("The location portal closed the request"))?;
     let (code, _): (u32, Dict) = msg.body().deserialize().map_err(err)?;
     if code != 0 {
         close();
-        return Err("Location access was denied".into());
+        return Err(tr("Location access was denied").into());
     }
     for msg in updates.by_ref() {
         let Ok((path, data)) = msg.body().deserialize::<(OwnedObjectPath, Dict)>() else {
@@ -125,7 +126,7 @@ fn via_portal() -> Result<Fix, String> {
         }
     }
     close();
-    Err("No location received".into())
+    Err(tr("No location received").into())
 }
 
 fn via_geoclue(desktop_id: &str) -> Result<Fix, String> {
@@ -180,7 +181,7 @@ fn via_geoclue(desktop_id: &str) -> Result<Fix, String> {
                 });
             }
         }
-        Err("No location received".to_string())
+        Err(tr("No location received").to_string())
     })();
     let _ = client.call::<_, _, ()>("Stop", &());
     let _ = manager.call::<_, _, ()>("DeleteClient", &(&client_path,));
@@ -199,7 +200,7 @@ pub fn locate(desktop_id: &str, timeout: Duration) -> Result<Fix, String> {
         let _ = tx.send(r);
     });
     rx.recv_timeout(timeout)
-        .unwrap_or_else(|_| Err("Timed out waiting for a location".into()))
+        .unwrap_or_else(|_| Err(tr("Timed out waiting for a location").into()))
 }
 
 #[cfg(test)]

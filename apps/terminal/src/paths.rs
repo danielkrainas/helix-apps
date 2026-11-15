@@ -1,5 +1,6 @@
 //! Working-directory URIs (OSC 7), titles and shell quoting.
 
+use helix_app_common::i18n::tr;
 use std::path::{Path, PathBuf};
 
 /// Parses an OSC 7 `file://HOST/PATH` URI into `(host, path)`.
@@ -66,7 +67,7 @@ pub fn tab_title(window_title: Option<&str>, cwd: Option<&Path>, home: &Path) ->
         Some(t) => t.to_string(),
         None => match cwd {
             Some(p) => display_path(p, home),
-            None => "Terminal".into(),
+            None => tr("Terminal").into(),
         },
     }
 }

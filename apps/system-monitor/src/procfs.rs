@@ -2,6 +2,7 @@
 //! usage arithmetic. Nothing in this module touches the file system, so it
 //! is unit-tested with fixture text.
 
+use helix_app_common::i18n::tr;
 use std::collections::HashMap;
 
 /// Fields of `/proc/<pid>/stat` that the monitor uses.
@@ -299,7 +300,7 @@ pub fn parse_meminfo(text: &str) -> MemInfo {
     let available = map
         .get("MemAvailable")
         .copied()
-        .unwrap_or_else(|| g("MemFree") + g("Buffers") + g("Cached"));
+        .unwrap_or_else(|| g("MemFree") + g(tr("Buffers")) + g(tr("Cached")));
     MemInfo {
         mem_total: g("MemTotal"),
         mem_available: available.min(g("MemTotal")),

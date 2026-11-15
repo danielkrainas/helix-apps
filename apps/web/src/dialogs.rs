@@ -3,7 +3,8 @@
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use helix_app_common::Labelled;
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
+use std::collections::HashMap;
 use std::rc::Rc;
 use webkit6::prelude::*;
 
@@ -14,6 +15,9 @@ use crate::settings::{CookiePolicy, OVERVIEW};
 use crate::store;
 use crate::webapp;
 use crate::window::Window;
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 /// Shared rebuild callback for the search-engine list.
 type Refresh = Rc<dyn Fn()>;
@@ -33,17 +37,19 @@ fn toast(app: &App, text: &str) {
 
 pub fn show_preferences(app: &Rc<App>) {
     let dialog = adw::PreferencesDialog::new();
-    dialog.set_title("Preferences");
+    dialog.set_title(tr("Preferences"));
     let s = app.settings.borrow().clone();
 
     // General.
     let general = adw::PreferencesPage::builder()
-        .title("General")
+        .title(tr("General"))
         .icon_name("preferences-system-symbolic")
         .build();
-    let group = adw::PreferencesGroup::builder().title("Browsing").build();
+    let group = adw::PreferencesGroup::builder()
+        .title(tr("Browsing"))
+        .build();
     let homepage = adw::EntryRow::builder()
-        .title("Homepage (empty for the start page)")
+        .title(tr("Homepage (empty for the start page)"))
         .show_apply_button(true)
         .build();
     homepage.set_text(s.home_url().as_deref().unwrap_or(""));
@@ -62,8 +68,12 @@ pub fn show_preferences(app: &Rc<App>) {
     group.add(&homepage);
 
     let restore = adw::ComboRow::builder()
-        .title("Restore Tabs on Startup")
-        .model(&gtk::StringList::new(&["Always", "After a Crash", "Never"]))
+        .title(tr("Restore Tabs on Startup"))
+        .model(&gtk::StringList::new(&[
+            tr("Always"),
+            tr("After a Crash"),
+            tr("Never"),
+        ]))
         .build();
     restore.set_selected(match s.restore_policy() {
         RestorePolicy::Always => 0,
@@ -80,7 +90,7 @@ pub fn show_preferences(app: &Rc<App>) {
     group.add(&restore);
 
     let zoom = adw::SpinRow::with_range(30.0, 300.0, 10.0);
-    zoom.set_title("Default Zoom (%)");
+    zoom.set_title(tr("Default Zoom (%)"));
     zoom.set_value((s.default_zoom * 100.0).round());
     let weak = Rc::downgrade(app);
     zoom.connect_value_notify(move |row| {
@@ -94,10 +104,10 @@ pub fn show_preferences(app: &Rc<App>) {
 
     // Reader mode (org.gnome.Epiphany.reader).
     let reader_group = adw::PreferencesGroup::builder()
-        .title("Reader Mode")
+        .title(tr("Reader Mode"))
         .build();
     let font = adw::ComboRow::builder()
-        .title("Font Style")
+        .title(tr("Font Style"))
         .model(&gtk::StringList::new(&["Sans", "Serif"]))
         .build();
     font.set_selected(u32::from(s.reader_font == "serif"));
@@ -110,9 +120,11 @@ pub fn show_preferences(app: &Rc<App>) {
     });
     reader_group.add(&font);
     let colors = adw::ComboRow::builder()
-        .title("Color Scheme")
-        .subtitle("The dark scheme is always used when the system style is dark")
-        .model(&gtk::StringList::new(&["Light", "Dark"]))
+        .title(tr("Color Scheme"))
+        .subtitle(tr(
+            "The dark scheme is always used when the system style is dark",
+        ))
+        .model(&gtk::StringList::new(&[tr("Light"), tr("Dark")]))
         .build();
     colors.set_selected(u32::from(s.reader_colors == "dark"));
     let weak = Rc::downgrade(app);
@@ -126,16 +138,20 @@ pub fn show_preferences(app: &Rc<App>) {
     general.add(&reader_group);
 
     // Search.
-    let search_group = adw::PreferencesGroup::builder().title("Search").build();
+    let search_group = adw::PreferencesGroup::builder().title(tr("Search")).build();
     let engines_row = adw::ComboRow::builder()
-        .title("Default Search Engine")
+        .title(tr("Default Search Engine"))
         .build();
     search_group.add(&engines_row);
     let list_group = adw::PreferencesGroup::builder()
-        .title("Search Engines")
-        .description("Custom engines use a URL template where %s is replaced by the search terms.")
+        .title(tr("Search Engines"))
+        .description(tr(
+            "Custom engines use a URL template where %s is replaced by the search terms.",
+        ))
         .build();
-    let add_name = adw::EntryRow::builder().title("New engine name").build();
+    let add_name = adw::EntryRow::builder()
+        .title(tr("New engine name"))
+        .build();
     let add_url = adw::EntryRow::builder()
         .title("URL template, e.g. https://example.com/?q=%s")
         .show_apply_button(true)
@@ -178,10 +194,10 @@ pub fn show_preferences(app: &Rc<App>) {
                 if s.search_engines.len() > 1 {
                     let del = gtk::Button::builder()
                         .icon_name("user-trash-symbolic")
-                        .tooltip_text("Remove")
+                        .tooltip_text(tr("Remove"))
                         .valign(gtk::Align::Center)
                         .build()
-                        .labelled(&format!("Remove {}", e.name));
+                        .labelled(&trf!("Remove {}", e.name));
                     del.add_css_class("flat");
                     let name = e.name.clone();
                     let weak = Rc::downgrade(&app);
@@ -239,7 +255,7 @@ pub fn show_preferences(app: &Rc<App>) {
                 .settings
                 .borrow()
                 .engine_problem(&name, &url)
-                .unwrap_or("This search engine cannot be added");
+                .unwrap_or(tr("This search engine cannot be added"));
             let bad_name = name.trim().is_empty() || problem.contains("name");
             if bad_name {
                 helix_app_common::set_input_error(&name_row, None, Some(problem));
@@ -259,14 +275,14 @@ pub fn show_preferences(app: &Rc<App>) {
 
     // Privacy.
     let privacy = adw::PreferencesPage::builder()
-        .title("Privacy")
+        .title(tr("Privacy"))
         .icon_name("security-high-symbolic")
         .build();
     let content = adw::PreferencesGroup::builder()
-        .title("Web Content")
+        .title(tr("Web Content"))
         .build();
     let js = adw::SwitchRow::builder()
-        .title("Enable JavaScript")
+        .title(tr("Enable JavaScript"))
         .active(s.javascript)
         .build();
     let weak = Rc::downgrade(app);
@@ -278,8 +294,8 @@ pub fn show_preferences(app: &Rc<App>) {
     });
     content.add(&js);
     let popups = adw::SwitchRow::builder()
-        .title("Block Pop-up Windows")
-        .subtitle("Windows opened by pages without a click")
+        .title(tr("Block Pop-up Windows"))
+        .subtitle(tr("Windows opened by pages without a click"))
         .active(!s.enable_popups)
         .build();
     let weak = Rc::downgrade(app);
@@ -291,11 +307,11 @@ pub fn show_preferences(app: &Rc<App>) {
     });
     content.add(&popups);
     let cookies = adw::ComboRow::builder()
-        .title("Cookies")
+        .title(tr("Cookies"))
         .model(&gtk::StringList::new(&[
-            "Always Accept",
-            "Block Third-Party Cookies",
-            "Block All Cookies",
+            tr("Always Accept"),
+            tr("Block Third-Party Cookies"),
+            tr("Block All Cookies"),
         ]))
         .build();
     cookies.set_selected(match s.cookie_policy() {
@@ -314,12 +330,12 @@ pub fn show_preferences(app: &Rc<App>) {
     privacy.add(&content);
 
     let pw_group = adw::PreferencesGroup::builder()
-        .title("Passwords")
-        .description("Passwords are kept in your keyring (Secret Service).")
+        .title(tr("Passwords"))
+        .description(tr("Passwords are kept in your keyring (Secret Service)."))
         .build();
     let remember = adw::SwitchRow::builder()
-        .title("Remember Passwords")
-        .subtitle("Offer to save site logins and fill them in")
+        .title(tr("Remember Passwords"))
+        .subtitle(tr("Offer to save site logins and fill them in"))
         .active(s.remember_passwords)
         .build();
     let weak = Rc::downgrade(app);
@@ -331,7 +347,7 @@ pub fn show_preferences(app: &Rc<App>) {
     });
     pw_group.add(&remember);
     let saved = adw::ActionRow::builder()
-        .title("Saved Passwords…")
+        .title(tr("Saved Passwords…"))
         .activatable(true)
         .build();
     saved.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
@@ -345,17 +361,17 @@ pub fn show_preferences(app: &Rc<App>) {
     privacy.add(&pw_group);
 
     let data = adw::PreferencesGroup::builder()
-        .title("Browsing Data")
+        .title(tr("Browsing Data"))
         .build();
     let clear = adw::ActionRow::builder()
-        .title("Clear Browsing Data…")
+        .title(tr("Clear Browsing Data…"))
         .activatable(true)
         .build();
     clear.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
     data.add(&clear);
     let perms = adw::ActionRow::builder()
-        .title("Reset All Site Permissions")
-        .subtitle("Forget every allow/deny decision")
+        .title(tr("Reset All Site Permissions"))
+        .subtitle(tr("Forget every allow/deny decision"))
         .activatable(true)
         .build();
     data.add(&perms);
@@ -386,14 +402,14 @@ pub fn show_preferences(app: &Rc<App>) {
 /// outcome in the Preferences dialog.
 fn confirm_reset_permissions(app: &Rc<App>, prefs: &adw::PreferencesDialog) {
     if app.permissions.borrow().is_empty() {
-        prefs.add_toast(adw::Toast::new("No site permissions to reset"));
+        prefs.add_toast(adw::Toast::new(tr("No site permissions to reset")));
         return;
     }
     let d = adw::AlertDialog::new(
-        Some("Reset All Site Permissions?"),
-        Some("Every site will ask again before using your camera, location, notifications and other permissions."),
+        Some(tr("Reset All Site Permissions?")),
+        Some(tr("Every site will ask again before using your camera, location, notifications and other permissions.")),
     );
-    d.add_responses(&[("cancel", "_Cancel"), ("reset", "_Reset")]);
+    d.add_responses(&[("cancel", tr("_Cancel")), ("reset", tr("_Reset"))]);
     d.set_response_appearance("reset", adw::ResponseAppearance::Destructive);
     d.set_default_response(Some("cancel"));
     d.set_close_response("cancel");
@@ -403,7 +419,7 @@ fn confirm_reset_permissions(app: &Rc<App>, prefs: &adw::PreferencesDialog) {
         if let Some(app) = weak.upgrade() {
             app.permissions.borrow_mut().clear();
             app.save_permissions();
-            p.add_toast(adw::Toast::new("Site permissions reset"));
+            p.add_toast(adw::Toast::new(tr("Site permissions reset")));
         }
     });
     d.present(Some(prefs));
@@ -411,27 +427,27 @@ fn confirm_reset_permissions(app: &Rc<App>, prefs: &adw::PreferencesDialog) {
 
 fn show_clear_data(app: &Rc<App>, over: &adw::PreferencesDialog) {
     let d = adw::AlertDialog::new(
-        Some("Clear Browsing Data?"),
-        Some("Data from all time will be removed."),
+        Some(tr("Clear Browsing Data?")),
+        Some(tr("Data from all time will be removed.")),
     );
     let list = gtk::Box::new(gtk::Orientation::Vertical, 6);
     let site = gtk::CheckButton::builder()
-        .label("Cookies and site data")
+        .label(tr("Cookies and site data"))
         .active(true)
         .build();
     let cache = gtk::CheckButton::builder()
-        .label("Cached files")
+        .label(tr("Cached files"))
         .active(true)
         .build();
     let history = gtk::CheckButton::builder()
-        .label("Browsing history")
+        .label(tr("Browsing history"))
         .active(false)
         .build();
     list.append(&site);
     list.append(&cache);
     list.append(&history);
     d.set_extra_child(Some(&list));
-    d.add_responses(&[("cancel", "_Cancel"), ("clear", "C_lear")]);
+    d.add_responses(&[("cancel", tr("_Cancel")), ("clear", tr("C_lear"))]);
     d.set_response_appearance("clear", adw::ResponseAppearance::Destructive);
     d.set_close_response("cancel");
     let weak = Rc::downgrade(app);
@@ -445,8 +461,8 @@ fn show_clear_data(app: &Rc<App>, over: &adw::PreferencesDialog) {
                 history.is_active(),
                 move |r| {
                     let text = match r {
-                        Ok(()) => "Browsing data cleared".to_string(),
-                        Err(e) => format!("Could not clear browsing data: {e}"),
+                        Ok(()) => tr("Browsing data cleared").to_string(),
+                        Err(e) => trf!("Could not clear browsing data: {e}", e = e),
                     };
                     match prefs.upgrade() {
                         Some(p) if p.parent().is_some() => p.add_toast(adw::Toast::new(&text)),
@@ -467,34 +483,62 @@ fn show_clear_data(app: &Rc<App>, over: &adw::PreferencesDialog) {
 
 pub fn show_history(app: &Rc<App>) {
     let dialog = adw::Dialog::builder()
-        .title("History")
+        .title(tr("History"))
         .content_width(640)
         .content_height(560)
         .build();
     let header = adw::HeaderBar::new();
-    let clear = gtk::Button::with_label("Clear All…");
+    let clear = gtk::Button::with_label(tr("Clear All…"));
     clear.add_css_class("destructive-action");
     header.pack_start(&clear);
     let search = gtk::SearchEntry::builder()
-        .placeholder_text("Search history")
+        .placeholder_text(tr("Search history"))
         .margin_start(12)
         .margin_end(12)
         .margin_top(6)
         .margin_bottom(6)
         .build();
-    helix_app_common::set_accessible_label(&search, "Search History");
+    helix_app_common::set_accessible_label(&search, tr("Search History"));
     let list = gtk::ListBox::builder()
         .selection_mode(gtk::SelectionMode::None)
         .build();
     list.add_css_class("navigation-sidebar");
+    // Day of each row (by URL, which is unique in history), for headers.
+    let days: Rc<RefCell<HashMap<String, String>>> = Rc::default();
+    {
+        let days = days.clone();
+        list.set_header_func(move |row, before| {
+            let days = days.borrow();
+            let day = days.get(row.widget_name().as_str());
+            let prev = before.and_then(|b| days.get(b.widget_name().as_str()));
+            match day.filter(|d| Some(*d) != prev) {
+                Some(d) => {
+                    let l = gtk::Label::builder()
+                        .label(d)
+                        .xalign(0.0)
+                        .margin_start(12)
+                        .margin_top(if before.is_some() { 12 } else { 6 })
+                        .margin_bottom(6)
+                        .build();
+                    l.add_css_class("heading");
+                    row.set_header(Some(&l));
+                }
+                None => row.set_header(None::<&gtk::Widget>),
+            }
+        });
+    }
     let scroll = gtk::ScrolledWindow::builder()
         .vexpand(true)
         .hscrollbar_policy(gtk::PolicyType::Never)
         .child(&list)
         .build();
+    let status = adw::StatusPage::builder().vexpand(true).build();
+    let stack = gtk::Stack::new();
+    stack.add_named(&scroll, Some("list"));
+    stack.add_named(&status, Some("empty"));
     let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
     content.append(&search);
-    content.append(&scroll);
+    content.append(&stack);
     let tv = adw::ToolbarView::new();
     tv.add_top_bar(&header);
     tv.set_content(Some(&content));
@@ -504,26 +548,58 @@ pub fn show_history(app: &Rc<App>) {
         let weak = Rc::downgrade(app);
         let list = list.clone();
         let search = search.clone();
+        let (status, stack, days) = (status.clone(), stack.clone(), days.clone());
         Rc::new(move || {
             let Some(app) = weak.upgrade() else { return };
             while let Some(r) = list.row_at_index(0) {
                 list.remove(&r);
             }
-            let entries = app.history.borrow().recent(&search.text(), 500);
+            let query = search.text();
+            let entries = app.history.borrow().recent(&query, 500);
             if entries.is_empty() {
-                let l = gtk::Label::builder()
-                    .label("No history")
-                    .margin_top(24)
-                    .build();
-                l.add_css_class("dim-label");
-                list.append(
-                    &gtk::ListBoxRow::builder()
-                        .child(&l)
-                        .activatable(false)
-                        .build(),
-                );
+                let (icon, title, description) = history_empty_state(&query);
+                status.set_icon_name(Some(icon));
+                status.set_title(title);
+                status.set_description(Some(description));
+                stack.set_visible_child_name("empty");
+                if !query.is_empty() {
+                    helix_app_common::announce_settled(&status, title);
+                }
                 return;
             }
+            stack.set_visible_child_name("list");
+            if !query.is_empty() {
+                helix_app_common::announce_settled(
+                    &list,
+                    &crate::window::result_count(entries.len()),
+                );
+            }
+            let today = glib::DateTime::now_local()
+                .ok()
+                .map(|d| days_from_civil(d.year(), d.month(), d.day_of_month()));
+            let mut day_of = days.borrow_mut();
+            day_of.clear();
+            for e in &entries {
+                let visit = glib::DateTime::from_unix_local(e.last_visit).ok();
+                let heading = match (&visit, today) {
+                    (Some(v), Some(today)) => {
+                        let ago = today - days_from_civil(v.year(), v.month(), v.day_of_month());
+                        match day_heading(ago) {
+                            DayHeading::Today => tr("Today").to_string(),
+                            DayHeading::Yesterday => tr("Yesterday").to_string(),
+                            DayHeading::Weekday => {
+                                v.format("%A").map(|s| s.to_string()).unwrap_or_default()
+                            }
+                            DayHeading::Date => {
+                                v.format("%x").map(|s| s.to_string()).unwrap_or_default()
+                            }
+                        }
+                    }
+                    _ => String::new(),
+                };
+                day_of.insert(e.url.clone(), heading);
+            }
+            drop(day_of);
             for e in entries {
                 let row_box = gtk::Box::builder()
                     .spacing(10)
@@ -546,9 +622,10 @@ pub fn show_history(app: &Rc<App>) {
                         .ellipsize(gtk::pango::EllipsizeMode::End)
                         .build(),
                 );
+                // The day is in the group header; rows show the time.
                 let when = glib::DateTime::from_unix_local(e.last_visit)
                     .ok()
-                    .and_then(|d| d.format("%x %X").ok())
+                    .and_then(|d| d.format("%X").ok())
                     .map(|s| s.to_string())
                     .unwrap_or_default();
                 let sub = gtk::Label::builder()
@@ -562,10 +639,10 @@ pub fn show_history(app: &Rc<App>) {
                 row_box.append(&text);
                 let del = gtk::Button::builder()
                     .icon_name("edit-delete-symbolic")
-                    .tooltip_text("Remove")
+                    .tooltip_text(tr("Remove"))
                     .valign(gtk::Align::Center)
                     .build()
-                    .labelled(&format!("Remove {title}"));
+                    .labelled(&trf!("Remove {title}", title = title));
                 helix_app_common::focus::set_part(&del, "remove");
                 del.add_css_class("flat");
                 row_box.append(&del);
@@ -573,6 +650,10 @@ pub fn show_history(app: &Rc<App>) {
                     .child(&row_box)
                     .name(e.url.as_str())
                     .build();
+                // Headers are not focusable: say the day with the row.
+                if let Some(day) = days.borrow().get(&e.url).filter(|d| !d.is_empty()) {
+                    row.update_property(&[gtk::accessible::Property::Description(day)]);
+                }
                 let weak = Rc::downgrade(&app);
                 let url = e.url.clone();
                 let r = row.clone();
@@ -619,10 +700,10 @@ pub fn show_history(app: &Rc<App>) {
     let dlg = dialog.clone();
     clear.connect_clicked(move |_| {
         let confirm = adw::AlertDialog::new(
-            Some("Clear All History?"),
-            Some("All pages you visited will be removed from history."),
+            Some(tr("Clear All History?")),
+            Some(tr("All pages you visited will be removed from history.")),
         );
-        confirm.add_responses(&[("cancel", "_Cancel"), ("clear", "C_lear")]);
+        confirm.add_responses(&[("cancel", tr("_Cancel")), ("clear", tr("C_lear"))]);
         confirm.set_response_appearance("clear", adw::ResponseAppearance::Destructive);
         confirm.set_close_response("cancel");
         let weak = weak.clone();
@@ -638,7 +719,59 @@ pub fn show_history(app: &Rc<App>) {
     });
     if let Some(w) = parent(app) {
         dialog.present(Some(&w));
+        dialog.set_focus(Some(&search));
     }
+}
+
+/// Icon, title and description of the history dialog with nothing to
+/// list: no history at all, or none matching `query`.
+fn history_empty_state(query: &str) -> (&'static str, &'static str, &'static str) {
+    if query.trim().is_empty() {
+        (
+            "document-open-recent-symbolic",
+            tr("No History"),
+            tr("Pages you visit will appear here"),
+        )
+    } else {
+        (
+            "edit-find-symbolic",
+            tr("No Results Found"),
+            tr("Try a different search"),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum DayHeading {
+    Today,
+    Yesterday,
+    /// Within the last week: the weekday's name.
+    Weekday,
+    /// Older (or in the future, for a changed clock): the date.
+    Date,
+}
+
+/// How a history group `days_ago` days old is headed.
+fn day_heading(days_ago: i64) -> DayHeading {
+    match days_ago {
+        0 => DayHeading::Today,
+        1 => DayHeading::Yesterday,
+        2..=6 => DayHeading::Weekday,
+        _ => DayHeading::Date,
+    }
+}
+
+/// Days since 1970-01-01 of a proleptic Gregorian date, so calendar days
+/// can be subtracted across month and year ends.
+fn days_from_civil(year: i32, month: i32, day: i32) -> i64 {
+    let (y, m, d) = (i64::from(year), i64::from(month), i64::from(day));
+    let y = if m <= 2 { y - 1 } else { y };
+    let era = y.div_euclid(400);
+    let yoe = y - era * 400;
+    let mp = (m + 9) % 12;
+    let doy = (153 * mp + 2) / 5 + d - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    era * 146_097 + doe - 719_468
 }
 
 // ---- bookmarks import / export --------------------------------------------
@@ -656,7 +789,7 @@ fn html_filter() -> gio::ListStore {
 
 pub fn import_bookmarks(app: &Rc<App>) {
     let dialog = gtk::FileDialog::builder()
-        .title("Import Bookmarks")
+        .title(tr("Import Bookmarks"))
         .filters(&html_filter())
         .modal(true)
         .build();
@@ -676,10 +809,10 @@ pub fn import_bookmarks(app: &Rc<App>) {
                         app.bookmarks_changed();
                         toast(
                             &app,
-                            &format!("Imported {n} bookmark{}", if n == 1 { "" } else { "s" }),
+                            &trnf!("Imported {n} bookmark", "Imported {n} bookmarks", n),
                         );
                     }
-                    Err(e) => toast(&app, &format!("Could not read file: {e}")),
+                    Err(e) => toast(&app, &trf!("Could not read file: {e}", e = e)),
                 }
             });
         },
@@ -688,7 +821,7 @@ pub fn import_bookmarks(app: &Rc<App>) {
 
 pub fn export_bookmarks(app: &Rc<App>) {
     let dialog = gtk::FileDialog::builder()
-        .title("Export Bookmarks")
+        .title(tr("Export Bookmarks"))
         .filters(&html_filter())
         .initial_name("bookmarks.html")
         .modal(true)
@@ -710,7 +843,7 @@ pub fn export_bookmarks(app: &Rc<App>) {
                 None::<&gio::Cancellable>,
                 move |res| {
                     if let (Err((_, e)), Some(app)) = (res, weak.upgrade()) {
-                        toast(&app, &format!("Could not export bookmarks: {e}"));
+                        toast(&app, &trf!("Could not export bookmarks: {e}", e = e));
                     }
                 },
             );
@@ -724,7 +857,7 @@ pub fn export_bookmarks(app: &Rc<App>) {
 /// themselves are never shown.
 pub fn show_passwords(app: &Rc<App>) {
     let dialog = adw::Dialog::builder()
-        .title("Passwords")
+        .title(tr("Passwords"))
         .content_width(460)
         .content_height(520)
         .build();
@@ -733,7 +866,7 @@ pub fn show_passwords(app: &Rc<App>) {
     page.add(&group);
     let status = adw::StatusPage::builder()
         .icon_name("dialog-password-symbolic")
-        .title("Loading…")
+        .title(tr("Loading…"))
         .build();
     let stack = gtk::Stack::new();
     stack.add_named(&status, Some("status"));
@@ -751,8 +884,8 @@ pub fn show_passwords(app: &Rc<App>) {
 }
 
 fn show_no_passwords(stack: &gtk::Stack, status: &adw::StatusPage) {
-    status.set_title("No Saved Passwords");
-    status.set_description(Some("Logins you save while browsing appear here."));
+    status.set_title(tr("No Saved Passwords"));
+    status.set_description(Some(tr("Logins you save while browsing appear here.")));
     stack.set_visible_child_name("status");
 }
 
@@ -776,17 +909,22 @@ impl PasswordList {
         host: String,
     ) {
         let who = if user.is_empty() {
-            format!("the saved password for {host}")
+            trf!("the saved password for {host}", host = host)
         } else {
-            format!("the saved password for {user} on {host}")
+            trf!(
+                "the saved password for {user} on {host}",
+                user = user,
+                host = host
+            )
         };
         let d = adw::AlertDialog::new(
-            Some("Remove Password?"),
-            Some(&format!(
-                "This removes {who} from your keyring. It cannot be undone."
+            Some(tr("Remove Password?")),
+            Some(&trf!(
+                "This removes {who} from your keyring. It cannot be undone.",
+                who = who
             )),
         );
-        d.add_responses(&[("cancel", "_Cancel"), ("remove", "_Remove")]);
+        d.add_responses(&[("cancel", tr("_Cancel")), ("remove", tr("_Remove"))]);
         d.set_response_appearance("remove", adw::ResponseAppearance::Destructive);
         d.set_default_response(Some("cancel"));
         d.set_close_response("cancel");
@@ -816,22 +954,25 @@ impl PasswordList {
                 Ok(Ok(())) => {
                     me.group.remove(&row);
                     me.rows.set(me.rows.get().saturating_sub(1));
-                    me.toasts
-                        .add_toast(adw::Toast::new(&format!("Password for {host} removed")));
+                    me.toasts.add_toast(adw::Toast::new(&trf!(
+                        "Password for {host} removed",
+                        host = host
+                    )));
                     if me.rows.get() == 0 {
                         show_no_passwords(&me.stack, &me.status);
                     }
                 }
                 Ok(Err(e)) => {
                     b.set_sensitive(true);
-                    me.toasts.add_toast(adw::Toast::new(&format!(
-                        "Could not remove the password: {e}"
+                    me.toasts.add_toast(adw::Toast::new(&trf!(
+                        "Could not remove the password: {e}",
+                        e = e
                     )));
                 }
                 Err(_) => {
                     b.set_sensitive(true);
                     me.toasts
-                        .add_toast(adw::Toast::new("Could not remove the password"));
+                        .add_toast(adw::Toast::new(tr("Could not remove the password")));
                 }
             }
         });
@@ -850,7 +991,7 @@ fn load_passwords(
         let logins = match r {
             Ok(Ok(l)) => l,
             Ok(Err(e)) => {
-                status.set_title("Keyring Unavailable");
+                status.set_title(tr("Keyring Unavailable"));
                 status.set_description(Some(&glib::markup_escape_text(&e.to_string())));
                 stack.set_visible_child_name("status");
                 return;
@@ -878,14 +1019,14 @@ fn load_passwords(
             let row = adw::ActionRow::builder()
                 .title(glib::markup_escape_text(&host))
                 .subtitle(glib::markup_escape_text(if l.username.is_empty() {
-                    "(no user name)"
+                    tr("(no user name)")
                 } else {
                     &l.username
                 }))
                 .build();
             let del = gtk::Button::builder()
                 .icon_name("user-trash-symbolic")
-                .tooltip_text("Remove")
+                .tooltip_text(tr("Remove"))
                 .valign(gtk::Align::Center)
                 .build()
                 .labelled(&remove_password_name(&host, &l.username));
@@ -943,8 +1084,8 @@ pub fn install_web_app(w: &Rc<Window>) {
     let Some(icon) = launcher_icon(tab.view.favicon()) else {
         message(
             &win,
-            "Could Not Install Web Application",
-            "No icon is available for this site.",
+            tr("Could Not Install Web Application"),
+            tr("No icon is available for this site."),
         );
         return;
     };
@@ -956,11 +1097,18 @@ pub fn install_web_app(w: &Rc<Window>) {
         match r {
             Ok(Ok((_, name))) => message(
                 &win,
-                "Web Application Installed",
-                &format!("“{name}” can now be started from your applications."),
+                tr("Web Application Installed"),
+                &trf!(
+                    "“{name}” can now be started from your applications.",
+                    name = name
+                ),
             ),
             Ok(Err(webapp::Error::Cancelled)) => {}
-            Ok(Err(e)) => message(&win, "Could Not Install Web Application", &e.to_string()),
+            Ok(Err(e)) => message(
+                &win,
+                tr("Could Not Install Web Application"),
+                &e.to_string(),
+            ),
             Err(_) => {}
         }
     });
@@ -973,10 +1121,12 @@ pub fn uninstall_web_app(app: &Rc<App>) {
     };
     let Some(w) = parent(app) else { return };
     let d = adw::AlertDialog::new(
-        Some("Uninstall Web Application?"),
-        Some("The launcher is removed. Its saved site data stays on disk."),
+        Some(tr("Uninstall Web Application?")),
+        Some(tr(
+            "The launcher is removed. Its saved site data stays on disk.",
+        )),
     );
-    d.add_responses(&[("cancel", "_Cancel"), ("uninstall", "_Uninstall")]);
+    d.add_responses(&[("cancel", tr("_Cancel")), ("uninstall", tr("_Uninstall"))]);
     d.set_response_appearance("uninstall", adw::ResponseAppearance::Destructive);
     d.set_close_response("cancel");
     let gtk_app = app.gtk.clone();
@@ -988,7 +1138,7 @@ pub fn uninstall_web_app(app: &Rc<App>) {
         glib::spawn_future_local(async move {
             match gio::spawn_blocking(move || webapp::uninstall(&wa)).await {
                 Ok(Ok(())) => gtk_app.quit(),
-                Ok(Err(e)) => message(&w2, "Could Not Uninstall", &e.to_string()),
+                Ok(Err(e)) => message(&w2, tr("Could Not Uninstall"), &e.to_string()),
                 Err(_) => {}
             }
         });
@@ -1002,9 +1152,13 @@ pub fn uninstall_web_app(app: &Rc<App>) {
 /// "Remove password for jane on example.org".
 fn remove_password_name(host: &str, user: &str) -> String {
     if user.is_empty() {
-        format!("Remove password for {host}")
+        trf!("Remove password for {host}", host = host)
     } else {
-        format!("Remove password for {user} on {host}")
+        trf!(
+            "Remove password for {user} on {host}",
+            user = user,
+            host = host
+        )
     }
 }
 
@@ -1014,7 +1168,7 @@ fn fill_allowed_sites(list: &gtk::ListBox, app: &Rc<App>) {
     let sites = app.web_app_prefs.borrow().additional_urls.clone();
     if sites.is_empty() {
         let row = adw::ActionRow::builder()
-            .title("No additional sites")
+            .title(tr("No additional sites"))
             .activatable(false)
             .build();
         row.add_css_class("dim-label");
@@ -1027,10 +1181,10 @@ fn fill_allowed_sites(list: &gtk::ListBox, app: &Rc<App>) {
             .build();
         let del = gtk::Button::builder()
             .icon_name("user-trash-symbolic")
-            .tooltip_text("Remove")
+            .tooltip_text(tr("Remove"))
             .valign(gtk::Align::Center)
             .build()
-            .labelled(&format!("Remove {site}"));
+            .labelled(&trf!("Remove {site}", site = site));
         del.add_css_class("flat");
         let weak = Rc::downgrade(app);
         let list2 = list.clone();
@@ -1054,10 +1208,10 @@ pub fn show_web_app_preferences(app: &Rc<App>) {
         return;
     };
     let dialog = adw::PreferencesDialog::new();
-    dialog.set_title("Web Application Settings");
+    dialog.set_title(tr("Web Application Settings"));
     let page = adw::PreferencesPage::new();
     let group = adw::PreferencesGroup::builder()
-        .title("Additional Allowed Sites")
+        .title(tr("Additional Allowed Sites"))
         .description(glib::markup_escape_text(&format!(
             "Links to these sites open in this web application instead of the browser, \
              like links within {}. Write *.example.com to include all subdomains.",
@@ -1071,7 +1225,7 @@ pub fn show_web_app_preferences(app: &Rc<App>) {
     group.add(&list);
     let add_group = adw::PreferencesGroup::new();
     let add = adw::EntryRow::builder()
-        .title("Add site, e.g. accounts.example.com")
+        .title(tr("Add site, e.g. accounts.example.com"))
         .show_apply_button(true)
         .build();
     add_group.add(&add);
@@ -1092,13 +1246,13 @@ pub fn show_web_app_preferences(app: &Rc<App>) {
                 fill_allowed_sites(&list, &app);
             }
             None => {
-                const PROBLEM: &str = "Enter a site address, such as example.org";
-                helix_app_common::set_input_error(row, None, Some(PROBLEM));
+                const PROBLEM: &str = n_("Enter a site address, such as example.org");
+                helix_app_common::set_input_error(row, None, Some(tr(PROBLEM)));
                 if let Some(d) = row
                     .ancestor(adw::PreferencesDialog::static_type())
                     .and_downcast::<adw::PreferencesDialog>()
                 {
-                    d.add_toast(adw::Toast::new(PROBLEM));
+                    d.add_toast(adw::Toast::new(tr(PROBLEM)));
                 }
             }
         }
@@ -1107,7 +1261,29 @@ pub fn show_web_app_preferences(app: &Rc<App>) {
 }
 #[cfg(test)]
 mod tests {
-    use super::remove_password_name;
+    use super::{
+        day_heading, days_from_civil, history_empty_state, remove_password_name, DayHeading,
+    };
+
+    #[test]
+    fn history_groups_by_calendar_day() {
+        assert_eq!(days_from_civil(1970, 1, 1), 0);
+        assert_eq!(
+            days_from_civil(2000, 3, 1) - days_from_civil(2000, 2, 28),
+            2
+        );
+        assert_eq!(
+            days_from_civil(2026, 1, 1) - days_from_civil(2025, 12, 31),
+            1
+        );
+        assert_eq!(day_heading(0), DayHeading::Today);
+        assert_eq!(day_heading(1), DayHeading::Yesterday);
+        assert_eq!(day_heading(6), DayHeading::Weekday);
+        assert_eq!(day_heading(7), DayHeading::Date);
+        assert_eq!(day_heading(-1), DayHeading::Date);
+        assert_eq!(history_empty_state("").1, "No History");
+        assert_eq!(history_empty_state("x").1, "No Results Found");
+    }
 
     #[test]
     fn password_remove_names_its_login() {

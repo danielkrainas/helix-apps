@@ -9,6 +9,9 @@ use crate::render::{DocInfo, JobKey, Renderer, Reply, TextPurpose};
 use crate::state::{self, DocState, StateStore};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
+use helix_app_common::trnf;
 use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
@@ -16,7 +19,7 @@ use std::rc::{Rc, Weak};
 use std::time::Duration;
 
 pub const APP_ID: &str = "org.helix.DocumentViewer";
-const APP_NAME: &str = "Document Viewer";
+const APP_NAME: &str = n_("Document Viewer");
 const BIN: &str = "helix-document-viewer";
 
 /// Where to start in a newly opened document.
@@ -49,7 +52,7 @@ pub fn run(opts: Options) -> glib::ExitCode {
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::NON_UNIQUE)
         .build();
-    helix_app_common::install_standard_actions(&app, APP_NAME, "View PDF documents");
+    helix_app_common::install_standard_actions(&app, tr(APP_NAME), tr("View PDF documents"));
     app.connect_startup(|app| {
         load_css();
         let new_window = gio::ActionEntry::builder("new-window")
@@ -226,7 +229,7 @@ impl Win {
 
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .default_width(1000)
             .default_height(800)
             .width_request(360)
@@ -239,34 +242,34 @@ impl Win {
 
         // ----- header -----
         let header = adw::HeaderBar::new();
-        let title = adw::WindowTitle::new(APP_NAME, "");
+        let title = adw::WindowTitle::new(tr(APP_NAME), "");
         header.set_title_widget(Some(&title));
         let open_btn = gtk::Button::builder()
             .icon_name("document-open-symbolic")
-            .tooltip_text("Open…")
+            .tooltip_text(tr("Open…"))
             .action_name("win.open")
             .build()
-            .labelled("Open…");
+            .labelled(tr("Open…"));
         header.pack_start(&open_btn);
         let sidebar_btn = gtk::ToggleButton::builder()
             .icon_name("sidebar-show-symbolic")
-            .tooltip_text("Sidebar (F9)")
+            .tooltip_text(tr("Sidebar (F9)"))
             .action_name("win.sidebar")
             .build()
-            .labelled("Sidebar");
+            .labelled(tr("Sidebar"));
         header.pack_start(&sidebar_btn);
 
         let page_entry = gtk::Entry::builder()
             .width_chars(4)
             .max_width_chars(8)
             .xalign(1.0)
-            .tooltip_text("Go to page (Ctrl+L)")
+            .tooltip_text(tr("Go to page (Ctrl+L)"))
             .build();
         page_entry.add_css_class("dv-page-entry");
         let page_of = gtk::Label::new(None);
         page_of.add_css_class("dim-label");
         // "Current Page", described by the "of 12" next to it.
-        helix_app_common::set_accessible_label(&page_entry, "Current Page");
+        helix_app_common::set_accessible_label(&page_entry, tr("Current Page"));
         page_entry.update_relation(&[gtk::accessible::Relation::DescribedBy(&[
             page_of.upcast_ref()
         ])]);
@@ -276,38 +279,40 @@ impl Win {
 
         let menu = gio::Menu::new();
         let s1 = gio::Menu::new();
-        s1.append(Some("_Open…"), Some("win.open"));
-        s1.append(Some("New _Window"), Some("app.new-window"));
+        s1.append(Some(tr("_Open…")), Some("win.open"));
+        s1.append(Some(tr("New _Window")), Some("app.new-window"));
         menu.append_section(None, &s1);
         let s2 = gio::Menu::new();
-        s2.append(Some("_Dual Page"), Some("win.dual"));
-        s2.append(Some("_Night Mode"), Some("win.night"));
-        s2.append(Some("_Caret Navigation"), Some("win.caret"));
-        s2.append(Some("Rotate _Left"), Some("win.rotate-left"));
-        s2.append(Some("Rotate _Right"), Some("win.rotate-right"));
+        s2.append(Some(tr("_Dual Page")), Some("win.dual"));
+        s2.append(Some(tr("_Night Mode")), Some("win.night"));
+        s2.append(Some(tr("_Caret Navigation")), Some("win.caret"));
+        s2.append(Some(tr("Rotate _Left")), Some("win.rotate-left"));
+        s2.append(Some(tr("Rotate _Right")), Some("win.rotate-right"));
         menu.append_section(None, &s2);
         let s3 = gio::Menu::new();
-        s3.append(Some("_Presentation"), Some("win.presentation"));
-        s3.append(Some("_Fullscreen"), Some("win.fullscreen"));
+        s3.append(Some(tr("_Presentation")), Some("win.presentation"));
+        s3.append(Some(tr("_Fullscreen")), Some("win.fullscreen"));
         menu.append_section(None, &s3);
         let s4 = gio::Menu::new();
-        s4.append(Some("_Print…"), Some("win.print"));
-        s4.append(Some("P_roperties"), Some("win.properties"));
+        s4.append(Some(tr("_Print…")), Some("win.print"));
+        s4.append(Some(tr("P_roperties")), Some("win.properties"));
         menu.append_section(None, &s4);
         let s5 = gio::Menu::new();
         s5.append(
-            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some(helix_app_common::i18n::tr(
+                helix_app_common::shortcuts::MENU_LABEL,
+            )),
             Some(helix_app_common::shortcuts::ACTION),
         );
-        s5.append(Some("_About Document Viewer"), Some("app.about"));
+        s5.append(Some(tr("_About Document Viewer")), Some("app.about"));
         menu.append_section(None, &s5);
         let menu_btn = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .primary(true)
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         header.pack_end(&menu_btn);
 
         // Zoom menu.
@@ -319,9 +324,9 @@ impl Win {
         zmenu.append_section(None, &zc);
         let zm = gio::Menu::new();
         for (label, mode) in [
-            ("Fit _Width", "fit-width"),
-            ("Fit _Page", "fit-page"),
-            ("_Automatic", "automatic"),
+            (tr("Fit _Width"), "fit-width"),
+            (tr("Fit _Page"), "fit-page"),
+            (tr("_Automatic"), "automatic"),
         ] {
             let item = gio::MenuItem::new(Some(label), None);
             item.set_action_and_target_value(Some("win.zoom-mode"), Some(&mode.to_variant()));
@@ -342,11 +347,11 @@ impl Win {
         let zoom_entry = gtk::Entry::builder()
             .width_chars(6)
             .xalign(1.0)
-            .tooltip_text("Zoom (%)")
+            .tooltip_text(tr("Zoom (%)"))
             .build()
-            .labelled("Zoom Level");
-        let zout = icon_button("zoom-out-symbolic", "Zoom Out", "win.zoom-out");
-        let zin = icon_button("zoom-in-symbolic", "Zoom In", "win.zoom-in");
+            .labelled(tr("Zoom Level"));
+        let zout = icon_button("zoom-out-symbolic", tr("Zoom Out"), "win.zoom-out");
+        let zin = icon_button("zoom-in-symbolic", tr("Zoom In"), "win.zoom-in");
         zout.add_css_class("flat");
         zin.add_css_class("flat");
         zbox.append(&zout);
@@ -356,16 +361,16 @@ impl Win {
         let zoom_btn = gtk::MenuButton::builder()
             .label("100%")
             .popover(&zpop)
-            .tooltip_text("Zoom")
+            .tooltip_text(tr("Zoom"))
             .build();
         header.pack_end(&zoom_btn);
         header.pack_end(&page_box);
         let search_btn = gtk::Button::builder()
             .icon_name("system-search-symbolic")
-            .tooltip_text("Search (Ctrl+F)")
+            .tooltip_text(tr("Search (Ctrl+F)"))
             .action_name("win.search")
             .build()
-            .labelled("Search");
+            .labelled(tr("Search"));
         header.pack_end(&search_btn);
         let header_doc: Vec<gtk::Widget> = vec![
             sidebar_btn.upcast(),
@@ -377,11 +382,11 @@ impl Win {
         // ----- start page -----
         let status = adw::StatusPage::builder()
             .icon_name("x-office-document-symbolic")
-            .title("Open a Document")
-            .description("Drag and drop a PDF here, or choose one")
+            .title(tr("Open a Document"))
+            .description(tr("Drag and drop a PDF here, or choose one"))
             .build();
         let open_big = gtk::Button::builder()
-            .label("_Open…")
+            .label(tr("_Open…"))
             .use_underline(true)
             .action_name("win.open")
             .halign(gtk::Align::Center)
@@ -392,7 +397,7 @@ impl Win {
         recent_list.add_css_class("boxed-list");
         recent_list.set_selection_mode(gtk::SelectionMode::None);
         let recent_label = gtk::Label::builder()
-            .label("Recent Documents")
+            .label(tr("Recent Documents"))
             .xalign(0.0)
             .build();
         recent_label.add_css_class("heading");
@@ -485,12 +490,12 @@ impl Win {
 
         // Search.
         let search_entry = gtk::SearchEntry::builder()
-            .placeholder_text("Search document")
+            .placeholder_text(tr("Search document"))
             .search_delay(300)
             .build()
-            .labelled("Search Document");
-        let case_btn = gtk::CheckButton::with_label("Match case");
-        let words_btn = gtk::CheckButton::with_label("Whole words only");
+            .labelled(tr("Search Document"));
+        let case_btn = gtk::CheckButton::with_label(tr("Match case"));
+        let words_btn = gtk::CheckButton::with_label(tr("Whole words only"));
         let search_status = gtk::Label::builder().xalign(0.0).build();
         search_status.add_css_class("dim-label");
         let results_store = gtk::StringList::new(&[]);
@@ -524,19 +529,19 @@ impl Win {
         side_stack.add_titled_with_icon(
             &thumbs_scroll,
             Some("thumbnails"),
-            "Pages",
+            tr("Pages"),
             "view-grid-symbolic",
         );
         let outline_page = side_stack.add_titled_with_icon(
             &outline_scroll,
             Some("outline"),
-            "Outline",
+            tr("Outline"),
             "view-list-symbolic",
         );
         side_stack.add_titled_with_icon(
             &search_box,
             Some("search"),
-            "Search",
+            tr("Search"),
             "system-search-symbolic",
         );
         let switcher = adw::ViewSwitcher::builder()
@@ -803,9 +808,9 @@ impl Win {
             Box::new(|w, v| {
                 w.view.set_caret_mode(v);
                 w.toast(if v {
-                    "Caret navigation on: arrow keys move the caret, Shift+arrows select"
+                    tr("Caret navigation on: arrow keys move the caret, Shift+arrows select")
                 } else {
-                    "Caret navigation off"
+                    tr("Caret navigation off")
                 });
             }),
         );
@@ -913,9 +918,9 @@ impl Win {
 
         // Context menu, from the secondary button or Menu / Shift+F10.
         let cm = gio::Menu::new();
-        cm.append(Some("_Copy"), Some("win.copy"));
-        cm.append(Some("Select _All"), Some("win.select-all"));
-        cm.append(Some("_Caret Navigation"), Some("win.caret"));
+        cm.append(Some(tr("_Copy")), Some("win.copy"));
+        cm.append(Some(tr("Select _All")), Some("win.select-all"));
+        cm.append(Some(tr("_Caret Navigation")), Some("win.caret"));
         let pop = gtk::PopoverMenu::from_model(Some(&cm));
         pop.set_parent(&self.view);
         pop.set_has_arrow(false);
@@ -1160,7 +1165,7 @@ impl Win {
             let Some(hit) = search.hits().get(pos) else {
                 return;
             };
-            let page = format!("Page {}", win.model.label(hit.page));
+            let page = trf!("Page {}", win.model.label(hit.page));
             if let Some(p) = b.first_child().and_downcast::<gtk::Label>() {
                 p.set_label(&page);
             }
@@ -1298,7 +1303,7 @@ impl Win {
         if q.trim().is_empty() || self.model.info().is_none() {
             self.model.renderer.cancel_search();
         } else {
-            self.search_status.set_label("Searching…");
+            self.search_status.set_label(tr("Searching…"));
             self.model.renderer.search(
                 gen,
                 &q,
@@ -1480,7 +1485,7 @@ impl Win {
         filters.append(&pdf);
         filters.append(&all);
         let dialog = gtk::FileDialog::builder()
-            .title("Open Document")
+            .title(tr("Open Document"))
             .modal(true)
             .filters(&filters)
             .default_filter(&pdf)
@@ -1543,9 +1548,10 @@ impl Win {
             }
             Reply::OpenFailed { id, uri, message } if Some(id) == pending_id => {
                 self.pending.borrow_mut().take();
-                self.toast(&format!(
-                    "Unable to open “{}”: {message}",
-                    Self::display_name(&uri)
+                self.toast(&trf!(
+                    "Unable to open “{uri}”: {message}",
+                    uri = Self::display_name(&uri),
+                    message = message
                 ));
             }
             Reply::Image {
@@ -1608,7 +1614,7 @@ impl Win {
                 self.results_store.splice(at as u32, 0, &blanks);
                 let total = self.model.search.borrow().len();
                 self.search_status
-                    .set_label(&format!("Searching… {total} found"));
+                    .set_label(&trf!("Searching… {total} found", total = total));
                 let first = self.model.search.borrow().current().is_none();
                 if first {
                     // Jump to the first match at or after the current page.
@@ -1623,17 +1629,18 @@ impl Win {
                 if id == doc_id && gen == self.search_gen.get() =>
             {
                 let total = self.model.search.borrow().len();
-                self.search_status.set_label(&format!(
-                    "Searching page {page} of {}… {total} found",
-                    self.model.n_pages()
+                self.search_status.set_label(&trf!(
+                    "Searching page {page} of {n_pages}… {total} found",
+                    page = page,
+                    n_pages = self.model.n_pages(),
+                    total = total
                 ));
             }
             Reply::SearchDone { id, gen } if id == doc_id && gen == self.search_gen.get() => {
                 let total = self.model.search.borrow().len();
                 let text = match total {
-                    0 => "No results found".to_string(),
-                    1 => "1 result".to_string(),
-                    n => format!("{n} results"),
+                    0 => tr("No results found").to_string(),
+                    n => trnf!("{n} result", "{n} results", n),
                 };
                 helix_app_common::announce(
                     &self.search_status,
@@ -1813,7 +1820,7 @@ impl Win {
             self.print_settings.clone(),
             move |msg| {
                 if let Some(win) = w.upgrade() {
-                    win.toast(&format!("Printing failed: {msg}"));
+                    win.toast(&trf!("Printing failed: {msg}", msg = msg));
                 }
             },
         );

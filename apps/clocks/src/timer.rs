@@ -1,5 +1,6 @@
 //! Countdown timers on a monotonic timestamp.
 
+use helix_app_common::trf;
 use std::time::Duration;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -115,7 +116,7 @@ pub fn describe_duration(secs: u64) -> String {
         parts.push(format!("{h} h"));
     }
     if m > 0 {
-        parts.push(format!("{m} min"));
+        parts.push(trf!("{m} min", m = m));
     }
     if s > 0 || parts.is_empty() {
         parts.push(format!("{s} s"));
@@ -155,7 +156,7 @@ pub fn timer_labels(timers: &[(&str, u64)]) -> Vec<String> {
         .iter()
         .map(|(name, secs)| {
             if name.trim().is_empty() {
-                format!("{} timer", spoken_duration(*secs))
+                trf!("{} timer", spoken_duration(*secs))
             } else {
                 name.trim().to_string()
             }

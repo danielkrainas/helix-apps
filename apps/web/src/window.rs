@@ -15,6 +15,9 @@ use crate::settings;
 use crate::store;
 use crate::tab::{display_uri, Change, Security, Tab};
 use crate::urlinput;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 const MAX_CLOSED: usize = 10;
 const MAX_SUGGESTIONS: usize = 8;
@@ -41,10 +44,10 @@ impl SuggestionKind {
 
     fn word(self) -> &'static str {
         match self {
-            Self::Search => "Search",
-            Self::Address => "Address",
-            Self::Bookmark => "Bookmark",
-            Self::History => "History",
+            Self::Search => tr("Search"),
+            Self::Address => tr("Address"),
+            Self::Bookmark => tr("Bookmark"),
+            Self::History => tr("History"),
         }
     }
 }
@@ -60,10 +63,7 @@ fn suggestion_label(kind: SuggestionKind, title: &str, url: &str) -> String {
 }
 
 fn suggestion_count(n: usize) -> String {
-    match n {
-        1 => "1 suggestion".to_string(),
-        n => format!("{n} suggestions"),
-    }
+    trnf!("{n} suggestion", "{n} suggestions", n)
 }
 
 const CSS: &str = "
@@ -74,6 +74,8 @@ const CSS: &str = "
   border-radius: 6px; box-shadow: 0 1px 3px alpha(black, .3); }
 .private-indicator { font-weight: bold; padding: 2px 8px; border-radius: 99px;
   background: alpha(@accent_bg_color, .25); }
+.download-attention { background: @accent_bg_color; border-radius: 99px;
+  min-width: 8px; min-height: 8px; }
 ";
 
 /// High contrast: the bars' separators reach 3:1 and their tints are
@@ -83,6 +85,7 @@ const HIGH_CONTRAST_CSS: &str = "
 .permission-bar { background: alpha(@accent_bg_color, .35); }
 .tls-bar { background: alpha(@error_bg_color, .4); }
 .link-preview { border: 1px solid alpha(currentColor, .6); }
+.download-attention { box-shadow: 0 0 0 1px currentColor; }
 ";
 
 pub fn install_css() {
@@ -99,6 +102,10 @@ pub struct Window {
     overview: adw::TabOverview,
     toolbar: adw::ToolbarView,
     entry: gtk::Entry,
+    /// Opens site information; its icon shows the connection security.
+    site_button: gtk::Button,
+    /// Adds or edits the bookmark for the current page.
+    star_button: gtk::Button,
     back: gtk::Button,
     forward: gtk::Button,
     reload: gtk::Button,
@@ -120,9 +127,14 @@ pub struct Window {
     find_entry: gtk::SearchEntry,
     find_label: gtk::Label,
     dl_button: gtk::MenuButton,
+    /// Dot on the Downloads button: downloads started since it was opened.
+    dl_attention: gtk::Box,
     dl_list: gtk::ListBox,
     bm_search: gtk::SearchEntry,
     bm_list: gtk::ListBox,
+    /// Switches the bookmarks popover between its list and empty states.
+    bm_stack: gtk::Stack,
+    bm_status: adw::StatusPage,
     zoom_label: gtk::Label,
     closed: RefCell<Vec<TabState>>,
     info_pop: gtk::Popover,
@@ -131,6 +143,12 @@ pub struct Window {
     bm_tags: adw::EntryRow,
     bm_editing: RefCell<Option<String>>,
     toasts: adw::ToastOverlay,
+    /// The tabs' context menu, refilled for each tab as it opens.
+    tab_menu: gio::Menu,
+    /// The page the tab context menu is open for.
+    menu_page: RefCell<Option<adw::TabPage>>,
+    /// The narrow-window breakpoint is applied.
+    narrow: Cell<bool>,
 }
 
 fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
@@ -150,22 +168,25 @@ fn web_app_menu() -> gio::Menu {
     zoom.append_item(&item);
     menu.append_section(None, &zoom);
     let s1 = gio::Menu::new();
-    s1.append(Some("_Find…"), Some("win.find"));
-    s1.append(Some("_Print…"), Some("win.print"));
-    s1.append(Some("_Fullscreen"), Some("win.fullscreen"));
-    s1.append(Some("Open in _Browser"), Some("win.open-in-browser"));
+    s1.append(Some(tr("_Find…")), Some("win.find"));
+    s1.append(Some(tr("_Print…")), Some("win.print"));
+    s1.append(Some(tr("_Fullscreen")), Some("win.fullscreen"));
+    s1.append(Some(tr("Open in _Browser")), Some("win.open-in-browser"));
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
     s2.append(
-        Some("Web Application _Settings…"),
+        Some(tr("Web Application _Settings…")),
         Some("app.web-app-preferences"),
     );
     s2.append(
-        Some("_Uninstall Web Application…"),
+        Some(tr("_Uninstall Web Application…")),
         Some("app.uninstall-web-app"),
     );
-    s2.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
-    s2.append(Some("_About Web"), Some("app.about"));
+    s2.append(
+        Some(tr("_Keyboard Shortcuts")),
+        Some("win.show-help-overlay"),
+    );
+    s2.append(Some(tr("_About Web")), Some("app.about"));
     menu.append_section(None, &s2);
     menu
 }
@@ -173,9 +194,12 @@ fn web_app_menu() -> gio::Menu {
 fn main_menu() -> gio::Menu {
     let menu = gio::Menu::new();
     let s1 = gio::Menu::new();
-    s1.append(Some("_New Tab"), Some("win.new-tab"));
-    s1.append(Some("New _Window"), Some("app.new-window"));
-    s1.append(Some("New _Private Window"), Some("app.new-private-window"));
+    s1.append(Some(tr("_New Tab")), Some("win.new-tab"));
+    s1.append(Some(tr("New _Window")), Some("app.new-window"));
+    s1.append(
+        Some(tr("New _Private Window")),
+        Some("app.new-private-window"),
+    );
     menu.append_section(None, &s1);
     let zoom = gio::Menu::new();
     let item = gio::MenuItem::new(None, None);
@@ -183,25 +207,29 @@ fn main_menu() -> gio::Menu {
     zoom.append_item(&item);
     menu.append_section(None, &zoom);
     let s2 = gio::Menu::new();
-    s2.append(Some("_Reopen Closed Tab"), Some("win.reopen-tab"));
-    s2.append(Some("_Find…"), Some("win.find"));
-    s2.append(Some("_Print…"), Some("win.print"));
-    s2.append(Some("_Fullscreen"), Some("win.fullscreen"));
+    s2.append(Some(tr("_Reopen Closed Tab")), Some("win.reopen-tab"));
+    s2.append(Some(tr("Site _Information")), Some("win.site-info"));
+    s2.append(Some(tr("_Find…")), Some("win.find"));
+    s2.append(Some(tr("_Print…")), Some("win.print"));
+    s2.append(Some(tr("_Fullscreen")), Some("win.fullscreen"));
     s2.append(
-        Some("Install Site as _Web Application…"),
+        Some(tr("Install Site as _Web Application…")),
         Some("win.install-web-app"),
     );
     menu.append_section(None, &s2);
     let s3 = gio::Menu::new();
-    s3.append(Some("_History"), Some("app.history"));
-    s3.append(Some("_Passwords"), Some("app.passwords"));
-    s3.append(Some("_Import Bookmarks…"), Some("app.import-bookmarks"));
-    s3.append(Some("_Export Bookmarks…"), Some("app.export-bookmarks"));
+    s3.append(Some(tr("_History")), Some("app.history"));
+    s3.append(Some(tr("_Passwords")), Some("app.passwords"));
+    s3.append(Some(tr("_Import Bookmarks…")), Some("app.import-bookmarks"));
+    s3.append(Some(tr("_Export Bookmarks…")), Some("app.export-bookmarks"));
     menu.append_section(None, &s3);
     let s4 = gio::Menu::new();
-    s4.append(Some("_Preferences"), Some("app.preferences"));
-    s4.append(Some("_Keyboard Shortcuts"), Some("win.show-help-overlay"));
-    s4.append(Some("_About Web"), Some("app.about"));
+    s4.append(Some(tr("_Preferences")), Some("app.preferences"));
+    s4.append(
+        Some(tr("_Keyboard Shortcuts")),
+        Some("win.show-help-overlay"),
+    );
+    s4.append(Some(tr("_About Web")), Some("app.about"));
     menu.append_section(None, &s4);
     menu
 }
@@ -250,7 +278,11 @@ impl Window {
             .application(&app.gtk)
             .default_width(1200)
             .default_height(800)
-            .title(if private { "Private Browsing" } else { "Web" })
+            .title(if private {
+                tr("Private Browsing")
+            } else {
+                tr("Web")
+            })
             .width_request(helix_app_common::MIN_WIDTH)
             .height_request(helix_app_common::MIN_HEIGHT)
             .build();
@@ -267,19 +299,19 @@ impl Window {
             .build();
 
         // Header: navigation.
-        let back = icon_button("go-previous-symbolic", "Back", "win.back");
-        let forward = icon_button("go-next-symbolic", "Forward", "win.forward");
-        let reload = icon_button("view-refresh-symbolic", "Reload", "win.reload");
-        let home = icon_button("go-home-symbolic", "Home", "win.home");
+        let back = icon_button("go-previous-symbolic", tr("Back"), "win.back");
+        let forward = icon_button("go-next-symbolic", tr("Forward"), "win.forward");
+        let reload = icon_button("view-refresh-symbolic", tr("Reload"), "win.reload");
+        let home = icon_button("go-home-symbolic", tr("Home"), "win.home");
         // A button acting as a toggle: the pressed state follows the tab's
         // reader mode, which changes only once the page has reloaded.
         let reader = gtk::Button::builder()
             .icon_name("format-justify-left-symbolic")
-            .tooltip_text("Reader View")
+            .tooltip_text(tr("Reader View"))
             .action_name("win.reader")
             .accessible_role(gtk::AccessibleRole::ToggleButton)
             .build()
-            .labelled("Reader View");
+            .labelled(tr("Reader View"));
         reader.update_state(&[gtk::accessible::State::Pressed(
             gtk::AccessibleTristate::False,
         )]);
@@ -292,22 +324,40 @@ impl Window {
         header.pack_start(&home);
 
         // Address entry.
+        // A small minimum width so the header fits a 360 px window; the
+        // entry still expands to fill the header.
         let entry = gtk::Entry::builder()
             .hexpand(true)
+            .width_chars(8)
             .input_purpose(gtk::InputPurpose::Url)
-            .placeholder_text("Search or enter address")
-            .primary_icon_name("web-browser-symbolic")
-            .primary_icon_activatable(true)
-            .primary_icon_tooltip_text("Site information")
-            .secondary_icon_name("non-starred-symbolic")
-            .secondary_icon_activatable(true)
-            .secondary_icon_tooltip_text("Bookmark this page")
+            .placeholder_text(tr("Search or enter address"))
             .build()
-            .labelled("Address and Search");
+            .labelled(tr("Address and Search"));
+        // Site information and the bookmark star are real buttons joined
+        // to the entry (entry icons cannot take keyboard focus).
+        let site_button = gtk::Button::builder()
+            .icon_name("web-browser-symbolic")
+            .tooltip_text(tr("Site Information"))
+            .action_name("win.site-info")
+            .build()
+            .labelled(tr("Site Information"));
+        let star_button = gtk::Button::builder()
+            .icon_name("non-starred-symbolic")
+            .tooltip_text(tr("Bookmark This Page"))
+            .action_name("win.bookmark")
+            .build()
+            .labelled(tr("Bookmark This Page"));
+        let location = gtk::Box::builder()
+            .css_classes(["linked"])
+            .hexpand(true)
+            .build();
+        location.append(&site_button);
+        location.append(&entry);
+        location.append(&star_button);
         let clamp = adw::Clamp::builder()
             .maximum_size(760)
             .tightening_threshold(560)
-            .child(&entry)
+            .child(&location)
             .build();
         clamp.set_hexpand(true);
         let app_title = web_app.then(|| adw::WindowTitle::new("", ""));
@@ -323,14 +373,14 @@ impl Window {
             .halign(gtk::Align::Center)
             .hexpand(true)
             .build();
-        let zout = icon_button("zoom-out-symbolic", "Zoom Out", "win.zoom-out");
-        let zin = icon_button("zoom-in-symbolic", "Zoom In", "win.zoom-in");
+        let zout = icon_button("zoom-out-symbolic", tr("Zoom Out"), "win.zoom-out");
+        let zin = icon_button("zoom-in-symbolic", tr("Zoom In"), "win.zoom-in");
         let zreset = gtk::Button::builder()
             .child(&zoom_label)
             .action_name("win.zoom-reset")
-            .tooltip_text("Reset Zoom")
+            .tooltip_text(tr("Reset Zoom"))
             .build()
-            .labelled("Reset Zoom");
+            .labelled(tr("Reset Zoom"));
         for b in [&zout, &zreset, &zin] {
             b.add_css_class("flat");
         }
@@ -342,11 +392,11 @@ impl Window {
         menu_pop.add_child(&zoom_box, "zoom");
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .popover(&menu_pop)
             .primary(true)
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         header.pack_end(&menu_button);
         let tab_button = adw::TabButton::builder()
             .view(&tab_view)
@@ -359,7 +409,7 @@ impl Window {
             .selection_mode(gtk::SelectionMode::None)
             .build();
         dl_list.add_css_class("boxed-list");
-        let dl_clear = gtk::Button::with_label("Clear Finished");
+        let dl_clear = gtk::Button::with_label(tr("Clear Finished"));
         let dl_box = gtk::Box::new(gtk::Orientation::Vertical, 8);
         let dl_scroll = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never)
@@ -371,19 +421,41 @@ impl Window {
         dl_box.append(&dl_scroll);
         dl_box.append(&dl_clear);
         let dl_pop = gtk::Popover::builder().child(&dl_box).build();
+        // New downloads mark the button instead of opening the popover,
+        // which would take focus away from the page.
+        let dl_attention = gtk::Box::builder()
+            .halign(gtk::Align::End)
+            .valign(gtk::Align::Start)
+            .visible(false)
+            .can_target(false)
+            .css_classes(["download-attention"])
+            .build();
+        let dl_icon = gtk::Overlay::builder()
+            .child(&gtk::Image::from_icon_name("folder-download-symbolic"))
+            .build();
+        dl_icon.add_overlay(&dl_attention);
         let dl_button = gtk::MenuButton::builder()
-            .icon_name("folder-download-symbolic")
-            .tooltip_text("Downloads")
+            .child(&dl_icon)
+            .tooltip_text(tr("Downloads"))
             .popover(&dl_pop)
             .visible(false)
             .build()
-            .labelled("Downloads");
+            .labelled(tr("Downloads"));
+        {
+            let (dot, button) = (dl_attention.clone(), dl_button.downgrade());
+            dl_pop.connect_show(move |_| {
+                dot.set_visible(false);
+                if let Some(b) = button.upgrade() {
+                    set_downloads_description(&b, None);
+                }
+            });
+        }
         header.pack_end(&dl_button);
 
         let bm_search = gtk::SearchEntry::builder()
-            .placeholder_text("Search bookmarks")
+            .placeholder_text(tr("Search bookmarks"))
             .build()
-            .labelled("Search Bookmarks");
+            .labelled(tr("Search Bookmarks"));
         let bm_list = gtk::ListBox::builder()
             .selection_mode(gtk::SelectionMode::None)
             .build();
@@ -395,38 +467,57 @@ impl Window {
             .min_content_width(300)
             .child(&bm_list)
             .build();
+        let bm_status = adw::StatusPage::builder()
+            .css_classes(["compact"])
+            .width_request(300)
+            .build();
+        let bm_stack = gtk::Stack::builder().vhomogeneous(false).build();
+        bm_stack.add_named(&bm_scroll, Some("list"));
+        bm_stack.add_named(&bm_status, Some("empty"));
         let bm_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
         bm_box.append(&bm_search);
-        bm_box.append(&bm_scroll);
+        bm_box.append(&bm_stack);
         let bm_list_pop = gtk::Popover::builder().child(&bm_box).build();
         let bm_button = gtk::MenuButton::builder()
             .icon_name("user-bookmarks-symbolic")
-            .tooltip_text("Bookmarks")
+            .tooltip_text(tr("Bookmarks"))
             .popover(&bm_list_pop)
             .visible(!web_app)
             .build()
-            .labelled("Bookmarks");
+            .labelled(tr("Bookmarks"));
         header.pack_end(&bm_button);
         header.pack_end(&reader);
 
-        if private {
-            let pill = gtk::Label::new(Some("Private"));
-            pill.add_css_class("private-indicator");
-            pill.set_tooltip_text(Some(
-                "Private browsing: history and site data are not saved",
-            ));
-            header.pack_start(&pill);
-        }
+        // The private-browsing pill collapses to an icon in narrow windows.
+        let private_box = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        let pill = gtk::Label::new(Some(tr("Private")));
+        pill.add_css_class("private-indicator");
+        pill.set_tooltip_text(Some(tr(
+            "Private browsing: history and site data are not saved",
+        )));
+        let private_icon = gtk::Image::builder()
+            .icon_name("view-conceal-symbolic")
+            .tooltip_text(tr("Private browsing: history and site data are not saved"))
+            .visible(false)
+            .build()
+            .labelled(tr("Private Browsing"));
+        private_box.append(&pill);
+        private_box.append(&private_icon);
+        private_box.set_visible(private);
+        header.pack_start(&private_box);
 
         // Find bar.
         let find_entry = gtk::SearchEntry::builder()
-            .placeholder_text("Find in page")
-            .width_chars(28)
+            .placeholder_text(tr("Find in page"))
+            .width_chars(8)
+            .max_width_chars(28)
             .build()
-            .labelled("Find in Page");
-        let find_prev = icon_button("go-up-symbolic", "Previous Match", "win.find-prev");
-        let find_next = icon_button("go-down-symbolic", "Next Match", "win.find-next");
-        let find_label = gtk::Label::new(None);
+            .labelled(tr("Find in Page"));
+        let find_prev = icon_button("go-up-symbolic", tr("Previous Match"), "win.find-prev");
+        let find_next = icon_button("go-down-symbolic", tr("Next Match"), "win.find-next");
+        let find_label = gtk::Label::builder()
+            .ellipsize(gtk::pango::EllipsizeMode::End)
+            .build();
         find_label.add_css_class("dim-label");
         let find_box = gtk::Box::builder().spacing(6).build();
         find_box.append(&find_entry);
@@ -451,17 +542,11 @@ impl Window {
         toolbar.add_top_bar(&tab_bar);
         toolbar.set_content(Some(&toasts));
 
-        // Narrow windows: the navigation buttons move from the header to a
-        // bar at the bottom, so the address entry keeps its room.
+        // Narrow windows: navigation, reader view, bookmarks, downloads
+        // and the tab button move from the header to a bar at the bottom,
+        // so the address entry keeps its room. The widgets themselves move
+        // (not copies), so their state, popovers and focus order go along.
         let bottom = gtk::ActionBar::builder().revealed(false).build();
-        bottom.pack_start(&icon_button("go-previous-symbolic", "Back", "win.back"));
-        bottom.pack_start(&icon_button("go-next-symbolic", "Forward", "win.forward"));
-        bottom.pack_start(&icon_button(
-            "view-refresh-symbolic",
-            "Reload",
-            "win.reload",
-        ));
-        bottom.pack_end(&icon_button("go-home-symbolic", "Home", "win.home"));
         toolbar.add_bottom_bar(&bottom);
         let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
             adw::BreakpointConditionLengthType::MaxWidth,
@@ -469,15 +554,51 @@ impl Window {
             adw::LengthUnit::Sp,
         ));
         narrow.add_setter(&bottom, "revealed", Some(&true.to_value()));
-        for w in [
-            back.upcast_ref::<gtk::Widget>(),
-            forward.upcast_ref(),
-            reload.upcast_ref(),
-            home.upcast_ref(),
-        ] {
-            narrow.add_setter(w, "visible", Some(&false.to_value()));
+        narrow.add_setter(&pill, "visible", Some(&false.to_value()));
+        narrow.add_setter(&private_icon, "visible", Some(&true.to_value()));
+        let start: Vec<gtk::Widget> = vec![
+            back.clone().upcast(),
+            forward.clone().upcast(),
+            reload.clone().upcast(),
+            home.clone().upcast(),
+        ];
+        // In pack_end order: outermost first.
+        let end: Vec<gtk::Widget> = vec![
+            tab_button.clone().upcast(),
+            dl_button.clone().upcast(),
+            bm_button.clone().upcast(),
+            reader.clone().upcast(),
+        ];
+        {
+            let (header, bottom, start, end) =
+                (header.clone(), bottom.clone(), start.clone(), end.clone());
+            narrow.connect_apply(move |_| {
+                for w in &start {
+                    header.remove(w);
+                    bottom.pack_start(w);
+                }
+                for w in &end {
+                    header.remove(w);
+                    bottom.pack_end(w);
+                }
+            });
         }
-        win.add_breakpoint(narrow);
+        {
+            let (header, bottom, private_box) = (header.clone(), bottom.clone(), private_box);
+            narrow.connect_unapply(move |_| {
+                // Navigation goes back before the private indicator.
+                header.remove(&private_box);
+                for w in &start {
+                    bottom.remove(w);
+                    header.pack_start(w);
+                }
+                header.pack_start(&private_box);
+                for w in &end {
+                    bottom.remove(w);
+                    header.pack_end(w);
+                }
+            });
+        }
 
         let overview = adw::TabOverview::builder()
             .view(&tab_view)
@@ -492,7 +613,7 @@ impl Window {
             .build();
         suggest_list.add_css_class("navigation-sidebar");
         suggest_list.set_can_focus(false);
-        helix_app_common::set_accessible_label(&suggest_list, "Suggestions");
+        helix_app_common::set_accessible_label(&suggest_list, tr("Suggestions"));
         // Combobox pattern: focus stays in the entry, which says that it
         // has a list of completions, whether it is open, and (see
         // entry_key) which row is highlighted.
@@ -514,16 +635,16 @@ impl Window {
             .build();
         suggest_pop.set_parent(&entry);
 
-        // Site info and bookmark-edit popovers, anchored to entry icons.
+        // Site info and bookmark-edit popovers, anchored to their buttons.
         let info_pop = gtk::Popover::new();
-        info_pop.set_parent(&entry);
+        info_pop.set_parent(&site_button);
         // Visible field labels: libadwaita entry rows in a boxed list.
         let bm_title = adw::EntryRow::builder()
-            .title("_Name")
+            .title(tr("_Name"))
             .use_underline(true)
             .build();
         let bm_tags = adw::EntryRow::builder()
-            .title("_Tags (comma separated)")
+            .title(tr("_Tags (comma separated)"))
             .use_underline(true)
             .build();
         let bm_fields = gtk::ListBox::builder()
@@ -533,7 +654,7 @@ impl Window {
             .build();
         bm_fields.append(&bm_title);
         bm_fields.append(&bm_tags);
-        let bm_remove = gtk::Button::with_label("Remove Bookmark");
+        let bm_remove = gtk::Button::with_label(tr("Remove Bookmark"));
         bm_remove.add_css_class("destructive-action");
         let bm_edit_box = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
@@ -543,13 +664,16 @@ impl Window {
             .margin_top(6)
             .margin_bottom(6)
             .build();
-        let heading = gtk::Label::builder().label("Bookmark").xalign(0.0).build();
+        let heading = gtk::Label::builder()
+            .label(tr("Bookmark"))
+            .xalign(0.0)
+            .build();
         heading.add_css_class("heading");
         bm_edit_box.append(&heading);
         bm_edit_box.append(&bm_fields);
         bm_edit_box.append(&bm_remove);
         let bm_pop = gtk::Popover::builder().child(&bm_edit_box).build();
-        bm_pop.set_parent(&entry);
+        bm_pop.set_parent(&star_button);
 
         let w = Rc::new_cyclic(|this| Window {
             this: this.clone(),
@@ -561,6 +685,8 @@ impl Window {
             overview,
             toolbar,
             entry,
+            site_button,
+            star_button,
             back,
             forward,
             reload,
@@ -577,9 +703,12 @@ impl Window {
             find_entry,
             find_label,
             dl_button,
+            dl_attention,
             dl_list,
             bm_search,
             bm_list,
+            bm_stack,
+            bm_status,
             zoom_label,
             zoom_reset: zreset.clone(),
             closed: RefCell::default(),
@@ -589,16 +718,32 @@ impl Window {
             bm_tags,
             bm_editing: RefCell::default(),
             toasts,
+            tab_menu: {
+                let m = gio::Menu::new();
+                fill_tab_menu(&m, false, false);
+                m
+            },
+            menu_page: RefCell::default(),
+            narrow: Cell::new(false),
         });
+        let cb = w.weak_fn(|w, ()| w.set_narrow(true));
+        narrow.connect_apply(move |_| cb(()));
+        let cb = w.weak_fn(|w, ()| w.set_narrow(false));
+        narrow.connect_unapply(move |_| cb(()));
+        w.win.add_breakpoint(narrow);
         w.install_actions();
         w.connect_signals(&dl_clear, &bm_list_pop, &bm_remove);
-        // Popovers parented to the entry must be unparented with it.
-        let pops = [w.suggest_pop.clone(), w.info_pop.clone(), w.bm_pop.clone()];
-        w.entry.connect_destroy(move |_| {
-            for p in &pops {
-                p.unparent();
-            }
-        });
+        // Popovers parented to a widget must be unparented with it.
+        for (parent, pop) in [
+            (
+                w.entry.clone().upcast::<gtk::Widget>(),
+                w.suggest_pop.clone(),
+            ),
+            (w.site_button.clone().upcast(), w.info_pop.clone()),
+            (w.star_button.clone().upcast(), w.bm_pop.clone()),
+        ] {
+            parent.connect_destroy(move |_| pop.unparent());
+        }
         w.sync();
         w
     }
@@ -633,21 +778,14 @@ impl Window {
             }
         });
         add("reopen-tab", |w| w.reopen_closed());
-        add("location", |w| {
-            w.entry.grab_focus();
-            w.entry.select_region(0, -1);
-        });
+        add("location", |w| w.focus_location());
+        add("next-pane", |w| w.cycle_focus(true));
+        add("previous-pane", |w| w.cycle_focus(false));
         add("back", |w| w.with_view(|v| v.go_back()));
         add("forward", |w| w.with_view(|v| v.go_forward()));
         add("reload", |w| {
             if let Some(t) = w.current() {
-                if t.view.is_loading() {
-                    t.view.stop_loading();
-                } else if t.pending_uri.borrow().is_some() {
-                    t.realize_lazy();
-                } else {
-                    t.view.reload();
-                }
+                reload_or_stop(&t);
             }
         });
         add("reload-bypass", |w| {
@@ -659,6 +797,7 @@ impl Window {
             }
         });
         add("bookmark", |w| w.bookmark_current());
+        add("site-info", |w| w.show_site_info());
         add("overview", |w| w.overview.set_open(!w.overview.is_open()));
         add("find", |w| {
             w.find_bar.set_search_mode(true);
@@ -689,6 +828,124 @@ impl Window {
         add("fullscreen", |w| {
             w.win.set_fullscreened(!w.win.is_fullscreen())
         });
+
+        // Ctrl+M, and the tab context menu (which acts on the tab it was
+        // opened for, see setup_tab_menu).
+        add("mute", |w| {
+            if let Some(p) = w.tab_view.selected_page() {
+                w.toggle_mute(&p);
+            }
+        });
+        add("tab-reload", |w| {
+            if let Some(t) = w.menu_target().and_then(|p| w.tab_for_page(&p)) {
+                reload_or_stop(&t);
+            }
+        });
+        add("tab-duplicate", |w| {
+            if let Some(t) = w.menu_target().and_then(|p| w.tab_for_page(&p)) {
+                let copy = w.new_tab_after(&t);
+                copy.load(&t.uri());
+                w.select(&copy);
+            }
+        });
+        add("tab-pin", |w| {
+            if let Some(p) = w.menu_target() {
+                w.tab_view.set_page_pinned(&p, !p.is_pinned());
+            }
+        });
+        add("tab-mute", |w| {
+            if let Some(p) = w.menu_target() {
+                w.toggle_mute(&p);
+            }
+        });
+        add("tab-move-to-new-window", |w| {
+            let (Some(p), Some(app)) = (w.menu_target(), w.app()) else {
+                return;
+            };
+            if w.tab_view.n_pages() < 2 {
+                return;
+            }
+            let nw = app.new_window(w.private);
+            w.tab_view.transfer_page(&p, &nw.tab_view, 0);
+            nw.win.present();
+        });
+        add("tab-close-others", |w| {
+            if let Some(p) = w.menu_target() {
+                w.tab_view.close_other_pages(&p);
+            }
+        });
+        add("tab-close-right", |w| {
+            if let Some(p) = w.menu_target() {
+                w.tab_view.close_pages_after(&p);
+            }
+        });
+        add("tab-close", |w| {
+            if let Some(p) = w.menu_target() {
+                w.tab_view.close_page(&p);
+            }
+        });
+    }
+
+    fn set_action_enabled(&self, name: &str, enabled: bool) {
+        if let Some(a) = self
+            .win
+            .lookup_action(name)
+            .and_downcast::<gio::SimpleAction>()
+        {
+            a.set_enabled(enabled);
+        }
+    }
+
+    /// The page a tab context menu was opened for, else the selected one.
+    fn menu_target(&self) -> Option<adw::TabPage> {
+        let page = self.menu_page.borrow().clone();
+        page.filter(|p| {
+            p.child()
+                .ancestor(adw::TabView::static_type())
+                .is_some_and(|a| a == *self.tab_view.upcast_ref::<gtk::Widget>())
+        })
+        .or_else(|| self.tab_view.selected_page())
+    }
+
+    /// Fills the tab context menu for `page` as it opens (`None` once it
+    /// has closed).
+    fn setup_tab_menu(&self, page: Option<adw::TabPage>) {
+        let Some(page) = page else {
+            // Menu items activate before the menu reports it closed; drop
+            // the page afterwards so later shortcuts act on the selection.
+            let weak = self.this.clone();
+            glib::idle_add_local_once(move || {
+                if let Some(w) = weak.upgrade() {
+                    w.menu_page.replace(None);
+                }
+            });
+            return;
+        };
+        let muted = self.tab_for_page(&page).is_some_and(|t| t.view.is_muted());
+        fill_tab_menu(&self.tab_menu, page.is_pinned(), muted);
+        let n = self.tab_view.n_pages();
+        let pos = self.tab_view.page_position(&page);
+        self.set_action_enabled("tab-close-others", n > 1);
+        self.set_action_enabled("tab-close-right", pos + 1 < n);
+        self.set_action_enabled("tab-move-to-new-window", n > 1);
+        self.menu_page.replace(Some(page));
+    }
+
+    fn toggle_mute(&self, page: &adw::TabPage) {
+        let Some(t) = self.tab_for_page(page) else {
+            return;
+        };
+        let muted = !t.view.is_muted();
+        t.view.set_is_muted(muted);
+        helix_app_common::announce(
+            &self.tab_view,
+            if muted {
+                tr("Tab muted")
+            } else {
+                tr("Tab unmuted")
+            },
+            helix_app_common::Urgency::Polite,
+        );
     }
 
     fn connect_signals(
@@ -709,6 +966,7 @@ impl Window {
         });
         let cb = self.weak_fn(|w, fs: bool| {
             w.toolbar.set_reveal_top_bars(!fs);
+            w.toolbar.set_reveal_bottom_bars(!fs);
             if fs {
                 w.find_bar.set_search_mode(false);
             }
@@ -735,6 +993,8 @@ impl Window {
         let cb = self.weak_fn(|w, page: adw::TabPage| {
             if let Some(t) = w.tab_for_page(&page) {
                 w.refresh_page(&t);
+                // Tabs moved in from another window take this one's layout.
+                t.set_narrow(w.narrow.get());
             }
             if let Some(app) = w.app() {
                 app.schedule_session_save();
@@ -756,13 +1016,13 @@ impl Window {
             nw.win.present();
             Some(nw.tab_view.clone())
         });
-        let cb = self.weak_fn(|w, page: adw::TabPage| {
-            if let Some(t) = w.tab_for_page(&page) {
-                t.view.set_is_muted(!t.view.is_muted());
-            }
-        });
+        let cb = self.weak_fn(|w, page: adw::TabPage| w.toggle_mute(&page));
         self.tab_view
             .connect_indicator_activated(move |_, page| cb(page.clone()));
+        self.tab_view.set_menu_model(Some(&self.tab_menu));
+        let cb = self.weak_fn(|w, page: Option<adw::TabPage>| w.setup_tab_menu(page));
+        self.tab_view
+            .connect_setup_menu(move |_, page| cb(page.cloned()));
         let weak = self.this.clone();
         self.overview.connect_create_tab(move |o| {
             match weak.upgrade() {
@@ -789,12 +1049,6 @@ impl Window {
             w.update_suggestions();
         });
         self.entry.connect_changed(move |_| cb(()));
-        let cb = self.weak_fn(|w, pos: gtk::EntryIconPosition| match pos {
-            gtk::EntryIconPosition::Primary => w.show_site_info(),
-            _ => w.bookmark_current(),
-        });
-        self.entry.connect_icon_press(move |_, pos| cb(pos));
-
         let keys = gtk::EventControllerKey::new();
         keys.set_propagation_phase(gtk::PropagationPhase::Capture);
         let weak = self.this.clone();
@@ -853,6 +1107,7 @@ impl Window {
                     }
                 });
                 w.find_label.set_text("");
+                w.set_find_error(false);
                 w.with_view(|v| {
                     v.grab_focus();
                 });
@@ -926,6 +1181,38 @@ impl Window {
             .contains(gtk::StateFlags::FOCUS_WITHIN)
     }
 
+    fn focus_location(&self) {
+        self.entry.grab_focus();
+        self.entry.select_region(0, -1);
+    }
+
+    /// F6: moves focus between the address bar, the current tab's prompt
+    /// bars and the page, so the bars' buttons can be reached from the
+    /// keyboard (the page keeps Tab to itself).
+    fn cycle_focus(&self, forward: bool) {
+        let mut stops: Vec<gtk::Widget> = Vec::new();
+        if self.app_title.is_none() {
+            stops.push(self.entry.clone().upcast());
+        }
+        if let Some(t) = self.current() {
+            stops.extend(t.prompt_bars());
+            stops.push(t.view.clone().upcast());
+        }
+        let focused = gtk::prelude::GtkWindowExt::focus(&self.win);
+        let at = focused.and_then(|f| stops.iter().position(|s| f == *s || f.is_ancestor(s)));
+        let Some(next) = next_stop(at, stops.len(), forward) else {
+            return;
+        };
+        let target = &stops[next];
+        if target == self.entry.upcast_ref::<gtk::Widget>() {
+            self.focus_location();
+        } else if target.is::<webkit6::WebView>() {
+            target.grab_focus();
+        } else {
+            target.child_focus(gtk::DirectionType::TabForward);
+        }
+    }
+
     pub fn current(&self) -> Option<Rc<Tab>> {
         let page = self.tab_view.selected_page()?;
         self.tab_for_page(&page)
@@ -957,6 +1244,16 @@ impl Window {
 
     fn setup_page(&self, tab: &Rc<Tab>) {
         self.refresh_page(tab);
+        tab.set_narrow(self.narrow.get());
+    }
+
+    fn set_narrow(&self, narrow: bool) {
+        self.narrow.set(narrow);
+        for i in 0..self.tab_view.n_pages() {
+            if let Some(t) = self.tab_for_page(&self.tab_view.nth_page(i)) {
+                t.set_narrow(narrow);
+            }
+        }
     }
 
     /// Appends a tab that opens the homepage.
@@ -1117,9 +1414,9 @@ impl Window {
             };
             page.set_indicator_icon(Some(&gio::ThemedIcon::new(icon)));
             page.set_indicator_tooltip(if tab.view.is_muted() {
-                "Unmute Tab"
+                tr("Unmute Tab")
             } else {
-                "Mute Tab"
+                tr("Mute Tab")
             });
             page.set_indicator_activatable(true);
         } else {
@@ -1157,7 +1454,7 @@ impl Window {
             "view-refresh-symbolic"
         });
         self.reload
-            .set_tooltip_text(Some(if loading { "Stop" } else { "Reload" }));
+            .set_tooltip_text(Some(if loading { tr("Stop") } else { tr("Reload") }));
         helix_app_common::set_accessible_label(
             &self.reload,
             &self.reload.tooltip_text().unwrap_or_default(),
@@ -1178,6 +1475,13 @@ impl Window {
         {
             a.set_enabled(web_page && !self.private);
         }
+        if let Some(a) = self
+            .win
+            .lookup_action("site-info")
+            .and_downcast::<gio::SimpleAction>()
+        {
+            a.set_enabled(self.app_title.is_none());
+        }
         self.sync_entry();
         self.sync_progress();
         self.sync_zoom();
@@ -1192,9 +1496,9 @@ impl Window {
             .unwrap_or((false, false));
         self.reader.set_visible(available);
         self.reader.set_tooltip_text(Some(if active {
-            "Leave Reader View"
+            tr("Leave Reader View")
         } else {
-            "Reader View"
+            tr("Reader View")
         }));
         // The name stays "Reader View"; the state says whether it is on.
         self.reader
@@ -1224,9 +1528,9 @@ impl Window {
             return;
         }
         let suffix = if self.private {
-            "Private Browsing"
+            tr("Private Browsing")
         } else {
-            "Web"
+            tr("Web")
         };
         if title.is_empty() {
             self.win.set_title(Some(suffix));
@@ -1249,17 +1553,15 @@ impl Window {
         if !self.editing.get() {
             self.set_entry_text(&display_uri(&t.uri()));
         }
-        let (icon, tip) = match t.security.get() {
-            _ if t.is_start_page() => ("web-browser-symbolic", "Start page"),
-            Security::Secure => ("channel-secure-symbolic", "Secure connection"),
-            Security::Insecure => ("channel-insecure-symbolic", "Connection is not secure"),
-            Security::Broken => ("channel-insecure-symbolic", "Certificate problems"),
-            Security::Local => ("text-x-generic-symbolic", "Local page"),
-        };
+        let (icon, tip) = security_icon_and_text(t.security.get(), t.is_start_page());
+        self.site_button.set_icon_name(icon);
+        self.site_button.set_tooltip_text(Some(tip));
+        // Screen readers hear the connection security with the address
+        // and with the Site Information button.
+        self.site_button
+            .update_property(&[gtk::accessible::Property::Description(tip)]);
         self.entry
-            .set_icon_from_icon_name(gtk::EntryIconPosition::Primary, Some(icon));
-        self.entry
-            .set_icon_tooltip_text(gtk::EntryIconPosition::Primary, Some(tip));
+            .update_property(&[gtk::accessible::Property::Description(tip)]);
     }
 
     fn sync_progress(&self) {
@@ -1277,33 +1579,31 @@ impl Window {
         let level = format!("{:.0}%", z * 100.0);
         self.zoom_label.set_text(&level);
         self.zoom_reset
-            .update_property(&[gtk::accessible::Property::Description(&format!(
-                "Current zoom {level}"
+            .update_property(&[gtk::accessible::Property::Description(&trf!(
+                "Current zoom {level}",
+                level = level
             ))]);
     }
 
     pub fn sync_bookmark_state(&self) {
         let Some(app) = self.app() else { return };
         let uri = self.current().map(|t| t.uri()).unwrap_or_default();
-        let bookmarkable =
-            !uri.is_empty() && !uri.starts_with("helix-about:") && uri != "about:blank";
+        let bookmarkable = bookmarkable(&uri);
         let marked = bookmarkable && app.bookmarks.borrow().contains(&uri);
-        self.entry.set_icon_from_icon_name(
-            gtk::EntryIconPosition::Secondary,
-            bookmarkable.then_some(if marked {
-                "starred-symbolic"
-            } else {
-                "non-starred-symbolic"
-            }),
-        );
-        self.entry.set_icon_tooltip_text(
-            gtk::EntryIconPosition::Secondary,
-            Some(if marked {
-                "Edit bookmark"
-            } else {
-                "Bookmark this page"
-            }),
-        );
+        self.star_button.set_visible(bookmarkable);
+        if marked {
+            helix_app_common::set_icon_and_label(
+                &self.star_button,
+                "starred-symbolic",
+                tr("Edit Bookmark"),
+            );
+        } else {
+            helix_app_common::set_icon_and_label(
+                &self.star_button,
+                "non-starred-symbolic",
+                tr("Bookmark This Page"),
+            );
+        }
     }
 
     fn zoom(&self, dir: i32) {
@@ -1447,7 +1747,7 @@ impl Window {
         let mut rows: Vec<(String, String, SuggestionKind, String)> = Vec::new();
         match urlinput::classify(query, &home) {
             Some(urlinput::Input::Search(q)) => rows.push((
-                format!("Search {} for “{}”", engine.name, q),
+                trf!("Search {} for “{}”", engine.name, q),
                 String::new(),
                 SuggestionKind::Search,
                 app.resolve_input(query)
@@ -1511,15 +1811,14 @@ impl Window {
 
     // ---- site info & bookmarks -------------------------------------------
 
-    fn anchor(&self, pop: &gtk::Popover, pos: gtk::EntryIconPosition) {
-        let rect = self.entry.icon_area(pos);
-        pop.set_pointing_to(Some(&rect));
-    }
-
     fn show_site_info(&self) {
         let (Some(app), Some(t)) = (self.app(), self.current()) else {
             return;
         };
+        // Web applications have no address bar to anchor to.
+        if self.app_title.is_some() {
+            return;
+        }
         let uri = t.uri();
         let vbox = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
@@ -1531,23 +1830,24 @@ impl Window {
             .width_request(300)
             .build();
         let host = urlinput::host_of(&uri).unwrap_or_else(|| display_uri(&uri));
+        let host = if host.is_empty() {
+            tr("Start Page").to_string()
+        } else {
+            host
+        };
         let heading = gtk::Label::builder()
-            .label(if host.is_empty() {
-                "Start Page".to_string()
-            } else {
-                host
-            })
+            .label(&host)
             .xalign(0.0)
             .ellipsize(gtk::pango::EllipsizeMode::Middle)
             .build();
         heading.add_css_class("heading");
         vbox.append(&heading);
         let status = match t.security.get() {
-            _ if t.is_start_page() => "This is a page built into Web.",
-            Security::Secure => "Your connection to this site is secure.",
-            Security::Insecure => "Your connection to this site is not encrypted. Do not enter passwords or other sensitive information.",
-            Security::Broken => "This site's security certificate has problems. The connection may not be private.",
-            Security::Local => "This page is stored on your computer.",
+            _ if t.is_start_page() => tr("This is a page built into Web."),
+            Security::Secure => tr("Your connection to this site is secure."),
+            Security::Insecure => tr("Your connection to this site is not encrypted. Do not enter passwords or other sensitive information."),
+            Security::Broken => tr("This site's security certificate has problems. The connection may not be private."),
+            Security::Local => tr("This page is stored on your computer."),
         };
         vbox.append(
             &gtk::Label::builder()
@@ -1560,13 +1860,13 @@ impl Window {
         if let Some((cert, flags)) = t.view.tls_info() {
             let mut lines = Vec::new();
             if let Some(s) = cert.subject_name() {
-                lines.push(format!("Issued to: {s}"));
+                lines.push(trf!("Issued to: {s}", s = s));
             }
             if let Some(s) = cert.issuer_name() {
-                lines.push(format!("Issued by: {s}"));
+                lines.push(trf!("Issued by: {s}", s = s));
             }
             if let Some(d) = cert.not_valid_after().and_then(|d| d.format("%x").ok()) {
-                lines.push(format!("Expires: {d}"));
+                lines.push(trf!("Expires: {d}", d = d));
             }
             if !flags.is_empty() {
                 lines.push(format!("Problems: {flags:?}"));
@@ -1585,33 +1885,60 @@ impl Window {
             let perms = app.permissions.borrow().for_origin(&origin);
             if !perms.is_empty() {
                 let h = gtk::Label::builder()
-                    .label("Permissions")
+                    .label(tr("Permissions"))
                     .xalign(0.0)
                     .build();
                 h.add_css_class("heading");
                 vbox.append(&h);
+                let resets: Rc<RefCell<Vec<gtk::Button>>> = Rc::default();
                 for (kind, allowed) in perms {
                     let row = gtk::Box::builder().spacing(6).build();
                     let l = gtk::Label::builder()
                         .label(format!(
                             "{}: {}",
                             kind.label(),
-                            if allowed { "Allowed" } else { "Denied" }
+                            if allowed { tr("Allowed") } else { tr("Denied") }
                         ))
                         .xalign(0.0)
                         .hexpand(true)
                         .build();
-                    let reset = gtk::Button::with_label("Reset");
+                    let reset = gtk::Button::with_label(tr("Reset"))
+                        .labelled(&trf!("Reset {} Permission", kind.label()));
                     reset.add_css_class("flat");
+                    resets.borrow_mut().push(reset.clone());
                     let weak_app = Rc::downgrade(&app);
                     let origin = origin.clone();
                     let row_c = row.clone();
-                    reset.connect_clicked(move |_| {
+                    let resets = resets.clone();
+                    let pop = self.info_pop.clone();
+                    reset.connect_clicked(move |b| {
                         if let Some(app) = weak_app.upgrade() {
                             app.permissions.borrow_mut().reset(&origin, kind);
                             app.save_permissions();
                         }
+                        // Keep keyboard focus on a remaining Reset button
+                        // (the next one, else the previous one).
+                        let next = {
+                            let list = resets.borrow();
+                            let at = list.iter().position(|r| r == b).unwrap_or(0);
+                            list[at + 1..]
+                                .iter()
+                                .chain(list[..at].iter().rev())
+                                .find(|r| r.parent().is_some_and(|p| p.is_visible()))
+                                .cloned()
+                        };
                         row_c.set_visible(false);
+                        helix_app_common::announce(
+                            &pop,
+                            &trf!("{} permission reset", kind.label()),
+                            helix_app_common::Urgency::Polite,
+                        );
+                        match next {
+                            Some(r) => {
+                                r.grab_focus();
+                            }
+                            None => pop.popdown(),
+                        }
                     });
                     row.append(&l);
                     row.append(&reset);
@@ -1620,8 +1947,13 @@ impl Window {
             }
         }
         self.info_pop.set_child(Some(&vbox));
-        self.anchor(&self.info_pop, gtk::EntryIconPosition::Primary);
         self.info_pop.popup();
+        // The summary is not focusable; say it when the popover opens.
+        helix_app_common::announce(
+            &self.info_pop,
+            &format!("{host}. {status}"),
+            helix_app_common::Urgency::Polite,
+        );
     }
 
     fn bookmark_current(&self) {
@@ -1629,7 +1961,7 @@ impl Window {
             return;
         };
         let uri = t.uri();
-        if uri.is_empty() || t.is_start_page() {
+        if !bookmarkable(&uri) || t.is_start_page() || self.app_title.is_some() {
             return;
         }
         let existing = app.bookmarks.borrow().get(&uri).cloned();
@@ -1650,7 +1982,6 @@ impl Window {
         self.bm_title.set_text(&bm.title);
         self.bm_tags.set_text(&bm.tags.join(", "));
         self.bm_editing.replace(Some(uri));
-        self.anchor(&self.bm_pop, gtk::EntryIconPosition::Secondary);
         self.bm_pop.popup();
         self.bm_title.grab_focus();
     }
@@ -1672,21 +2003,22 @@ impl Window {
         while let Some(row) = self.bm_list.row_at_index(0) {
             self.bm_list.remove(&row);
         }
-        let items = app.bookmarks.borrow().search(&self.bm_search.text());
+        let query = self.bm_search.text();
+        let items = app.bookmarks.borrow().search(&query);
         if items.is_empty() {
-            let l = gtk::Label::builder()
-                .label("No bookmarks")
-                .margin_top(12)
-                .margin_bottom(12)
-                .build();
-            l.add_css_class("dim-label");
-            let row = gtk::ListBoxRow::builder()
-                .child(&l)
-                .activatable(false)
-                .selectable(false)
-                .build();
-            self.bm_list.append(&row);
+            let (icon, title, description) = bookmarks_empty_state(&query);
+            self.bm_status.set_icon_name(Some(icon));
+            self.bm_status.set_title(title);
+            self.bm_status.set_description(Some(description));
+            self.bm_stack.set_visible_child_name("empty");
+            if !query.is_empty() {
+                helix_app_common::announce_settled(&self.bm_status, title);
+            }
             return;
+        }
+        self.bm_stack.set_visible_child_name("list");
+        if !query.is_empty() {
+            helix_app_common::announce_settled(&self.bm_list, &result_count(items.len()));
         }
         for b in items {
             let title = if b.title.is_empty() {
@@ -1702,10 +2034,10 @@ impl Window {
             let (content, _) = two_line_row(&title, &sub, "starred-symbolic");
             let remove = gtk::Button::builder()
                 .icon_name("user-trash-symbolic")
-                .tooltip_text("Remove Bookmark")
+                .tooltip_text(tr("Remove Bookmark"))
                 .valign(gtk::Align::Center)
                 .build()
-                .labelled(&format!("Remove Bookmark {title}"));
+                .labelled(&trf!("Remove Bookmark {title}", title = title));
             remove.add_css_class("flat");
             content.append(&remove);
             let row = gtk::ListBoxRow::builder()
@@ -1746,6 +2078,7 @@ impl Window {
         });
         if text.is_empty() {
             self.find_label.set_text("");
+            self.set_find_error(false);
         }
     }
 
@@ -1772,15 +2105,34 @@ impl Window {
             return;
         }
         let text = match matches {
-            Some(0) => "Not found".to_string(),
-            Some(1) => "1 match".to_string(),
-            Some(n) => format!("{n} matches"),
+            Some(0) => tr("Not found").to_string(),
+            Some(n) => trnf!("{n} match", "{n} matches", n),
             None => String::new(),
         };
         if !text.is_empty() && text != self.find_label.text() {
             helix_app_common::announce_settled(&self.find_label, &text);
         }
         self.find_label.set_text(&text);
+        self.set_find_error(matches == Some(0));
+    }
+
+    /// "Not found" is shown in the error style and marks the search
+    /// entry invalid (not by colour alone: the label says it).
+    fn set_find_error(&self, error: bool) {
+        if error {
+            self.find_label.add_css_class("error");
+            self.find_label.remove_css_class("dim-label");
+            self.find_entry.add_css_class("error");
+            self.find_entry
+                .update_state(&[gtk::accessible::State::Invalid(
+                    gtk::AccessibleInvalidState::True,
+                )]);
+        } else {
+            self.find_label.remove_css_class("error");
+            self.find_label.add_css_class("dim-label");
+            self.find_entry.remove_css_class("error");
+            self.find_entry.reset_state(gtk::AccessibleState::Invalid);
+        }
     }
 
     // ---- downloads --------------------------------------------------------
@@ -1806,7 +2158,10 @@ impl Window {
             .ellipsize(gtk::pango::EllipsizeMode::Middle)
             .build();
         let progress = gtk::ProgressBar::new();
-        let status = gtk::Label::builder().label("Starting…").xalign(0.0).build();
+        let status = gtk::Label::builder()
+            .label(tr("Starting…"))
+            .xalign(0.0)
+            .build();
         status.add_css_class("dim-label");
         status.add_css_class("caption");
         text.append(&name_label);
@@ -1816,24 +2171,24 @@ impl Window {
         helix_app_common::label_widget(&progress, &name_label);
         let cancel = gtk::Button::builder()
             .icon_name("process-stop-symbolic")
-            .tooltip_text("Cancel")
+            .tooltip_text(tr("Cancel"))
             .valign(gtk::Align::Center)
             .build()
-            .labelled(&format!("Cancel {name}"));
+            .labelled(&trf!("Cancel {name}", name = name));
         let open = gtk::Button::builder()
             .icon_name("document-open-symbolic")
-            .tooltip_text("Open")
+            .tooltip_text(tr("Open"))
             .valign(gtk::Align::Center)
             .visible(false)
             .build()
-            .labelled(&format!("Open {name}"));
+            .labelled(&trf!("Open {name}", name = name));
         let folder = gtk::Button::builder()
             .icon_name("folder-open-symbolic")
-            .tooltip_text("Open Folder")
+            .tooltip_text(tr("Open Folder"))
             .valign(gtk::Align::Center)
             .visible(false)
             .build()
-            .labelled(&format!("Open Folder of {name}"));
+            .labelled(&trf!("Open Folder of {name}", name = name));
         for b in [&cancel, &open, &folder] {
             b.add_css_class("flat");
             row_box.append(b);
@@ -1844,7 +2199,15 @@ impl Window {
             .build();
         self.dl_list.prepend(&row);
         self.dl_button.set_visible(true);
-        self.dl_button.popup();
+        if !self.dl_button.is_active() {
+            self.dl_attention.set_visible(true);
+            set_downloads_description(&self.dl_button, Some(tr("New downloads")));
+        }
+        helix_app_common::announce(
+            &self.dl_button,
+            &trf!("Downloading {name}", name = name),
+            helix_app_common::Urgency::Polite,
+        );
 
         let dc = d.clone();
         cancel.connect_clicked(move |_| dc.cancel());
@@ -1860,7 +2223,7 @@ impl Window {
                 move |r| {
                     if let (Err(e), Some(w)) = (r, me.upgrade()) {
                         if !is_dismissed(&e) {
-                            w.toast(&format!("Could not open the download: {}", e.message()));
+                            w.toast(&trf!("Could not open the download: {}", e.message()));
                         }
                     }
                 },
@@ -1876,7 +2239,7 @@ impl Window {
                 move |r| {
                     if let (Err(e), Some(w)) = (r, me.upgrade()) {
                         if !is_dismissed(&e) {
-                            w.toast(&format!("Could not open the folder: {}", e.message()));
+                            w.toast(&trf!("Could not open the folder: {}", e.message()));
                         }
                     }
                 },
@@ -1912,10 +2275,10 @@ impl Window {
                 return;
             }
             p.set_fraction(1.0);
-            s.set_text("Finished");
+            s.set_text(tr("Finished"));
             helix_app_common::announce(
                 &s,
-                &format!("Download finished: {name}"),
+                &trf!("Download finished: {name}", name = name),
                 helix_app_common::Urgency::Polite,
             );
             o.set_visible(true);
@@ -1927,16 +2290,139 @@ impl Window {
             r.set_widget_name("finished");
             c.set_visible(false);
             if err.matches(webkit6::DownloadError::CancelledByUser) {
-                s.set_text("Cancelled");
+                s.set_text(tr("Cancelled"));
             } else {
-                s.set_text(&format!("Failed: {}", err.message()));
+                s.set_text(&trf!("Failed: {}", err.message()));
                 helix_app_common::announce(
                     &s,
-                    &format!("Download failed: {}", err.message()),
+                    &trf!("Download failed: {}", err.message()),
                     helix_app_common::Urgency::Assertive,
                 );
             }
         });
+    }
+}
+
+/// Sets (or clears) the accessible description of the Downloads button
+/// and of the inner button that takes focus.
+fn set_downloads_description(button: &gtk::MenuButton, text: Option<&str>) {
+    let inner = button.first_child();
+    for w in std::iter::once(button.clone().upcast::<gtk::Widget>()).chain(inner) {
+        match text {
+            Some(t) => w.update_property(&[gtk::accessible::Property::Description(t)]),
+            None => w.reset_property(gtk::AccessibleProperty::Description),
+        }
+    }
+}
+
+/// Icon, title and description of the bookmarks popover with nothing to
+/// list: no bookmarks at all, or none matching `query`.
+fn bookmarks_empty_state(query: &str) -> (&'static str, &'static str, &'static str) {
+    if query.trim().is_empty() {
+        (
+            "starred-symbolic",
+            tr("No Bookmarks"),
+            tr("Bookmark pages with the star in the address bar or Ctrl+D"),
+        )
+    } else {
+        (
+            "edit-find-symbolic",
+            tr("No Results Found"),
+            tr("Try a different search"),
+        )
+    }
+}
+
+/// "1 result", "3 results".
+pub fn result_count(n: usize) -> String {
+    trnf!("{n} result", "{n} results", n)
+}
+
+/// Stops a loading tab, loads a lazily restored one, else reloads.
+fn reload_or_stop(t: &Tab) {
+    if t.view.is_loading() {
+        t.view.stop_loading();
+    } else if t.pending_uri.borrow().is_some() {
+        t.realize_lazy();
+    } else {
+        t.view.reload();
+    }
+}
+
+/// The tab context menu's sections of (label, action) for a tab.
+fn tab_menu_sections(pinned: bool, muted: bool) -> [Vec<(&'static str, &'static str)>; 3] {
+    [
+        vec![
+            (tr("_Reload"), "win.tab-reload"),
+            (tr("_Duplicate"), "win.tab-duplicate"),
+        ],
+        vec![
+            (
+                if pinned {
+                    tr("Un_pin Tab")
+                } else {
+                    tr("_Pin Tab")
+                },
+                "win.tab-pin",
+            ),
+            (
+                if muted {
+                    tr("Un_mute Tab")
+                } else {
+                    tr("_Mute Tab")
+                },
+                "win.tab-mute",
+            ),
+            (tr("Move to New _Window"), "win.tab-move-to-new-window"),
+        ],
+        vec![
+            (tr("Close _Other Tabs"), "win.tab-close-others"),
+            (tr("Close Tabs to the _Right"), "win.tab-close-right"),
+            (tr("_Close Tab"), "win.tab-close"),
+        ],
+    ]
+}
+
+/// Refills `menu` in place, so an open popover follows the change.
+fn fill_tab_menu(menu: &gio::Menu, pinned: bool, muted: bool) {
+    menu.remove_all();
+    for section in tab_menu_sections(pinned, muted) {
+        let s = gio::Menu::new();
+        for (label, action) in section {
+            s.append(Some(label), Some(action));
+        }
+        menu.append_section(None, &s);
+    }
+}
+
+/// The index of the next focus stop after `at` (or before it, going
+/// backwards) among `n` stops; from outside every stop, forward starts at
+/// the first (the address bar) and backward at the last (the page).
+fn next_stop(at: Option<usize>, n: usize, forward: bool) -> Option<usize> {
+    if n == 0 {
+        return None;
+    }
+    Some(match (at, forward) {
+        (Some(i), true) => (i + 1) % n,
+        (Some(i), false) => (i + n - 1) % n,
+        (None, true) => 0,
+        (None, false) => n - 1,
+    })
+}
+
+/// Whether a page can be bookmarked (built-in pages cannot).
+fn bookmarkable(uri: &str) -> bool {
+    !uri.is_empty() && !uri.starts_with("helix-about:") && uri != "about:blank"
+}
+
+/// The Site Information button's icon and the spoken connection state.
+fn security_icon_and_text(security: Security, start_page: bool) -> (&'static str, &'static str) {
+    match security {
+        _ if start_page => ("web-browser-symbolic", tr("Start page")),
+        Security::Secure => ("channel-secure-symbolic", tr("Secure connection")),
+        Security::Insecure => ("channel-insecure-symbolic", tr("Connection is not secure")),
+        Security::Broken => ("channel-insecure-symbolic", tr("Certificate problems")),
+        Security::Local => ("text-x-generic-symbolic", tr("Local page")),
     }
 }
 
@@ -1947,7 +2433,87 @@ fn is_dismissed(e: &glib::Error) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{suggestion_count, suggestion_label, SuggestionKind};
+    use super::{
+        bookmarkable, bookmarks_empty_state, next_stop, result_count, security_icon_and_text,
+        suggestion_count, suggestion_label, tab_menu_sections, SuggestionKind,
+    };
+
+    #[test]
+    fn empty_bookmarks_and_no_results_differ() {
+        assert_eq!(bookmarks_empty_state("").1, "No Bookmarks");
+        assert_eq!(bookmarks_empty_state("  ").1, "No Bookmarks");
+        assert_eq!(bookmarks_empty_state("rust").1, "No Results Found");
+        assert_eq!(result_count(1), "1 result");
+        assert_eq!(result_count(0), "0 results");
+    }
+    use crate::tab::{prompt_announcement, Security};
+
+    #[test]
+    fn tab_menu_follows_the_tab() {
+        let labels = |pinned, muted| -> Vec<&str> {
+            tab_menu_sections(pinned, muted)
+                .iter()
+                .flatten()
+                .map(|(l, _)| *l)
+                .collect()
+        };
+        assert_eq!(
+            labels(false, false),
+            [
+                "_Reload",
+                "_Duplicate",
+                "_Pin Tab",
+                "_Mute Tab",
+                "Move to New _Window",
+                "Close _Other Tabs",
+                "Close Tabs to the _Right",
+                "_Close Tab"
+            ]
+        );
+        let l = labels(true, true);
+        assert!(l.contains(&"Un_pin Tab") && l.contains(&"Un_mute Tab"));
+        // Every item is a window action this file installs.
+        let src = include_str!("window.rs");
+        for (_, action) in tab_menu_sections(false, false).iter().flatten() {
+            let name = action.strip_prefix("win.").unwrap();
+            assert!(src.contains(&format!("add(\"{name}\"")), "{action}");
+        }
+    }
+
+    #[test]
+    fn f6_cycles_through_address_bar_prompts_and_page() {
+        // Address bar, one prompt bar, page.
+        assert_eq!(next_stop(Some(0), 3, true), Some(1));
+        assert_eq!(next_stop(Some(2), 3, true), Some(0));
+        assert_eq!(next_stop(Some(0), 3, false), Some(2));
+        assert_eq!(next_stop(None, 3, true), Some(0));
+        assert_eq!(next_stop(None, 3, false), Some(2));
+        assert_eq!(next_stop(None, 0, true), None);
+        assert_eq!(
+            prompt_announcement("Allow example.org to use your camera?"),
+            "Allow example.org to use your camera? Press F6 to answer."
+        );
+        assert_eq!(
+            prompt_announcement("Save password for a@b"),
+            "Save password for a@b. Press F6 to answer."
+        );
+    }
+
+    #[test]
+    fn security_is_spoken_and_built_in_pages_are_not_bookmarkable() {
+        assert_eq!(
+            security_icon_and_text(Security::Broken, false).1,
+            "Certificate problems"
+        );
+        assert_eq!(
+            security_icon_and_text(Security::Secure, true).1,
+            "Start page"
+        );
+        assert!(bookmarkable("https://gnome.org/"));
+        assert!(!bookmarkable("helix-about:overview"));
+        assert!(!bookmarkable("about:blank"));
+        assert!(!bookmarkable(""));
+    }
 
     #[test]
     fn suggestion_rows_say_their_type() {

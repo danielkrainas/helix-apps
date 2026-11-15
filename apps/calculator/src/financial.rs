@@ -1,6 +1,8 @@
 //! Financial functions. Rates are fractions per period (5% = 0.05).
 
 use crate::engine::CalcError;
+use helix_app_common::i18n::n_;
+use helix_app_common::trf;
 
 /// Describes a financial function for the UI's input forms.
 pub struct FinancialFn {
@@ -12,61 +14,69 @@ pub struct FinancialFn {
 pub const FUNCTIONS: &[FinancialFn] = &[
     FinancialFn {
         name: "ctrm",
-        title: "Compounding Term",
-        params: &["Periodic interest rate", "Future value", "Present value"],
+        title: n_("Compounding Term"),
+        params: &[
+            n_("Periodic interest rate"),
+            n_("Future value"),
+            n_("Present value"),
+        ],
     },
     FinancialFn {
         name: "ddb",
-        title: "Double-Declining Depreciation",
+        title: n_("Double-Declining Depreciation"),
         params: &["Cost", "Life", "Period"],
     },
     FinancialFn {
         name: "fv",
-        title: "Future Value",
+        title: n_("Future Value"),
         params: &[
-            "Periodic payment",
-            "Periodic interest rate",
-            "Number of periods",
+            n_("Periodic payment"),
+            n_("Periodic interest rate"),
+            n_("Number of periods"),
         ],
     },
     FinancialFn {
         name: "gpm",
-        title: "Gross Profit Margin",
+        title: n_("Gross Profit Margin"),
         params: &["Cost", "Margin"],
     },
     FinancialFn {
         name: "pmt",
-        title: "Periodic Payment",
-        params: &["Principal", "Periodic interest rate", "Term"],
+        title: n_("Periodic Payment"),
+        params: &["Principal", n_("Periodic interest rate"), "Term"],
     },
     FinancialFn {
         name: "pv",
-        title: "Present Value",
+        title: n_("Present Value"),
         params: &[
-            "Periodic payment",
-            "Periodic interest rate",
-            "Number of periods",
+            n_("Periodic payment"),
+            n_("Periodic interest rate"),
+            n_("Number of periods"),
         ],
     },
     FinancialFn {
         name: "rate",
-        title: "Periodic Interest Rate",
-        params: &["Future value", "Present value", "Term"],
+        title: n_("Periodic Interest Rate"),
+        params: &[n_("Future value"), n_("Present value"), "Term"],
     },
     FinancialFn {
         name: "sln",
-        title: "Straight-Line Depreciation",
+        title: n_("Straight-Line Depreciation"),
         params: &["Cost", "Salvage", "Life"],
     },
     FinancialFn {
         name: "syd",
-        title: "Sum-of-the-Years'-Digits Depreciation",
+        title: n_("Sum-of-the-Years'-Digits Depreciation"),
         params: &["Cost", "Salvage", "Life", "Period"],
     },
     FinancialFn {
         name: "term",
-        title: "Payment Period",
-        params: &["Periodic payment", "Future value", "Periodic interest rate"],
+        title: n_("Payment Period"),
+        params: &[
+            n_("Periodic payment"),
+            n_("Future value"),
+            n_("Periodic interest rate"),
+        ],
     },
 ];
 
@@ -81,7 +91,7 @@ pub fn call(name: &str, a: &[f64]) -> Option<Result<f64, CalcError>> {
         }));
     }
     let undefined = || {
-        Err(CalcError::Domain(format!(
+        Err(CalcError::Domain(trf!(
             "{} is undefined for these values",
             f.title
         )))

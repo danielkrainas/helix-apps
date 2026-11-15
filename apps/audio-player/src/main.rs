@@ -14,6 +14,7 @@ use gtk::{gio, glib, prelude::*};
 const USAGE: &str = "Usage: helix-audio-player [FILE|URI]";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let mut target = None;
     for arg in std::env::args().skip(1) {
         match arg.as_str() {

@@ -18,6 +18,7 @@ use std::path::PathBuf;
 const USAGE: &str = "Usage: helix-music [--scan DIR... | --gnome-music [DB-DIR]]";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
         None => ui::run(),

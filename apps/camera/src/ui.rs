@@ -10,8 +10,11 @@ use crate::qr;
 use crate::settings::{self, Settings};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
+use helix_app_common::{announce, Urgency};
 use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -80,6 +83,11 @@ impl State {
         self.ui.toasts.add_toast(adw::Toast::new(msg));
     }
 
+    /// Speaks `msg` on behalf of the window.
+    fn say(&self, msg: &str, urgency: Urgency) {
+        announce(&self.ui.window, msg, urgency);
+    }
+
     /// Whether preview frames should be scanned for QR codes.
     fn scanning(&self) -> bool {
         self.streaming.get() && !self.video_mode() && !self.recording.get() && !self.busy.get()
@@ -98,7 +106,7 @@ pub fn format_elapsed(secs: u64) -> String {
 
 pub fn run() -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
-    helix_app_common::install_standard_actions(&app, "Camera", "Take pictures and videos");
+    helix_app_common::install_standard_actions(&app, tr("Camera"), tr("Take pictures and videos"));
     app.connect_startup(|_| {
         load_css();
         adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceDark);
@@ -150,28 +158,30 @@ fn load_css() {
 fn menu_model(formats: &[(VideoFormat, bool)]) -> gio::Menu {
     let menu = gio::Menu::new();
     let timer = gio::Menu::new();
-    timer.append(Some("Off"), Some("win.countdown::0"));
+    timer.append(Some(tr("Off")), Some("win.countdown::0"));
     for d in countdown::DELAYS.iter().skip(1) {
         timer.append(
-            Some(&format!("{d} Seconds")),
+            Some(&trf!("{d} Seconds", d = d)),
             Some(&format!("win.countdown::{d}")),
         );
     }
     let prefs = gio::Menu::new();
-    prefs.append_submenu(Some("_Countdown"), &timer);
+    prefs.append_submenu(Some(tr("_Countdown")), &timer);
     let fmt = gio::Menu::new();
     for (f, _) in formats {
         fmt.append(Some(f.label()), Some(&format!("win.format-{}", f.id())));
     }
-    prefs.append_submenu(Some("Video _Format"), &fmt);
-    prefs.append(Some("Play Shutter _Sound"), Some("win.shutter-sound"));
+    prefs.append_submenu(Some(tr("Video _Format")), &fmt);
+    prefs.append(Some(tr("Play Shutter _Sound")), Some("win.shutter-sound"));
     menu.append_section(None, &prefs);
     let misc = gio::Menu::new();
     misc.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some("win.show-help-overlay"),
     );
-    misc.append(Some("_About Camera"), Some("app.about"));
+    misc.append(Some(tr("_About Camera")), Some("app.about"));
     menu.append_section(None, &misc);
     menu
 }
@@ -186,7 +196,7 @@ fn build(app: &adw::Application) -> Rc<State> {
 
     let window = adw::ApplicationWindow::builder()
         .application(app)
-        .title("Camera")
+        .title(tr("Camera"))
         .default_width(800)
         .default_height(640)
         .width_request(helix_app_common::MIN_WIDTH)
@@ -260,23 +270,23 @@ fn build(app: &adw::Application) -> Rc<State> {
     ]));
     let qr_copy = gtk::Button::builder()
         .icon_name("edit-copy-symbolic")
-        .tooltip_text("Copy")
+        .tooltip_text(tr("Copy"))
         .action_name("win.qr-copy")
         .css_classes(["flat", "circular"])
         .build()
-        .labelled("Copy");
+        .labelled(tr("Copy"));
     let qr_open = gtk::Button::builder()
-        .label("Open")
+        .label(tr("Open"))
         .action_name("win.qr-open")
         .css_classes(["suggested-action", "pill"])
         .build();
     let qr_close = gtk::Button::builder()
         .icon_name("window-close-symbolic")
-        .tooltip_text("Dismiss")
+        .tooltip_text(tr("Dismiss"))
         .action_name("win.qr-dismiss")
         .css_classes(["flat", "circular"])
         .build()
-        .labelled("Dismiss");
+        .labelled(tr("Dismiss"));
     let qr_box = gtk::Box::builder()
         .spacing(8)
         .css_classes(["qr-banner"])
@@ -302,35 +312,36 @@ fn build(app: &adw::Application) -> Rc<State> {
         .build();
     let gallery = gtk::Button::builder()
         .child(&gallery_image)
-        .tooltip_text("Open Last Capture")
+        .tooltip_text(tr("Open Last Capture"))
         .action_name("win.open-gallery")
         .valign(gtk::Align::Center)
         .css_classes(["gallery", "circular"])
         .build();
+    helix_app_common::set_accessible_label(&gallery, tr("Open Last Capture"));
     let shutter = gtk::Button::builder()
         .icon_name("camera-photo-symbolic")
-        .tooltip_text("Take Photo")
+        .tooltip_text(tr("Take Photo"))
         .action_name("win.shutter")
         .halign(gtk::Align::Center)
         .css_classes(["shutter"])
         .build()
-        .labelled("Take Photo");
+        .labelled(tr("Take Photo"));
     let switcher = gtk::Button::builder()
         .icon_name("camera-switch-symbolic")
-        .tooltip_text("Switch Camera")
+        .tooltip_text(tr("Switch Camera"))
         .action_name("win.next-camera")
         .valign(gtk::Align::Center)
         .visible(false)
         .css_classes(["circular", "flat"])
         .build()
-        .labelled("Switch Camera");
+        .labelled(tr("Switch Camera"));
     let photo_toggle = gtk::ToggleButton::builder()
-        .label("Photo")
+        .label(tr("Photo"))
         .action_name("win.mode")
         .action_target(&"photo".to_variant())
         .build();
     let video_toggle = gtk::ToggleButton::builder()
-        .label("Video")
+        .label(tr("Video"))
         .action_name("win.mode")
         .action_target(&"video".to_variant())
         .build();
@@ -351,11 +362,11 @@ fn build(app: &adw::Application) -> Rc<State> {
     let header = adw::HeaderBar::new();
     let menu_button = gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
-        .tooltip_text("Main Menu")
+        .tooltip_text(tr("Main Menu"))
         .menu_model(&menu_model(&formats))
         .primary(true)
         .build()
-        .labelled("Main Menu");
+        .labelled(tr("Main Menu"));
     header.pack_end(&menu_button);
 
     let toolbar = adw::ToolbarView::new();
@@ -528,6 +539,10 @@ fn apply_qr(state: &State, change: Option<qr::Change>) {
             state.ui.qr_label.set_tooltip_text(Some(&text));
             state.ui.qr_open.set_visible(uri.is_some());
             state.ui.qr_revealer.set_reveal_child(true);
+            state.say(
+                &trf!("QR code detected: {text}", text = text),
+                Urgency::Polite,
+            );
             *state.qr_text.borrow_mut() = Some(text);
         }
         Some(qr::Change::Hide) => {
@@ -566,7 +581,7 @@ fn install_actions(state: &Rc<State>) {
             return;
         };
         WidgetExt::display(&s.ui.window).clipboard().set_text(&text);
-        s.toast("Copied to clipboard");
+        s.toast(tr("Copied to clipboard"));
     });
     win.add_action(&qr_copy);
 
@@ -582,7 +597,7 @@ fn install_actions(state: &Rc<State>) {
         launcher.launch(Some(&s.ui.window), None::<&gio::Cancellable>, move |res| {
             if let (Err(e), Some(s)) = (res, weak.upgrade()) {
                 if !e.matches(gtk::DialogError::Dismissed) {
-                    s.toast(&format!("Could not open link: {}", e.message()));
+                    s.toast(&trf!("Could not open link: {}", e.message()));
                 }
             }
         });
@@ -674,7 +689,7 @@ fn install_actions(state: &Rc<State>) {
         launcher.launch(Some(&s.ui.window), None::<&gio::Cancellable>, move |res| {
             if let (Err(e), Some(s)) = (res, weak.upgrade()) {
                 if !e.matches(gtk::DialogError::Dismissed) {
-                    s.toast(&format!("Could not open capture: {}", e.message()));
+                    s.toast(&trf!("Could not open capture: {}", e.message()));
                 }
             }
         });
@@ -765,7 +780,9 @@ fn on_shutter(state: &Rc<State>) {
         return;
     }
     if !state.photos_ok {
-        state.toast("Taking photos is not supported: a JPEG encoder is missing");
+        state.toast(tr(
+            "Taking photos is not supported: a JPEG encoder is missing",
+        ));
         return;
     }
     let delay = state.settings.borrow().countdown;
@@ -782,10 +799,15 @@ fn apply_countdown(state: &Rc<State>, action: Action) {
             stop_countdown(state);
             capture_photo(state);
         }
-        Action::Cancelled => stop_countdown(state),
+        Action::Cancelled => {
+            stop_countdown(state);
+            state.say(tr("Countdown cancelled"), Urgency::Polite);
+        }
         Action::Show(n) => {
             state.ui.countdown_label.set_label(&n.to_string());
             state.ui.countdown_label.set_visible(true);
+            // Each tick is spoken so the self-timer is not visual-only.
+            state.say(&n.to_string(), Urgency::Polite);
             if state.countdown_timer.borrow().is_none() {
                 let weak = Rc::downgrade(state);
                 let id = glib::timeout_add_seconds_local(1, move || {
@@ -819,6 +841,27 @@ fn stop_countdown(state: &State) {
     state.ui.countdown_label.set_visible(false);
 }
 
+/// Whether the desktop allows animations (the flash is skipped otherwise).
+fn animations_enabled() -> bool {
+    gtk::Settings::default().is_none_or(|s| s.is_gtk_enable_animations())
+}
+
+/// Confirms a saved capture: a toast with an Open button when the flash
+/// cannot be seen (animations off), otherwise a spoken message (the toast
+/// would be spoken too, so only one of them is used).
+fn confirm_capture(state: &State, message: &str) {
+    if animations_enabled() {
+        state.say(message, Urgency::Polite);
+    } else {
+        let toast = adw::Toast::builder()
+            .title(message)
+            .button_label(tr("_Open"))
+            .action_name("win.open-gallery")
+            .build();
+        state.ui.toasts.add_toast(toast);
+    }
+}
+
 fn capture_photo(state: &Rc<State>) {
     let anim = adw::TimedAnimation::new(
         &state.ui.flash,
@@ -847,12 +890,13 @@ fn handle_event(state: &Rc<State>, ev: Event) {
                 state
                     .ui
                     .switcher
-                    .set_tooltip_text(Some(&format!("Switch Camera (current: {name})")));
+                    .set_tooltip_text(Some(&trf!("Switch Camera (current: {name})", name = name)));
             }
         }
         Event::Status(st) => show_status(state, &st),
         Event::PhotoSaved { path, thumb } => {
             set_gallery(state, path, thumb.as_ref().map(texture), CaptureKind::Photo);
+            confirm_capture(state, tr("Photo saved"));
         }
         Event::RecordingStarted(path) => {
             state.busy.set(false);
@@ -864,6 +908,7 @@ fn handle_event(state: &Rc<State>, ev: Event) {
             state.rec_started.set(Some(Instant::now()));
             state.ui.rec_label.set_label(&format_elapsed(0));
             state.ui.rec_label.set_visible(true);
+            state.say(tr("Recording started"), Urgency::Polite);
             let weak = Rc::downgrade(state);
             let id = glib::timeout_add_local(std::time::Duration::from_millis(500), move || {
                 let Some(s) = weak.upgrade() else {
@@ -878,9 +923,14 @@ fn handle_event(state: &Rc<State>, ev: Event) {
             *state.rec_timer.borrow_mut() = Some(id);
         }
         Event::RecordingSaved { path, thumb } => {
+            let secs = state.rec_started.get().map(|t| t.elapsed().as_secs());
             end_recording(state);
+            state.say(&recording_stopped_message(secs), Urgency::Polite);
             let tex = thumb.as_ref().map(texture);
             set_gallery(state, path, tex, CaptureKind::Video);
+            if !animations_enabled() {
+                confirm_capture(state, tr("Video saved"));
+            }
         }
         Event::Failed(msg) => {
             if state.busy.get() || state.recording.get() {
@@ -890,6 +940,14 @@ fn handle_event(state: &Rc<State>, ev: Event) {
         }
     }
     update_controls(state);
+}
+
+/// "Recording stopped, 0:12" (just "Recording stopped" without a start time).
+pub fn recording_stopped_message(secs: Option<u64>) -> String {
+    match secs {
+        Some(s) => trf!("Recording stopped, {}", format_elapsed(s)),
+        None => tr("Recording stopped").to_string(),
+    }
 }
 
 fn end_recording(state: &State) {
@@ -915,19 +973,19 @@ fn show_status(state: &Rc<State>, st: &Status) {
         }
         Status::NoCamera => {
             page.set_icon_name(Some("camera-disabled-symbolic"));
-            page.set_title("No Camera Found");
-            page.set_description(Some("Connect a camera device"));
+            page.set_title(tr("No Camera Found"));
+            page.set_description(Some(tr("Connect a camera device")));
         }
         Status::Denied => {
             page.set_icon_name(Some("camera-disabled-symbolic"));
-            page.set_title("Permission Denied");
-            page.set_description(Some(
+            page.set_title(tr("Permission Denied"));
+            page.set_description(Some(tr(
                 "Camera access was not granted. It can be allowed in Settings → Apps → Camera.",
-            ));
+            )));
         }
         Status::Error(e) => {
             page.set_icon_name(Some("dialog-error-symbolic"));
-            page.set_title("Camera Error");
+            page.set_title(tr("Camera Error"));
             page.set_description(Some(&glib::markup_escape_text(e)));
         }
     }
@@ -938,6 +996,15 @@ fn show_status(state: &Rc<State>, st: &Status) {
     stop_countdown(state);
     state.countdown.set(Countdown::Idle);
     state.ui.stack.set_visible_child_name("status");
+    // The status page replaces the viewfinder: say why.
+    let detail = match st {
+        Status::Error(e) => e.clone(),
+        _ => page
+            .description()
+            .map(|d| d.to_string())
+            .unwrap_or_default(),
+    };
+    state.say(&format!("{}. {detail}", page.title()), Urgency::Assertive);
 }
 
 fn update_controls(state: &State) {
@@ -951,14 +1018,14 @@ fn update_controls(state: &State) {
     }
     let (icon, tip) = if recording {
         ui.shutter.add_css_class("recording");
-        ("media-playback-stop-symbolic", "Stop Recording")
+        ("media-playback-stop-symbolic", tr("Stop Recording"))
     } else if video {
         ui.shutter.add_css_class("video");
-        ("media-record-symbolic", "Start Recording")
+        ("media-record-symbolic", tr("Start Recording"))
     } else if state.countdown.get().is_running() {
-        ("process-stop-symbolic", "Cancel Countdown")
+        ("process-stop-symbolic", tr("Cancel Countdown"))
     } else {
-        ("camera-photo-symbolic", "Take Photo")
+        ("camera-photo-symbolic", tr("Take Photo"))
     };
     ui.shutter.set_icon_name(icon);
     ui.shutter.set_tooltip_text(Some(tip));
@@ -994,12 +1061,14 @@ fn set_gallery(state: &State, path: PathBuf, tex: Option<gdk::Texture>, kind: Ca
             state.ui.gallery_image.set_paintable(Some(&paintable));
         }
     }
-    state.ui.gallery.set_tooltip_text(Some(&format!(
+    let tip = trf!(
         "Open {}",
         path.file_name()
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_default()
-    )));
+    );
+    state.ui.gallery.set_tooltip_text(Some(&tip));
+    helix_app_common::set_accessible_label(&state.ui.gallery, &tip);
     *state.last_capture.borrow_mut() = Some(path);
 }
 
@@ -1061,5 +1130,14 @@ mod tests {
         assert_eq!(format_elapsed(0), "0:00");
         assert_eq!(format_elapsed(65), "1:05");
         assert_eq!(format_elapsed(3725), "1:02:05");
+    }
+
+    #[test]
+    fn recording_stopped_includes_duration() {
+        assert_eq!(
+            recording_stopped_message(Some(12)),
+            "Recording stopped, 0:12"
+        );
+        assert_eq!(recording_stopped_message(None), "Recording stopped");
     }
 }

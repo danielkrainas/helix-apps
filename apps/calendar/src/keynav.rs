@@ -4,6 +4,7 @@
 use chrono::{Datelike, Duration, NaiveDate, Weekday};
 
 use crate::dates;
+use helix_app_common::trf;
 
 /// A navigation key, independent of GDK.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -93,8 +94,12 @@ pub fn day_label(d: NaiveDate, today: NaiveDate, selected: bool, titles: &[&str]
     }
     match titles.len() {
         0 => s.push_str(", no events"),
-        1 => s.push_str(&format!(", 1 event: {}", titles[0])),
-        n => s.push_str(&format!(", {n} events: {}", titles.join(", "))),
+        1 => s.push_str(&trf!(", 1 event: {}", titles[0])),
+        n => s.push_str(&trf!(
+            ", {n} events: {join}",
+            n = n,
+            join = titles.join(", ")
+        )),
     }
     s
 }

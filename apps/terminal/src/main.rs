@@ -14,6 +14,7 @@ mod window;
 use gtk::glib;
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     // --help, --version and bad options are handled locally so they work
     // without a display; everything else goes to the (possibly remote)
     // primary instance through GApplication's command-line forwarding.

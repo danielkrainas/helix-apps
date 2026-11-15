@@ -1,5 +1,6 @@
 //! HTTP plumbing shared by the tile, geocoding and routing clients.
 
+use helix_app_common::trf;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime};
@@ -33,7 +34,7 @@ pub fn get(
             resp.into_reader()
                 .take(MAX_BODY)
                 .read_to_end(&mut body)
-                .map_err(|e| format!("Network error: {e}"))?;
+                .map_err(|e| trf!("Network error: {e}", e = e))?;
             Ok(body)
         }
         Err(ureq::Error::Status(code, resp)) => {
@@ -43,11 +44,15 @@ pub fn get(
                 .ok()
                 .and_then(|v| v.get("message").and_then(|m| m.as_str()).map(String::from));
             Err(match detail {
-                Some(m) => format!("The server returned an error ({code}): {m}"),
-                None => format!("The server returned an error ({code})"),
+                Some(m) => trf!(
+                    "The server returned an error ({code}): {m}",
+                    code = code,
+                    m = m
+                ),
+                None => trf!("The server returned an error ({code})", code = code),
             })
         }
-        Err(ureq::Error::Transport(t)) => Err(format!("Could not connect to the server: {t}")),
+        Err(ureq::Error::Transport(t)) => Err(trf!("Could not connect to the server: {t}", t = t)),
     }
 }
 

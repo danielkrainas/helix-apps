@@ -11,6 +11,8 @@ use super::widgets::{self, has_key, watch};
 use super::{spawn_worker, Ctx, Panel};
 use crate::values::{self, Style, ACCENT_COLORS};
 use crate::wallpaper::{self, Wallpaper};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 const INTERFACE: &str = "org.gnome.desktop.interface";
 const BACKGROUND: &str = "org.gnome.desktop.background";
@@ -101,9 +103,9 @@ fn style_card(style: Style, label: &str) -> gtk::ToggleButton {
 }
 
 fn style_group(prefs: &Prefs) -> adw::PreferencesGroup {
-    let group = widgets::group("Style");
-    let default = style_card(Style::Default, "Default");
-    let dark = style_card(Style::Dark, "Dark");
+    let group = widgets::group(tr("Style"));
+    let default = style_card(Style::Default, tr("Default"));
+    let dark = style_card(Style::Dark, tr("Dark"));
     dark.set_group(Some(&default));
     let sync = {
         let (d, k, p) = (default.downgrade(), dark.downgrade(), prefs.clone());
@@ -160,7 +162,7 @@ fn flow_append(flow: &gtk::FlowBox, child: &impl IsA<gtk::Widget>) {
 }
 
 fn accent_group(prefs: &Prefs) -> adw::PreferencesGroup {
-    let group = widgets::group("Accent Color");
+    let group = widgets::group(tr("Accent Color"));
     if !has_key(prefs, "accent-color") {
         group.set_description(Some(widgets::UNSUPPORTED));
     }
@@ -171,7 +173,7 @@ fn accent_group(prefs: &Prefs) -> adw::PreferencesGroup {
     for (nick, label, _) in ACCENT_COLORS {
         let b = gtk::ToggleButton::builder()
             .css_classes(["accent-swatch", &format!("accent-{nick}")])
-            .tooltip_text(*label)
+            .tooltip_text(tr(label))
             .valign(gtk::Align::Center)
             .halign(gtk::Align::Center)
             .build();
@@ -210,8 +212,8 @@ fn accent_group(prefs: &Prefs) -> adw::PreferencesGroup {
 /// *Icon Theme*: the installed themes, by name; one set by other tools
 /// that is not installed stays listed under its id.
 fn icons_group(prefs: &Prefs) -> adw::PreferencesGroup {
-    let group = widgets::group("Icons");
-    let row = adw::ComboRow::builder().title("Icon Theme").build();
+    let group = widgets::group(tr("Icons"));
+    let row = adw::ComboRow::builder().title(tr("Icon Theme")).build();
     group.add(&row);
     if !has_key(prefs, "icon-theme") {
         group.set_description(Some(widgets::UNSUPPORTED));
@@ -295,7 +297,7 @@ struct Background {
 /// as a light and dark pair.
 fn tile_name(name: &str, pair: bool) -> String {
     if pair {
-        format!("{name}, light and dark variants")
+        trf!("{name}, light and dark variants", name = name)
     } else {
         name.to_string()
     }
@@ -340,7 +342,7 @@ impl Background {
             .light
             .file_stem()
             .and_then(|s| s.to_str())
-            .unwrap_or("Wallpaper")
+            .unwrap_or(tr("Wallpaper"))
             .replace('_', " ");
         let check = gtk::Image::builder()
             .icon_name("object-select-symbolic")
@@ -407,9 +409,9 @@ fn load_thumbnail(path: &Path) -> Option<(i32, i32, bool, usize, glib::Bytes)> {
 
 fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
     let prefs = ctx.prefs(BACKGROUND);
-    let group = widgets::group("Background");
+    let group = widgets::group(tr("Background"));
     let add_button = gtk::Button::builder()
-        .label("Add Picture…")
+        .label(tr("Add Picture…"))
         .css_classes(["flat"])
         .build();
     group.set_header_suffix(Some(&add_button));
@@ -423,16 +425,16 @@ fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
         .build();
     group.add(&flow);
     let empty = gtk::Label::builder()
-        .label("No Backgrounds Found")
+        .label(tr("No Backgrounds Found"))
         .wrap(true)
         .margin_top(12)
         .margin_bottom(12)
         .css_classes(["dim-label"])
         .visible(false)
         .build();
-    empty.update_property(&[gtk::accessible::Property::Description(
+    empty.update_property(&[gtk::accessible::Property::Description(tr(
         "Add a picture with Add Picture…",
-    )]);
+    ))]);
     group.add(&empty);
 
     // Thumbnail worker: paths in, pixel data out.
@@ -508,7 +510,7 @@ fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&filter);
         let dialog = gtk::FileDialog::builder()
-            .title("Add Picture")
+            .title(tr("Add Picture"))
             .modal(true)
             .filters(&filters)
             .build();
@@ -541,7 +543,7 @@ fn background_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
                     }
                     Err(e) => {
                         if let Some(ctx) = ctx_weak.upgrade() {
-                            ctx.toast(&format!("Could not add picture: {e}"));
+                            ctx.toast(&trf!("Could not add picture: {e}", e = e));
                         }
                     }
                 },

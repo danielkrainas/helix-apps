@@ -13,6 +13,7 @@ use std::path::PathBuf;
 const USAGE: &str = "Usage: helix-fonts [FILE...]\n\nWithout FILE, shows the installed fonts. Each FILE (.ttf, .otf, .ttc, .otc)\nopens in its own window with an Install button.";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let mut files = Vec::new();
     let mut only_files = false;
     for arg in std::env::args_os().skip(1) {

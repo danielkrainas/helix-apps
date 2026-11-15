@@ -1,5 +1,6 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys, GENERAL};
 
 /// Accelerators registered on the application (the tour's own keys are
@@ -8,10 +9,10 @@ pub const ACCELS: &[(&str, &[&str])] = &[];
 
 pub const GROUPS: &[Group] = &[
     (
-        "Tour",
+        n_("Tour"),
         &[
-            Keys("Previous or Next Page", "Left Right"),
-            Keys("Skip the Tour", "Escape"),
+            Keys(n_("Previous or Next Page"), "Left Right"),
+            Keys(n_("Skip the Tour"), "Escape"),
         ],
     ),
     GENERAL,

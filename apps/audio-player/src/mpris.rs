@@ -4,6 +4,7 @@
 //! [`Snapshot`]s through a [`Handle`]; the thread diffs them and emits
 //! `PropertiesChanged`. Remote calls become [`Command`]s sent to the UI.
 
+use helix_app_common::i18n::tr;
 use std::collections::HashMap;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
@@ -62,9 +63,9 @@ pub enum Status {
 impl Status {
     pub fn as_str(self) -> &'static str {
         match self {
-            Status::Playing => "Playing",
-            Status::Paused => "Paused",
-            Status::Stopped => "Stopped",
+            Status::Playing => tr("Playing"),
+            Status::Paused => tr("Paused"),
+            Status::Stopped => tr("Stopped"),
         }
     }
 }
@@ -175,9 +176,9 @@ pub fn changed_properties(old: &Snapshot, new: &Snapshot) -> HashMap<&'static st
 
 fn loop_status(s: &Snapshot) -> &'static str {
     if s.loop_track {
-        "Track"
+        tr("Track")
     } else {
-        "None"
+        tr("None")
     }
 }
 
@@ -215,7 +216,7 @@ impl Root {
     }
     #[zbus(property)]
     fn identity(&self) -> &str {
-        "Audio Player"
+        tr("Audio Player")
     }
     #[zbus(property)]
     fn desktop_entry(&self) -> &str {

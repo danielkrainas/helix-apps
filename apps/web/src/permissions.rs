@@ -1,5 +1,7 @@
 //! Per-origin permission decisions.
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -19,12 +21,12 @@ pub enum Kind {
 impl Kind {
     pub fn label(self) -> &'static str {
         match self {
-            Kind::Geolocation => "Location",
-            Kind::Notifications => "Notifications",
-            Kind::Microphone => "Microphone",
-            Kind::Camera => "Camera",
-            Kind::Clipboard => "Clipboard",
-            Kind::SavePassword => "Save Passwords",
+            Kind::Geolocation => tr("Location"),
+            Kind::Notifications => tr("Notifications"),
+            Kind::Microphone => tr("Microphone"),
+            Kind::Camera => tr("Camera"),
+            Kind::Clipboard => tr("Clipboard"),
+            Kind::SavePassword => tr("Save Passwords"),
         }
     }
 
@@ -54,7 +56,7 @@ pub fn request_text(host: &str, kinds: &[Kind]) -> String {
         [Kind::Microphone] => "use your microphone".to_string(),
         _ => "use additional permissions".to_string(),
     };
-    format!("{host} wants to {what}")
+    trf!("{host} wants to {what}", host = host, what = what)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -2,6 +2,8 @@
 //! and the pixel operations the document needs (rotate, crop, assembling
 //! SANE frames).
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use std::sync::Arc;
 
 /// A rectangle in page pixel coordinates.
@@ -253,15 +255,15 @@ impl PageBuilder {
         let lines = p.lines_in(raw.len());
         let chans = if p.format == FrameFormat::Rgb { 3 } else { 1 };
         if p.pixels_per_line == 0 || lines == 0 {
-            return Err("The scanner returned an empty image".into());
+            return Err(tr("The scanner returned an empty image").into());
         }
         if p.depth != 1 && p.depth != 8 && p.depth != 16 {
-            return Err(format!("Unsupported bit depth {}", p.depth));
+            return Err(trf!("Unsupported bit depth {}", p.depth));
         }
         let samples = p.pixels_per_line * chans;
         let needed = (samples * p.depth as usize).div_ceil(8);
         if needed > p.bytes_per_line {
-            return Err("Invalid scan line length".into());
+            return Err(tr("Invalid scan line length").into());
         }
         let mut out = Vec::with_capacity(samples * lines);
         for l in 0..lines {
@@ -269,7 +271,7 @@ impl PageBuilder {
             line_to_8bit(line, p.depth, samples, &mut out);
         }
         if self.width != 0 && (self.width != p.pixels_per_line) {
-            return Err("Frames have different sizes".into());
+            return Err(tr("Frames have different sizes").into());
         }
         self.width = p.pixels_per_line;
         self.height = if self.height == 0 {
@@ -304,7 +306,7 @@ impl PageBuilder {
             }
             return Ok(Page::new(w as u32, h as u32, 3, rgb, dpi));
         }
-        Err("The scanner returned an incomplete image".into())
+        Err(tr("The scanner returned an incomplete image").into())
     }
 }
 

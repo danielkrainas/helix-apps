@@ -1,5 +1,9 @@
 //! GTK user interface: window, sidebar, search and the panel registry.
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
+
 mod about;
 mod access;
 mod appearance;
@@ -118,7 +122,7 @@ impl Window {
     fn new(app: &adw::Application) -> Rc<Self> {
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title("Settings")
+            .title(tr("Settings"))
             .default_width(980)
             .default_height(680)
             .width_request(360)
@@ -136,10 +140,10 @@ impl Window {
 
         // Sidebar.
         let search_entry = gtk::SearchEntry::builder()
-            .placeholder_text("Search settings")
+            .placeholder_text(tr("Search settings"))
             .hexpand(true)
             .build()
-            .labelled("Search Settings");
+            .labelled(tr("Search Settings"));
         let search_bar = gtk::SearchBar::builder()
             .child(&search_entry)
             .show_close_button(false)
@@ -147,24 +151,24 @@ impl Window {
         search_bar.connect_entry(&search_entry);
         let search_button = gtk::ToggleButton::builder()
             .icon_name("system-search-symbolic")
-            .tooltip_text("Search")
+            .tooltip_text(tr("Search"))
             .build()
-            .labelled("Search");
+            .labelled(tr("Search"));
         search_button
             .bind_property("active", &search_bar, "search-mode-enabled")
             .bidirectional()
             .build();
 
         let menu = gio::Menu::new();
-        menu.append(Some("_Keyboard Shortcuts"), Some("win.show-shortcuts"));
-        menu.append(Some("_About Settings"), Some("app.about"));
+        menu.append(Some(tr("_Keyboard Shortcuts")), Some("win.show-shortcuts"));
+        menu.append(Some(tr("_About Settings")), Some("app.about"));
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
             .primary(true)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         let header = adw::HeaderBar::new();
         header.pack_start(&search_button);
         header.pack_end(&menu_button);
@@ -185,8 +189,8 @@ impl Window {
             .build();
         let no_results = adw::StatusPage::builder()
             .icon_name("system-search-symbolic")
-            .title("No Results Found")
-            .description("Try a different search")
+            .title(tr("No Results Found"))
+            .description(tr("Try a different search"))
             .build();
         no_results.add_css_class("compact");
         let list_stack = gtk::Stack::new();
@@ -196,7 +200,10 @@ impl Window {
         sidebar_view.add_top_bar(&header);
         sidebar_view.add_top_bar(&search_bar);
         sidebar_view.set_content(Some(&list_stack));
-        split.set_sidebar(Some(&adw::NavigationPage::new(&sidebar_view, "Settings")));
+        split.set_sidebar(Some(&adw::NavigationPage::new(
+            &sidebar_view,
+            tr("Settings"),
+        )));
 
         toasts.set_child(Some(&split));
         window.set_content(Some(&toasts));
@@ -300,11 +307,11 @@ impl Window {
         bx.append(&gtk::Image::from_icon_name(p.icon));
         let labels = gtk::Box::new(gtk::Orientation::Vertical, 0);
         labels.set_valign(gtk::Align::Center);
-        labels.append(&gtk::Label::builder().label(p.title).xalign(0.0).build());
+        labels.append(&gtk::Label::builder().label(tr(p.title)).xalign(0.0).build());
         if !p.available {
             labels.append(
                 &gtk::Label::builder()
-                    .label("Not yet available")
+                    .label(tr("Not yet available"))
                     .xalign(0.0)
                     .css_classes(["caption"])
                     .build(),
@@ -314,10 +321,12 @@ impl Window {
         bx.append(&labels);
         let row = gtk::ListBoxRow::builder().child(&bx).build();
         row.set_widget_name(p.name);
-        helix_app_common::set_accessible_label(&row, p.title);
+        helix_app_common::set_accessible_label(&row, tr(p.title));
         if !p.available {
             // Read as "Wi-Fi, Not yet available".
-            row.update_property(&[gtk::accessible::Property::Description("Not yet available")]);
+            row.update_property(&[gtk::accessible::Property::Description(tr(
+                "Not yet available",
+            ))]);
         }
         row
     }
@@ -336,7 +345,7 @@ impl Window {
                 .is_some_and(|h| h.widget_name() == "placeholders-heading");
             if !is_heading {
                 let heading = gtk::Label::builder()
-                    .label("Not Yet Available")
+                    .label(tr("Not Yet Available"))
                     .xalign(0.0)
                     .margin_top(if before.is_some() { 12 } else { 6 })
                     .margin_bottom(6)
@@ -378,9 +387,8 @@ impl Window {
             .set_visible_child_name(if found == 0 { "no-results" } else { "list" });
         if !query.trim().is_empty() {
             let message = match found {
-                0 => "No results found".to_string(),
-                1 => "1 panel found".to_string(),
-                n => format!("{n} panels found"),
+                0 => tr("No results found").to_string(),
+                n => trnf!("{n} panel found", "{n} panels found", n),
             };
             helix_app_common::announce_settled(&self.search_entry, &message);
         }
@@ -406,7 +414,7 @@ impl Window {
         let info = panels::info(id);
         if let Some(panel) = panel_impl(id).filter(|p| p.own_header()) {
             return adw::NavigationPage::builder()
-                .title(info.title)
+                .title(tr(info.title))
                 .tag(info.name)
                 .child(&panel.build(&self.ctx))
                 .build();
@@ -417,14 +425,16 @@ impl Window {
             Some(panel) => panel.build(&self.ctx),
             None => adw::StatusPage::builder()
                 .icon_name(info.icon)
-                .title(format!("{} Is Not Yet Available", info.title))
-                .description("This panel will be added in a later version of Helix Settings.")
+                .title(trf!("{} Is Not Yet Available", tr(info.title)))
+                .description(tr(
+                    "This panel will be added in a later version of Helix Settings.",
+                ))
                 .build()
                 .upcast(),
         };
         view.set_content(Some(&content));
         adw::NavigationPage::builder()
-            .title(info.title)
+            .title(tr(info.title))
             .tag(info.name)
             .child(&view)
             .build()
@@ -444,7 +454,11 @@ pub fn run(args: Vec<String>) -> glib::ExitCode {
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::HANDLES_COMMAND_LINE)
         .build();
-    helix_app_common::install_standard_actions(&app, "Settings", "Configure the Helix desktop");
+    helix_app_common::install_standard_actions(
+        &app,
+        tr("Settings"),
+        tr("Configure the Helix desktop"),
+    );
     let window: Rc<RefCell<Option<Rc<Window>>>> = Rc::default();
     app.connect_command_line(move |app, cmd| {
         let panel = cmd

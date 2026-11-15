@@ -1,6 +1,7 @@
 //! Coordinates, `geo:` URIs, launch arguments and human-readable
 //! distance / duration formatting.
 
+use helix_app_common::trf;
 use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -256,14 +257,14 @@ pub fn format_duration(secs: f64) -> String {
     if mins < 1 {
         "less than a minute".to_string()
     } else if mins < 60 {
-        format!("{mins} min")
+        trf!("{mins} min", mins = mins)
     } else {
         let h = mins / 60;
         let m = mins % 60;
         if m == 0 {
             format!("{h} h")
         } else {
-            format!("{h} h {m} min")
+            trf!("{h} h {m} min", h = h, m = m)
         }
     }
 }

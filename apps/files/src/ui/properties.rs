@@ -7,6 +7,8 @@ use std::rc::Rc;
 
 use super::Window;
 use crate::fmt::{self, Perm, Who};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 const ATTRS: &str = "standard::*,time::modified,time::access,time::created,unix::mode,unix::uid,owner::user,owner::group,access::can-write,trash::orig-path,trash::deletion-date";
 
@@ -52,10 +54,11 @@ fn measure_into(files: Vec<gio::File>, target: adw::ActionRow, cancel: gio::Canc
                 return;
             }
             let suffix = if done { "" } else { "…" };
-            target.set_subtitle(&format!(
-                "{}, totalling {}{suffix}",
-                fmt::item_count(items),
-                fmt::size(bytes)
+            target.set_subtitle(&trf!(
+                "{items}, totalling {bytes}{suffix}",
+                items = fmt::item_count(items),
+                bytes = fmt::size(bytes),
+                suffix = suffix
             ));
         }
     });
@@ -80,7 +83,7 @@ pub fn show(win: &Rc<Window>, files: Vec<gio::File>) {
             {
                 Ok(i) => infos.push((f.clone(), i)),
                 Err(e) => {
-                    win.toast(&format!("Could not read properties: {}", e.message()));
+                    win.toast(&trf!("Could not read properties: {}", e.message()));
                     return;
                 }
             }
@@ -119,26 +122,29 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
         }
         title.set_text(&info.display_name());
         let is_dir = info.file_type() == gio::FileType::Directory;
-        group.add(&row("Type", &super::tab::type_description(info)));
+        group.add(&row(tr("Type"), &super::tab::type_description(info)));
         if is_dir {
-            let contents = row("Contents", "Calculating…");
+            let contents = row(tr("Contents"), tr("Calculating…"));
             group.add(&contents);
             measure_into(vec![file.clone()], contents, cancel.clone());
         } else {
             let bytes = info.size().max(0) as u64;
             group.add(&row(
-                "Size",
-                &format!("{} ({} bytes)", fmt::size(bytes), bytes),
+                tr("Size"),
+                &trf!("{} ({} bytes)", fmt::size(bytes), bytes),
             ));
         }
         if let Some(parent) = file.parent() {
-            let r = row("Parent Folder", &super::window::display_location(&parent));
+            let r = row(
+                tr("Parent Folder"),
+                &super::window::display_location(&parent),
+            );
             let btn = gtk::Button::builder()
                 .icon_name("folder-open-symbolic")
-                .tooltip_text("Open Parent Folder")
+                .tooltip_text(tr("Open Parent Folder"))
                 .valign(gtk::Align::Center)
                 .build()
-                .labelled("Open Parent Folder");
+                .labelled(tr("Open Parent Folder"));
             btn.add_css_class("flat");
             let w = Rc::downgrade(win);
             let f = file.clone();
@@ -160,16 +166,16 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
         }
         if info.is_symlink() {
             if let Some(t) = info.symlink_target() {
-                group.add(&row("Link Target", &t.display().to_string()));
+                group.add(&row(tr("Link Target"), &t.display().to_string()));
             }
         }
         if let Some(orig) = info.attribute_byte_string("trash::orig-path") {
-            group.add(&row("Original Location", orig.as_str()));
+            group.add(&row(tr("Original Location"), orig.as_str()));
         }
         for (label, attr) in [
-            ("Modified", "time::modified"),
-            ("Accessed", "time::access"),
-            ("Created", "time::created"),
+            (tr("Modified"), "time::modified"),
+            (tr("Accessed"), "time::access"),
+            (tr("Created"), "time::created"),
         ] {
             if let Some(t) = time_attr(info, attr) {
                 group.add(&row(label, &t));
@@ -180,10 +186,10 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
                 .attribute_string("owner::group")
                 .map(|g| format!(" ({g})"))
                 .unwrap_or_default();
-            group.add(&row("Owner", &format!("{user}{g}")));
+            group.add(&row(tr("Owner"), &format!("{user}{g}")));
         }
         page.add(&group);
-        let free = row("Free Space", "…");
+        let free = row(tr("Free Space"), "…");
         group.add(&free);
         let f = file.clone();
         glib::spawn_future_local(async move {
@@ -212,8 +218,8 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
         }
     } else {
         img.set_icon_name(Some("edit-copy-symbolic"));
-        title.set_text(&format!("{} selected", fmt::item_count(infos.len() as u64)));
-        let contents = row("Contents", "Calculating…");
+        title.set_text(&trf!("{} selected", fmt::item_count(infos.len() as u64)));
+        let contents = row(tr("Contents"), tr("Calculating…"));
         group.add(&contents);
         measure_into(
             infos.iter().map(|(f, _)| f.clone()).collect(),
@@ -226,7 +232,7 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
                 .all(|(f, _)| f.parent().is_some_and(|p| p.equal(&parent)))
             {
                 group.add(&row(
-                    "Parent Folder",
+                    tr("Parent Folder"),
                     &super::window::display_location(&parent),
                 ));
             }
@@ -238,7 +244,7 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
     tv.add_top_bar(&adw::HeaderBar::new());
     tv.set_content(Some(&page));
     let dialog = adw::Dialog::builder()
-        .title("Properties")
+        .title(tr("Properties"))
         .content_width(420)
         .content_height(620)
         .child(&tv)
@@ -253,7 +259,7 @@ fn permissions_group(
     info: &gio::FileInfo,
 ) -> adw::PreferencesGroup {
     let group = adw::PreferencesGroup::builder()
-        .title("Permissions")
+        .title(tr("Permissions"))
         .build();
     let mode = Rc::new(std::cell::Cell::new(info.attribute_uint32("unix::mode")));
     let editable = file.is_native() && {
@@ -265,17 +271,17 @@ fn permissions_group(
     summary.add_css_class("dim-label");
     group.set_header_suffix(Some(&summary));
     for (who, label) in [
-        (Who::Owner, "Owner"),
-        (Who::Group, "Group"),
-        (Who::Others, "Others"),
+        (Who::Owner, tr("Owner")),
+        (Who::Group, tr("Group")),
+        (Who::Others, tr("Others")),
     ] {
         let r = adw::ActionRow::builder().title(label).build();
         let b = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         b.set_valign(gtk::Align::Center);
         for (perm, plabel) in [
-            (Perm::Read, "Read"),
-            (Perm::Write, "Write"),
-            (Perm::Execute, "Execute"),
+            (Perm::Read, tr("Read")),
+            (Perm::Write, tr("Write")),
+            (Perm::Execute, tr("Execute")),
         ] {
             let check = gtk::CheckButton::with_label(plabel);
             // The visible label is just "Read"; say whose permission it is.
@@ -316,7 +322,7 @@ fn permissions_group(
                         }
                         Err(e) => {
                             if let Some(w) = win.upgrade() {
-                                w.toast(&format!("Could not change permissions: {}", e.message()));
+                                w.toast(&trf!("Could not change permissions: {}", e.message()));
                             }
                             c.set_active(!c.is_active());
                         }
@@ -329,9 +335,9 @@ fn permissions_group(
         group.add(&r);
     }
     if !editable {
-        group.set_description(Some(
+        group.set_description(Some(tr(
             "You are not the owner, so you cannot change these permissions.",
-        ));
+        )));
     }
     group
 }

@@ -6,6 +6,8 @@
 //! and a re-implementation would list a different set of fonts than every
 //! other application. `fc-list` also uses fontconfig's cache, so it is fast.
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use std::collections::BTreeMap;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -87,7 +89,7 @@ pub fn parse_fc_list(output: &str) -> Vec<FaceEntry> {
                     .get(3)
                     .map(|s| unescape(s.trim()))
                     .filter(|s| !s.is_empty())
-                    .unwrap_or_else(|| "Regular".into()),
+                    .unwrap_or_else(|| tr("Regular").into()),
                 format: f.get(4).map(|s| s.trim().to_string()).unwrap_or_default(),
                 weight: f.get(5).map(|s| parse_num(s)).unwrap_or(80.0),
                 slant: f.get(6).map(|s| parse_num(s)).unwrap_or(0.0),
@@ -183,7 +185,7 @@ fn output_with_timeout(cmd: &mut Command, timeout: Duration) -> Result<Vec<u8>, 
     let Some(mut stdout) = child.stdout.take() else {
         let _ = child.kill();
         let _ = child.wait();
-        return Err(format!("{name}: no output"));
+        return Err(trf!("{name}: no output", name = name));
     };
     let reader = std::thread::spawn(move || {
         let mut buf = Vec::new();
@@ -197,9 +199,10 @@ fn output_with_timeout(cmd: &mut Command, timeout: Duration) -> Result<Vec<u8>, 
             Ok(None) => {
                 let _ = child.kill();
                 let _ = child.wait();
-                return Err(format!(
-                    "{name} did not finish within {} s",
-                    timeout.as_secs_f64()
+                return Err(trf!(
+                    "{name} did not finish within {as_secs_f64} s",
+                    name = name,
+                    as_secs_f64 = timeout.as_secs_f64()
                 ));
             }
             Err(e) => return Err(format!("{name}: {e}")),
@@ -207,10 +210,14 @@ fn output_with_timeout(cmd: &mut Command, timeout: Duration) -> Result<Vec<u8>, 
     };
     let out = reader
         .join()
-        .map_err(|_| format!("{name}: reading its output failed"))?
+        .map_err(|_| trf!("{name}: reading its output failed", name = name))?
         .map_err(|e| format!("{name}: {e}"))?;
     if !status.success() {
-        return Err(format!("{name} failed ({status})"));
+        return Err(trf!(
+            "{name} failed ({status})",
+            name = name,
+            status = status
+        ));
     }
     Ok(out)
 }

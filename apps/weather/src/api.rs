@@ -6,6 +6,8 @@ use std::time::Duration;
 
 use crate::store::Place;
 use crate::timefmt::DateTime;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 pub const USER_AGENT: &str = "helix-weather/0.1";
 const FORECAST_URL: &str = "https://api.open-meteo.com/v1/forecast";
@@ -168,7 +170,7 @@ fn api_error(body: &str) -> Option<String> {
     let e: ApiError = serde_json::from_str(body).ok()?;
     e.error.then(|| {
         e.reason
-            .unwrap_or_else(|| "The weather service reported an error".into())
+            .unwrap_or_else(|| tr("The weather service reported an error").into())
     })
 }
 
@@ -178,13 +180,13 @@ pub fn parse_forecast(body: &str) -> Result<Forecast, String> {
         return Err(reason);
     }
     let raw: RawForecast =
-        serde_json::from_str(body).map_err(|e| format!("Unexpected forecast data: {e}"))?;
+        serde_json::from_str(body).map_err(|e| trf!("Unexpected forecast data: {e}", e = e))?;
     let c = raw.current;
     let current = Current {
-        time: DateTime::parse(&c.time).ok_or("Invalid time in forecast data")?,
+        time: DateTime::parse(&c.time).ok_or(tr("Invalid time in forecast data"))?,
         temperature: c
             .temperature_2m
-            .ok_or("Forecast data has no current temperature")?,
+            .ok_or(tr("Forecast data has no current temperature"))?,
         apparent: c.apparent_temperature,
         humidity: c.relative_humidity_2m,
         is_day: c.is_day.unwrap_or(1) != 0,
@@ -240,7 +242,7 @@ pub fn parse_geocoding(body: &str) -> Result<Vec<Place>, String> {
         return Err(reason);
     }
     let raw: RawGeocoding =
-        serde_json::from_str(body).map_err(|e| format!("Unexpected search data: {e}"))?;
+        serde_json::from_str(body).map_err(|e| trf!("Unexpected search data: {e}", e = e))?;
     Ok(raw.results)
 }
 
@@ -257,15 +259,15 @@ fn get(req: ureq::Request) -> Result<String, String> {
     match req.call() {
         Ok(resp) => resp
             .into_string()
-            .map_err(|e| format!("Could not read response: {e}")),
+            .map_err(|e| trf!("Could not read response: {e}", e = e)),
         // Open-Meteo returns a JSON body with a reason on 4xx.
         Err(ureq::Error::Status(code, resp)) => {
             let body = resp.into_string().unwrap_or_default();
             Err(api_error(&body)
-                .unwrap_or_else(|| format!("The weather service returned HTTP {code}")))
+                .unwrap_or_else(|| trf!("The weather service returned HTTP {code}", code = code)))
         }
         Err(ureq::Error::Transport(t)) => {
-            Err(format!("Could not connect to the weather service: {t}"))
+            Err(trf!("Could not connect to the weather service: {t}", t = t))
         }
     }
 }

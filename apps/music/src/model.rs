@@ -1,13 +1,14 @@
 //! Library model: tracks and their grouping into albums and artists.
 
+use helix_app_common::i18n::{n_, tr};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 use unicode_normalization::UnicodeNormalization;
 
-pub const UNKNOWN_ARTIST: &str = "Unknown Artist";
-pub const UNKNOWN_ALBUM: &str = "Unknown Album";
-pub const VARIOUS_ARTISTS: &str = "Various Artists";
+pub const UNKNOWN_ARTIST: &str = n_("Unknown Artist");
+pub const UNKNOWN_ALBUM: &str = n_("Unknown Album");
+pub const VARIOUS_ARTISTS: &str = n_("Various Artists");
 
 /// One indexed audio file.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -48,11 +49,11 @@ pub struct Track {
 
 impl Track {
     pub fn artist_name(&self) -> &str {
-        self.artist.as_deref().unwrap_or(UNKNOWN_ARTIST)
+        self.artist.as_deref().unwrap_or(tr(UNKNOWN_ARTIST))
     }
 
     pub fn album_name(&self) -> &str {
-        self.album.as_deref().unwrap_or(UNKNOWN_ALBUM)
+        self.album.as_deref().unwrap_or(tr(UNKNOWN_ALBUM))
     }
 
     pub fn uri(&self) -> String {
@@ -97,6 +98,13 @@ pub struct Library {
     by_path: HashMap<PathBuf, usize>,
     track_album: Vec<usize>,
     folded: Vec<String>,
+}
+
+/// Whether an album-artist name means "Various Artists", as tagged in
+/// files (English) or as shown in the interface language.
+fn is_various(name: &str) -> bool {
+    let f = fold(name);
+    f == fold(VARIOUS_ARTISTS) || f == fold(tr(VARIOUS_ARTISTS))
 }
 
 /// Lower-cases and strips diacritics for searching and comparisons.
@@ -170,9 +178,9 @@ impl Library {
                 artists.dedup();
                 let compilation = idx.iter().any(|&i| tracks[i].compilation);
                 let (artist, various, has_aa) = match album_artist {
-                    Some(aa) => (aa.to_string(), fold(aa) == fold(VARIOUS_ARTISTS), true),
+                    Some(aa) => (aa.to_string(), is_various(aa), true),
                     None if artists.len() > 1 || compilation => {
-                        (VARIOUS_ARTISTS.to_string(), true, false)
+                        (tr(VARIOUS_ARTISTS).to_string(), true, false)
                     }
                     None => (first.artist_name().to_string(), false, false),
                 };
@@ -187,7 +195,9 @@ impl Library {
                     .max_by(|a, b| a.1.cmp(&b.1).then(b.0.cmp(&a.0)))
                     .map(|(y, _)| y);
                 Album {
-                    title: nonempty(&first.album).unwrap_or(UNKNOWN_ALBUM).to_string(),
+                    title: nonempty(&first.album)
+                        .unwrap_or(tr(UNKNOWN_ALBUM))
+                        .to_string(),
                     artist,
                     various,
                     has_album_artist: has_aa,
@@ -232,7 +242,7 @@ impl Library {
         }
         let mut artists: Vec<Artist> = artist_map
             .into_values()
-            .filter(|(name, _)| fold(name) != fold(VARIOUS_ARTISTS))
+            .filter(|(name, _)| !is_various(name))
             .map(|(name, mut al)| {
                 al.sort_by(|&a, &b| {
                     albums[a]

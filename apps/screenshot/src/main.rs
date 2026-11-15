@@ -11,9 +11,11 @@ mod ui;
 use gtk::glib;
 
 use args::Command;
+use helix_app_common::trf;
 use shell::CaptureError;
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let argv = std::env::args_os()
         .skip(1)
         .map(|a| a.to_string_lossy().into_owned());
@@ -39,7 +41,11 @@ fn main() -> glib::ExitCode {
             let result = shell::take(&req).and_then(|png| {
                 let path = naming::absolute(file);
                 std::fs::write(&path, png).map_err(|e| {
-                    CaptureError::Failed(format!("Could not save {}: {e}", path.display()))
+                    CaptureError::Failed(trf!(
+                        "Could not save {path}: {e}",
+                        path = path.display(),
+                        e = e
+                    ))
                 })
             });
             match result {

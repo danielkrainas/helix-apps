@@ -5,23 +5,10 @@
 use adw::prelude::*;
 use gtk::glib;
 use helix_app_common::a11y::set_input_error;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use helix_eds::vcard;
 use std::rc::Rc;
-
-const MONTHS: [&str; 12] = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-];
 
 /// Placeholder entry of the day and month drop-downs: "not set".
 const UNSET: &str = "—";
@@ -51,26 +38,26 @@ pub fn compose(day: u32, month: u32, year: &str) -> Result<Option<Ymd>, String> 
         return if year.is_empty() {
             Ok(None)
         } else {
-            Err("Choose a day and month".into())
+            Err(tr("Choose a day and month").into())
         };
     }
     if day == 0 || month == 0 {
-        return Err("Choose both a day and a month".into());
+        return Err(tr("Choose both a day and a month").into());
     }
     let year = if year.is_empty() {
         None
     } else {
         match year.parse::<i32>() {
             Ok(y) if (1..=9999).contains(&y) => Some(y),
-            _ => return Err("Enter the year as a number, like 1990".into()),
+            _ => return Err(tr("Enter the year as a number, like 1990").into()),
         }
     };
     let max = days_in_month(month, year);
     if day > max {
-        let name = MONTHS[month as usize - 1];
+        let name = helix_app_common::i18n::month_name(month);
         return Err(match year {
-            Some(y) if month == 2 => format!("February {y} has only {max} days"),
-            _ => format!("{name} has only {max} days"),
+            Some(y) if month == 2 => trf!("February {y} has only {max} days", y = y, max = max),
+            _ => trf!("{name} has only {max} days", name = name, max = max),
         });
     }
     Ok(Some((year, month, day)))
@@ -106,32 +93,35 @@ impl DateField {
         days.extend((1..=31).map(|d| d.to_string()));
         let days: Vec<&str> = days.iter().map(String::as_str).collect();
         let day = gtk::DropDown::from_strings(&days);
-        helix_app_common::set_accessible_label(&day, &format!("{title} Day"));
+        helix_app_common::set_accessible_label(&day, &trf!("{title} Day", title = title));
         let mut months = vec![UNSET];
-        months.extend(MONTHS);
+        months.extend((1..=12).map(helix_app_common::i18n::month_name));
         let month = gtk::DropDown::from_strings(&months);
-        helix_app_common::set_accessible_label(&month, &format!("{title} Month"));
+        helix_app_common::set_accessible_label(&month, &trf!("{title} Month", title = title));
         let year = gtk::Entry::builder()
-            .placeholder_text("Year")
+            .placeholder_text(tr("Year"))
             .width_chars(4)
             .max_width_chars(5)
             .max_length(4)
             .input_purpose(gtk::InputPurpose::Digits)
-            .tooltip_text("Year (optional)")
+            .tooltip_text(tr("Year (optional)"))
             .build();
-        helix_app_common::set_accessible_label(&year, &format!("{title} Year"));
-        year.update_property(&[gtk::accessible::Property::Description("Optional")]);
+        helix_app_common::set_accessible_label(&year, &trf!("{title} Year", title = title));
+        year.update_property(&[gtk::accessible::Property::Description(tr("Optional"))]);
 
         let calendar = gtk::Calendar::new();
         let pop = gtk::Popover::builder().child(&calendar).build();
         let pick = gtk::MenuButton::builder()
             .icon_name("x-office-calendar-symbolic")
-            .tooltip_text("Pick from Calendar")
+            .tooltip_text(tr("Pick from Calendar"))
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
             .popover(&pop)
             .build();
-        helix_app_common::set_accessible_label(&pick, &format!("Pick {title} from Calendar"));
+        helix_app_common::set_accessible_label(
+            &pick,
+            &trf!("Pick {title} from Calendar", title = title),
+        );
 
         let controls = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         controls.append(&day);

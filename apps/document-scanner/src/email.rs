@@ -11,6 +11,8 @@
 
 use crate::export::{self, Format};
 use crate::page::Page;
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 use std::collections::HashMap;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -20,7 +22,7 @@ use zbus::zvariant::{Fd, Value};
 pub const PORTAL_BUS: &str = "org.freedesktop.portal.Desktop";
 pub const PORTAL_PATH: &str = "/org/freedesktop/portal/desktop";
 pub const PORTAL_IFACE: &str = "org.freedesktop.portal.Email";
-pub const SUBJECT: &str = "Scanned Document";
+pub const SUBJECT: &str = n_("Scanned Document");
 /// Temporary email directories older than this are removed.
 const KEEP: Duration = Duration::from_secs(24 * 3600);
 
@@ -59,7 +61,7 @@ pub fn write_attachments(
         .unwrap_or(0);
     let dir = base.join(format!("{}-{nanos}", std::process::id()));
     std::fs::create_dir_all(&dir)
-        .map_err(|e| format!("Could not create {}: {e}", dir.display()))?;
+        .map_err(|e| trf!("Could not create {dir}: {e}", dir = dir.display(), e = e))?;
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -83,7 +85,7 @@ pub fn compose_via_portal(
     let fds: Vec<Fd> = opened.iter().map(Fd::from).collect();
     let mut options: HashMap<&str, Value> = HashMap::new();
     options.insert("attachment_fds", Value::from(fds));
-    options.insert("subject", Value::from(SUBJECT));
+    options.insert("subject", Value::from(tr(SUBJECT)));
     let reply = conn
         .call_method(
             Some(PORTAL_BUS),
@@ -100,7 +102,7 @@ pub fn compose_via_portal(
 
 /// Arguments for the `xdg-email` fallback.
 pub fn xdg_email_args(files: &[PathBuf]) -> Vec<OsString> {
-    let mut args: Vec<OsString> = vec!["--subject".into(), SUBJECT.into()];
+    let mut args: Vec<OsString> = vec!["--subject".into(), tr(SUBJECT).into()];
     for f in files {
         args.push("--attach".into());
         args.push(f.as_os_str().to_owned());
@@ -122,11 +124,11 @@ pub fn compose(files: &[PathBuf], parent: &str) -> Result<(), String> {
                 .args(xdg_email_args(files))
                 .stdin(std::process::Stdio::null())
                 .status()
-                .map_err(|e| format!("Could not run xdg-email: {e}"))?;
+                .map_err(|e| trf!("Could not run xdg-email: {e}", e = e))?;
             if status.success() {
                 Ok(())
             } else {
-                Err(format!("xdg-email failed ({status})"))
+                Err(trf!("xdg-email failed ({status})", status = status))
             }
         }
     }

@@ -1,5 +1,6 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys, GENERAL};
 
 /// Accelerators registered on the application.
@@ -10,15 +11,15 @@ pub const ACCELS: &[(&str, &[&str])] = &[
 
 pub const GROUPS: &[Group] = &[
     (
-        "Disks",
+        n_("Disks"),
         &[
-            Keys("Attach Disk Image", "<Control>i"),
-            Keys("SMART Data and Self-Tests", "<Control><Shift>s"),
+            Keys(n_("Attach Disk Image"), "<Control>i"),
+            Keys(n_("SMART Data and Self-Tests"), "<Control><Shift>s"),
         ],
     ),
     (
-        "Volumes",
-        &[Keys("Select the Previous or Next Volume", "Left Right")],
+        n_("Volumes"),
+        &[Keys(n_("Select the Previous or Next Volume"), "Left Right")],
     ),
     GENERAL,
 ];

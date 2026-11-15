@@ -12,6 +12,9 @@ use crate::search::{self, Matcher, SearchOptions};
 use crate::settings::Settings;
 use crate::textops::{self, Indent};
 use crate::view::{EditorView, LineGutter};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 /// Maximum number of matches that get highlighted.
 const MAX_HIGHLIGHTS: usize = 10_000;
@@ -144,10 +147,10 @@ impl Doc {
             .hexpand(true)
             .wrap(true)
             .build();
-        let banner_reload = gtk::Button::with_label("_Reload");
+        let banner_reload = gtk::Button::with_label(tr("_Reload"));
         banner_reload.set_use_underline(true);
         banner_reload.add_css_class("suggested-action");
-        let banner_ignore = gtk::Button::with_label("_Ignore");
+        let banner_ignore = gtk::Button::with_label(tr("_Ignore"));
         banner_ignore.set_use_underline(true);
         let banner_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         banner_box.add_css_class("change-banner");
@@ -159,33 +162,34 @@ impl Doc {
         // Find bar.
         // Small minimum widths: the entries grow into the room there is.
         let entry = gtk::SearchEntry::builder()
-            .placeholder_text("Find")
+            .placeholder_text(tr("Find"))
             .hexpand(true)
             .width_chars(6)
             .build();
-        helix_app_common::set_accessible_label(&entry, "Find");
+        helix_app_common::set_accessible_label(&entry, tr("Find"));
         let count = gtk::Label::new(None);
         count.add_css_class("dim-label");
         count.add_css_class("numeric");
-        let prev = icon_button("go-up-symbolic", "Previous Match (Ctrl+Shift+G)");
-        let next = icon_button("go-down-symbolic", "Next Match (Ctrl+G)");
+        let prev = icon_button("go-up-symbolic", tr("Previous Match (Ctrl+Shift+G)"));
+        let next = icon_button("go-down-symbolic", tr("Next Match (Ctrl+G)"));
         // Search options live in a menu so the bar fits narrow windows.
-        let case_btn = option_check("_Case Sensitive");
-        let word_btn = option_check("Match _Whole Words Only");
-        let regex_btn = option_check("_Regular Expression");
+        let case_btn = option_check(tr("_Case Sensitive"));
+        let word_btn = option_check(tr("Match _Whole Words Only"));
+        let regex_btn = option_check(tr("_Regular Expression"));
         let options_box = gtk::Box::new(gtk::Orientation::Vertical, 2);
         options_box.append(&case_btn);
         options_box.append(&word_btn);
         options_box.append(&regex_btn);
-        let options = helix_app_common::icon_menu_button("view-more-symbolic", "Search Options");
+        let options =
+            helix_app_common::icon_menu_button("view-more-symbolic", tr("Search Options"));
         options.set_popover(Some(&gtk::Popover::builder().child(&options_box).build()));
         options.add_css_class("flat");
         let replace_toggle = gtk::ToggleButton::new();
         replace_toggle.set_icon_name("edit-find-replace-symbolic");
-        replace_toggle.set_tooltip_text(Some("Replace (Ctrl+H)"));
-        helix_app_common::set_accessible_label(&replace_toggle, "Replace");
+        replace_toggle.set_tooltip_text(Some(tr("Replace (Ctrl+H)")));
+        helix_app_common::set_accessible_label(&replace_toggle, tr("Replace"));
         replace_toggle.add_css_class("flat");
-        let close = icon_button("window-close-symbolic", "Close (Escape)");
+        let close = icon_button("window-close-symbolic", tr("Close (Escape)"));
         let find_row = gtk::Box::new(gtk::Orientation::Horizontal, 4);
         for w in [
             entry.upcast_ref::<gtk::Widget>(),
@@ -199,14 +203,14 @@ impl Doc {
             find_row.append(w);
         }
         let replace_entry = gtk::Entry::builder()
-            .placeholder_text("Replace")
+            .placeholder_text(tr("Replace"))
             .hexpand(true)
             .width_chars(6)
             .build();
-        helix_app_common::set_accessible_label(&replace_entry, "Replace With");
-        let replace_btn = gtk::Button::with_label("_Replace");
+        helix_app_common::set_accessible_label(&replace_entry, tr("Replace With"));
+        let replace_btn = gtk::Button::with_label(tr("_Replace"));
         replace_btn.set_use_underline(true);
-        let replace_all_btn = gtk::Button::with_label("Replace _All");
+        let replace_all_btn = gtk::Button::with_label(tr("Replace _All"));
         replace_all_btn.set_use_underline(true);
         let replace_row = gtk::Box::new(gtk::Orientation::Horizontal, 4);
         replace_row.append(&replace_entry);
@@ -484,15 +488,15 @@ impl Doc {
                 .unwrap_or_else(|| f.uri().to_string());
         }
         match self.untitled.get() {
-            0 | 1 => "New Document".into(),
-            n => format!("New Document {n}"),
+            0 | 1 => tr("New Document").into(),
+            n => trf!("New Document {n}", n = n),
         }
     }
 
     pub fn subtitle(&self) -> String {
         let file = self.file.borrow();
         let Some(f) = file.as_ref() else {
-            return "Draft".into();
+            return tr("Draft").into();
         };
         let Some(parent) = f.parent() else {
             return String::new();
@@ -812,7 +816,7 @@ impl Doc {
         let matches = match self.matcher() {
             None => Vec::new(),
             Some(Err(_)) => {
-                error = Some("Invalid regular expression");
+                error = Some(tr("Invalid regular expression"));
                 Vec::new()
             }
             Some(Ok(m)) => {
@@ -854,10 +858,10 @@ impl Doc {
         let text = match (n, self.current_match()) {
             (0, _) if self.find.entry.text().is_empty() => String::new(),
             // Spoken right away by refresh_search.
-            (0, _) if invalid => "Invalid expression".into(),
-            (0, _) => "No results".into(),
+            (0, _) if invalid => tr("Invalid expression").into(),
+            (0, _) => tr("No results").into(),
             (n, Some(i)) => format!("{} of {}", i + 1, n),
-            (n, None) => format!("{n} results"),
+            (n, None) => trf!("{n} results", n = n),
         };
         if !invalid && !text.is_empty() && text != self.find.count.text() {
             helix_app_common::announce_settled(&self.find.count, &text);
@@ -949,7 +953,7 @@ impl Doc {
             let n = bytes.len();
             app.toast_for(
                 self,
-                &format!("Replaced {n} occurrence{}", if n == 1 { "" } else { "s" }),
+                &trnf!("Replaced {n} occurrence", "Replaced {n} occurrences", n),
             );
         }
     }
@@ -1123,9 +1127,9 @@ impl Doc {
 
     fn show_banner(&self, deleted: bool) {
         self.banner_label.set_text(if deleted {
-            "The file has been deleted from disk. Saving will recreate it."
+            tr("The file has been deleted from disk. Saving will recreate it.")
         } else {
-            "The file has changed on disk."
+            tr("The file has changed on disk.")
         });
         self.banner_reload.set_visible(!deleted);
         if !self.banner.reveals_child() {
@@ -1150,7 +1154,7 @@ impl Doc {
                 Ok(()) => d.goto(line + 1, Some(col + 1)),
                 Err(e) => {
                     if let Some(app) = d.app.upgrade() {
-                        app.toast_for(&d, &format!("Could not reload: {}", e.message()));
+                        app.toast_for(&d, &trf!("Could not reload: {}", e.message()));
                     }
                 }
             }

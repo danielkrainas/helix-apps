@@ -1,6 +1,8 @@
 //! Alarms: model, next-ring computation and the ringing state machine.
 
 use chrono::{DateTime, Datelike, Duration, LocalResult, NaiveDateTime, TimeZone, Utc, Weekday};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 /// A set of weekdays; bit 0 = Monday … bit 6 = Sunday.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -50,9 +52,9 @@ impl Weekdays {
     pub fn summary(self) -> String {
         match self.0 & 0x7f {
             0 => String::new(),
-            0x7f => "Every Day".into(),
-            0x1f => "Weekdays".into(),
-            0x60 => "Weekends".into(),
+            0x7f => tr("Every Day").into(),
+            0x1f => tr("Weekdays").into(),
+            0x60 => tr("Weekends").into(),
             _ => Self::ALL
                 .iter()
                 .filter(|d| self.contains(**d))
@@ -66,13 +68,13 @@ impl Weekdays {
 /// The full day name, for assistive technology and explanations.
 pub fn full_name(d: Weekday) -> &'static str {
     match d {
-        Weekday::Mon => "Monday",
-        Weekday::Tue => "Tuesday",
-        Weekday::Wed => "Wednesday",
-        Weekday::Thu => "Thursday",
-        Weekday::Fri => "Friday",
-        Weekday::Sat => "Saturday",
-        Weekday::Sun => "Sunday",
+        Weekday::Mon => tr("Monday"),
+        Weekday::Tue => tr("Tuesday"),
+        Weekday::Wed => tr("Wednesday"),
+        Weekday::Thu => tr("Thursday"),
+        Weekday::Fri => tr("Friday"),
+        Weekday::Sat => tr("Saturday"),
+        Weekday::Sun => tr("Sunday"),
     }
 }
 
@@ -81,10 +83,10 @@ pub fn full_name(d: Weekday) -> &'static str {
 /// is selected.
 pub fn repeat_hint(days: Weekdays) -> String {
     match days.0 & 0x7f {
-        0 => "No days selected: the alarm rings once, then turns off".into(),
-        0x7f => "Rings every day".into(),
-        0x1f => "Rings Monday to Friday".into(),
-        0x60 => "Rings Saturday and Sunday".into(),
+        0 => tr("No days selected: the alarm rings once, then turns off").into(),
+        0x7f => tr("Rings every day").into(),
+        0x1f => tr("Rings Monday to Friday").into(),
+        0x60 => tr("Rings Saturday and Sunday").into(),
         _ => {
             let names: Vec<&str> = Weekdays::ALL
                 .iter()
@@ -92,8 +94,12 @@ pub fn repeat_hint(days: Weekdays) -> String {
                 .map(|d| full_name(*d))
                 .collect();
             match names.as_slice() {
-                [one] => format!("Rings every {one}"),
-                [rest @ .., last] => format!("Rings every {} and {last}", rest.join(", ")),
+                [one] => trf!("Rings every {one}", one = one),
+                [rest @ .., last] => trf!(
+                    "Rings every {join} and {last}",
+                    join = rest.join(", "),
+                    last = last
+                ),
                 [] => String::new(),
             }
         }
@@ -102,13 +108,13 @@ pub fn repeat_hint(days: Weekdays) -> String {
 
 pub fn short_name(d: Weekday) -> &'static str {
     match d {
-        Weekday::Mon => "Mon",
-        Weekday::Tue => "Tue",
-        Weekday::Wed => "Wed",
-        Weekday::Thu => "Thu",
-        Weekday::Fri => "Fri",
-        Weekday::Sat => "Sat",
-        Weekday::Sun => "Sun",
+        Weekday::Mon => tr("Mon"),
+        Weekday::Tue => tr("Tue"),
+        Weekday::Wed => tr("Wed"),
+        Weekday::Thu => tr("Thu"),
+        Weekday::Fri => tr("Fri"),
+        Weekday::Sat => tr("Sat"),
+        Weekday::Sun => tr("Sun"),
     }
 }
 
@@ -130,7 +136,7 @@ impl Default for Alarm {
     fn default() -> Self {
         Alarm {
             id: String::new(),
-            name: "Alarm".into(),
+            name: tr("Alarm").into(),
             active: true,
             hour: 7,
             minute: 0,

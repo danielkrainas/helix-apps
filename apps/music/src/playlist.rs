@@ -2,6 +2,7 @@
 //! statistics and smart playlists.
 
 use crate::model::Library;
+use helix_app_common::i18n::tr;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -308,7 +309,7 @@ fn sanitize(name: &str) -> String {
         .take(100)
         .collect();
     if s.is_empty() {
-        "Playlist".into()
+        tr("Playlist").into()
     } else {
         s
     }
@@ -447,10 +448,10 @@ impl Smart {
 
     pub fn title(self) -> &'static str {
         match self {
-            Smart::Favorites => "Favorite Songs",
-            Smart::MostPlayed => "Most Played",
-            Smart::RecentlyPlayed => "Recently Played",
-            Smart::RecentlyAdded => "Recently Added",
+            Smart::Favorites => tr("Favorite Songs"),
+            Smart::MostPlayed => tr("Most Played"),
+            Smart::RecentlyPlayed => tr("Recently Played"),
+            Smart::RecentlyAdded => tr("Recently Added"),
         }
     }
 

@@ -1,5 +1,7 @@
 //! Helix Document Viewer.
 
+use helix_app_common::trf;
+
 mod cache;
 mod dialogs;
 mod docview;
@@ -44,7 +46,7 @@ fn parse_args(args: &[String]) -> Result<Option<ui::Options>, String> {
             inline
                 .clone()
                 .or_else(|| it.next().cloned())
-                .ok_or(format!("Missing value for {n}"))
+                .ok_or(trf!("Missing value for {n}", n = n))
         };
         match name {
             "--" => only_files = true,
@@ -54,10 +56,12 @@ fn parse_args(args: &[String]) -> Result<Option<ui::Options>, String> {
             "-p" | "--page-label" => opts.start = Some(ui::Start::Label(value(name)?)),
             "-i" | "--page-index" => {
                 let v = value(name)?;
-                let n: usize = v.parse().map_err(|_| format!("Invalid page index: {v}"))?;
+                let n: usize = v
+                    .parse()
+                    .map_err(|_| trf!("Invalid page index: {v}", v = v))?;
                 opts.start = Some(ui::Start::Index(n.saturating_sub(1)));
             }
-            _ => return Err(format!("Unknown option: {a}")),
+            _ => return Err(trf!("Unknown option: {a}", a = a)),
         }
     }
     opts.uris = files;
@@ -65,6 +69,7 @@ fn parse_args(args: &[String]) -> Result<Option<ui::Options>, String> {
 }
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let args: Vec<String> = std::env::args().skip(1).collect();
     let mut opts = match parse_args(&args) {
         Ok(Some(o)) => o,

@@ -1,5 +1,6 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{Group, Item::Keys, GENERAL};
 
 /// Accelerators registered on the application.
@@ -11,11 +12,11 @@ pub const ACCELS: &[(&str, &[&str])] = &[
 
 pub const GROUPS: &[Group] = &[
     (
-        "Screenshot",
+        n_("Screenshot"),
         &[
-            Keys("Copy to Clipboard", "<Control>c"),
-            Keys("Save", "<Control>s"),
-            Keys("New Screenshot", "Escape <Alt>Left"),
+            Keys(n_("Copy to Clipboard"), "<Control>c"),
+            Keys(n_("Save"), "<Control>s"),
+            Keys(n_("New Screenshot"), "Escape <Alt>Left"),
         ],
     ),
     GENERAL,

@@ -1,5 +1,6 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{
     Group,
     Item::{Keys, Pointer},
@@ -7,64 +8,67 @@ use helix_app_common::shortcuts::{
 
 const GROUPS: &[Group] = &[
     (
-        "Documents",
+        n_("Documents"),
         &[
-            Keys("New Tab", "<Control>t"),
-            Keys("New Window", "<Control>n"),
-            Keys("Open", "<Control>o"),
-            Keys("Save", "<Control>s"),
-            Keys("Save As", "<Control><Shift>s"),
-            Keys("Close Tab", "<Control>w"),
-            Keys("Close Window", "<Control><Shift>w"),
-            Keys("Quit", "<Control>q"),
+            Keys(n_("New Tab"), "<Control>t"),
+            Keys(n_("New Window"), "<Control>n"),
+            Keys(n_("Open"), "<Control>o"),
+            Keys(n_("Save"), "<Control>s"),
+            Keys(n_("Save As"), "<Control><Shift>s"),
+            Keys(n_("Close Tab"), "<Control>w"),
+            Keys(n_("Close Window"), "<Control><Shift>w"),
+            Keys(n_("Quit"), "<Control>q"),
         ],
     ),
     (
-        "Tabs",
+        n_("Tabs"),
         &[
-            Keys("Next Tab", "<Control>Page_Down"),
-            Keys("Previous Tab", "<Control>Page_Up"),
-            Keys("Switch to Tab 1–9", "<Alt>1...<Alt>9"),
-            Keys("Move Tab Right", "<Control><Shift>Page_Down"),
-            Keys("Move Tab Left", "<Control><Shift>Page_Up"),
+            Keys(n_("Next Tab"), "<Control>Page_Down"),
+            Keys(n_("Previous Tab"), "<Control>Page_Up"),
+            Keys(n_("Switch to Tab 1–9"), "<Alt>1...<Alt>9"),
+            Keys(n_("Move Tab Right"), "<Control><Shift>Page_Down"),
+            Keys(n_("Move Tab Left"), "<Control><Shift>Page_Up"),
         ],
     ),
     (
-        "Editing",
+        n_("Editing"),
         &[
-            Keys("Undo", "<Control>z"),
-            Keys("Redo", "<Control><Shift>z"),
-            Keys("Indent", "Tab"),
-            Keys("Unindent", "<Shift>Tab"),
-            Keys("Go to Line", "<Control>i"),
+            Keys(n_("Undo"), "<Control>z"),
+            Keys(n_("Redo"), "<Control><Shift>z"),
+            Keys(n_("Indent"), "Tab"),
+            Keys(n_("Unindent"), "<Shift>Tab"),
+            Keys(n_("Go to Line"), "<Control>i"),
         ],
     ),
     (
-        "Find and Replace",
+        n_("Find and Replace"),
         &[
-            Keys("Find", "<Control>f"),
-            Keys("Find and Replace", "<Control>h"),
-            Keys("Next Match", "<Control>g"),
-            Keys("Previous Match", "<Control><Shift>g"),
-            Keys("Next Match from the Find Bar", "Return"),
-            Keys("Previous Match from the Find Bar", "<Shift>Return"),
-            Keys("Close Find Bar", "Escape"),
+            Keys(n_("Find"), "<Control>f"),
+            Keys(n_("Find and Replace"), "<Control>h"),
+            Keys(n_("Next Match"), "<Control>g"),
+            Keys(n_("Previous Match"), "<Control><Shift>g"),
+            Keys(n_("Next Match from the Find Bar"), "Return"),
+            Keys(n_("Previous Match from the Find Bar"), "<Shift>Return"),
+            Keys(n_("Close Find Bar"), "Escape"),
         ],
     ),
     (
-        "View",
+        n_("View"),
         &[
-            Keys("Zoom In", "<Control>plus <Control>equal <Control>KP_Add"),
-            Keys("Zoom Out", "<Control>minus <Control>KP_Subtract"),
-            Keys("Reset Zoom", "<Control>0 <Control>KP_0"),
-            Pointer("Zoom", "Ctrl + scroll", "input-mouse-symbolic"),
+            Keys(
+                n_("Zoom In"),
+                "<Control>plus <Control>equal <Control>KP_Add",
+            ),
+            Keys(n_("Zoom Out"), "<Control>minus <Control>KP_Subtract"),
+            Keys(n_("Reset Zoom"), "<Control>0 <Control>KP_0"),
+            Pointer(n_("Zoom"), n_("Ctrl + scroll"), "input-mouse-symbolic"),
         ],
     ),
     (
-        "General",
+        n_("General"),
         &[
-            Keys("Preferences", "<Control>comma"),
-            Keys("Keyboard Shortcuts", "<Control>question"),
+            Keys(n_("Preferences"), "<Control>comma"),
+            Keys(n_("Keyboard Shortcuts"), "<Control>question"),
         ],
     ),
 ];

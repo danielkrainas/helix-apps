@@ -3,6 +3,7 @@
 use crate::session::RestorePolicy;
 use crate::urlinput::{default_engines, SearchEngine};
 use gtk::{gio, glib, prelude::*};
+use helix_app_common::i18n::tr;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -148,13 +149,13 @@ impl Settings {
     pub fn engine_problem(&self, name: &str, url: &str) -> Option<&'static str> {
         let name = name.trim();
         if name.is_empty() {
-            Some("Enter a name for the search engine")
+            Some(tr("Enter a name for the search engine"))
         } else if self
             .search_engines
             .iter()
             .any(|e| e.name.eq_ignore_ascii_case(name))
         {
-            Some("A search engine with this name already exists")
+            Some(tr("A search engine with this name already exists"))
         } else if !crate::urlinput::valid_template(url) {
             Some("The address must start with https:// or http:// and contain %s where the search goes")
         } else {

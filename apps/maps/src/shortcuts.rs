@@ -1,5 +1,6 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
+use helix_app_common::i18n::n_;
 use helix_app_common::shortcuts::{
     Group,
     Item::{Keys, Pointer},
@@ -7,47 +8,47 @@ use helix_app_common::shortcuts::{
 
 const GROUPS: &[Group] = &[
     (
-        "General",
+        n_("General"),
         &[
-            Keys("Preferences", "<Control>comma"),
-            Keys("Keyboard Shortcuts", "<Control>question"),
-            Keys("Close Window", "<Control>w"),
-            Keys("Quit", "<Control>q"),
+            Keys(n_("Preferences"), "<Control>comma"),
+            Keys(n_("Keyboard Shortcuts"), "<Control>question"),
+            Keys(n_("Close Window"), "<Control>w"),
+            Keys(n_("Quit"), "<Control>q"),
         ],
     ),
     (
-        "Map",
+        n_("Map"),
         &[
-            Keys("Go to Current Location", "<Control>l"),
+            Keys(n_("Go to Current Location"), "<Control>l"),
             Keys(
-                "Zoom In",
+                n_("Zoom In"),
                 "<Control>plus <Control>equal <Control>KP_Add plus equal KP_Add",
             ),
             Keys(
-                "Zoom Out",
+                n_("Zoom Out"),
                 "<Control>minus <Control>KP_Subtract minus KP_Subtract",
             ),
-            Keys("Pan the Map", "Left Right Up Down"),
+            Keys(n_("Pan the Map"), "Left Right Up Down"),
             Keys(
-                "Pan in Larger Steps",
+                n_("Pan in Larger Steps"),
                 "<Shift>Left <Shift>Right <Shift>Up <Shift>Down",
             ),
-            Keys("Actions for the Map Centre", "Menu <Shift>F10"),
-            Pointer("Pan the Map", "Drag", "input-mouse-symbolic"),
+            Keys(n_("Actions for the Map Centre"), "Menu <Shift>F10"),
+            Pointer(n_("Pan the Map"), n_("Drag"), "input-mouse-symbolic"),
             Pointer(
-                "Actions for a Point",
-                "Secondary click or long press",
+                n_("Actions for a Point"),
+                n_("Secondary click or long press"),
                 "input-mouse-symbolic",
             ),
         ],
     ),
     (
-        "Search and Directions",
+        n_("Search and Directions"),
         &[
-            Keys("Search", "<Control>f"),
-            Keys("Move to the Results", "Down"),
-            Keys("Directions", "<Control>d"),
-            Keys("Close the Sidebar", "Escape"),
+            Keys(n_("Search"), "<Control>f"),
+            Keys(n_("Move to the Results"), "Down"),
+            Keys(n_("Directions"), "<Control>d"),
+            Keys(n_("Close the Sidebar"), "Escape"),
         ],
     ),
 ];

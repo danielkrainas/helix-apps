@@ -1,6 +1,7 @@
 //! Character encoding and line-ending detection / conversion.
 
 use encoding_rs::{Encoding, UTF_16BE, UTF_16LE, UTF_8};
+use helix_app_common::i18n::tr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum LineEnding {
@@ -31,9 +32,9 @@ impl LineEnding {
 
     pub fn label(self) -> &'static str {
         match self {
-            LineEnding::Lf => "Unix/Linux (LF)",
-            LineEnding::CrLf => "Windows (CRLF)",
-            LineEnding::Cr => "Classic Mac OS (CR)",
+            LineEnding::Lf => tr("Unix/Linux (LF)"),
+            LineEnding::CrLf => tr("Windows (CRLF)"),
+            LineEnding::Cr => tr("Classic Mac OS (CR)"),
         }
     }
 

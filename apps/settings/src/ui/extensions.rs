@@ -10,6 +10,8 @@ use std::time::Duration;
 use super::widgets::{self, switch};
 use super::{spawn_worker, Ctx, Panel};
 use crate::extensions::{self as ext, Ext, Failure, Kind, Setting, Val};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 const SCHEMA: &str = "org.helix.extensions";
 /// Changes closer together than this are read once.
@@ -88,24 +90,24 @@ impl Panel for ExtensionsPanel {
         stack.add_named(&loading_page(), Some("loading"));
         let missing = adw::StatusPage::builder()
             .icon_name("application-x-addon-symbolic")
-            .title("Extensions Are Not Available")
-            .description("They need the Helix shell.")
+            .title(tr("Extensions Are Not Available"))
+            .description(tr("They need the Helix shell."))
             .build();
         stack.add_named(&missing, Some("missing"));
 
         let page = widgets::page();
-        let general = widgets::group("General");
+        let general = widgets::group(tr("General"));
         let prefs = ctx.prefs(SCHEMA);
         general.add(&switch(
             &prefs,
             "disable-all",
             false,
             true,
-            "Use Extensions",
-            "Panel items, quick settings and more from extensions",
+            tr("Use Extensions"),
+            tr("Panel items, quick settings and more from extensions"),
         ));
         page.add(&general);
-        let group = widgets::group("Installed");
+        let group = widgets::group(tr("Installed"));
         page.add(&group);
         stack.add_named(&page, Some("list"));
         // Until the first read answers; "missing" only when it fails.
@@ -156,7 +158,7 @@ fn loading_page() -> gtk::Widget {
         .height_request(32)
         .build();
     let label = gtk::Label::builder()
-        .label("Loading Extensions…")
+        .label(tr("Loading Extensions…"))
         .css_classes(["dim-label"])
         .build();
     helix_app_common::label_widget(&spinner, &label);
@@ -225,7 +227,7 @@ fn show(state: &Rc<State>, found: Option<Vec<(Ext, Vec<Setting>)>>) {
     if found.is_empty() {
         state
             .group
-            .set_description(Some("No extensions are installed."));
+            .set_description(Some(tr("No extensions are installed.")));
     } else {
         state.group.set_description(None);
     }
@@ -282,7 +284,7 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
     let id = e.id.clone();
     let switch = (!e.development()).then(|| {
         let sw = gtk::Switch::builder().valign(gtk::Align::Center).build();
-        helix_app_common::set_accessible_label(&sw, &format!("Use {}", e.name));
+        helix_app_common::set_accessible_label(&sw, &trf!("Use {}", e.name));
         let weak = Rc::downgrade(state);
         let id = id.clone();
         sw.connect_active_notify(move |sw| {
@@ -309,14 +311,14 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
 
     let problem = adw::ActionRow::builder()
         .use_markup(false)
-        .title("Problem")
+        .title(tr("Problem"))
         .subtitle_lines(0)
         .build();
     let log_button = gtk::Button::builder()
-        .label("Show Log")
+        .label(tr("Show Log"))
         .valign(gtk::Align::Center)
         .build();
-    helix_app_common::set_accessible_label(&log_button, &format!("Show Log for {}", e.name));
+    helix_app_common::set_accessible_label(&log_button, &trf!("Show Log for {}", e.name));
     {
         let weak = Rc::downgrade(state);
         let (id, name) = (id.clone(), e.name.clone());
@@ -329,12 +331,12 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
     problem.add_suffix(&log_button);
     expander.add_row(&problem);
 
-    let restart = adw::ActionRow::builder().title("Restart").build();
+    let restart = adw::ActionRow::builder().title(tr("Restart")).build();
     let restart_button = gtk::Button::builder()
-        .label("Restart")
+        .label(tr("Restart"))
         .valign(gtk::Align::Center)
         .build();
-    helix_app_common::set_accessible_label(&restart_button, &format!("Restart {}", e.name));
+    helix_app_common::set_accessible_label(&restart_button, &trf!("Restart {}", e.name));
     {
         let weak = Rc::downgrade(state);
         let id = id.clone();
@@ -363,16 +365,20 @@ fn build_row(state: &Rc<State>, e: &Ext, settings: &[Setting]) -> ExtRow {
             .title(title)
             .build();
         let keys = gtk::ShortcutLabel::builder()
-            .disabled_text("None")
+            .disabled_text(tr("None"))
             .valign(gtk::Align::Center)
             .build();
         let change = gtk::Button::builder()
-            .label("Change…")
+            .label(tr("Change…"))
             .valign(gtk::Align::Center)
             .build();
         helix_app_common::set_accessible_label(
             &change,
-            &format!("Change Shortcut for {title} ({})", e.name),
+            &trf!(
+                "Change Shortcut for {title} ({name})",
+                title = title,
+                name = e.name
+            ),
         );
         let weak = Rc::downgrade(state);
         let (full, title) = (format!("{id}/{command}"), title.clone());
@@ -430,7 +436,9 @@ fn turn(state: &Rc<State>, sw: &gtk::Switch, id: &str, on: bool) {
             }
             match result {
                 Ok(()) => {}
-                Err(Failure::Denied) => state.ctx.toast(&format!("{name} was not turned on")),
+                Err(Failure::Denied) => state
+                    .ctx
+                    .toast(&trf!("{name} was not turned on", name = name)),
                 Err(Failure::Other(msg)) => state.ctx.toast(&msg),
             }
             refresh(&state);
@@ -563,7 +571,7 @@ fn show_log(state: &Rc<State>, id: &str, name: &str) {
     toolbar.add_top_bar(&adw::HeaderBar::new());
     toolbar.set_content(Some(&scrolled));
     let dialog = adw::Dialog::builder()
-        .title(format!("{name} Log"))
+        .title(trf!("{name} Log", name = name))
         .content_width(640)
         .content_height(420)
         .child(&toolbar)
@@ -576,7 +584,7 @@ fn show_log(state: &Rc<State>, id: &str, name: &str) {
         move |lines| {
             if let Some(view) = view.upgrade() {
                 let text = if lines.is_empty() {
-                    "Nothing was logged.".to_owned()
+                    tr("Nothing was logged.").to_owned()
                 } else {
                     lines.join("\n")
                 };
@@ -600,12 +608,12 @@ fn show_capture_error(status: &gtk::Label, message: &str) {
 /// "Change…": wait for a key combination for `command`.
 fn capture_shortcut(state: &Rc<State>, command: &str, title: &str) {
     let heading = gtk::Label::builder()
-        .label(format!("Press the new keys for {title}"))
+        .label(trf!("Press the new keys for {title}", title = title))
         .wrap(true)
         .css_classes(["title-4"])
         .build();
     let hint = gtk::Label::builder()
-        .label("Escape cancels, Backspace removes the key.")
+        .label(tr("Escape cancels, Backspace removes the key."))
         .css_classes(["dim-label"])
         .build();
     let status = gtk::Label::builder()
@@ -628,7 +636,7 @@ fn capture_shortcut(state: &Rc<State>, command: &str, title: &str) {
     toolbar.add_top_bar(&adw::HeaderBar::new());
     toolbar.set_content(Some(&content));
     let dialog = adw::Dialog::builder()
-        .title("Change Key")
+        .title(tr("Change Key"))
         .content_width(420)
         .child(&toolbar)
         .build();
@@ -665,7 +673,7 @@ fn capture_shortcut(state: &Rc<State>, command: &str, title: &str) {
                     // starts a combination).
                     if !ext::is_modifier_key(&name) {
                         if let Some(status) = status_weak.upgrade() {
-                            show_capture_error(&status, "Use Ctrl, Alt or Super with this key");
+                            show_capture_error(&status, tr("Use Ctrl, Alt or Super with this key"));
                         }
                     }
                     return glib::Propagation::Stop;
@@ -690,10 +698,13 @@ fn capture_shortcut(state: &Rc<State>, command: &str, title: &str) {
                 Err(err) => {
                     let msg = match err {
                         Failure::Other(m) => m,
-                        Failure::Denied => "Not allowed".to_owned(),
+                        Failure::Denied => tr("Not allowed").to_owned(),
                     };
                     if let Some(status) = status.upgrade() {
-                        show_capture_error(&status, &format!("Could not use these keys: {msg}"));
+                        show_capture_error(
+                            &status,
+                            &trf!("Could not use these keys: {msg}", msg = msg),
+                        );
                     }
                 }
             },

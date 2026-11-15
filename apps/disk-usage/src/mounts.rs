@@ -1,5 +1,6 @@
 //! Mounted file systems (`/proc/self/mounts` + `statvfs`).
 
+use helix_app_common::i18n::tr;
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::os::unix::ffi::OsStrExt;
@@ -151,7 +152,7 @@ pub fn statvfs(path: &Path) -> Option<Usage> {
 
 fn mount_name(mp: &Path) -> String {
     if mp == Path::new("/") {
-        "Computer".into()
+        tr("Computer").into()
     } else {
         mp.file_name()
             .map(|n| n.to_string_lossy().into_owned())
@@ -163,7 +164,7 @@ fn mount_name(mp: &Path) -> String {
 /// mounts, so call it from a worker thread.
 pub fn locations(home: &Path) -> Vec<Location> {
     let mut out = vec![Location {
-        name: "Home Folder".into(),
+        name: tr("Home Folder").into(),
         path: home.to_path_buf(),
         detail: home.display().to_string(),
         usage: statvfs(home),

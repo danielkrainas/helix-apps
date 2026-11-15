@@ -13,6 +13,8 @@ use crate::journal::{self, Boot, Entry, QueryArgs};
 use crate::live::{self, Live, Placement};
 use crate::search::{Search, SearchField};
 use crate::worker;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 pub const APP_ID: &str = "org.helix.Logs";
 const SCHEMA: &str = "org.gnome.Logs";
@@ -67,8 +69,8 @@ pub fn run() -> glib::ExitCode {
         .build();
     helix_app_common::install_standard_actions(
         &app,
-        "Logs",
-        "View detailed event logs for the system",
+        tr("Logs"),
+        tr("View detailed event logs for the system"),
     );
     app.connect_startup(|_| load_css());
     app.connect_activate(|app| {
@@ -109,7 +111,7 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
 
     let window = adw::ApplicationWindow::builder()
         .application(app)
-        .title("Logs")
+        .title(tr("Logs"))
         .default_width(1000)
         .default_height(680)
         .width_request(360)
@@ -140,7 +142,7 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     let sidebar_header = adw::HeaderBar::new();
     sidebar_tv.add_top_bar(&sidebar_header);
     sidebar_tv.set_content(Some(&sidebar_scroll));
-    let sidebar_page = adw::NavigationPage::new(&sidebar_tv, "Logs");
+    let sidebar_page = adw::NavigationPage::new(&sidebar_tv, tr("Logs"));
 
     // ---- Event list ----------------------------------------------------
     let store = gio::ListStore::new::<glib::BoxedAnyObject>();
@@ -248,7 +250,7 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
 
     let empty = adw::StatusPage::builder()
         .icon_name("edit-find-symbolic")
-        .title("No Events")
+        .title(tr("No Events"))
         .build();
     let loading_page = gtk::Spinner::builder()
         .spinning(true)
@@ -265,45 +267,47 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
 
     // Header.
     let header = adw::HeaderBar::new();
-    let boot_dropdown = gtk::DropDown::from_strings(&["Current Boot"]);
-    boot_dropdown.set_tooltip_text(Some("Boot"));
-    helix_app_common::set_accessible_label(&boot_dropdown, "Boot");
+    let boot_dropdown = gtk::DropDown::from_strings(&[tr("Current Boot")]);
+    boot_dropdown.set_tooltip_text(Some(tr("Boot")));
+    helix_app_common::set_accessible_label(&boot_dropdown, tr("Boot"));
     header.set_title_widget(Some(&boot_dropdown));
     let search_button = gtk::ToggleButton::builder()
         .icon_name("system-search-symbolic")
-        .tooltip_text("Search")
+        .tooltip_text(tr("Search"))
         .build()
-        .labelled("Search");
+        .labelled(tr("Search"));
     header.pack_start(&search_button);
     let menu = gio::Menu::new();
     let s1 = gio::Menu::new();
-    s1.append(Some("_Export…"), Some("win.export"));
-    s1.append(Some("_Refresh"), Some("win.refresh"));
+    s1.append(Some(tr("_Export…")), Some("win.export"));
+    s1.append(Some(tr("_Refresh")), Some("win.refresh"));
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
     s2.append(
-        Some("_Newest First"),
+        Some(tr("_Newest First")),
         Some(&format!("win.sort-order::{SORT_DESC}")),
     );
     s2.append(
-        Some("_Oldest First"),
+        Some(tr("_Oldest First")),
         Some(&format!("win.sort-order::{SORT_ASC}")),
     );
-    menu.append_section(Some("Sort"), &s2);
+    menu.append_section(Some(tr("Sort")), &s2);
     let s3 = gio::Menu::new();
     s3.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some(helix_app_common::shortcuts::ACTION),
     );
-    s3.append(Some("_About Logs"), Some("app.about"));
+    s3.append(Some(tr("_About Logs")), Some("app.about"));
     menu.append_section(None, &s3);
     let menu_button = gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
         .menu_model(&menu)
         .primary(true)
-        .tooltip_text("Main Menu")
+        .tooltip_text(tr("Main Menu"))
         .build()
-        .labelled("Main Menu");
+        .labelled(tr("Main Menu"));
     header.pack_end(&menu_button);
     let spinner = gtk::Spinner::new();
     header.pack_end(&spinner);
@@ -311,12 +315,14 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     // Search bar.
     let search_entry = gtk::SearchEntry::builder()
         .hexpand(true)
-        .placeholder_text("Search events (FIELD=value restricts to a journal field)")
+        .placeholder_text(tr(
+            "Search events (FIELD=value restricts to a journal field)",
+        ))
         .build();
     let field_dropdown = gtk::DropDown::from_strings(&SearchField::ALL.map(|f| f.label()));
-    field_dropdown.set_tooltip_text(Some("Search in"));
-    helix_app_common::set_accessible_label(&field_dropdown, "Search in");
-    helix_app_common::set_accessible_label(&search_entry, "Search events");
+    field_dropdown.set_tooltip_text(Some(tr("Search in")));
+    helix_app_common::set_accessible_label(&field_dropdown, tr("Search in"));
+    helix_app_common::set_accessible_label(&search_entry, tr("Search events"));
     let search_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     search_box.append(&search_entry);
     search_box.append(&field_dropdown);
@@ -337,8 +343,10 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
         .build();
 
     let banner = adw::Banner::builder()
-        .title("Only your own logs are shown. Join the “systemd-journal” group to see system logs.")
-        .button_label("Don't Show Again")
+        .title(tr(
+            "Only your own logs are shown. Join the “systemd-journal” group to see system logs.",
+        ))
+        .button_label(tr("Don't Show Again"))
         .build();
 
     let list_tv = adw::ToolbarView::new();
@@ -346,13 +354,13 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
     list_tv.add_top_bar(&search_bar);
     list_tv.add_top_bar(&banner);
     list_tv.set_content(Some(&stack));
-    let list_page = adw::NavigationPage::with_tag(&list_tv, "Important", "events");
+    let list_page = adw::NavigationPage::with_tag(&list_tv, tr("Important"), "events");
 
     let nav = adw::NavigationView::new();
     nav.add(&list_page);
     let toasts = adw::ToastOverlay::new();
     toasts.set_child(Some(&nav));
-    let content_page = adw::NavigationPage::new(&toasts, "Events");
+    let content_page = adw::NavigationPage::new(&toasts, tr("Events"));
 
     let split = adw::NavigationSplitView::new();
     split.set_sidebar(Some(&sidebar_page));
@@ -700,15 +708,15 @@ fn reload(a: &Rc<App>) {
                                 "document-open-recent-symbolic"
                             }));
                             a.ui.empty.set_title(if searching {
-                                "No Results"
+                                tr("No Results")
                             } else {
-                                "No Events"
+                                tr("No Events")
                             });
                             a.ui.empty.set_description(None);
                         }
                         a.ui.stack.set_visible_child_name("empty");
                         if searching {
-                            helix_app_common::announce_settled(&a.ui.empty, "No results");
+                            helix_app_common::announce_settled(&a.ui.empty, tr("No results"));
                         }
                     }
                     // Keep listening: live entries may still arrive.
@@ -736,13 +744,13 @@ fn reload(a: &Rc<App>) {
                 }
                 worker::Msg::Error(e) => {
                     a.ui.empty.set_icon_name(Some("dialog-error-symbolic"));
-                    a.ui.empty.set_title("Unable to Read Logs");
+                    a.ui.empty.set_title(tr("Unable to Read Logs"));
                     a.ui.empty
                         .set_description(Some(&glib::markup_escape_text(&e)));
                     a.ui.stack.set_visible_child_name("empty");
                     helix_app_common::announce(
                         &a.ui.empty,
-                        &format!("Unable to read logs. {e}"),
+                        &trf!("Unable to read logs. {e}", e = e),
                         helix_app_common::Urgency::Assertive,
                     );
                 }
@@ -770,7 +778,7 @@ fn maybe_load_more(a: &Rc<App>) {
 
 fn export_view(a: &Rc<App>) {
     let dialog = gtk::FileDialog::builder()
-        .title("Export Logs")
+        .title(tr("Export Logs"))
         .initial_name("logs.txt")
         .modal(true)
         .build();
@@ -797,8 +805,8 @@ fn export_view(a: &Rc<App>) {
                 )
                 .await;
             let msg = match res {
-                Ok(_) => "Logs exported".to_string(),
-                Err((_, e)) => format!("Export failed: {e}"),
+                Ok(_) => tr("Logs exported").to_string(),
+                Err((_, e)) => trf!("Export failed: {e}", e = e),
             };
             toasts.add_toast(adw::Toast::new(&msg));
         });
@@ -808,22 +816,26 @@ fn export_view(a: &Rc<App>) {
 fn detail_page(entry: &Entry, toasts: &adw::ToastOverlay) -> adw::NavigationPage {
     let tz = glib::TimeZone::local();
     let process = entry.process();
-    let title = if process.is_empty() { "Event" } else { process };
+    let title = if process.is_empty() {
+        tr("Event")
+    } else {
+        process
+    };
     let time = format::full_time(entry.timestamp_usec(), &tz);
 
     let header = adw::HeaderBar::new();
     header.set_title_widget(Some(&adw::WindowTitle::new(title, &time)));
     let copy = gtk::Button::builder()
         .icon_name("edit-copy-symbolic")
-        .tooltip_text("Copy Event")
+        .tooltip_text(tr("Copy Event"))
         .build()
-        .labelled("Copy Event");
+        .labelled(tr("Copy Event"));
     {
         let text = entry.to_export_fields();
         let toasts = toasts.clone();
         copy.connect_clicked(move |b| {
             b.clipboard().set_text(&text);
-            toasts.add_toast(adw::Toast::new("Copied to clipboard"));
+            toasts.add_toast(adw::Toast::new(tr("Copied to clipboard")));
         });
     }
     header.pack_end(&copy);
@@ -861,12 +873,12 @@ fn detail_page(entry: &Entry, toasts: &adw::ToastOverlay) -> adw::NavigationPage
             add_row(k, v);
         }
         if !time_added && k != "MESSAGE" {
-            add_row("Time", &time);
+            add_row(tr("Time"), &time);
             time_added = true;
         }
     }
     if !time_added {
-        add_row("Time", &time);
+        add_row(tr("Time"), &time);
     }
 
     let clamp = adw::Clamp::builder()

@@ -6,6 +6,7 @@ use crate::render::{Client, JobKey};
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{gdk, glib, graphene};
+use helix_app_common::i18n::tr;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::time::Duration;
@@ -153,7 +154,7 @@ pub fn present(
 
     let win = gtk::Window::builder()
         .transient_for(parent)
-        .title("Presentation")
+        .title(tr("Presentation"))
         .default_width(1024)
         .default_height(768)
         .child(&view)

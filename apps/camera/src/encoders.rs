@@ -1,5 +1,7 @@
 //! Video format / encoder selection based on what the GStreamer registry has.
 
+use helix_app_common::i18n::tr;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VideoFormat {
     WebmVp8,
@@ -28,9 +30,9 @@ impl VideoFormat {
 
     pub fn label(self) -> &'static str {
         match self {
-            VideoFormat::WebmVp8 => "WebM (VP8)",
-            VideoFormat::WebmVp9 => "WebM (VP9)",
-            VideoFormat::Mp4H264 => "MP4 (H.264)",
+            VideoFormat::WebmVp8 => tr("WebM (VP8)"),
+            VideoFormat::WebmVp9 => tr("WebM (VP9)"),
+            VideoFormat::Mp4H264 => tr("MP4 (H.264)"),
         }
     }
 

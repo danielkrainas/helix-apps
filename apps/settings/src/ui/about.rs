@@ -8,6 +8,8 @@ use std::rc::Rc;
 use super::widgets::{self, value_label};
 use super::{spawn_worker, Ctx, Panel};
 use crate::{dbus, sysinfo, values};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 pub struct AboutPanel;
 
@@ -33,10 +35,10 @@ fn read_local() -> LocalInfo {
     };
     LocalInfo {
         os: sysinfo::os_name(&sysinfo::parse_os_release(&os_release))
-            .unwrap_or_else(|| "Unknown".into()),
+            .unwrap_or_else(|| tr("Unknown").into()),
         os_type: format!("{}-bit", usize::BITS),
         cpu: sysinfo::cpu_description(&sysinfo::read("/proc/cpuinfo"))
-            .unwrap_or_else(|| "Unknown".into()),
+            .unwrap_or_else(|| tr("Unknown").into()),
         memory: sysinfo::mem_total_bytes(&sysinfo::read("/proc/meminfo")),
         kernel: sysinfo::read("/proc/sys/kernel/osrelease")
             .trim()
@@ -52,13 +54,13 @@ fn read_local() -> LocalInfo {
 
 fn windowing_system() -> &'static str {
     let Some(display) = gdk::Display::default() else {
-        return "Unknown";
+        return tr("Unknown");
     };
     match display.type_().name() {
-        "GdkWaylandDisplay" => "Wayland",
+        "GdkWaylandDisplay" => tr("Wayland"),
         "GdkX11Display" => "X11",
-        "GdkBroadwayDisplay" => "Broadway",
-        _ => "Unknown",
+        "GdkBroadwayDisplay" => tr("Broadway"),
+        _ => tr("Unknown"),
     }
 }
 
@@ -91,63 +93,63 @@ impl Panel for AboutPanel {
 
         let name_group = widgets::group("");
         let name_row = adw::EntryRow::builder()
-            .title("Device Name")
+            .title(tr("Device Name"))
             .show_apply_button(true)
             .sensitive(false)
             .build();
         name_group.add(&name_row);
         page.add(&name_group);
 
-        let hw = widgets::group("Hardware");
+        let hw = widgets::group(tr("Hardware"));
         let model = value_label("…");
         let memory = value_label("…");
         let cpu = value_label("…");
         let disk = value_label("…");
-        let sw = widgets::group("Software");
+        let sw = widgets::group(tr("Software"));
         let os = value_label("…");
         let os_type = value_label("…");
         let desktop_name =
-            std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_else(|_| "Unknown".into());
+            std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_else(|_| tr("Unknown").into());
         let desktop = value_label(&desktop_name);
         let windowing = value_label(windowing_system());
         let kernel = value_label("…");
         for (title, label) in [
-            ("Hardware Model", &model),
-            ("Memory", &memory),
-            ("Processor", &cpu),
-            ("Disk Capacity", &disk),
+            (tr("Hardware Model"), &model),
+            (tr("Memory"), &memory),
+            (tr("Processor"), &cpu),
+            (tr("Disk Capacity"), &disk),
         ] {
             hw.add(&row_for(title, label));
         }
         for (title, label) in [
-            ("OS Name", &os),
-            ("OS Type", &os_type),
-            ("Desktop", &desktop),
-            ("Windowing System", &windowing),
-            ("Kernel Version", &kernel),
+            (tr("OS Name"), &os),
+            (tr("OS Type"), &os_type),
+            (tr("Desktop"), &desktop),
+            (tr("Windowing System"), &windowing),
+            (tr("Kernel Version"), &kernel),
         ] {
             sw.add(&row_for(title, label));
         }
         let copy = gtk::Button::builder()
             .icon_name("edit-copy-symbolic")
-            .tooltip_text("Copy System Information")
+            .tooltip_text(tr("Copy System Information"))
             .css_classes(["flat"])
             .build()
-            .labelled("Copy System Information");
+            .labelled(tr("Copy System Information"));
         hw.set_header_suffix(Some(&copy));
         page.add(&hw);
         page.add(&sw);
 
         let labels: Vec<(&'static str, gtk::Label)> = vec![
-            ("Hardware Model", model.clone()),
-            ("Memory", memory.clone()),
-            ("Processor", cpu.clone()),
-            ("Disk Capacity", disk.clone()),
-            ("OS Name", os.clone()),
-            ("OS Type", os_type.clone()),
-            ("Desktop", desktop.clone()),
-            ("Windowing System", windowing.clone()),
-            ("Kernel Version", kernel.clone()),
+            (tr("Hardware Model"), model.clone()),
+            (tr("Memory"), memory.clone()),
+            (tr("Processor"), cpu.clone()),
+            (tr("Disk Capacity"), disk.clone()),
+            (tr("OS Name"), os.clone()),
+            (tr("OS Type"), os_type.clone()),
+            (tr("Desktop"), desktop.clone()),
+            (tr("Windowing System"), windowing.clone()),
+            (tr("Kernel Version"), kernel.clone()),
         ];
         let toast_ctx = Rc::downgrade(ctx);
         copy.connect_clicked(move |b| {
@@ -158,7 +160,7 @@ impl Panel for AboutPanel {
             b.clipboard().set_text(&text);
             // libadwaita speaks toasts, so this is also the announcement.
             if let Some(ctx) = toast_ctx.upgrade() {
-                ctx.toast("System information copied");
+                ctx.toast(tr("System information copied"));
             }
         });
 
@@ -180,7 +182,7 @@ impl Panel for AboutPanel {
                         &local
                             .memory
                             .map(|b| glib::format_size(b).to_string())
-                            .unwrap_or_else(|| "Unknown".into()),
+                            .unwrap_or_else(|| tr("Unknown").into()),
                     );
                     kernel.set_label(&local.kernel);
                     let (vendor, hw_model) = match &host {
@@ -191,7 +193,7 @@ impl Panel for AboutPanel {
                     };
                     model.set_label(
                         &sysinfo::hardware_model(&vendor, &hw_model)
-                            .unwrap_or_else(|| "Unknown".into()),
+                            .unwrap_or_else(|| tr("Unknown").into()),
                     );
                     match host {
                         Ok(h) => {
@@ -203,10 +205,10 @@ impl Panel for AboutPanel {
                             eprintln!("helix-settings-app: hostname1: {e}");
                             // The name stays read-only; say why.
                             name_row.set_tooltip_text(Some(
-                                "The device name cannot be changed: the hostname service is unavailable",
+                                tr("The device name cannot be changed: the hostname service is unavailable"),
                             ));
                             if let Some(ctx) = host_ctx.upgrade() {
-                                ctx.toast("The device name cannot be changed right now");
+                                ctx.toast(tr("The device name cannot be changed right now"));
                             }
                         }
                     }
@@ -224,7 +226,7 @@ impl Panel for AboutPanel {
                     &size
                         .filter(|s| *s > 0)
                         .map(|s| glib::format_size(s).to_string())
-                        .unwrap_or_else(|| "Unknown".into()),
+                        .unwrap_or_else(|| tr("Unknown").into()),
                 );
             },
         );
@@ -234,10 +236,10 @@ impl Panel for AboutPanel {
         name_row.connect_apply(move |row| {
             let pretty = row.text().trim().to_string();
             if pretty.is_empty() {
-                const EMPTY: &str = "The device name cannot be empty";
-                helix_app_common::set_input_error(row, None, Some(EMPTY));
+                const EMPTY: &str = n_("The device name cannot be empty");
+                helix_app_common::set_input_error(row, None, Some(tr(EMPTY)));
                 if let Some(ctx) = ctx_weak.upgrade() {
-                    ctx.toast(EMPTY);
+                    ctx.toast(tr(EMPTY));
                 }
                 return;
             }
@@ -248,7 +250,7 @@ impl Panel for AboutPanel {
                 move || dbus::set_hostname(&pretty, &static_name),
                 move |res| {
                     if let (Err(e), Some(ctx)) = (res, ctx_weak.upgrade()) {
-                        ctx.toast(&format!("Could not rename the device: {e}"));
+                        ctx.toast(&trf!("Could not rename the device: {e}", e = e));
                     }
                 },
             );

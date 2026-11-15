@@ -10,6 +10,9 @@ use std::rc::Rc;
 use crate::model::{self, format_duration, format_total};
 use crate::playlist::{self, EntryInfo, Playlist, Smart};
 use crate::ui::{music_dir, set_heart_icon, sync_heart, toast, App, RowHandle};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 /// Which playlist a page shows.
 #[derive(Clone, Debug, PartialEq)]
@@ -179,7 +182,7 @@ impl App {
         self.stack.add_titled_with_icon(
             &albums_scroll,
             Some("albums"),
-            "Albums",
+            tr("Albums"),
             "media-optical-cd-audio-symbolic",
         );
 
@@ -193,19 +196,23 @@ impl App {
         self.stack.add_titled_with_icon(
             &scrolled(&self.artists_list, 700),
             Some("artists"),
-            "Artists",
+            tr("Artists"),
             "system-users-symbolic",
         );
 
         // Songs.
         let songs = self.build_songs_view();
-        self.stack
-            .add_titled_with_icon(&songs, Some("songs"), "Songs", "audio-x-generic-symbolic");
+        self.stack.add_titled_with_icon(
+            &songs,
+            Some("songs"),
+            tr("Songs"),
+            "audio-x-generic-symbolic",
+        );
 
         // Playlists.
         let pl_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
         let new_btn = gtk::Button::builder()
-            .label("New Playlist…")
+            .label(tr("New Playlist…"))
             .action_name("win.new-playlist")
             .halign(gtk::Align::End)
             .css_classes(["pill"])
@@ -229,12 +236,12 @@ impl App {
         self.stack.add_titled_with_icon(
             &scrolled(&pl_box, 700),
             Some("playlists"),
-            "Playlists",
+            tr("Playlists"),
             "view-list-symbolic",
         );
 
         let empty_btn = gtk::Button::builder()
-            .label("Add Folder…")
+            .label(tr("Add Folder…"))
             .action_name("win.add-folder")
             .halign(gtk::Align::Center)
             .css_classes(["pill", "suggested-action"])
@@ -327,7 +334,7 @@ impl App {
             if let Some(img) = item.child().and_downcast::<gtk::Image>() {
                 img.set_icon_name(playing.then_some("media-playback-start-symbolic"));
                 if playing {
-                    img.update_property(&[gtk::accessible::Property::Label("Now Playing")]);
+                    img.update_property(&[gtk::accessible::Property::Label(tr("Now Playing"))]);
                 } else {
                     img.reset_property(gtk::AccessibleProperty::Label);
                 }
@@ -335,26 +342,26 @@ impl App {
         });
         cv.append_column(
             &gtk::ColumnViewColumn::builder()
-                .title("Playing")
+                .title(tr("Playing"))
                 .factory(&f)
                 .build(),
         );
 
-        let title = text_col("Title", true, |t, _| t.title.clone());
+        let title = text_col(tr("Title"), true, |t, _| t.title.clone());
         title.set_sorter(Some(&sorter(|t, _| {
             SortKey::Text(model::sort_key(&t.title))
         })));
-        let artist = text_col("Artist", true, |t, _| t.artist_name().to_string());
+        let artist = text_col(tr("Artist"), true, |t, _| t.artist_name().to_string());
         artist.set_sorter(Some(&sorter(|t, _| {
             SortKey::Text(model::sort_key(t.artist_name()))
         })));
-        let album = text_col("Album", true, |t, _| t.album_name().to_string());
+        let album = text_col(tr("Album"), true, |t, _| t.album_name().to_string());
         album.set_sorter(Some(&sorter(|t, _| {
             SortKey::Text(model::sort_key(t.album_name()))
         })));
-        let length = text_col("Length", false, |t, _| format_duration(t.duration_ms));
+        let length = text_col(tr("Length"), false, |t, _| format_duration(t.duration_ms));
         length.set_sorter(Some(&sorter(|t, _| SortKey::Num(t.duration_ms))));
-        let plays = text_col("Plays", false, |t, app| {
+        let plays = text_col(tr("Plays"), false, |t, app| {
             app.stats.borrow().plays(&t.path).to_string()
         });
         plays.set_sorter(Some(&sorter(|t, app| {
@@ -378,7 +385,7 @@ impl App {
                 .icon_name("non-starred-symbolic")
                 .css_classes(["flat"])
                 .build()
-                .labelled("Add to Favorites");
+                .labelled(tr("Add to Favorites"));
             let ws = ws.clone();
             let it = item.downgrade();
             heart.connect_toggled(move |h| {
@@ -410,7 +417,7 @@ impl App {
         });
         cv.append_column(
             &gtk::ColumnViewColumn::builder()
-                .title("Favorite")
+                .title(tr("Favorite"))
                 .factory(&f)
                 .build(),
         );
@@ -453,11 +460,7 @@ impl App {
             let n = a.albums.len();
             let row = adw::ActionRow::builder()
                 .title(glib::markup_escape_text(&a.name))
-                .subtitle(if n == 1 {
-                    "1 album".to_string()
-                } else {
-                    format!("{n} albums")
-                })
+                .subtitle(trnf!("{n} album", "{n} albums", n))
                 .activatable(true)
                 .build();
             row.add_prefix(&gtk::Image::from_icon_name("avatar-default-symbolic"));
@@ -563,19 +566,27 @@ impl App {
         let ti = (idx as u32).to_variant();
         let s1 = gio::Menu::new();
         if !matches!(ctx, RowCtx::Queue) {
-            s1.append_item(&item("Play Next", "win.play-next", ti.clone()));
-            s1.append_item(&item("Add to Queue", "win.queue-add", ti.clone()));
+            s1.append_item(&item(tr("Play Next"), "win.play-next", ti.clone()));
+            s1.append_item(&item(tr("Add to Queue"), "win.queue-add", ti.clone()));
         }
-        s1.append_item(&item("Add to Playlist…", "win.add-to-playlist", ti.clone()));
-        s1.append_item(&item("Go to Album", "win.go-album", ti));
+        s1.append_item(&item(
+            tr("Add to Playlist…"),
+            "win.add-to-playlist",
+            ti.clone(),
+        ));
+        s1.append_item(&item(tr("Go to Album"), "win.go-album", ti));
         menu.append_section(None, &s1);
         match ctx {
             RowCtx::Playlist(file) => {
                 let target = (file.to_string_lossy().into_owned(), pos as u32).to_variant();
-                menu.append_item(&item("Remove from Playlist", "win.playlist-remove", target));
+                menu.append_item(&item(
+                    tr("Remove from Playlist"),
+                    "win.playlist-remove",
+                    target,
+                ));
             }
             RowCtx::Queue => menu.append_item(&item(
-                "Remove from Queue",
+                tr("Remove from Queue"),
                 "win.queue-remove",
                 (pos as u32).to_variant(),
             )),
@@ -585,9 +596,9 @@ impl App {
             .icon_name("view-more-symbolic")
             .valign(gtk::Align::Center)
             .css_classes(["flat"])
-            .tooltip_text("More")
+            .tooltip_text(tr("More"))
             .build()
-            .labelled("More");
+            .labelled(tr("More"));
         more.set_create_popup_func(move |mb| {
             if mb.menu_model().is_none() {
                 mb.set_menu_model(Some(&menu));
@@ -680,8 +691,8 @@ impl App {
             .halign(gtk::Align::Start)
             .max_children_per_line(8)
             .build();
-        let play = pill("Play", "media-playback-start-symbolic", true);
-        let shuffle = pill("Shuffle", "media-playlist-shuffle-symbolic", false);
+        let play = pill(tr("Play"), "media-playback-start-symbolic", true);
+        let shuffle = pill(tr("Shuffle"), "media-playlist-shuffle-symbolic", false);
         play.set_sensitive(!tracks.is_empty());
         shuffle.set_sensitive(!tracks.is_empty());
         let (w, t1) = (Rc::downgrade(self), tracks.clone());
@@ -750,7 +761,10 @@ impl App {
                 .filter(|&t| lib.tracks[t].disc.unwrap_or(1) == *disc)
                 .collect();
             if discs.len() > 1 {
-                content.append(&label(&format!("Disc {disc}"), &["heading", "hm-disc"]));
+                content.append(&label(
+                    &trf!("Disc {disc}", disc = disc),
+                    &["heading", "hm-disc"],
+                ));
             }
             let lib2 = lib.clone();
             let list = self.track_list(
@@ -799,11 +813,7 @@ impl App {
             "",
             &format!(
                 "{} · {} · {}",
-                if artist.albums.len() == 1 {
-                    "1 album".into()
-                } else {
-                    format!("{} albums", artist.albums.len())
-                },
+                trnf!("{n} album", "{n} albums", artist.albums.len()),
                 songs_count(all.len()),
                 format_total(total)
             ),
@@ -928,16 +938,16 @@ impl App {
         if let PlRef::User(file) = r {
             let rename = gtk::Button::builder()
                 .icon_name("document-edit-symbolic")
-                .tooltip_text("Rename Playlist")
+                .tooltip_text(tr("Rename Playlist"))
                 .css_classes(["circular"])
                 .build()
-                .labelled("Rename Playlist");
+                .labelled(tr("Rename Playlist"));
             let delete = gtk::Button::builder()
                 .icon_name("user-trash-symbolic")
-                .tooltip_text("Delete Playlist")
+                .tooltip_text(tr("Delete Playlist"))
                 .css_classes(["circular", "destructive-action"])
                 .build()
-                .labelled("Delete Playlist");
+                .labelled(tr("Delete Playlist"));
             let (w, f) = (Rc::downgrade(self), file.clone());
             rename.connect_clicked(move |_| {
                 if let Some(app) = w.upgrade() {
@@ -952,10 +962,10 @@ impl App {
             });
             let export = gtk::Button::builder()
                 .icon_name("document-save-as-symbolic")
-                .tooltip_text("Export Playlist…")
+                .tooltip_text(tr("Export Playlist…"))
                 .css_classes(["circular"])
                 .build()
-                .labelled("Export Playlist…");
+                .labelled(tr("Export Playlist…"));
             let (w, f) = (Rc::downgrade(self), file.clone());
             export.connect_clicked(move |_| {
                 if let Some(app) = w.upgrade() {
@@ -970,12 +980,14 @@ impl App {
         if tracks.is_empty() {
             let empty = adw::StatusPage::builder()
                 .icon_name("view-list-symbolic")
-                .title("No Songs")
+                .title(tr("No Songs"))
                 .build();
             empty.set_description(Some(match r {
-                PlRef::User(_) => "Add songs with “Add to Playlist…” in a song’s menu.",
-                PlRef::Smart(Smart::Favorites) => "Mark songs as favorites with the star button.",
-                _ => "Songs will appear here as you listen.",
+                PlRef::User(_) => tr("Add songs with “Add to Playlist…” in a song’s menu."),
+                PlRef::Smart(Smart::Favorites) => {
+                    tr("Mark songs as favorites with the star button.")
+                }
+                _ => tr("Songs will appear here as you listen."),
             }));
             content.append(&empty);
         } else {
@@ -1036,7 +1048,7 @@ impl App {
         content.append(&img);
         content.append(&title);
         content.append(&sub);
-        content.append(&label("Queue", &["heading", "hm-disc"]));
+        content.append(&label(tr("Queue"), &["heading", "hm-disc"]));
         let list = gtk::ListBox::builder()
             .selection_mode(gtk::SelectionMode::None)
             .css_classes(["boxed-list"])
@@ -1058,7 +1070,7 @@ impl App {
         sub.set_widget_name("np-sub");
         *self.queue_view.borrow_mut() = Some(list.downgrade());
         self.nav.push(&page(
-            "Now Playing",
+            tr("Now Playing"),
             Some("now-playing"),
             &scrolled(&content, 700),
         ));
@@ -1086,7 +1098,7 @@ impl App {
                         l.set_label(
                             track
                                 .as_ref()
-                                .map_or("Nothing Playing", |t| t.title.as_str()),
+                                .map_or(tr("Nothing Playing"), |t| t.title.as_str()),
                         );
                     }
                 }
@@ -1137,14 +1149,14 @@ impl App {
         if r.is_empty() {
             let s = adw::StatusPage::builder()
                 .icon_name("system-search-symbolic")
-                .title("No Results")
-                .description("Try a different search")
+                .title(tr("No Results"))
+                .description(tr("Try a different search"))
                 .build();
             b.append(&s);
             return;
         }
         if !r.albums.is_empty() {
-            b.append(&label("Albums", &["heading"]));
+            b.append(&label(tr("Albums"), &["heading"]));
             let list = gtk::ListBox::builder()
                 .selection_mode(gtk::SelectionMode::None)
                 .css_classes(["boxed-list"])
@@ -1175,7 +1187,7 @@ impl App {
             b.append(&list);
         }
         if !r.artists.is_empty() {
-            b.append(&label("Artists", &["heading"]));
+            b.append(&label(tr("Artists"), &["heading"]));
             let list = gtk::ListBox::builder()
                 .selection_mode(gtk::SelectionMode::None)
                 .css_classes(["boxed-list"])
@@ -1197,7 +1209,7 @@ impl App {
             b.append(&list);
         }
         if !r.tracks.is_empty() {
-            b.append(&label("Songs", &["heading"]));
+            b.append(&label(tr("Songs"), &["heading"]));
             let tracks: Vec<usize> = r.tracks.iter().copied().take(200).collect();
             b.append(&self.track_list(
                 &tracks,
@@ -1226,7 +1238,7 @@ impl App {
     fn save_playlist(&self, pl: &Playlist) {
         if let Err(e) = playlist::save(pl, self.entry_info()) {
             self.toasts
-                .add_toast(toast(&format!("Cannot save playlist: {e}")));
+                .add_toast(toast(&trf!("Cannot save playlist: {e}", e = e)));
         }
     }
 
@@ -1240,9 +1252,9 @@ impl App {
         let all = gtk::FileFilter::new();
         all.set_name(Some("Playlists"));
         let kinds: &[(&str, &[&str], &str)] = &[
-            ("M3U Playlist", &["m3u", "m3u8"], "audio/x-mpegurl"),
-            ("XSPF Playlist", &["xspf"], "application/xspf+xml"),
-            ("PLS Playlist", &["pls"], "audio/x-scpls"),
+            (tr("M3U Playlist"), &["m3u", "m3u8"], "audio/x-mpegurl"),
+            (tr("XSPF Playlist"), &["xspf"], "application/xspf+xml"),
+            (tr("PLS Playlist"), &["pls"], "audio/x-scpls"),
         ];
         let mut singles = Vec::new();
         for (name, exts, mime) in kinds {
@@ -1272,7 +1284,7 @@ impl App {
     /// library are dropped).
     pub fn import_playlist_dialog(self: &Rc<Self>) {
         let dialog = gtk::FileDialog::builder()
-            .title("Import Playlist")
+            .title(tr("Import Playlist"))
             .modal(true)
             .filters(&Self::playlist_filters(false))
             .build();
@@ -1296,14 +1308,13 @@ impl App {
             match (read, imported) {
                 (Err(e), _) => app
                     .toasts
-                    .add_toast(toast(&format!("Cannot read playlist: {e}"))),
+                    .add_toast(toast(&trf!("Cannot read playlist: {e}", e = e))),
                 (Ok(_), None) => app
                     .toasts
-                    .add_toast(toast("No songs from this playlist are in your library")),
+                    .add_toast(toast(tr("No songs from this playlist are in your library"))),
                 (Ok(_), Some(pl)) => {
                     app.save_playlist(&pl);
-                    app.toasts
-                        .add_toast(toast(&format!("Imported “{}”", pl.name)));
+                    app.toasts.add_toast(toast(&trf!("Imported “{}”", pl.name)));
                     app.reload_playlists();
                 }
             }
@@ -1329,7 +1340,8 @@ impl App {
             let found = match res {
                 Ok(f) => f,
                 Err(e) => {
-                    app.toasts.add_toast(toast(&format!("Cannot import: {e}")));
+                    app.toasts
+                        .add_toast(toast(&trf!("Cannot import: {e}", e = e)));
                     return;
                 }
             };
@@ -1354,9 +1366,9 @@ impl App {
                 count += 1;
             }
             app.toasts.add_toast(toast(&match count {
-                0 => "No new playlists with songs from your library were found".to_string(),
-                1 => "Imported 1 playlist".to_string(),
-                n => format!("Imported {n} playlists"),
+                0 => tr("No new playlists with songs from your library were found").to_string(),
+                1 => tr("Imported 1 playlist").to_string(),
+                n => trf!("Imported {n} playlists", n = n),
             }));
             if count > 0 {
                 app.reload_playlists();
@@ -1457,7 +1469,7 @@ impl App {
             return;
         };
         let dialog = gtk::FileDialog::builder()
-            .title("Export Playlist")
+            .title(tr("Export Playlist"))
             .modal(true)
             .initial_name(format!("{}.m3u", pl.name.replace('/', "_")))
             .filters(&Self::playlist_filters(true))
@@ -1472,10 +1484,10 @@ impl App {
                 path.set_extension("m3u");
             }
             match playlist::export(&pl, &path, app.entry_info()) {
-                Ok(()) => app.toasts.add_toast(toast("Playlist exported")),
+                Ok(()) => app.toasts.add_toast(toast(tr("Playlist exported"))),
                 Err(e) => app
                     .toasts
-                    .add_toast(toast(&format!("Cannot export playlist: {e}"))),
+                    .add_toast(toast(&trf!("Cannot export playlist: {e}", e = e))),
             }
         });
     }
@@ -1495,24 +1507,24 @@ impl App {
         });
         let dialog = adw::AlertDialog::new(
             Some(if rename.is_some() {
-                "Rename Playlist"
+                tr("Rename Playlist")
             } else {
-                "New Playlist"
+                tr("New Playlist")
             }),
             None,
         );
         let entry = gtk::Entry::builder()
-            .placeholder_text("Playlist Name")
+            .placeholder_text(tr("Playlist Name"))
             .activates_default(true)
             .text(current.unwrap_or_default())
             .build()
-            .labelled("Playlist Name");
+            .labelled(tr("Playlist Name"));
         dialog.set_extra_child(Some(&entry));
-        dialog.add_response("cancel", "_Cancel");
+        dialog.add_response("cancel", tr("_Cancel"));
         let ok = if rename.is_some() {
-            "_Rename"
+            tr("_Rename")
         } else {
-            "_Create"
+            tr("_Create")
         };
         dialog.add_response("ok", ok);
         dialog.set_response_appearance("ok", adw::ResponseAppearance::Suggested);
@@ -1563,8 +1575,7 @@ impl App {
                     app.save_playlist(&pl);
                     app.reload_playlists();
                     if !add.is_empty() {
-                        app.toasts
-                            .add_toast(toast(&format!("Added to “{}”", pl.name)));
+                        app.toasts.add_toast(toast(&trf!("Added to “{}”", pl.name)));
                     }
                 }
             }
@@ -1574,13 +1585,13 @@ impl App {
     }
 
     pub fn add_to_playlist_dialog(self: &Rc<Self>, tracks: Vec<usize>) {
-        let dialog = adw::AlertDialog::new(Some("Add to Playlist"), None);
+        let dialog = adw::AlertDialog::new(Some(tr("Add to Playlist")), None);
         let list = gtk::ListBox::builder()
             .selection_mode(gtk::SelectionMode::None)
             .css_classes(["boxed-list"])
             .build();
         let new_row = adw::ActionRow::builder()
-            .title("New Playlist…")
+            .title(tr("New Playlist…"))
             .activatable(true)
             .build();
         new_row.add_prefix(&gtk::Image::from_icon_name("list-add-symbolic"));
@@ -1607,7 +1618,7 @@ impl App {
             .hscrollbar_policy(gtk::PolicyType::Never)
             .build();
         dialog.set_extra_child(Some(&sw));
-        dialog.add_response("cancel", "_Cancel");
+        dialog.add_response("cancel", tr("_Cancel"));
         dialog.set_close_response("cancel");
         let w = Rc::downgrade(self);
         let d = dialog.clone();
@@ -1631,8 +1642,7 @@ impl App {
                 pl.entries
                     .extend(tracks.iter().map(|&t| lib.tracks[t].path.clone()));
                 app.save_playlist(&pl);
-                app.toasts
-                    .add_toast(toast(&format!("Added to “{}”", pl.name)));
+                app.toasts.add_toast(toast(&trf!("Added to “{}”", pl.name)));
                 app.reload_playlists();
             }
         });
@@ -1664,13 +1674,14 @@ impl App {
             .map(|p| p.name.clone())
             .unwrap_or_default();
         let dialog = adw::AlertDialog::new(
-            Some("Delete Playlist?"),
-            Some(&format!(
-                "“{name}” will be permanently deleted. The songs stay in your library."
+            Some(tr("Delete Playlist?")),
+            Some(&trf!(
+                "“{name}” will be permanently deleted. The songs stay in your library.",
+                name = name
             )),
         );
-        dialog.add_response("cancel", "_Cancel");
-        dialog.add_response("delete", "_Delete");
+        dialog.add_response("cancel", tr("_Cancel"));
+        dialog.add_response("delete", tr("_Delete"));
         dialog.set_response_appearance("delete", adw::ResponseAppearance::Destructive);
         dialog.set_close_response("cancel");
         let (w, f) = (Rc::downgrade(self), file.to_path_buf());
@@ -1678,7 +1689,7 @@ impl App {
             let Some(app) = w.upgrade() else { return };
             if let Err(e) = std::fs::remove_file(&f) {
                 app.toasts
-                    .add_toast(toast(&format!("Cannot delete playlist: {e}")));
+                    .add_toast(toast(&trf!("Cannot delete playlist: {e}", e = e)));
                 return;
             }
             *app.playlist_view.borrow_mut() = None;
@@ -1694,25 +1705,25 @@ impl App {
         let dialog = adw::PreferencesDialog::new();
         let page = adw::PreferencesPage::new();
         let description = if self.using_tracker.get() {
-            "Music in these folders appears in your library. Folders indexed by LocalSearch are read from its index."
+            tr("Music in these folders appears in your library. Folders indexed by LocalSearch are read from its index.")
         } else {
-            "Music in these folders appears in your library"
+            tr("Music in these folders appears in your library")
         };
         let folders = adw::PreferencesGroup::builder()
-            .title("Library Folders")
+            .title(tr("Library Folders"))
             .description(description)
             .build();
         let add = gtk::Button::builder()
             .icon_name("list-add-symbolic")
-            .tooltip_text("Add Folder…")
+            .tooltip_text(tr("Add Folder…"))
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
             .build()
-            .labelled("Add Folder…");
+            .labelled(tr("Add Folder…"));
         folders.set_header_suffix(Some(&add));
         let main = adw::ActionRow::builder()
             .title(glib::markup_escape_text(&music_dir().display().to_string()))
-            .subtitle("Music folder")
+            .subtitle(tr("Music folder"))
             .build();
         main.add_prefix(&gtk::Image::from_icon_name("folder-music-symbolic"));
         folders.add(&main);
@@ -1723,11 +1734,11 @@ impl App {
             row.add_prefix(&gtk::Image::from_icon_name("folder-symbolic"));
             let rm = gtk::Button::builder()
                 .icon_name("user-trash-symbolic")
-                .tooltip_text("Remove Folder")
+                .tooltip_text(tr("Remove Folder"))
                 .css_classes(["flat"])
                 .valign(gtk::Align::Center)
                 .build()
-                .labelled("Remove Folder");
+                .labelled(tr("Remove Folder"));
             let (w, g, r) = (Rc::downgrade(self), folders.downgrade(), row.downgrade());
             rm.connect_clicked(move |_| {
                 if let (Some(app), Some(g), Some(r)) = (w.upgrade(), g.upgrade(), r.upgrade()) {
@@ -1747,10 +1758,12 @@ impl App {
         });
         page.add(&folders);
 
-        let playback = adw::PreferencesGroup::builder().title("Playback").build();
+        let playback = adw::PreferencesGroup::builder()
+            .title(tr("Playback"))
+            .build();
         let inhibit = adw::SwitchRow::builder()
-            .title("Inhibit Suspend")
-            .subtitle("Keep the computer awake while music plays")
+            .title(tr("Inhibit Suspend"))
+            .subtitle(tr("Keep the computer awake while music plays"))
             .active(self.prefs.get("inhibit-suspend", false))
             .build();
         let w = Rc::downgrade(self);
@@ -1766,7 +1779,9 @@ impl App {
         let labels: Vec<&str> = modes.iter().map(|m| m.label()).collect();
         let rg = adw::ComboRow::builder()
             .title("ReplayGain")
-            .subtitle("Even out loudness using the volume tags of songs or albums")
+            .subtitle(tr(
+                "Even out loudness using the volume tags of songs or albums",
+            ))
             .model(&gtk::StringList::new(&labels))
             .selected(
                 modes
@@ -1784,8 +1799,10 @@ impl App {
         playback.add(&rg);
 
         let notify = adw::SwitchRow::builder()
-            .title("Notifications")
-            .subtitle("Announce new songs while the window is in the background")
+            .title(tr("Notifications"))
+            .subtitle(tr(
+                "Announce new songs while the window is in the background",
+            ))
             .active(self.state.borrow().notifications)
             .build();
         let w = Rc::downgrade(self);
@@ -1809,9 +1826,5 @@ enum SortKey {
 }
 
 fn songs_count(n: usize) -> String {
-    if n == 1 {
-        "1 song".into()
-    } else {
-        format!("{n} songs")
-    }
+    trnf!("{n} song", "{n} songs", n)
 }

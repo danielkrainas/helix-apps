@@ -18,10 +18,11 @@
 //! [`assert_all_listed`]. The primary-menu entry is [`MENU_LABEL`], placed
 //! after Preferences and before About.
 
+use crate::i18n::n_;
 use gtk::prelude::*;
 
 /// The primary-menu label for the shortcuts window.
-pub const MENU_LABEL: &str = "_Keyboard Shortcuts";
+pub const MENU_LABEL: &str = n_("_Keyboard Shortcuts");
 
 /// The action [`install`] adds.
 pub const ACTION: &str = "app.shortcuts";
@@ -36,11 +37,11 @@ pub const STANDARD_ACCELS: &[(&str, &[&str])] = &[
 
 /// The "General" group most apps end with: shortcuts window, close, quit.
 pub const GENERAL: Group = (
-    "General",
+    n_("General"),
     &[
-        Item::Keys("Keyboard Shortcuts", "<Control>question"),
-        Item::Keys("Close Window", "<Control>w"),
-        Item::Keys("Quit", "<Control>q"),
+        Item::Keys(n_("Keyboard Shortcuts"), "<Control>question"),
+        Item::Keys(n_("Close Window"), "<Control>w"),
+        Item::Keys(n_("Quit"), "<Control>q"),
     ],
 );
 
@@ -124,17 +125,21 @@ pub fn window_from<'a>(
         .section_name("main")
         .build();
     for (title, items) in groups {
-        let group = gtk::ShortcutsGroup::builder().title(title).build();
+        // Tables are `const`, so their text is marked with `n_` and
+        // translated here.
+        let group = gtk::ShortcutsGroup::builder()
+            .title(crate::i18n::tr_dyn(title))
+            .build();
         for item in items {
             let row = match item {
                 Item::Keys(name, accel) => gtk::ShortcutsShortcut::builder()
-                    .title(*name)
+                    .title(crate::i18n::tr_dyn(name))
                     .accelerator(*accel)
                     .build(),
                 Item::Pointer(name, how, icon) => gtk::ShortcutsShortcut::builder()
                     .shortcut_type(gtk::ShortcutType::Gesture)
-                    .title(*name)
-                    .subtitle(*how)
+                    .title(crate::i18n::tr_dyn(name))
+                    .subtitle(crate::i18n::tr_dyn(how))
                     .icon(&gtk::gio::ThemedIcon::new(icon))
                     .build(),
             };
@@ -161,7 +166,7 @@ mod tests {
     #[test]
     fn alternatives_are_split() {
         const G: &[Group] = &[(
-            "A",
+            n_("A"),
             &[
                 Item::Keys("Zoom", "<Control>plus <Control>equal"),
                 Item::Pointer("Pan", "Drag", "input-mouse-symbolic"),

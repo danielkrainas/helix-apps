@@ -15,6 +15,9 @@ use std::time::Duration;
 use crate::chart::{self, ChartKind, Hit, Layout};
 use crate::mounts::{self, Location};
 use crate::scanner::{self, Kind, NodeId, Progress, ScanError, ScanOptions, ScanTree, ROOT};
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 pub const APP_ID: &str = "org.helix.DiskUsage";
 /// `excluded-uris` lives here.
@@ -23,8 +26,8 @@ const SCHEMA_PREFERENCES: &str = "org.gnome.baobab.preferences";
 const SCHEMA_UI: &str = "org.gnome.baobab.ui";
 /// Upstream default of `org.gnome.baobab.ui window-size`.
 const DEFAULT_WINDOW_SIZE: (i32, i32) = (960, 600);
-const APP_NAME: &str = "Disk Usage Analyzer";
-const COMMENTS: &str = "Check folder sizes and available disk space";
+const APP_NAME: &str = n_("Disk Usage Analyzer");
+const COMMENTS: &str = n_("Check folder sizes and available disk space");
 
 /// Options that have no `org.gnome.baobab` key (see SPEC.md). Older
 /// versions also stored the window state here; those fields are ignored.
@@ -121,7 +124,7 @@ pub fn run(initial: Option<String>) -> glib::ExitCode {
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::NON_UNIQUE)
         .build();
-    helix_app_common::install_standard_actions(&app, APP_NAME, COMMENTS);
+    helix_app_common::install_standard_actions(&app, tr(APP_NAME), tr(COMMENTS));
     let initial = RefCell::new(initial);
     app.connect_startup(|_| load_css());
     app.connect_activate(move |gapp| {
@@ -131,7 +134,7 @@ pub fn run(initial: Option<String>) -> glib::ExitCode {
         if let Some(arg) = initial.borrow_mut().take() {
             match gio::File::for_commandline_arg(&arg).path() {
                 Some(p) => ui.start_scan(p),
-                None => ui.toast(&format!("“{arg}” is not a local folder")),
+                None => ui.toast(&trf!("“{arg}” is not a local folder", arg = arg)),
             }
         }
     });
@@ -163,14 +166,14 @@ fn clean_level_bar(bar: &gtk::LevelBar) {
 fn item_menu() -> gio::Menu {
     let menu = gio::Menu::new();
     let s1 = gio::Menu::new();
-    s1.append(Some("_Open Folder"), Some("win.open-item"));
-    s1.append(Some("_Copy Path"), Some("win.copy-path"));
+    s1.append(Some(tr("_Open Folder")), Some("win.open-item"));
+    s1.append(Some(tr("_Copy Path")), Some("win.copy-path"));
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
-    let trash = gio::MenuItem::new(Some("Move to _Trash…"), Some("win.trash-item"));
+    let trash = gio::MenuItem::new(Some(tr("Move to _Trash…")), Some("win.trash-item"));
     // Delete is a bubble-phase shortcut, not an application accelerator,
     // so the menu is told about it explicitly.
-    trash.set_attribute_value("accel", Some(&"Delete".to_variant()));
+    trash.set_attribute_value("accel", Some(&tr("Delete").to_variant()));
     s2.append_item(&trash);
     menu.append_section(None, &s2);
     menu
@@ -179,20 +182,22 @@ fn item_menu() -> gio::Menu {
 fn primary_menu() -> gtk::MenuButton {
     let menu = gio::Menu::new();
     let s = gio::Menu::new();
-    s.append(Some("_Preferences"), Some("win.preferences"));
+    s.append(Some(tr("_Preferences")), Some("win.preferences"));
     s.append(
-        Some(helix_app_common::shortcuts::MENU_LABEL),
+        Some(helix_app_common::i18n::tr(
+            helix_app_common::shortcuts::MENU_LABEL,
+        )),
         Some(helix_app_common::shortcuts::ACTION),
     );
-    s.append(Some("_About Disk Usage Analyzer"), Some("app.about"));
+    s.append(Some(tr("_About Disk Usage Analyzer")), Some("app.about"));
     menu.append_section(None, &s);
     gtk::MenuButton::builder()
         .icon_name("open-menu-symbolic")
         .menu_model(&menu)
-        .tooltip_text("Main Menu")
+        .tooltip_text(tr("Main Menu"))
         .primary(true)
         .build()
-        .labelled("Main Menu")
+        .labelled(tr("Main Menu"))
 }
 
 impl App {
@@ -202,7 +207,7 @@ impl App {
         let local = LocalState::load();
         let window = adw::ApplicationWindow::builder()
             .application(gapp)
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .default_width(DEFAULT_WINDOW_SIZE.0)
             .default_height(DEFAULT_WINDOW_SIZE.1)
             .width_request(helix_app_common::MIN_WIDTH)
@@ -228,19 +233,19 @@ impl App {
         // ---- Start page -------------------------------------------------
         let start_header = adw::HeaderBar::new();
         let scan_btn = gtk::Button::builder()
-            .label("Scan Folder…")
+            .label(tr("Scan Folder…"))
             .action_name("win.scan-folder")
-            .tooltip_text("Scan a folder (Ctrl+O)")
+            .tooltip_text(tr("Scan a folder (Ctrl+O)"))
             .build();
         start_header.pack_start(&scan_btn);
         // In narrow windows the button shows only its icon.
         let scan_icon_btn = gtk::Button::builder()
             .icon_name("folder-open-symbolic")
             .action_name("win.scan-folder")
-            .tooltip_text("Scan a folder (Ctrl+O)")
+            .tooltip_text(tr("Scan a folder (Ctrl+O)"))
             .visible(false)
             .build()
-            .labelled("Scan Folder");
+            .labelled(tr("Scan Folder"));
         start_header.pack_start(&scan_icon_btn);
         let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
             adw::BreakpointConditionLengthType::MaxWidth,
@@ -254,15 +259,15 @@ impl App {
         let reload_btn = gtk::Button::builder()
             .icon_name("view-refresh-symbolic")
             .action_name("win.rescan")
-            .tooltip_text("Reload Locations")
+            .tooltip_text(tr("Reload Locations"))
             .build()
-            .labelled("Reload Locations");
+            .labelled(tr("Reload Locations"));
         start_header.pack_end(&reload_btn);
         let locations_list = gtk::ListBox::new();
         locations_list.add_css_class("boxed-list");
         locations_list.set_selection_mode(gtk::SelectionMode::None);
         let title = gtk::Label::builder()
-            .label("Devices &amp; Locations")
+            .label(tr("Devices &amp; Locations"))
             .use_markup(true)
             .xalign(0.0)
             .css_classes(["heading"])
@@ -284,7 +289,7 @@ impl App {
         start_tv.add_top_bar(&start_header);
         start_tv.set_content(Some(&scroller));
         let start_page = adw::NavigationPage::builder()
-            .title(APP_NAME)
+            .title(tr(APP_NAME))
             .tag("start")
             .child(&start_tv)
             .build();
@@ -298,9 +303,9 @@ impl App {
         let rescan_btn = gtk::Button::builder()
             .icon_name("view-refresh-symbolic")
             .action_name("win.rescan")
-            .tooltip_text("Rescan (Ctrl+R)")
+            .tooltip_text(tr("Rescan (Ctrl+R)"))
             .build()
-            .labelled("Rescan");
+            .labelled(tr("Rescan"));
         results_header.pack_end(&rescan_btn);
 
         // Progress view.
@@ -312,7 +317,7 @@ impl App {
             .css_classes(["dim-label"])
             .build();
         let cancel_btn = gtk::Button::builder()
-            .label("_Cancel")
+            .label(tr("_Cancel"))
             .use_underline(true)
             .action_name("win.cancel-scan")
             .halign(gtk::Align::Center)
@@ -323,7 +328,7 @@ impl App {
         pbox.set_margin_start(24);
         pbox.set_margin_end(24);
         let scanning = gtk::Label::builder()
-            .label("Scanning…")
+            .label(tr("Scanning…"))
             .css_classes(["title-1"])
             .build();
         for w in [
@@ -373,17 +378,17 @@ impl App {
         let up_button = gtk::Button::builder()
             .icon_name("go-up-symbolic")
             .action_name("win.chart-up")
-            .tooltip_text("Up (Alt+Up)")
+            .tooltip_text(tr("Up (Alt+Up)"))
             .css_classes(["flat"])
             .build()
-            .labelled("Up");
+            .labelled(tr("Up"));
         let rings_btn = gtk::ToggleButton::builder()
-            .label("Rings")
-            .tooltip_text("Rings Chart")
+            .label(tr("Rings"))
+            .tooltip_text(tr("Rings Chart"))
             .build();
         let treemap_btn = gtk::ToggleButton::builder()
-            .label("Treemap")
-            .tooltip_text("Treemap Chart")
+            .label(tr("Treemap"))
+            .tooltip_text(tr("Treemap Chart"))
             .group(&rings_btn)
             .build();
         let switch = gtk::Box::new(gtk::Orientation::Horizontal, 0);
@@ -408,7 +413,7 @@ impl App {
             .accessible_role(gtk::AccessibleRole::Img)
             .css_classes(["du-chart"])
             .build();
-        chart_area.update_property(&[gtk::accessible::Property::Label("Usage chart")]);
+        chart_area.update_property(&[gtk::accessible::Property::Label(tr("Usage chart"))]);
         chart_area.set_size_request(240, 240);
         let chart_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
         chart_box.append(&chart_bar);
@@ -434,7 +439,7 @@ impl App {
         results_tv.add_top_bar(&results_header);
         results_tv.set_content(Some(&results_stack));
         let results_page = adw::NavigationPage::builder()
-            .title("Results")
+            .title(tr("Results"))
             .tag("results")
             .child(&results_tv)
             .build();
@@ -622,7 +627,7 @@ impl App {
                 }
             });
         if let Err(e) = spawned {
-            self.toast(&format!("Could not start scan: {e}"));
+            self.toast(&trf!("Could not start scan: {e}", e = e));
             return;
         }
         let a = self.clone();
@@ -637,7 +642,7 @@ impl App {
             }
             use std::sync::atomic::Ordering::Relaxed;
             a.progress_bar.pulse();
-            a.progress_label.set_text(&format!(
+            a.progress_label.set_text(&trf!(
                 "{} items, {}",
                 progress.items.load(Relaxed),
                 size_text(progress.bytes.load(Relaxed))
@@ -666,7 +671,11 @@ impl App {
             Err(ScanError::Cancelled) => {}
             Err(e) => {
                 let path = self.scan_path.borrow().clone().unwrap_or_default();
-                self.toast(&format!("Could not scan “{}”: {e}", path.display()));
+                self.toast(&trf!(
+                    "Could not scan “{path}”: {e}",
+                    path = path.display(),
+                    e = e
+                ));
                 self.nav.pop_to_tag("start");
             }
         }
@@ -725,14 +734,14 @@ impl App {
         let tree = self.tree.borrow();
         let Some(t) = tree.as_ref() else { return };
         let r = t.root();
-        let mut s = format!(
+        let mut s = trf!(
             "{} on disk · {} apparent · {} items",
             size_text(r.size),
             size_text(r.apparent),
             r.items
         );
         if t.errors > 0 {
-            s.push_str(&format!(" · {} folders could not be read", t.errors));
+            s.push_str(&trf!(" · {} folders could not be read", t.errors));
         }
         self.status.set_text(&s);
     }
@@ -772,7 +781,7 @@ impl App {
                     _ => "text-x-generic-symbolic",
                 }));
                 label.set_text(&n.name);
-                bx.set_tooltip_text(n.error.then_some("This folder could not be fully read"));
+                bx.set_tooltip_text(n.error.then_some(tr("This folder could not be fully read")));
             }
             Col::Size => {
                 let bx = widget.downcast_ref::<gtk::Box>().expect("size cell");
@@ -792,7 +801,7 @@ impl App {
                     .map(|s| n.size as f64 / s as f64)
                     .unwrap_or(1.0);
                 bar.set_value(share.clamp(0.0, 1.0));
-                bx.set_tooltip_text(Some(&format!(
+                bx.set_tooltip_text(Some(&trf!(
                     "{} on disk, {} apparent",
                     size_text(n.size),
                     size_text(n.apparent)
@@ -801,11 +810,7 @@ impl App {
             Col::Contents => {
                 let label = widget.downcast_ref::<gtk::Label>().expect("label");
                 label.set_text(&if n.kind == Kind::Dir {
-                    if n.items == 1 {
-                        "1 item".to_string()
-                    } else {
-                        format!("{} items", n.items)
-                    }
+                    trnf!("{n} item", "{n} items", n.items)
                 } else {
                     String::new()
                 });
@@ -994,10 +999,10 @@ impl App {
     fn setup_columns(self: &Rc<Self>) {
         let mut size_col = None;
         for (col, title) in [
-            (Col::Name, "Name"),
-            (Col::Size, "Size"),
-            (Col::Contents, "Contents"),
-            (Col::Modified, "Modified"),
+            (Col::Name, tr("Name")),
+            (Col::Size, tr("Size")),
+            (Col::Contents, tr("Contents")),
+            (Col::Modified, tr("Modified")),
         ] {
             let c = gtk::ColumnViewColumn::new(Some(title), Some(self.make_factory(col)));
             c.set_sorter(Some(&self.node_sorter(col)));
@@ -1326,11 +1331,16 @@ impl App {
             let root = self.chart_root.get();
             if id == root {
                 let up = if n.parent.is_some() {
-                    ", press Enter to go up"
+                    tr(", press Enter to go up")
                 } else {
                     ""
                 };
-                format!("{}, {} in total{up}", n.name, size_text(n.size))
+                trf!(
+                    "{name}, {size} in total{up}",
+                    name = n.name,
+                    size = size_text(n.size),
+                    up = up
+                )
             } else {
                 let share = n
                     .parent
@@ -1403,7 +1413,7 @@ impl App {
         let tree = self.tree.borrow();
         let Some(t) = tree.as_ref() else { return };
         let root = t.node(self.chart_root.get());
-        let label = format!("Usage of {}", root.name);
+        let label = trf!("Usage of {}", root.name);
         let mut kids: Vec<_> = root
             .children
             .iter()
@@ -1422,7 +1432,7 @@ impl App {
         let description = if parts.is_empty() {
             format!("{} in total; no items", size_text(root.size))
         } else {
-            format!(
+            trf!(
                 "{} in total. Largest: {}. Use the arrow keys to explore.",
                 size_text(root.size),
                 parts.join("; ")
@@ -1535,7 +1545,7 @@ impl App {
         helix_app_common::add_bubble_shortcuts(
             &self.window,
             &[
-                ("Delete", "win.trash-item"),
+                (tr("Delete"), "win.trash-item"),
                 ("KP_Delete", "win.trash-item"),
             ],
         );
@@ -1577,7 +1587,7 @@ impl App {
 
     fn choose_folder(self: &Rc<Self>) {
         let dialog = gtk::FileDialog::builder()
-            .title("Select Folder to Scan")
+            .title(tr("Select Folder to Scan"))
             .modal(true)
             .build();
         dialog.set_initial_folder(Some(&gio::File::for_path(glib::home_dir())));
@@ -1586,7 +1596,7 @@ impl App {
             if let Ok(file) = res {
                 match file.path() {
                     Some(p) => a.start_scan(p),
-                    None => a.toast("Only local folders can be scanned"),
+                    None => a.toast(tr("Only local folders can be scanned")),
                 }
             }
         });
@@ -1603,7 +1613,7 @@ impl App {
                 if !e.matches(gtk::DialogError::Dismissed)
                     && !e.matches(gtk::DialogError::Cancelled)
                 {
-                    a.toast(&format!("Could not open folder: {}", e.message()));
+                    a.toast(&trf!("Could not open folder: {}", e.message()));
                 }
             }
         };
@@ -1617,7 +1627,7 @@ impl App {
     fn copy_target(&self) {
         if let Some((_, path, _)) = self.target_path() {
             self.window.clipboard().set_text(&path.to_string_lossy());
-            self.toast("Path copied");
+            self.toast(tr("Path copied"));
         }
     }
 
@@ -1636,14 +1646,14 @@ impl App {
             (n.name.clone(), n.size)
         };
         let dialog = adw::AlertDialog::new(
-            Some(&format!("Move “{name}” to the Trash?")),
+            Some(&trf!("Move “{name}” to the Trash?", name = name)),
             Some(&format!(
                 "{}\n\nThis frees up to {} once the trash is emptied.",
                 path.display(),
                 size_text(size)
             )),
         );
-        dialog.add_responses(&[("cancel", "_Cancel"), ("trash", "_Move to Trash")]);
+        dialog.add_responses(&[("cancel", tr("_Cancel")), ("trash", tr("_Move to Trash"))]);
         dialog.set_response_appearance("trash", adw::ResponseAppearance::Destructive);
         dialog.set_default_response(Some("cancel"));
         dialog.set_close_response("cancel");
@@ -1659,9 +1669,10 @@ impl App {
                 None::<&gio::Cancellable>,
                 move |res| match res {
                     Ok(()) => a.remove_node(id),
-                    Err(e) => a.toast(&format!(
-                        "Could not move “{name}” to the trash: {}",
-                        e.message()
+                    Err(e) => a.toast(&trf!(
+                        "Could not move “{name}” to the trash: {error}",
+                        name = name,
+                        error = e.message()
                     )),
                 },
             );
@@ -1723,19 +1734,23 @@ impl App {
         self.target.set(None);
         self.update_action_state();
         self.update_status();
-        self.toast("Moved to the trash");
+        self.toast(tr("Moved to the trash"));
     }
 
     // ---- Preferences --------------------------------------------------
 
     fn show_preferences(self: &Rc<Self>) {
         let dialog = adw::PreferencesDialog::new();
-        dialog.set_title("Preferences");
+        dialog.set_title(tr("Preferences"));
         let page = adw::PreferencesPage::new();
-        let scan_group = adw::PreferencesGroup::builder().title("Scanning").build();
+        let scan_group = adw::PreferencesGroup::builder()
+            .title(tr("Scanning"))
+            .build();
         let cross = adw::SwitchRow::builder()
-            .title("Cross File System Boundaries")
-            .subtitle("Also scan folders that are on other disks or partitions")
+            .title(tr("Cross File System Boundaries"))
+            .subtitle(tr(
+                "Also scan folders that are on other disks or partitions",
+            ))
             .active(self.local.borrow().cross_filesystems)
             .build();
         let a = self.clone();
@@ -1748,15 +1763,15 @@ impl App {
         page.add(&scan_group);
 
         let excl_group = adw::PreferencesGroup::builder()
-            .title("Excluded Locations")
-            .description("These locations are skipped when scanning")
+            .title(tr("Excluded Locations"))
+            .description(tr("These locations are skipped when scanning"))
             .build();
         let add_btn = gtk::Button::builder()
             .icon_name("list-add-symbolic")
-            .tooltip_text("Add Location…")
+            .tooltip_text(tr("Add Location…"))
             .css_classes(["flat"])
             .build()
-            .labelled("Add Location…");
+            .labelled(tr("Add Location…"));
         excl_group.set_header_suffix(Some(&add_btn));
         let list = gtk::ListBox::new();
         list.add_css_class("boxed-list");
@@ -1769,7 +1784,7 @@ impl App {
         let (a, l, dlg) = (self.clone(), list.clone(), dialog.downgrade());
         add_btn.connect_clicked(move |_| {
             let fd = gtk::FileDialog::builder()
-                .title("Exclude Location")
+                .title(tr("Exclude Location"))
                 .modal(true)
                 .build();
             let (a2, l2) = (a.clone(), l.clone());
@@ -1802,7 +1817,7 @@ fn fill_excluded(a: &Rc<App>, list: &gtk::ListBox) {
     if uris.is_empty() {
         list.append(
             &adw::ActionRow::builder()
-                .title("No excluded locations")
+                .title(tr("No excluded locations"))
                 .sensitive(false)
                 .build(),
         );
@@ -1817,11 +1832,11 @@ fn fill_excluded(a: &Rc<App>, list: &gtk::ListBox) {
             .build();
         let rm = gtk::Button::builder()
             .icon_name("user-trash-symbolic")
-            .tooltip_text("Remove")
+            .tooltip_text(tr("Remove"))
             .valign(gtk::Align::Center)
             .css_classes(["flat"])
             .build()
-            .labelled("Remove");
+            .labelled(tr("Remove"));
         let (a2, l2) = (a.clone(), list.clone());
         rm.connect_clicked(move |_| {
             let v: Vec<String> = a2
@@ -1868,7 +1883,7 @@ fn location_row(loc: &Location) -> gtk::ListBoxRow {
             .build();
         clean_level_bar(&bar);
         let text = gtk::Label::builder()
-            .label(format!(
+            .label(trf!(
                 "{} used of {} ({} available)",
                 size_text(u.used()),
                 size_text(u.total),
@@ -1893,7 +1908,7 @@ fn location_row(loc: &Location) -> gtk::ListBoxRow {
         .child(&hbox)
         .activatable(true)
         .build();
-    row.set_tooltip_text(Some(&format!("Scan {}", loc.path.display())));
+    row.set_tooltip_text(Some(&trf!("Scan {}", loc.path.display())));
     row
 }
 

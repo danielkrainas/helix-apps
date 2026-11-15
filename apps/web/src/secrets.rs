@@ -17,6 +17,8 @@
 //! client falls back to `plain`.
 
 use crate::sscrypto;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use std::collections::HashMap;
 use zbus::blocking::{Connection, Proxy};
 use zbus::zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Value};
@@ -53,9 +55,13 @@ impl Login {
             .map(|(_, h)| h)
             .unwrap_or(&self.origin);
         if self.username.is_empty() {
-            format!("Password for {host}")
+            trf!("Password for {host}", host = host)
         } else {
-            format!("Password for {} on {host}", self.username)
+            trf!(
+                "Password for {username} on {host}",
+                username = self.username,
+                host = host
+            )
         }
     }
 
@@ -107,7 +113,7 @@ impl From<zbus::fdo::Error> for Error {
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Bus(e) => write!(f, "Secret Service error: {e}"),
+            Error::Bus(e) => f.write_str(&trf!("Secret Service error: {e}", e = e)),
             Error::Dismissed => write!(f, "the keyring prompt was dismissed"),
             Error::Unavailable => write!(f, "no Secret Service collection is available"),
             Error::Crypto => write!(
@@ -314,7 +320,7 @@ impl Client {
         // No default collection yet: ask the service to create one.
         let label = HashMap::from([(
             "org.freedesktop.Secret.Collection.Label",
-            Value::from("Login"),
+            Value::from(tr("Login")),
         )]);
         let (created, prompt): (OwnedObjectPath, OwnedObjectPath) =
             svc.call("CreateCollection", &(label, "default"))?;

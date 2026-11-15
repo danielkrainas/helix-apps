@@ -1,5 +1,6 @@
 //! Installing a font file into the user's font directory.
 
+use helix_app_common::trf;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -125,7 +126,10 @@ pub fn refresh_cache(dir: &Path) -> io::Result<()> {
     if status.success() {
         Ok(())
     } else {
-        Err(io::Error::other(format!("fc-cache exited with {status}")))
+        Err(io::Error::other(trf!(
+            "fc-cache exited with {status}",
+            status = status
+        )))
     }
 }
 

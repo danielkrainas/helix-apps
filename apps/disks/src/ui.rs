@@ -20,26 +20,28 @@ use crate::parttypes;
 use crate::settings::{self, Settings};
 use crate::smart::Attribute;
 use crate::udisks;
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 pub const APP_ID: &str = "org.helix.Disks";
 const SCHEMA: &str = "org.gnome.Disks";
 const BAR_HEIGHT: i32 = 96;
 const BAR_MIN_SEGMENT: f64 = 40.0;
 /// Shown under the confirmation of a new passphrase that differs.
-const PASSPHRASE_MISMATCH: &str = "The passphrases do not match";
+const PASSPHRASE_MISMATCH: &str = n_("The passphrases do not match");
 
 /// Filesystem choices for Format / Create Partition: (id, label).
 /// `ext4+luks` means ext4 inside a LUKS2 container.
 const FS_CHOICES: &[(&str, &str)] = &[
-    ("ext4", "Ext4 — Linux"),
-    ("ext4+luks", "Ext4 in LUKS — encrypted, Linux"),
-    ("vfat", "FAT — all systems and devices"),
-    ("exfat", "exFAT — all systems, large files"),
-    ("ntfs", "NTFS — Windows"),
-    ("btrfs", "Btrfs — Linux"),
-    ("xfs", "XFS — Linux"),
-    ("swap", "Linux Swap"),
-    ("empty", "No Filesystem"),
+    ("ext4", n_("Ext4 — Linux")),
+    ("ext4+luks", n_("Ext4 in LUKS — encrypted, Linux")),
+    ("vfat", n_("FAT — all systems and devices")),
+    ("exfat", n_("exFAT — all systems, large files")),
+    ("ntfs", n_("NTFS — Windows")),
+    ("btrfs", n_("Btrfs — Linux")),
+    ("xfs", n_("XFS — Linux")),
+    ("swap", n_("Linux Swap")),
+    ("empty", n_("No Filesystem")),
 ];
 
 const DRIVE_ACTIONS: &[&str] = &[
@@ -68,7 +70,7 @@ const VOLUME_ACTIONS: &[&str] = &[
 pub fn run(block_device: Option<String>) -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
     app.connect_startup(|app| {
-        helix_app_common::install_standard_actions(app, "Disks", "Manage drives and media");
+        helix_app_common::install_standard_actions(app, tr("Disks"), tr("Manage drives and media"));
         helix_app_common::shortcuts::install(
             app,
             crate::shortcuts::ACCELS,
@@ -215,7 +217,7 @@ impl Ui {
     fn new(app: &adw::Application, block_device: Option<String>) -> Rc<Self> {
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title("Disks")
+            .title(tr("Disks"))
             .default_width(980)
             .default_height(680)
             .width_request(360)
@@ -248,28 +250,33 @@ impl Ui {
 
         // ---- sidebar
         let menu = gio::Menu::new();
-        menu.append(Some("Attach Disk Image…"), Some("win.attach-image"));
+        menu.append(Some(tr("Attach Disk Image…")), Some("win.attach-image"));
         let view_section = gio::Menu::new();
-        view_section.append(Some("Hide Snap Loop Devices"), Some("win.hide-snap-loops"));
+        view_section.append(
+            Some(tr("Hide Snap Loop Devices")),
+            Some("win.hide-snap-loops"),
+        );
         menu.append_section(None, &view_section);
         let section = gio::Menu::new();
         section.append(
-            Some(helix_app_common::shortcuts::MENU_LABEL),
+            Some(helix_app_common::i18n::tr(
+                helix_app_common::shortcuts::MENU_LABEL,
+            )),
             Some(helix_app_common::shortcuts::ACTION),
         );
-        section.append(Some("_About Disks"), Some("app.about"));
+        section.append(Some(tr("_About Disks")), Some("app.about"));
         menu.append_section(None, &section);
         let menu_btn = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
             .primary(true)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         let sidebar_header = adw::HeaderBar::new();
         sidebar_header.pack_start(&icon_button(
             "list-add-symbolic",
-            "Attach Disk Image…",
+            tr("Attach Disk Image…"),
             "win.attach-image",
         ));
         sidebar_header.pack_end(&menu_btn);
@@ -277,7 +284,7 @@ impl Ui {
         list.add_css_class("navigation-sidebar");
         let status_page = adw::StatusPage::builder()
             .icon_name("drive-harddisk-symbolic")
-            .title("Unable to Connect to UDisks2")
+            .title(tr("Unable to Connect to UDisks2"))
             .build();
         status_page.add_css_class("compact");
         let sidebar_stack = gtk::Stack::new();
@@ -293,7 +300,7 @@ impl Ui {
         sidebar_view.add_top_bar(&sidebar_header);
         sidebar_view.set_content(Some(&sidebar_stack));
         let sidebar_page = adw::NavigationPage::builder()
-            .title("Disks")
+            .title(tr("Disks"))
             .child(&sidebar_view)
             .build();
 
@@ -304,27 +311,37 @@ impl Ui {
             .build();
         let drive_menu = gio::Menu::new();
         let s1 = gio::Menu::new();
-        s1.append(Some("Format Disk…"), Some("win.format-disk"));
+        s1.append(Some(tr("Format Disk…")), Some("win.format-disk"));
         let s2 = gio::Menu::new();
-        s2.append(Some("Create Disk Image…"), Some("win.create-disk-image"));
-        s2.append(Some("Restore Disk Image…"), Some("win.restore-disk-image"));
+        s2.append(
+            Some(tr("Create Disk Image…")),
+            Some("win.create-disk-image"),
+        );
+        s2.append(
+            Some(tr("Restore Disk Image…")),
+            Some("win.restore-disk-image"),
+        );
         let s3 = gio::Menu::new();
-        s3.append(Some("SMART Data & Self-Tests…"), Some("win.smart"));
+        s3.append(Some(tr("SMART Data & Self-Tests…")), Some("win.smart"));
         let s4 = gio::Menu::new();
-        s4.append(Some("Power Off"), Some("win.power-off"));
-        s4.append(Some("Detach Loop Device"), Some("win.detach"));
+        s4.append(Some(tr("Power Off")), Some("win.power-off"));
+        s4.append(Some(tr("Detach Loop Device")), Some("win.detach"));
         for s in [&s1, &s2, &s3, &s4] {
             drive_menu.append_section(None, s);
         }
         let drive_menu_btn = gtk::MenuButton::builder()
             .icon_name("view-more-symbolic")
             .menu_model(&drive_menu)
-            .tooltip_text("Drive Options")
+            .tooltip_text(tr("Drive Options"))
             .build()
-            .labelled("Drive Options");
-        let eject_btn = icon_button("media-eject-symbolic", "Eject", "win.eject");
-        let power_btn = icon_button("system-shutdown-symbolic", "Power Off", "win.power-off");
-        let detach_btn = icon_button("window-close-symbolic", "Detach Loop Device", "win.detach");
+            .labelled(tr("Drive Options"));
+        let eject_btn = icon_button("media-eject-symbolic", tr("Eject"), "win.eject");
+        let power_btn = icon_button("system-shutdown-symbolic", tr("Power Off"), "win.power-off");
+        let detach_btn = icon_button(
+            "window-close-symbolic",
+            tr("Detach Loop Device"),
+            "win.detach",
+        );
         let spinner = gtk::Spinner::new();
         spinner.set_visible(false);
         content_header.pack_end(&drive_menu_btn);
@@ -336,16 +353,16 @@ impl Ui {
         // ---- drive group
         let drive_group = adw::PreferencesGroup::new();
         let drive_rows = DriveRows {
-            model: property_row("Model"),
-            serial: property_row("Serial Number"),
-            size: property_row("Size"),
-            partitioning: property_row("Partitioning"),
-            assessment: property_row("Assessment"),
-            backing: property_row("Backing File"),
-            autoclear: property_row("Auto-Clear"),
+            model: property_row(tr("Model")),
+            serial: property_row(tr("Serial Number")),
+            size: property_row(tr("Size")),
+            partitioning: property_row(tr("Partitioning")),
+            assessment: property_row(tr("Assessment")),
+            backing: property_row(tr("Backing File")),
+            autoclear: property_row(tr("Auto-Clear")),
         };
         let smart_btn = gtk::Button::builder()
-            .label("SMART Data…")
+            .label(tr("SMART Data…"))
             .valign(gtk::Align::Center)
             .action_name("win.smart")
             .build();
@@ -371,34 +388,34 @@ impl Ui {
             .build();
         // Arrow keys move the selection; the selected volume is the bar's
         // description and is announced as it changes.
-        helix_app_common::set_accessible_label(&bar, "Volumes");
-        let mount_btn = icon_button("media-playback-start-symbolic", "Mount", "win.mount");
-        let lock_btn = icon_button("changes-allow-symbolic", "Unlock", "win.lock");
+        helix_app_common::set_accessible_label(&bar, tr("Volumes"));
+        let mount_btn = icon_button("media-playback-start-symbolic", tr("Mount"), "win.mount");
+        let lock_btn = icon_button("changes-allow-symbolic", tr("Unlock"), "win.lock");
         let add_btn = icon_button(
             "list-add-symbolic",
-            "Create Partition…",
+            tr("Create Partition…"),
             "win.create-partition",
         );
         let remove_btn = icon_button(
             "list-remove-symbolic",
-            "Delete Partition…",
+            tr("Delete Partition…"),
             "win.delete-partition",
         );
         let vol_menu = gio::Menu::new();
         let v1 = gio::Menu::new();
-        v1.append(Some("Format Partition…"), Some("win.format-partition"));
-        v1.append(Some("Edit Partition…"), Some("win.edit-partition"));
-        v1.append(Some("Edit Filesystem…"), Some("win.edit-filesystem"));
+        v1.append(Some(tr("Format Partition…")), Some("win.format-partition"));
+        v1.append(Some(tr("Edit Partition…")), Some("win.edit-partition"));
+        v1.append(Some(tr("Edit Filesystem…")), Some("win.edit-filesystem"));
         let v2 = gio::Menu::new();
-        v2.append(Some("Check Filesystem…"), Some("win.check-fs"));
-        v2.append(Some("Repair Filesystem…"), Some("win.repair-fs"));
+        v2.append(Some(tr("Check Filesystem…")), Some("win.check-fs"));
+        v2.append(Some(tr("Repair Filesystem…")), Some("win.repair-fs"));
         let v3 = gio::Menu::new();
         v3.append(
-            Some("Create Partition Image…"),
+            Some(tr("Create Partition Image…")),
             Some("win.create-partition-image"),
         );
         v3.append(
-            Some("Restore Partition Image…"),
+            Some(tr("Restore Partition Image…")),
             Some("win.restore-partition-image"),
         );
         for s in [&v1, &v2, &v3] {
@@ -407,9 +424,9 @@ impl Ui {
         let vol_menu_btn = gtk::MenuButton::builder()
             .icon_name("emblem-system-symbolic")
             .menu_model(&vol_menu)
-            .tooltip_text("Additional Partition Options")
+            .tooltip_text(tr("Additional Partition Options"))
             .build()
-            .labelled("Additional Partition Options");
+            .labelled(tr("Additional Partition Options"));
         let toolbar = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         for b in [&mount_btn, &lock_btn, &add_btn, &remove_btn] {
             b.add_css_class("flat");
@@ -421,7 +438,9 @@ impl Ui {
         let bar_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
         bar_box.append(&bar_frame);
         bar_box.append(&toolbar);
-        let volumes_group = adw::PreferencesGroup::builder().title("Volumes").build();
+        let volumes_group = adw::PreferencesGroup::builder()
+            .title(tr("Volumes"))
+            .build();
         volumes_group.add(&bar_box);
 
         // ---- volume details
@@ -431,11 +450,11 @@ impl Ui {
             .build();
         let vol_rows = VolumeRows {
             group: vol_group.clone(),
-            size: property_row("Size"),
-            device: property_row("Device"),
+            size: property_row(tr("Size")),
+            device: property_row(tr("Device")),
             uuid: property_row("UUID"),
-            ptype: property_row("Partition Type"),
-            contents: property_row("Contents"),
+            ptype: property_row(tr("Partition Type")),
+            contents: property_row(tr("Contents")),
             mount_link,
         };
         vol_rows.contents.add_suffix(&vol_rows.mount_link);
@@ -463,8 +482,8 @@ impl Ui {
             .build();
         let empty = adw::StatusPage::builder()
             .icon_name("drive-harddisk-symbolic")
-            .title("No Drive Selected")
-            .description("Select a drive from the list")
+            .title(tr("No Drive Selected"))
+            .description(tr("Select a drive from the list"))
             .build();
         let content_stack = gtk::Stack::new();
         content_stack.add_named(&empty, Some("empty"));
@@ -479,7 +498,7 @@ impl Ui {
         content_view.add_top_bar(&content_header);
         content_view.set_content(Some(&content_stack));
         let content_page = adw::NavigationPage::builder()
-            .title("Drive")
+            .title(tr("Drive"))
             .child(&content_view)
             .build();
 
@@ -835,8 +854,8 @@ impl Ui {
                     i + 1,
                     all.len()
                 ),
-                None if all.is_empty() => "No media".to_string(),
-                None => "No volume selected".to_string(),
+                None if all.is_empty() => tr("No media").to_string(),
+                None => tr("No volume selected").to_string(),
             }
         };
         self.bar
@@ -885,7 +904,7 @@ impl Ui {
         r.size.set_subtitle(&if d.size > 0 {
             format::size_long(d.size)
         } else {
-            "No Media".into()
+            tr("No Media").into()
         });
         r.partitioning.set_subtitle(&d.partitioning());
         match &d.smart {
@@ -907,7 +926,7 @@ impl Ui {
         ));
         r.autoclear.set_visible(d.kind == DriveKind::Loop);
         r.autoclear
-            .set_subtitle(if d.autoclear { "On" } else { "Off" });
+            .set_subtitle(if d.autoclear { tr("On") } else { tr("Off") });
 
         // Keep the selected volume if it still exists, else pick the first.
         let keep = self
@@ -953,7 +972,7 @@ impl Ui {
                             .unwrap_or_default(),
                     );
                     rows.mount_link
-                        .set_tooltip_text(Some("Open in File Manager"));
+                        .set_tooltip_text(Some(tr("Open in File Manager")));
                     rows.mount_link.set_visible(true);
                 }
                 None => rows.mount_link.set_visible(false),
@@ -1001,10 +1020,10 @@ impl Ui {
         });
         self.mount_btn
             .set_tooltip_text(Some(match (is_swap, active) {
-                (true, true) => "Deactivate Swap",
-                (true, false) => "Activate Swap",
-                (false, true) => "Unmount",
-                (false, false) => "Mount",
+                (true, true) => tr("Deactivate Swap"),
+                (true, false) => tr("Activate Swap"),
+                (false, true) => tr("Unmount"),
+                (false, false) => tr("Mount"),
             }));
         helix_app_common::set_accessible_label(
             &self.mount_btn,
@@ -1019,8 +1038,11 @@ impl Ui {
         } else {
             "changes-allow-symbolic"
         });
-        self.lock_btn
-            .set_tooltip_text(Some(if unlocked { "Lock" } else { "Unlock…" }));
+        self.lock_btn.set_tooltip_text(Some(if unlocked {
+            tr("Lock")
+        } else {
+            tr("Unlock…")
+        }));
         helix_app_common::set_accessible_label(
             &self.lock_btn,
             &self.lock_btn.tooltip_text().unwrap_or_default(),
@@ -1059,7 +1081,7 @@ impl Ui {
         );
         let hc = is_high_contrast();
         if drive.volumes.is_empty() {
-            let layout = area.create_pango_layout(Some("No Media"));
+            let layout = area.create_pango_layout(Some(tr("No Media")));
             let (lw, lh) = layout.pixel_size();
             cr.set_source_rgba(fr, fgc, fb, 0.6);
             cr.move_to((w - lw as f64) / 2.0, (h - lh as f64) / 2.0);
@@ -1172,7 +1194,7 @@ impl Ui {
 
     fn error(&self, heading: &str, body: &str) {
         let d = adw::AlertDialog::new(Some(heading), Some(body));
-        d.add_response("close", "_Close");
+        d.add_response("close", tr("_Close"));
         d.present(Some(&self.window));
     }
 
@@ -1190,7 +1212,7 @@ impl Ui {
         on_yes: F,
     ) {
         let d = adw::AlertDialog::new(Some(heading), Some(body));
-        d.add_response("cancel", "_Cancel");
+        d.add_response("cancel", tr("_Cancel"));
         d.add_response("confirm", confirm_label);
         d.set_response_appearance("confirm", adw::ResponseAppearance::Destructive);
         d.set_default_response(Some("cancel"));
@@ -1228,8 +1250,8 @@ impl Ui {
             ui.set_busy(false);
             match res {
                 Ok(Ok(out)) => done(&ui, out),
-                Ok(Err((msg, verb))) => ui.error(&format!("Error {verb}"), &msg),
-                Err(_) => ui.error("Error", "The operation failed unexpectedly."),
+                Ok(Err((msg, verb))) => ui.error(&trf!("Error {verb}", verb = verb), &msg),
+                Err(_) => ui.error(tr("Error"), tr("The operation failed unexpectedly.")),
             }
         });
     }
@@ -1280,21 +1302,18 @@ impl Ui {
             return;
         }
         let d = adw::AlertDialog::new(
-            Some("Unlock Encrypted Device"),
-            Some(&format!(
-                "Enter the passphrase for {}.",
-                describe_volume(&v)
-            )),
+            Some(tr("Unlock Encrypted Device")),
+            Some(&trf!("Enter the passphrase for {}.", describe_volume(&v))),
         );
         let list = boxed_list();
         let pass = adw::PasswordEntryRow::builder()
-            .title("Passphrase")
+            .title(tr("Passphrase"))
             .activates_default(true)
             .build();
         list.append(&pass);
         d.set_extra_child(Some(&list));
-        d.add_response("cancel", "_Cancel");
-        d.add_response("unlock", "_Unlock");
+        d.add_response("cancel", tr("_Cancel"));
+        d.add_response("unlock", tr("_Unlock"));
         d.set_response_appearance("unlock", adw::ResponseAppearance::Suggested);
         d.set_default_response(Some("unlock"));
         d.set_close_response("cancel");
@@ -1328,25 +1347,25 @@ impl Ui {
         on_change: Rc<dyn Fn(bool)>,
     ) -> Rc<dyn Fn() -> (String, String, Option<String>)> {
         let name = adw::EntryRow::builder()
-            .title("Volume Name")
+            .title(tr("Volume Name"))
             .text(default_label)
             .build();
-        let labels: Vec<&str> = FS_CHOICES.iter().map(|(_, l)| *l).collect();
+        let labels: Vec<&str> = FS_CHOICES.iter().map(|(_, l)| tr(l)).collect();
         let kind = adw::ComboRow::builder()
-            .title("Type")
+            .title(tr("Type"))
             .model(&gtk::StringList::new(&labels))
             .build();
         let pass1 = adw::PasswordEntryRow::builder()
-            .title("Passphrase")
+            .title(tr("Passphrase"))
             .visible(false)
             .build();
         let pass2 = adw::PasswordEntryRow::builder()
-            .title("Confirm Passphrase")
+            .title(tr("Confirm Passphrase"))
             .visible(false)
             .build();
         // Says why the dialog cannot continue while the passphrases differ.
         let mismatch = gtk::Label::builder()
-            .label(PASSPHRASE_MISMATCH)
+            .label(tr(PASSPHRASE_MISMATCH))
             .css_classes(["error"])
             .xalign(0.0)
             .wrap(true)
@@ -1378,7 +1397,7 @@ impl Ui {
                 helix_app_common::set_input_error(
                     &pass2,
                     Some(&mismatch),
-                    differ.then_some(PASSPHRASE_MISMATCH),
+                    differ.then_some(tr(PASSPHRASE_MISMATCH)),
                 );
                 let ok = !luks || (!pass1.text().is_empty() && pass1.text() == pass2.text());
                 on_change(ok);
@@ -1409,9 +1428,9 @@ impl Ui {
         let Some(block) = v.block_path.clone() else {
             return;
         };
-        let d = adw::AlertDialog::new(Some("Format Volume"), Some(&describe_volume(&v)));
-        d.add_response("cancel", "_Cancel");
-        d.add_response("format", "_Next");
+        let d = adw::AlertDialog::new(Some(tr("Format Volume")), Some(&describe_volume(&v)));
+        d.add_response("cancel", tr("_Cancel"));
+        d.add_response("format", tr("_Next"));
         let list = boxed_list();
         let dd = d.clone();
         let get = Ui::fs_form(
@@ -1420,8 +1439,8 @@ impl Ui {
             Rc::new(move |ok| dd.set_response_enabled("format", ok)),
         );
         let erase = adw::SwitchRow::builder()
-            .title("Erase")
-            .subtitle("Overwrite existing data with zeroes (slow)")
+            .title(tr("Erase"))
+            .subtitle(tr("Overwrite existing data with zeroes (slow)"))
             .build();
         list.append(&erase);
         d.set_extra_child(Some(&list));
@@ -1455,7 +1474,7 @@ impl Ui {
                     v.mount_points()[0]
                 ));
             }
-            ui.confirm("Format Volume?", &body, "_Format", move |ui| {
+            ui.confirm(tr("Format Volume?"), &body, tr("_Format"), move |ui| {
                 ui.run_ops(vec![op.clone()], |_, _| {})
             });
         });
@@ -1472,8 +1491,8 @@ impl Ui {
         let table_type = drive.table_type.clone().unwrap_or_default();
         let max_mb = (v.size as f64 / 1e6).floor().max(1.0);
         let d = adw::AlertDialog::new(
-            Some("Create Partition"),
-            Some(&format!(
+            Some(tr("Create Partition")),
+            Some(&trf!(
                 "{} of free space on {}",
                 format::size(v.size),
                 describe_drive(&drive)
@@ -1481,11 +1500,11 @@ impl Ui {
         );
         let list = boxed_list();
         let size = adw::SpinRow::with_range(1.0, max_mb, 1.0);
-        size.set_title("Partition Size (MB)");
+        size.set_title(tr("Partition Size (MB)"));
         size.set_value(max_mb);
         list.append(&size);
-        d.add_response("cancel", "_Cancel");
-        d.add_response("create", "C_reate");
+        d.add_response("cancel", tr("_Cancel"));
+        d.add_response("create", tr("C_reate"));
         let dd = d.clone();
         let get = Ui::fs_form(
             &list,
@@ -1546,7 +1565,7 @@ impl Ui {
         let Some(block) = v.block_path.clone() else {
             return;
         };
-        let mut body = format!(
+        let mut body = trf!(
             "All data on the partition {} will be lost and cannot be recovered.",
             describe_volume(&v)
         );
@@ -1559,7 +1578,7 @@ impl Ui {
                 v.mount_points()[0]
             ));
         }
-        self.confirm("Delete Partition?", &body, "_Delete", move |ui| {
+        self.confirm(tr("Delete Partition?"), &body, tr("_Delete"), move |ui| {
             ui.run_ops(
                 vec![Op::DeletePartition {
                     block: block.clone(),
@@ -1578,7 +1597,7 @@ impl Ui {
         };
         let mut types: Vec<(String, String)> = parttypes::for_table(&p.table_type)
             .iter()
-            .map(|t| (t.id.to_string(), t.name.to_string()))
+            .map(|t| (t.id.to_string(), tr(t.name).to_string()))
             .collect();
         let current = parttypes::normalize(&p.table_type, &p.type_id);
         let idx = match types.iter().position(|(id, _)| *id == current) {
@@ -1594,31 +1613,31 @@ impl Ui {
                 0
             }
         };
-        let d = adw::AlertDialog::new(Some("Edit Partition"), Some(&describe_volume(&v)));
+        let d = adw::AlertDialog::new(Some(tr("Edit Partition")), Some(&describe_volume(&v)));
         let list = boxed_list();
         let labels: Vec<String> = types.iter().map(|(_, n)| n.clone()).collect();
         let label_refs: Vec<&str> = labels.iter().map(|s| s.as_str()).collect();
         let kind = adw::ComboRow::builder()
-            .title("Type")
+            .title(tr("Type"))
             .model(&gtk::StringList::new(&label_refs))
             .selected(idx as u32)
             .build();
         list.append(&kind);
         let name = adw::EntryRow::builder()
-            .title("Name")
+            .title(tr("Name"))
             .text(&p.name)
             .visible(p.table_type == "gpt")
             .build();
         list.append(&name);
         let bootable = adw::SwitchRow::builder()
-            .title("Bootable")
+            .title(tr("Bootable"))
             .active(p.flags & parttypes::DOS_FLAG_BOOTABLE != 0)
             .visible(p.table_type == "dos")
             .build();
         list.append(&bootable);
         d.set_extra_child(Some(&list));
-        d.add_response("cancel", "_Cancel");
-        d.add_response("change", "C_hange");
+        d.add_response("cancel", tr("_Cancel"));
+        d.add_response("change", tr("C_hange"));
         d.set_response_appearance("change", adw::ResponseAppearance::Suggested);
         d.set_close_response("cancel");
         let weak = Rc::downgrade(self);
@@ -1666,16 +1685,16 @@ impl Ui {
         let Some(block) = v.block_path.clone() else {
             return;
         };
-        let d = adw::AlertDialog::new(Some("Edit Filesystem"), Some(&describe_volume(&v)));
+        let d = adw::AlertDialog::new(Some(tr("Edit Filesystem")), Some(&describe_volume(&v)));
         let list = boxed_list();
         let label = adw::EntryRow::builder()
-            .title("Label")
+            .title(tr("Label"))
             .text(&v.label)
             .build();
         list.append(&label);
         d.set_extra_child(Some(&list));
-        d.add_response("cancel", "_Cancel");
-        d.add_response("change", "C_hange");
+        d.add_response("cancel", tr("_Cancel"));
+        d.add_response("change", tr("C_hange"));
         d.set_response_appearance("change", adw::ResponseAppearance::Suggested);
         d.set_close_response("cancel");
         let weak = Rc::downgrade(self);
@@ -1707,10 +1726,10 @@ impl Ui {
         let report = move |ui: &Rc<Ui>, out: OpOutput, repair: bool| {
             let ok = matches!(out, OpOutput::Bool(true));
             match (repair, ok) {
-                (false, true) => ui.info("Filesystem Is Undamaged", &format!("The filesystem on {desc} has no errors.")),
-                (false, false) => ui.info("Filesystem Is Damaged", &format!("The filesystem on {desc} has errors. Use “Repair Filesystem” after making a backup.")),
-                (true, true) => ui.info("Repair Successful", &format!("The filesystem on {desc} was repaired.")),
-                (true, false) => ui.info("Repair Failed", &format!("The filesystem on {desc} could not be repaired.")),
+                (false, true) => ui.info(tr("Filesystem Is Undamaged"), &trf!("The filesystem on {desc} has no errors.", desc = desc)),
+                (false, false) => ui.info(tr("Filesystem Is Damaged"), &trf!("The filesystem on {desc} has errors. Use “Repair Filesystem” after making a backup.", desc = desc)),
+                (true, true) => ui.info(tr("Repair Successful"), &trf!("The filesystem on {desc} was repaired.", desc = desc)),
+                (true, false) => ui.info(tr("Repair Failed"), &trf!("The filesystem on {desc} could not be repaired.", desc = desc)),
             }
         };
         if repair {
@@ -1718,7 +1737,7 @@ impl Ui {
                 "Repairing the filesystem on {} may result in loss of data. Make a backup first; repairing is a risky operation.",
                 describe_volume(&v)
             );
-            self.confirm("Repair Filesystem?", &body, "_Repair", move |ui| {
+            self.confirm(tr("Repair Filesystem?"), &body, tr("_Repair"), move |ui| {
                 let report = report.clone();
                 ui.run_ops(
                     vec![Op::Repair {
@@ -1744,26 +1763,26 @@ impl Ui {
             return;
         };
         const SCHEMES: &[(&str, &str)] = &[
-            ("gpt", "GPT — modern systems and disks over 2 TB"),
-            ("dos", "MBR / DOS — legacy systems and devices"),
-            ("empty", "No partitioning (empty)"),
+            ("gpt", n_("GPT — modern systems and disks over 2 TB")),
+            ("dos", n_("MBR / DOS — legacy systems and devices")),
+            ("empty", n_("No partitioning (empty)")),
         ];
-        let d = adw::AlertDialog::new(Some("Format Disk"), Some(&describe_drive(&drive)));
+        let d = adw::AlertDialog::new(Some(tr("Format Disk")), Some(&describe_drive(&drive)));
         let list = boxed_list();
-        let labels: Vec<&str> = SCHEMES.iter().map(|(_, l)| *l).collect();
+        let labels: Vec<&str> = SCHEMES.iter().map(|(_, l)| tr(l)).collect();
         let scheme = adw::ComboRow::builder()
-            .title("Partitioning")
+            .title(tr("Partitioning"))
             .model(&gtk::StringList::new(&labels))
             .build();
         let erase = adw::SwitchRow::builder()
-            .title("Erase")
-            .subtitle("Overwrite existing data with zeroes (slow)")
+            .title(tr("Erase"))
+            .subtitle(tr("Overwrite existing data with zeroes (slow)"))
             .build();
         list.append(&scheme);
         list.append(&erase);
         d.set_extra_child(Some(&list));
-        d.add_response("cancel", "_Cancel");
-        d.add_response("format", "_Next");
+        d.add_response("cancel", tr("_Cancel"));
+        d.add_response("format", tr("_Next"));
         d.set_response_appearance("format", adw::ResponseAppearance::Suggested);
         d.set_close_response("cancel");
         let weak = Rc::downgrade(self);
@@ -1781,11 +1800,8 @@ impl Ui {
                 passphrase: None,
                 update_partition_type: false,
             });
-            let body = format!(
-                "All data on the disk {} will be lost and cannot be recovered. All its volumes will be unmounted first.",
-                describe_drive(&drive)
-            );
-            ui.confirm("Format Disk?", &body, "_Format", move |ui| ui.run_ops(ops.clone(), |_, _| {}));
+            let body = trf!("All data on the disk {} will be lost and cannot be recovered. All its volumes will be unmounted first.", describe_drive(&drive));
+            ui.confirm(tr("Format Disk?"), &body, tr("_Format"), move |ui| ui.run_ops(ops.clone(), |_, _| {}));
         });
         d.present(Some(&self.window));
     }
@@ -1829,31 +1845,31 @@ impl Ui {
         let now = glib::real_time() as u64 / 1_000_000;
         let rows = [
             (
-                "Updated",
+                tr("Updated"),
                 if smart.updated == 0 {
-                    "Never".into()
+                    tr("Never").into()
                 } else {
                     format::ago(now.saturating_sub(smart.updated))
                 },
             ),
-            ("Self-test Result", smart.selftest_description()),
+            (tr("Self-test Result"), smart.selftest_description()),
             (
-                "Powered On",
+                tr("Powered On"),
                 if smart.power_on_seconds == 0 {
-                    "Unknown".into()
+                    tr("Unknown").into()
                 } else {
                     format::duration(smart.power_on_seconds)
                 },
             ),
             (
-                "Temperature",
+                tr("Temperature"),
                 if smart.temperature_k > 0.0 {
                     format::temperature_kelvin(smart.temperature_k)
                 } else {
-                    "Unknown".into()
+                    tr("Unknown").into()
                 },
             ),
-            ("Overall Assessment", smart.assessment()),
+            (tr("Overall Assessment"), smart.assessment()),
         ];
         for (title, value) in rows {
             let r = property_row(title);
@@ -1869,14 +1885,14 @@ impl Ui {
             .build();
         let headers = [
             "ID",
-            "Attribute",
-            "Value",
-            "Normalized",
-            "Threshold",
-            "Worst",
-            "Type",
-            "Updates",
-            "Assessment",
+            tr("Attribute"),
+            tr("Value"),
+            tr("Normalized"),
+            tr("Threshold"),
+            tr("Worst"),
+            tr("Type"),
+            tr("Updates"),
+            tr("Assessment"),
         ];
         for (c, h) in headers.iter().enumerate() {
             let l = gtk::Label::builder().label(*h).xalign(0.0).build();
@@ -1911,10 +1927,10 @@ impl Ui {
             }
         }
         let attrs_group = adw::PreferencesGroup::builder()
-            .title("SMART Attributes")
+            .title(tr("SMART Attributes"))
             .build();
         if attrs.is_empty() {
-            attrs_group.set_description(Some("No attributes reported."));
+            attrs_group.set_description(Some(tr("No attributes reported.")));
         }
         let grid_scroll = gtk::ScrolledWindow::builder()
             .child(&grid)
@@ -1937,7 +1953,7 @@ impl Ui {
                 .build(),
         ));
         let dialog = adw::Dialog::builder()
-            .title(format!("SMART Data — {}", drive.title()))
+            .title(trf!("SMART Data — {}", drive.title()))
             .content_width(860)
             .content_height(640)
             .child(&view)
@@ -1960,7 +1976,7 @@ impl Ui {
         all.add_pattern("*");
         filters.append(&all);
         let dialog = gtk::FileDialog::builder()
-            .title("Select Disk Image to Attach")
+            .title(tr("Select Disk Image to Attach"))
             .modal(true)
             .initial_folder(&self.image_dir())
             .filters(&filters)
@@ -1972,24 +1988,26 @@ impl Ui {
             };
             let Some(path) = file.path() else {
                 ui.error(
-                    "Error attaching disk image",
-                    "Only local files can be attached.",
+                    tr("Error attaching disk image"),
+                    tr("Only local files can be attached."),
                 );
                 return;
             };
             ui.remember_dir(&file);
-            let d =
-                adw::AlertDialog::new(Some("Attach Disk Image"), Some(&path.display().to_string()));
+            let d = adw::AlertDialog::new(
+                Some(tr("Attach Disk Image")),
+                Some(&path.display().to_string()),
+            );
             let list = boxed_list();
             let ro = adw::SwitchRow::builder()
-                .title("Read-Only")
-                .subtitle("Prevent changes to the image file")
+                .title(tr("Read-Only"))
+                .subtitle(tr("Prevent changes to the image file"))
                 .active(true)
                 .build();
             list.append(&ro);
             d.set_extra_child(Some(&list));
-            d.add_response("cancel", "_Cancel");
-            d.add_response("attach", "_Attach");
+            d.add_response("cancel", tr("_Cancel"));
+            d.add_response("attach", tr("_Attach"));
             d.set_response_appearance("attach", adw::ResponseAppearance::Suggested);
             d.set_default_response(Some("attach"));
             d.set_close_response("cancel");
@@ -2026,10 +2044,10 @@ impl Ui {
                         *ui.pending_select.borrow_mut() = Some(block);
                     }
                 }
-                Ok(Err(e)) => ui.error("Error attaching disk image", &e),
+                Ok(Err(e)) => ui.error(tr("Error attaching disk image"), &e),
                 Err(_) => ui.error(
-                    "Error attaching disk image",
-                    "The operation failed unexpectedly.",
+                    tr("Error attaching disk image"),
+                    tr("The operation failed unexpectedly."),
                 ),
             }
         });
@@ -2079,14 +2097,14 @@ impl Ui {
             .collect();
         let dialog = gtk::FileDialog::builder()
             .title(if whole_disk {
-                "Create Disk Image"
+                tr("Create Disk Image")
             } else {
-                "Create Partition Image"
+                tr("Create Partition Image")
             })
             .modal(true)
             .initial_folder(&self.image_dir())
             .initial_name(format!("{}.img", safe.trim()))
-            .accept_label("_Start Creating")
+            .accept_label(tr("_Start Creating"))
             .build();
         let weak = Rc::downgrade(self);
         dialog.save(Some(&self.window), gio::Cancellable::NONE, move |res| {
@@ -2095,8 +2113,8 @@ impl Ui {
             };
             let Some(path) = file.path() else {
                 ui.error(
-                    "Error creating disk image",
-                    "Only local files are supported.",
+                    tr("Error creating disk image"),
+                    tr("Only local files are supported."),
                 );
                 return;
             };
@@ -2106,7 +2124,7 @@ impl Ui {
                 block.clone(),
                 path,
                 size,
-                format!("Creating image of {desc}"),
+                trf!("Creating image of {desc}", desc = desc),
             );
         });
     }
@@ -2117,9 +2135,9 @@ impl Ui {
         };
         let dialog = gtk::FileDialog::builder()
             .title(if whole_disk {
-                "Select Disk Image to Restore"
+                tr("Select Disk Image to Restore")
             } else {
-                "Select Partition Image to Restore"
+                tr("Select Partition Image to Restore")
             })
             .modal(true)
             .initial_folder(&self.image_dir())
@@ -2128,29 +2146,25 @@ impl Ui {
         dialog.open(Some(&self.window), gio::Cancellable::NONE, move |res| {
             let (Some(ui), Ok(file)) = (weak.upgrade(), res) else { return };
             let Some(path) = file.path() else {
-                ui.error("Error restoring disk image", "Only local files are supported.");
+                ui.error(tr("Error restoring disk image"), tr("Only local files are supported."));
                 return;
             };
             ui.remember_dir(&file);
             let image_size = match std::fs::metadata(&path) {
                 Ok(m) => m.len(),
                 Err(e) => {
-                    ui.error("Error restoring disk image", &e.to_string());
+                    ui.error(tr("Error restoring disk image"), &e.to_string());
                     return;
                 }
             };
             if image_size > size {
                 ui.error(
-                    "Image Too Large",
-                    &format!("The image is {} but the target {desc} is only {}.", format::size(image_size), format::size(size)),
+                    tr("Image Too Large"),
+                    &trf!("The image is {image_size} but the target {desc} is only {size}.", image_size = format::size(image_size), desc = desc, size = format::size(size)),
                 );
                 return;
             }
-            let mut body = format!(
-                "All existing data on {desc} will be overwritten by the image “{}” ({}) and cannot be recovered.",
-                path.display(),
-                format::size(image_size)
-            );
+            let mut body = trf!("All existing data on {desc} will be overwritten by the image “{path}” ({image_size}) and cannot be recovered.", desc = desc, path = path.display(), image_size = format::size(image_size));
             if image_size < size {
                 body.push_str(&format!("\n\nThe image is smaller than the target; the remaining {} will be left as is.", format::size(size - image_size)));
             }
@@ -2160,10 +2174,10 @@ impl Ui {
             let block = block.clone();
             let desc = desc.clone();
             let teardown = teardown.clone();
-            ui.confirm("Restore Disk Image?", &body, "_Restore", move |ui| {
+            ui.confirm(tr("Restore Disk Image?"), &body, tr("_Restore"), move |ui| {
                 let (block, path, desc) = (block.clone(), path.clone(), desc.clone());
                 ui.run_ops(teardown.clone(), move |ui, _| {
-                    ui.copy_image(CopyDir::Restore, block, path, image_size, format!("Restoring image to {desc}"));
+                    ui.copy_image(CopyDir::Restore, block, path, image_size, trf!("Restoring image to {desc}", desc = desc));
                 });
             });
         });
@@ -2181,7 +2195,7 @@ impl Ui {
         let cancel = Arc::new(AtomicBool::new(false));
         let progress = gtk::ProgressBar::builder().show_text(true).build();
         let detail = gtk::Label::builder()
-            .label("Starting…")
+            .label(tr("Starting…"))
             .xalign(0.0)
             .wrap(true)
             .build();
@@ -2198,7 +2212,7 @@ impl Ui {
             .wrap(true)
             .build();
         let cancel_btn = gtk::Button::builder()
-            .label("_Cancel")
+            .label(tr("_Cancel"))
             .use_underline(true)
             .halign(gtk::Align::End)
             .build();
@@ -2221,9 +2235,9 @@ impl Ui {
         view.set_content(Some(&body));
         let dialog = adw::Dialog::builder()
             .title(if dir == CopyDir::Backup {
-                "Creating Image"
+                tr("Creating Image")
             } else {
-                "Restoring Image"
+                tr("Restoring Image")
             })
             .content_width(480)
             .child(&view)
@@ -2261,7 +2275,7 @@ impl Ui {
                         } else {
                             0
                         };
-                        detail.set_label(&format!(
+                        detail.set_label(&trf!(
                             "{} of {} — {} — {} remaining",
                             format::size(done),
                             format::size(total),
@@ -2277,21 +2291,21 @@ impl Ui {
                             Ok(n) => {
                                 if dir == CopyDir::Backup {
                                     ui.info(
-                                        "Image Created",
-                                        &format!("{} were copied.", format::size_long(n)),
+                                        tr("Image Created"),
+                                        &trf!("{} were copied.", format::size_long(n)),
                                     );
                                 } else {
                                     ui.info(
-                                        "Image Restored",
-                                        &format!("{} were written.", format::size_long(n)),
+                                        tr("Image Restored"),
+                                        &trf!("{} were written.", format::size_long(n)),
                                     );
                                 }
                             }
                             Err(e) => ui.error(
                                 if dir == CopyDir::Backup {
-                                    "Error creating disk image"
+                                    tr("Error creating disk image")
                                 } else {
-                                    "Error restoring disk image"
+                                    tr("Error restoring disk image")
                                 },
                                 &e,
                             ),

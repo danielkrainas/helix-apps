@@ -3,6 +3,9 @@
 
 use adw::prelude::*;
 use gtk::glib;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
 use helix_app_common::Labelled;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -15,16 +18,20 @@ pub const MAX_ROWS: usize = 400;
 
 /// The note under a capped list ("Showing 400 of 1,234 …"), or `None`.
 pub fn cap_note(shown: usize, total: usize) -> Option<String> {
-    (total > shown)
-        .then(|| format!("Showing {shown} of {total} matches. Type to narrow the search."))
+    (total > shown).then(|| {
+        trf!(
+            "Showing {shown} of {total} matches. Type to narrow the search.",
+            shown = shown,
+            total = total
+        )
+    })
 }
 
 /// What is announced after the list changed for a search.
 pub fn count_message(total: usize) -> String {
     match total {
-        0 => "No results found".to_string(),
-        1 => "1 result".to_string(),
-        n => format!("{n} results"),
+        0 => tr("No results found").to_string(),
+        n => trnf!("{n} result", "{n} results", n),
     }
 }
 
@@ -104,8 +111,8 @@ impl Picker {
         );
         let empty = adw::StatusPage::builder()
             .icon_name("system-search-symbolic")
-            .title("No Results Found")
-            .description("Try a different search")
+            .title(tr("No Results Found"))
+            .description(tr("Try a different search"))
             .build();
         empty.add_css_class("compact");
         let stack = gtk::Stack::new();
@@ -213,7 +220,11 @@ impl Picker {
         if !self.search.text().trim().is_empty() {
             let mut message = count_message(total);
             if note.is_some() {
-                message = format!("{message}, showing the first {}", choices.len());
+                message = trf!(
+                    "{message}, showing the first {choices}",
+                    message = message,
+                    choices = choices.len()
+                );
             }
             helix_app_common::announce_settled(&self.search, &message);
         }

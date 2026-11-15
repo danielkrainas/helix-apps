@@ -4,8 +4,8 @@
 #
 #   packaging/stage.sh DESTDIR
 #
-# Binaries come from $BIN_DIR (default target/release). Needs jq, cargo and
-# glib-compile-schemas.
+# Binaries come from $BIN_DIR (default target/release). Needs jq, cargo,
+# glib-compile-schemas and GNU gettext (msgfmt).
 #
 # Where each app's data/ files go:
 #   *-autostart.desktop      /etc/xdg/autostart/<id>.desktop
@@ -15,6 +15,9 @@
 #   apparmor.d/*             /etc/apparmor.d/
 #   *.gschema.xml            /usr/share/helix-apps/schemas/ (compiled there)
 #   *.metainfo.xml           /usr/share/metainfo/
+# Desktop files and metainfo are merged with the translations in po/ on
+# the way (msgfmt --desktop / --xml), and each language in po/LINGUAS is
+# compiled to /usr/share/locale/<lang>/LC_MESSAGES/helix-apps.mo.
 #   icons/*-symbolic.svg     /usr/share/icons/hicolor/symbolic/apps/
 #   icons/*.svg              /usr/share/icons/hicolor/scalable/apps/
 # The schemas are Helix's copies of GNOME app schemas (org.gnome.clocks, …).
@@ -26,6 +29,17 @@ set -eu
 dest=${1:?usage: packaging/stage.sh DESTDIR}
 bin=${BIN_DIR:-target/release}
 root=$(cd "$(dirname "$0")/.." && pwd)
+po="$root/po"
+
+# Installs desktop file or metainfo $1 as $2 with its translations.
+install_translated() {
+    install -d "$(dirname "$2")"
+    case $1 in
+        *.desktop) msgfmt --desktop --template="$1" -d "$po" -o "$2" ;;
+        *) msgfmt --xml --template="$1" -d "$po" -o "$2" ;;
+    esac
+    chmod 644 "$2"
+}
 
 # Every binary target in the workspace.
 bins=$(cd "$root" && cargo metadata --format-version 1 --no-deps --locked |
@@ -48,9 +62,9 @@ for data in "$root"/apps/*/data; do
         name=$(basename "$f")
         case $name in
             *-autostart.desktop)
-                install -Dm644 "$f" "$dest/etc/xdg/autostart/${name%-autostart.desktop}.desktop" ;;
+                install_translated "$f" "$dest/etc/xdg/autostart/${name%-autostart.desktop}.desktop" ;;
             *.desktop)
-                install -Dm644 "$f" "$dest/usr/share/applications/$name" ;;
+                install_translated "$f" "$dest/usr/share/applications/$name" ;;
             *.service)
                 install -Dm644 "$f" "$dest/usr/share/dbus-1/services/$name" ;;
             *.policy)
@@ -58,7 +72,7 @@ for data in "$root"/apps/*/data; do
             *.gschema.xml)
                 install -Dm644 "$f" "$dest/usr/share/helix-apps/schemas/$name" ;;
             *.metainfo.xml)
-                install -Dm644 "$f" "$dest/usr/share/metainfo/$name" ;;
+                install_translated "$f" "$dest/usr/share/metainfo/$name" ;;
             *)
                 echo "stage.sh: don't know where $f goes" >&2; exit 1 ;;
         esac
@@ -80,6 +94,12 @@ for data in "$root"/apps/*/data; do
 done
 
 glib-compile-schemas --strict "$dest/usr/share/helix-apps/schemas"
+
+# Message catalogues (see TRANSLATING.md).
+for lang in $(sed 's/#.*//' "$po/LINGUAS"); do
+    install -d "$dest/usr/share/locale/$lang/LC_MESSAGES"
+    msgfmt --check -o "$dest/usr/share/locale/$lang/LC_MESSAGES/helix-apps.mo" "$po/$lang.po"
+done
 
 install -Dm644 "$root/LICENSE" "$dest/usr/share/licenses/helix-apps/LICENSE"
 install -Dm644 "$root/README.md" "$dest/usr/share/doc/helix-apps/README.md"

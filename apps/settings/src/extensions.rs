@@ -4,6 +4,8 @@
 
 use std::collections::HashMap;
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use zbus::blocking::Connection;
 use zbus::zvariant::{OwnedValue, Value};
 
@@ -72,7 +74,7 @@ impl Ext {
             parts.push(self.version.clone());
         }
         if self.development() {
-            parts.push("Development".into());
+            parts.push(tr("Development").into());
         }
         parts.push(state);
         parts.join(" — ")
@@ -88,12 +90,12 @@ impl Ext {
         let below = if can.is_empty() {
             String::new()
         } else {
-            format!("Can: {}", can.join(", "))
+            trf!("Can: {}", can.join(", "))
         };
         if self.sandboxed {
-            ("Sandboxed".into(), below)
+            (tr("Sandboxed").into(), below)
         } else {
-            ("Full access: it can do anything you can".into(), below)
+            (tr("Full access: it can do anything you can").into(), below)
         }
     }
 
@@ -105,15 +107,15 @@ impl Ext {
 
 pub fn state_text(e: &Ext) -> String {
     match e.state.as_str() {
-        "running" => "Running".into(),
-        "starting" => "Starting".into(),
-        "stopped" => "Not running".into(),
-        "disabled" if e.error == "Off for this session" => "Off for this session".into(),
-        "disabled" => "Off".into(),
-        "needs-approval" => "Needs approval".into(),
-        "invalid" => format!("Cannot run: {}", e.error),
-        "crashed" if e.error.is_empty() => "Stopped working".into(),
-        "crashed" => format!("Stopped working: {}", e.error),
+        "running" => tr("Running").into(),
+        "starting" => tr("Starting").into(),
+        "stopped" => tr("Not running").into(),
+        "disabled" if e.error == "Off for this session" => tr("Off for this session").into(),
+        "disabled" => tr("Off").into(),
+        "needs-approval" => tr("Needs approval").into(),
+        "invalid" => trf!("Cannot run: {}", e.error),
+        "crashed" if e.error.is_empty() => tr("Stopped working").into(),
+        "crashed" => trf!("Stopped working: {}", e.error),
         other => other.into(),
     }
 }

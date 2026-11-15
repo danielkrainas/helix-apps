@@ -34,6 +34,7 @@ Options:
   -V, --version      Show the version";
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     // Must run before anything starts threads.
     if let Some(code) = sandbox::probe_if_requested() {
         std::process::exit(code);

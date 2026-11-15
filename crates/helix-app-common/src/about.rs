@@ -6,6 +6,7 @@
 //! (`data/releases.xml`, which `tools/metainfo/make_metainfo.py` also
 //! copies into every app's AppStream metainfo).
 
+use crate::i18n::tr;
 use adw::prelude::*;
 use std::cell::RefCell;
 
@@ -72,7 +73,7 @@ pub fn debug_info(app_name: &str, app_id: &str) -> String {
         .unwrap_or_else(|| "none".into());
     out.push_str(&format!("Display: {display}\n"));
     for var in ["XDG_CURRENT_DESKTOP", "XDG_SESSION_TYPE", "LANG"] {
-        let value = std::env::var(var).unwrap_or_else(|_| "(unset)".into());
+        let value = std::env::var(var).unwrap_or_else(|_| tr("(unset)").into());
         out.push_str(&format!("{var}: {value}\n"));
     }
     let style = adw::StyleManager::default();
@@ -80,7 +81,7 @@ pub fn debug_info(app_name: &str, app_id: &str) -> String {
         "Style: {}{}\n",
         if style.is_dark() { "dark" } else { "light" },
         if style.is_high_contrast() {
-            ", high contrast"
+            tr(", high contrast")
         } else {
             ""
         }
@@ -118,17 +119,17 @@ pub fn show(parent: &impl IsA<gtk::Widget>, app_name: &str, app_id: &str, commen
         .filter(|s| !s.is_empty())
         .collect();
     let about = adw::AboutDialog::builder()
-        .application_name(app_name)
+        .application_name(crate::i18n::tr_dyn(app_name))
         .application_icon(app_id)
-        .developer_name("The Helix Project")
+        .developer_name(tr("The Helix Project"))
         .version(VERSION)
-        .comments(comments)
+        .comments(crate::i18n::tr_dyn(comments))
         .website(WEBSITE)
         .issue_url(ISSUE_URL)
         .debug_info(debug_info(app_name, app_id))
         .debug_info_filename(format!("{app_id}-troubleshooting.txt"))
         .developers(developers)
-        .copyright("Dedicated to the public domain (CC0 1.0)")
+        .copyright(tr("Dedicated to the public domain (CC0 1.0)"))
         .license_type(gtk::License::Custom)
         .license(LICENSE_TEXT)
         .build();

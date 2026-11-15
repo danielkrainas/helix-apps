@@ -3,6 +3,7 @@
 use crate::category::Category;
 use crate::journal::{self, Boot, Entry, QueryArgs};
 use crate::search::Search;
+use helix_app_common::trf;
 use std::io::{BufRead, BufReader};
 use std::process::{Child, Command, Stdio};
 use std::sync::mpsc::{self, TryRecvError};
@@ -231,7 +232,7 @@ fn run(
     {
         Ok(c) => c,
         Err(e) => {
-            let _ = tx.send_blocking(Msg::Error(format!("Could not run journalctl: {e}")));
+            let _ = tx.send_blocking(Msg::Error(trf!("Could not run journalctl: {e}", e = e)));
             return;
         }
     };

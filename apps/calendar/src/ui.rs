@@ -18,6 +18,9 @@ use crate::editor::{self, Target};
 use crate::keynav;
 use crate::layout;
 use crate::model::{Item, Store};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
 
 pub const APP_ID: &str = "org.helix.Calendar";
 const SCHEMA: &str = "org.gnome.calendar";
@@ -37,7 +40,11 @@ pub struct Options {
 
 pub fn run(opts: Options) -> glib::ExitCode {
     let app = adw::Application::builder().application_id(APP_ID).build();
-    helix_app_common::install_standard_actions(&app, "Calendar", "View and edit your events");
+    helix_app_common::install_standard_actions(
+        &app,
+        tr("Calendar"),
+        tr("View and edit your events"),
+    );
     app.connect_startup(|_| load_css());
     let ui: Rc<RefCell<Option<Rc<Ui>>>> = Rc::default();
     let opts = RefCell::new(Some(opts));
@@ -64,6 +71,7 @@ fn load_css() {
          .weekday-header { padding: 6px; }
          .week-number { padding: 4px; }
          .day-cell { border-top: 1px solid alpha(currentColor, 0.12); border-left: 1px solid alpha(currentColor, 0.12); padding: 2px; }
+         .day-cell:dir(rtl) { border-left: none; border-right: 1px solid alpha(currentColor, 0.12); }
          .day-cell.other-month { background: alpha(currentColor, 0.035); }
          .day-cell.selected { background: alpha(@accent_bg_color, 0.12); }
          .day-number { padding: 2px 6px; margin: 2px; border-radius: 999px; }
@@ -79,6 +87,7 @@ fn load_css() {
         // Grid lines reach 3:1, other months and the selection stand out
         // more, focus rings are solid.
         ".day-cell { border-top-color: alpha(currentColor, 0.6); border-left-color: alpha(currentColor, 0.6); }
+         .day-cell:dir(rtl) { border-right-color: alpha(currentColor, 0.6); }
          .day-cell.other-month { background: alpha(currentColor, 0.1); }
          .day-cell.selected { background: alpha(@accent_bg_color, 0.3); }
          .day-cell:focus-visible, .week-day-cell:focus-visible { outline-color: @accent_color; }",
@@ -209,7 +218,7 @@ impl Ui {
         let defaults = Prefs::new(DEFAULTS_SCHEMA);
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title("Calendar")
+            .title(tr("Calendar"))
             .default_width(768)
             .default_height(600)
             .width_request(360)
@@ -232,28 +241,28 @@ impl Ui {
         let header = adw::HeaderBar::new();
         let new_button = gtk::Button::builder()
             .icon_name("list-add-symbolic")
-            .tooltip_text("New Event")
+            .tooltip_text(tr("New Event"))
             .build()
-            .labelled("New Event");
+            .labelled(tr("New Event"));
         new_button.set_action_name(Some("win.new-event"));
         let sidebar_button = gtk::ToggleButton::builder()
             .icon_name("sidebar-show-symbolic")
-            .tooltip_text("Toggle Sidebar")
+            .tooltip_text(tr("Toggle Sidebar"))
             .build()
-            .labelled("Toggle Sidebar");
-        let today_button = gtk::Button::with_label("Today");
+            .labelled(tr("Toggle Sidebar"));
+        let today_button = gtk::Button::with_label(tr("Today"));
         today_button.set_action_name(Some("win.today"));
         let prev = gtk::Button::builder()
             .icon_name("go-previous-symbolic")
-            .tooltip_text("Previous")
+            .tooltip_text(tr("Previous"))
             .build()
-            .labelled("Previous");
+            .labelled(tr("Previous"));
         prev.set_action_name(Some("win.previous"));
         let next = gtk::Button::builder()
             .icon_name("go-next-symbolic")
-            .tooltip_text("Next")
+            .tooltip_text(tr("Next"))
             .build()
-            .labelled("Next");
+            .labelled(tr("Next"));
         next.set_action_name(Some("win.next"));
         let nav = gtk::Box::builder().css_classes(["linked"]).build();
         nav.append(&prev);
@@ -267,39 +276,39 @@ impl Ui {
             .ellipsize(gtk::pango::EllipsizeMode::End)
             .build();
         header.set_title_widget(Some(&title));
-        let week_toggle = gtk::ToggleButton::with_label("Week");
-        let month_toggle = gtk::ToggleButton::with_label("Month");
+        let week_toggle = gtk::ToggleButton::with_label(tr("Week"));
+        let month_toggle = gtk::ToggleButton::with_label(tr("Month"));
         month_toggle.set_group(Some(&week_toggle));
         let switcher = gtk::Box::builder().css_classes(["linked"]).build();
         switcher.append(&week_toggle);
         switcher.append(&month_toggle);
         let menu = gio::Menu::new();
         let s1 = gio::Menu::new();
-        s1.append(Some("_Manage Calendars…"), Some("win.manage"));
-        s1.append(Some("_Import…"), Some("win.import"));
+        s1.append(Some(tr("_Manage Calendars…")), Some("win.manage"));
+        s1.append(Some(tr("_Import…")), Some("win.import"));
         menu.append_section(None, &s1);
         let s2 = gio::Menu::new();
-        s2.append(Some("_Keyboard Shortcuts"), Some("win.shortcuts"));
-        s2.append(Some("_About Calendar"), Some("app.about"));
+        s2.append(Some(tr("_Keyboard Shortcuts")), Some("win.shortcuts"));
+        s2.append(Some(tr("_About Calendar")), Some("app.about"));
         menu.append_section(None, &s2);
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
-            .tooltip_text("Main Menu")
+            .tooltip_text(tr("Main Menu"))
             .build()
-            .labelled("Main Menu");
+            .labelled(tr("Main Menu"));
         menu_button.set_primary(true);
         let search_button = gtk::ToggleButton::builder()
             .icon_name("system-search-symbolic")
-            .tooltip_text("Search")
+            .tooltip_text(tr("Search"))
             .build()
-            .labelled("Search");
+            .labelled(tr("Search"));
         header.pack_end(&menu_button);
         header.pack_end(&search_button);
         header.pack_end(&switcher);
 
         let search = gtk::SearchEntry::builder()
-            .placeholder_text("Search events")
+            .placeholder_text(tr("Search events"))
             .hexpand(true)
             .build();
         let search_bar = gtk::SearchBar::builder()
@@ -311,7 +320,7 @@ impl Ui {
             )
             .build();
         search_bar.connect_entry(&search);
-        helix_app_common::set_accessible_label(&search, "Search Events");
+        helix_app_common::set_accessible_label(&search, tr("Search Events"));
         search_button
             .bind_property("active", &search_bar, "search-mode-enabled")
             .bidirectional()
@@ -349,7 +358,7 @@ impl Ui {
             .build();
         let side_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
         side_box.append(&picker);
-        let cal_header = label("Calendars", &["heading"]);
+        let cal_header = label(tr("Calendars"), &["heading"]);
         cal_header.set_xalign(0.0);
         cal_header.set_margin_start(12);
         cal_header.set_margin_top(6);
@@ -359,8 +368,8 @@ impl Ui {
         side_box.append(&agenda);
         let search_empty = adw::StatusPage::builder()
             .icon_name("system-search-symbolic")
-            .title("No Results Found")
-            .description("Try a different search")
+            .title(tr("No Results Found"))
+            .description(tr("Try a different search"))
             .css_classes(["compact"])
             .visible(false)
             .build();
@@ -448,10 +457,10 @@ impl Ui {
 
         let unavailable_page = adw::StatusPage::builder()
             .icon_name("dialog-warning-symbolic")
-            .title("Calendar Service Unavailable")
+            .title(tr("Calendar Service Unavailable"))
             .build();
         let retry = gtk::Button::builder()
-            .label("Retry")
+            .label(tr("Retry"))
             .css_classes(["pill"])
             .halign(gtk::Align::Center)
             .build();
@@ -462,7 +471,7 @@ impl Ui {
             .width_request(32)
             .height_request(32)
             .build();
-        helix_app_common::set_accessible_label(&spinner, "Loading calendars");
+        helix_app_common::set_accessible_label(&spinner, tr("Loading calendars"));
         let loading_page = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
             .spacing(12)
@@ -470,14 +479,14 @@ impl Ui {
             .valign(gtk::Align::Center)
             .build();
         loading_page.append(&spinner);
-        loading_page.append(&label("Loading Calendars…", &["dim-label"]));
+        loading_page.append(&label(tr("Loading Calendars…"), &["dim-label"]));
         let no_calendars = adw::StatusPage::builder()
             .icon_name("x-office-calendar-symbolic")
-            .title("No Calendars")
-            .description("Add or enable a calendar to see and create events")
+            .title(tr("No Calendars"))
+            .description(tr("Add or enable a calendar to see and create events"))
             .build();
         let manage = gtk::Button::builder()
-            .label("_Manage Calendars…")
+            .label(tr("_Manage Calendars…"))
             .use_underline(true)
             .action_name("win.manage")
             .css_classes(["pill", "suggested-action"])
@@ -495,25 +504,25 @@ impl Ui {
 
         // Narrow windows: Today, previous/next and the view switcher move
         // to a bottom bar so the header fits 360 px.
-        let bottom_today = gtk::Button::with_label("Today");
+        let bottom_today = gtk::Button::with_label(tr("Today"));
         bottom_today.set_action_name(Some("win.today"));
         let bottom_prev = gtk::Button::builder()
             .icon_name("go-previous-symbolic")
-            .tooltip_text("Previous")
+            .tooltip_text(tr("Previous"))
             .build()
-            .labelled("Previous");
+            .labelled(tr("Previous"));
         bottom_prev.set_action_name(Some("win.previous"));
         let bottom_next = gtk::Button::builder()
             .icon_name("go-next-symbolic")
-            .tooltip_text("Next")
+            .tooltip_text(tr("Next"))
             .build()
-            .labelled("Next");
+            .labelled(tr("Next"));
         bottom_next.set_action_name(Some("win.next"));
         let bottom_nav = gtk::Box::builder().css_classes(["linked"]).build();
         bottom_nav.append(&bottom_prev);
         bottom_nav.append(&bottom_next);
-        let bottom_week = gtk::ToggleButton::with_label("Week");
-        let bottom_month = gtk::ToggleButton::with_label("Month");
+        let bottom_week = gtk::ToggleButton::with_label(tr("Week"));
+        let bottom_month = gtk::ToggleButton::with_label(tr("Month"));
         bottom_month.set_group(Some(&bottom_week));
         for (a, b) in [(&week_toggle, &bottom_week), (&month_toggle, &bottom_month)] {
             a.bind_property("active", b, "active")
@@ -651,7 +660,7 @@ impl Ui {
                 if stack.visible_child_name().as_deref() == Some("loading") {
                     helix_app_common::announce(
                         &stack,
-                        "Loading calendars",
+                        tr("Loading calendars"),
                         helix_app_common::Urgency::Polite,
                     );
                 }
@@ -956,7 +965,7 @@ impl Ui {
         if page == "no-calendars" {
             helix_app_common::announce(
                 &self.main_stack,
-                "No calendars",
+                tr("No calendars"),
                 helix_app_common::Urgency::Polite,
             );
         }
@@ -1025,13 +1034,13 @@ impl Ui {
         self.state.borrow_mut().pending_delete.insert(key.clone());
         self.schedule_render();
         let title = if summary.trim().is_empty() {
-            "Event deleted".to_string()
+            tr("Event deleted").to_string()
         } else {
-            format!("“{}” deleted", summary.trim())
+            trf!("“{}” deleted", summary.trim())
         };
         let toast = adw::Toast::builder()
             .title(glib::markup_escape_text(&title).as_str())
-            .button_label("Undo")
+            .button_label(tr("Undo"))
             .timeout(5)
             .build();
         let undone = Rc::new(Cell::new(false));
@@ -1210,12 +1219,9 @@ impl Ui {
                         },
                     );
                 }
-                None => self.error_toast("Event not found"),
+                None => self.error_toast(tr("Event not found")),
             },
-            Msg::Imported(n) => self.toast(&format!(
-                "Imported {n} event{}",
-                if n == 1 { "" } else { "s" }
-            )),
+            Msg::Imported(n) => self.toast(&trnf!("Imported {n} event", "Imported {n} events", n)),
             Msg::Error(e) => self.error_toast(&e),
         }
     }
@@ -1416,7 +1422,7 @@ impl Ui {
         let cal = self.cal_name(&item.calendar);
         if !cal.is_empty() {
             s.push('\n');
-            s.push_str(&format!("Calendar: {cal}"));
+            s.push_str(&trf!("Calendar: {cal}", cal = cal));
         }
         s
     }
@@ -1427,7 +1433,7 @@ impl Ui {
         if item.all_day {
             let last = (item.end - Duration::days(1)).date().max(item.start.date());
             if last == item.start.date() {
-                format!("{}, all day", dates::short_date(item.start.date()))
+                trf!("{}, all day", dates::short_date(item.start.date()))
             } else {
                 format!(
                     "{} – {}",
@@ -1642,7 +1648,7 @@ impl Ui {
                 }
                 if on_day.len() > limit {
                     let more = gtk::MenuButton::builder()
-                        .label(format!("+{} more", on_day.len() - limit))
+                        .label(trf!("+{} more", on_day.len() - limit))
                         .css_classes(["flat", "more-chip", "caption"])
                         .halign(gtk::Align::Start)
                         .build();
@@ -2186,7 +2192,7 @@ impl Ui {
         self.day_title.set_label(&dates::long_date(day));
         let items = self.day_items(day);
         if items.is_empty() {
-            let l = label("No events", &["dim-label"]);
+            let l = label(tr("No events"), &["dim-label"]);
             l.set_margin_top(6);
             l.set_margin_bottom(6);
             self.day_list.append(
@@ -2221,7 +2227,7 @@ impl Ui {
     /// An agenda row's time text: "All day" or "09:00 – 10:00".
     fn item_when(&self, it: &Item, twelve: bool) -> String {
         if it.spans_days() {
-            "All day".to_string()
+            tr("All day").to_string()
         } else {
             format!(
                 "{} – {}",
@@ -2243,13 +2249,12 @@ impl Ui {
         self.agenda.set_visible(!no_results);
         if let Some(results) = results {
             let count = match results.len() {
-                0 => "No events found".to_string(),
-                1 => "1 event found".to_string(),
-                n => format!("{n} events found"),
+                0 => tr("No events found").to_string(),
+                n => trnf!("{n} event found", "{n} events found", n),
             };
             helix_app_common::announce_settled(&self.search, &count);
             self.agenda_title
-                .set_label(&format!("{} Search Results", results.len()));
+                .set_label(&trf!("{} Search Results", results.len()));
             let zones = self.zones.borrow();
             for (i, (cal, e)) in results.iter().enumerate() {
                 let s = e.start.local(&zones);
@@ -2263,7 +2268,7 @@ impl Ui {
                     )
                 };
                 let title = if e.summary.trim().is_empty() {
-                    "(No title)"
+                    tr("(No title)")
                 } else {
                     e.summary.as_str()
                 };
@@ -2278,7 +2283,7 @@ impl Ui {
         self.agenda_title.set_label(&dates::long_date(day));
         let items = self.day_items(day);
         if items.is_empty() {
-            let l = label("No events", &["dim-label"]);
+            let l = label(tr("No events"), &["dim-label"]);
             l.set_margin_top(6);
             l.set_margin_bottom(6);
             let row = gtk::ListBoxRow::builder()
@@ -2380,7 +2385,7 @@ impl Ui {
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         filters.append(&filter);
         let dialog = gtk::FileDialog::builder()
-            .title("Import Events")
+            .title(tr("Import Events"))
             .filters(&filters)
             .build();
         let weak = Rc::downgrade(self);
@@ -2397,7 +2402,11 @@ impl Ui {
         let text = match std::fs::read(&path) {
             Ok(b) => String::from_utf8_lossy(&b).into_owned(),
             Err(e) => {
-                self.toast(&format!("Could not read {}: {e}", path.display()));
+                self.toast(&trf!(
+                    "Could not read {path}: {e}",
+                    path = path.display(),
+                    e = e
+                ));
                 return;
             }
         };
@@ -2413,7 +2422,7 @@ impl Ui {
             tzs.extend(tz.into_iter().map(|t| t.to_ics()));
         }
         if events.is_empty() {
-            self.toast("No events found in the file");
+            self.toast(tr("No events found in the file"));
             return;
         }
         let ui = self.clone();
@@ -2433,21 +2442,22 @@ impl Ui {
                 };
             }
             let dialog = adw::AlertDialog::new(
-                Some("Import Events"),
-                Some(&format!(
-                    "Add {} event{} from “{file}” to:",
+                Some(tr("Import Events")),
+                Some(&trnf!(
+                    "Add {n} event from “{file}” to:",
+                    "Add {n} events from “{file}” to:",
                     events.len(),
-                    if events.len() == 1 { "" } else { "s" }
+                    file = file
                 )),
             );
             let names: Vec<&str> = cals.iter().map(|(_, n, _)| n.as_str()).collect();
             let dd = gtk::DropDown::from_strings(&names);
-            helix_app_common::set_accessible_label(&dd, "Import into Calendar");
+            helix_app_common::set_accessible_label(&dd, tr("Import into Calendar"));
             let def = ui.default_calendar();
             dd.set_selected(cals.iter().position(|(u, _, _)| *u == def).unwrap_or(0) as u32);
             dialog.set_extra_child(Some(&dd));
-            dialog.add_response("cancel", "_Cancel");
-            dialog.add_response("import", "_Import");
+            dialog.add_response("cancel", tr("_Cancel"));
+            dialog.add_response("import", tr("_Import"));
             dialog.set_response_appearance("import", adw::ResponseAppearance::Suggested);
             dialog.set_default_response(Some("import"));
             dialog.set_close_response("cancel");

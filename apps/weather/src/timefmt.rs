@@ -1,6 +1,10 @@
 //! Minimal civil date/time handling for Open-Meteo's ISO-8601 local times
 //! (`YYYY-MM-DDTHH:MM` / `YYYY-MM-DD`), without a timezone database.
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
+use helix_app_common::trnf;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct DateTime {
     pub year: i32,
@@ -9,19 +13,6 @@ pub struct DateTime {
     pub hour: u32,
     pub minute: u32,
 }
-
-const WEEKDAYS: [&str; 7] = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-];
-const MONTHS: [&str; 12] = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
 
 /// Days since 1970-01-01 for a proleptic Gregorian date.
 pub fn days_from_civil(y: i32, m: u32, d: u32) -> i64 {
@@ -109,15 +100,15 @@ impl DateTime {
     }
 
     pub fn weekday_name(&self) -> &'static str {
-        WEEKDAYS[self.weekday()]
+        helix_app_common::i18n::weekday_name(self.weekday() as u32)
     }
 
     pub fn weekday_short(&self) -> &'static str {
-        &WEEKDAYS[self.weekday()][..3]
+        helix_app_common::i18n::weekday_abbr(self.weekday() as u32)
     }
 
     pub fn month_short(&self) -> &'static str {
-        MONTHS[(self.month as usize - 1).min(11)]
+        helix_app_common::i18n::month_abbr(self.month)
     }
 
     /// Truncated to the hour.
@@ -160,8 +151,8 @@ pub fn format_hour(t: &DateTime, use_12h: bool) -> String {
 /// Day label for the daily forecast relative to `today`.
 pub fn day_label(day: &DateTime, today: &DateTime) -> String {
     match day.days() - today.days() {
-        0 => "Today".into(),
-        1 => "Tomorrow".into(),
+        0 => tr("Today").into(),
+        1 => tr("Tomorrow").into(),
         _ => day.weekday_name().into(),
     }
 }
@@ -171,15 +162,15 @@ pub fn day_label(day: &DateTime, today: &DateTime) -> String {
 pub fn updated_text(fetched: i64, now: i64, fetched_local: &DateTime, use_12h: bool) -> String {
     let age = (now - fetched).max(0);
     if age < 60 {
-        "Updated just now".into()
+        tr("Updated just now").into()
     } else if age < 3600 {
         let m = age / 60;
-        format!("Updated {m} minute{} ago", if m == 1 { "" } else { "s" })
+        trnf!("Updated {n} minute ago", "Updated {n} minutes ago", m)
     } else if age < 6 * 3600 {
         let h = age / 3600;
-        format!("Updated {h} hour{} ago", if h == 1 { "" } else { "s" })
+        trnf!("Updated {n} hour ago", "Updated {n} hours ago", h)
     } else {
-        format!(
+        trf!(
             "Updated {} {} {}, {}",
             fetched_local.weekday_short(),
             fetched_local.day,

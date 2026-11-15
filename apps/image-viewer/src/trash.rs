@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use gtk::gio;
 use gtk::glib;
 use gtk::prelude::*;
+use helix_app_common::i18n::tr;
 
 /// Moves `path` to the trash (blocking; call from a worker thread).
 pub fn trash(path: &Path) -> Result<(), String> {
@@ -123,7 +124,7 @@ pub fn find_trashed(original: &Path, dirs: &[(PathBuf, PathBuf)]) -> Option<Tras
 /// original path.
 pub fn restore(original: &Path, dirs: &[(PathBuf, PathBuf)]) -> Result<(), String> {
     if original.exists() {
-        return Err("A file with the same name already exists".into());
+        return Err(tr("A file with the same name already exists").into());
     }
     let t = find_trashed(original, dirs)
         .ok_or_else(|| "The file was not found in the trash".to_string())?;

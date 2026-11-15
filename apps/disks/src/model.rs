@@ -5,6 +5,8 @@ use crate::layout::{self, Span, MIB};
 use crate::parttypes;
 use crate::props::{Props, PropsExt, Snapshot};
 use crate::smart::Smart;
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 
 pub mod iface {
     pub const MANAGER: &str = "org.freedesktop.UDisks2.Manager";
@@ -134,32 +136,32 @@ fn lower_first(text: &str) -> String {
 /// Human name of a filesystem / content type (`IdType`).
 pub fn fs_name(id_type: &str, id_version: &str) -> String {
     match id_type {
-        "ext2" => "Ext2".into(),
-        "ext3" => "Ext3".into(),
-        "ext4" => "Ext4".into(),
+        "ext2" => tr("Ext2").into(),
+        "ext3" => tr("Ext3").into(),
+        "ext4" => tr("Ext4").into(),
         "vfat" => match id_version {
-            "FAT12" => "FAT (12-bit version)".into(),
-            "FAT16" => "FAT (16-bit version)".into(),
-            "FAT32" => "FAT (32-bit version)".into(),
+            "FAT12" => tr("FAT (12-bit version)").into(),
+            "FAT16" => tr("FAT (16-bit version)").into(),
+            "FAT32" => tr("FAT (32-bit version)").into(),
             _ => "FAT".into(),
         },
         "exfat" => "exFAT".into(),
         "ntfs" => "NTFS".into(),
-        "btrfs" => "Btrfs".into(),
+        "btrfs" => tr("Btrfs").into(),
         "xfs" => "XFS".into(),
         "f2fs" => "F2FS".into(),
-        "iso9660" => "ISO 9660".into(),
+        "iso9660" => tr("ISO 9660").into(),
         "udf" => "UDF".into(),
-        "squashfs" => "SquashFS".into(),
-        "hfsplus" => "HFS+".into(),
+        "squashfs" => tr("SquashFS").into(),
+        "hfsplus" => tr("HFS+").into(),
         "apfs" => "APFS".into(),
-        "crypto_LUKS" => "LUKS Encryption".into(),
-        "BitLocker" => "BitLocker Encryption".into(),
-        "swap" => "Swap".into(),
-        "LVM2_member" => "LVM2 Physical Volume".into(),
-        "linux_raid_member" => "Linux RAID Member".into(),
-        "zfs_member" => "ZFS Device".into(),
-        "" => "Unknown".into(),
+        "crypto_LUKS" => tr("LUKS Encryption").into(),
+        "BitLocker" => tr("BitLocker Encryption").into(),
+        "swap" => tr("Swap").into(),
+        "LVM2_member" => tr("LVM2 Physical Volume").into(),
+        "linux_raid_member" => tr("Linux RAID Member").into(),
+        "zfs_member" => tr("ZFS Device").into(),
+        "" => tr("Unknown").into(),
         other => other.to_string(),
     }
 }
@@ -201,36 +203,47 @@ impl Volume {
     /// Content description, e.g. `Ext4 (version 1.0) — Mounted at /home`.
     pub fn contents(&self) -> String {
         if self.is_free() {
-            return "Unallocated Space".into();
+            return tr("Unallocated Space").into();
         }
         if self.is_container() {
-            return "Extended Partition".into();
+            return tr("Extended Partition").into();
         }
         let mut name = self.type_name();
         if !self.id_version.is_empty() && self.id_type != "vfat" {
-            name = format!("{name} (version {})", self.id_version);
+            name = trf!(
+                "{name} (version {id_version})",
+                name = name,
+                id_version = self.id_version
+            );
         }
         if let Some(mps) = &self.filesystem {
             return match mps.first() {
-                Some(mp) => format!("{name} — Mounted at {mp}"),
-                None => format!("{name} — Not Mounted"),
+                Some(mp) => trf!("{name} — Mounted at {mp}", name = name, mp = mp),
+                None => trf!("{name} — Not Mounted", name = name),
             };
         }
         if let Some(clear) = &self.encrypted {
             return format!(
                 "{name} — {}",
                 if clear.is_some() {
-                    "Unlocked"
+                    tr("Unlocked")
                 } else {
-                    "Locked"
+                    tr("Locked")
                 }
             );
         }
         if let Some(active) = self.swap_active {
-            return format!("{name} — {}", if active { "Active" } else { "Not Active" });
+            return format!(
+                "{name} — {}",
+                if active {
+                    tr("Active")
+                } else {
+                    tr("Not Active")
+                }
+            );
         }
         if self.id_usage.is_empty() && self.id_type.is_empty() {
-            return "Unknown".into();
+            return tr("Unknown").into();
         }
         name
     }
@@ -241,7 +254,7 @@ impl Volume {
     pub fn spoken(&self, size: &str) -> String {
         let name = self.short_name();
         if self.is_free() {
-            return format!("{name}, {size}, not partitioned");
+            return trf!("{name}, {size}, not partitioned", name = name, size = size);
         }
         let contents = self.contents();
         let mut parts = vec![name.clone(), size.to_string()];
@@ -253,7 +266,7 @@ impl Volume {
         }
         if let Some(t) = self.partition_type().filter(|t| !t.is_empty()) {
             if !self.is_container() {
-                parts.push(format!("partition type {t}"));
+                parts.push(trf!("partition type {t}", t = t));
             }
         }
         parts.join(", ")
@@ -262,14 +275,14 @@ impl Volume {
     /// Short name for the volume bar.
     pub fn short_name(&self) -> String {
         if self.is_free() {
-            return "Free Space".into();
+            return tr("Free Space").into();
         }
         if !self.label.is_empty() {
             return self.label.clone();
         }
         if let Some(p) = &self.partition {
             if p.is_container {
-                return "Extended Partition".into();
+                return tr("Extended Partition").into();
             }
             if !p.name.is_empty() {
                 return p.name.clone();
@@ -277,8 +290,8 @@ impl Volume {
         }
         if self.id_type.is_empty() {
             match &self.partition {
-                Some(p) => format!("Partition {}", p.number),
-                None => "Unknown".into(),
+                Some(p) => trf!("Partition {}", p.number),
+                None => tr("Unknown").into(),
             }
         } else {
             fs_name(&self.id_type, "")
@@ -313,22 +326,24 @@ impl Drive {
             String::new()
         };
         match self.kind {
-            DriveKind::Loop => format!("{size}Loop Device"),
-            DriveKind::Disk if self.optical => "CD/DVD Drive".into(),
+            DriveKind::Loop => trf!("{size}Loop Device", size = size),
+            DriveKind::Disk if self.optical => tr("CD/DVD Drive").into(),
             DriveKind::Disk
                 if self.media.starts_with("flash") || (self.media_removable && !self.optical) =>
             {
                 if self.media_available {
-                    format!("{size}Drive")
+                    trf!("{size}Drive", size = size)
                 } else {
-                    "Card Reader".into()
+                    tr("Card Reader").into()
                 }
             }
             DriveKind::Disk if self.removable || self.connection_bus == "usb" => {
-                format!("{size}Drive")
+                trf!("{size}Drive", size = size)
             }
-            DriveKind::Disk if self.rotation_rate == 0 => format!("{size}Solid-State Disk"),
-            DriveKind::Disk => format!("{size}Hard Disk"),
+            DriveKind::Disk if self.rotation_rate == 0 => {
+                trf!("{size}Solid-State Disk", size = size)
+            }
+            DriveKind::Disk => trf!("{size}Hard Disk", size = size),
         }
     }
 
@@ -373,8 +388,8 @@ impl Drive {
     pub fn partitioning(&self) -> String {
         match &self.table_type {
             Some(t) => parttypes::table_name(t).into(),
-            None if self.size == 0 => "No Media".into(),
-            None => "None".into(),
+            None if self.size == 0 => tr("No Media").into(),
+            None => tr("None").into(),
         }
     }
 
@@ -490,11 +505,11 @@ fn block_volume(snap: &Snapshot, path: &str, depth: usize) -> Volume {
             .map(|t| t.str("Type"))
             .unwrap_or_default();
         PartitionInfo {
-            number: p.u64("Number") as u32,
+            number: p.u64(tr("Number")) as u32,
             type_id: p.str("Type"),
             name: p.str("Name"),
             uuid: p.str("UUID"),
-            flags: p.u64("Flags"),
+            flags: p.u64(tr("Flags")),
             is_container: p.bool("IsContainer"),
             is_contained: p.bool("IsContained"),
             table_path,
@@ -502,14 +517,14 @@ fn block_volume(snap: &Snapshot, path: &str, depth: usize) -> Volume {
         }
     });
     let offset = iface(snap, path, iface::PARTITION)
-        .map(|p| p.u64("Offset"))
+        .map(|p| p.u64(tr("Offset")))
         .unwrap_or(0);
     // Extended partitions' block devices report 1 KiB; the partition entry
     // has the real extent.
     let size = iface(snap, path, iface::PARTITION)
-        .map(|p| p.u64("Size"))
+        .map(|p| p.u64(tr("Size")))
         .filter(|s| *s > 0)
-        .unwrap_or_else(|| b.u64("Size"));
+        .unwrap_or_else(|| b.u64(tr("Size")));
     let filesystem = iface(snap, path, iface::FILESYSTEM).map(|f| f.bytestrings("MountPoints"));
     let encrypted = iface(snap, path, iface::ENCRYPTED).map(|e| {
         e.path("CleartextDevice").or_else(|| {
@@ -564,7 +579,7 @@ fn partitions_of(snap: &Snapshot, table: &str) -> Vec<String> {
         .iter()
         .filter_map(|(path, ifs)| {
             let p = ifs.get(iface::PARTITION)?;
-            (p.path("Table").as_deref() == Some(table)).then(|| (p.u64("Offset"), path.clone()))
+            (p.path("Table").as_deref() == Some(table)).then(|| (p.u64(tr("Offset")), path.clone()))
         })
         .collect();
     v.sort();
@@ -607,8 +622,8 @@ fn logical_volumes(snap: &Snapshot, table: &str, ext_offset: u64, ext_size: u64)
         .filter(|p| {
             iface(snap, p, iface::PARTITION).is_some_and(|pp| {
                 pp.bool("IsContained")
-                    && pp.u64("Offset") >= ext_offset
-                    && pp.u64("Offset") < ext_end
+                    && pp.u64(tr("Offset")) >= ext_offset
+                    && pp.u64(tr("Offset")) < ext_end
             })
         })
         .map(|p| block_volume(snap, p, 1))
@@ -682,11 +697,11 @@ pub fn build(snap: &Snapshot) -> Model {
             .as_deref()
             .and_then(|bp| iface(snap, bp, iface::BLOCK));
         let disk_size = b
-            .map(|b| b.u64("Size"))
+            .map(|b| b.u64(tr("Size")))
             .filter(|s| *s > 0)
-            .unwrap_or(d.u64("Size"));
+            .unwrap_or(d.u64(tr("Size")));
         let (table_type, volumes) = match &block_path {
-            Some(bp) => disk_volumes(snap, bp, b.map(|b| b.u64("Size")).unwrap_or(0)),
+            Some(bp) => disk_volumes(snap, bp, b.map(|b| b.u64(tr("Size"))).unwrap_or(0)),
             None => (None, Vec::new()),
         };
         disks.push(Drive {
@@ -727,10 +742,10 @@ pub fn build(snap: &Snapshot) -> Model {
         let (Some(l), Some(b)) = (ifs.get(iface::LOOP), ifs.get(iface::BLOCK)) else {
             continue;
         };
-        if ifs.contains_key(iface::PARTITION) || b.u64("Size") == 0 {
+        if ifs.contains_key(iface::PARTITION) || b.u64(tr("Size")) == 0 {
             continue;
         }
-        let size = b.u64("Size");
+        let size = b.u64(tr("Size"));
         let (table_type, volumes) = disk_volumes(snap, path, size);
         let backing = l.bytestring("BackingFile");
         loops.push(Drive {

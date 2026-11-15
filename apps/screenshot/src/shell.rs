@@ -11,6 +11,8 @@ use std::time::Duration;
 use zbus::blocking::Connection;
 
 use crate::naming;
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 const SHELL_NAME: &str = "org.gnome.Shell";
 const SHELL_PATH: &str = "/org/gnome/Shell/Screenshot";
@@ -20,7 +22,7 @@ const PICKER_IFACE: &str = "org.helix.ScreenshotWindowPicker";
 pub const CALLER_NAME: &str = "org.gnome.Screenshot";
 
 const NO_SHELL: &str =
-    "The desktop shell does not offer screenshots. Screenshot needs Helix or GNOME Shell.";
+    n_("The desktop shell does not offer screenshots. Screenshot needs Helix or GNOME Shell.");
 
 /// What to capture.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -74,7 +76,7 @@ pub enum CaptureError {
 impl std::fmt::Display for CaptureError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CaptureError::Cancelled => f.write_str("Cancelled"),
+            CaptureError::Cancelled => f.write_str(tr("Cancelled")),
             CaptureError::Failed(reason) => f.write_str(reason),
         }
     }
@@ -85,8 +87,9 @@ type Result<T> = std::result::Result<T, CaptureError>;
 /// Takes a screenshot on a new session-bus connection and returns the PNG
 /// bytes.
 pub fn take(req: &Request) -> Result<Vec<u8>> {
-    let conn = Connection::session()
-        .map_err(|e| CaptureError::Failed(format!("Could not connect to the session bus: {e}")))?;
+    let conn = Connection::session().map_err(|e| {
+        CaptureError::Failed(trf!("Could not connect to the session bus: {e}", e = e))
+    })?;
     take_on(&conn, req)
 }
 
@@ -101,12 +104,13 @@ pub fn take_on(conn: &Connection, req: &Request) -> Result<Vec<u8>> {
         ) => {}
         Ok(_) | Err(zbus::Error::NameTaken) => {
             return Err(CaptureError::Failed(
-                "Another screenshot is already being taken.".into(),
+                tr("Another screenshot is already being taken.").into(),
             ))
         }
         Err(e) => {
-            return Err(CaptureError::Failed(format!(
-                "Could not register as a screenshot tool on the session bus: {e}"
+            return Err(CaptureError::Failed(trf!(
+                "Could not register as a screenshot tool on the session bus: {e}",
+                e = e
             )))
         }
     }
@@ -170,7 +174,7 @@ fn capture(conn: &Connection, req: &Request) -> Result<Vec<u8>> {
         .map_err(describe)?;
     if !success {
         let _ = std::fs::remove_file(&target);
-        let mut reason = String::from("The shell could not take the screenshot.");
+        let mut reason = String::from(tr("The shell could not take the screenshot."));
         if req.mode == Mode::Window {
             reason.push_str(" Is a window focused?");
         }
@@ -191,13 +195,14 @@ fn capture(conn: &Connection, req: &Request) -> Result<Vec<u8>> {
 
 fn read_capture(path: &Path) -> Result<Vec<u8>> {
     let bytes = std::fs::read(path).map_err(|e| {
-        CaptureError::Failed(format!(
-            "Could not read the screenshot from {}: {e}",
-            path.display()
+        CaptureError::Failed(trf!(
+            "Could not read the screenshot from {path}: {e}",
+            path = path.display(),
+            e = e
         ))
     })?;
     if !is_png(&bytes) {
-        return Err(CaptureError::Failed(format!(
+        return Err(CaptureError::Failed(trf!(
             "The shell wrote something other than a PNG image to {}.",
             path.display()
         )));
@@ -252,21 +257,25 @@ fn describe(e: zbus::Error) -> CaptureError {
                 }
                 "org.freedesktop.DBus.Error.ServiceUnknown"
                 | "org.freedesktop.DBus.Error.NameHasNoOwner" => {
-                    CaptureError::Failed(NO_SHELL.into())
+                    CaptureError::Failed(tr(NO_SHELL).into())
                 }
                 "org.freedesktop.DBus.Error.UnknownMethod"
                 | "org.freedesktop.DBus.Error.UnknownInterface"
-                | "org.freedesktop.DBus.Error.UnknownObject" => CaptureError::Failed(format!(
-                    "The desktop shell does not support this kind of screenshot ({detail})."
+                | "org.freedesktop.DBus.Error.UnknownObject" => CaptureError::Failed(trf!(
+                    "The desktop shell does not support this kind of screenshot ({detail}).",
+                    detail = detail
                 )),
-                "org.freedesktop.DBus.Error.AccessDenied" => CaptureError::Failed(format!(
-                    "The desktop shell refused the screenshot: {detail}"
+                "org.freedesktop.DBus.Error.AccessDenied" => CaptureError::Failed(trf!(
+                    "The desktop shell refused the screenshot: {detail}",
+                    detail = detail
                 )),
                 _ if !detail.is_empty() => CaptureError::Failed(detail.to_string()),
-                _ => CaptureError::Failed(format!("The shell reported an error ({name}).")),
+                _ => {
+                    CaptureError::Failed(trf!("The shell reported an error ({name}).", name = name))
+                }
             }
         }
-        _ => CaptureError::Failed(format!("D-Bus error: {e}")),
+        _ => CaptureError::Failed(trf!("D-Bus error: {e}", e = e)),
     }
 }
 

@@ -14,6 +14,7 @@ fn usage() -> ! {
 }
 
 fn main() -> glib::ExitCode {
+    helix_app_common::i18n::init();
     let mut args = std::env::args().skip(1);
     let mut initial = None;
     while let Some(arg) = args.next() {

@@ -4,6 +4,7 @@
 //! GTK main loop as [`Command`]s; the UI pushes state changes with
 //! [`Mpris::update`], which emits `PropertiesChanged`.
 
+use helix_app_common::i18n::tr;
 use std::collections::HashMap;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
@@ -61,8 +62,8 @@ pub struct State {
 impl Default for State {
     fn default() -> Self {
         State {
-            status: "Stopped",
-            loop_status: "None",
+            status: tr("Stopped"),
+            loop_status: tr("None"),
             shuffle: false,
             volume: 1.0,
             position_us: 0,
@@ -143,7 +144,7 @@ impl Root {
     }
     #[zbus(property)]
     fn identity(&self) -> &str {
-        "Music"
+        tr("Music")
     }
     #[zbus(property)]
     fn desktop_entry(&self) -> &str {
@@ -216,7 +217,7 @@ impl PlayerIface {
     }
     fn open_uri(&self, _uri: &str) -> zbus::fdo::Result<()> {
         Err(zbus::fdo::Error::NotSupported(
-            "OpenUri is not supported".into(),
+            tr("OpenUri is not supported").into(),
         ))
     }
 

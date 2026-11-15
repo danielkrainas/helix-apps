@@ -1,6 +1,8 @@
 //! Worker thread owning the EDS connection, the opened address books and
 //! their live views. The UI sends [`Cmd`]s and receives [`Msg`]s.
 
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use helix_eds::vcard::Contact;
 use helix_eds::{sexp, Book, Eds, Source, SourceKind, View, ViewEvent, Watch};
 use std::collections::HashMap;
@@ -135,21 +137,27 @@ fn worker(rx: mpsc::Receiver<Cmd>, self_tx: mpsc::Sender<Cmd>, out: async_channe
             Cmd::Create { book, contact, tag } => match books.get(&book) {
                 Some(b) => match b.book.create(&[*contact]) {
                     Ok(uids) => send(Msg::Created { book, uids, tag }),
-                    Err(err) => send(Msg::Error(format!("Could not create contact: {err}"))),
+                    Err(err) => send(Msg::Error(trf!(
+                        "Could not create contact: {err}",
+                        err = err
+                    ))),
                 },
-                None => send(Msg::Error("The address book is not available".into())),
+                None => send(Msg::Error(tr("The address book is not available").into())),
             },
             Cmd::Modify { book, contact } => {
                 if let Some(b) = books.get(&book) {
                     if let Err(err) = b.book.modify(&[*contact]) {
-                        send(Msg::Error(format!("Could not save contact: {err}")));
+                        send(Msg::Error(trf!("Could not save contact: {err}", err = err)));
                     }
                 }
             }
             Cmd::Remove { book, uids } => {
                 if let Some(b) = books.get(&book) {
                     if let Err(err) = b.book.remove(&uids) {
-                        send(Msg::Error(format!("Could not delete contact: {err}")));
+                        send(Msg::Error(trf!(
+                            "Could not delete contact: {err}",
+                            err = err
+                        )));
                     }
                 }
             }
@@ -166,10 +174,10 @@ fn worker(rx: mpsc::Receiver<Cmd>, self_tx: mpsc::Sender<Cmd>, out: async_channe
                         .collect();
                     match b.book.create(&contacts) {
                         Ok(_) => send(Msg::Imported(n)),
-                        Err(err) => send(Msg::Error(format!("Import failed: {err}"))),
+                        Err(err) => send(Msg::Error(trf!("Import failed: {err}", err = err))),
                     }
                 }
-                None => send(Msg::Error("The address book is not available".into())),
+                None => send(Msg::Error(tr("The address book is not available").into())),
             },
         }
     }
@@ -215,9 +223,10 @@ fn sync(eds: &Eds, books: &mut HashMap<String, OpenBook>, out: &async_channel::S
         let book = match eds.open_book(&s.uid) {
             Ok(b) => b,
             Err(e) => {
-                send(Msg::Error(format!(
-                    "Could not open “{}”: {e}",
-                    s.display_name()
+                send(Msg::Error(trf!(
+                    "Could not open “{display_name}”: {e}",
+                    display_name = s.display_name(),
+                    e = e
                 )));
                 continue;
             }
@@ -256,9 +265,10 @@ fn sync(eds: &Eds, books: &mut HashMap<String, OpenBook>, out: &async_channel::S
             Ok(v) => {
                 books.insert(s.uid.clone(), OpenBook { _view: v, book });
             }
-            Err(e) => send(Msg::Error(format!(
-                "Could not read “{}”: {e}",
-                s.display_name()
+            Err(e) => send(Msg::Error(trf!(
+                "Could not read “{display_name}”: {e}",
+                display_name = s.display_name(),
+                e = e
             ))),
         }
     }

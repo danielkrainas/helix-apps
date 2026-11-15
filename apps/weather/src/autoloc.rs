@@ -12,10 +12,12 @@ use crate::api::USER_AGENT;
 use crate::gwdb;
 use crate::location::{self, Fix};
 use crate::store::Place;
+use helix_app_common::i18n::{n_, tr};
+use helix_app_common::trf;
 
 pub const OFFLINE_RADIUS_KM: f64 = 50.0;
 const NOMINATIM_URL: &str = "https://nominatim.openstreetmap.org/reverse";
-pub const FALLBACK_NAME: &str = "Current Location";
+pub const FALLBACK_NAME: &str = n_("Current Location");
 
 /// Nearest GWeather city within the radius.
 pub fn offline(db: &gwdb::Db, fix: Fix) -> Option<Place> {
@@ -55,7 +57,7 @@ struct Reverse {
 /// Parses a Nominatim `format=jsonv2` reverse response.
 pub fn parse_nominatim(body: &str, fix: Fix) -> Result<Place, String> {
     let r: Reverse = serde_json::from_str(body)
-        .map_err(|e| format!("Unexpected reverse geocoding data: {e}"))?;
+        .map_err(|e| trf!("Unexpected reverse geocoding data: {e}", e = e))?;
     if let Some(e) = r.error {
         return Err(e);
     }
@@ -73,7 +75,7 @@ pub fn parse_nominatim(body: &str, fix: Fix) -> Result<Place, String> {
     .into_iter()
     .flatten()
     .find(|s| !s.trim().is_empty())
-    .ok_or("No place name at this position")?;
+    .ok_or(tr("No place name at this position"))?;
     Ok(Place {
         admin1: a.state,
         country: a.country,
@@ -110,7 +112,7 @@ pub fn name_place(fix: Fix, db: Option<&gwdb::Db>, language: &str) -> Place {
                 .map_err(|e| eprintln!("helix-weather: reverse geocoding: {e}"))
                 .ok()
         })
-        .unwrap_or_else(|| Place::at(FALLBACK_NAME, fix.latitude, fix.longitude))
+        .unwrap_or_else(|| Place::at(tr(FALLBACK_NAME), fix.latitude, fix.longitude))
 }
 
 /// Locates and names the current place (blocking).

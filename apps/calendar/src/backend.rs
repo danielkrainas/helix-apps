@@ -2,6 +2,8 @@
 //! range views. The UI sends [`Cmd`]s and receives [`Msg`]s.
 
 use chrono::{DateTime, Utc};
+use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use helix_eds::client::split_calendar_id;
 use helix_eds::ical::{parse_events, resolve_tzid, Event, Time};
 use helix_eds::{sexp, Calendar, Eds, ModType, Source, SourceKind, View, ViewEvent, Watch};
@@ -215,28 +217,28 @@ impl Worker {
             Cmd::Create { cal, ics } => {
                 if let Some(o) = self.open.get(&cal) {
                     if let Err(e) = o.cal.create(&ics) {
-                        self.send(Msg::Error(format!("Could not create event: {e}")));
+                        self.send(Msg::Error(trf!("Could not create event: {e}", e = e)));
                     }
                 } else {
                     self.with_temp(
                         &eds,
                         &cal,
                         |c| c.create(&ics).map(|_| ()),
-                        "Could not create event",
+                        tr("Could not create event"),
                     );
                 }
             }
             Cmd::Modify { cal, ics, mod_type } => {
                 if let Some(o) = self.open.get(&cal) {
                     if let Err(e) = o.cal.modify(&ics, mod_type) {
-                        self.send(Msg::Error(format!("Could not save event: {e}")));
+                        self.send(Msg::Error(trf!("Could not save event: {e}", e = e)));
                     }
                 }
             }
             Cmd::Remove { cal, ids, mod_type } => {
                 if let Some(o) = self.open.get(&cal) {
                     if let Err(e) = o.cal.remove(&ids, mod_type) {
-                        self.send(Msg::Error(format!("Could not delete event: {e}")));
+                        self.send(Msg::Error(trf!("Could not delete event: {e}", e = e)));
                     }
                 }
             }
@@ -251,13 +253,14 @@ impl Worker {
                     Ok(()) => {
                         if let Some(o) = self.open.get(&from) {
                             if let Err(e) = o.cal.remove(&[(uid, String::new())], ModType::All) {
-                                self.send(Msg::Error(format!(
-                                    "Event copied but not removed from the old calendar: {e}"
+                                self.send(Msg::Error(trf!(
+                                    "Event copied but not removed from the old calendar: {e}",
+                                    e = e
                                 )));
                             }
                         }
                     }
-                    Err(e) => self.send(Msg::Error(format!("Could not move event: {e}"))),
+                    Err(e) => self.send(Msg::Error(trf!("Could not move event: {e}", e = e))),
                 }
             }
             Cmd::Search { query, tag } => {
@@ -293,18 +296,18 @@ impl Worker {
             }
             Cmd::WriteSource(s) => {
                 if let Err(e) = eds.write_source(&s) {
-                    self.send(Msg::Error(format!("Could not update calendar: {e}")));
+                    self.send(Msg::Error(trf!("Could not update calendar: {e}", e = e)));
                 }
             }
             Cmd::CreateSource { uid, data } => {
                 if let Err(e) = eds.create_source(&uid, &data) {
-                    self.send(Msg::Error(format!("Could not create calendar: {e}")));
+                    self.send(Msg::Error(trf!("Could not create calendar: {e}", e = e)));
                 }
             }
             Cmd::RemoveSource(s) => {
                 self.open.remove(&s.uid);
                 if let Err(e) = eds.remove_source(&s) {
-                    self.send(Msg::Error(format!("Could not remove calendar: {e}")));
+                    self.send(Msg::Error(trf!("Could not remove calendar: {e}", e = e)));
                 }
             }
             Cmd::Import {
@@ -342,8 +345,12 @@ impl Worker {
                 };
                 match r {
                     Ok(()) if ok == n => self.send(Msg::Imported(ok)),
-                    Ok(()) => self.send(Msg::Error(format!("Imported {ok} of {n} events"))),
-                    Err(e) => self.send(Msg::Error(format!("Import failed: {e}"))),
+                    Ok(()) => self.send(Msg::Error(trf!(
+                        "Imported {ok} of {n} events",
+                        ok = ok,
+                        n = n
+                    ))),
+                    Err(e) => self.send(Msg::Error(trf!("Import failed: {e}", e = e))),
                 }
             }
         }
@@ -406,9 +413,10 @@ impl Worker {
                     self.open.insert(s.uid.clone(), Open { view: None, cal });
                     self.start_view(&s.uid);
                 }
-                Err(e) => self.send(Msg::Error(format!(
-                    "Could not open “{}”: {e}",
-                    s.display_name()
+                Err(e) => self.send(Msg::Error(trf!(
+                    "Could not open “{display_name}”: {e}",
+                    display_name = s.display_name(),
+                    e = e
                 ))),
             }
         }
@@ -469,8 +477,8 @@ impl Worker {
                 ViewEvent::Complete(err) => {
                     // E.g. a subscribed (webcal) feed that could not be fetched.
                     if let Some(e) = err.filter(|e| !e.is_empty()) {
-                        let _ =
-                            tx.send_blocking(Msg::Error(format!("Could not load calendar: {e}")));
+                        let _ = tx
+                            .send_blocking(Msg::Error(trf!("Could not load calendar: {e}", e = e)));
                     }
                     Msg::Loaded {
                         cal: cal.clone(),
@@ -486,7 +494,7 @@ impl Worker {
             Err(e) => {
                 let _ = self
                     .out
-                    .send_blocking(Msg::Error(format!("Could not read calendar: {e}")));
+                    .send_blocking(Msg::Error(trf!("Could not read calendar: {e}", e = e)));
             }
         }
     }

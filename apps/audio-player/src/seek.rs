@@ -1,5 +1,7 @@
 //! Seek, rate and volume math.
 
+use helix_app_common::trf;
+
 pub const SECOND: u64 = 1_000_000_000;
 /// Step of the skip buttons / arrow keys.
 pub const SKIP_NS: i64 = 10 * SECOND as i64;
@@ -97,14 +99,14 @@ pub fn linear_to_cubic(v: f64) -> f64 {
 
 /// Accessible name of the speed button: "Playback Speed: 1.25×".
 pub fn rate_name(rate: f64) -> String {
-    format!("Playback Speed: {}", rate_label(rate))
+    trf!("Playback Speed: {}", rate_label(rate))
 }
 
 /// Accessible value of the volume slider (its position, 0 – 100 %).
 pub fn volume_text(slider: f64, muted: bool) -> String {
     let pct = (slider.clamp(0.0, 1.0) * 100.0).round() as u32;
     if muted {
-        format!("{pct}%, muted")
+        trf!("{pct}%, muted", pct = pct)
     } else {
         format!("{pct}%")
     }

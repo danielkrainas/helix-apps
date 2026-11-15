@@ -7,22 +7,29 @@ use std::rc::Rc;
 use crate::app::App;
 use crate::palette::Theme;
 use crate::transparency::Transparency;
+use helix_app_common::i18n::tr;
 
 pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     let prefs = &app.prefs;
     let dialog = adw::PreferencesDialog::builder()
-        .title("Preferences")
+        .title(tr("Preferences"))
         .build();
     let page = adw::PreferencesPage::builder()
-        .title("General")
+        .title(tr("General"))
         .icon_name("preferences-system-symbolic")
         .build();
 
     // Appearance.
-    let appearance = adw::PreferencesGroup::builder().title("Appearance").build();
+    let appearance = adw::PreferencesGroup::builder()
+        .title(tr("Appearance"))
+        .build();
     let style = adw::ComboRow::builder()
-        .title("Style")
-        .model(&gtk::StringList::new(&["Follow System", "Light", "Dark"]))
+        .title(tr("Style"))
+        .model(&gtk::StringList::new(&[
+            tr("Follow System"),
+            tr("Light"),
+            tr("Dark"),
+        ]))
         .selected(app.theme().combo_index())
         .build();
     let a = app.clone();
@@ -36,11 +43,15 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     appearance.add(&style);
 
     let use_system = adw::SwitchRow::builder()
-        .title("Use System Font")
+        .title(tr("Use System Font"))
         .active(prefs.get("use-system-font", true))
         .build();
     let font_button = gtk::FontDialogButton::builder()
-        .dialog(&gtk::FontDialog::builder().title("Terminal Font").build())
+        .dialog(
+            &gtk::FontDialog::builder()
+                .title(tr("Terminal Font"))
+                .build(),
+        )
         .level(gtk::FontLevel::Font)
         .use_font(true)
         .valign(gtk::Align::Center)
@@ -48,7 +59,7 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     font_button.set_font_desc(&pango::FontDescription::from_string(
         &prefs.get("custom-font", "Monospace 11".to_string()),
     ));
-    let font_row = adw::ActionRow::builder().title("Custom Font").build();
+    let font_row = adw::ActionRow::builder().title(tr("Custom Font")).build();
     font_row.add_suffix(&font_button);
     font_row.set_activatable_widget(Some(&font_button));
     font_row.set_sensitive(!use_system.is_active());
@@ -72,7 +83,7 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     // Transparency (org.helix.Terminal, GNOME Terminal key names).
     let current = app.transparency();
     let transparent = adw::SwitchRow::builder()
-        .title("Transparent Background")
+        .title(tr("Transparent Background"))
         .active(current.enabled)
         .build();
     let scale = gtk::Scale::with_range(gtk::Orientation::Horizontal, 0.0, 100.0, 1.0);
@@ -83,8 +94,8 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     scale.set_hexpand(true);
     scale.set_valign(gtk::Align::Center);
     scale.set_format_value_func(|_, v| format!("{v:.0} %"));
-    helix_app_common::set_accessible_label(&scale, "Transparency");
-    let amount_row = adw::ActionRow::builder().title("Transparency").build();
+    helix_app_common::set_accessible_label(&scale, tr("Transparency"));
+    let amount_row = adw::ActionRow::builder().title(tr("Transparency")).build();
     amount_row.add_suffix(&scale);
     amount_row.set_sensitive(current.enabled);
     let a = app.clone();
@@ -107,17 +118,19 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     page.add(&appearance);
 
     // Behaviour.
-    let behaviour = adw::PreferencesGroup::builder().title("Behaviour").build();
+    let behaviour = adw::PreferencesGroup::builder()
+        .title(tr("Behaviour"))
+        .build();
     // org.gnome.Console has no separate "unlimited" key: a negative
     // `scrollback-lines` means unlimited.
     let stored: i64 = prefs.get("scrollback-lines", 10000i64);
     let unlimited = adw::SwitchRow::builder()
-        .title("Unlimited Scrollback")
-        .subtitle("Keep all terminal output in memory")
+        .title(tr("Unlimited Scrollback"))
+        .subtitle(tr("Keep all terminal output in memory"))
         .active(stored < 0)
         .build();
     let lines = adw::SpinRow::with_range(0.0, 1_000_000.0, 1000.0);
-    lines.set_title("Scrollback Lines");
+    lines.set_title(tr("Scrollback Lines"));
     lines.set_value(if stored < 0 { 10000.0 } else { stored as f64 });
     lines.set_sensitive(!unlimited.is_active());
     let a = app.clone();
@@ -144,9 +157,9 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     behaviour.add(&lines);
 
     for (key, title, default) in [
-        ("audible-bell", "Audible Bell", true),
-        ("visual-bell", "Visual Bell", true),
-        ("restore-window-size", "Restore Window Size", true),
+        ("audible-bell", tr("Audible Bell"), true),
+        ("visual-bell", tr("Visual Bell"), true),
+        ("restore-window-size", tr("Restore Window Size"), true),
     ] {
         let row = adw::SwitchRow::builder()
             .title(title)
