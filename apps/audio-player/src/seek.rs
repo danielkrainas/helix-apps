@@ -16,6 +16,39 @@ pub fn offset(position: u64, delta_ns: i64, duration: Option<u64>) -> u64 {
     }
 }
 
+/// Small step of the focused waveform's arrow keys.
+pub const KEY_STEP_NS: i64 = 5 * SECOND as i64;
+/// Large step of the focused waveform's Page Up/Page Down keys.
+pub const KEY_PAGE_NS: i64 = 60 * SECOND as i64;
+
+/// A seek requested with the keyboard on the waveform.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum KeySeek {
+    By(i64),
+    Start,
+    End,
+}
+
+/// Where a keyboard seek on the waveform goes.
+pub fn key_target(seek: KeySeek, position: u64, duration: Option<u64>) -> u64 {
+    match seek {
+        KeySeek::By(d) => offset(position, d, duration),
+        KeySeek::Start => 0,
+        KeySeek::End => duration.unwrap_or(position),
+    }
+}
+
+/// Alpha applied to the foreground colour for the not-yet-played bars:
+/// enough for 3:1 against the window background in the light and dark
+/// styles (see the test), more in high contrast.
+pub fn unplayed_alpha(high_contrast: bool) -> f32 {
+    if high_contrast {
+        0.85
+    } else {
+        0.6
+    }
+}
+
 /// Position under `x` on a widget `width` pixels wide.
 pub fn position_at(x: f64, width: f64, duration: u64) -> u64 {
     if width <= 0.0 || !x.is_finite() {
@@ -92,6 +125,68 @@ pub fn volume_icon(slider: f64, muted: bool) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn key_seeks() {
+        let d = Some(100 * SECOND);
+        assert_eq!(key_target(KeySeek::By(KEY_STEP_NS), 0, d), 5 * SECOND);
+        assert_eq!(key_target(KeySeek::By(-KEY_STEP_NS), 3 * SECOND, d), 0);
+        assert_eq!(
+            key_target(KeySeek::By(KEY_PAGE_NS), 50 * SECOND, d),
+            100 * SECOND
+        );
+        assert_eq!(key_target(KeySeek::Start, 50 * SECOND, d), 0);
+        assert_eq!(key_target(KeySeek::End, 50 * SECOND, d), 100 * SECOND);
+        assert_eq!(key_target(KeySeek::End, 7, None), 7);
+    }
+
+    /// WCAG contrast of the unplayed bars (foreground at `unplayed_alpha`)
+    /// against Adwaita's window background, light and dark.
+    #[test]
+    fn unplayed_bars_contrast() {
+        fn lin(v: f64) -> f64 {
+            if v <= 0.04045 {
+                v / 12.92
+            } else {
+                ((v + 0.055) / 1.055).powf(2.4)
+            }
+        }
+        fn lum(c: (f64, f64, f64)) -> f64 {
+            0.2126 * lin(c.0) + 0.7152 * lin(c.1) + 0.0722 * lin(c.2)
+        }
+        fn over(fg: (f64, f64, f64), a: f64, bg: (f64, f64, f64)) -> (f64, f64, f64) {
+            (
+                fg.0 * a + bg.0 * (1.0 - a),
+                fg.1 * a + bg.1 * (1.0 - a),
+                fg.2 * a + bg.2 * (1.0 - a),
+            )
+        }
+        fn ratio(a: (f64, f64, f64), b: (f64, f64, f64)) -> f64 {
+            let (x, y) = (lum(a), lum(b));
+            (x.max(y) + 0.05) / (x.min(y) + 0.05)
+        }
+        // Adwaita: light fg rgb(0 0 6 / 80%) on #fafafb; dark fg #ffffff on
+        // #222226.
+        let light_bg = (0.98, 0.98, 0.984);
+        let light_fg = over(
+            (0.0, 0.0, 0.024),
+            0.8 * unplayed_alpha(false) as f64,
+            light_bg,
+        );
+        assert!(
+            ratio(light_fg, light_bg) >= 3.0,
+            "{}",
+            ratio(light_fg, light_bg)
+        );
+        let dark_bg = (0.133, 0.133, 0.149);
+        let dark_fg = over((1.0, 1.0, 1.0), unplayed_alpha(false) as f64, dark_bg);
+        assert!(
+            ratio(dark_fg, dark_bg) >= 3.0,
+            "{}",
+            ratio(dark_fg, dark_bg)
+        );
+        assert!(unplayed_alpha(true) > unplayed_alpha(false));
+    }
 
     #[test]
     fn readable_rate_and_volume() {

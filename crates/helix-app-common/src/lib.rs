@@ -9,6 +9,7 @@
 pub mod a11y;
 pub mod focus;
 pub mod keys;
+pub mod style;
 
 pub use a11y::{
     announce, announce_change, announce_settled, icon_button, icon_menu_button, icon_toggle_button,

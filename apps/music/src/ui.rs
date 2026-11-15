@@ -144,6 +144,16 @@ pub fn music_dir() -> PathBuf {
         .unwrap_or_else(|| glib::home_dir().join("Music"))
 }
 
+/// A short name for a folder in messages: "~/Music" for folders in the
+/// home folder, the full path otherwise.
+pub fn friendly_folder_name(dir: &std::path::Path, home: &std::path::Path) -> String {
+    match dir.strip_prefix(home) {
+        Ok(rest) if rest.as_os_str().is_empty() => "~".to_string(),
+        Ok(rest) => format!("~/{}", rest.display()),
+        Err(_) => dir.display().to_string(),
+    }
+}
+
 /// Registered track row widgets, updated when the playing track or a
 /// favourite changes.
 pub struct RowHandle {
@@ -624,6 +634,19 @@ impl App {
                 app.watch_tracker(ep);
             }
             let first = !app.scanned_once.replace(true);
+            if report.changed() && !first {
+                // A rescan found changes while the user may be listening
+                // or browsing; say so without moving focus.
+                let text = match tracks.len() {
+                    1 => "Library updated: 1 song".to_string(),
+                    n => format!("Library updated: {n} songs"),
+                };
+                helix_app_common::announce(
+                    &app.main_stack,
+                    &text,
+                    helix_app_common::Urgency::Polite,
+                );
+            }
             if report.changed() || first {
                 if report.changed() {
                     *app.lib.borrow_mut() = Rc::new(Library::new(tracks));
@@ -905,8 +928,15 @@ impl App {
             }
             Event::Error(e) => {
                 let name = self.current_track().map(|t| t.title).unwrap_or_default();
-                self.toasts
-                    .add_toast(toast(&format!("Cannot play “{name}”")));
+                // The toast is spoken by libadwaita; say it urgently as well,
+                // since playback stopped or skipped without any action.
+                let text = format!("Cannot play “{name}”");
+                helix_app_common::announce(
+                    &self.bar.title,
+                    &text,
+                    helix_app_common::Urgency::Assertive,
+                );
+                self.toasts.add_toast(toast(&text));
                 eprintln!("helix-music: playback error: {e}");
                 let has_next = self.queue.borrow().has_next();
                 let moved = has_next && self.queue.borrow_mut().advance(false).is_some();
@@ -1388,6 +1418,7 @@ impl App {
             } else {
                 app.update_next_uri();
                 app.update_now_playing();
+                app.toasts.add_toast(toast("Will play next"));
             }
         });
         track_action("add-to-playlist", |app, i| {
@@ -1504,7 +1535,7 @@ impl App {
         self.main_stack.set_visible_child_name(name);
         self.empty_page.set_description(Some(&format!(
             "Music files in {} will appear here.",
-            glib::markup_escape_text(&music_dir().display().to_string())
+            glib::markup_escape_text(&friendly_folder_name(&music_dir(), &glib::home_dir()))
         )));
     }
 
@@ -1547,17 +1578,6 @@ impl App {
             }
             glib::Propagation::Proceed
         });
-        // Clicking the title area opens Now Playing.
-        let click = gtk::GestureClick::new();
-        let w = Rc::downgrade(self);
-        click.connect_released(move |_, _, _, _| {
-            if let Some(app) = w.upgrade() {
-                app.show_now_playing();
-            }
-        });
-        if let Some(info) = b.title.parent() {
-            info.add_controller(click);
-        }
     }
 
     pub fn add_folder_dialog(self: &Rc<Self>) {
@@ -1694,6 +1714,8 @@ fn build_player_bar() -> PlayerBar {
     let cover = gtk::Image::builder()
         .pixel_size(48)
         .css_classes(["hm-cover"])
+        // Decorative: the album or track title next to it names it.
+        .accessible_role(gtk::AccessibleRole::Presentation)
         .build();
     let title = gtk::Label::builder()
         .xalign(0.0)
@@ -1709,12 +1731,20 @@ fn build_player_bar() -> PlayerBar {
     info.set_valign(gtk::Align::Center);
     info.append(&title);
     info.append(&artist);
-    info.set_cursor_from_name(Some("pointer"));
     let left = gtk::Box::new(gtk::Orientation::Horizontal, 10);
     left.set_size_request(220, -1);
     left.append(&cover);
     left.append(&info);
     info.set_hexpand(true);
+    // The cover and title open Now Playing: a real (flat) button, so it
+    // works from the keyboard too.
+    let info_button = gtk::Button::builder()
+        .child(&left)
+        .action_name("win.now-playing")
+        .tooltip_text("Show Now Playing")
+        .css_classes(["flat"])
+        .build()
+        .labelled("Show Now Playing");
 
     let prev = flat_button("media-skip-backward-symbolic", "Previous");
     let play = gtk::Button::builder()
@@ -1819,7 +1849,8 @@ fn build_player_bar() -> PlayerBar {
         .row_spacing(4)
         .css_classes(["hm-playerbar"])
         .build();
-    grid.attach(&left, 0, 0, 1, 1);
+    grid.attach(&info_button, 0, 0, 1, 1);
+
     grid.attach(&controls, 1, 0, 1, 1);
     grid.attach(&seek, 2, 0, 1, 1);
     grid.attach(&right, 3, 0, 1, 1);
@@ -1892,3 +1923,23 @@ const SHORTCUTS_UI: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
   </object>
 </interface>
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::friendly_folder_name;
+    use std::path::Path;
+
+    #[test]
+    fn folder_names() {
+        let home = Path::new("/home/ana");
+        assert_eq!(
+            friendly_folder_name(Path::new("/home/ana/Music"), home),
+            "~/Music"
+        );
+        assert_eq!(friendly_folder_name(Path::new("/home/ana"), home), "~");
+        assert_eq!(
+            friendly_folder_name(Path::new("/srv/music"), home),
+            "/srv/music"
+        );
+    }
+}

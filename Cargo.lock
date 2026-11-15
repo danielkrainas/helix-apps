@@ -1327,6 +1327,7 @@ dependencies = [
  "helix-app-common",
  "libadwaita",
  "libc",
+ "pangocairo",
  "serde",
  "serde_json",
  "tempfile",

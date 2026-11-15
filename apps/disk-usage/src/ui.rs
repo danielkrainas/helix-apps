@@ -118,6 +118,8 @@ struct App {
     chart_kind: Cell<ChartKind>,
     chart_menu: gtk::PopoverMenu,
     hover: Cell<Option<NodeId>>,
+    /// The chart item with keyboard focus (an item or the chart root).
+    chart_focus: Cell<Option<NodeId>>,
     breadcrumbs: gtk::Box,
     up_button: gtk::Button,
     target: Cell<Option<NodeId>>,
@@ -151,7 +153,9 @@ fn load_css() {
         ".du-share { min-height: 6px; }
          .du-share block { min-height: 6px; }
          .du-capacity block { min-height: 8px; }
-         .du-breadcrumbs button { padding: 2px 6px; min-height: 0; }",
+         .du-breadcrumbs button { padding: 2px 6px; min-height: 0; }
+         .du-chart:focus-visible { outline: 2px solid alpha(@accent_color, 0.5);
+                                   outline-offset: -2px; border-radius: 6px; }",
     );
     if let Some(display) = gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
@@ -179,7 +183,11 @@ fn item_menu() -> gio::Menu {
     s1.append(Some("_Copy Path"), Some("win.copy-path"));
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
-    s2.append(Some("Move to _Trash…"), Some("win.trash-item"));
+    let trash = gio::MenuItem::new(Some("Move to _Trash…"), Some("win.trash-item"));
+    // Delete is a bubble-phase shortcut, not an application accelerator,
+    // so the menu is told about it explicitly.
+    trash.set_attribute_value("accel", Some(&"Delete".to_variant()));
+    s2.append_item(&trash);
     menu.append_section(None, &s2);
     menu
 }
@@ -374,11 +382,18 @@ impl App {
         chart_bar.append(&up_button);
         chart_bar.append(&crumb_scroller);
         chart_bar.append(&switch);
+        // A picture of the folder's contents: reachable with Tab, its
+        // items navigable with the arrow keys (see `setup_chart`), and
+        // summarised in text for screen readers.
         let chart_area = gtk::DrawingArea::builder()
             .hexpand(true)
             .vexpand(true)
             .has_tooltip(true)
+            .focusable(true)
+            .accessible_role(gtk::AccessibleRole::Img)
+            .css_classes(["du-chart"])
             .build();
+        chart_area.update_property(&[gtk::accessible::Property::Label("Usage chart")]);
         chart_area.set_size_request(240, 240);
         let chart_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
         chart_box.append(&chart_bar);
@@ -440,6 +455,7 @@ impl App {
             chart_kind: Cell::new(chart_kind),
             chart_menu,
             hover: Cell::new(None),
+            chart_focus: Cell::new(None),
             breadcrumbs,
             up_button,
             target: Cell::new(None),
@@ -833,28 +849,27 @@ impl App {
                     .build()
                     .upcast(),
             };
-            // Right-click: select the row and show the item menu.
+            // Right-click or long press: select the row and show the item
+            // menu (Menu and Shift+F10 are handled on the column view).
             let gesture = gtk::GestureClick::builder()
                 .button(gdk::BUTTON_SECONDARY)
                 .build();
             let (a2, weak_item) = (a.clone(), item.downgrade());
             gesture.connect_pressed(move |g, _, x, y| {
-                let Some(item) = weak_item.upgrade() else {
-                    return;
-                };
-                let Some(w) = g.widget() else { return };
-                a2.selection.set_selected(item.position());
-                let menu = gtk::PopoverMenu::from_model(Some(&item_menu()));
-                menu.set_has_arrow(false);
-                menu.set_parent(&w);
-                menu.set_pointing_to(Some(&gdk::Rectangle::new(x as i32, y as i32, 1, 1)));
-                menu.connect_closed(|m| {
-                    let m = m.clone();
-                    glib::idle_add_local_once(move || m.unparent());
-                });
-                menu.popup();
+                if let (Some(item), Some(w)) = (weak_item.upgrade(), g.widget()) {
+                    a2.row_menu(&w, item.position(), Some((x, y)));
+                }
             });
             widget.add_controller(gesture);
+            let long_press = gtk::GestureLongPress::new();
+            let (a2, weak_item) = (a.clone(), item.downgrade());
+            long_press.connect_pressed(move |g, x, y| {
+                if let (Some(item), Some(w)) = (weak_item.upgrade(), g.widget()) {
+                    g.set_state(gtk::EventSequenceState::Claimed);
+                    a2.row_menu(&w, item.position(), Some((x, y)));
+                }
+            });
+            widget.add_controller(long_press);
             item.set_child(Some(&widget));
         });
         let a = self.clone();
@@ -903,6 +918,50 @@ impl App {
         factory
     }
 
+    /// Selects row `pos`, makes its item the target of the item actions and
+    /// shows the item menu on `widget`, at `at` or below the whole widget.
+    fn row_menu(&self, widget: &gtk::Widget, pos: u32, at: Option<(f64, f64)>) {
+        self.selection.set_selected(pos);
+        self.target
+            .set(self.selection.item(pos).and_then(|o| node_id(&o)));
+        self.update_action_state();
+        let menu = gtk::PopoverMenu::from_model(Some(&item_menu()));
+        menu.set_has_arrow(false);
+        menu.set_parent(widget);
+        if let Some((x, y)) = at {
+            menu.set_pointing_to(Some(&gdk::Rectangle::new(x as i32, y as i32, 1, 1)));
+        }
+        menu.connect_closed(|m| {
+            let m = m.clone();
+            glib::idle_add_local_once(move || m.unparent());
+        });
+        menu.popup();
+    }
+
+    /// Menu or Shift+F10 in the tree: the item menu for the selected row,
+    /// shown on the row that has keyboard focus.
+    fn tree_menu_from_keyboard(&self) -> bool {
+        let pos = self.selection.selected();
+        if pos == gtk::INVALID_LIST_POSITION {
+            return false;
+        }
+        let focused = gtk::prelude::GtkWindowExt::focus(&self.window)
+            .filter(|f| f.is_ancestor(&self.column_view));
+        let Some(mut widget) = focused else {
+            return false;
+        };
+        // Focus is on GTK's row (or cell) widget, which expects only cells
+        // as children: put the menu on our own cell content inside it.
+        while widget.type_().name().starts_with("GtkColumnView") {
+            match widget.first_child() {
+                Some(c) => widget = c,
+                None => return false,
+            }
+        }
+        self.row_menu(&widget, pos, None);
+        true
+    }
+
     fn node_sorter(self: &Rc<Self>, col: Col) -> gtk::CustomSorter {
         let a = self.clone();
         gtk::CustomSorter::new(move |x, y| {
@@ -942,6 +1001,18 @@ impl App {
         }
         self.column_view
             .sort_by_column(size_col.as_ref(), gtk::SortType::Descending);
+        let keys = gtk::EventControllerKey::new();
+        let a = self.clone();
+        keys.connect_key_pressed(move |_, key, _, mods| {
+            let menu_key = key == gdk::Key::Menu
+                || (key == gdk::Key::F10 && mods.contains(gdk::ModifierType::SHIFT_MASK));
+            if menu_key && a.tree_menu_from_keyboard() {
+                glib::Propagation::Stop
+            } else {
+                glib::Propagation::Proceed
+            }
+        });
+        self.column_view.add_controller(keys);
         let a = self.clone();
         self.column_view.connect_activate(move |_, pos| {
             let Some(row) = a.selection.item(pos).and_downcast::<gtk::TreeListRow>() else {
@@ -964,19 +1035,47 @@ impl App {
                 return;
             };
             let root = a.chart_root.get();
-            let layout = chart::compute(t, root, a.chart_kind.get(), w as f64, h as f64);
+            // The widget's Pango context carries the interface font and
+            // the text-scaling factor.
+            let pango = area.pango_context();
+            let layout = chart::compute(
+                t,
+                root,
+                a.chart_kind.get(),
+                w as f64,
+                h as f64,
+                chart::line_height(&pango),
+            );
             let fg = area.color();
+            let theme = chart::Theme {
+                fg: (fg.red() as f64, fg.green() as f64, fg.blue() as f64),
+                style: chart::Style {
+                    dark: helix_app_common::style::is_dark(),
+                    high_contrast: helix_app_common::style::is_high_contrast(),
+                },
+            };
             chart::draw(
                 cr,
+                &pango,
                 t,
                 root,
                 &layout,
                 a.hover.get(),
-                (fg.red() as f64, fg.green() as f64, fg.blue() as f64),
+                theme,
                 &size_text,
             );
+            // Only when focus came from the keyboard, like a focus ring.
+            let focus_visible = area.state_flags().contains(gtk::StateFlags::FOCUS_VISIBLE);
+            if let Some(f) = a
+                .chart_focus
+                .get()
+                .filter(|_| area.has_focus() && focus_visible)
+            {
+                chart::draw_focus(cr, &layout, root, f, theme);
+            }
             *a.chart_layout.borrow_mut() = layout;
         });
+        helix_app_common::style::redraw_on_style_change(&self.chart);
 
         let hit_node = |a: &App, x: f64, y: f64| -> Option<NodeId> {
             match chart::hit(&a.chart_layout.borrow(), x, y)? {
@@ -1069,24 +1168,284 @@ impl App {
             }
         });
         self.chart.add_controller(click);
+
+        // Long press (touch): the item menu, like a right click.
+        let long_press = gtk::GestureLongPress::new();
+        let a = self.clone();
+        long_press.connect_pressed(move |g, x, y| {
+            let id = match chart::hit(&a.chart_layout.borrow(), x, y) {
+                Some(Hit::Root) => a.chart_root.get(),
+                Some(Hit::Node(id)) => id,
+                None => return,
+            };
+            g.set_state(gtk::EventSequenceState::Claimed);
+            a.target.set(Some(id));
+            a.update_action_state();
+            a.chart_menu
+                .set_pointing_to(Some(&gdk::Rectangle::new(x as i32, y as i32, 1, 1)));
+            a.chart_menu.popup();
+        });
+        self.chart.add_controller(long_press);
+
+        // Keyboard: arrows move between items (Left/Right along a ring or
+        // level, Up towards the centre, Down outwards), Enter opens a
+        // folder (or goes up from the centre), Backspace goes up, and
+        // Menu or Shift+F10 opens the item menu.
+        let keys = gtk::EventControllerKey::new();
+        let a = self.clone();
+        keys.connect_key_pressed(move |_, key, _, mods| {
+            use chart::Move;
+            let plain = !mods.intersects(
+                gdk::ModifierType::CONTROL_MASK
+                    | gdk::ModifierType::ALT_MASK
+                    | gdk::ModifierType::SUPER_MASK,
+            );
+            let shift = mods.contains(gdk::ModifierType::SHIFT_MASK);
+            let rtl = a.chart.direction() == gtk::TextDirection::Rtl;
+            let mv = match key {
+                gdk::Key::Left | gdk::Key::KP_Left if plain => {
+                    Some(if rtl { Move::Next } else { Move::Prev })
+                }
+                gdk::Key::Right | gdk::Key::KP_Right if plain => {
+                    Some(if rtl { Move::Prev } else { Move::Next })
+                }
+                gdk::Key::Up | gdk::Key::KP_Up if plain => Some(Move::Out),
+                gdk::Key::Down | gdk::Key::KP_Down if plain => Some(Move::In),
+                gdk::Key::Home | gdk::Key::KP_Home if plain => Some(Move::First),
+                gdk::Key::End | gdk::Key::KP_End if plain => Some(Move::Last),
+                _ => None,
+            };
+            if let Some(m) = mv {
+                a.chart_move(m);
+                return glib::Propagation::Stop;
+            }
+            match key {
+                gdk::Key::Return | gdk::Key::KP_Enter | gdk::Key::space | gdk::Key::KP_Space
+                    if plain && !shift =>
+                {
+                    a.chart_activate();
+                    glib::Propagation::Stop
+                }
+                gdk::Key::BackSpace if plain => {
+                    a.chart_up();
+                    glib::Propagation::Stop
+                }
+                gdk::Key::Menu => {
+                    a.chart_popup_focused();
+                    glib::Propagation::Stop
+                }
+                gdk::Key::F10 if shift => {
+                    a.chart_popup_focused();
+                    glib::Propagation::Stop
+                }
+                _ => glib::Propagation::Proceed,
+            }
+        });
+        self.chart.add_controller(keys);
+        let focus = gtk::EventControllerFocus::new();
+        let a = self.clone();
+        focus.connect_enter(move |_| {
+            let current = a.chart_focus.get();
+            let valid = current.is_some_and(|f| {
+                f == a.chart_root.get()
+                    || chart::visible(&a.fresh_layout())
+                        .iter()
+                        .any(|(n, _)| *n == f)
+            });
+            match current {
+                Some(f) if valid => a.focus_chart_item(f),
+                _ => {
+                    a.chart_focus.set(None);
+                    a.chart_move(chart::Move::In);
+                }
+            }
+        });
+        let a = self.clone();
+        focus.connect_leave(move |_| a.chart.queue_draw());
+        self.chart.add_controller(focus);
+    }
+
+    /// The chart's current layout, computed now (the stored one is only
+    /// refreshed when the chart is drawn).
+    fn fresh_layout(&self) -> Layout {
+        let tree = self.tree.borrow();
+        let Some(t) = tree.as_ref() else {
+            return Layout::Empty;
+        };
+        chart::compute(
+            t,
+            self.chart_root.get(),
+            self.chart_kind.get(),
+            self.chart.width() as f64,
+            self.chart.height() as f64,
+            chart::line_height(&self.chart.pango_context()),
+        )
+    }
+
+    /// Moves the chart's keyboard focus; from nowhere, starts at the
+    /// largest item (or the centre when the folder shows no items).
+    fn chart_move(self: &Rc<Self>, m: chart::Move) {
+        let root = self.chart_root.get();
+        let next = {
+            let tree = self.tree.borrow();
+            let Some(t) = tree.as_ref() else { return };
+            let layout = self.fresh_layout();
+            match self.chart_focus.get() {
+                Some(cur) => chart::navigate(t, &layout, root, cur, m),
+                None => chart::navigate(t, &layout, root, root, chart::Move::In).or(Some(root)),
+            }
+        };
+        match next {
+            Some(n) => self.focus_chart_item(n),
+            None => self.chart.error_bell(),
+        }
+    }
+
+    /// Gives `id` the chart's keyboard focus, makes it the target of the
+    /// item actions, and tells screen readers what it is.
+    fn focus_chart_item(self: &Rc<Self>, id: NodeId) {
+        self.chart_focus.set(Some(id));
+        self.target.set(Some(id));
+        self.update_action_state();
+        self.chart.queue_draw();
+        let text = {
+            let tree = self.tree.borrow();
+            let Some(t) = tree.as_ref() else { return };
+            let n = t.node(id);
+            let root = self.chart_root.get();
+            if id == root {
+                let up = if n.parent.is_some() {
+                    ", press Enter to go up"
+                } else {
+                    ""
+                };
+                format!("{}, {} in total{up}", n.name, size_text(n.size))
+            } else {
+                let share = n
+                    .parent
+                    .map(|p| t.node(p))
+                    .filter(|p| p.size > 0)
+                    .map(|p| format!(", {} % of {}", n.size * 100 / p.size, p.name))
+                    .unwrap_or_default();
+                let what = match n.kind {
+                    Kind::Dir if !n.children.is_empty() => "folder, press Enter to open",
+                    Kind::Dir => "empty folder",
+                    _ => "file",
+                };
+                format!("{}, {}{share}, {what}", n.name, size_text(n.size))
+            }
+        };
+        helix_app_common::announce(&self.chart, &text, helix_app_common::Urgency::Polite);
+    }
+
+    /// Enter on the focused chart item: opens a folder, or goes up from
+    /// the centre.
+    fn chart_activate(self: &Rc<Self>) {
+        let Some(id) = self.chart_focus.get() else {
+            return;
+        };
+        if id == self.chart_root.get() {
+            self.chart_up();
+            return;
+        }
+        let opens = self
+            .tree
+            .borrow()
+            .as_ref()
+            .is_some_and(|t| t.node(id).kind == Kind::Dir && !t.node(id).children.is_empty());
+        if opens {
+            self.set_chart_root(id);
+            if self.chart.has_focus() {
+                self.chart_move(chart::Move::In);
+            }
+        } else {
+            self.chart.error_bell();
+        }
+    }
+
+    /// Opens the item menu for the keyboard-focused chart item.
+    fn chart_popup_focused(self: &Rc<Self>) {
+        let Some(id) = self.chart_focus.get() else {
+            return;
+        };
+        let rect = chart::anchor(&self.fresh_layout(), self.chart_root.get(), id);
+        self.target.set(Some(id));
+        self.update_action_state();
+        let r = rect.map_or_else(
+            || gdk::Rectangle::new(self.chart.width() / 2, self.chart.height() / 2, 1, 1),
+            |r| {
+                gdk::Rectangle::new(
+                    r.x as i32,
+                    r.y as i32,
+                    r.w.max(1.0) as i32,
+                    r.h.max(1.0) as i32,
+                )
+            },
+        );
+        self.chart_menu.set_pointing_to(Some(&r));
+        self.chart_menu.popup();
+    }
+
+    /// Names the chart after its folder and describes the largest items,
+    /// for screen readers.
+    fn update_chart_accessible(&self) {
+        let tree = self.tree.borrow();
+        let Some(t) = tree.as_ref() else { return };
+        let root = t.node(self.chart_root.get());
+        let label = format!("Usage of {}", root.name);
+        let mut kids: Vec<_> = root
+            .children
+            .iter()
+            .map(|&c| t.node(c))
+            .filter(|n| !n.removed && n.size > 0)
+            .collect();
+        kids.sort_by_key(|n| std::cmp::Reverse(n.size));
+        let parts: Vec<String> = kids
+            .iter()
+            .take(5)
+            .map(|n| {
+                let pct = (n.size * 100).checked_div(root.size).unwrap_or(0);
+                format!("{} {}, {pct} %", n.name, size_text(n.size))
+            })
+            .collect();
+        let description = if parts.is_empty() {
+            format!("{} in total; no items", size_text(root.size))
+        } else {
+            format!(
+                "{} in total. Largest: {}. Use the arrow keys to explore.",
+                size_text(root.size),
+                parts.join("; ")
+            )
+        };
+        self.chart.update_property(&[
+            gtk::accessible::Property::Label(&label),
+            gtk::accessible::Property::Description(&description),
+        ]);
     }
 
     fn set_chart_root(self: &Rc<Self>, id: NodeId) {
         self.chart_root.set(id);
         self.hover.set(None);
+        self.chart_focus.set(None);
         self.rebuild_breadcrumbs();
+        self.update_chart_accessible();
         self.chart.queue_draw();
         self.update_action_state();
     }
 
     fn chart_up(self: &Rc<Self>) {
-        let parent = self
-            .tree
-            .borrow()
-            .as_ref()
-            .and_then(|t| t.node(self.chart_root.get()).parent);
-        if let Some(p) = parent {
-            self.set_chart_root(p);
+        let old = self.chart_root.get();
+        let parent = self.tree.borrow().as_ref().and_then(|t| t.node(old).parent);
+        match parent {
+            Some(p) => {
+                self.set_chart_root(p);
+                // Keep the keyboard on the folder just left.
+                if self.chart.has_focus() {
+                    self.focus_chart_item(old);
+                }
+            }
+            None if self.chart.has_focus() => self.chart.error_bell(),
+            None => {}
         }
     }
 
@@ -1160,6 +1519,18 @@ impl App {
         gapp.set_accels_for_action("win.cancel-scan", &["Escape"]);
         gapp.set_accels_for_action("win.chart-up", &["<Alt>Up"]);
         gapp.set_accels_for_action("win.preferences", &["<Control>comma"]);
+        // Item actions, for the selected row or the focused chart item.
+        gapp.set_accels_for_action("win.open-item", &["<Control>Return", "<Control>KP_Enter"]);
+        gapp.set_accels_for_action("win.copy-path", &["<Control><Shift>c"]);
+        // Delete without modifiers must not reach past a focused text field
+        // (the preferences search), so it is a bubble-phase shortcut.
+        helix_app_common::add_bubble_shortcuts(
+            &self.window,
+            &[
+                ("Delete", "win.trash-item"),
+                ("KP_Delete", "win.trash-item"),
+            ],
+        );
     }
 
     fn set_enabled(&self, name: &str, enabled: bool) {
@@ -1335,6 +1706,10 @@ impl App {
         if !chart_ok {
             self.set_chart_root(parent.unwrap_or(ROOT));
         } else {
+            if self.chart_focus.get() == Some(id) {
+                self.chart_focus.set(None);
+            }
+            self.update_chart_accessible();
             self.chart.queue_draw();
         }
         self.target.set(None);

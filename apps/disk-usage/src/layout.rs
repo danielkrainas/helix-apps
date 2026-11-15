@@ -117,7 +117,6 @@ pub struct Tile {
 }
 
 pub const TREEMAP_PAD: f64 = 2.0;
-pub const TREEMAP_HEADER: f64 = 14.0;
 
 fn visible_children(tree: &ScanTree, id: NodeId) -> Vec<NodeId> {
     tree.node(id)
@@ -130,13 +129,15 @@ fn visible_children(tree: &ScanTree, id: NodeId) -> Vec<NodeId> {
 
 /// Nested treemap of `root` inside `rect`. Parents come before their
 /// children in the result, so the last tile containing a point is the
-/// deepest one.
+/// deepest one. Folder tiles tall enough get a `header` strip (the height
+/// of one label line) above their children.
 pub fn treemap(
     tree: &ScanTree,
     root: NodeId,
     rect: Rect,
     max_depth: usize,
     min_px: f64,
+    header: f64,
 ) -> Vec<Tile> {
     let mut out = vec![Tile {
         node: root,
@@ -154,16 +155,17 @@ pub fn treemap(
         branch: Option<usize>,
         max_depth: usize,
         min_px: f64,
+        header: f64,
     ) {
         if depth >= max_depth {
             return;
         }
-        let header = if rect.h >= TREEMAP_HEADER * 2.5 && depth > 0 {
-            TREEMAP_HEADER
+        let top = if rect.h >= header * 2.5 && depth > 0 {
+            header
         } else {
             0.0
         };
-        let inner = rect.inset(TREEMAP_PAD, TREEMAP_PAD + header, TREEMAP_PAD, TREEMAP_PAD);
+        let inner = rect.inset(TREEMAP_PAD, TREEMAP_PAD + top, TREEMAP_PAD, TREEMAP_PAD);
         if inner.w < min_px || inner.h < min_px {
             return;
         }
@@ -180,10 +182,22 @@ pub fn treemap(
                 depth: depth + 1,
                 branch: b,
             });
-            recurse(tree, out, kid, r, depth + 1, Some(b), max_depth, min_px);
+            recurse(
+                tree,
+                out,
+                kid,
+                r,
+                depth + 1,
+                Some(b),
+                max_depth,
+                min_px,
+                header,
+            );
         }
     }
-    recurse(tree, &mut out, root, rect, 0, None, max_depth, min_px);
+    recurse(
+        tree, &mut out, root, rect, 0, None, max_depth, min_px, header,
+    );
     out
 }
 
@@ -319,6 +333,8 @@ mod tests {
     use super::*;
     use crate::scanner::{Kind, ROOT};
 
+    const TREEMAP_HEADER: f64 = 14.0;
+
     fn close(a: f64, b: f64) -> bool {
         (a - b).abs() < 1e-6
     }
@@ -442,7 +458,7 @@ mod tests {
     fn treemap_nesting_and_hit() {
         let t = sample();
         let area = Rect::new(0.0, 0.0, 400.0, 300.0);
-        let tiles = treemap(&t, ROOT, area, 4, 1.0);
+        let tiles = treemap(&t, ROOT, area, 4, 1.0, TREEMAP_HEADER);
         assert_eq!(tiles.len(), 6);
         assert_eq!(tiles[0].node, ROOT);
         let a = tiles.iter().find(|x| t.node(x.node).name == "a").unwrap();
@@ -458,10 +474,18 @@ mod tests {
         let (cx, cy) = (a1.rect.x + a1.rect.w / 2.0, a1.rect.y + a1.rect.h / 2.0);
         assert_eq!(treemap_hit(&tiles, cx, cy).unwrap().node, a1.node);
         // Depth limit.
-        assert_eq!(treemap(&t, ROOT, area, 1, 1.0).len(), 4);
+        assert_eq!(treemap(&t, ROOT, area, 1, 1.0, TREEMAP_HEADER).len(), 4);
         // Tiny area: nothing below the root.
         assert_eq!(
-            treemap(&t, ROOT, Rect::new(0.0, 0.0, 6.0, 6.0), 4, 4.0).len(),
+            treemap(
+                &t,
+                ROOT,
+                Rect::new(0.0, 0.0, 6.0, 6.0),
+                4,
+                4.0,
+                TREEMAP_HEADER
+            )
+            .len(),
             1
         );
     }

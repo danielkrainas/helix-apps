@@ -584,10 +584,12 @@ impl Worker {
                             .text_for_area(&mut line)
                             .map(|t| t.to_string())
                             .unwrap_or_default();
+                        let (context, matched) = snippet(&ctx, &s.query, 60);
                         Hit {
                             page: i,
                             rect,
-                            context: snippet(&ctx, &s.query, 60),
+                            context,
+                            matched,
                         }
                     })
                     .collect();

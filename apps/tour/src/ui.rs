@@ -69,10 +69,7 @@ pub fn run(state_path: PathBuf) -> glib::ExitCode {
 
 fn load_css() {
     let css = gtk::CssProvider::new();
-    css.load_from_string(
-        ".tour-body { font-size: 12pt; }
-         .tour-nav { min-width: 40px; min-height: 40px; }",
-    );
+    css.load_from_string(".tour-nav { min-width: 40px; min-height: 40px; }");
     if let Some(display) = gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
             &display,
@@ -80,6 +77,12 @@ fn load_css() {
             gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
         );
     }
+}
+
+/// What is announced when tour page `idx` comes into view.
+fn page_announcement(idx: usize) -> String {
+    let title = PAGES.get(idx).map_or("", |p| p.title);
+    format!("{title}, page {} of {}", idx + 1, PAGES.len())
 }
 
 fn illustration(art: Art, areas: &mut Vec<gtk::DrawingArea>) -> gtk::DrawingArea {
@@ -112,13 +115,20 @@ fn body_label(markup: &str) -> gtk::Label {
         .wrap(true)
         .justify(gtk::Justification::Center)
         .max_width_chars(52)
-        .css_classes(["tour-body"])
+        .css_classes(["body"])
         .build()
 }
 
 fn pill(label: &str, suggested: bool) -> gtk::Button {
-    let b = gtk::Button::builder()
+    // A wrapping label, so a long translation or large text cannot make
+    // the button wider than a narrow window.
+    let text = gtk::Label::builder()
         .label(label)
+        .wrap(true)
+        .justify(gtk::Justification::Center)
+        .build();
+    let b = gtk::Button::builder()
+        .child(&text)
         .halign(gtk::Align::Center)
         .css_classes(["pill"])
         .build();
@@ -128,15 +138,40 @@ fn pill(label: &str, suggested: bool) -> gtk::Button {
     b
 }
 
-fn page_box() -> gtk::Box {
-    gtk::Box::builder()
+/// Side margin of a page: room for the previous/next buttons.
+const MARGIN: i32 = 72;
+/// The same at narrow widths (40 px button + 18 px gap + 2).
+const NARROW_MARGIN: i32 = 60;
+/// Window width (sp) at or below which pages are laid out narrow.
+const NARROW_WIDTH: f64 = 600.0;
+/// Illustration size at narrow widths.
+const NARROW_ART: (i32, i32) = (220, 134);
+
+fn page_box(boxes: &mut Vec<gtk::Box>) -> gtk::Box {
+    let b = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
         .spacing(18)
         .valign(gtk::Align::Center)
         .hexpand(true)
         .vexpand(true)
-        .margin_start(72)
-        .margin_end(72)
+        .margin_start(MARGIN)
+        .margin_end(MARGIN)
+        .margin_top(12)
+        .margin_bottom(12)
+        .build();
+    boxes.push(b.clone());
+    b
+}
+
+/// Puts a page in a scrolled window, so that with large text, a long
+/// translation or a small screen every part of it (the buttons too) can
+/// still be reached.
+fn scrollable(page: &gtk::Box) -> gtk::ScrolledWindow {
+    gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .hexpand(true)
+        .vexpand(true)
+        .child(&adw::Clamp::builder().maximum_size(720).child(page).build())
         .build()
 }
 
@@ -146,12 +181,14 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
         .title("Tour")
         .default_width(800)
         .default_height(640)
-        .resizable(false)
+        .width_request(360)
+        .height_request(480)
         .build();
     let mut areas = Vec::new();
+    let mut boxes = Vec::new();
 
     // Welcome view.
-    let welcome = page_box();
+    let welcome = page_box(&mut boxes);
     welcome.append(&illustration(Art::Welcome, &mut areas));
     welcome.append(&title_label(pages::WELCOME_TITLE));
     if let Some(os) = crate::os_release::system_display_name() {
@@ -180,7 +217,7 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
         .allow_long_swipes(false)
         .build();
     for (i, page) in PAGES.iter().enumerate() {
-        let b = page_box();
+        let b = page_box(&mut boxes);
         b.append(&illustration(page.art, &mut areas));
         b.append(&title_label(page.title));
         b.append(&body_label(page.body));
@@ -210,7 +247,7 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
             });
             b.append(&close);
         }
-        carousel.append(&b);
+        carousel.append(&scrollable(&b));
     }
 
     let prev = gtk::Button::builder()
@@ -245,7 +282,7 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
     let stack = gtk::Stack::builder()
         .transition_type(gtk::StackTransitionType::Crossfade)
         .build();
-    stack.add_named(&welcome, Some("welcome"));
+    stack.add_named(&scrollable(&welcome), Some("welcome"));
     stack.add_named(&tour, Some("tour"));
 
     let header = adw::HeaderBar::builder().show_title(false).build();
@@ -253,6 +290,29 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
     toolbar.add_top_bar(&header);
     toolbar.set_content(Some(&stack));
     window.set_content(Some(&toolbar));
+
+    // Narrow windows: smaller side margins and illustrations.
+    let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
+        adw::BreakpointConditionLengthType::MaxWidth,
+        NARROW_WIDTH,
+        adw::LengthUnit::Sp,
+    ));
+    for b in &boxes {
+        narrow.add_setter(b, "margin-start", Some(&NARROW_MARGIN.to_value()));
+        narrow.add_setter(b, "margin-end", Some(&NARROW_MARGIN.to_value()));
+    }
+    for a in &areas {
+        narrow.add_setter(a, "content-width", Some(&NARROW_ART.0.to_value()));
+        narrow.add_setter(a, "content-height", Some(&NARROW_ART.1.to_value()));
+    }
+    // The welcome buttons stack up instead of sitting side by side.
+    narrow.add_setter(
+        &buttons,
+        "orientation",
+        Some(&gtk::Orientation::Vertical.to_value()),
+    );
+    narrow.add_setter(&buttons, "spacing", Some(&6.to_value()));
+    window.add_breakpoint(narrow);
 
     // Navigation. `current` is the page being shown or scrolled to, so
     // repeated presses advance even while an animation is running.
@@ -278,9 +338,15 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
     };
     {
         let current = current.clone();
-        carousel.connect_page_changed(move |_, idx| {
+        carousel.connect_page_changed(move |c, idx| {
             current.set(idx);
             update_arrows(idx);
+            // Focus usually stays on the Next button, so say where we are.
+            helix_app_common::announce(
+                c,
+                &page_announcement(idx as usize),
+                helix_app_common::Urgency::Polite,
+            );
         });
     }
     {
@@ -297,6 +363,11 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
         move || {
             stack.set_visible_child_name("tour");
             next.grab_focus();
+            helix_app_common::announce(
+                &next,
+                &page_announcement(0),
+                helix_app_common::Urgency::Polite,
+            );
         }
     };
     {
@@ -318,10 +389,15 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
         no_thanks.connect_clicked(move |_| skip());
     }
 
+    // Left/Right turn the pages of the tour, but only when focus is on the
+    // previous/next buttons or on no button at all: on "No Thanks",
+    // "Start Tour", "Learn More" or "Close" they keep their usual meaning
+    // (moving focus). Escape skips the tour from anywhere.
     let keys = gtk::EventControllerKey::new();
     keys.set_propagation_phase(gtk::PropagationPhase::Capture);
     {
-        let stack = stack.clone();
+        let (stack, window_weak) = (stack.clone(), window.downgrade());
+        let (prev, next) = (prev.clone(), next.clone());
         keys.connect_key_pressed(move |_, key, _, mods| {
             if mods.intersects(
                 gdk::ModifierType::CONTROL_MASK
@@ -330,14 +406,33 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
             ) {
                 return glib::Propagation::Proceed;
             }
-            let on_tour = stack.visible_child_name().as_deref() == Some("tour");
-            match key {
-                gdk::Key::Escape => skip(),
-                gdk::Key::Right | gdk::Key::KP_Right if on_tour => go(1),
-                gdk::Key::Left | gdk::Key::KP_Left if on_tour => go(-1),
-                gdk::Key::Right | gdk::Key::KP_Right => start_tour(),
-                _ => return glib::Propagation::Proceed,
+            if key == gdk::Key::Escape {
+                skip();
+                return glib::Propagation::Stop;
             }
+            let forward = match key {
+                gdk::Key::Right | gdk::Key::KP_Right => true,
+                gdk::Key::Left | gdk::Key::KP_Left => false,
+                _ => return glib::Propagation::Proceed,
+            };
+            if stack.visible_child_name().as_deref() != Some("tour") {
+                return glib::Propagation::Proceed;
+            }
+            let Some(window) = window_weak.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
+            let focus = gtk::prelude::GtkWindowExt::focus(&window);
+            let on_other_button = focus.as_ref().is_some_and(|f| {
+                let nav =
+                    f == prev.upcast_ref::<gtk::Widget>() || f == next.upcast_ref::<gtk::Widget>();
+                !nav && (f.is::<gtk::Button>() || f.ancestor(gtk::Button::static_type()).is_some())
+            });
+            if on_other_button {
+                return glib::Propagation::Proceed;
+            }
+            // The carousel runs right to left in right-to-left text.
+            let rtl = window.direction() == gtk::TextDirection::Rtl;
+            go(if forward != rtl { 1 } else { -1 });
             glib::Propagation::Stop
         });
     }
@@ -354,4 +449,20 @@ fn build(app: &adw::Application, session: Rc<Session>) -> adw::ApplicationWindow
     window.set_default_widget(Some(&start));
     start.grab_focus();
     window
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn page_announcements() {
+        assert_eq!(
+            page_announcement(0),
+            format!("{}, page 1 of {}", PAGES[0].title, PAGES.len())
+        );
+        assert!(
+            page_announcement(PAGES.len() - 1).ends_with(&format!("page {0} of {0}", PAGES.len()))
+        );
+    }
 }

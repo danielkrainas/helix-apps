@@ -127,6 +127,8 @@ impl App {
             let img = gtk::Image::builder()
                 .pixel_size(160)
                 .css_classes(["hm-cover"])
+                // Decorative: the album or track title next to it names it.
+                .accessible_role(gtk::AccessibleRole::Presentation)
                 .build();
             let title = label("", &["heading"]);
             let artist = label("", &["dim-label"]);
@@ -655,6 +657,8 @@ impl App {
         let img = gtk::Image::builder()
             .pixel_size(160)
             .css_classes(["hm-cover"])
+            // Decorative: the album or track title next to it names it.
+            .accessible_role(gtk::AccessibleRole::Presentation)
             .build();
         self.set_cover(&img, cover);
         let info = gtk::Box::new(gtk::Orientation::Vertical, 6);
@@ -812,6 +816,8 @@ impl App {
             let img = gtk::Image::builder()
                 .pixel_size(48)
                 .css_classes(["hm-cover"])
+                // Decorative: the album or track title next to it names it.
+                .accessible_role(gtk::AccessibleRole::Presentation)
                 .build();
             self.set_cover(&img, album.cover.as_deref());
             let text = gtk::Box::new(gtk::Orientation::Vertical, 2);
@@ -1013,6 +1019,8 @@ impl App {
         let img = gtk::Image::builder()
             .pixel_size(256)
             .css_classes(["hm-cover"])
+            // Decorative: the album or track title next to it names it.
+            .accessible_role(gtk::AccessibleRole::Presentation)
             .halign(gtk::Align::Center)
             .build();
         let title = gtk::Label::builder()
@@ -1151,6 +1159,8 @@ impl App {
                 let img = gtk::Image::builder()
                     .pixel_size(40)
                     .css_classes(["hm-cover"])
+                    // Decorative: the album or track title next to it names it.
+                    .accessible_role(gtk::AccessibleRole::Presentation)
                     .build();
                 self.set_cover(&img, a.cover.as_deref());
                 row.add_prefix(&img);

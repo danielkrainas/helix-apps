@@ -95,6 +95,7 @@ fn load_css() {
     css.load_from_string(
         ".log-row { padding: 4px 6px; }
          .log-time { font-feature-settings: \"tnum\"; min-width: 7em; }
+         .log-severity { min-width: 16px; }
          .log-field-name { font-size: smaller; }
          .log-field-value { font-family: monospace; }",
     );
@@ -165,6 +166,13 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
         };
         let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
         row.add_css_class("log-row");
+        // Severity shown by an icon whose shape differs (error, warning), not
+        // only by colour; the row's accessible label says it in words.
+        let severity = gtk::Image::builder()
+            .accessible_role(gtk::AccessibleRole::Presentation)
+            .css_classes(["log-severity"])
+            .build();
+        row.append(&severity);
         let time = label("", &["log-time", "dim-label", "numeric"]);
         time.set_xalign(0.0);
         let msg = label("", &["log-message"]);
@@ -193,7 +201,10 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
             return;
         };
         let entry = obj.borrow::<Entry>();
-        let time = row.first_child().and_downcast::<gtk::Label>();
+        let Some(severity) = row.first_child().and_downcast::<gtk::Image>() else {
+            return;
+        };
+        let time = severity.next_sibling().and_downcast::<gtk::Label>();
         let msg = time
             .as_ref()
             .and_then(|t| t.next_sibling())
@@ -208,16 +219,32 @@ fn build(app: &adw::Application) -> adw::ApplicationWindow {
         let tz = glib::TimeZone::local();
         let now =
             glib::DateTime::now(&tz).unwrap_or_else(|_| glib::DateTime::now_utc().expect("clock"));
-        time.set_text(&format::row_time(entry.timestamp_usec(), &now, &tz));
-        msg.set_text(&format::one_line(entry.message()));
+        let time_text = format::row_time(entry.timestamp_usec(), &now, &tz);
+        let message = format::one_line(entry.message());
+        time.set_text(&time_text);
+        msg.set_text(&message);
         proc_.set_text(entry.process());
-        msg.remove_css_class("error");
-        msg.remove_css_class("warning");
-        match entry.priority() {
-            0..=3 => msg.add_css_class("error"),
-            4 => msg.add_css_class("warning"),
-            _ => {}
+        for c in ["error", "warning"] {
+            severity.remove_css_class(c);
         }
+        match entry.priority() {
+            0..=3 => {
+                severity.set_icon_name(Some("dialog-error-symbolic"));
+                severity.add_css_class("error");
+            }
+            4 => {
+                severity.set_icon_name(Some("dialog-warning-symbolic"));
+                severity.add_css_class("warning");
+            }
+            _ => severity.set_icon_name(None),
+        }
+        item.set_accessible_label(&format::row_accessible_label(
+            journal::priority_name(entry.priority()),
+            &time_text,
+            entry.process(),
+            &message,
+        ));
+
         row.set_tooltip_text(Some(&format!(
             "{} · {}",
             journal::priority_name(entry.priority()),

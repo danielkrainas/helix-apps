@@ -95,7 +95,9 @@ fn load_css() {
     css.load_from_string(
         ".ap-cover { border-radius: 12px; }
          .ap-play { min-width: 56px; min-height: 56px; }
-         .ap-waveform { min-height: 96px; }",
+         .ap-waveform { min-height: 96px; }
+         .ap-waveform:focus-visible { outline: 2px solid alpha(@accent_color, 0.5);
+                                      outline-offset: 2px; border-radius: 6px; }",
     );
     if let Some(display) = gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
@@ -300,13 +302,17 @@ impl Ui {
             .build();
         subtitle.add_css_class("dim-label");
 
+        // Focusable and operated with the arrow, Page Up/Down, Home and End
+        // keys (see `connect_signals`). The `accent` class makes its own
+        // colour the accent colour, for the played bars.
         let waveform = gtk::DrawingArea::builder()
             .accessible_role(gtk::AccessibleRole::Slider)
             .tooltip_text("Position")
             .hexpand(true)
             .content_height(96)
+            .focusable(true)
+            .css_classes(["ap-waveform", "accent"])
             .build();
-        waveform.add_css_class("ap-waveform");
         waveform.set_cursor_from_name(Some("pointer"));
         helix_app_common::set_accessible_label(&waveform, "Position");
 
@@ -644,6 +650,53 @@ impl Ui {
             }
         });
         self.waveform.add_controller(drag);
+        helix_app_common::style::redraw_on_style_change(&self.waveform);
+
+        // Keyboard seeking while the waveform has focus.
+        let keys = gtk::EventControllerKey::new();
+        let w = Rc::downgrade(self);
+        keys.connect_key_pressed(move |_, key, _, mods| {
+            use seek::KeySeek;
+            let Some(ui) = w.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
+            if mods.intersects(
+                gdk::ModifierType::CONTROL_MASK
+                    | gdk::ModifierType::ALT_MASK
+                    | gdk::ModifierType::SHIFT_MASK
+                    | gdk::ModifierType::SUPER_MASK,
+            ) {
+                return glib::Propagation::Proceed;
+            }
+            // Left is "back" in left-to-right text, "forward" otherwise.
+            let rtl = ui.waveform.direction() == gtk::TextDirection::Rtl;
+            let (back, fwd) = if rtl {
+                (seek::KEY_STEP_NS, -seek::KEY_STEP_NS)
+            } else {
+                (-seek::KEY_STEP_NS, seek::KEY_STEP_NS)
+            };
+            let request = match key {
+                gdk::Key::Left | gdk::Key::KP_Left => KeySeek::By(back),
+                gdk::Key::Right | gdk::Key::KP_Right => KeySeek::By(fwd),
+                gdk::Key::Down | gdk::Key::KP_Down => KeySeek::By(-seek::KEY_STEP_NS),
+                gdk::Key::Up | gdk::Key::KP_Up => KeySeek::By(seek::KEY_STEP_NS),
+                gdk::Key::Page_Down | gdk::Key::KP_Page_Down => KeySeek::By(-seek::KEY_PAGE_NS),
+                gdk::Key::Page_Up | gdk::Key::KP_Page_Up => KeySeek::By(seek::KEY_PAGE_NS),
+                gdk::Key::Home | gdk::Key::KP_Home => KeySeek::Start,
+                gdk::Key::End | gdk::Key::KP_End => KeySeek::End,
+                _ => return glib::Propagation::Proceed,
+            };
+            if ui.has_file() {
+                let (pos, dur) = {
+                    let st = ui.state.borrow();
+                    (st.position, st.duration)
+                };
+                ui.seek_to(seek::key_target(request, pos, dur));
+                ui.waveform.queue_draw();
+            }
+            glib::Propagation::Stop
+        });
+        self.waveform.add_controller(keys);
 
         // Volume slider.
         let w = Rc::downgrade(self);
@@ -929,12 +982,12 @@ impl Ui {
         height: f64,
     ) {
         let st = self.state.borrow();
-        let fg = area.color();
-        #[allow(deprecated)]
-        let accent = area
-            .style_context()
-            .lookup_color("accent_color")
-            .unwrap_or(gdk::RGBA::new(0.21, 0.52, 0.89, 1.0));
+        // The area carries the `accent` class, so its own colour is the
+        // accent colour; bars that are not played yet use its parent's
+        // (normal) foreground colour.
+        let accent = area.color();
+        let fg = area.parent().map_or(accent, |p| p.color());
+        let unplayed = seek::unplayed_alpha(helix_app_common::style::is_high_contrast());
         let pos = st.drag.unwrap_or(st.position);
         let frac = seek::fraction(pos, st.duration);
         let mid = height / 2.0;
@@ -969,7 +1022,7 @@ impl Ui {
             if x + 1.0 <= play_x {
                 set(&accent, 1.0);
             } else {
-                set(&fg, 0.35);
+                set(&fg, unplayed);
             }
             cr.rectangle(x, mid - half, 2.0, half * 2.0);
             let _ = cr.fill();

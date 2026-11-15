@@ -116,9 +116,33 @@ pub fn one_line(msg: &str) -> String {
     }
 }
 
+/// What a screen reader says for a list row: severity, time, process and
+/// message ("Error, 12:03:39, gdm-password: unable to locate …").
+pub fn row_accessible_label(severity: &str, time: &str, process: &str, message: &str) -> String {
+    let mut s = format!("{severity}, {time}");
+    if !process.is_empty() {
+        s.push_str(&format!(", {process}"));
+    }
+    s.push_str(": ");
+    s.push_str(message);
+    s
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn row_labels() {
+        assert_eq!(
+            row_accessible_label("Error", "12:03:39", "gdm-password", "no daemon"),
+            "Error, 12:03:39, gdm-password: no daemon"
+        );
+        assert_eq!(
+            row_accessible_label("Info", "12:03:39", "", "hello"),
+            "Info, 12:03:39: hello"
+        );
+    }
 
     fn utc() -> TimeZone {
         TimeZone::utc()

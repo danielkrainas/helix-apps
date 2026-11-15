@@ -1129,8 +1129,11 @@ impl Win {
             let p = gtk::Label::builder().xalign(0.0).build();
             p.add_css_class("dim-label");
             p.add_css_class("dv-result-page");
+            // The snippet starts a few words before the match, so the match
+            // stays visible when the end is ellipsized.
             let c = gtk::Label::builder()
                 .xalign(0.0)
+                .use_markup(true)
                 .ellipsize(gtk::pango::EllipsizeMode::End)
                 .build();
             b.append(&p);
@@ -1149,13 +1152,15 @@ impl Win {
             let Some(hit) = search.hits().get(pos) else {
                 return;
             };
+            let page = format!("Page {}", win.model.label(hit.page));
             if let Some(p) = b.first_child().and_downcast::<gtk::Label>() {
-                p.set_label(&format!("Page {}", win.model.label(hit.page)));
+                p.set_label(&page);
             }
             if let Some(c) = b.last_child().and_downcast::<gtk::Label>() {
-                c.set_label(&hit.context);
+                c.set_markup(&hit.context_markup());
                 c.set_tooltip_text(Some(&hit.context));
             }
+            li.set_accessible_label(&format!("{page}: {}", hit.context));
         });
         self.results_view.set_factory(Some(&f));
         let w = self.weak();

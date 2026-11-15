@@ -77,8 +77,10 @@ const ACCELS: &[(&str, &[&str])] = &[
     ("win.open-with", &["<Control><Shift>o"]),
     ("win.copy", &["<Control>c"]),
     ("win.trash", &["Delete", "KP_Delete"]),
-    ("win.prev", &["Left", "Page_Up", "KP_Left"]),
-    ("win.next", &["Right", "Page_Down", "KP_Right"]),
+    // The arrow keys also go to the previous/next image, but pan a zoomed
+    // image instead (see `Viewer::arrow_key`).
+    ("win.prev", &["Page_Up", "KP_Page_Up"]),
+    ("win.next", &["Page_Down", "KP_Page_Down"]),
     ("win.first", &["Home"]),
     ("win.last", &["End"]),
     (
@@ -193,6 +195,8 @@ struct State {
     delays: Vec<u32>,
     controls_timeout: Option<glib::SourceId>,
     over_controls: bool,
+    /// Keyboard focus is on one of the on-screen controls.
+    focus_in_controls: bool,
     slideshow: Option<glib::SourceId>,
     monitor: Option<(PathBuf, gio::FileMonitor)>,
     refresh_pending: bool,
@@ -284,6 +288,13 @@ impl Viewer {
         s2.append(Some("Set as _Background…"), Some("win.set-background"));
         s2.append(Some("Move to _Trash"), Some("win.trash"));
         menu.append_section(None, &s2);
+        let zoom = gio::Menu::new();
+        zoom.append(Some("Zoom _In"), Some("win.zoom-in"));
+        zoom.append(Some("Zoom O_ut"), Some("win.zoom-out"));
+        zoom.append(Some("_Best Fit"), Some("win.zoom-fit"));
+        zoom.append(Some("100 %"), Some("win.zoom-100"));
+        zoom.append(Some("200 %"), Some("win.zoom-200"));
+        menu.append_section(None, &zoom);
         let s3 = gio::Menu::new();
         s3.append(Some("Rotate _Left"), Some("win.rotate-left"));
         s3.append(Some("Rotate _Right"), Some("win.rotate-right"));
@@ -620,6 +631,7 @@ impl Viewer {
                 delays: Vec::new(),
                 controls_timeout: None,
                 over_controls: false,
+                focus_in_controls: false,
                 slideshow: None,
                 monitor: None,
                 refresh_pending: false,
@@ -746,6 +758,47 @@ impl Viewer {
             }
         });
         controls.add_controller(over);
+
+        // Keyboard: the on-screen controls appear on Tab and the arrow
+        // keys, and stay while one of them has focus, so they can be
+        // reached and used without a pointer.
+        for r in &self.revealers {
+            let focus = gtk::EventControllerFocus::new();
+            let weak = self.weak();
+            focus.connect_enter(move |_| {
+                if let Some(v) = weak.upgrade() {
+                    v.state.borrow_mut().focus_in_controls = true;
+                    v.show_controls();
+                }
+            });
+            let weak = self.weak();
+            focus.connect_leave(move |_| {
+                if let Some(v) = weak.upgrade() {
+                    v.state.borrow_mut().focus_in_controls = false;
+                    // Restart the timer so they hide again later.
+                    v.show_controls();
+                }
+            });
+            r.add_controller(focus);
+        }
+        let focus = gtk::EventControllerFocus::new();
+        let weak = self.weak();
+        focus.connect_enter(move |_| {
+            if let Some(v) = weak.upgrade() {
+                v.show_controls();
+            }
+        });
+        overlay.add_controller(focus);
+        let keys = gtk::EventControllerKey::new();
+        keys.set_propagation_phase(gtk::PropagationPhase::Capture);
+        let weak = self.weak();
+        keys.connect_key_pressed(move |_, key, _, mods| {
+            let Some(v) = weak.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
+            v.key_pressed(key, mods)
+        });
+        self.window.add_controller(keys);
 
         let weak = self.weak();
         self.window.connect_fullscreened_notify(move |w| {
@@ -1178,6 +1231,82 @@ impl Viewer {
         self.update_canvas_a11y();
     }
 
+    /// Window-wide key handling (capture phase): Tab reveals the on-screen
+    /// controls, and the arrow keys pan a zoomed image or go to the
+    /// previous/next image.
+    fn key_pressed(&self, key: gdk::Key, mods: gdk::ModifierType) -> glib::Propagation {
+        use gdk::Key;
+        if matches!(key, Key::Tab | Key::ISO_Left_Tab | Key::KP_Tab) {
+            if self.stack.visible_child_name().as_deref() == Some("image") {
+                // Revealed before GTK moves focus, so the controls are
+                // focusable by the time it looks for the next widget.
+                self.show_controls();
+            }
+            return glib::Propagation::Proceed;
+        }
+        let (dx, dy) = match key {
+            Key::Left | Key::KP_Left => (-1.0, 0.0),
+            Key::Right | Key::KP_Right => (1.0, 0.0),
+            Key::Up | Key::KP_Up => (0.0, -1.0),
+            Key::Down | Key::KP_Down => (0.0, 1.0),
+            _ => return glib::Propagation::Proceed,
+        };
+        let modified = mods.intersects(
+            gdk::ModifierType::CONTROL_MASK
+                | gdk::ModifierType::ALT_MASK
+                | gdk::ModifierType::SHIFT_MASK
+                | gdk::ModifierType::SUPER_MASK,
+        );
+        if modified || self.focus_uses_arrows() {
+            return glib::Propagation::Proceed;
+        }
+        let showing = self.stack.visible_child_name().as_deref() == Some("image");
+        if showing {
+            self.show_controls();
+        }
+        if showing && self.canvas.view().can_pan() {
+            // A tenth of the view per press, at least 32 px.
+            let step_x = (self.canvas.width() as f64 / 10.0).max(32.0);
+            let step_y = (self.canvas.height() as f64 / 10.0).max(32.0);
+            self.canvas
+                .update_view(|s| s.pan_by(-dx * step_x, -dy * step_y));
+            return glib::Propagation::Stop;
+        }
+        if dx == 0.0 {
+            return glib::Propagation::Proceed;
+        }
+        // Right is "next" in left-to-right text, "previous" in right-to-left.
+        let rtl = self.window.direction() == gtk::TextDirection::Rtl;
+        let action = if (dx > 0.0) != rtl {
+            "win.next"
+        } else {
+            "win.prev"
+        };
+        let _ = WidgetExt::activate_action(&self.window, action, None);
+        glib::Propagation::Stop
+    }
+
+    /// Whether the focused widget needs the arrow keys itself: the
+    /// thumbnail strip, a menu, or a text field.
+    fn focus_uses_arrows(&self) -> bool {
+        let Some(focus) = gtk::prelude::GtkWindowExt::focus(&self.window) else {
+            return false;
+        };
+        if focus.is_ancestor(&self.strip.view)
+            || focus == *self.strip.view.upcast_ref::<gtk::Widget>()
+        {
+            return true;
+        }
+        let mut w = Some(focus.clone());
+        while let Some(x) = w {
+            if x.is::<gtk::Popover>() || x.is::<gtk::Editable>() {
+                return true;
+            }
+            w = x.parent();
+        }
+        false
+    }
+
     fn show_controls(&self) {
         for r in &self.revealers {
             r.set_reveal_child(true);
@@ -1193,9 +1322,13 @@ impl Viewer {
         let id = glib::timeout_add_local_once(CONTROLS_TIMEOUT, move || {
             let Some(v) = weak.upgrade() else { return };
             v.state.borrow_mut().controls_timeout = None;
-            if v.state.borrow().over_controls {
+            // Never hide controls under the pointer or with keyboard focus.
+            let st = v.state.borrow();
+            if st.over_controls || st.focus_in_controls {
                 return;
             }
+            drop(st);
+
             for r in &v.revealers {
                 r.set_reveal_child(false);
             }

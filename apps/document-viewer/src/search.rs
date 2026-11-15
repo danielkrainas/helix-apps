@@ -16,6 +16,25 @@ pub struct Hit {
     pub rect: Rect,
     /// Line of text around the match.
     pub context: String,
+    /// Where the match is in `context` (byte range), if it was found.
+    pub matched: Option<std::ops::Range<usize>>,
+}
+
+impl Hit {
+    /// `context` as Pango markup with the match in bold, so it is marked
+    /// by weight and not only by colour.
+    pub fn context_markup(&self) -> String {
+        let esc = |s: &str| gtk::glib::markup_escape_text(s).to_string();
+        match &self.matched {
+            Some(r) if self.context.get(r.clone()).is_some() => format!(
+                "{}<b>{}</b>{}",
+                esc(&self.context[..r.start]),
+                esc(&self.context[r.clone()]),
+                esc(&self.context[r.end..])
+            ),
+            _ => esc(&self.context),
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -105,35 +124,59 @@ impl Results {
     }
 }
 
-/// Shortens a line of context to at most `max` characters around the first
-/// occurrence of `query` (case-insensitive), adding ellipses.
-pub fn snippet(line: &str, query: &str, max: usize) -> String {
+/// Characters of context kept before the match, so that the match itself
+/// stays visible in a narrow sidebar (the row is ellipsized at the end).
+const LEFT_CONTEXT: usize = 18;
+
+/// Shortens a line of context to at most `max` characters starting a few
+/// words before the first occurrence of `query` (case-insensitive), adding
+/// ellipses. Returns the snippet and the byte range of the match in it.
+pub fn snippet(line: &str, query: &str, max: usize) -> (String, Option<std::ops::Range<usize>>) {
     let line: String = line.split_whitespace().collect::<Vec<_>>().join(" ");
     let chars: Vec<char> = line.chars().collect();
-    if chars.len() <= max {
-        return line;
-    }
     let lower: Vec<char> = line.to_lowercase().chars().collect();
     let q: Vec<char> = query.to_lowercase().chars().collect();
+    // Character position of the match (lower-casing can change the length
+    // of some characters; then the match position is unknown).
     let pos = if q.is_empty() || lower.len() != chars.len() {
-        0
+        None
     } else {
-        lower
-            .windows(q.len())
-            .position(|w| w == q.as_slice())
-            .unwrap_or(0)
+        lower.windows(q.len()).position(|w| w == q.as_slice())
     };
-    let half = max.saturating_sub(q.len()) / 2;
-    let start = pos.saturating_sub(half).min(chars.len() - max);
+    let mut start = match pos {
+        Some(p) if p > LEFT_CONTEXT => {
+            // Start at a word boundary within the left context.
+            let from = p - LEFT_CONTEXT;
+            (from..p)
+                .find(|&i| i > 0 && chars[i - 1] == ' ')
+                .unwrap_or(from)
+        }
+        _ => 0,
+    };
+    if chars.len() > max {
+        start = start.min(chars.len() - max);
+    } else {
+        start = start.min(pos.unwrap_or(0));
+    }
     let end = (start + max).min(chars.len());
-    let mut s: String = chars[start..end].iter().collect();
+    let mut s = String::new();
     if start > 0 {
-        s.insert(0, '…');
+        s.push('…');
+    }
+    let mut matched = None;
+    for (i, c) in chars[start..end].iter().enumerate() {
+        let at = start + i;
+        if pos == Some(at) {
+            let b = s.len();
+            let m: String = chars[at..(at + q.len()).min(end)].iter().collect();
+            matched = Some(b..b + m.len());
+        }
+        s.push(*c);
     }
     if end < chars.len() {
         s.push('…');
     }
-    s
+    (s, matched)
 }
 
 #[cfg(test)]
@@ -145,6 +188,7 @@ mod tests {
             page,
             rect: Rect::default(),
             context: String::new(),
+            matched: None,
         }
     }
 
@@ -186,11 +230,36 @@ mod tests {
 
     #[test]
     fn snippets() {
-        assert_eq!(snippet("  short   line ", "line", 40), "short line");
+        let (s, m) = snippet("  short   line ", "line", 40);
+        assert_eq!(s, "short line");
+        assert_eq!(&s[m.unwrap()], "line");
         let long = "a ".repeat(50) + "needle" + &" b".repeat(50);
-        let s = snippet(&long, "NEEDLE", 20);
-        assert!(s.contains("needle"));
+        let (s, m) = snippet(&long, "NEEDLE", 40);
+        assert_eq!(&s[m.clone().unwrap()], "needle");
         assert!(s.starts_with('…') && s.ends_with('…'));
-        assert_eq!(s.chars().count(), 22);
+        assert_eq!(s.chars().count(), 42);
+        // Only a few words of left context, so the match is near the start
+        // and survives end-ellipsizing in a narrow sidebar.
+        assert!(s[..m.unwrap().start].chars().count() <= 1 + LEFT_CONTEXT);
+        // The match keeps the document's case.
+        let (s, m) = snippet("the quick brown Fox jumps over the lazy dog", "fox", 60);
+        assert_eq!(&s[m.unwrap()], "Fox");
+        // Non-ASCII text before the match.
+        let (s, m) = snippet("ünïcödé wörds before the needle here", "needle", 60);
+        assert_eq!(&s[m.unwrap()], "needle");
+        // Not found: no range.
+        assert_eq!(snippet("nothing here", "zzz", 60).1, None);
+    }
+
+    #[test]
+    fn markup_bolds_the_match() {
+        let (context, matched) = snippet("a <b> & fox here", "fox", 60);
+        let h = Hit {
+            page: 0,
+            rect: Rect::default(),
+            context,
+            matched,
+        };
+        assert_eq!(h.context_markup(), "a &lt;b&gt; &amp; <b>fox</b> here");
     }
 }

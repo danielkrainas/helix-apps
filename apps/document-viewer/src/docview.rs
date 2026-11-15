@@ -150,6 +150,48 @@ fn rgba(r: f32, g: f32, b: f32, a: f32) -> gdk::RGBA {
     gdk::RGBA::new(r, g, b, a)
 }
 
+/// Colours for the selection and search-hit overlays, read from the
+/// desktop style at draw time.
+struct Highlights {
+    /// The selection: the accent colour, translucent.
+    selection: gdk::RGBA,
+    hit_fill: gdk::RGBA,
+    /// Other hits get an outline only in high contrast.
+    hit_outline: Option<(gdk::RGBA, f32)>,
+    current_fill: gdk::RGBA,
+    /// The current hit is outlined, so it stands out without colour.
+    current_outline: (gdk::RGBA, f32),
+}
+
+impl Highlights {
+    fn current(night: bool) -> Self {
+        Self::new(
+            helix_app_common::style::accent_rgba(),
+            helix_app_common::style::is_high_contrast(),
+            night,
+        )
+    }
+
+    fn new(accent: gdk::RGBA, high_contrast: bool, night: bool) -> Self {
+        // The page is white (black in night mode); outlines use the
+        // opposite colour.
+        let ink = if night { 1.0 } else { 0.0 };
+        let ink = rgba(ink, ink, ink, 1.0);
+        let (sel_a, hit_a, cur_a) = if high_contrast {
+            (0.55, 0.6, 0.7)
+        } else {
+            (0.35, 0.4, 0.45)
+        };
+        Highlights {
+            selection: rgba(accent.red(), accent.green(), accent.blue(), sel_a),
+            hit_fill: rgba(0.96, 0.83, 0.18, hit_a),
+            hit_outline: high_contrast.then_some((ink, 1.0)),
+            current_fill: rgba(1.0, 0.47, 0.0, cur_a),
+            current_outline: (ink, if high_contrast { 3.0 } else { 2.0 }),
+        }
+    }
+}
+
 fn grect(r: &Rect) -> graphene::Rect {
     graphene::Rect::new(r.x as f32, r.y as f32, r.w as f32, r.h as f32)
 }
@@ -502,6 +544,8 @@ mod imp {
             obj.set_focusable(true);
             obj.set_overflow(gtk::Overflow::Hidden);
             obj.setup_input();
+            // Highlights follow the accent colour and high-contrast style.
+            helix_app_common::style::redraw_on_style_change(&*obj);
         }
 
         fn dispose(&self) {
@@ -1457,6 +1501,7 @@ impl DocView {
         }
 
         // Overlays: search hits and selection.
+        let hl = Highlights::current(night);
         let search = model.search.borrow();
         let current_hit = search.current();
         for &i in &visible {
@@ -1467,12 +1512,24 @@ impl DocView {
                 let mut r = page_rect_to_content(&h.rect, &page_rect, pw, ph, rot, l.scale);
                 r.x -= view.x;
                 r.y -= view.y;
-                let color = if Some(hi) == current_hit {
-                    rgba(1.0, 0.47, 0.0, 0.45)
+                let (fill, outline) = if Some(hi) == current_hit {
+                    (hl.current_fill, Some(hl.current_outline))
                 } else {
-                    rgba(0.96, 0.83, 0.18, 0.40)
+                    (hl.hit_fill, hl.hit_outline)
                 };
-                snap.append_color(&color, &grect(&r));
+                snap.append_color(&fill, &grect(&r));
+                if let Some((color, width)) = outline {
+                    // Grow the box by the line width so the outline does
+                    // not cover the matched text.
+                    let o = Rect::new(
+                        r.x - width as f64,
+                        r.y - width as f64,
+                        r.w + 2.0 * width as f64,
+                        r.h + 2.0 * width as f64,
+                    );
+                    let rr = gsk::RoundedRect::from_rect(grect(&o), 0.0);
+                    snap.append_border(&rr, &[width; 4], &[color; 4]);
+                }
             }
         }
         drop(search);
@@ -1486,7 +1543,7 @@ impl DocView {
                 let mut r = page_rect_to_content(pr, &l.pages[*i], pw, ph, rot, l.scale);
                 r.x -= view.x;
                 r.y -= view.y;
-                snap.append_color(&rgba(0.21, 0.52, 0.89, 0.35), &grect(&r));
+                snap.append_color(&hl.selection, &grect(&r));
             }
         }
         drop(sel);
@@ -1988,11 +2045,34 @@ pub fn page_description(label: &str, page: usize, n: usize) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::page_description;
+    use super::{page_description, Highlights};
+    use gtk::gdk;
 
     #[test]
     fn page_descriptions() {
         assert_eq!(page_description("4", 3, 120), "Page 4 of 120");
         assert_eq!(page_description("iv", 3, 120), "Page iv (4 of 120)");
+    }
+
+    #[test]
+    fn highlights_follow_accent_and_contrast() {
+        let purple = gdk::RGBA::new(0.57, 0.25, 0.68, 1.0);
+        let h = Highlights::new(purple, false, false);
+        assert_eq!(
+            (h.selection.red(), h.selection.green(), h.selection.blue()),
+            (0.57, 0.25, 0.68)
+        );
+        // The current hit has an outline; other hits none.
+        assert!(h.current_outline.1 >= 2.0);
+        assert!(h.hit_outline.is_none());
+        let hc = Highlights::new(purple, true, false);
+        assert!(hc.selection.alpha() > h.selection.alpha());
+        assert!(hc.hit_fill.alpha() > h.hit_fill.alpha());
+        assert!(hc.current_outline.1 > h.current_outline.1);
+        assert!(hc.hit_outline.is_some());
+        // Night mode: light outline on the dark page.
+        let night = Highlights::new(purple, false, true);
+        assert_eq!(night.current_outline.0.red(), 1.0);
+        assert_eq!(h.current_outline.0.red(), 0.0);
     }
 }
