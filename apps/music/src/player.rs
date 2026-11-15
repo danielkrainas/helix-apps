@@ -74,10 +74,39 @@ pub enum State {
     Playing,
 }
 
+/// Tracks which stream starts were queued from `about-to-finish`.
+///
+/// The flag is read when GStreamer posts each `stream-start`, not when the
+/// main loop gets to the message: by then the next `about-to-finish` may
+/// already have fired (short tracks, or a busy main loop).
+#[derive(Default)]
+struct Gapless {
+    /// Set by `about-to-finish` when it hands playbin the next URI.
+    queued: AtomicBool,
+    /// Per posted `stream-start` message: whether it was gapless.
+    starts: Mutex<Vec<(gst::Seqnum, bool)>>,
+}
+
+impl Gapless {
+    fn reset(&self) {
+        self.queued.store(false, Ordering::SeqCst);
+    }
+
+    fn take(&self, msg: &gst::Message) -> bool {
+        let Ok(mut starts) = self.starts.lock() else {
+            return false;
+        };
+        match starts.iter().position(|(n, _)| *n == msg.seqnum()) {
+            Some(i) => starts.remove(i).1,
+            None => false,
+        }
+    }
+}
+
 pub struct Player {
     playbin: gst::Element,
     next_uri: Arc<Mutex<Option<String>>>,
-    gapless: Arc<AtomicBool>,
+    gapless: Arc<Gapless>,
     watch: Option<gst::bus::BusWatchGuard>,
     /// `rgvolume` (when the plugin is available) and the mode it should use.
     rgvolume: Option<gst::Element>,
@@ -101,7 +130,25 @@ impl Player {
             playbin.set_property("audio-sink", &bin);
         }
         let next_uri: Arc<Mutex<Option<String>>> = Arc::default();
-        let gapless = Arc::new(AtomicBool::new(false));
+        let gapless = Arc::new(Gapless::default());
+        if let Some(bus) = playbin.bus() {
+            let gapless = gapless.clone();
+            // Runs on the posting thread, in order with `about-to-finish`.
+            bus.set_sync_handler(move |_, msg| {
+                if let gst::MessageView::StreamStart(_) = msg.view() {
+                    let was = gapless.queued.swap(false, Ordering::SeqCst);
+                    if let Ok(mut starts) = gapless.starts.lock() {
+                        // Messages dropped unread (e.g. a bus flush) must not
+                        // pile up.
+                        if starts.len() > 64 {
+                            starts.clear();
+                        }
+                        starts.push((msg.seqnum(), was));
+                    }
+                }
+                gst::BusSyncReply::Pass
+            });
+        }
         {
             let next_uri = next_uri.clone();
             let gapless = gapless.clone();
@@ -109,7 +156,7 @@ impl Player {
             playbin.connect("about-to-finish", false, move |args| {
                 let pb = args[0].get::<gst::Element>().ok()?;
                 if let Some(uri) = next_uri.lock().ok().and_then(|mut n| n.take()) {
-                    gapless.store(true, Ordering::SeqCst);
+                    gapless.queued.store(true, Ordering::SeqCst);
                     pb.set_property("uri", uri);
                 }
                 None
@@ -180,7 +227,7 @@ impl Player {
 
     /// Starts `uri` from the beginning.
     pub fn load(&self, uri: &str, play: bool) {
-        self.gapless.store(false, Ordering::SeqCst);
+        self.gapless.reset();
         let _ = self.playbin.set_state(gst::State::Ready);
         self.apply_filter();
         self.playbin.set_property("uri", uri);
@@ -207,7 +254,7 @@ impl Player {
     }
 
     pub fn stop(&self) {
-        self.gapless.store(false, Ordering::SeqCst);
+        self.gapless.reset();
         let _ = self.playbin.set_state(gst::State::Null);
     }
 
@@ -274,7 +321,7 @@ fn map_state(s: gst::State) -> State {
     }
 }
 
-fn translate(playbin: &gst::Element, gapless: &AtomicBool, msg: &gst::Message) -> Option<Event> {
+fn translate(playbin: &gst::Element, gapless: &Gapless, msg: &gst::Message) -> Option<Event> {
     use gst::MessageView;
     match msg.view() {
         MessageView::Eos(_) => Some(Event::Eos),
@@ -286,7 +333,7 @@ fn translate(playbin: &gst::Element, gapless: &AtomicBool, msg: &gst::Message) -
             Some(Event::Error(text))
         }
         MessageView::StreamStart(_) => Some(Event::StreamStart {
-            gapless: gapless.swap(false, Ordering::SeqCst),
+            gapless: gapless.take(msg),
         }),
         MessageView::StateChanged(s) if s.src().is_some_and(|src| src == playbin) => {
             Some(Event::State(map_state(s.current())))
@@ -325,6 +372,10 @@ mod tests {
         };
         player.set_next(Some(crate::model::path_to_uri(&b)));
         player.load(&crate::model::path_to_uri(&a), true);
+        // Read the bus only after both files have played (fakesink with
+        // sync=false takes milliseconds): the first stream-start must still
+        // be reported as not gapless although `about-to-finish` has fired.
+        std::thread::sleep(std::time::Duration::from_millis(500));
         let bus = player.bus();
         let mut starts = Vec::new();
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
