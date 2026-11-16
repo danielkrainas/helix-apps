@@ -56,6 +56,11 @@ jobs:
       - name: Check translation template
         run: tools/i18n/update-pot.sh --check
 
+      # Every catalogue compiles and keeps the placeholders, markup and
+      # access keys of the original messages.
+      - name: Check translations
+        run: python3 tools/i18n/check-po.py
+
       - name: Check schemas
         run: |
           dir=$(mktemp -d)
