@@ -1059,7 +1059,10 @@ impl Window {
                         || e.matches(gtk::DialogError::Cancelled) => {}
                 Err(e) => {
                     if let Some(w) = weak.upgrade() {
-                        w.toast(&trf!("Could not open file: {}", e.message()));
+                        w.toast(&trf!(
+                            "Could not open file: {}",
+                            helix_app_common::errors::glib_detail(&e)
+                        ));
                     }
                 }
             },
@@ -1087,7 +1090,11 @@ impl Window {
                         }
                     }
                     Err(e) if e.matches(gio::IOErrorEnum::FailedHandled) => {}
-                    Err(e) => w.toast(&trf!("Unable to mount “{}”: {}", v.name(), e.message())),
+                    Err(e) => w.toast(&trf!(
+                        "Unable to mount “{}”: {}",
+                        v.name(),
+                        helix_app_common::errors::glib_detail(&e)
+                    )),
                 }
             },
         );
@@ -1111,7 +1118,7 @@ impl Window {
                     w.toast(&trf!(
                         "Unable to eject “{name}”: {error}",
                         name = name,
-                        error = e.message()
+                        error = helix_app_common::errors::glib_detail(&e)
                     ));
                 }
             }
@@ -1419,7 +1426,10 @@ impl Window {
                         .set_display_name_future(&old_name, glib::Priority::DEFAULT)
                         .await;
                     if let (Some(w), Err(e)) = (weak.upgrade(), res) {
-                        w.toast(&trf!("Could not undo rename: {}", e.message()));
+                        w.toast(&trf!(
+                            "Could not undo rename: {}",
+                            helix_app_common::errors::glib_detail(&e)
+                        ));
                     }
                 });
             }
@@ -1468,7 +1478,10 @@ impl Window {
                             });
                             tab.select_when_listed(vec![new_file]);
                         }
-                        Err(e) => w.toast(&trf!("Could not rename: {}", e.message())),
+                        Err(e) => w.toast(&trf!(
+                            "Could not rename: {}",
+                            helix_app_common::errors::glib_detail(&e)
+                        )),
                     }
                 });
             },
@@ -1496,7 +1509,10 @@ impl Window {
                 glib::spawn_future_local(async move {
                     match f.make_directory_future(glib::Priority::DEFAULT).await {
                         Ok(()) => tab.select_when_listed(vec![f]),
-                        Err(e) => w.toast(&trf!("Could not create folder: {}", e.message())),
+                        Err(e) => w.toast(&trf!(
+                            "Could not create folder: {}",
+                            helix_app_common::errors::glib_detail(&e)
+                        )),
                     }
                 });
             },
@@ -1520,7 +1536,10 @@ impl Window {
         list.push(crate::bookmarks::Bookmark { uri, label: None });
         match crate::bookmarks::save(&list) {
             Ok(()) => self.toast(&trf!("“{}” added to bookmarks", location_title(&loc))),
-            Err(e) => self.toast(&trf!("Could not save bookmarks: {e}", e = e)),
+            Err(e) => self.toast(&trf!(
+                "Could not save bookmarks: {e}",
+                e = helix_app_common::errors::io_detail(&e)
+            )),
         }
         self.shared.windows.borrow().iter().for_each(|w| {
             if let Some(s) = w.sidebar.borrow().as_ref() {

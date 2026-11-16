@@ -511,7 +511,10 @@ pub fn open_with(win: &Rc<Window>, infos: Vec<gio::FileInfo>) {
             if let Some(w) = win.upgrade() {
                 let ctx = gtk::prelude::WidgetExt::display(&w.window).app_launch_context();
                 if let Err(e) = app.launch(&files, Some(&ctx)) {
-                    w.toast(&trf!("Could not open: {}", e.message()));
+                    w.toast(&trf!(
+                        "Could not open: {}",
+                        helix_app_common::errors::glib_detail(&e)
+                    ));
                 } else {
                     for f in &files {
                         gtk::RecentManager::default().add_item(&f.uri());

@@ -8,6 +8,7 @@
 
 pub mod a11y;
 pub mod about;
+pub mod errors;
 pub mod focus;
 pub mod i18n;
 pub mod keys;

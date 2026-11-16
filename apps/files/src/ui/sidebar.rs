@@ -619,7 +619,10 @@ impl Sidebar {
             list.remove(bi);
             if let Err(e) = bookmarks::save(&list) {
                 if let Some(w) = self.win.upgrade() {
-                    w.toast(&trf!("Could not save bookmarks: {e}", e = e));
+                    w.toast(&trf!(
+                        "Could not save bookmarks: {e}",
+                        e = helix_app_common::errors::io_detail(&e)
+                    ));
                 }
             }
         }
@@ -661,7 +664,10 @@ impl Sidebar {
                 b.label = (!text.is_empty()).then_some(text);
                 if let Err(err) = bookmarks::save(&list) {
                     if let Some(w) = win.upgrade() {
-                        w.toast(&trf!("Could not save bookmarks: {err}", err = err));
+                        w.toast(&trf!(
+                            "Could not save bookmarks: {e}",
+                            e = helix_app_common::errors::io_detail(&err)
+                        ));
                     }
                 }
             }

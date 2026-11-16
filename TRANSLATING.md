@@ -126,6 +126,13 @@ accessible labels. Never translate text that is parsed or compared
 `i18n::justify_start`/`justify_end`, and in CSS give right-to-left
 variants (`:dir(rtl)`) for one-sided borders and padding.
 
+Library errors (zbus, GLib/GIO, `std::io`) are English and technical:
+show them through `helix_app_common::errors` (`detail`, `glib_detail`,
+`io_detail`, or `alert` for a dialog with the raw text under "Details"),
+which turns the common kinds (not found, permission denied, timed out, a
+service that is not running, cancelled, no space, …) into translated
+sentences and logs the raw text.
+
 `tools/i18n/update-pot.sh` regenerates `po/POTFILES` and the template;
 CI runs it with `--check`, and a unit test checks that `po/POTFILES`
 lists every source file with messages. `tools/i18n/mark_strings.py`

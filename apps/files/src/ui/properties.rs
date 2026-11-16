@@ -85,7 +85,10 @@ pub fn show(win: &Rc<Window>, files: Vec<gio::File>) {
             {
                 Ok(i) => infos.push((f.clone(), i)),
                 Err(e) => {
-                    win.toast(&trf!("Could not read properties: {}", e.message()));
+                    win.toast(&trf!(
+                        "Could not read properties: {}",
+                        helix_app_common::errors::glib_detail(&e)
+                    ));
                     return;
                 }
             }
@@ -346,7 +349,10 @@ fn permissions_group(
                         }
                         Err(e) => {
                             if let Some(w) = win.upgrade() {
-                                w.toast(&trf!("Could not change permissions: {}", e.message()));
+                                w.toast(&trf!(
+                                    "Could not change permissions: {}",
+                                    helix_app_common::errors::glib_detail(&e)
+                                ));
                             }
                             c.set_active(!c.is_active());
                         }

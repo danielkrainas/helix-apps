@@ -909,7 +909,10 @@ impl Tab {
                     Err(e) if e.matches(gio::IOErrorEnum::FailedHandled) => t.update_status(),
                     Err(e) => {
                         if let Some(w) = t.window() {
-                            w.toast(&trf!("Unable to access location: {}", e.message()));
+                            w.toast(&trf!(
+                                "Unable to access location: {}",
+                                helix_app_common::errors::glib_detail(&e)
+                            ));
                         }
                         t.update_status();
                     }
@@ -940,13 +943,17 @@ impl Tab {
             if !self.dir_list.is_loading() {
                 self.status.set_icon_name(Some("dialog-error-symbolic"));
                 self.status.set_title(tr("Unable to Open Folder"));
-                self.status.set_description(Some(err.message()));
+                self.status
+                    .set_description(Some(&helix_app_common::errors::glib_text(&err)));
                 self.set_status_retry(true);
                 self.status.set_visible(true);
                 if !self.error_shown.replace(true) {
                     helix_app_common::announce(
                         &self.root,
-                        &trf!("Unable to open folder: {}", err.message()),
+                        &trf!(
+                            "Unable to open folder: {}",
+                            helix_app_common::errors::glib_detail(&err)
+                        ),
                         helix_app_common::Urgency::Assertive,
                     );
                 }

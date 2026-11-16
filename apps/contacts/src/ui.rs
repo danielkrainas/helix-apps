@@ -1580,7 +1580,10 @@ impl Ui {
 
     fn save_links(&self) {
         if let Err(e) = self.links.borrow().save(&self.links_path) {
-            self.toast(&trf!("Could not save links: {e}", e = e));
+            self.toast(&trf!(
+                "Could not save links: {e}",
+                e = helix_app_common::errors::io_detail(&e)
+            ));
         }
     }
 
@@ -1722,7 +1725,7 @@ impl Ui {
                 self.toast(&trf!(
                     "Could not read {path}: {e}",
                     path = path.display(),
-                    e = e
+                    e = helix_app_common::errors::io_detail(&e)
                 ));
                 return;
             }
@@ -1778,7 +1781,10 @@ impl Ui {
                     "Exported {n} contacts",
                     contacts.len()
                 ),
-                Err(e) => trf!("Export failed: {e}", e = e),
+                Err(e) => trf!(
+                    "Export failed: {e}",
+                    e = helix_app_common::errors::io_detail(&e)
+                ),
             };
             toasts.add_toast(adw::Toast::new(&msg));
         });

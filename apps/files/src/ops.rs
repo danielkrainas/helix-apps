@@ -258,7 +258,7 @@ impl Runner<'_> {
             self.out.cancelled = true;
         } else {
             let file = display_name(f);
-            let error = e.message();
+            let error = helix_app_common::errors::glib_detail(e);
             self.out.errors.push(match verb {
                 "replace" => trf!(
                     "Could not replace “{file}”: {error}",

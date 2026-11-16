@@ -22,13 +22,15 @@ pub const SERVICE: &str = "org.freedesktop.UDisks2";
 pub const ROOT: &str = "/org/freedesktop/UDisks2";
 pub const MANAGER: &str = "/org/freedesktop/UDisks2/Manager";
 
+/// The error as text with its D-Bus name, so the UI can tell the common
+/// kinds apart (`helix_app_common::errors`); the name is not shown.
 pub fn error_text(e: &zbus::Error) -> String {
     match e {
         zbus::Error::MethodError(name, Some(msg), _) => {
             if name.as_str().ends_with("NotAuthorizedDismissed") {
                 tr("Authentication was dismissed.").into()
             } else {
-                msg.clone()
+                format!("{name}: {msg}")
             }
         }
         zbus::Error::MethodError(name, None, _) => name.to_string(),

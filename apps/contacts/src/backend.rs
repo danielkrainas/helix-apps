@@ -117,7 +117,7 @@ fn worker(rx: mpsc::Receiver<Cmd>, self_tx: mpsc::Sender<Cmd>, out: async_channe
                     eds = Some(e);
                 }
                 Err(e) => {
-                    send(Msg::Unavailable(e.to_string()));
+                    send(Msg::Unavailable(shown(&e)));
                     continue;
                 }
             }
@@ -139,7 +139,7 @@ fn worker(rx: mpsc::Receiver<Cmd>, self_tx: mpsc::Sender<Cmd>, out: async_channe
                     Ok(uids) => send(Msg::Created { book, uids, tag }),
                     Err(err) => send(Msg::Error(trf!(
                         "Could not create contact: {err}",
-                        err = err
+                        err = shown(&err)
                     ))),
                 },
                 None => send(Msg::Error(tr("The address book is not available").into())),
@@ -147,7 +147,10 @@ fn worker(rx: mpsc::Receiver<Cmd>, self_tx: mpsc::Sender<Cmd>, out: async_channe
             Cmd::Modify { book, contact } => {
                 if let Some(b) = books.get(&book) {
                     if let Err(err) = b.book.modify(&[*contact]) {
-                        send(Msg::Error(trf!("Could not save contact: {err}", err = err)));
+                        send(Msg::Error(trf!(
+                            "Could not save contact: {err}",
+                            err = shown(&err)
+                        )));
                     }
                 }
             }
@@ -156,7 +159,7 @@ fn worker(rx: mpsc::Receiver<Cmd>, self_tx: mpsc::Sender<Cmd>, out: async_channe
                     if let Err(err) = b.book.remove(&uids) {
                         send(Msg::Error(trf!(
                             "Could not delete contact: {err}",
-                            err = err
+                            err = shown(&err)
                         )));
                     }
                 }
@@ -174,7 +177,9 @@ fn worker(rx: mpsc::Receiver<Cmd>, self_tx: mpsc::Sender<Cmd>, out: async_channe
                         .collect();
                     match b.book.create(&contacts) {
                         Ok(_) => send(Msg::Imported(n)),
-                        Err(err) => send(Msg::Error(trf!("Import failed: {err}", err = err))),
+                        Err(err) => {
+                            send(Msg::Error(trf!("Import failed: {err}", err = shown(&err))))
+                        }
                     }
                 }
                 None => send(Msg::Error(tr("The address book is not available").into())),
@@ -190,7 +195,7 @@ fn sync(eds: &Eds, books: &mut HashMap<String, OpenBook>, out: &async_channel::S
     let sources = match eds.sources() {
         Ok(s) => s,
         Err(e) => {
-            send(Msg::Error(e.to_string()));
+            send(Msg::Error(shown(&e)));
             return;
         }
     };
@@ -226,7 +231,7 @@ fn sync(eds: &Eds, books: &mut HashMap<String, OpenBook>, out: &async_channel::S
                 send(Msg::Error(trf!(
                     "Could not open “{display_name}”: {e}",
                     display_name = s.display_name(),
-                    e = e
+                    e = shown(&e)
                 )));
                 continue;
             }
@@ -268,8 +273,51 @@ fn sync(eds: &Eds, books: &mut HashMap<String, OpenBook>, out: &async_channel::S
             Err(e) => send(Msg::Error(trf!(
                 "Could not read “{display_name}”: {e}",
                 display_name = s.display_name(),
-                e = e
+                e = shown(&e)
             ))),
         }
+    }
+}
+
+/// What to show for an error from EDS or a library: common bus and I/O
+/// errors as translated sentences (the raw text is logged), EDS's own
+/// messages as they are.
+fn shown<E: std::fmt::Display + 'static>(e: &E) -> String {
+    let any: &dyn std::any::Any = e;
+    if let Some(eds) = any.downcast_ref::<helix_eds::Error>() {
+        return match eds.bus_text() {
+            Some(raw) => helix_app_common::errors::detail(raw),
+            None => eds.to_string(),
+        };
+    }
+    if let Some(io) = any.downcast_ref::<std::io::Error>() {
+        return helix_app_common::errors::io_detail(io);
+    }
+    helix_app_common::errors::detail(&e.to_string())
+}
+
+#[cfg(test)]
+mod shown_tests {
+    use super::shown;
+    use helix_app_common::errors::Kind;
+
+    /// Bus-level errors become the common sentences; EDS's own messages
+    /// and anything unknown stay as they are, without a D-Bus name.
+    #[test]
+    fn bus_errors_are_explained() {
+        let e = helix_eds::Error::Bus(
+            "org.freedesktop.DBus.Error.ServiceUnknown: The name org.gnome.evolution.dataserver.Sources5 \
+             was not provided by any .service files"
+                .into(),
+        );
+        assert_eq!(shown(&e), Kind::ServiceMissing.msgid());
+        let e = helix_eds::Error::Bus("org.freedesktop.DBus.Error.NoReply: no reply".into());
+        assert_eq!(shown(&e), Kind::TimedOut.msgid());
+        let e = helix_eds::Error::Bus(
+            "org.gnome.evolution.dataserver.Client.OtherError: Le serveur a refusé".into(),
+        );
+        assert_eq!(shown(&e), "Le serveur a refusé");
+        let e = std::io::Error::from_raw_os_error(13);
+        assert_eq!(shown(&e), Kind::PermissionDenied.msgid());
     }
 }

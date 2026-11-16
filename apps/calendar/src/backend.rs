@@ -171,7 +171,7 @@ impl Worker {
                         self.eds = Some(e);
                     }
                     Err(e) => {
-                        self.send(Msg::Unavailable(e.to_string()));
+                        self.send(Msg::Unavailable(shown(&e)));
                         if let Cmd::SetRange(a, b) = cmd {
                             self.range = Some((a, b));
                         }
@@ -217,7 +217,10 @@ impl Worker {
             Cmd::Create { cal, ics } => {
                 if let Some(o) = self.open.get(&cal) {
                     if let Err(e) = o.cal.create(&ics) {
-                        self.send(Msg::Error(trf!("Could not create event: {e}", e = e)));
+                        self.send(Msg::Error(trf!(
+                            "Could not create event: {e}",
+                            e = shown(&e)
+                        )));
                     }
                 } else {
                     self.with_temp(
@@ -231,14 +234,17 @@ impl Worker {
             Cmd::Modify { cal, ics, mod_type } => {
                 if let Some(o) = self.open.get(&cal) {
                     if let Err(e) = o.cal.modify(&ics, mod_type) {
-                        self.send(Msg::Error(trf!("Could not save event: {e}", e = e)));
+                        self.send(Msg::Error(trf!("Could not save event: {e}", e = shown(&e))));
                     }
                 }
             }
             Cmd::Remove { cal, ids, mod_type } => {
                 if let Some(o) = self.open.get(&cal) {
                     if let Err(e) = o.cal.remove(&ids, mod_type) {
-                        self.send(Msg::Error(trf!("Could not delete event: {e}", e = e)));
+                        self.send(Msg::Error(trf!(
+                            "Could not delete event: {e}",
+                            e = shown(&e)
+                        )));
                     }
                 }
             }
@@ -255,12 +261,14 @@ impl Worker {
                             if let Err(e) = o.cal.remove(&[(uid, String::new())], ModType::All) {
                                 self.send(Msg::Error(trf!(
                                     "Event copied but not removed from the old calendar: {e}",
-                                    e = e
+                                    e = shown(&e)
                                 )));
                             }
                         }
                     }
-                    Err(e) => self.send(Msg::Error(trf!("Could not move event: {e}", e = e))),
+                    Err(e) => {
+                        self.send(Msg::Error(trf!("Could not move event: {e}", e = shown(&e))))
+                    }
                 }
             }
             Cmd::Search { query, tag } => {
@@ -296,18 +304,27 @@ impl Worker {
             }
             Cmd::WriteSource(s) => {
                 if let Err(e) = eds.write_source(&s) {
-                    self.send(Msg::Error(trf!("Could not update calendar: {e}", e = e)));
+                    self.send(Msg::Error(trf!(
+                        "Could not update calendar: {e}",
+                        e = shown(&e)
+                    )));
                 }
             }
             Cmd::CreateSource { uid, data } => {
                 if let Err(e) = eds.create_source(&uid, &data) {
-                    self.send(Msg::Error(trf!("Could not create calendar: {e}", e = e)));
+                    self.send(Msg::Error(trf!(
+                        "Could not create calendar: {e}",
+                        e = shown(&e)
+                    )));
                 }
             }
             Cmd::RemoveSource(s) => {
                 self.open.remove(&s.uid);
                 if let Err(e) = eds.remove_source(&s) {
-                    self.send(Msg::Error(trf!("Could not remove calendar: {e}", e = e)));
+                    self.send(Msg::Error(trf!(
+                        "Could not remove calendar: {e}",
+                        e = shown(&e)
+                    )));
                 }
             }
             Cmd::Import {
@@ -352,7 +369,7 @@ impl Worker {
                         n,
                         ok = ok
                     ))),
-                    Err(e) => self.send(Msg::Error(trf!("Import failed: {e}", e = e))),
+                    Err(e) => self.send(Msg::Error(trf!("Import failed: {e}", e = shown(&e)))),
                 }
             }
         }
@@ -368,7 +385,11 @@ impl Worker {
         if let Err(e) = eds.open_calendar(cal).and_then(|c| f(&c)) {
             // Translators: an error message: what failed ("Could not save
             // the event"), then the reason.
-            self.send(Msg::Error(trf!("{what}: {error}", what = what, error = e)));
+            self.send(Msg::Error(trf!(
+                "{what}: {error}",
+                what = what,
+                error = shown(&e)
+            )));
         }
     }
 
@@ -376,7 +397,7 @@ impl Worker {
         let sources = match eds.sources() {
             Ok(s) => s,
             Err(e) => {
-                self.send(Msg::Error(e.to_string()));
+                self.send(Msg::Error(shown(&e)));
                 return;
             }
         };
@@ -420,7 +441,7 @@ impl Worker {
                 Err(e) => self.send(Msg::Error(trf!(
                     "Could not open “{display_name}”: {e}",
                     display_name = s.display_name(),
-                    e = e
+                    e = shown(&e)
                 ))),
             }
         }
@@ -481,8 +502,10 @@ impl Worker {
                 ViewEvent::Complete(err) => {
                     // E.g. a subscribed (webcal) feed that could not be fetched.
                     if let Some(e) = err.filter(|e| !e.is_empty()) {
-                        let _ = tx
-                            .send_blocking(Msg::Error(trf!("Could not load calendar: {e}", e = e)));
+                        let _ = tx.send_blocking(Msg::Error(trf!(
+                            "Could not load calendar: {e}",
+                            e = shown(&e)
+                        )));
                     }
                     Msg::Loaded {
                         cal: cal.clone(),
@@ -496,9 +519,10 @@ impl Worker {
         match view {
             Ok(v) => open.view = Some(v),
             Err(e) => {
-                let _ = self
-                    .out
-                    .send_blocking(Msg::Error(trf!("Could not read calendar: {e}", e = e)));
+                let _ = self.out.send_blocking(Msg::Error(trf!(
+                    "Could not read calendar: {e}",
+                    e = shown(&e)
+                )));
             }
         }
     }
@@ -506,5 +530,48 @@ impl Worker {
     /// VTIMEZONE text for a TZID from any open calendar.
     fn timezone(&self, tzid: &str) -> Option<String> {
         self.open.values().find_map(|o| o.cal.timezone(tzid).ok())
+    }
+}
+
+/// What to show for an error from EDS or a library: common bus and I/O
+/// errors as translated sentences (the raw text is logged), EDS's own
+/// messages as they are.
+fn shown<E: std::fmt::Display + 'static>(e: &E) -> String {
+    let any: &dyn std::any::Any = e;
+    if let Some(eds) = any.downcast_ref::<helix_eds::Error>() {
+        return match eds.bus_text() {
+            Some(raw) => helix_app_common::errors::detail(raw),
+            None => eds.to_string(),
+        };
+    }
+    if let Some(io) = any.downcast_ref::<std::io::Error>() {
+        return helix_app_common::errors::io_detail(io);
+    }
+    helix_app_common::errors::detail(&e.to_string())
+}
+
+#[cfg(test)]
+mod shown_tests {
+    use super::shown;
+    use helix_app_common::errors::Kind;
+
+    /// Bus-level errors become the common sentences; EDS's own messages
+    /// and anything unknown stay as they are, without a D-Bus name.
+    #[test]
+    fn bus_errors_are_explained() {
+        let e = helix_eds::Error::Bus(
+            "org.freedesktop.DBus.Error.ServiceUnknown: The name org.gnome.evolution.dataserver.Sources5 \
+             was not provided by any .service files"
+                .into(),
+        );
+        assert_eq!(shown(&e), Kind::ServiceMissing.msgid());
+        let e = helix_eds::Error::Bus("org.freedesktop.DBus.Error.NoReply: no reply".into());
+        assert_eq!(shown(&e), Kind::TimedOut.msgid());
+        let e = helix_eds::Error::Bus(
+            "org.gnome.evolution.dataserver.Client.OtherError: Le serveur a refusé".into(),
+        );
+        assert_eq!(shown(&e), "Le serveur a refusé");
+        let e = std::io::Error::from_raw_os_error(13);
+        assert_eq!(shown(&e), Kind::PermissionDenied.msgid());
     }
 }

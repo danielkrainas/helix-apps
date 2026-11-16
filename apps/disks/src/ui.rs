@@ -560,7 +560,13 @@ impl Ui {
                 match ev {
                     udisks::Event::Snapshot(s) => ui.set_model(model::build(&s)),
                     udisks::Event::Error(e) => {
-                        ui.status_page.set_description(Some(&e));
+                        let shown = helix_app_common::errors::detail(&e);
+                        ui.status_page.set_description(Some(&shown));
+                        ui.status_page.set_child(
+                            (shown != e)
+                                .then(|| helix_app_common::errors::details_expander(&e))
+                                .as_ref(),
+                        );
                         ui.sidebar_stack.set_visible_child_name("status");
                     }
                 }
@@ -1194,14 +1200,16 @@ impl Ui {
 
     // ------------------------------------------------------------ helpers
 
+    /// `body` may be a library's error text: common errors are shown
+    /// translated, with the raw text under "Details" (and logged).
     fn error(&self, heading: &str, body: &str) {
-        let d = adw::AlertDialog::new(Some(heading), Some(body));
-        d.add_response("close", tr("_Close"));
-        d.present(Some(&self.window));
+        helix_app_common::errors::alert(heading, body).present(Some(&self.window));
     }
 
     fn info(&self, heading: &str, body: &str) {
-        self.error(heading, body);
+        let d = adw::AlertDialog::new(Some(heading), Some(body));
+        d.add_response("close", tr("_Close"));
+        d.present(Some(&self.window));
     }
 
     /// Confirmation for destructive operations. The confirm button is

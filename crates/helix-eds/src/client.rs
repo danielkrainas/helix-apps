@@ -66,6 +66,19 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
+impl Error {
+    /// The bus's or service's own text, with its D-Bus error name, when
+    /// the error came from the bus: English for bus-level errors (no
+    /// reply, service not running, access denied), so apps can show a
+    /// translated explanation instead (`helix_app_common::errors`).
+    pub fn bus_text(&self) -> Option<&str> {
+        match self {
+            Error::Bus(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
 impl From<zbus::Error> for Error {
     fn from(e: zbus::Error) -> Self {
         Error::Bus(e.to_string())
