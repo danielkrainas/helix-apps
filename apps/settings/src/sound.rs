@@ -974,8 +974,31 @@ pub mod tests {
         let tone = audio
             .play(MICROPHONE, &["MONO"], &["MONO"], 440.0, 0.5)
             .unwrap();
-        let moved = (0..40).any(|_| next() > 0.2);
-        assert!(moved, "the meter did not move while the test source played");
+        // Linking the tone into the microphone takes a few policy rounds;
+        // slow CI runners need more than a second or two.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        let mut loudest = 0.0f32;
+        while loudest <= 0.2 && std::time::Instant::now() < deadline {
+            loudest = loudest.max(next());
+        }
+        if loudest <= 0.2 {
+            let links = audio
+                .command("pw-link")
+                .arg("-l")
+                .output()
+                .map(|o| String::from_utf8_lossy(&o.stdout).into_owned())
+                .unwrap_or_default();
+            panic!(
+                "the meter did not move while the test source played (loudest {loudest})\n\
+                 sink inputs:\n{}\nsource outputs:\n{}\nlinks:\n{links}",
+                audio
+                    .pactl(&["list", "short", "sink-inputs"])
+                    .unwrap_or_default(),
+                audio
+                    .pactl(&["list", "short", "source-outputs"])
+                    .unwrap_or_default(),
+            );
+        }
         drop(tone);
         drop(m);
     }
