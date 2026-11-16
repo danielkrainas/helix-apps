@@ -642,10 +642,11 @@ impl App {
             }
             use std::sync::atomic::Ordering::Relaxed;
             a.progress_bar.pulse();
-            a.progress_label.set_text(&trf!(
-                "{} items, {}",
+            a.progress_label.set_text(&trnf!(
+                "{n} item, {size}",
+                "{n} items, {size}",
                 progress.items.load(Relaxed),
-                size_text(progress.bytes.load(Relaxed))
+                size = size_text(progress.bytes.load(Relaxed))
             ));
             if let Ok(cur) = progress.current.lock() {
                 a.progress_current.set_text(&cur.display().to_string());
@@ -734,14 +735,19 @@ impl App {
         let tree = self.tree.borrow();
         let Some(t) = tree.as_ref() else { return };
         let r = t.root();
-        let mut s = trf!(
-            "{} on disk · {} apparent · {} items",
-            size_text(r.size),
-            size_text(r.apparent),
-            r.items
+        let mut s = trnf!(
+            "{size} on disk · {apparent} apparent · {n} item",
+            "{size} on disk · {apparent} apparent · {n} items",
+            r.items,
+            size = size_text(r.size),
+            apparent = size_text(r.apparent)
         );
         if t.errors > 0 {
-            s.push_str(&trf!(" · {} folders could not be read", t.errors));
+            s.push_str(&trnf!(
+                " · {n} folder could not be read",
+                " · {n} folders could not be read",
+                t.errors
+            ));
         }
         self.status.set_text(&s);
     }

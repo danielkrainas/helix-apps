@@ -19,10 +19,11 @@ pub const MAX_ROWS: usize = 400;
 /// The note under a capped list ("Showing 400 of 1,234 …"), or `None`.
 pub fn cap_note(shown: usize, total: usize) -> Option<String> {
     (total > shown).then(|| {
-        trf!(
-            "Showing {shown} of {total} matches. Type to narrow the search.",
-            shown = shown,
-            total = total
+        trnf!(
+            "Showing {shown} of {n} match. Type to narrow the search.",
+            "Showing {shown} of {n} matches. Type to narrow the search.",
+            total,
+            shown = shown
         )
     })
 }

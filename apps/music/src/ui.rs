@@ -20,6 +20,7 @@ use crate::queue::{Queue, Repeat, Rng};
 use crate::tracker;
 use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
+use helix_app_common::trnf;
 
 pub const APP_ID: &str = "org.helix.Music";
 pub const APP_NAME: &str = n_("Music");
@@ -641,10 +642,11 @@ impl App {
             if report.changed() && !first {
                 // A rescan found changes while the user may be listening
                 // or browsing; say so without moving focus.
-                let text = match tracks.len() {
-                    1 => tr("Library updated: 1 song").to_string(),
-                    n => trf!("Library updated: {n} songs", n = n),
-                };
+                let text = trnf!(
+                    "Library updated: {n} song",
+                    "Library updated: {n} songs",
+                    tracks.len()
+                );
                 helix_app_common::announce(
                     &app.main_stack,
                     &text,

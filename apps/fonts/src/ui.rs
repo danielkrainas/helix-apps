@@ -1185,7 +1185,12 @@ fn set_tile_family(area: &gtk::DrawingArea, family: &str) {
 
 /// Accessible name of a drawn sample: "The quick brown fox… at 12 points".
 fn sample_name(text: &str, pt: u32) -> String {
-    trf!("{text} at {pt} points", text = text, pt = pt)
+    trnf!(
+        "{text} at {n} point",
+        "{text} at {n} points",
+        pt,
+        text = text
+    )
 }
 
 /// Accessible name of a glyph cell: "U+0041 LATIN CAPITAL LETTER A".

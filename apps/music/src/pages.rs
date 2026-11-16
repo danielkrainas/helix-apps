@@ -1367,8 +1367,7 @@ impl App {
             }
             app.toasts.add_toast(toast(&match count {
                 0 => tr("No new playlists with songs from your library were found").to_string(),
-                1 => tr("Imported 1 playlist").to_string(),
-                n => trf!("Imported {n} playlists", n = n),
+                n => trnf!("Imported {n} playlist", "Imported {n} playlists", n),
             }));
             if count > 0 {
                 app.reload_playlists();

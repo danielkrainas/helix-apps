@@ -7,6 +7,7 @@ use gtk::glib;
 use helix_app_common::a11y::set_input_error;
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
+use helix_app_common::trnf;
 use helix_eds::vcard;
 use std::rc::Rc;
 
@@ -56,8 +57,18 @@ pub fn compose(day: u32, month: u32, year: &str) -> Result<Option<Ymd>, String> 
     if day > max {
         let name = helix_app_common::i18n::month_name(month);
         return Err(match year {
-            Some(y) if month == 2 => trf!("February {y} has only {max} days", y = y, max = max),
-            _ => trf!("{name} has only {max} days", name = name, max = max),
+            Some(y) if month == 2 => trnf!(
+                "February {y} has only {n} day",
+                "February {y} has only {n} days",
+                max,
+                y = y
+            ),
+            _ => trnf!(
+                "{name} has only {n} day",
+                "{name} has only {n} days",
+                max,
+                name = name
+            ),
         });
     }
     Ok(Some((year, month, day)))

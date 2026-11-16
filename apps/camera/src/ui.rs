@@ -12,6 +12,7 @@ use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
+use helix_app_common::trnf;
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use helix_app_common::{announce, Urgency};
@@ -161,7 +162,7 @@ fn menu_model(formats: &[(VideoFormat, bool)]) -> gio::Menu {
     timer.append(Some(tr("Off")), Some("win.countdown::0"));
     for d in countdown::DELAYS.iter().skip(1) {
         timer.append(
-            Some(&trf!("{d} Seconds", d = d)),
+            Some(&trnf!("{n} Second", "{n} Seconds", *d)),
             Some(&format!("win.countdown::{d}")),
         );
     }

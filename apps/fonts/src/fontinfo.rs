@@ -2,6 +2,7 @@
 
 use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
+use helix_app_common::trnf;
 use std::path::Path;
 use ttf_parser::{name_id, Face, PlatformId};
 
@@ -292,7 +293,7 @@ pub fn info_rows(
 /// Formats a byte count like "1.2 MB" (SI units, as GNOME does).
 pub fn human_size(bytes: u64) -> String {
     if bytes < 1000 {
-        return trf!("{bytes} bytes", bytes = bytes);
+        return trnf!("{n} byte", "{n} bytes", bytes);
     }
     let units = ["kB", "MB", "GB", "TB"];
     let mut v = bytes as f64 / 1000.0;

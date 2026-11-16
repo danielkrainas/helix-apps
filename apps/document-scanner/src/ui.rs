@@ -12,6 +12,7 @@ use adw::prelude::*;
 use gtk::{cairo, gdk, gio, glib};
 use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
+use helix_app_common::trnf;
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::{Cell, RefCell};
@@ -1552,7 +1553,7 @@ impl Win {
                     .map(|n| n.to_string_lossy().into_owned());
                 self.toast(&match (files.len(), name) {
                     (1, Some(n)) => trf!("Saved “{n}”", n = n),
-                    (n, _) => trf!("Saved {n} files", n = n),
+                    (n, _) => trnf!("Saved {n} file", "Saved {n} files", n),
                 });
                 self.post_process(format, files);
                 self.update();

@@ -133,7 +133,13 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
             let bytes = info.size().max(0) as u64;
             group.add(&row(
                 tr("Size"),
-                &trf!("{} ({} bytes)", fmt::size(bytes), bytes),
+                &trnf!(
+                    "{size} ({bytes} byte)",
+                    "{size} ({bytes} bytes)",
+                    bytes,
+                    size = fmt::size(bytes),
+                    bytes = bytes
+                ),
             ));
         }
         if let Some(parent) = file.parent() {

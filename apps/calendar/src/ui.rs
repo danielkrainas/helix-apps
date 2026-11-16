@@ -2261,8 +2261,11 @@ impl Ui {
                 n => trnf!("{n} event found", "{n} events found", n),
             };
             helix_app_common::announce_settled(&self.search, &count);
-            self.agenda_title
-                .set_label(&trf!("{} Search Results", results.len()));
+            self.agenda_title.set_label(&trnf!(
+                "{n} Search Result",
+                "{n} Search Results",
+                results.len()
+            ));
             let zones = self.zones.borrow();
             for (i, (cal, e)) in results.iter().enumerate() {
                 let s = e.start.local(&zones);

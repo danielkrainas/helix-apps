@@ -3,6 +3,7 @@
 use helix_app_common::i18n::{format_number, tr};
 use helix_app_common::nc_;
 use helix_app_common::trf;
+use helix_app_common::trnf;
 
 /// Formats a byte count, SI (kB = 1000) or IEC (KiB = 1024).
 pub fn size(bytes: u64, iec: bool) -> String {
@@ -34,7 +35,7 @@ pub fn size(bytes: u64, iec: bool) -> String {
         )
     };
     if (bytes as f64) < base {
-        return trf!("{bytes} bytes", bytes = bytes);
+        return trnf!("{n} byte", "{n} bytes", bytes);
     }
     let mut v = bytes as f64;
     let mut i = 0;

@@ -55,7 +55,13 @@ pub fn size_long(bytes: u64) -> String {
     if bytes < 1000 {
         return size(bytes);
     }
-    trf!("{} ({} bytes)", size(bytes), group_thousands(bytes))
+    trnf!(
+        "{size} ({bytes} byte)",
+        "{size} ({bytes} bytes)",
+        bytes,
+        size = size(bytes),
+        bytes = group_thousands(bytes)
+    )
 }
 
 /// `n` of the unit at `index` in `duration`'s table.
