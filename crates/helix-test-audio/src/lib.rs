@@ -291,14 +291,21 @@ impl FakeAudio {
         freq: f32,
         amplitude: f32,
     ) -> Option<Tone> {
-        // An AU stream on stdin, not `--raw`: pw-cat before PipeWire 1.2
-        // (Ubuntu 24.04's 1.0.5, on CI) has no --raw, but every version
-        // reads AU (which allows an unknown length) from a pipe. The
-        // little-endian variant: 1.0.5 passes the samples on unconverted,
-        // so they must already be in the native float format.
-        let mut child = self
-            .command("pw-cat")
-            .args(["--playback", "--channel-map"])
+        // Raw native floats on stdin. pw-cat before PipeWire 1.2 (Ubuntu
+        // 24.04's 1.0.5, on CI) always reads `-` as raw samples and has no
+        // --raw; later versions decode `-` as a sound file unless given
+        // --raw. Either way the format, rate and channel count are ours.
+        let mut cmd = self.command("pw-cat");
+        cmd.arg("--playback");
+        if pw_cat_has_raw() {
+            cmd.arg("--raw");
+        }
+        let mut child = cmd
+            .args(["--format", "f32", "--rate"])
+            .arg(RATE.to_string())
+            .arg("--channels")
+            .arg(channels.len().to_string())
+            .arg("--channel-map")
             .arg(channels.join(","))
             .arg("--target")
             .arg(target)
@@ -312,21 +319,7 @@ impl FakeAudio {
         let stop = Arc::new(AtomicBool::new(false));
         let mask: Vec<bool> = channels.iter().map(|c| loud.contains(c)).collect();
         let s = stop.clone();
-        let header: Vec<u8> = [
-            u32::from_le_bytes(*b"dns."),
-            24,       // header size
-            u32::MAX, // length unknown
-            6,        // 32-bit IEEE float
-            RATE,
-            mask.len() as u32,
-        ]
-        .iter()
-        .flat_map(|w| w.to_le_bytes())
-        .collect();
         let writer = std::thread::spawn(move || {
-            if stdin.write_all(&header).is_err() {
-                return;
-            }
             let mut n: u64 = 0;
             let block = (RATE / 100) as usize;
             let started = Instant::now();
@@ -337,7 +330,7 @@ impl FakeAudio {
                         * (2.0 * std::f32::consts::PI * freq * n as f32 / RATE as f32).sin();
                     n += 1;
                     for on in &mask {
-                        buf.extend_from_slice(&(if *on { v } else { 0.0 }).to_le_bytes());
+                        buf.extend_from_slice(&(if *on { v } else { 0.0 }).to_ne_bytes());
                     }
                 }
                 if stdin.write_all(&buf).is_err() {
@@ -687,6 +680,20 @@ fn policy(dir: &Path, stop: &AtomicBool) {
         }
         std::thread::sleep(Duration::from_millis(50));
     }
+}
+
+/// Whether this pw-cat has `--raw` (PipeWire 1.2 and later).
+fn pw_cat_has_raw() -> bool {
+    static RAW: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *RAW.get_or_init(|| {
+        Command::new(tool("pw-cat").unwrap_or_else(|| "pw-cat".into()))
+            .arg("--help")
+            .output()
+            .is_ok_and(|o| {
+                String::from_utf8_lossy(&o.stdout).contains("--raw")
+                    || String::from_utf8_lossy(&o.stderr).contains("--raw")
+            })
+    })
 }
 
 #[cfg(test)]
