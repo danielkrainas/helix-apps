@@ -311,6 +311,25 @@ pub fn format_number(value: f64, decimals: usize) -> String {
     format_c(&fmt, value).unwrap_or_else(|| format!("{value:.decimals$}"))
 }
 
+/// The locale's decimal separator and, if it groups digits, its group
+/// separator (`('.', Some(','))` in English, `(',', Some('.'))` in German,
+/// `(',', Some('\u{202f}'))` in French), as the C library formats numbers.
+pub fn number_separators() -> (char, Option<char>) {
+    separators_of(&format_c("%'.1f", 1234.5).unwrap_or_default())
+}
+
+/// The separators in `formatted`, the C library's `%'.1f` of 1234.5.
+fn separators_of(formatted: &str) -> (char, Option<char>) {
+    let chars: Vec<char> = formatted.chars().collect();
+    let n = chars.len();
+    if n < 3 || !chars[0].is_ascii_digit() || chars[n - 1] != '5' {
+        return ('.', Some(','));
+    }
+    let decimal = chars[n - 2];
+    let group = (chars[1] != '2').then_some(chars[1]);
+    (decimal, group)
+}
+
 fn format_c(fmt: &str, value: f64) -> Option<String> {
     extern "C" {
         fn snprintf(buf: *mut std::ffi::c_char, n: usize, fmt: *const std::ffi::c_char, ...)
@@ -483,6 +502,16 @@ pub fn write_test_catalogue(path: &std::path::Path, entries: &[(&str, &str)]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn separators_from_formatted_numbers() {
+        assert_eq!(separators_of("1,234.5"), ('.', Some(',')));
+        assert_eq!(separators_of("1.234,5"), (',', Some('.')));
+        assert_eq!(separators_of("1\u{202f}234,5"), (',', Some('\u{202f}')));
+        assert_eq!(separators_of("1234,5"), (',', None));
+        assert_eq!(separators_of("1234.5"), ('.', None));
+        assert_eq!(separators_of(""), ('.', Some(',')));
+    }
 
     #[test]
     fn fills_placeholders() {

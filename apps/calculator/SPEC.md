@@ -133,6 +133,24 @@ Controlled by preferences:
   (default off).
 - In programming mode results use the selected base.
 
+### Decimal and group separators (locale)
+- The decimal key, results and grouped digits use the locale's separators
+  (from the C library's number formatting, `LC_NUMERIC`): `1.234.567,89`
+  in German, `1 234 567,89` (narrow no-break spaces) in French,
+  `1,234,567.89` in English. Programming mode in other bases groups binary,
+  octal and hexadecimal digits in fours with spaces, as before.
+- Input is read the locale's way and the English way: in a decimal-comma
+  locale, typing `.` or `,` (or the keypad's decimal key) enters the
+  locale's decimal separator; pasted numbers in either form are understood
+  (`1.234,5` and `1,234.5` are both 1234.5; a lone `.` or `,` is the decimal
+  point, except that a `.` followed by exactly three digits is a group
+  separator in locales that group with `.`, so `1.500` is 1500 in German,
+  as a result would be shown there). Function arguments are separated with
+  `;`, or with a comma followed by a space. The engine's own form (`.`
+  decimal) is internal; `--solve` reads and prints it.
+- *GNOME does not document how its Calculator reads pasted numbers from
+  another locale; Helix's choice:* the rules above.
+
 ### GSettings (`org.gnome.calculator`)
 Keys read and written (others ignored):
 `accuracy` (i), `word-size` (i), `base` (i), `show-thousands` (b),

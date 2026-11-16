@@ -1,6 +1,7 @@
 //! Result formatting.
 
 use crate::engine::{to_signed, Value};
+use crate::locale::Separators;
 use helix_app_common::i18n::tr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -52,6 +53,8 @@ pub struct Options {
     /// Output base (programming mode).
     pub base: u32,
     pub word_size: u32,
+    /// The decimal and group separators shown (base 10).
+    pub sep: Separators,
 }
 
 impl Default for Options {
@@ -63,6 +66,7 @@ impl Default for Options {
             show_zeroes: false,
             base: 10,
             word_size: 64,
+            sep: Separators::C,
         }
     }
 }
@@ -79,7 +83,7 @@ pub fn format(v: Value, o: &Options) -> String {
 pub fn format_int(raw: u64, o: &Options) -> String {
     if o.base == 10 {
         let s = to_signed(raw, o.word_size);
-        let digits = group(&s.unsigned_abs().to_string(), o.thousands, ',', 3);
+        let digits = group(&s.unsigned_abs().to_string(), o.thousands, o.sep.group, 3);
         return if s < 0 {
             format!("{MINUS}{digits}")
         } else {
@@ -134,9 +138,9 @@ fn fixed(x: f64, o: &Options) -> String {
     if x < 0.0 && s.chars().any(|c| c != '0' && c != '.') {
         out.push(MINUS);
     }
-    out.push_str(&group(int, o.thousands, ',', 3));
+    out.push_str(&group(int, o.thousands, o.sep.group, 3));
     if let Some(f) = frac {
-        out.push('.');
+        out.push(o.sep.decimal);
         out.push_str(f);
     }
     out
@@ -271,6 +275,48 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(format_int(0b1_0110_1001, &o), "1 0110 1001₂");
+    }
+
+    #[test]
+    fn locale_separators() {
+        let de = Separators {
+            decimal: ',',
+            group: '.',
+        };
+        let o = Options {
+            thousands: true,
+            accuracy: 2,
+            sep: de,
+            ..opts(NumberFormat::Fixed)
+        };
+        assert_eq!(format_real(1234567.891, &o), "1.234.567,89");
+        assert_eq!(format_real(-0.5, &o), "−0,5");
+        let o = Options {
+            sep: de,
+            ..opts(NumberFormat::Scientific)
+        };
+        assert_eq!(format_real(12345.0, &o), "1,2345×10⁴");
+        let o = Options {
+            thousands: true,
+            sep: de,
+            ..Default::default()
+        };
+        assert_eq!(format_int(1234567, &o), "1.234.567");
+        // Comma-locale results read back to the same values.
+        let mut ctx = crate::engine::Context {
+            sep: de,
+            ..Default::default()
+        };
+        for x in [1234567.891, -0.5, 1.5e-12, 1e20] {
+            let o = Options {
+                thousands: true,
+                sep: de,
+                ..opts(NumberFormat::Automatic)
+            };
+            let s = format_real(x, &o);
+            let v = ctx.evaluate(&s).unwrap().as_f64(64);
+            assert!((v - x).abs() <= x.abs() * 1e-9, "{s} → {v}");
+        }
     }
 
     #[test]

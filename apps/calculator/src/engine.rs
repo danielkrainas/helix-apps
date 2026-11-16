@@ -860,6 +860,8 @@ pub struct Context {
     pub ans: Value,
     pub angle: AngleUnit,
     pub mode: Mode,
+    /// The locale's separators: input is read the locale's way too.
+    pub sep: crate::locale::Separators,
 }
 
 impl Default for Context {
@@ -869,6 +871,7 @@ impl Default for Context {
             ans: Value::Real(0.0),
             angle: AngleUnit::Degrees,
             mode: Mode::Real,
+            sep: crate::locale::Separators::C,
         }
     }
 }
@@ -890,8 +893,31 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Statement> {
 }
 
 impl Context {
-    /// Evaluates `input`, updating `ans` (and variables on assignment).
+    /// Evaluates `input`, written with the locale's separators (see
+    /// [`crate::locale`]), updating `ans` (and variables on assignment).
     pub fn evaluate(&mut self, input: &str) -> Result<Value> {
+        let decimal = match self.mode {
+            Mode::Real => true,
+            Mode::Integer { base, .. } => base == 10,
+        };
+        if !decimal {
+            return self.evaluate_engine(input);
+        }
+        let (converted, map) = self.sep.to_engine(input);
+        self.evaluate_engine(&converted).map_err(|e| match e {
+            CalcError::Syntax { pos, msg } => CalcError::Syntax {
+                pos: map
+                    .get(pos)
+                    .copied()
+                    .unwrap_or_else(|| input.chars().count()),
+                msg,
+            },
+            other => other,
+        })
+    }
+
+    /// Evaluates `input` as the engine reads it (`.` decimal point).
+    fn evaluate_engine(&mut self, input: &str) -> Result<Value> {
         // Unit conversion has its own surface syntax.
         if let Mode::Real = self.mode {
             if let Some(v) = self.try_conversion(input)? {

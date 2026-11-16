@@ -3,6 +3,7 @@
 mod engine;
 mod financial;
 mod format;
+mod locale;
 mod ui;
 mod units;
 

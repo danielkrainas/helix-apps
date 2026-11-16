@@ -129,6 +129,7 @@ impl State {
             } else {
                 64
             },
+            sep: crate::locale::Separators::current(),
         }
     }
 }
@@ -205,6 +206,19 @@ fn kt(label: &'static str, insert: &'static str, tooltip: &'static str) -> Key {
     }
 }
 
+/// The locale's decimal separator, as the decimal key shows and types it.
+fn decimal_str() -> &'static str {
+    static DECIMAL: std::sync::OnceLock<&'static str> = std::sync::OnceLock::new();
+    DECIMAL.get_or_init(|| {
+        Box::leak(
+            crate::locale::Separators::current()
+                .decimal
+                .to_string()
+                .into_boxed_str(),
+        )
+    })
+}
+
 fn basic_keys(programming: bool) -> Vec<Vec<Key>> {
     let op = |label, ins, tip| Key {
         label,
@@ -252,7 +266,7 @@ fn basic_keys(programming: bool) -> Vec<Vec<Key>> {
             if programming {
                 kt("mod", " mod ", tr("Modulus divide"))
             } else {
-                kt(".", ".", tr("Decimal point"))
+                kt(decimal_str(), decimal_str(), tr("Decimal point"))
             },
             if programming {
                 kt("x!", "!", tr("Factorial"))
@@ -634,6 +648,7 @@ fn build(app: &adw::Application) -> Ui {
     let mode = ButtonMode::from_nick(&prefs.get_enum_nick("button-mode", "basic"));
     let ctx = Context {
         angle: AngleUnit::from_nick(&prefs.get_enum_nick("angle-units", "degrees")),
+        sep: crate::locale::Separators::current(),
         ..Context::default()
     };
     let mut state = State {
@@ -948,6 +963,22 @@ fn build(app: &adw::Application) -> Ui {
                 .intersects(gtk::gdk::ModifierType::CONTROL_MASK | gtk::gdk::ModifierType::ALT_MASK)
             {
                 return glib::Propagation::Proceed;
+            }
+            // In a decimal-comma locale, both `.` and `,` type the
+            // locale's decimal separator.
+            let decimal_key = matches!(
+                key,
+                gtk::gdk::Key::period
+                    | gtk::gdk::Key::comma
+                    | gtk::gdk::Key::KP_Decimal
+                    | gtk::gdk::Key::KP_Separator
+            );
+            if decimal_key && ui.state.borrow().options.sep.comma() {
+                let programming = ui.state.borrow().mode == ButtonMode::Programming;
+                if !programming {
+                    ui.insert(decimal_str());
+                    return glib::Propagation::Stop;
+                }
             }
             if let Some(c) = key.to_unicode() {
                 if ui.state.borrow().just_evaluated && "+-*/^×÷−!%²³".contains(c) {
