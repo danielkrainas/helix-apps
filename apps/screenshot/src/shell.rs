@@ -281,17 +281,16 @@ fn describe(e: zbus::Error) -> CaptureError {
     }
 }
 
+/// A fake shell on a private `dbus-daemon`, for tests (never the session
+/// bus).
 #[cfg(test)]
-mod tests {
-    //! Runs against a fake shell on a private `dbus-daemon`, never the
-    //! session bus.
-
+pub(crate) mod fake {
     use super::*;
     use std::io::BufRead;
     use std::sync::{Arc, Mutex};
 
     /// A 1×1 PNG.
-    const PNG: &[u8] = &[
+    pub const PNG: &[u8] = &[
         0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44,
         0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f,
         0x15, 0xc4, 0x89, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0xf8,
@@ -300,11 +299,11 @@ mod tests {
     ];
 
     #[derive(Default)]
-    struct State {
-        calls: Vec<String>,
-        cancel_select: bool,
-        fail_capture: bool,
-        no_picker: bool,
+    pub struct State {
+        pub calls: Vec<String>,
+        pub cancel_select: bool,
+        pub fail_capture: bool,
+        pub no_picker: bool,
     }
 
     struct FakeShell(Arc<Mutex<State>>);
@@ -425,9 +424,11 @@ mod tests {
         }
     }
 
-    struct Bus {
+    static BUSES: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
+    pub struct Bus {
         daemon: std::process::Child,
-        address: String,
+        pub address: String,
     }
 
     impl Drop for Bus {
@@ -437,16 +438,36 @@ mod tests {
         }
     }
 
-    fn private_bus() -> Option<Bus> {
-        let mut daemon = std::process::Command::new("dbus-daemon")
-            .args(["--session", "--nofork", "--print-address=1"])
+    /// A private bus that starts no services.
+    pub fn private_bus() -> Option<Bus> {
+        let config = std::env::temp_dir().join(format!(
+            "helix-screenshot-test-bus-{}-{}.conf",
+            std::process::id(),
+            BUSES.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ));
+        std::fs::write(
+            &config,
+            "<!DOCTYPE busconfig PUBLIC \"-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN\"\n \
+             \"http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd\">\n\
+             <busconfig><type>session</type><listen>unix:tmpdir=/tmp</listen>\
+             <policy context=\"default\"><allow send_destination=\"*\" eavesdrop=\"true\"/>\
+             <allow eavesdrop=\"true\"/><allow own=\"*\"/></policy></busconfig>\n",
+        )
+        .ok()?;
+        let daemon = std::process::Command::new("dbus-daemon")
+            .arg(format!("--config-file={}", config.display()))
+            .args(["--nofork", "--print-address=1"])
             .stdout(std::process::Stdio::piped())
-            .spawn()
-            .ok()?;
+            .spawn();
+        let mut daemon = daemon.ok()?;
         let mut line = String::new();
-        std::io::BufReader::new(daemon.stdout.take()?)
-            .read_line(&mut line)
-            .ok()?;
+        let read = daemon
+            .stdout
+            .take()
+            .map(|out| std::io::BufReader::new(out).read_line(&mut line));
+        // Read once the address is out.
+        let _ = std::fs::remove_file(&config);
+        read?.ok()?;
         let address = line.trim().to_string();
         if address.is_empty() {
             let _ = daemon.kill();
@@ -455,14 +476,14 @@ mod tests {
         Some(Bus { daemon, address })
     }
 
-    fn connect(bus: &Bus) -> Connection {
+    pub fn connect(bus: &Bus) -> Connection {
         zbus::blocking::connection::Builder::address(bus.address.as_str())
             .unwrap()
             .build()
             .unwrap()
     }
 
-    fn serve(bus: &Bus, state: &Arc<Mutex<State>>) -> Connection {
+    pub fn serve(bus: &Bus, state: &Arc<Mutex<State>>) -> Connection {
         zbus::blocking::connection::Builder::address(bus.address.as_str())
             .unwrap()
             .name(SHELL_NAME)
@@ -475,12 +496,19 @@ mod tests {
             .unwrap()
     }
 
-    fn quick(mode: Mode) -> Request {
+    pub fn quick(mode: Mode) -> Request {
         Request {
             settle: Duration::ZERO,
             ..Request::new(mode, 0, false)
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::fake::*;
+    use super::*;
+    use std::sync::{Arc, Mutex};
 
     #[test]
     fn captures_through_a_fake_shell() {

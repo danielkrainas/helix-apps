@@ -447,6 +447,15 @@ impl Win {
         });
         win.load_settings();
         win.connect();
+        // The handlers hold the Win weakly, so the window owns it until it
+        // is destroyed: the caller's reference goes away when `activate`
+        // returns, and without this every button did nothing. (Not on
+        // `destroy`: the Win holds the window, so that never comes.
+        // Hiding a window does not unrealize it; destroying it does.)
+        let owner = RefCell::new(Some(win.clone()));
+        win.window.connect_unrealize(move |_| {
+            owner.borrow_mut().take();
+        });
         win
     }
 
@@ -679,6 +688,92 @@ impl Win {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::shell::fake;
+    use std::sync::{Arc, Mutex};
+    use std::time::{Duration, Instant};
+
+    /// Runs the default main context until `done` or 20 seconds passed.
+    fn wait_for(what: &str, done: impl Fn() -> bool) {
+        let deadline = Instant::now() + Duration::from_secs(20);
+        let ctx = glib::MainContext::default();
+        while !done() {
+            assert!(Instant::now() < deadline, "timed out waiting for {what}");
+            if !ctx.iteration(false) {
+                std::thread::sleep(Duration::from_millis(10));
+            }
+        }
+    }
+
+    /// The window's own buttons work once `activate` has returned and only
+    /// the window holds its state (#146: "Select Area" did
+    /// nothing, as did every other button): Take in Area mode asks the
+    /// shell for an area, captures it and shows the preview.
+    #[test]
+    fn take_button_selects_and_captures_an_area() {
+        let Some(bus) = fake::private_bus() else {
+            eprintln!("dbus-daemon unavailable; skipping");
+            return;
+        };
+        let state = Arc::new(Mutex::new(fake::State::default()));
+        let _shell = fake::serve(&bus, &state);
+        // Before GTK or GIO read it: the app's captures use this bus.
+        std::env::set_var("DBUS_SESSION_BUS_ADDRESS", &bus.address);
+        std::env::set_var("GDK_DEBUG", "no-portals");
+        let Some(_display) = helix_app_common::testing::headless_gtk() else {
+            eprintln!("no headless GTK display (gtk4-broadwayd); skipping");
+            return;
+        };
+        adw::init().unwrap();
+        let app = adw::Application::builder()
+            .application_id("org.helix.Screenshot.Test")
+            .flags(gio::ApplicationFlags::NON_UNIQUE)
+            .build();
+        app.register(gio::Cancellable::NONE).unwrap();
+        let args = Args {
+            mode: Some(Mode::Area),
+            ..Args::default()
+        };
+        // As in `run`: the Win built is dropped at once.
+        let weak = Rc::downgrade(&Win::build(&app, &args, Status::default()));
+        let (window, take_button, stack) = {
+            let w = weak.upgrade().expect("the window keeps its state");
+            (w.window.clone(), w.take_button.clone(), w.stack.clone())
+        };
+        window.present();
+        take_button.emit_clicked();
+        wait_for("the preview", || {
+            stack.visible_child_name().as_deref() == Some("preview")
+        });
+        let calls = state.lock().unwrap().calls.clone();
+        assert_eq!(calls.len(), 2, "{calls:?}");
+        assert_eq!(calls[0], "SelectArea");
+        assert!(
+            calls[1].starts_with("ScreenshotArea 10,20 30x40 "),
+            "{calls:?}"
+        );
+
+        // A refused or failed capture is shown, not ignored: the options
+        // again, with a dialog saying why.
+        state.lock().unwrap().fail_capture = true;
+        let w = weak.upgrade().unwrap();
+        w.show_options();
+        drop(w);
+        take_button.emit_clicked();
+        wait_for("the error", || {
+            weak.upgrade().is_some_and(|w| !w.busy.get())
+                && state.lock().unwrap().calls.len() == 4
+                && window.is_visible()
+        });
+        assert!(
+            window.visible_dialog().is_some(),
+            "a dialog says why the capture failed"
+        );
+        assert_eq!(stack.visible_child_name().as_deref(), Some("options"));
+
+        // Closing the window frees its state.
+        window.destroy();
+        assert!(weak.upgrade().is_none(), "the window's state was freed");
+    }
 
     #[test]
     fn preview_says_what_was_captured() {
