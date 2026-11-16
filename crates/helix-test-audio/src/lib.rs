@@ -293,7 +293,9 @@ impl FakeAudio {
     ) -> Option<Tone> {
         // An AU stream on stdin, not `--raw`: pw-cat before PipeWire 1.2
         // (Ubuntu 24.04's 1.0.5, on CI) has no --raw, but every version
-        // reads AU (which allows an unknown length) from a pipe.
+        // reads AU (which allows an unknown length) from a pipe. The
+        // little-endian variant: 1.0.5 passes the samples on unconverted,
+        // so they must already be in the native float format.
         let mut child = self
             .command("pw-cat")
             .args(["--playback", "--channel-map"])
@@ -311,15 +313,15 @@ impl FakeAudio {
         let mask: Vec<bool> = channels.iter().map(|c| loud.contains(c)).collect();
         let s = stop.clone();
         let header: Vec<u8> = [
-            u32::from_be_bytes(*b".snd"),
+            u32::from_le_bytes(*b"dns."),
             24,       // header size
             u32::MAX, // length unknown
-            6,        // 32-bit IEEE float, big-endian
+            6,        // 32-bit IEEE float
             RATE,
             mask.len() as u32,
         ]
         .iter()
-        .flat_map(|w| w.to_be_bytes())
+        .flat_map(|w| w.to_le_bytes())
         .collect();
         let writer = std::thread::spawn(move || {
             if stdin.write_all(&header).is_err() {
@@ -335,7 +337,7 @@ impl FakeAudio {
                         * (2.0 * std::f32::consts::PI * freq * n as f32 / RATE as f32).sin();
                     n += 1;
                     for on in &mask {
-                        buf.extend_from_slice(&(if *on { v } else { 0.0 }).to_be_bytes());
+                        buf.extend_from_slice(&(if *on { v } else { 0.0 }).to_le_bytes());
                     }
                 }
                 if stdin.write_all(&buf).is_err() {
