@@ -4,6 +4,30 @@ All apps share one gettext domain, `helix-apps`, and one template,
 `po/helix-apps.pot`. A string that several apps use ("Cancel",
 "Keyboard Shortcuts", "About …") is translated once.
 
+## Languages
+
+| Code | Language | Status |
+| --- | --- | --- |
+| `de` | German | machine-translated, unreviewed |
+| `es` | Spanish | machine-translated, unreviewed |
+| `fr` | French | machine-translated, unreviewed |
+| `it` | Italian | machine-translated, unreviewed |
+| `ja` | Japanese | machine-translated, unreviewed |
+| `ko` | Korean | machine-translated, unreviewed |
+| `nl` | Dutch | machine-translated, unreviewed |
+| `pl` | Polish | machine-translated, unreviewed |
+| `pt_BR` | Portuguese (Brazil) | machine-translated, unreviewed |
+| `ru` | Russian | machine-translated, unreviewed |
+| `uk` | Ukrainian | machine-translated, unreviewed |
+| `zh_CN` | Chinese (Simplified) | machine-translated, unreviewed |
+
+The first catalogues were machine-translated and shipped without review
+(their header says `Last-Translator: Machine translation (unreviewed)`).
+If you are a fluent speaker, reports of wrong or awkward translations
+are welcome as issues, and so is a review of a whole catalogue: correct
+`po/<lang>.po`, put your name in its `Last-Translator` header, and change
+the language's status here to "reviewed".
+
 ## Adding a language
 
 You need the GNU gettext tools (`msginit`, `msgmerge`, `msgfmt`).
@@ -16,7 +40,10 @@ You need the GNU gettext tools (`msginit`, `msgmerge`, `msgfmt`).
 2. Add the language code (`de`) on its own line to `po/LINGUAS`.
 3. Translate `po/de.po` with a PO editor (Poedit, GNOME Translation
    Editor, Lokalize) or a text editor.
-4. Check it: `msgfmt --check --statistics -o /dev/null po/de.po`.
+4. Check it: `python3 tools/i18n/check-po.py de` (CI runs it for every
+   language). It runs `msgfmt --check` and makes sure each translation
+   keeps the original's placeholders, markup and access key.
+5. Add the language to the table above.
 
 `packaging/stage.sh` compiles every language listed in `po/LINGUAS` to
 `/usr/share/locale/<lang>/LC_MESSAGES/helix-apps.mo` and merges the
@@ -33,7 +60,9 @@ When the sources change, regenerate the template and merge it:
 ## Notes for translators
 
 - `{name}` and `{}` are placeholders filled in by the app. Keep them;
-  you may move them. Numbered ones (`{0}`, `{1}`) can be reordered.
+  you may move them. Numbered ones (`{0}`, `{1}`) can be reordered, and
+  plain `{}` may be numbered in order of appearance in the English
+  (`{1} … {0}`) to change their order.
 - `_` marks the access key of a menu item or button (`_Open`). Keep one
   `_` in the translation, before a letter that is easy to type.
 - Some messages contain Pango markup (`<b>…</b>`, `&amp;`). Keep the
@@ -84,7 +113,9 @@ their context: compare them with each other, not with a literal.
 
 Every app calls `helix_app_common::i18n::init()` first thing in `main`.
 Write whole sentences with placeholders rather than gluing pieces
-together, and use `i18n::month_name`, `weekday_name`, `format_number`,
+together, and use `i18n::month_name` (a month on its own) or
+`month_name_in_date` (next to a day number, where Russian, Polish and
+Ukrainian inflect it), `weekday_name`, `format_number`,
 or GLib's `DateTime::format` instead of hand-written names and number
 formats (chrono's `%A`, `%B` and `%p` are English in every locale).
 Put the order of a date's parts in a translatable message

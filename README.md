@@ -142,6 +142,15 @@ Shared helpers live in `helix_app_common::a11y`.
   window is re-checked every two seconds; each problem is printed once)
   and every announcement made.
 
+## Translations
+
+The apps are translated into Spanish, French, German, Brazilian
+Portuguese, Russian, Simplified Chinese, Japanese, Italian, Polish,
+Dutch, Korean and Ukrainian. These first translations are machine
+translations that no native speaker has reviewed yet; corrections and
+reviews are welcome. See [TRANSLATING.md](TRANSLATING.md) for each
+language's status and how to help.
+
 ## License
 
 CC0-1.0 (same as the rest of Helix).
