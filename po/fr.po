@@ -1428,7 +1428,7 @@ msgstr "Agenda"
 msgid "Location"
 msgstr "Lieu"
 
-#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:830
+#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:883
 msgid "Schedule"
 msgstr "Planification"
 
@@ -10649,9 +10649,9 @@ msgstr "Imprimante"
 msgid "Modem"
 msgstr "Modem"
 
-#: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:97
-#: apps/settings/src/ui/displays.rs:121 apps/settings/src/ui/displays.rs:122
-#: apps/settings/src/ui/displays.rs:381
+#: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:98
+#: apps/settings/src/ui/displays.rs:122 apps/settings/src/ui/displays.rs:123
+#: apps/settings/src/ui/displays.rs:434
 msgid "Display"
 msgstr "Écran"
 
@@ -10693,7 +10693,7 @@ msgstr "Lecteur de musique"
 msgid "Software"
 msgstr "Logiciels"
 
-#: apps/settings/src/displays.rs:592
+#: apps/settings/src/displays.rs:599
 msgid "Variable (up to {rate})"
 msgstr "Variable (jusqu’à {rate})"
 
@@ -12024,55 +12024,55 @@ msgstr "Chargement des fuseaux horaires…"
 msgid "Could not change the time zone: {e}"
 msgstr "Impossible de modifier le fuseau horaire : {e}"
 
-#: apps/settings/src/ui/displays.rs:24
+#: apps/settings/src/ui/displays.rs:25
 msgid "Join Displays"
 msgstr "Joindre les écrans"
 
-#: apps/settings/src/ui/displays.rs:25
+#: apps/settings/src/ui/displays.rs:26
 msgid "Mirror"
 msgstr "Miroir"
 
-#: apps/settings/src/ui/displays.rs:26
+#: apps/settings/src/ui/displays.rs:27
 msgid "Single Display"
 msgstr "Écran unique"
 
-#: apps/settings/src/ui/displays.rs:31
+#: apps/settings/src/ui/displays.rs:32
 msgid "Landscape"
 msgstr "Paysage"
 
-#: apps/settings/src/ui/displays.rs:32
+#: apps/settings/src/ui/displays.rs:33
 msgid "Portrait Right"
 msgstr "Portrait vers la droite"
 
-#: apps/settings/src/ui/displays.rs:33
+#: apps/settings/src/ui/displays.rs:34
 msgid "Portrait Left"
 msgstr "Portrait vers la gauche"
 
-#: apps/settings/src/ui/displays.rs:34
+#: apps/settings/src/ui/displays.rs:35
 msgid "Landscape (Flipped)"
 msgstr "Paysage (retourné)"
 
-#: apps/settings/src/ui/displays.rs:88
+#: apps/settings/src/ui/displays.rs:89
 msgid "Loading Displays…"
 msgstr "Chargement des écrans…"
 
-#: apps/settings/src/ui/displays.rs:91
+#: apps/settings/src/ui/displays.rs:92
 msgid "Arrangement"
 msgstr "Disposition"
 
-#: apps/settings/src/ui/displays.rs:92
+#: apps/settings/src/ui/displays.rs:93
 msgid "Display Mode"
 msgstr "Mode d’affichage"
 
-#: apps/settings/src/ui/displays.rs:98
+#: apps/settings/src/ui/displays.rs:99
 msgid "Display to Use"
 msgstr "Écran à utiliser"
 
-#: apps/settings/src/ui/displays.rs:107
+#: apps/settings/src/ui/displays.rs:108
 msgid "Display Arrangement"
 msgstr "Disposition des écrans"
 
-#: apps/settings/src/ui/displays.rs:108
+#: apps/settings/src/ui/displays.rs:109
 msgid ""
 "Drag displays to match how they stand on your desk; with the keyboard, move "
 "the selected display with the arrow keys"
@@ -12081,131 +12081,160 @@ msgstr ""
 "votre bureau ; au clavier, déplacez l’écran sélectionné avec les touches "
 "fléchées"
 
-#: apps/settings/src/ui/displays.rs:116
+#: apps/settings/src/ui/displays.rs:117
 msgid "Primary Display"
 msgstr "Écran principal"
 
-#: apps/settings/src/ui/displays.rs:117
+#: apps/settings/src/ui/displays.rs:118
 msgid "Holds the top bar and new windows"
 msgstr "Contient la barre supérieure et les nouvelles fenêtres"
 
-#: apps/settings/src/ui/displays.rs:123
+#: apps/settings/src/ui/displays.rs:124
 msgid "Display to Set Up"
 msgstr "Écran à configurer"
 
-#: apps/settings/src/ui/displays.rs:125
+#: apps/settings/src/ui/displays.rs:126
 msgid "Orientation"
 msgstr "Orientation"
 
-#: apps/settings/src/ui/displays.rs:130
+#: apps/settings/src/ui/displays.rs:131
 msgid "Resolution"
 msgstr "Résolution"
 
-#: apps/settings/src/ui/displays.rs:132
+#: apps/settings/src/ui/displays.rs:133
 msgid "Refresh Rate"
 msgstr "Fréquence de rafraîchissement"
 
-#: apps/settings/src/ui/displays.rs:134
+#: apps/settings/src/ui/displays.rs:135
 msgid "Scale"
 msgstr "Échelle"
 
-#: apps/settings/src/ui/displays.rs:135
+#: apps/settings/src/ui/displays.rs:136
 msgid "Makes everything larger or smaller"
 msgstr "Agrandit ou réduit tous les éléments"
 
-#: apps/settings/src/ui/displays.rs:139
+#: apps/settings/src/ui/displays.rs:140
 msgid "Adjust for TV"
 msgstr "Ajuster pour la télévision"
 
-#: apps/settings/src/ui/displays.rs:140
+#: apps/settings/src/ui/displays.rs:141
 msgid "Shrinks the picture for TVs that cut off its edges"
 msgstr "Réduit l’image pour les téléviseurs qui en coupent les bords"
 
-#: apps/settings/src/ui/displays.rs:156
+#: apps/settings/src/ui/displays.rs:161
 msgid "The display settings changed."
 msgstr "Les paramètres d’affichage ont été modifiés."
 
-#: apps/settings/src/ui/displays.rs:157 apps/web/src/dialogs.rs:413
+#: apps/settings/src/ui/displays.rs:162 apps/web/src/dialogs.rs:413
 msgid "_Reset"
 msgstr "_Rétablir"
 
-#: apps/settings/src/ui/displays.rs:159 apps/settings/src/ui/netedit.rs:286
+#: apps/settings/src/ui/displays.rs:164 apps/settings/src/ui/netedit.rs:286
 msgid "_Apply"
 msgstr "_Appliquer"
 
-#: apps/settings/src/ui/displays.rs:178
+#: apps/settings/src/ui/displays.rs:183
 msgid "Displays Are Not Available"
 msgstr "Les écrans ne sont pas disponibles"
 
-#: apps/settings/src/ui/displays.rs:179
+#: apps/settings/src/ui/displays.rs:184
 msgid "The display service is not running."
 msgstr "Le service d’affichage n’est pas en cours d’exécution."
 
-#: apps/settings/src/ui/displays.rs:260
+#: apps/settings/src/ui/displays.rs:252
+msgid "Login Screen"
+msgstr "Écran de connexion"
+
+#: apps/settings/src/ui/displays.rs:253
+msgid "Use This Layout for the Login Screen"
+msgstr "Utiliser cette disposition pour l’écran de connexion"
+
+#: apps/settings/src/ui/displays.rs:257
+msgid ""
+"The login screen shows these displays arranged as they are now. Needs an "
+"administrator."
+msgstr ""
+"L’écran de connexion affiche ces écrans disposés comme maintenant. Nécessite "
+"un administrateur."
+
+#: apps/settings/src/ui/displays.rs:282
+msgid "The login screen will use this layout"
+msgstr "L’écran de connexion utilisera cette disposition"
+
+#: apps/settings/src/ui/displays.rs:284
+msgid "Could not use this layout for the login screen: {e}"
+msgstr ""
+"Impossible d’utiliser cette disposition pour l’écran de connexion : {e}"
+
+#: apps/settings/src/ui/displays.rs:288
+msgid "Could not read the current layout"
+msgstr "Impossible de lire la disposition actuelle"
+
+#: apps/settings/src/ui/displays.rs:313
 msgid "Changing the displays is not allowed in this session."
 msgstr "La modification des écrans n’est pas autorisée dans cette session."
 
-#: apps/settings/src/ui/displays.rs:295
+#: apps/settings/src/ui/displays.rs:348
 msgid "Could not change the displays: {e}"
 msgstr "Impossible de modifier les écrans : {e}"
 
-#: apps/settings/src/ui/displays.rs:375
+#: apps/settings/src/ui/displays.rs:428
 msgid "Mirrored Displays"
 msgstr "Écrans en miroir"
 
-#: apps/settings/src/ui/displays.rs:482
+#: apps/settings/src/ui/displays.rs:535
 msgid "These displays have no resolution in common to mirror"
 msgstr "Ces écrans n’ont aucune résolution commune pour le mode miroir"
 
-#: apps/settings/src/ui/displays.rs:735
+#: apps/settings/src/ui/displays.rs:788
 msgid "{display} at {x}, {y}"
 msgstr "{display} à {x}, {y}"
 
-#: apps/settings/src/ui/displays.rs:766
+#: apps/settings/src/ui/displays.rs:819
 msgid "{time}, Hours"
 msgstr "{time}, heures"
 
-#: apps/settings/src/ui/displays.rs:767
+#: apps/settings/src/ui/displays.rs:820
 msgid "{time}, Minutes"
 msgstr "{time}, minutes"
 
-#: apps/settings/src/ui/displays.rs:817 apps/settings/src/ui/displays.rs:826
+#: apps/settings/src/ui/displays.rs:870 apps/settings/src/ui/displays.rs:879
 msgid "Night Light"
 msgstr "Éclairage nocturne"
 
-#: apps/settings/src/ui/displays.rs:818
+#: apps/settings/src/ui/displays.rs:871
 msgid "Makes the screen warmer in the evening, which can help you sleep."
 msgstr ""
 "Rend les couleurs de l’écran plus chaudes le soir, ce qui peut favoriser le "
 "sommeil."
 
-#: apps/settings/src/ui/displays.rs:832
+#: apps/settings/src/ui/displays.rs:885
 msgid "Sunset to Sunrise"
 msgstr "Du coucher au lever du soleil"
 
-#: apps/settings/src/ui/displays.rs:833
+#: apps/settings/src/ui/displays.rs:886
 msgid "Manual Schedule"
 msgstr "Horaires manuels"
 
-#: apps/settings/src/ui/displays.rs:851
+#: apps/settings/src/ui/displays.rs:904
 msgctxt "time range"
 msgid "From"
 msgstr "De"
 
-#: apps/settings/src/ui/displays.rs:857
+#: apps/settings/src/ui/displays.rs:910
 msgctxt "time range"
 msgid "To"
 msgstr "À"
 
-#: apps/settings/src/ui/displays.rs:869
+#: apps/settings/src/ui/displays.rs:922
 msgid "Color Temperature"
 msgstr "Température de couleur"
 
-#: apps/settings/src/ui/displays.rs:870
+#: apps/settings/src/ui/displays.rs:923
 msgid "Cooler"
 msgstr "Plus froid"
 
-#: apps/settings/src/ui/displays.rs:870
+#: apps/settings/src/ui/displays.rs:923
 msgid "Warmer"
 msgstr "Plus chaud"
 

@@ -1406,7 +1406,7 @@ msgstr "日历"
 msgid "Location"
 msgstr "地点"
 
-#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:830
+#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:883
 msgid "Schedule"
 msgstr "时间安排"
 
@@ -10448,9 +10448,9 @@ msgstr "打印机"
 msgid "Modem"
 msgstr "调制解调器"
 
-#: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:97
-#: apps/settings/src/ui/displays.rs:121 apps/settings/src/ui/displays.rs:122
-#: apps/settings/src/ui/displays.rs:381
+#: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:98
+#: apps/settings/src/ui/displays.rs:122 apps/settings/src/ui/displays.rs:123
+#: apps/settings/src/ui/displays.rs:434
 msgid "Display"
 msgstr "显示器"
 
@@ -10492,7 +10492,7 @@ msgstr "音乐播放器"
 msgid "Software"
 msgstr "软件"
 
-#: apps/settings/src/displays.rs:592
+#: apps/settings/src/displays.rs:599
 msgid "Variable (up to {rate})"
 msgstr "可变（最高 {rate}）"
 
@@ -11780,55 +11780,55 @@ msgstr "正在加载时区…"
 msgid "Could not change the time zone: {e}"
 msgstr "无法更改时区：{e}"
 
-#: apps/settings/src/ui/displays.rs:24
+#: apps/settings/src/ui/displays.rs:25
 msgid "Join Displays"
 msgstr "拼接显示器"
 
-#: apps/settings/src/ui/displays.rs:25
+#: apps/settings/src/ui/displays.rs:26
 msgid "Mirror"
 msgstr "镜像"
 
-#: apps/settings/src/ui/displays.rs:26
+#: apps/settings/src/ui/displays.rs:27
 msgid "Single Display"
 msgstr "单显示器"
 
-#: apps/settings/src/ui/displays.rs:31
+#: apps/settings/src/ui/displays.rs:32
 msgid "Landscape"
 msgstr "横向"
 
-#: apps/settings/src/ui/displays.rs:32
+#: apps/settings/src/ui/displays.rs:33
 msgid "Portrait Right"
 msgstr "纵向（向右）"
 
-#: apps/settings/src/ui/displays.rs:33
+#: apps/settings/src/ui/displays.rs:34
 msgid "Portrait Left"
 msgstr "纵向（向左）"
 
-#: apps/settings/src/ui/displays.rs:34
+#: apps/settings/src/ui/displays.rs:35
 msgid "Landscape (Flipped)"
 msgstr "横向（翻转）"
 
-#: apps/settings/src/ui/displays.rs:88
+#: apps/settings/src/ui/displays.rs:89
 msgid "Loading Displays…"
 msgstr "正在加载显示器…"
 
-#: apps/settings/src/ui/displays.rs:91
+#: apps/settings/src/ui/displays.rs:92
 msgid "Arrangement"
 msgstr "排列"
 
-#: apps/settings/src/ui/displays.rs:92
+#: apps/settings/src/ui/displays.rs:93
 msgid "Display Mode"
 msgstr "显示模式"
 
-#: apps/settings/src/ui/displays.rs:98
+#: apps/settings/src/ui/displays.rs:99
 msgid "Display to Use"
 msgstr "要使用的显示器"
 
-#: apps/settings/src/ui/displays.rs:107
+#: apps/settings/src/ui/displays.rs:108
 msgid "Display Arrangement"
 msgstr "显示器排列"
 
-#: apps/settings/src/ui/displays.rs:108
+#: apps/settings/src/ui/displays.rs:109
 msgid ""
 "Drag displays to match how they stand on your desk; with the keyboard, move "
 "the selected display with the arrow keys"
@@ -11836,129 +11836,155 @@ msgstr ""
 "拖动显示器，使其与桌面上的实际摆放位置一致；使用键盘时，用方向键移动选中的显"
 "示器"
 
-#: apps/settings/src/ui/displays.rs:116
+#: apps/settings/src/ui/displays.rs:117
 msgid "Primary Display"
 msgstr "主显示器"
 
-#: apps/settings/src/ui/displays.rs:117
+#: apps/settings/src/ui/displays.rs:118
 msgid "Holds the top bar and new windows"
 msgstr "显示顶栏和新窗口"
 
-#: apps/settings/src/ui/displays.rs:123
+#: apps/settings/src/ui/displays.rs:124
 msgid "Display to Set Up"
 msgstr "要设置的显示器"
 
-#: apps/settings/src/ui/displays.rs:125
+#: apps/settings/src/ui/displays.rs:126
 msgid "Orientation"
 msgstr "方向"
 
-#: apps/settings/src/ui/displays.rs:130
+#: apps/settings/src/ui/displays.rs:131
 msgid "Resolution"
 msgstr "分辨率"
 
-#: apps/settings/src/ui/displays.rs:132
+#: apps/settings/src/ui/displays.rs:133
 msgid "Refresh Rate"
 msgstr "刷新率"
 
-#: apps/settings/src/ui/displays.rs:134
+#: apps/settings/src/ui/displays.rs:135
 msgid "Scale"
 msgstr "缩放"
 
-#: apps/settings/src/ui/displays.rs:135
+#: apps/settings/src/ui/displays.rs:136
 msgid "Makes everything larger or smaller"
 msgstr "使所有内容变大或变小"
 
-#: apps/settings/src/ui/displays.rs:139
+#: apps/settings/src/ui/displays.rs:140
 msgid "Adjust for TV"
 msgstr "针对电视调整"
 
-#: apps/settings/src/ui/displays.rs:140
+#: apps/settings/src/ui/displays.rs:141
 msgid "Shrinks the picture for TVs that cut off its edges"
 msgstr "为会裁切画面边缘的电视缩小画面"
 
-#: apps/settings/src/ui/displays.rs:156
+#: apps/settings/src/ui/displays.rs:161
 msgid "The display settings changed."
 msgstr "显示设置已更改。"
 
-#: apps/settings/src/ui/displays.rs:157 apps/web/src/dialogs.rs:413
+#: apps/settings/src/ui/displays.rs:162 apps/web/src/dialogs.rs:413
 msgid "_Reset"
 msgstr "还原(_R)"
 
-#: apps/settings/src/ui/displays.rs:159 apps/settings/src/ui/netedit.rs:286
+#: apps/settings/src/ui/displays.rs:164 apps/settings/src/ui/netedit.rs:286
 msgid "_Apply"
 msgstr "应用(_A)"
 
-#: apps/settings/src/ui/displays.rs:178
+#: apps/settings/src/ui/displays.rs:183
 msgid "Displays Are Not Available"
 msgstr "显示器不可用"
 
-#: apps/settings/src/ui/displays.rs:179
+#: apps/settings/src/ui/displays.rs:184
 msgid "The display service is not running."
 msgstr "显示服务未运行。"
 
-#: apps/settings/src/ui/displays.rs:260
+#: apps/settings/src/ui/displays.rs:252
+msgid "Login Screen"
+msgstr "登录屏幕"
+
+#: apps/settings/src/ui/displays.rs:253
+msgid "Use This Layout for the Login Screen"
+msgstr "将此布局用于登录屏幕"
+
+#: apps/settings/src/ui/displays.rs:257
+msgid ""
+"The login screen shows these displays arranged as they are now. Needs an "
+"administrator."
+msgstr "登录屏幕将按当前的排列方式显示这些显示器。需要管理员权限。"
+
+#: apps/settings/src/ui/displays.rs:282
+msgid "The login screen will use this layout"
+msgstr "登录屏幕将使用此布局"
+
+#: apps/settings/src/ui/displays.rs:284
+msgid "Could not use this layout for the login screen: {e}"
+msgstr "无法将此布局用于登录屏幕：{e}"
+
+#: apps/settings/src/ui/displays.rs:288
+msgid "Could not read the current layout"
+msgstr "无法读取当前布局"
+
+#: apps/settings/src/ui/displays.rs:313
 msgid "Changing the displays is not allowed in this session."
 msgstr "此会话中不允许更改显示器设置。"
 
-#: apps/settings/src/ui/displays.rs:295
+#: apps/settings/src/ui/displays.rs:348
 msgid "Could not change the displays: {e}"
 msgstr "无法更改显示器设置：{e}"
 
-#: apps/settings/src/ui/displays.rs:375
+#: apps/settings/src/ui/displays.rs:428
 msgid "Mirrored Displays"
 msgstr "镜像显示器"
 
-#: apps/settings/src/ui/displays.rs:482
+#: apps/settings/src/ui/displays.rs:535
 msgid "These displays have no resolution in common to mirror"
 msgstr "这些显示器没有可用于镜像的共同分辨率"
 
-#: apps/settings/src/ui/displays.rs:735
+#: apps/settings/src/ui/displays.rs:788
 msgid "{display} at {x}, {y}"
 msgstr "{display}，位于 {x}, {y}"
 
-#: apps/settings/src/ui/displays.rs:766
+#: apps/settings/src/ui/displays.rs:819
 msgid "{time}, Hours"
 msgstr "{time}，小时"
 
-#: apps/settings/src/ui/displays.rs:767
+#: apps/settings/src/ui/displays.rs:820
 msgid "{time}, Minutes"
 msgstr "{time}，分钟"
 
-#: apps/settings/src/ui/displays.rs:817 apps/settings/src/ui/displays.rs:826
+#: apps/settings/src/ui/displays.rs:870 apps/settings/src/ui/displays.rs:879
 msgid "Night Light"
 msgstr "夜灯"
 
-#: apps/settings/src/ui/displays.rs:818
+#: apps/settings/src/ui/displays.rs:871
 msgid "Makes the screen warmer in the evening, which can help you sleep."
 msgstr "在傍晚使屏幕色调变暖，有助于睡眠。"
 
-#: apps/settings/src/ui/displays.rs:832
+#: apps/settings/src/ui/displays.rs:885
 msgid "Sunset to Sunrise"
 msgstr "日落到日出"
 
-#: apps/settings/src/ui/displays.rs:833
+#: apps/settings/src/ui/displays.rs:886
 msgid "Manual Schedule"
 msgstr "手动计划"
 
-#: apps/settings/src/ui/displays.rs:851
+#: apps/settings/src/ui/displays.rs:904
 msgctxt "time range"
 msgid "From"
 msgstr "从"
 
-#: apps/settings/src/ui/displays.rs:857
+#: apps/settings/src/ui/displays.rs:910
 msgctxt "time range"
 msgid "To"
 msgstr "至"
 
-#: apps/settings/src/ui/displays.rs:869
+#: apps/settings/src/ui/displays.rs:922
 msgid "Color Temperature"
 msgstr "色温"
 
-#: apps/settings/src/ui/displays.rs:870
+#: apps/settings/src/ui/displays.rs:923
 msgid "Cooler"
 msgstr "更冷"
 
-#: apps/settings/src/ui/displays.rs:870
+#: apps/settings/src/ui/displays.rs:923
 msgid "Warmer"
 msgstr "更暖"
 

@@ -1419,7 +1419,7 @@ msgstr "カレンダー"
 msgid "Location"
 msgstr "場所"
 
-#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:830
+#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:883
 msgid "Schedule"
 msgstr "日程"
 
@@ -10551,9 +10551,9 @@ msgstr "プリンター"
 msgid "Modem"
 msgstr "モデム"
 
-#: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:97
-#: apps/settings/src/ui/displays.rs:121 apps/settings/src/ui/displays.rs:122
-#: apps/settings/src/ui/displays.rs:381
+#: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:98
+#: apps/settings/src/ui/displays.rs:122 apps/settings/src/ui/displays.rs:123
+#: apps/settings/src/ui/displays.rs:434
 msgid "Display"
 msgstr "ディスプレイ"
 
@@ -10595,7 +10595,7 @@ msgstr "音楽プレーヤー"
 msgid "Software"
 msgstr "ソフトウェア"
 
-#: apps/settings/src/displays.rs:592
+#: apps/settings/src/displays.rs:599
 msgid "Variable (up to {rate})"
 msgstr "可変 (最大 {rate})"
 
@@ -11921,55 +11921,55 @@ msgstr "タイムゾーンを読み込み中…"
 msgid "Could not change the time zone: {e}"
 msgstr "タイムゾーンを変更できませんでした: {e}"
 
-#: apps/settings/src/ui/displays.rs:24
+#: apps/settings/src/ui/displays.rs:25
 msgid "Join Displays"
 msgstr "ディスプレイを結合"
 
-#: apps/settings/src/ui/displays.rs:25
+#: apps/settings/src/ui/displays.rs:26
 msgid "Mirror"
 msgstr "ミラー"
 
-#: apps/settings/src/ui/displays.rs:26
+#: apps/settings/src/ui/displays.rs:27
 msgid "Single Display"
 msgstr "単一のディスプレイ"
 
-#: apps/settings/src/ui/displays.rs:31
+#: apps/settings/src/ui/displays.rs:32
 msgid "Landscape"
 msgstr "横"
 
-#: apps/settings/src/ui/displays.rs:32
+#: apps/settings/src/ui/displays.rs:33
 msgid "Portrait Right"
 msgstr "縦 (右回転)"
 
-#: apps/settings/src/ui/displays.rs:33
+#: apps/settings/src/ui/displays.rs:34
 msgid "Portrait Left"
 msgstr "縦 (左回転)"
 
-#: apps/settings/src/ui/displays.rs:34
+#: apps/settings/src/ui/displays.rs:35
 msgid "Landscape (Flipped)"
 msgstr "横 (反転)"
 
-#: apps/settings/src/ui/displays.rs:88
+#: apps/settings/src/ui/displays.rs:89
 msgid "Loading Displays…"
 msgstr "ディスプレイを読み込み中…"
 
-#: apps/settings/src/ui/displays.rs:91
+#: apps/settings/src/ui/displays.rs:92
 msgid "Arrangement"
 msgstr "配置"
 
-#: apps/settings/src/ui/displays.rs:92
+#: apps/settings/src/ui/displays.rs:93
 msgid "Display Mode"
 msgstr "ディスプレイモード"
 
-#: apps/settings/src/ui/displays.rs:98
+#: apps/settings/src/ui/displays.rs:99
 msgid "Display to Use"
 msgstr "使用するディスプレイ"
 
-#: apps/settings/src/ui/displays.rs:107
+#: apps/settings/src/ui/displays.rs:108
 msgid "Display Arrangement"
 msgstr "ディスプレイの配置"
 
-#: apps/settings/src/ui/displays.rs:108
+#: apps/settings/src/ui/displays.rs:109
 msgid ""
 "Drag displays to match how they stand on your desk; with the keyboard, move "
 "the selected display with the arrow keys"
@@ -11977,129 +11977,157 @@ msgstr ""
 "机の上の配置に合わせてディスプレイをドラッグしてください。キーボードでは、選"
 "択したディスプレイを矢印キーで移動できます"
 
-#: apps/settings/src/ui/displays.rs:116
+#: apps/settings/src/ui/displays.rs:117
 msgid "Primary Display"
 msgstr "プライマリディスプレイ"
 
-#: apps/settings/src/ui/displays.rs:117
+#: apps/settings/src/ui/displays.rs:118
 msgid "Holds the top bar and new windows"
 msgstr "トップバーと新しいウィンドウを表示します"
 
-#: apps/settings/src/ui/displays.rs:123
+#: apps/settings/src/ui/displays.rs:124
 msgid "Display to Set Up"
 msgstr "設定するディスプレイ"
 
-#: apps/settings/src/ui/displays.rs:125
+#: apps/settings/src/ui/displays.rs:126
 msgid "Orientation"
 msgstr "向き"
 
-#: apps/settings/src/ui/displays.rs:130
+#: apps/settings/src/ui/displays.rs:131
 msgid "Resolution"
 msgstr "解像度"
 
-#: apps/settings/src/ui/displays.rs:132
+#: apps/settings/src/ui/displays.rs:133
 msgid "Refresh Rate"
 msgstr "リフレッシュレート"
 
-#: apps/settings/src/ui/displays.rs:134
+#: apps/settings/src/ui/displays.rs:135
 msgid "Scale"
 msgstr "拡大率"
 
-#: apps/settings/src/ui/displays.rs:135
+#: apps/settings/src/ui/displays.rs:136
 msgid "Makes everything larger or smaller"
 msgstr "すべてを大きく、または小さくします"
 
-#: apps/settings/src/ui/displays.rs:139
+#: apps/settings/src/ui/displays.rs:140
 msgid "Adjust for TV"
 msgstr "テレビに合わせて調整"
 
-#: apps/settings/src/ui/displays.rs:140
+#: apps/settings/src/ui/displays.rs:141
 msgid "Shrinks the picture for TVs that cut off its edges"
 msgstr "端が切れて表示されるテレビ向けに画像を縮小します"
 
-#: apps/settings/src/ui/displays.rs:156
+#: apps/settings/src/ui/displays.rs:161
 msgid "The display settings changed."
 msgstr "ディスプレイの設定が変更されました。"
 
-#: apps/settings/src/ui/displays.rs:157 apps/web/src/dialogs.rs:413
+#: apps/settings/src/ui/displays.rs:162 apps/web/src/dialogs.rs:413
 msgid "_Reset"
 msgstr "元に戻す(_R)"
 
-#: apps/settings/src/ui/displays.rs:159 apps/settings/src/ui/netedit.rs:286
+#: apps/settings/src/ui/displays.rs:164 apps/settings/src/ui/netedit.rs:286
 msgid "_Apply"
 msgstr "適用(_A)"
 
-#: apps/settings/src/ui/displays.rs:178
+#: apps/settings/src/ui/displays.rs:183
 msgid "Displays Are Not Available"
 msgstr "ディスプレイを利用できません"
 
-#: apps/settings/src/ui/displays.rs:179
+#: apps/settings/src/ui/displays.rs:184
 msgid "The display service is not running."
 msgstr "ディスプレイサービスが実行されていません。"
 
-#: apps/settings/src/ui/displays.rs:260
+#: apps/settings/src/ui/displays.rs:252
+msgid "Login Screen"
+msgstr "ログイン画面"
+
+#: apps/settings/src/ui/displays.rs:253
+msgid "Use This Layout for the Login Screen"
+msgstr "この配置をログイン画面に使用"
+
+#: apps/settings/src/ui/displays.rs:257
+msgid ""
+"The login screen shows these displays arranged as they are now. Needs an "
+"administrator."
+msgstr ""
+"ログイン画面にこれらのディスプレイを現在の配置で表示します。管理者権限が必要"
+"です。"
+
+#: apps/settings/src/ui/displays.rs:282
+msgid "The login screen will use this layout"
+msgstr "ログイン画面でこの配置が使用されます"
+
+#: apps/settings/src/ui/displays.rs:284
+msgid "Could not use this layout for the login screen: {e}"
+msgstr "この配置をログイン画面に使用できませんでした: {e}"
+
+#: apps/settings/src/ui/displays.rs:288
+msgid "Could not read the current layout"
+msgstr "現在の配置を読み取れませんでした"
+
+#: apps/settings/src/ui/displays.rs:313
 msgid "Changing the displays is not allowed in this session."
 msgstr "このセッションではディスプレイの変更は許可されていません。"
 
-#: apps/settings/src/ui/displays.rs:295
+#: apps/settings/src/ui/displays.rs:348
 msgid "Could not change the displays: {e}"
 msgstr "ディスプレイを変更できませんでした: {e}"
 
-#: apps/settings/src/ui/displays.rs:375
+#: apps/settings/src/ui/displays.rs:428
 msgid "Mirrored Displays"
 msgstr "ミラーリングされたディスプレイ"
 
-#: apps/settings/src/ui/displays.rs:482
+#: apps/settings/src/ui/displays.rs:535
 msgid "These displays have no resolution in common to mirror"
 msgstr "これらのディスプレイにはミラーリングできる共通の解像度がありません"
 
-#: apps/settings/src/ui/displays.rs:735
+#: apps/settings/src/ui/displays.rs:788
 msgid "{display} at {x}, {y}"
 msgstr "{display} (位置 {x}, {y})"
 
-#: apps/settings/src/ui/displays.rs:766
+#: apps/settings/src/ui/displays.rs:819
 msgid "{time}, Hours"
 msgstr "{time}、時"
 
-#: apps/settings/src/ui/displays.rs:767
+#: apps/settings/src/ui/displays.rs:820
 msgid "{time}, Minutes"
 msgstr "{time}、分"
 
-#: apps/settings/src/ui/displays.rs:817 apps/settings/src/ui/displays.rs:826
+#: apps/settings/src/ui/displays.rs:870 apps/settings/src/ui/displays.rs:879
 msgid "Night Light"
 msgstr "夜間モード"
 
-#: apps/settings/src/ui/displays.rs:818
+#: apps/settings/src/ui/displays.rs:871
 msgid "Makes the screen warmer in the evening, which can help you sleep."
 msgstr "夜間に画面を暖色にして、眠りやすくします。"
 
-#: apps/settings/src/ui/displays.rs:832
+#: apps/settings/src/ui/displays.rs:885
 msgid "Sunset to Sunrise"
 msgstr "日没から日の出まで"
 
-#: apps/settings/src/ui/displays.rs:833
+#: apps/settings/src/ui/displays.rs:886
 msgid "Manual Schedule"
 msgstr "手動スケジュール"
 
-#: apps/settings/src/ui/displays.rs:851
+#: apps/settings/src/ui/displays.rs:904
 msgctxt "time range"
 msgid "From"
 msgstr "開始"
 
-#: apps/settings/src/ui/displays.rs:857
+#: apps/settings/src/ui/displays.rs:910
 msgctxt "time range"
 msgid "To"
 msgstr "終了"
 
-#: apps/settings/src/ui/displays.rs:869
+#: apps/settings/src/ui/displays.rs:922
 msgid "Color Temperature"
 msgstr "色温度"
 
-#: apps/settings/src/ui/displays.rs:870
+#: apps/settings/src/ui/displays.rs:923
 msgid "Cooler"
 msgstr "寒色"
 
-#: apps/settings/src/ui/displays.rs:870
+#: apps/settings/src/ui/displays.rs:923
 msgid "Warmer"
 msgstr "暖色"
 

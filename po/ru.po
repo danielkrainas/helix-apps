@@ -1425,7 +1425,7 @@ msgstr "Календарь"
 msgid "Location"
 msgstr "Местоположение"
 
-#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:830
+#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:883
 msgid "Schedule"
 msgstr "Расписание"
 
@@ -10680,9 +10680,9 @@ msgstr "Принтер"
 msgid "Modem"
 msgstr "Модем"
 
-#: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:97
-#: apps/settings/src/ui/displays.rs:121 apps/settings/src/ui/displays.rs:122
-#: apps/settings/src/ui/displays.rs:381
+#: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:98
+#: apps/settings/src/ui/displays.rs:122 apps/settings/src/ui/displays.rs:123
+#: apps/settings/src/ui/displays.rs:434
 msgid "Display"
 msgstr "Дисплей"
 
@@ -10724,7 +10724,7 @@ msgstr "Музыкальный проигрыватель"
 msgid "Software"
 msgstr "Программное обеспечение"
 
-#: apps/settings/src/displays.rs:592
+#: apps/settings/src/displays.rs:599
 msgid "Variable (up to {rate})"
 msgstr "Переменная (до {rate})"
 
@@ -12048,55 +12048,55 @@ msgstr "Загрузка часовых поясов…"
 msgid "Could not change the time zone: {e}"
 msgstr "Не удалось изменить часовой пояс: {e}"
 
-#: apps/settings/src/ui/displays.rs:24
+#: apps/settings/src/ui/displays.rs:25
 msgid "Join Displays"
 msgstr "Объединить дисплеи"
 
-#: apps/settings/src/ui/displays.rs:25
+#: apps/settings/src/ui/displays.rs:26
 msgid "Mirror"
 msgstr "Зеркалирование"
 
-#: apps/settings/src/ui/displays.rs:26
+#: apps/settings/src/ui/displays.rs:27
 msgid "Single Display"
 msgstr "Один дисплей"
 
-#: apps/settings/src/ui/displays.rs:31
+#: apps/settings/src/ui/displays.rs:32
 msgid "Landscape"
 msgstr "Альбомная"
 
-#: apps/settings/src/ui/displays.rs:32
+#: apps/settings/src/ui/displays.rs:33
 msgid "Portrait Right"
 msgstr "Книжная, поворот вправо"
 
-#: apps/settings/src/ui/displays.rs:33
+#: apps/settings/src/ui/displays.rs:34
 msgid "Portrait Left"
 msgstr "Книжная, поворот влево"
 
-#: apps/settings/src/ui/displays.rs:34
+#: apps/settings/src/ui/displays.rs:35
 msgid "Landscape (Flipped)"
 msgstr "Альбомная (перевёрнутая)"
 
-#: apps/settings/src/ui/displays.rs:88
+#: apps/settings/src/ui/displays.rs:89
 msgid "Loading Displays…"
 msgstr "Загрузка дисплеев…"
 
-#: apps/settings/src/ui/displays.rs:91
+#: apps/settings/src/ui/displays.rs:92
 msgid "Arrangement"
 msgstr "Расположение"
 
-#: apps/settings/src/ui/displays.rs:92
+#: apps/settings/src/ui/displays.rs:93
 msgid "Display Mode"
 msgstr "Режим дисплеев"
 
-#: apps/settings/src/ui/displays.rs:98
+#: apps/settings/src/ui/displays.rs:99
 msgid "Display to Use"
 msgstr "Используемый дисплей"
 
-#: apps/settings/src/ui/displays.rs:107
+#: apps/settings/src/ui/displays.rs:108
 msgid "Display Arrangement"
 msgstr "Расположение дисплеев"
 
-#: apps/settings/src/ui/displays.rs:108
+#: apps/settings/src/ui/displays.rs:109
 msgid ""
 "Drag displays to match how they stand on your desk; with the keyboard, move "
 "the selected display with the arrow keys"
@@ -12104,129 +12104,157 @@ msgstr ""
 "Перетащите дисплеи так, как они стоят на вашем столе; с клавиатуры "
 "перемещайте выбранный дисплей клавишами со стрелками"
 
-#: apps/settings/src/ui/displays.rs:116
+#: apps/settings/src/ui/displays.rs:117
 msgid "Primary Display"
 msgstr "Основной дисплей"
 
-#: apps/settings/src/ui/displays.rs:117
+#: apps/settings/src/ui/displays.rs:118
 msgid "Holds the top bar and new windows"
 msgstr "На нём находятся верхняя панель и новые окна"
 
-#: apps/settings/src/ui/displays.rs:123
+#: apps/settings/src/ui/displays.rs:124
 msgid "Display to Set Up"
 msgstr "Настраиваемый дисплей"
 
-#: apps/settings/src/ui/displays.rs:125
+#: apps/settings/src/ui/displays.rs:126
 msgid "Orientation"
 msgstr "Ориентация"
 
-#: apps/settings/src/ui/displays.rs:130
+#: apps/settings/src/ui/displays.rs:131
 msgid "Resolution"
 msgstr "Разрешение"
 
-#: apps/settings/src/ui/displays.rs:132
+#: apps/settings/src/ui/displays.rs:133
 msgid "Refresh Rate"
 msgstr "Частота обновления"
 
-#: apps/settings/src/ui/displays.rs:134
+#: apps/settings/src/ui/displays.rs:135
 msgid "Scale"
 msgstr "Масштаб"
 
-#: apps/settings/src/ui/displays.rs:135
+#: apps/settings/src/ui/displays.rs:136
 msgid "Makes everything larger or smaller"
 msgstr "Делает всё крупнее или мельче"
 
-#: apps/settings/src/ui/displays.rs:139
+#: apps/settings/src/ui/displays.rs:140
 msgid "Adjust for TV"
 msgstr "Подстройка под телевизор"
 
-#: apps/settings/src/ui/displays.rs:140
+#: apps/settings/src/ui/displays.rs:141
 msgid "Shrinks the picture for TVs that cut off its edges"
 msgstr "Уменьшает изображение для телевизоров, обрезающих его края"
 
-#: apps/settings/src/ui/displays.rs:156
+#: apps/settings/src/ui/displays.rs:161
 msgid "The display settings changed."
 msgstr "Параметры дисплеев изменены."
 
-#: apps/settings/src/ui/displays.rs:157 apps/web/src/dialogs.rs:413
+#: apps/settings/src/ui/displays.rs:162 apps/web/src/dialogs.rs:413
 msgid "_Reset"
 msgstr "_Сбросить"
 
-#: apps/settings/src/ui/displays.rs:159 apps/settings/src/ui/netedit.rs:286
+#: apps/settings/src/ui/displays.rs:164 apps/settings/src/ui/netedit.rs:286
 msgid "_Apply"
 msgstr "_Применить"
 
-#: apps/settings/src/ui/displays.rs:178
+#: apps/settings/src/ui/displays.rs:183
 msgid "Displays Are Not Available"
 msgstr "Дисплеи недоступны"
 
-#: apps/settings/src/ui/displays.rs:179
+#: apps/settings/src/ui/displays.rs:184
 msgid "The display service is not running."
 msgstr "Служба дисплеев не запущена."
 
-#: apps/settings/src/ui/displays.rs:260
+#: apps/settings/src/ui/displays.rs:252
+msgid "Login Screen"
+msgstr "Экран входа"
+
+#: apps/settings/src/ui/displays.rs:253
+msgid "Use This Layout for the Login Screen"
+msgstr "Использовать это расположение для экрана входа"
+
+#: apps/settings/src/ui/displays.rs:257
+msgid ""
+"The login screen shows these displays arranged as they are now. Needs an "
+"administrator."
+msgstr ""
+"Экран входа показывает эти дисплеи в текущем расположении. Требуются права "
+"администратора."
+
+#: apps/settings/src/ui/displays.rs:282
+msgid "The login screen will use this layout"
+msgstr "Экран входа будет использовать это расположение"
+
+#: apps/settings/src/ui/displays.rs:284
+msgid "Could not use this layout for the login screen: {e}"
+msgstr "Не удалось использовать это расположение для экрана входа: {e}"
+
+#: apps/settings/src/ui/displays.rs:288
+msgid "Could not read the current layout"
+msgstr "Не удалось прочитать текущее расположение"
+
+#: apps/settings/src/ui/displays.rs:313
 msgid "Changing the displays is not allowed in this session."
 msgstr "Изменение дисплеев в этом сеансе запрещено."
 
-#: apps/settings/src/ui/displays.rs:295
+#: apps/settings/src/ui/displays.rs:348
 msgid "Could not change the displays: {e}"
 msgstr "Не удалось изменить дисплеи: {e}"
 
-#: apps/settings/src/ui/displays.rs:375
+#: apps/settings/src/ui/displays.rs:428
 msgid "Mirrored Displays"
 msgstr "Зеркальные дисплеи"
 
-#: apps/settings/src/ui/displays.rs:482
+#: apps/settings/src/ui/displays.rs:535
 msgid "These displays have no resolution in common to mirror"
 msgstr "У этих дисплеев нет общего разрешения для зеркалирования"
 
-#: apps/settings/src/ui/displays.rs:735
+#: apps/settings/src/ui/displays.rs:788
 msgid "{display} at {x}, {y}"
 msgstr "{display} в позиции {x}, {y}"
 
-#: apps/settings/src/ui/displays.rs:766
+#: apps/settings/src/ui/displays.rs:819
 msgid "{time}, Hours"
 msgstr "{time}, часы"
 
-#: apps/settings/src/ui/displays.rs:767
+#: apps/settings/src/ui/displays.rs:820
 msgid "{time}, Minutes"
 msgstr "{time}, минуты"
 
-#: apps/settings/src/ui/displays.rs:817 apps/settings/src/ui/displays.rs:826
+#: apps/settings/src/ui/displays.rs:870 apps/settings/src/ui/displays.rs:879
 msgid "Night Light"
 msgstr "Ночной свет"
 
-#: apps/settings/src/ui/displays.rs:818
+#: apps/settings/src/ui/displays.rs:871
 msgid "Makes the screen warmer in the evening, which can help you sleep."
 msgstr "Делает цвета экрана теплее по вечерам, что может помочь вам заснуть."
 
-#: apps/settings/src/ui/displays.rs:832
+#: apps/settings/src/ui/displays.rs:885
 msgid "Sunset to Sunrise"
 msgstr "От заката до рассвета"
 
-#: apps/settings/src/ui/displays.rs:833
+#: apps/settings/src/ui/displays.rs:886
 msgid "Manual Schedule"
 msgstr "Расписание вручную"
 
-#: apps/settings/src/ui/displays.rs:851
+#: apps/settings/src/ui/displays.rs:904
 msgctxt "time range"
 msgid "From"
 msgstr "С"
 
-#: apps/settings/src/ui/displays.rs:857
+#: apps/settings/src/ui/displays.rs:910
 msgctxt "time range"
 msgid "To"
 msgstr "До"
 
-#: apps/settings/src/ui/displays.rs:869
+#: apps/settings/src/ui/displays.rs:922
 msgid "Color Temperature"
 msgstr "Цветовая температура"
 
-#: apps/settings/src/ui/displays.rs:870
+#: apps/settings/src/ui/displays.rs:923
 msgid "Cooler"
 msgstr "Холоднее"
 
-#: apps/settings/src/ui/displays.rs:870
+#: apps/settings/src/ui/displays.rs:923
 msgid "Warmer"
 msgstr "Теплее"
 

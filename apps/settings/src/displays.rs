@@ -17,11 +17,18 @@ const DC: Obj<'static> = Obj::new(NAME, "/org/gnome/Mutter/DisplayConfig", NAME)
 pub const VERIFY: u32 = 0;
 pub const PERSISTENT: u32 = 2;
 
-type Spec = (String, String, String, String);
-type WireMode = (String, i32, i32, f64, f64, Vec<f64>, Props);
-type WireMonitor = (Spec, Vec<WireMode>, Props);
-type WireLogical = (i32, i32, f64, u32, bool, Vec<Spec>, Props);
-type State = (u32, Vec<WireMonitor>, Vec<WireLogical>, Props);
+/// A monitor's connector, vendor, product and serial.
+pub type Spec = (String, String, String, String);
+pub type WireMode = (String, i32, i32, f64, f64, Vec<f64>, Props);
+pub type WireMonitor = (Spec, Vec<WireMode>, Props);
+pub type WireLogical = (i32, i32, f64, u32, bool, Vec<Spec>, Props);
+/// `GetCurrentState`'s reply.
+pub type State = (u32, Vec<WireMonitor>, Vec<WireLogical>, Props);
+
+/// `GetCurrentState` as it comes.
+pub fn current_state(conn: &Connection) -> Result<State> {
+    DC.call(conn, "GetCurrentState", &())
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Mode {
@@ -114,7 +121,7 @@ pub struct Config {
 }
 
 pub fn read(conn: &Connection) -> Result<Config> {
-    let (serial, monitors, logical, props): State = DC.call(conn, "GetCurrentState", &())?;
+    let (serial, monitors, logical, props) = current_state(conn)?;
     let monitors: Vec<Monitor> = monitors
         .into_iter()
         .map(|(spec, modes, p)| Monitor {

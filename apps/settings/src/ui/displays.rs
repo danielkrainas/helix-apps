@@ -12,6 +12,7 @@ use super::widgets::{self, switch, watch, Num};
 use super::{follow, spawn_worker, Ctx, Panel};
 use crate::bus;
 use crate::displays::{self, Arrangement, Config};
+use crate::login_screen::{self, Outcome};
 use helix_app_common::i18n::{n_, tr};
 use helix_app_common::nc_;
 use helix_app_common::trf;
@@ -143,6 +144,10 @@ impl Panel for DisplaysPanel {
         page.add(&monitor_group);
 
         page.add(&night_light_group(&ctx.prefs(COLOR)));
+        // Only with helix-desktop's helper installed.
+        if let Some(helper) = login_screen::Helper::system() {
+            page.add(&login_screen_group(ctx, helper));
+        }
 
         // "Apply" / "Reset" under the page while something changed.
         let bar = gtk::Box::builder()
@@ -239,6 +244,54 @@ impl Panel for DisplaysPanel {
         });
         stack.upcast()
     }
+}
+
+/// "Use This Layout for the Login Screen": the layout shown now goes to
+/// the login screen, through the helper (an administrator must agree).
+fn login_screen_group(ctx: &Rc<Ctx>, helper: login_screen::Helper) -> adw::PreferencesGroup {
+    let group = widgets::group(tr("Login Screen"));
+    let title = tr("Use This Layout for the Login Screen");
+    let row = adw::ActionRow::builder()
+        .use_markup(false)
+        .title(title)
+        .subtitle(tr(
+            "The login screen shows these displays arranged as they are now. Needs an administrator.",
+        ))
+        .activatable(true)
+        .build();
+    row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+    helix_app_common::set_accessible_label(&row, title);
+    let ctx = Rc::downgrade(ctx);
+    row.connect_activated(move |row| {
+        row.set_sensitive(false);
+        let helper = helper.clone();
+        let row = row.clone();
+        let ctx = ctx.clone();
+        spawn_worker(
+            move || {
+                let layout = bus::session()
+                    .and_then(|c| displays::current_state(&c))
+                    .ok()
+                    .and_then(|s| login_screen::layout(&s))?;
+                Some(helper.run(&layout))
+            },
+            move |outcome| {
+                row.set_sensitive(true);
+                let Some(ctx) = ctx.upgrade() else { return };
+                match outcome {
+                    Some(Outcome::Done) => ctx.toast(tr("The login screen will use this layout")),
+                    Some(Outcome::Cancelled) => {}
+                    Some(Outcome::Failed(e)) => ctx.toast(&trf!(
+                        "Could not use this layout for the login screen: {e}",
+                        e = e
+                    )),
+                    None => ctx.toast(tr("Could not read the current layout")),
+                }
+            },
+        );
+    });
+    group.add(&row);
+    group
 }
 
 fn refresh(state: &Rc<State>) {
