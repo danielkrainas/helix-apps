@@ -296,7 +296,7 @@ pub fn instruction(kind: &str, modifier: &str, name: &str, exit: Option<u64>) ->
                 if named {
                     trf!("Continue on {name}", name = n)
                 } else {
-                    tr("Continue").to_string()
+                    trc("route instruction", "Continue")
                 }
             }
         },

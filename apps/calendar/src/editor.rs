@@ -968,7 +968,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
                 ask_scope(
                     &f.dialog,
                     tr("Save Changes to Recurring Event?"),
-                    tr("Save"),
+                    (tr("Save _Only This Event"), tr("Save _All Events")),
                     move |this| {
                         if this {
                             save_this();
@@ -999,7 +999,7 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
             ask_scope(
                 &dialog2,
                 tr("Delete Recurring Event?"),
-                tr("Delete"),
+                (tr("Delete _Only This Event"), tr("Delete _All Events")),
                 move |this| {
                     if this {
                         let r = own_rid.clone().unwrap_or_else(|| rid3.clone());
@@ -1027,12 +1027,18 @@ pub fn open(ui: &Rc<Ui>, target: Target) {
     }
 }
 
-/// Asks whether a change applies to this occurrence or the whole series.
-fn ask_scope(parent: &adw::Dialog, heading: &str, verb: &str, f: impl Fn(bool) + 'static) {
+/// Asks whether a change applies to this occurrence or the whole series;
+/// `buttons` are the labels for "this one" and "all".
+fn ask_scope(
+    parent: &adw::Dialog,
+    heading: &str,
+    buttons: (&str, &str),
+    f: impl Fn(bool) + 'static,
+) {
     let alert = adw::AlertDialog::new(Some(heading), Some(tr("This event is part of a series.")));
     alert.add_response("cancel", tr("_Cancel"));
-    alert.add_response("this", &trf!("{verb} _Only This Event", verb = verb));
-    alert.add_response("all", &trf!("{verb} _All Events", verb = verb));
+    alert.add_response("this", buttons.0);
+    alert.add_response("all", buttons.1);
     alert.set_close_response("cancel");
     alert.set_default_response(Some("this"));
     alert.set_response_appearance("this", adw::ResponseAppearance::Suggested);

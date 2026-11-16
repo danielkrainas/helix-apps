@@ -389,11 +389,11 @@ impl Runner<'_> {
         }
         let src_is_dir = src_type == gio::FileType::Directory;
         if src_is_dir && (target.equal(src) || target.has_prefix(src)) {
-            self.out.errors.push(trf!(
-                "Cannot {} “{}” into itself",
-                if is_move { "move" } else { "copy" },
-                display_name(src)
-            ));
+            self.out.errors.push(if is_move {
+                trf!("Cannot move “{}” into itself", display_name(src))
+            } else {
+                trf!("Cannot copy “{}” into itself", display_name(src))
+            });
             return None;
         }
         let mut target = target;

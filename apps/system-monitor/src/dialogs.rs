@@ -255,13 +255,13 @@ pub fn signal_process(
             pid,
         };
         escalate_if_needed(control::send(pid, action), command, move |res| {
-            on_done(res.map_err(|e| {
-                trf!(
-                    "Cannot {to_lowercase} “{name}”: {e}",
-                    to_lowercase = action.verb().to_lowercase(),
-                    name = name,
-                    e = e
-                )
+            on_done(res.map_err(|e| match action {
+                Action::Stop => trf!("Cannot stop “{name}”: {e}", name = name, e = e),
+                Action::Continue => {
+                    trf!("Cannot continue “{name}”: {e}", name = name, e = e)
+                }
+                Action::End => trf!("Cannot end “{name}”: {e}", name = name, e = e),
+                Action::Kill => trf!("Cannot kill “{name}”: {e}", name = name, e = e),
             }));
         });
     };

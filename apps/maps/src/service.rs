@@ -203,7 +203,7 @@ fn run(
             Some(Reply::Reverse { id, at, result })
         }
         Job::Route { id, mode, from, to } => {
-            let mut resolve = |e: Endpoint, which: &str| -> Result<Option<Place>, String> {
+            let mut resolve = |e: Endpoint, start: bool| -> Result<Option<Place>, String> {
                 match e {
                     Endpoint::Resolved(p) => Ok(Some(*p)),
                     Endpoint::Text(t) => {
@@ -217,13 +217,17 @@ fn run(
                         let places = http::get(agent, &url, lang)
                             .and_then(|b| nominatim::parse_search(&String::from_utf8_lossy(&b)))?;
                         places.into_iter().next().map(Some).ok_or_else(|| {
-                            trf!("Could not find the {which} “{t}”", which = which, t = t)
+                            if start {
+                                trf!("Could not find the start “{t}”", t = t)
+                            } else {
+                                trf!("Could not find the destination “{t}”", t = t)
+                            }
                         })
                     }
                 }
             };
-            let resolved = resolve(from, "start").and_then(|a| match a {
-                Some(a) => Ok(resolve(to, "destination")?.map(|b| (a, b))),
+            let resolved = resolve(from, true).and_then(|a| match a {
+                Some(a) => Ok(resolve(to, false)?.map(|b| (a, b))),
                 None => Ok(None),
             });
             let result = match resolved {

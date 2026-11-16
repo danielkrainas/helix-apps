@@ -315,30 +315,36 @@ impl Volume {
 impl Drive {
     /// Sidebar/page title, e.g. `2.0 TB Hard Disk`.
     pub fn title(&self) -> String {
-        let size = if self.size > 0 {
-            format!("{} ", format::size(self.size))
-        } else {
-            String::new()
+        // Whole messages with and without the size, so each language can
+        // put the size where it belongs ("2.0 TB Hard Disk").
+        let s = format::size(self.size);
+        let named = |sized: String, plain: &str| {
+            if self.size > 0 {
+                sized
+            } else {
+                plain.to_string()
+            }
         };
         match self.kind {
-            DriveKind::Loop => trf!("{size}Loop Device", size = size),
+            DriveKind::Loop => named(trf!("{size} Loop Device", size = s), tr("Loop Device")),
             DriveKind::Disk if self.optical => tr("CD/DVD Drive").into(),
             DriveKind::Disk
                 if self.media.starts_with("flash") || (self.media_removable && !self.optical) =>
             {
                 if self.media_available {
-                    trf!("{size}Drive", size = size)
+                    named(trf!("{size} Drive", size = s), tr("Drive"))
                 } else {
                     tr("Card Reader").into()
                 }
             }
             DriveKind::Disk if self.removable || self.connection_bus == "usb" => {
-                trf!("{size}Drive", size = size)
+                named(trf!("{size} Drive", size = s), tr("Drive"))
             }
-            DriveKind::Disk if self.rotation_rate == 0 => {
-                trf!("{size}Solid-State Disk", size = size)
-            }
-            DriveKind::Disk => trf!("{size}Hard Disk", size = size),
+            DriveKind::Disk if self.rotation_rate == 0 => named(
+                trf!("{size} Solid-State Disk", size = s),
+                tr("Solid-State Disk"),
+            ),
+            DriveKind::Disk => named(trf!("{size} Hard Disk", size = s), tr("Hard Disk")),
         }
     }
 

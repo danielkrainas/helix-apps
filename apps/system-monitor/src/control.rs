@@ -38,15 +38,6 @@ impl Action {
             Action::Kill => Signal::Kill,
         }
     }
-
-    pub fn verb(self) -> &'static str {
-        match self {
-            Action::Stop => tr("Stop"),
-            Action::Continue => tr("Continue"),
-            Action::End => tr("End"),
-            Action::Kill => tr("Kill"),
-        }
-    }
 }
 
 #[derive(Debug, PartialEq, Eq)]

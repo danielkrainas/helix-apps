@@ -1108,7 +1108,7 @@ msgstr ""
 msgid "C_alculate"
 msgstr ""
 
-#: apps/calculator/src/ui.rs:1525 apps/calendar/src/editor.rs:1033
+#: apps/calculator/src/ui.rs:1525 apps/calendar/src/editor.rs:1039
 #: apps/calendar/src/ui.rs:2467 apps/clocks/src/ui.rs:410
 #: apps/clocks/src/ui.rs:1352 apps/clocks/src/ui.rs:1907
 #: apps/disk-usage/src/ui.rs:320 apps/disk-usage/src/ui.rs:1682
@@ -1372,8 +1372,7 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: apps/calendar/src/editor.rs:467 apps/calendar/src/editor.rs:971
-#: apps/document-scanner/src/shortcuts.rs:21
+#: apps/calendar/src/editor.rs:467 apps/document-scanner/src/shortcuts.rs:21
 #: apps/document-scanner/src/ui.rs:322 apps/screenshot/src/shortcuts.rs:18
 #: apps/text-editor/src/shortcuts.rs:16 apps/text-editor/src/window.rs:181
 #: apps/web/src/tab.rs:191
@@ -1490,25 +1489,28 @@ msgstr ""
 msgid "Save Changes to Recurring Event?"
 msgstr ""
 
+#: apps/calendar/src/editor.rs:971
+msgid "Save _All Events"
+msgstr ""
+
+#: apps/calendar/src/editor.rs:971
+msgid "Save _Only This Event"
+msgstr ""
+
 #: apps/calendar/src/editor.rs:1001
 msgid "Delete Recurring Event?"
 msgstr ""
 
-#: apps/calendar/src/editor.rs:1002 apps/clocks/src/ui.rs:2094
-#: apps/contacts/src/ui.rs:302 apps/disk-usage/src/ui.rs:1571
-msgid "Delete"
+#: apps/calendar/src/editor.rs:1002
+msgid "Delete _All Events"
 msgstr ""
 
-#: apps/calendar/src/editor.rs:1032
+#: apps/calendar/src/editor.rs:1002
+msgid "Delete _Only This Event"
+msgstr ""
+
+#: apps/calendar/src/editor.rs:1038
 msgid "This event is part of a series."
-msgstr ""
-
-#: apps/calendar/src/editor.rs:1034
-msgid "{verb} _Only This Event"
-msgstr ""
-
-#: apps/calendar/src/editor.rs:1035
-msgid "{verb} _All Events"
 msgstr ""
 
 #. Translators: part of a day's accessible name, after its date.
@@ -3054,8 +3056,8 @@ msgstr ""
 msgid "Snooze"
 msgstr ""
 
-#: apps/clocks/src/ui.rs:1647 apps/system-monitor/src/control.rs:44
-#: apps/system-monitor/src/shortcuts.rs:49 apps/web/src/window.rs:1497
+#: apps/clocks/src/ui.rs:1647 apps/system-monitor/src/shortcuts.rs:49
+#: apps/web/src/window.rs:1497
 msgid "Stop"
 msgstr ""
 
@@ -3128,6 +3130,11 @@ msgstr ""
 
 #: apps/clocks/src/ui.rs:2089
 msgid "Reset {timer_label}"
+msgstr ""
+
+#: apps/clocks/src/ui.rs:2094 apps/contacts/src/ui.rs:302
+#: apps/disk-usage/src/ui.rs:1571
+msgid "Delete"
 msgstr ""
 
 #: apps/clocks/src/ui.rs:2097
@@ -4434,36 +4441,53 @@ msgstr ""
 msgid "{partition_type} (Bootable)"
 msgstr ""
 
-#: apps/disks/src/model.rs:324
-msgid "{size}Loop Device"
+#: apps/disks/src/model.rs:329
+msgid "Loop Device"
 msgstr ""
 
-#: apps/disks/src/model.rs:325
+#: apps/disks/src/model.rs:329
+msgid "{size} Loop Device"
+msgstr ""
+
+#: apps/disks/src/model.rs:330
 msgid "CD/DVD Drive"
 msgstr ""
 
-#: apps/disks/src/model.rs:330 apps/disks/src/model.rs:336
-msgid "{size}Drive"
+#: apps/disks/src/model.rs:335 apps/disks/src/model.rs:341
+#: apps/disks/src/ui.rs:501
+msgid "Drive"
 msgstr ""
 
-#: apps/disks/src/model.rs:332
+#: apps/disks/src/model.rs:335 apps/disks/src/model.rs:341
+msgid "{size} Drive"
+msgstr ""
+
+#: apps/disks/src/model.rs:337
 msgid "Card Reader"
 msgstr ""
 
-#: apps/disks/src/model.rs:339
-msgid "{size}Solid-State Disk"
+#: apps/disks/src/model.rs:344
+msgid "{size} Solid-State Disk"
 msgstr ""
 
-#: apps/disks/src/model.rs:341
-msgid "{size}Hard Disk"
+#: apps/disks/src/model.rs:345
+msgid "Solid-State Disk"
 msgstr ""
 
-#: apps/disks/src/model.rs:386 apps/disks/src/ui.rs:909
+#: apps/disks/src/model.rs:347
+msgid "Hard Disk"
+msgstr ""
+
+#: apps/disks/src/model.rs:347
+msgid "{size} Hard Disk"
+msgstr ""
+
+#: apps/disks/src/model.rs:392 apps/disks/src/ui.rs:909
 #: apps/disks/src/ui.rs:1086
 msgid "No Media"
 msgstr ""
 
-#: apps/disks/src/model.rs:387 apps/disks/src/parttypes.rs:202
+#: apps/disks/src/model.rs:393 apps/disks/src/parttypes.rs:202
 msgctxt "partition table"
 msgid "None"
 msgstr ""
@@ -5038,10 +5062,6 @@ msgstr ""
 
 #: apps/disks/src/ui.rs:486
 msgid "Select a drive from the list"
-msgstr ""
-
-#: apps/disks/src/ui.rs:501
-msgid "Drive"
 msgstr ""
 
 #. Translators: the selected volume, then its position among the volumes, "Data, 512 GB, Ext4, 2 of 3".
@@ -6788,8 +6808,12 @@ msgstr ""
 msgid "“{}” no longer exists"
 msgstr ""
 
-#: apps/files/src/ops.rs:392
-msgid "Cannot {} “{}” into itself"
+#: apps/files/src/ops.rs:393
+msgid "Cannot move “{}” into itself"
+msgstr ""
+
+#: apps/files/src/ops.rs:395
+msgid "Cannot copy “{}” into itself"
 msgstr ""
 
 #: apps/files/src/ops.rs:582
@@ -9141,8 +9165,8 @@ msgstr ""
 msgid "Continue on {name}"
 msgstr ""
 
-#: apps/maps/src/osrm.rs:299 apps/system-monitor/src/control.rs:45
-#: apps/system-monitor/src/shortcuts.rs:50
+#: apps/maps/src/osrm.rs:299
+msgctxt "route instruction"
 msgid "Continue"
 msgstr ""
 
@@ -9154,8 +9178,12 @@ msgstr ""
 msgid "Continue straight"
 msgstr ""
 
-#: apps/maps/src/service.rs:220
-msgid "Could not find the {which} “{t}”"
+#: apps/maps/src/service.rs:221
+msgid "Could not find the start “{t}”"
+msgstr ""
+
+#: apps/maps/src/service.rs:223
+msgid "Could not find the destination “{t}”"
 msgstr ""
 
 #: apps/maps/src/settings.rs:18
@@ -13463,47 +13491,37 @@ msgstr ""
 msgid "cannot {describe}: {e}"
 msgstr ""
 
-#: apps/system-monitor/src/control.rs:46
-#: apps/system-monitor/src/shortcuts.rs:51
-msgid "End"
-msgstr ""
-
-#: apps/system-monitor/src/control.rs:47
-#: apps/system-monitor/src/shortcuts.rs:52
-msgid "Kill"
-msgstr ""
-
-#: apps/system-monitor/src/control.rs:63
+#: apps/system-monitor/src/control.rs:54
 msgid "The process no longer exists"
 msgstr ""
 
-#: apps/system-monitor/src/control.rs:64
+#: apps/system-monitor/src/control.rs:55
 msgid "You do not own this process"
 msgstr ""
 
-#: apps/system-monitor/src/control.rs:65
+#: apps/system-monitor/src/control.rs:56
 msgid "Permission denied"
 msgstr ""
 
-#: apps/system-monitor/src/control.rs:158
+#: apps/system-monitor/src/control.rs:149
 msgid "Authorization was denied or cancelled"
 msgstr ""
 
-#: apps/system-monitor/src/control.rs:161
+#: apps/system-monitor/src/control.rs:152
 msgid "Not authorized to control this process"
 msgstr ""
 
-#: apps/system-monitor/src/control.rs:169
+#: apps/system-monitor/src/control.rs:160
 #: apps/system-monitor/src/dialogs.rs:117
 msgid "The privileged helper failed"
 msgstr ""
 
-#: apps/system-monitor/src/control.rs:184
+#: apps/system-monitor/src/control.rs:175
 msgid ""
 "Administrator privileges are required, but the helper {} is not installed"
 msgstr ""
 
-#: apps/system-monitor/src/control.rs:194
+#: apps/system-monitor/src/control.rs:185
 msgid "Cannot run pkexec: {e}"
 msgstr ""
 
@@ -13601,7 +13619,19 @@ msgid "Cannot change priority of “{name}”: {e}"
 msgstr ""
 
 #: apps/system-monitor/src/dialogs.rs:259
-msgid "Cannot {to_lowercase} “{name}”: {e}"
+msgid "Cannot stop “{name}”: {e}"
+msgstr ""
+
+#: apps/system-monitor/src/dialogs.rs:261
+msgid "Cannot continue “{name}”: {e}"
+msgstr ""
+
+#: apps/system-monitor/src/dialogs.rs:263
+msgid "Cannot end “{name}”: {e}"
+msgstr ""
+
+#: apps/system-monitor/src/dialogs.rs:264
+msgid "Cannot kill “{name}”: {e}"
 msgstr ""
 
 #: apps/system-monitor/src/dialogs.rs:274
@@ -13890,6 +13920,18 @@ msgstr ""
 
 #: apps/system-monitor/src/shortcuts.rs:47
 msgid "Signals"
+msgstr ""
+
+#: apps/system-monitor/src/shortcuts.rs:50
+msgid "Continue"
+msgstr ""
+
+#: apps/system-monitor/src/shortcuts.rs:51
+msgid "End"
+msgstr ""
+
+#: apps/system-monitor/src/shortcuts.rs:52
+msgid "Kill"
 msgstr ""
 
 #: apps/system-monitor/src/ui.rs:131 apps/system-monitor/src/ui.rs:155
@@ -15083,8 +15125,9 @@ msgid_plural "Updated {n} hours ago"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/weather/src/timefmt.rs:173
-msgid "Updated {} {} {}, {}"
+#. Translators: "Updated Mon 3 Nov, 14:05"; put the parts in your language's order.
+#: apps/weather/src/timefmt.rs:175
+msgid "Updated {weekday} {day} {month}, {time}"
 msgstr ""
 
 #: apps/weather/src/ui.rs:130 apps/weather/src/ui.rs:181

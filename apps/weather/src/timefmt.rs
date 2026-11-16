@@ -170,12 +170,14 @@ pub fn updated_text(fetched: i64, now: i64, fetched_local: &DateTime, use_12h: b
         let h = age / 3600;
         trnf!("Updated {n} hour ago", "Updated {n} hours ago", h)
     } else {
+        // Translators: "Updated Mon 3 Nov, 14:05"; put the parts in your
+        // language's order.
         trf!(
-            "Updated {} {} {}, {}",
-            fetched_local.weekday_short(),
-            fetched_local.day,
-            fetched_local.month_short(),
-            format_time(fetched_local, use_12h)
+            "Updated {weekday} {day} {month}, {time}",
+            weekday = fetched_local.weekday_short(),
+            day = fetched_local.day,
+            month = fetched_local.month_short(),
+            time = format_time(fetched_local, use_12h)
         )
     }
 }
