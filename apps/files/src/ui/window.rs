@@ -15,6 +15,7 @@ use crate::ops::Job;
 use crate::pathbar::{self, Target};
 use crate::sorting::SortKey;
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
@@ -132,7 +133,7 @@ pub fn location_title(file: &gio::File) -> String {
     }
     if let Some(p) = file.path() {
         if p == glib::home_dir() {
-            return tr("Home").into();
+            return tr(nc_!("home folder", "Home")).into();
         }
         if p == std::path::Path::new("/") {
             return tr("Computer").into();
@@ -809,7 +810,7 @@ impl Window {
     fn path_roots(&self) -> Vec<pathbar::Root> {
         let mut roots = vec![pathbar::Root {
             path: glib::home_dir(),
-            label: tr("Home").into(),
+            label: tr(nc_!("home folder", "Home")).into(),
             icon: "user-home-symbolic",
         }];
         for m in gio::VolumeMonitor::get().mounts() {

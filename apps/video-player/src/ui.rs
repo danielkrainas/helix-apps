@@ -10,6 +10,7 @@ use crate::{screenshot, subtitles, timefmt};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use helix_app_common::i18n::{n_, tr};
+use helix_app_common::nc_;
 use helix_app_common::trf;
 use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
@@ -29,7 +30,7 @@ const SPEEDS: &[(&str, &str)] = &[
     ("0.5", "0.5×"),
     ("0.75", "0.75×"),
     // Translators: playback speed 1×.
-    ("1", n_("Normal")),
+    ("1", nc_!("playback speed", "Normal")),
     ("1.25", "1.25×"),
     ("1.5", "1.5×"),
     ("2", "2×"),
@@ -1736,7 +1737,7 @@ impl Ui {
             menu.append_section(Some(tr("Audio")), &section);
         }
         let section = gio::Menu::new();
-        let none = gio::MenuItem::new(Some(tr("None")), None);
+        let none = gio::MenuItem::new(Some(tr(nc_!("subtitles", "None"))), None);
         none.set_action_and_target_value(Some("win.subtitle-track"), Some(&(-1i32).to_variant()));
         section.append_item(&none);
         for t in self.player.text_tracks() {

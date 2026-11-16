@@ -11,13 +11,13 @@ fn ident(c: u8) -> bool {
     c.is_ascii_alphanumeric() || c == b'_'
 }
 
-/// Whether `text` calls tr/trc/trn/n_ with a literal, or trf!/trnf!.
+/// Whether `text` calls tr/trc/trn/n_ with a literal, or trf!/trnf!/nc_!.
 fn has_messages(text: &str) -> bool {
     let b = text.as_bytes();
     let starts_call =
         |i: usize, name: &str| b[i..].starts_with(name.as_bytes()) && (i == 0 || !ident(b[i - 1]));
     for i in 0..b.len() {
-        for name in ["trf!(", "trnf!("] {
+        for name in ["trf!(", "trnf!(", "nc_!("] {
             if starts_call(i, name) {
                 return true;
             }

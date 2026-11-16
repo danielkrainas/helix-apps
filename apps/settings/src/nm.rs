@@ -7,6 +7,7 @@
 use std::collections::HashMap;
 
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use zbus::blocking::Connection;
 use zbus::zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Value};
 
@@ -116,7 +117,7 @@ pub enum Security {
 impl Security {
     pub fn label(self) -> &'static str {
         match self {
-            Security::None => tr("None"),
+            Security::None => tr(nc_!("Wi-Fi security", "None")),
             Security::Owe => tr("Enhanced Open"),
             Security::Wep => tr("WEP"),
             Security::Personal => tr("WPA/WPA2 Personal"),

@@ -7,6 +7,7 @@ Recognises the calls of helix_app_common::i18n (see its module docs):
 
     tr("msg")   n_("msg")   tr_dyn is not extracted (its argument is not
     trc("context", "msg")   a literal)
+    nc_!("context", "msg")
     trn("singular", "plural", n)
     trf!("msg", ...)        trnf!("singular", "plural", n, ...)
 
@@ -28,6 +29,7 @@ KEYWORDS = {
     "trn": (2, False),
     "trf!": (1, False),
     "trnf!": (2, False),
+    "nc_!": (2, True),
 }
 
 IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")

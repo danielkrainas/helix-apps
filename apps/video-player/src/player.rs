@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use crate::sink::{self, FrameSlot};
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use helix_app_common::trf;
 
 /// Environment variable naming the audio sink (a bin description).
@@ -93,7 +94,7 @@ pub fn track_label(
             codec
                 .map(str::trim)
                 .filter(|c| !c.is_empty())
-                .unwrap_or(tr("Track"))
+                .unwrap_or(tr(nc_!("audio or subtitle stream", "Track")))
         ),
         (None, None) => trf!("Track {}", index + 1),
     }

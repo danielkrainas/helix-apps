@@ -95,9 +95,13 @@ fn cache() -> &'static Mutex<HashMap<&'static str, &'static str>> {
 /// (the locale never changes while an app runs), which is what lets this
 /// return a `&'static str`. Before [`init`] (unit tests, `--help` before
 /// set-up) the message is returned untranslated and not cached.
+///
+/// `msgid` may carry a context, as made by [`nc_!`](crate::nc_): it is
+/// looked up like [`trc`] and shown without the context when there is no
+/// translation.
 pub fn tr(msgid: &'static str) -> &'static str {
     if msgid.is_empty() || !READY.load(Ordering::Relaxed) {
-        return msgid;
+        return strip_context(msgid);
     }
     let mut cache = cache().lock().unwrap_or_else(|e| e.into_inner());
     if let Some(t) = cache.get(msgid) {
@@ -105,7 +109,7 @@ pub fn tr(msgid: &'static str) -> &'static str {
     }
     let t = gettextrs::dgettext(DOMAIN, msgid);
     let t: &'static str = if t == msgid {
-        msgid
+        strip_context(msgid)
     } else {
         Box::leak(t.into_boxed_str())
     };
@@ -114,12 +118,30 @@ pub fn tr(msgid: &'static str) -> &'static str {
 }
 
 /// Translates a message that is not a `'static` literal at the call site
-/// but was marked for extraction elsewhere (with [`n_`] or [`tr`]).
+/// but was marked for extraction elsewhere (with [`n_`], [`nc_!`](crate::nc_)
+/// or [`tr`]).
 pub fn tr_dyn(msgid: &str) -> String {
     if msgid.is_empty() || !READY.load(Ordering::Relaxed) {
-        return msgid.to_string();
+        return strip_context(msgid).to_string();
     }
-    gettextrs::dgettext(DOMAIN, msgid)
+    let t = gettextrs::dgettext(DOMAIN, msgid);
+    if t == msgid {
+        strip_context(msgid).to_string()
+    } else {
+        t
+    }
+}
+
+/// Separates a message's context from its text in the catalogue (and in
+/// [`nc_!`](crate::nc_)), as in gettext's `pgettext`.
+pub const CONTEXT_SEPARATOR: char = '\u{4}';
+
+/// The text of a message made with [`nc_!`](crate::nc_), without its context;
+/// other messages unchanged.
+pub fn strip_context(msgid: &str) -> &str {
+    msgid
+        .split_once(CONTEXT_SEPARATOR)
+        .map_or(msgid, |(_, text)| text)
 }
 
 /// Translates `msgid` in `context` (`msgctxt`), for short strings whose
@@ -152,6 +174,20 @@ pub fn trn(singular: &'static str, plural: &'static str, n: u64) -> String {
 /// `static` tables; translate it with [`tr`] where it is shown.
 pub const fn n_(msgid: &'static str) -> &'static str {
     msgid
+}
+
+/// Like [`n_`], with a context (`msgctxt`) for a short message that needs
+/// different translations in different places, for `const`/`static`
+/// tables: `nc_!("phone number type", "Home")`. The table holds the
+/// context and the message joined by [`CONTEXT_SEPARATOR`]; [`tr`] and
+/// [`tr_dyn`] translate it and show the message alone when it has no
+/// translation. Compare such labels with each other, never with a plain
+/// literal.
+#[macro_export]
+macro_rules! nc_ {
+    ($context:literal, $msgid:literal $(,)?) => {
+        concat!($context, "\u{4}", $msgid)
+    };
 }
 
 /// Replaces placeholders in a translated `template`: `{}` takes the next
@@ -393,6 +429,15 @@ mod tests {
             "2 files in x"
         );
         assert_eq!(n_("Marked"), "Marked");
+    }
+
+    #[test]
+    fn context_marked_messages_show_without_context() {
+        const HOME: &str = crate::nc_!("phone number type", "Home");
+        assert_eq!(HOME, "phone number type\u{4}Home");
+        assert_eq!(tr(HOME), "Home");
+        assert_eq!(tr_dyn(HOME), "Home");
+        assert_eq!(strip_context("Home"), "Home");
     }
 
     #[test]

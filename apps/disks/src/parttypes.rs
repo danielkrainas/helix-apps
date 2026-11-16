@@ -1,6 +1,7 @@
 //! Well-known partition types (GPT GUIDs and MBR codes).
 
 use helix_app_common::i18n::{n_, tr};
+use helix_app_common::nc_;
 use helix_app_common::trf;
 
 pub struct PartType {
@@ -198,7 +199,7 @@ pub fn table_name(table: &str) -> &'static str {
     match table {
         "dos" => tr("Master Boot Record"),
         "gpt" => tr("GUID Partition Table"),
-        "" => tr("None"),
+        "" => tr(nc_!("partition table", "None")),
         _ => tr("Unknown"),
     }
 }

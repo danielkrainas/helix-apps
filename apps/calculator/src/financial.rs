@@ -24,6 +24,8 @@ pub const FUNCTIONS: &[FinancialFn] = &[
     FinancialFn {
         name: "ddb",
         title: n_("Double-Declining Depreciation"),
+        // Translators: inputs of a depreciation: the asset's cost, its useful life
+        // (in periods) and the period to compute.
         params: &[n_("Cost"), n_("Life"), n_("Period")],
     },
     FinancialFn {
@@ -43,6 +45,8 @@ pub const FUNCTIONS: &[FinancialFn] = &[
     FinancialFn {
         name: "pmt",
         title: n_("Periodic Payment"),
+        // Translators: inputs of a loan payment: the amount borrowed, the interest
+        // rate per period and the term (number of periods).
         params: &[n_("Principal"), n_("Periodic interest rate"), n_("Term")],
     },
     FinancialFn {
@@ -62,6 +66,7 @@ pub const FUNCTIONS: &[FinancialFn] = &[
     FinancialFn {
         name: "sln",
         title: n_("Straight-Line Depreciation"),
+        // Translators: "Salvage" is the asset's value at the end of its useful life.
         params: &[n_("Cost"), n_("Salvage"), n_("Life")],
     },
     FinancialFn {

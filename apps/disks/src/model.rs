@@ -6,6 +6,7 @@ use crate::parttypes;
 use crate::props::{Props, PropsExt, Snapshot};
 use crate::smart::Smart;
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use helix_app_common::trf;
 
 pub mod iface {
@@ -383,7 +384,7 @@ impl Drive {
         match &self.table_type {
             Some(t) => parttypes::table_name(t).into(),
             None if self.size == 0 => tr("No Media").into(),
-            None => tr("None").into(),
+            None => tr(nc_!("partition table", "None")).into(),
         }
     }
 

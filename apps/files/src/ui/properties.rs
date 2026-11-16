@@ -8,6 +8,7 @@ use std::rc::Rc;
 use super::Window;
 use crate::fmt::{self, Perm, Who};
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
@@ -288,9 +289,9 @@ fn permissions_group(
         let b = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         b.set_valign(gtk::Align::Center);
         for (perm, plabel) in [
-            (Perm::Read, tr("Read")),
-            (Perm::Write, tr("Write")),
-            (Perm::Execute, tr("Execute")),
+            (Perm::Read, tr(nc_!("file permission", "Read"))),
+            (Perm::Write, tr(nc_!("file permission", "Write"))),
+            (Perm::Execute, tr(nc_!("file permission", "Execute"))),
         ] {
             let check = gtk::CheckButton::with_label(plabel);
             // The visible label is just "Read"; say whose permission it is.

@@ -14,7 +14,7 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CALL = re.compile(r'(?<![A-Za-z0-9_])(tr|trc|trn|n_)\(\s*"|(?<![A-Za-z0-9_])trn?f!\(')
+CALL = re.compile(r'(?<![A-Za-z0-9_])(tr|trc|trn|n_)\(\s*"|(?<![A-Za-z0-9_])(trn?f|nc_)!\(')
 
 
 def rust_files():

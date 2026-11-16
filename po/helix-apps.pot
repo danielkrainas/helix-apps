@@ -168,36 +168,6 @@ msgstr ""
 msgid "sound"
 msgstr ""
 
-#: apps/audio-player/src/mpris.rs:66 apps/music/src/pages.rs:345
-#: apps/music/src/ui.rs:979 apps/video-player/src/ui.rs:1403
-msgid "Playing"
-msgstr ""
-
-#: apps/audio-player/src/mpris.rs:67 apps/music/src/ui.rs:985
-#: apps/video-player/src/ui.rs:1404
-msgid "Paused"
-msgstr ""
-
-#: apps/audio-player/src/mpris.rs:68 apps/music/src/mpris.rs:65
-#: apps/music/src/ui.rs:987 apps/system-monitor/src/format.rs:97
-#: apps/video-player/src/mpris.rs:65 apps/video-player/src/ui.rs:1193
-#: apps/video-player/src/ui.rs:1405
-msgid "Stopped"
-msgstr ""
-
-#: apps/audio-player/src/mpris.rs:179 apps/music/src/player.rs:54
-#: apps/music/src/queue.rs:45 apps/video-player/src/player.rs:96
-msgid "Track"
-msgstr ""
-
-#: apps/audio-player/src/mpris.rs:181 apps/disks/src/model.rs:386
-#: apps/disks/src/parttypes.rs:201 apps/document-viewer/src/dialogs.rs:82
-#: apps/music/src/mpris.rs:66 apps/music/src/queue.rs:43
-#: apps/settings/src/nm.rs:119 apps/settings/src/ui/extensions.rs:368
-#: apps/video-player/src/ui.rs:1739
-msgid "None"
-msgstr ""
-
 #: apps/audio-player/src/mpris.rs:219 apps/audio-player/src/ui.rs:24
 msgid "Audio Player"
 msgstr ""
@@ -220,26 +190,26 @@ msgid "Play audio files"
 msgstr ""
 
 #: apps/audio-player/src/ui.rs:170 apps/music/src/pages.rs:1762
-#: apps/music/src/shortcuts.rs:8 apps/video-player/src/ui.rs:147
+#: apps/music/src/shortcuts.rs:8 apps/video-player/src/ui.rs:148
 msgid "Playback"
 msgstr ""
 
 #: apps/audio-player/src/ui.rs:172 apps/music/src/shortcuts.rs:10
-#: apps/video-player/src/ui.rs:149
+#: apps/video-player/src/ui.rs:150
 msgid "Play or Pause"
 msgstr ""
 
 #: apps/audio-player/src/ui.rs:173 apps/audio-player/src/ui.rs:357
-#: apps/video-player/src/ui.rs:150
+#: apps/video-player/src/ui.rs:151
 msgid "Back 10 Seconds"
 msgstr ""
 
 #: apps/audio-player/src/ui.rs:174 apps/audio-player/src/ui.rs:362
-#: apps/video-player/src/ui.rs:151
+#: apps/video-player/src/ui.rs:152
 msgid "Forward 10 Seconds"
 msgstr ""
 
-#: apps/audio-player/src/ui.rs:175 apps/video-player/src/ui.rs:161
+#: apps/audio-player/src/ui.rs:175 apps/video-player/src/ui.rs:162
 msgid "Mute or Unmute"
 msgstr ""
 
@@ -251,20 +221,20 @@ msgstr ""
 #: apps/document-scanner/src/shortcuts.rs:48 apps/files/src/ui/dialogs.rs:560
 #: apps/files/src/ui/dialogs.rs:614 apps/files/src/ui/shortcuts.rs:78
 #: apps/help/src/shortcuts.rs:49 apps/maps/src/shortcuts.rs:11
-#: apps/maps/src/ui.rs:1854 apps/music/src/shortcuts.rs:29
+#: apps/maps/src/ui.rs:1855 apps/music/src/shortcuts.rs:29
 #: apps/settings/src/ui/access.rs:62 apps/settings/src/ui/extensions.rs:99
 #: apps/settings/src/ui/input.rs:64 apps/settings/src/ui/multitasking.rs:26
 #: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:155
 #: apps/settings/src/ui/shortcuts.rs:16 apps/system-monitor/src/shortcuts.rs:25
 #: apps/system-monitor/src/ui.rs:510 apps/terminal/src/prefs_dialog.rs:18
 #: apps/terminal/src/shortcuts.rs:60 apps/text-editor/src/shortcuts.rs:68
-#: apps/video-player/src/ui.rs:172 apps/weather/src/ui.rs:1756
+#: apps/video-player/src/ui.rs:173 apps/weather/src/ui.rs:1756
 #: apps/web/src/dialogs.rs:45 apps/web/src/shortcuts.rs:74
 #: crates/helix-app-common/src/shortcuts.rs:40
 msgid "General"
 msgstr ""
 
-#: apps/audio-player/src/ui.rs:181 apps/video-player/src/ui.rs:174
+#: apps/audio-player/src/ui.rs:181 apps/video-player/src/ui.rs:175
 msgid "Open File"
 msgstr ""
 
@@ -275,7 +245,7 @@ msgstr ""
 #: apps/help/src/shortcuts.rs:52 apps/maps/src/shortcuts.rs:14
 #: apps/music/src/shortcuts.rs:33 apps/settings/src/ui/shortcuts.rs:18
 #: apps/system-monitor/src/shortcuts.rs:33 apps/terminal/src/shortcuts.rs:63
-#: apps/text-editor/src/shortcuts.rs:71 apps/video-player/src/ui.rs:176
+#: apps/text-editor/src/shortcuts.rs:71 apps/video-player/src/ui.rs:177
 #: apps/weather/src/ui.rs:1760 apps/web/src/shortcuts.rs:77
 #: crates/helix-app-common/src/shortcuts.rs:42
 msgid "Keyboard Shortcuts"
@@ -287,7 +257,7 @@ msgstr ""
 #: apps/maps/src/shortcuts.rs:15 apps/music/src/shortcuts.rs:34
 #: apps/settings/src/ui/shortcuts.rs:20 apps/system-monitor/src/shortcuts.rs:34
 #: apps/terminal/src/shortcuts.rs:16 apps/text-editor/src/shortcuts.rs:19
-#: apps/video-player/src/ui.rs:177 apps/weather/src/ui.rs:1761
+#: apps/video-player/src/ui.rs:178 apps/weather/src/ui.rs:1761
 #: apps/web/src/shortcuts.rs:17 crates/helix-app-common/src/shortcuts.rs:43
 msgid "Close Window"
 msgstr ""
@@ -299,7 +269,7 @@ msgstr ""
 #: apps/help/src/shortcuts.rs:54 apps/maps/src/shortcuts.rs:16
 #: apps/music/src/shortcuts.rs:35 apps/settings/src/ui/shortcuts.rs:21
 #: apps/system-monitor/src/shortcuts.rs:35 apps/text-editor/src/shortcuts.rs:20
-#: apps/video-player/src/ui.rs:178 apps/weather/src/ui.rs:1762
+#: apps/video-player/src/ui.rs:179 apps/weather/src/ui.rs:1762
 #: apps/web/src/shortcuts.rs:24 crates/helix-app-common/src/shortcuts.rs:44
 msgid "Quit"
 msgstr ""
@@ -309,7 +279,7 @@ msgstr ""
 #: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:11
 #: apps/settings/src/ui/apps.rs:530 apps/settings/src/ui/bluetooth.rs:129
 #: apps/settings/src/ui/users.rs:575 apps/text-editor/src/shortcuts.rs:15
-#: apps/web/src/window.rs:2222
+#: apps/web/src/window.rs:2227
 msgid "Open"
 msgstr ""
 
@@ -320,7 +290,7 @@ msgstr ""
 #: apps/audio-player/src/ui.rs:223 apps/audio-player/src/ui.rs:244
 #: apps/document-viewer/src/ui.rs:282 apps/document-viewer/src/ui.rs:389
 #: apps/fonts/src/ui.rs:110 apps/image-viewer/src/ui.rs:286
-#: apps/video-player/src/ui.rs:290 apps/video-player/src/ui.rs:371
+#: apps/video-player/src/ui.rs:291 apps/video-player/src/ui.rs:372
 msgid "_Open…"
 msgstr ""
 
@@ -339,21 +309,21 @@ msgstr ""
 #: apps/disks/src/ui.rs:273 apps/disks/src/ui.rs:275
 #: apps/document-scanner/src/ui.rs:316 apps/document-scanner/src/ui.rs:318
 #: apps/document-viewer/src/ui.rs:312 apps/document-viewer/src/ui.rs:315
-#: apps/files/src/ui/window.rs:237 apps/files/src/ui/window.rs:240
+#: apps/files/src/ui/window.rs:238 apps/files/src/ui/window.rs:241
 #: apps/fonts/src/ui.rs:123 apps/fonts/src/ui.rs:126 apps/help/src/ui.rs:360
 #: apps/help/src/ui.rs:362 apps/image-viewer/src/ui.rs:322
 #: apps/image-viewer/src/ui.rs:324 apps/logs/src/ui.rs:308
-#: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:488 apps/maps/src/ui.rs:490
+#: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:489 apps/maps/src/ui.rs:491
 #: apps/music/src/ui.rs:316 apps/music/src/ui.rs:318
 #: apps/screenshot/src/ui.rs:287 apps/screenshot/src/ui.rs:289
 #: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
-#: apps/terminal/src/window.rs:291 apps/terminal/src/window.rs:295
+#: apps/terminal/src/window.rs:296 apps/terminal/src/window.rs:300
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
 #: apps/tour/src/ui.rs:330 apps/tour/src/ui.rs:332
-#: apps/video-player/src/ui.rs:320 apps/video-player/src/ui.rs:324
+#: apps/video-player/src/ui.rs:321 apps/video-player/src/ui.rs:325
 #: apps/weather/src/ui.rs:299 apps/weather/src/ui.rs:301
-#: apps/web/src/window.rs:430 apps/web/src/window.rs:434
+#: apps/web/src/window.rs:435 apps/web/src/window.rs:439
 msgid "Main Menu"
 msgstr ""
 
@@ -375,11 +345,11 @@ msgstr ""
 
 #: apps/audio-player/src/ui.rs:297 apps/audio-player/src/ui.rs:304
 #: apps/music/src/ui.rs:1779 apps/music/src/ui.rs:1780
-#: apps/video-player/src/ui.rs:463
+#: apps/video-player/src/ui.rs:464
 msgid "Position"
 msgstr ""
 
-#: apps/audio-player/src/ui.rs:336 apps/video-player/src/ui.rs:512
+#: apps/audio-player/src/ui.rs:336 apps/video-player/src/ui.rs:513
 msgid "Playback Speed"
 msgstr ""
 
@@ -390,7 +360,7 @@ msgstr ""
 #: apps/audio-player/src/ui.rs:348 apps/audio-player/src/ui.rs:351
 #: apps/audio-player/src/ui.rs:1283 apps/music/src/pages.rs:694
 #: apps/music/src/ui.rs:966 apps/music/src/ui.rs:1755 apps/music/src/ui.rs:1759
-#: apps/video-player/src/ui.rs:442 apps/video-player/src/ui.rs:1395
+#: apps/video-player/src/ui.rs:443 apps/video-player/src/ui.rs:1396
 msgid "Play"
 msgstr ""
 
@@ -401,17 +371,17 @@ msgid "Repeat"
 msgstr ""
 
 #: apps/audio-player/src/ui.rs:378 apps/audio-player/src/ui.rs:380
-#: apps/settings/src/ui/sound.rs:110 apps/video-player/src/ui.rs:481
-#: apps/video-player/src/ui.rs:483
+#: apps/settings/src/ui/sound.rs:110 apps/video-player/src/ui.rs:482
+#: apps/video-player/src/ui.rs:484
 msgid "Mute"
 msgstr ""
 
 #: apps/audio-player/src/ui.rs:386 apps/audio-player/src/ui.rs:394
 #: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:1805
 #: apps/music/src/ui.rs:1812 apps/music/src/ui.rs:1817
-#: apps/settings/src/ui/sound.rs:147 apps/video-player/src/ui.rs:157
-#: apps/video-player/src/ui.rs:490 apps/video-player/src/ui.rs:496
-#: apps/video-player/src/ui.rs:502
+#: apps/settings/src/ui/sound.rs:147 apps/video-player/src/ui.rs:158
+#: apps/video-player/src/ui.rs:491 apps/video-player/src/ui.rs:497
+#: apps/video-player/src/ui.rs:503
 msgid "Volume"
 msgstr ""
 
@@ -421,7 +391,7 @@ msgstr ""
 
 #: apps/audio-player/src/ui.rs:755 apps/disks/src/ui.rs:1980
 #: apps/document-viewer/src/ui.rs:1484 apps/files/src/ui/dialogs.rs:659
-#: apps/video-player/src/ui.rs:1042
+#: apps/video-player/src/ui.rs:1043
 msgid "All Files"
 msgstr ""
 
@@ -450,7 +420,7 @@ msgstr ""
 
 #: apps/audio-player/src/ui.rs:1281 apps/clocks/src/ui.rs:1758
 #: apps/clocks/src/ui.rs:2241 apps/music/src/ui.rs:966
-#: apps/video-player/src/ui.rs:1395
+#: apps/video-player/src/ui.rs:1396
 msgid "Pause"
 msgstr ""
 
@@ -642,18 +612,19 @@ msgstr ""
 msgid "Compounding Term"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:19 apps/calculator/src/financial.rs:34
-#: apps/calculator/src/financial.rs:46 apps/calculator/src/financial.rs:53
-#: apps/calculator/src/financial.rs:78
+#. Translators: inputs of a loan payment: the amount borrowed, the interest rate per period and the term (number of periods).
+#: apps/calculator/src/financial.rs:19 apps/calculator/src/financial.rs:36
+#: apps/calculator/src/financial.rs:50 apps/calculator/src/financial.rs:57
+#: apps/calculator/src/financial.rs:83
 msgid "Periodic interest rate"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:20 apps/calculator/src/financial.rs:60
-#: apps/calculator/src/financial.rs:77
+#: apps/calculator/src/financial.rs:20 apps/calculator/src/financial.rs:64
+#: apps/calculator/src/financial.rs:82
 msgid "Future value"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:21 apps/calculator/src/financial.rs:60
+#: apps/calculator/src/financial.rs:21 apps/calculator/src/financial.rs:64
 msgid "Present value"
 msgstr ""
 
@@ -661,84 +632,92 @@ msgstr ""
 msgid "Double-Declining Depreciation"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:27 apps/calculator/src/financial.rs:41
-#: apps/calculator/src/financial.rs:65 apps/calculator/src/financial.rs:70
+#. Translators: inputs of a depreciation: the asset's cost, its useful life (in periods) and the period to compute.
+#. Translators: "Salvage" is the asset's value at the end of its useful life.
+#: apps/calculator/src/financial.rs:29 apps/calculator/src/financial.rs:43
+#: apps/calculator/src/financial.rs:70 apps/calculator/src/financial.rs:75
 msgid "Cost"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:27 apps/calculator/src/financial.rs:65
-#: apps/calculator/src/financial.rs:70
+#. Translators: inputs of a depreciation: the asset's cost, its useful life (in periods) and the period to compute.
+#. Translators: "Salvage" is the asset's value at the end of its useful life.
+#: apps/calculator/src/financial.rs:29 apps/calculator/src/financial.rs:70
+#: apps/calculator/src/financial.rs:75
 msgid "Life"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:27 apps/calculator/src/financial.rs:70
+#. Translators: inputs of a depreciation: the asset's cost, its useful life (in periods) and the period to compute.
+#: apps/calculator/src/financial.rs:29 apps/calculator/src/financial.rs:75
 msgid "Period"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:31
+#: apps/calculator/src/financial.rs:33
 msgid "Future Value"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:33 apps/calculator/src/financial.rs:52
-#: apps/calculator/src/financial.rs:76
+#: apps/calculator/src/financial.rs:35 apps/calculator/src/financial.rs:56
+#: apps/calculator/src/financial.rs:81
 msgid "Periodic payment"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:35 apps/calculator/src/financial.rs:54
+#: apps/calculator/src/financial.rs:37 apps/calculator/src/financial.rs:58
 msgid "Number of periods"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:40
+#: apps/calculator/src/financial.rs:42
 msgid "Gross Profit Margin"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:41
+#: apps/calculator/src/financial.rs:43
 msgid "Margin"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:45
+#: apps/calculator/src/financial.rs:47
 msgid "Periodic Payment"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:46
+#. Translators: inputs of a loan payment: the amount borrowed, the interest rate per period and the term (number of periods).
+#: apps/calculator/src/financial.rs:50
 msgid "Principal"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:46 apps/calculator/src/financial.rs:60
+#. Translators: inputs of a loan payment: the amount borrowed, the interest rate per period and the term (number of periods).
+#: apps/calculator/src/financial.rs:50 apps/calculator/src/financial.rs:64
 msgid "Term"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:50
+#: apps/calculator/src/financial.rs:54
 msgid "Present Value"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:59
+#: apps/calculator/src/financial.rs:63
 msgid "Periodic Interest Rate"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:64
+#: apps/calculator/src/financial.rs:68
 msgid "Straight-Line Depreciation"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:65 apps/calculator/src/financial.rs:70
+#. Translators: "Salvage" is the asset's value at the end of its useful life.
+#: apps/calculator/src/financial.rs:70 apps/calculator/src/financial.rs:75
 msgid "Salvage"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:69
+#: apps/calculator/src/financial.rs:74
 msgid "Sum-of-the-Years'-Digits Depreciation"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:74
+#: apps/calculator/src/financial.rs:79
 msgid "Payment Period"
 msgstr ""
 
-#: apps/calculator/src/financial.rs:94
+#: apps/calculator/src/financial.rs:99
 msgid "{} is undefined for these values"
 msgstr ""
 
 #: apps/calculator/src/format.rs:32 apps/document-scanner/src/settings.rs:29
 #: apps/document-scanner/src/ui.rs:1729 apps/document-scanner/src/ui.rs:1796
-#: apps/settings/src/ui/netedit.rs:32 apps/settings/src/ui/network.rs:27
+#: apps/settings/src/ui/netedit.rs:32 apps/settings/src/ui/network.rs:28
 msgid "Automatic"
 msgstr ""
 
@@ -974,7 +953,7 @@ msgstr ""
 msgid "Calculate result"
 msgstr ""
 
-#: apps/calculator/src/ui.rs:410 apps/maps/src/ui.rs:1868
+#: apps/calculator/src/ui.rs:410 apps/maps/src/ui.rs:1869
 msgid "Clear"
 msgstr ""
 
@@ -1039,10 +1018,10 @@ msgstr ""
 #: apps/calculator/src/ui.rs:492 apps/calculator/src/ui.rs:1554
 #: apps/disk-usage/src/shortcuts.rs:49 apps/disk-usage/src/ui.rs:1770
 #: apps/document-scanner/src/shortcuts.rs:50 apps/files/src/ui/shortcuts.rs:80
-#: apps/maps/src/shortcuts.rs:13 apps/maps/src/ui.rs:1795
+#: apps/maps/src/shortcuts.rs:13 apps/maps/src/ui.rs:1796
 #: apps/music/src/shortcuts.rs:32 apps/system-monitor/src/shortcuts.rs:32
 #: apps/system-monitor/src/ui.rs:472 apps/terminal/src/prefs_dialog.rs:15
-#: apps/terminal/src/shortcuts.rs:62 apps/text-editor/src/prefs.rs:53
+#: apps/terminal/src/shortcuts.rs:62 apps/text-editor/src/prefs.rs:54
 #: apps/text-editor/src/shortcuts.rs:70 apps/web/src/dialogs.rs:40
 #: apps/web/src/shortcuts.rs:76
 msgid "Preferences"
@@ -1074,10 +1053,10 @@ msgstr ""
 
 #: apps/calculator/src/ui.rs:684 apps/disk-usage/src/ui.rs:185
 #: apps/document-scanner/src/ui.rs:173 apps/document-scanner/src/ui.rs:189
-#: apps/files/src/ui/window.rs:230 apps/maps/src/ui.rs:481
+#: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:482
 #: apps/music/src/ui.rs:303 apps/system-monitor/src/ui.rs:247
-#: apps/terminal/src/window.rs:285 apps/text-editor/src/window.rs:62
-#: apps/web/src/window.rs:262
+#: apps/terminal/src/window.rs:290 apps/text-editor/src/window.rs:62
+#: apps/web/src/window.rs:263
 msgid "_Preferences"
 msgstr ""
 
@@ -1141,12 +1120,12 @@ msgstr ""
 #: apps/document-scanner/src/ui.rs:1380 apps/document-scanner/src/ui.rs:1418
 #: apps/document-viewer/src/dialogs.rs:169 apps/files/src/ui/dialogs.rs:28
 #: apps/files/src/ui/dialogs.rs:74 apps/files/src/ui/dialogs.rs:220
-#: apps/files/src/ui/sidebar.rs:626 apps/music/src/pages.rs:1523
+#: apps/files/src/ui/sidebar.rs:627 apps/music/src/pages.rs:1523
 #: apps/music/src/pages.rs:1621 apps/music/src/pages.rs:1683
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
 #: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
 #: apps/system-monitor/src/dialogs.rs:142
-#: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1283
+#: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1288
 #: apps/text-editor/src/window.rs:975 apps/web/src/dialogs.rs:413
 #: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
 #: apps/web/src/dialogs.rs:928 apps/web/src/dialogs.rs:1130
@@ -1389,7 +1368,7 @@ msgid "New Event"
 msgstr ""
 
 #: apps/calendar/src/editor.rs:464 apps/contacts/src/ui.rs:340
-#: apps/files/src/ui/jobs.rs:157 apps/web/src/window.rs:2216
+#: apps/files/src/ui/jobs.rs:157 apps/web/src/window.rs:2221
 msgid "Cancel"
 msgstr ""
 
@@ -1401,8 +1380,8 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
-#: apps/calendar/src/editor.rs:478 apps/maps/src/ui.rs:2228
-#: apps/maps/src/ui.rs:2332 apps/tour/src/ui.rs:267
+#: apps/calendar/src/editor.rs:478 apps/maps/src/ui.rs:2229
+#: apps/maps/src/ui.rs:2333 apps/tour/src/ui.rs:267
 msgid "Close"
 msgstr ""
 
@@ -1417,13 +1396,13 @@ msgid "Calendar"
 msgstr ""
 
 #: apps/calendar/src/editor.rs:504 apps/document-viewer/src/dialogs.rs:112
-#: apps/files/src/ui/window.rs:210 apps/image-viewer/src/ui.rs:562
+#: apps/files/src/ui/window.rs:211 apps/image-viewer/src/ui.rs:562
 #: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:128
 #: apps/web/src/permissions.rs:24
 msgid "Location"
 msgstr ""
 
-#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:829
+#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:830
 msgid "Schedule"
 msgstr ""
 
@@ -1486,7 +1465,7 @@ msgid "Add Reminder"
 msgstr ""
 
 #: apps/calendar/src/editor.rs:608 apps/calendar/src/editor.rs:617
-#: apps/contacts/src/editor.rs:387 apps/contacts/src/editor.rs:396
+#: apps/contacts/src/editor.rs:391 apps/contacts/src/editor.rs:400
 #: apps/contacts/src/ui.rs:1336
 msgid "Notes"
 msgstr ""
@@ -1515,9 +1494,8 @@ msgstr ""
 msgid "Delete Recurring Event?"
 msgstr ""
 
-#: apps/calendar/src/editor.rs:1002 apps/clocks/src/ui.rs:642
-#: apps/clocks/src/ui.rs:2094 apps/contacts/src/ui.rs:302
-#: apps/disk-usage/src/ui.rs:176 apps/disk-usage/src/ui.rs:1571
+#: apps/calendar/src/editor.rs:1002 apps/clocks/src/ui.rs:2094
+#: apps/contacts/src/ui.rs:302 apps/disk-usage/src/ui.rs:1571
 msgid "Delete"
 msgstr ""
 
@@ -1534,22 +1512,22 @@ msgid "{verb} _All Events"
 msgstr ""
 
 #. Translators: part of a day's accessible name, after its date.
-#: apps/calendar/src/keynav.rs:92
+#: apps/calendar/src/keynav.rs:93
 msgid "today"
 msgstr ""
 
 #. Translators: part of a day's accessible name, after its date.
-#: apps/calendar/src/keynav.rs:96
+#: apps/calendar/src/keynav.rs:97
 msgid "selected"
 msgstr ""
 
 #. Translators: part of a day's accessible name, after its date.
-#: apps/calendar/src/keynav.rs:100
+#: apps/calendar/src/keynav.rs:101
 msgid "no events"
 msgstr ""
 
 #. Translators: part of a day's accessible name, after its date; {titles} is the list of event titles.
-#: apps/calendar/src/keynav.rs:104
+#: apps/calendar/src/keynav.rs:105
 msgid "{n} event: {titles}"
 msgid_plural "{n} events: {titles}"
 msgstr[0] ""
@@ -1557,8 +1535,9 @@ msgstr[1] ""
 
 #. Translators: separator between the parts of an accessible name ("Friday, 13 November 2026, today, 2 events: …").
 #. Translators: separator between certificate problems in a list.
-#: apps/calendar/src/keynav.rs:108 apps/calendar/src/keynav.rs:113
-#: apps/web/src/window.rs:97
+#: apps/calendar/src/keynav.rs:109 apps/calendar/src/keynav.rs:114
+#: apps/web/src/window.rs:98
+msgctxt "list separator"
 msgid ", "
 msgstr ""
 
@@ -1764,7 +1743,7 @@ msgstr ""
 #: apps/characters/src/ui.rs:364 apps/contacts/src/shortcuts.rs:19
 #: apps/document-viewer/src/ui.rs:373 apps/document-viewer/src/ui.rs:544
 #: apps/files/src/ui/dialogs.rs:691 apps/files/src/ui/shortcuts.rs:28
-#: apps/files/src/ui/window.rs:273 apps/files/src/ui/window.rs:275
+#: apps/files/src/ui/window.rs:274 apps/files/src/ui/window.rs:276
 #: apps/fonts/src/shortcuts.rs:17 apps/fonts/src/ui.rs:290
 #: apps/fonts/src/ui.rs:292 apps/help/src/shortcuts.rs:32
 #: apps/help/src/ui.rs:334 apps/help/src/ui.rs:336
@@ -1775,7 +1754,7 @@ msgstr ""
 #: apps/settings/src/ui/mod.rs:189 apps/settings/src/ui/mod.rs:191
 #: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
 #: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
-#: apps/web/src/dialogs.rs:142 apps/web/src/window.rs:47
+#: apps/web/src/dialogs.rs:142 apps/web/src/window.rs:48
 msgid "Search"
 msgstr ""
 
@@ -1807,8 +1786,8 @@ msgid "Month View"
 msgstr ""
 
 #: apps/calendar/src/shortcuts.rs:23 apps/document-viewer/src/shortcuts.rs:14
-#: apps/files/src/ui/shortcuts.rs:50 apps/files/src/ui/window.rs:179
-#: apps/files/src/ui/window.rs:181 apps/help/src/shortcuts.rs:33
+#: apps/files/src/ui/shortcuts.rs:50 apps/files/src/ui/window.rs:180
+#: apps/files/src/ui/window.rs:182 apps/help/src/shortcuts.rs:33
 #: apps/help/src/ui.rs:328 apps/help/src/ui.rs:331
 msgid "Show Sidebar"
 msgstr ""
@@ -1856,25 +1835,25 @@ msgstr ""
 #: apps/calendar/src/shortcuts.rs:45 apps/document-viewer/src/shortcuts.rs:41
 #: apps/document-viewer/src/ui.rs:354 apps/files/src/ui/shortcuts.rs:44
 #: apps/image-viewer/src/shortcuts.rs:32 apps/maps/src/shortcuts.rs:24
-#: apps/terminal/src/shortcuts.rs:51 apps/terminal/src/window.rs:185
+#: apps/terminal/src/shortcuts.rs:51 apps/terminal/src/window.rs:190
 #: apps/text-editor/src/shortcuts.rs:59 apps/text-editor/src/window.rs:161
-#: apps/web/src/shortcuts.rs:62 apps/web/src/window.rs:412
+#: apps/web/src/shortcuts.rs:62 apps/web/src/window.rs:417
 msgid "Zoom In"
 msgstr ""
 
 #: apps/calendar/src/shortcuts.rs:46 apps/document-viewer/src/shortcuts.rs:44
 #: apps/document-viewer/src/ui.rs:353 apps/files/src/ui/shortcuts.rs:47
 #: apps/image-viewer/src/shortcuts.rs:35 apps/maps/src/shortcuts.rs:28
-#: apps/terminal/src/shortcuts.rs:54 apps/terminal/src/window.rs:183
+#: apps/terminal/src/shortcuts.rs:54 apps/terminal/src/window.rs:188
 #: apps/text-editor/src/shortcuts.rs:62 apps/text-editor/src/window.rs:152
-#: apps/web/src/shortcuts.rs:66 apps/web/src/window.rs:411
+#: apps/web/src/shortcuts.rs:66 apps/web/src/window.rs:416
 msgid "Zoom Out"
 msgstr ""
 
 #: apps/calendar/src/shortcuts.rs:47 apps/terminal/src/shortcuts.rs:55
-#: apps/terminal/src/window.rs:299 apps/text-editor/src/shortcuts.rs:63
+#: apps/terminal/src/window.rs:304 apps/text-editor/src/shortcuts.rs:63
 #: apps/text-editor/src/window.rs:157 apps/web/src/shortcuts.rs:69
-#: apps/web/src/window.rs:416 apps/web/src/window.rs:418
+#: apps/web/src/window.rs:421 apps/web/src/window.rs:423
 msgid "Reset Zoom"
 msgstr ""
 
@@ -1922,10 +1901,10 @@ msgid "_Import…"
 msgstr ""
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
-#: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:482
-#: apps/settings/src/ui/mod.rs:198 apps/terminal/src/window.rs:286
-#: apps/text-editor/src/window.rs:64 apps/web/src/window.rs:221
-#: apps/web/src/window.rs:264 crates/helix-app-common/src/shortcuts.rs:25
+#: apps/files/src/ui/window.rs:232 apps/maps/src/ui.rs:483
+#: apps/settings/src/ui/mod.rs:198 apps/terminal/src/window.rs:291
+#: apps/text-editor/src/window.rs:64 apps/web/src/window.rs:222
+#: apps/web/src/window.rs:265 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
 msgstr ""
 
@@ -1944,7 +1923,7 @@ msgstr ""
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
 #: apps/files/src/ui/tab.rs:961 apps/settings/src/ui/mod.rs:227
 #: apps/settings/src/ui/picker.rs:114 apps/web/src/dialogs.rs:739
-#: apps/web/src/window.rs:2372
+#: apps/web/src/window.rs:2377
 msgid "No Results Found"
 msgstr ""
 
@@ -1952,7 +1931,7 @@ msgstr ""
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
 #: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:228
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:740
-#: apps/web/src/window.rs:2373
+#: apps/web/src/window.rs:2378
 msgid "Try a different search"
 msgstr ""
 
@@ -2239,9 +2218,9 @@ msgid "Take pictures and videos"
 msgstr ""
 
 #: apps/camera/src/ui.rs:161 apps/disks/src/ui.rs:931
-#: apps/music/src/player.rs:53 apps/settings/src/extensions.rs:116
-#: apps/settings/src/ui/network.rs:25 apps/settings/src/ui/network.rs:187
-#: apps/settings/src/ui/network.rs:466
+#: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:116
+#: apps/settings/src/ui/network.rs:26 apps/settings/src/ui/network.rs:188
+#: apps/settings/src/ui/network.rs:467
 msgid "Off"
 msgstr ""
 
@@ -2289,7 +2268,7 @@ msgid "Photo"
 msgstr ""
 
 #: apps/camera/src/ui.rs:344 apps/settings/src/defaults.rs:44
-#: apps/video-player/src/screenshot.rs:19 apps/video-player/src/ui.rs:411
+#: apps/video-player/src/screenshot.rs:19 apps/video-player/src/ui.rs:412
 msgid "Video"
 msgstr ""
 
@@ -2319,7 +2298,7 @@ msgid "Countdown cancelled"
 msgstr ""
 
 #: apps/camera/src/ui.rs:858 apps/files/src/ui/dialogs.rs:455
-#: apps/files/src/ui/sidebar.rs:518 apps/files/src/ui/window.rs:1549
+#: apps/files/src/ui/sidebar.rs:519 apps/files/src/ui/window.rs:1550
 #: apps/text-editor/src/window.rs:130
 msgid "_Open"
 msgstr ""
@@ -2448,7 +2427,7 @@ msgstr ""
 msgid "Symbols"
 msgstr ""
 
-#: apps/characters/src/category.rs:65 apps/disks/src/model.rs:506
+#: apps/characters/src/category.rs:65
 msgid "Flags"
 msgstr ""
 
@@ -2690,21 +2669,6 @@ msgstr ""
 msgid "Ring alarms when Clocks is closed"
 msgstr ""
 
-#: apps/clocks/src/location.rs:54 apps/maps/src/location.rs:54
-#: apps/weather/src/location.rs:54
-msgid "Latitude"
-msgstr ""
-
-#: apps/clocks/src/location.rs:54 apps/maps/src/location.rs:54
-#: apps/weather/src/location.rs:54
-msgid "Longitude"
-msgstr ""
-
-#: apps/clocks/src/location.rs:58 apps/maps/src/location.rs:69
-#: apps/weather/src/location.rs:58
-msgid "Accuracy"
-msgstr ""
-
 #: apps/clocks/src/location.rs:110 apps/maps/src/location.rs:157
 #: apps/weather/src/location.rs:110
 msgid "The location portal closed the request"
@@ -2757,9 +2721,9 @@ msgid "Lap"
 msgstr ""
 
 #: apps/clocks/src/shortcuts.rs:35 apps/clocks/src/ui.rs:1759
-#: apps/clocks/src/ui.rs:2086 apps/maps/src/ui.rs:1878
+#: apps/clocks/src/ui.rs:2086 apps/maps/src/ui.rs:1879
 #: apps/settings/src/ui/apps.rs:490 apps/settings/src/ui/apps.rs:550
-#: apps/web/src/window.rs:1945
+#: apps/web/src/window.rs:1950
 msgid "Reset"
 msgstr ""
 
@@ -2894,10 +2858,10 @@ msgstr ""
 #: apps/clocks/src/ui.rs:310 apps/clocks/src/ui.rs:311
 #: apps/document-scanner/src/ui.rs:1781
 #: apps/document-viewer/src/shortcuts.rs:33 apps/files/src/ui/shortcuts.rs:22
-#: apps/files/src/ui/window.rs:184 apps/files/src/ui/window.rs:187
-#: apps/files/src/ui/window.rs:378 apps/help/src/shortcuts.rs:29
+#: apps/files/src/ui/window.rs:185 apps/files/src/ui/window.rs:188
+#: apps/files/src/ui/window.rs:379 apps/help/src/shortcuts.rs:29
 #: apps/help/src/ui.rs:310 apps/help/src/ui.rs:313 apps/web/src/shortcuts.rs:37
-#: apps/web/src/window.rs:337
+#: apps/web/src/window.rs:338
 msgid "Back"
 msgstr ""
 
@@ -2934,7 +2898,7 @@ msgid "Alarms only ring while Clocks is running."
 msgstr ""
 
 #: apps/clocks/src/ui.rs:384 apps/clocks/src/ui.rs:1757
-#: apps/clocks/src/ui.rs:2246 apps/maps/src/osrm.rs:244
+#: apps/clocks/src/ui.rs:2246
 msgid "Start"
 msgstr ""
 
@@ -3063,7 +3027,7 @@ msgstr ""
 msgid "AM or PM"
 msgstr ""
 
-#: apps/clocks/src/ui.rs:1460 apps/contacts/src/editor.rs:301
+#: apps/clocks/src/ui.rs:1460 apps/contacts/src/editor.rs:302
 #: apps/disk-usage/src/ui.rs:1002 apps/disks/src/ui.rs:1632
 #: apps/files/src/sorting.rs:43 apps/files/src/ui/tab.rs:190
 #: apps/settings/src/ui/netedit.rs:235 apps/settings/src/ui/users.rs:81
@@ -3091,7 +3055,7 @@ msgid "Snooze"
 msgstr ""
 
 #: apps/clocks/src/ui.rs:1647 apps/system-monitor/src/control.rs:44
-#: apps/system-monitor/src/shortcuts.rs:49 apps/web/src/window.rs:1492
+#: apps/system-monitor/src/shortcuts.rs:49 apps/web/src/window.rs:1497
 msgid "Stop"
 msgstr ""
 
@@ -3141,8 +3105,8 @@ msgstr ""
 msgid "{label} deleted"
 msgstr ""
 
-#: apps/clocks/src/ui.rs:1871 apps/files/src/ui/window.rs:227
-#: apps/files/src/ui/window.rs:1295 apps/image-viewer/src/ui.rs:1502
+#: apps/clocks/src/ui.rs:1871 apps/files/src/ui/window.rs:228
+#: apps/files/src/ui/window.rs:1296 apps/image-viewer/src/ui.rs:1502
 msgid "_Undo"
 msgstr ""
 
@@ -3327,187 +3291,186 @@ msgstr ""
 msgid "Pick {title} from Calendar"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:49
+#: apps/contacts/src/editor.rs:50
 msgid "Email Type"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:50
+#: apps/contacts/src/editor.rs:51
 msgid "Phone Number Type"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:51
+#: apps/contacts/src/editor.rs:52
 msgid "Website Type"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:52 apps/contacts/src/editor.rs:489
+#: apps/contacts/src/editor.rs:53 apps/contacts/src/editor.rs:493
 msgid "Address Type"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:59
+#: apps/contacts/src/editor.rs:60
 msgid "Remove Email"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:60
+#: apps/contacts/src/editor.rs:61
 msgid "Remove Phone Number"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:61
+#: apps/contacts/src/editor.rs:62
 msgid "Remove Website"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:62
+#: apps/contacts/src/editor.rs:63
 msgid "Remove Address"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:75
+#: apps/contacts/src/editor.rs:76
 msgid "Remove Email {value}"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:76
+#: apps/contacts/src/editor.rs:77
 msgid "Remove Phone Number {value}"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:77
+#: apps/contacts/src/editor.rs:78
 msgid "Remove Website {value}"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:78
+#: apps/contacts/src/editor.rs:79
 msgid "Remove Address {value}"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:268
+#: apps/contacts/src/editor.rs:269
 msgid "Change Picture…"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:269
+#: apps/contacts/src/editor.rs:270
 msgid "Remove Picture"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:284 apps/contacts/src/editor.rs:285
+#: apps/contacts/src/editor.rs:285 apps/contacts/src/editor.rs:286
 msgid "Address Book"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:302
+#: apps/contacts/src/editor.rs:303
 msgid "Prefix"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:303
+#: apps/contacts/src/editor.rs:304
 msgid "First Name"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:304
+#: apps/contacts/src/editor.rs:305
 msgid "Middle Name"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:305
+#: apps/contacts/src/editor.rs:306
 msgid "Last Name"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:306
+#: apps/contacts/src/editor.rs:307
 msgid "Suffix"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:307
+#: apps/contacts/src/editor.rs:308
 msgid "Nickname"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:321 apps/contacts/src/editor.rs:323
+#: apps/contacts/src/editor.rs:322 apps/contacts/src/editor.rs:324
 msgid "Organization"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:324 apps/contacts/src/ui.rs:1323
+#: apps/contacts/src/editor.rs:325 apps/contacts/src/ui.rs:1323
 msgid "Department"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:325
+#: apps/contacts/src/editor.rs:326
 msgid "Job Title"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:332
+#: apps/contacts/src/editor.rs:333
 msgid "Email Addresses"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:333
+#: apps/contacts/src/editor.rs:334
 msgid "Add Email"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:342
+#: apps/contacts/src/editor.rs:343
 msgid "Phone Numbers"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:343
+#: apps/contacts/src/editor.rs:344
 msgid "Add Phone Number"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:352
+#: apps/contacts/src/editor.rs:353
 msgid "Websites"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:353
+#: apps/contacts/src/editor.rs:354
 msgid "Add Website"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:366 apps/settings/src/ui/netedit.rs:76
+#: apps/contacts/src/editor.rs:367 apps/settings/src/ui/netedit.rs:76
 msgid "Addresses"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:370 apps/contacts/src/editor.rs:374
+#: apps/contacts/src/editor.rs:371 apps/contacts/src/editor.rs:375
 msgid "Add Address"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:380 apps/settings/src/ui/network.rs:570
-#: crates/helix-eds/src/vcard.rs:699 crates/helix-eds/src/vcard.rs:711
-#: crates/helix-eds/src/vcard.rs:724 crates/helix-eds/src/vcard.rs:731
+#: apps/contacts/src/editor.rs:383
+msgctxt "contact details"
 msgid "Other"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:381 apps/contacts/src/ui.rs:1317
+#: apps/contacts/src/editor.rs:385 apps/contacts/src/ui.rs:1317
 msgid "Birthday"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:382 apps/contacts/src/ui.rs:1320
+#: apps/contacts/src/editor.rs:386 apps/contacts/src/ui.rs:1320
 msgid "Anniversary"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:458 apps/image-viewer/src/shortcuts.rs:8
+#: apps/contacts/src/editor.rs:462 apps/image-viewer/src/shortcuts.rs:8
 #: apps/settings/src/ui/appearance.rs:508 apps/settings/src/ui/users.rs:441
 msgid "Images"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:463 apps/settings/src/ui/users.rs:389
+#: apps/contacts/src/editor.rs:467 apps/settings/src/ui/users.rs:389
 #: apps/settings/src/ui/users.rs:446
 msgid "Choose a Picture"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:516
+#: apps/contacts/src/editor.rs:520
 msgid "Street"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:517
+#: apps/contacts/src/editor.rs:521
 msgid "Extended Address"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:518
+#: apps/contacts/src/editor.rs:522
 msgid "PO Box"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:519
+#: apps/contacts/src/editor.rs:523
 msgid "City"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:520
+#: apps/contacts/src/editor.rs:524
 msgid "State/Province"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:521
+#: apps/contacts/src/editor.rs:525
 msgid "Postal Code"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:522
+#: apps/contacts/src/editor.rs:526
 msgid "Country"
 msgstr ""
 
-#: apps/contacts/src/editor.rs:619
+#: apps/contacts/src/editor.rs:623
 msgid "Enter a name or some details first"
 msgstr ""
 
@@ -3690,18 +3653,18 @@ msgid "Email"
 msgstr ""
 
 #: apps/contacts/src/ui.rs:1272 apps/maps/src/nominatim.rs:153
-#: apps/maps/src/nominatim.rs:154 apps/maps/src/ui.rs:289
+#: apps/maps/src/nominatim.rs:154 apps/maps/src/ui.rs:290
 #: apps/settings/src/bluez.rs:228
 msgid "Phone"
 msgstr ""
 
 #: apps/contacts/src/ui.rs:1288 apps/maps/src/nominatim.rs:248
-#: apps/settings/src/ui/bluetooth.rs:515 apps/web/src/window.rs:48
+#: apps/settings/src/ui/bluetooth.rs:515 apps/web/src/window.rs:49
 msgid "Address"
 msgstr ""
 
 #: apps/contacts/src/ui.rs:1300 apps/maps/src/nominatim.rs:155
-#: apps/maps/src/nominatim.rs:156 apps/maps/src/ui.rs:281
+#: apps/maps/src/nominatim.rs:156 apps/maps/src/ui.rs:282
 msgid "Website"
 msgstr ""
 
@@ -3709,8 +3672,7 @@ msgstr ""
 msgid "Groups"
 msgstr ""
 
-#: apps/contacts/src/ui.rs:1329 crates/helix-eds/src/vcard.rs:707
-#: crates/helix-eds/src/vcard.rs:729
+#: apps/contacts/src/ui.rs:1329
 msgid "Personal"
 msgstr ""
 
@@ -3832,7 +3794,7 @@ msgstr ""
 msgid "Show on Map"
 msgstr ""
 
-#: apps/contacts/src/ui.rs:1917 apps/maps/src/ui.rs:247
+#: apps/contacts/src/ui.rs:1917 apps/maps/src/ui.rs:248
 msgid "Open Website"
 msgstr ""
 
@@ -3890,7 +3852,7 @@ msgstr ""
 
 #: apps/disk-usage/src/mounts.rs:155 apps/files/src/pathbar.rs:25
 #: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1246
-#: apps/files/src/ui/window.rs:138 apps/settings/src/bluez.rs:229
+#: apps/files/src/ui/window.rs:139 apps/settings/src/bluez.rs:229
 msgid "Computer"
 msgstr ""
 
@@ -3962,8 +3924,8 @@ msgstr ""
 msgid "Open the Folder"
 msgstr ""
 
-#: apps/disk-usage/src/shortcuts.rs:43 apps/files/src/ui/properties.rs:140
-#: apps/files/src/ui/properties.rs:244 apps/files/src/ui/shortcuts.rs:24
+#: apps/disk-usage/src/shortcuts.rs:43 apps/files/src/ui/properties.rs:141
+#: apps/files/src/ui/properties.rs:245 apps/files/src/ui/shortcuts.rs:24
 msgid "Parent Folder"
 msgstr ""
 
@@ -4090,24 +4052,21 @@ msgid_plural "{n} items"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/disk-usage/src/ui.rs:1003 apps/disks/src/model.rs:519
-#: apps/disks/src/model.rs:521 apps/disks/src/model.rs:694
-#: apps/disks/src/model.rs:696 apps/disks/src/model.rs:698
-#: apps/disks/src/model.rs:739 apps/disks/src/model.rs:742
-#: apps/disks/src/ui.rs:358 apps/disks/src/ui.rs:453
-#: apps/files/src/sorting.rs:44 apps/files/src/ui/properties.rs:134
-#: apps/files/src/ui/tab.rs:191 apps/fonts/src/fontinfo.rs:286
+#: apps/disk-usage/src/ui.rs:1003 apps/disks/src/ui.rs:358
+#: apps/disks/src/ui.rs:453 apps/files/src/sorting.rs:44
+#: apps/files/src/ui/properties.rs:135 apps/files/src/ui/tab.rs:191
+#: apps/fonts/src/fontinfo.rs:286
 msgid "Size"
 msgstr ""
 
 #: apps/disk-usage/src/ui.rs:1004 apps/disks/src/ui.rs:457
-#: apps/files/src/ui/properties.rs:128 apps/files/src/ui/properties.rs:231
+#: apps/files/src/ui/properties.rs:129 apps/files/src/ui/properties.rs:232
 #: apps/help/src/docbook.rs:316 apps/help/src/ui.rs:400
 msgid "Contents"
 msgstr ""
 
 #: apps/disk-usage/src/ui.rs:1005 apps/document-viewer/src/dialogs.rs:104
-#: apps/files/src/sorting.rs:46 apps/files/src/ui/properties.rs:177
+#: apps/files/src/sorting.rs:46 apps/files/src/ui/properties.rs:178
 #: apps/files/src/ui/tab.rs:193 apps/image-viewer/src/ui.rs:555
 msgid "Modified"
 msgstr ""
@@ -4265,27 +4224,27 @@ msgstr ""
 msgid "volume"
 msgstr ""
 
-#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:31
+#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:32
 msgid "EB"
 msgstr ""
 
-#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:28
+#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:29
 msgid "GB"
 msgstr ""
 
-#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:27
+#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:28
 msgid "MB"
 msgstr ""
 
-#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:30
+#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:31
 msgid "PB"
 msgstr ""
 
-#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:29
+#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:30
 msgid "TB"
 msgstr ""
 
-#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:26
+#: apps/disks/src/format.rs:7 apps/system-monitor/src/format.rs:27
 msgid "kB"
 msgstr ""
 
@@ -4297,12 +4256,12 @@ msgstr[1] ""
 
 #. Translators: a size, "1.5" "MB".
 #. Translators: a size, "2.5 MB"; {unit} is one of the units above.
-#: apps/disks/src/format.rs:33 apps/system-monitor/src/format.rs:45
-#: apps/system-monitor/src/format.rs:71
+#: apps/disks/src/format.rs:33 apps/system-monitor/src/format.rs:46
+#: apps/system-monitor/src/format.rs:72
 msgid "{value} {unit}"
 msgstr ""
 
-#: apps/disks/src/format.rs:58 apps/files/src/ui/properties.rs:135
+#: apps/disks/src/format.rs:58 apps/files/src/ui/properties.rs:136
 msgid "{} ({} bytes)"
 msgstr ""
 
@@ -4337,180 +4296,176 @@ msgstr ""
 
 #. Translators: a data rate, "85.3 MB" per second.
 #. Translators: a transfer rate, "2.5 kB/s".
-#: apps/disks/src/format.rs:126 apps/system-monitor/src/format.rs:74
+#: apps/disks/src/format.rs:126 apps/system-monitor/src/format.rs:75
 msgid "{size}/s"
 msgstr ""
 
-#: apps/disks/src/model.rs:139
+#: apps/disks/src/model.rs:140
 msgid "Ext2"
 msgstr ""
 
-#: apps/disks/src/model.rs:140
+#: apps/disks/src/model.rs:141
 msgid "Ext3"
 msgstr ""
 
-#: apps/disks/src/model.rs:141
+#: apps/disks/src/model.rs:142
 msgid "Ext4"
 msgstr ""
 
-#: apps/disks/src/model.rs:143
+#: apps/disks/src/model.rs:144
 msgid "FAT (12-bit version)"
 msgstr ""
 
-#: apps/disks/src/model.rs:144
+#: apps/disks/src/model.rs:145
 msgid "FAT (16-bit version)"
 msgstr ""
 
-#: apps/disks/src/model.rs:145
+#: apps/disks/src/model.rs:146
 msgid "FAT (32-bit version)"
 msgstr ""
 
-#: apps/disks/src/model.rs:150
+#: apps/disks/src/model.rs:151
 msgid "Btrfs"
 msgstr ""
 
-#: apps/disks/src/model.rs:153
+#: apps/disks/src/model.rs:154
 msgid "ISO 9660"
 msgstr ""
 
-#: apps/disks/src/model.rs:155
+#: apps/disks/src/model.rs:156
 msgid "SquashFS"
 msgstr ""
 
-#: apps/disks/src/model.rs:156
+#: apps/disks/src/model.rs:157
 msgid "HFS+"
 msgstr ""
 
-#: apps/disks/src/model.rs:158
+#: apps/disks/src/model.rs:159
 msgid "LUKS Encryption"
 msgstr ""
 
-#: apps/disks/src/model.rs:159
+#: apps/disks/src/model.rs:160
 msgid "BitLocker Encryption"
 msgstr ""
 
-#: apps/disks/src/model.rs:160 apps/system-monitor/src/res_view.rs:366
+#: apps/disks/src/model.rs:161 apps/system-monitor/src/res_view.rs:366
 #: apps/system-monitor/src/res_view.rs:486
 msgid "Swap"
 msgstr ""
 
-#: apps/disks/src/model.rs:161
+#: apps/disks/src/model.rs:162
 msgid "LVM2 Physical Volume"
 msgstr ""
 
-#: apps/disks/src/model.rs:162
+#: apps/disks/src/model.rs:163
 msgid "Linux RAID Member"
 msgstr ""
 
-#: apps/disks/src/model.rs:163
+#: apps/disks/src/model.rs:164
 msgid "ZFS Device"
 msgstr ""
 
-#: apps/disks/src/model.rs:164 apps/disks/src/model.rs:240
-#: apps/disks/src/model.rs:288 apps/disks/src/parttypes.rs:170
-#: apps/disks/src/parttypes.rs:202 apps/disks/src/smart.rs:104
+#: apps/disks/src/model.rs:165 apps/disks/src/model.rs:241
+#: apps/disks/src/model.rs:289 apps/disks/src/parttypes.rs:171
+#: apps/disks/src/parttypes.rs:203 apps/disks/src/smart.rs:104
 #: apps/disks/src/ui.rs:1864 apps/disks/src/ui.rs:1874
 #: apps/files/src/ui/tab.rs:54 apps/settings/src/ui/about.rs:38
 #: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
 #: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
 #: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
 #: apps/settings/src/ui/about.rs:230 apps/settings/src/values.rs:277
-#: apps/system-monitor/src/format.rs:105 apps/weather/src/wmo.rs:37
+#: apps/system-monitor/src/format.rs:106 apps/weather/src/wmo.rs:37
 msgid "Unknown"
 msgstr ""
 
-#: apps/disks/src/model.rs:206
+#: apps/disks/src/model.rs:207
 msgid "Unallocated Space"
 msgstr ""
 
-#: apps/disks/src/model.rs:209 apps/disks/src/model.rs:279
+#: apps/disks/src/model.rs:210 apps/disks/src/model.rs:280
 msgid "Extended Partition"
 msgstr ""
 
-#: apps/disks/src/model.rs:213
+#: apps/disks/src/model.rs:214
 msgid "{name} (version {id_version})"
 msgstr ""
 
-#: apps/disks/src/model.rs:221
+#: apps/disks/src/model.rs:222
 msgid "{name} — Mounted at {mp}"
 msgstr ""
 
-#: apps/disks/src/model.rs:222
+#: apps/disks/src/model.rs:223
 msgid "{name} — Not Mounted"
 msgstr ""
 
-#: apps/disks/src/model.rs:227
+#: apps/disks/src/model.rs:228
 msgid "{name} — Unlocked"
 msgstr ""
 
-#: apps/disks/src/model.rs:229
+#: apps/disks/src/model.rs:230
 msgid "{name} — Locked"
 msgstr ""
 
-#: apps/disks/src/model.rs:234
+#: apps/disks/src/model.rs:235
 msgid "{name} — Active"
 msgstr ""
 
-#: apps/disks/src/model.rs:236
+#: apps/disks/src/model.rs:237
 msgid "{name} — Not Active"
 msgstr ""
 
-#: apps/disks/src/model.rs:251
+#: apps/disks/src/model.rs:252
 msgid "{name}, {size}, not partitioned"
 msgstr ""
 
-#: apps/disks/src/model.rs:263
+#: apps/disks/src/model.rs:264
 msgid "partition type {t}"
 msgstr ""
 
-#: apps/disks/src/model.rs:272 apps/files/src/ui/properties.rs:193
+#: apps/disks/src/model.rs:273 apps/files/src/ui/properties.rs:194
 msgid "Free Space"
 msgstr ""
 
-#: apps/disks/src/model.rs:287
+#: apps/disks/src/model.rs:288
 msgid "Partition {}"
 msgstr ""
 
-#: apps/disks/src/model.rs:300
+#: apps/disks/src/model.rs:301
 msgid "{partition_type} (Bootable)"
 msgstr ""
 
-#: apps/disks/src/model.rs:323
+#: apps/disks/src/model.rs:324
 msgid "{size}Loop Device"
 msgstr ""
 
-#: apps/disks/src/model.rs:324
+#: apps/disks/src/model.rs:325
 msgid "CD/DVD Drive"
 msgstr ""
 
-#: apps/disks/src/model.rs:329 apps/disks/src/model.rs:335
+#: apps/disks/src/model.rs:330 apps/disks/src/model.rs:336
 msgid "{size}Drive"
 msgstr ""
 
-#: apps/disks/src/model.rs:331
+#: apps/disks/src/model.rs:332
 msgid "Card Reader"
 msgstr ""
 
-#: apps/disks/src/model.rs:338
+#: apps/disks/src/model.rs:339
 msgid "{size}Solid-State Disk"
 msgstr ""
 
-#: apps/disks/src/model.rs:340
+#: apps/disks/src/model.rs:341
 msgid "{size}Hard Disk"
 msgstr ""
 
-#: apps/disks/src/model.rs:385 apps/disks/src/ui.rs:909
+#: apps/disks/src/model.rs:386 apps/disks/src/ui.rs:909
 #: apps/disks/src/ui.rs:1086
 msgid "No Media"
 msgstr ""
 
-#: apps/disks/src/model.rs:502
-msgid "Number"
-msgstr ""
-
-#: apps/disks/src/model.rs:514 apps/disks/src/model.rs:576
-#: apps/disks/src/model.rs:619 apps/disks/src/model.rs:620
-msgid "Offset"
+#: apps/disks/src/model.rs:387 apps/disks/src/parttypes.rs:202
+msgctxt "partition table"
+msgid "None"
 msgstr ""
 
 #: apps/disks/src/ops.rs:101
@@ -4589,159 +4544,159 @@ msgstr ""
 msgid "Error reading SMART data"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:27
+#: apps/disks/src/parttypes.rs:28
 msgid "EFI System"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:32
+#: apps/disks/src/parttypes.rs:33
 msgid "BIOS Boot"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:34
+#: apps/disks/src/parttypes.rs:35
 msgid "Linux Filesystem"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:38
+#: apps/disks/src/parttypes.rs:39
 msgid "Linux Root (x86-64)"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:43
+#: apps/disks/src/parttypes.rs:44
 msgid "Linux Root (ARM-64)"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:48
+#: apps/disks/src/parttypes.rs:49
 msgid "Linux Home"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:53
+#: apps/disks/src/parttypes.rs:54
 msgid "Linux Extended Boot"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:55 apps/disks/src/ui.rs:43
+#: apps/disks/src/parttypes.rs:56 apps/disks/src/ui.rs:43
 msgid "Linux Swap"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:59 apps/disks/src/parttypes.rs:130
+#: apps/disks/src/parttypes.rs:60 apps/disks/src/parttypes.rs:131
 msgid "Linux LVM"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:64
+#: apps/disks/src/parttypes.rs:65
 msgid "Linux RAID"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:66
+#: apps/disks/src/parttypes.rs:67
 msgid "Linux LUKS"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:70
+#: apps/disks/src/parttypes.rs:71
 msgid "Linux Reserved"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:72
+#: apps/disks/src/parttypes.rs:73
 msgid "Basic Data"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:76
+#: apps/disks/src/parttypes.rs:77
 msgid "Microsoft Reserved"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:81
+#: apps/disks/src/parttypes.rs:82
 msgid "Microsoft Windows Recovery Environment"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:86
+#: apps/disks/src/parttypes.rs:87
 msgid "Microsoft LDM Metadata"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:91
+#: apps/disks/src/parttypes.rs:92
 msgid "Microsoft LDM Data"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:96
+#: apps/disks/src/parttypes.rs:97
 msgid "Apple HFS/HFS+"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:101
+#: apps/disks/src/parttypes.rs:102
 msgid "Apple APFS"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:106
+#: apps/disks/src/parttypes.rs:107
 msgid "Apple Boot"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:111
+#: apps/disks/src/parttypes.rs:112
 msgid "FreeBSD Data"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:116
+#: apps/disks/src/parttypes.rs:117
 msgid "FreeBSD ZFS"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:121
+#: apps/disks/src/parttypes.rs:122
 msgid "Solaris /usr or Apple ZFS"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:126
+#: apps/disks/src/parttypes.rs:127
 msgid "MBR Partition Scheme"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:129
+#: apps/disks/src/parttypes.rs:130
 msgid "Linux swap or Solaris"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:131
+#: apps/disks/src/parttypes.rs:132
 msgid "Linux RAID auto"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:132
+#: apps/disks/src/parttypes.rs:133
 msgid "Linux Extended"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:133
+#: apps/disks/src/parttypes.rs:134
 msgid "Extended"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:134
+#: apps/disks/src/parttypes.rs:135
 msgid "W95 Ext d (LBA)"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:136
+#: apps/disks/src/parttypes.rs:137
 msgid "W95 FAT32"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:137
+#: apps/disks/src/parttypes.rs:138
 msgid "W95 FAT32 (LBA)"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:138
+#: apps/disks/src/parttypes.rs:139
 msgid "W95 FAT16 (LBA)"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:141
+#: apps/disks/src/parttypes.rs:142
 msgid "Hidden NTFS WinRE"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:142
+#: apps/disks/src/parttypes.rs:143
 msgid "EFI (FAT-12/16/32)"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:145
+#: apps/disks/src/parttypes.rs:146
 msgid "HFS / HFS+"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:146
+#: apps/disks/src/parttypes.rs:147
 msgid "GPT Protective"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:172
+#: apps/disks/src/parttypes.rs:173
 msgid "Unknown ({id})"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:199
+#: apps/disks/src/parttypes.rs:200
 msgid "Master Boot Record"
 msgstr ""
 
-#: apps/disks/src/parttypes.rs:200
+#: apps/disks/src/parttypes.rs:201
 msgid "GUID Partition Table"
 msgstr ""
 
@@ -4900,14 +4855,6 @@ msgstr[1] ""
 msgid "Authentication was dismissed."
 msgstr ""
 
-#: apps/disks/src/udisks.rs:346
-msgid "Check"
-msgstr ""
-
-#: apps/disks/src/udisks.rs:348
-msgid "Repair"
-msgstr ""
-
 #: apps/disks/src/udisks.rs:436
 msgid "Operation was cancelled"
 msgstr ""
@@ -4997,7 +4944,7 @@ msgstr ""
 msgid "Drive Options"
 msgstr ""
 
-#: apps/disks/src/ui.rs:338 apps/files/src/ui/sidebar.rs:424
+#: apps/disks/src/ui.rs:338 apps/files/src/ui/sidebar.rs:425
 msgid "Eject"
 msgstr ""
 
@@ -5126,7 +5073,7 @@ msgstr ""
 msgid "Activate Swap"
 msgstr ""
 
-#: apps/disks/src/ui.rs:1027 apps/files/src/ui/sidebar.rs:426
+#: apps/disks/src/ui.rs:1027 apps/files/src/ui/sidebar.rs:427
 msgid "Unmount"
 msgstr ""
 
@@ -5141,7 +5088,7 @@ msgstr ""
 #: apps/disks/src/ui.rs:1199 apps/document-scanner/src/ui.rs:894
 #: apps/document-scanner/src/ui.rs:1565 apps/files/src/ui/jobs.rs:260
 #: apps/screenshot/src/ui.rs:620 apps/screenshot/src/ui.rs:672
-#: apps/terminal/src/window.rs:470
+#: apps/terminal/src/window.rs:475
 msgid "_Close"
 msgstr ""
 
@@ -5179,8 +5126,8 @@ msgstr ""
 
 #: apps/disks/src/ui.rs:1357 apps/disks/src/ui.rs:1626
 #: apps/disks/src/ui.rs:1898 apps/files/src/sorting.rs:45
-#: apps/files/src/ui/properties.rs:126 apps/files/src/ui/tab.rs:192
-#: apps/settings/src/ui/bluetooth.rs:513 apps/settings/src/ui/network.rs:528
+#: apps/files/src/ui/properties.rs:127 apps/files/src/ui/tab.rs:192
+#: apps/settings/src/ui/bluetooth.rs:513 apps/settings/src/ui/network.rs:529
 #: apps/system-monitor/src/fs_view.rs:25
 msgid "Type"
 msgstr ""
@@ -5259,7 +5206,7 @@ msgid "Delete Partition?"
 msgstr ""
 
 #: apps/disks/src/ui.rs:1586 apps/document-scanner/src/ui.rs:227
-#: apps/files/src/ui/window.rs:1380 apps/music/src/pages.rs:1684
+#: apps/files/src/ui/window.rs:1381 apps/music/src/pages.rs:1684
 msgid "_Delete"
 msgstr ""
 
@@ -5516,7 +5463,7 @@ msgstr ""
 msgid "Restoring image to {desc}"
 msgstr ""
 
-#: apps/disks/src/ui.rs:2205 apps/web/src/window.rs:2204
+#: apps/disks/src/ui.rs:2205 apps/web/src/window.rs:2209
 msgid "Starting…"
 msgstr ""
 
@@ -5824,8 +5771,8 @@ msgid "_Copy Page"
 msgstr ""
 
 #: apps/document-scanner/src/ui.rs:184 apps/document-viewer/src/ui.rs:297
-#: apps/help/src/ui.rs:340 apps/web/src/window.rs:207
-#: apps/web/src/window.rs:248
+#: apps/help/src/ui.rs:340 apps/web/src/window.rs:208
+#: apps/web/src/window.rs:249
 msgid "_Print…"
 msgstr ""
 
@@ -5876,8 +5823,8 @@ msgid "_Crop"
 msgstr ""
 
 #: apps/document-scanner/src/ui.rs:226 apps/document-viewer/src/ui.rs:921
-#: apps/files/src/ui/window.rs:1562 apps/image-viewer/src/ui.rs:291
-#: apps/terminal/src/window.rs:722
+#: apps/files/src/ui/window.rs:1563 apps/image-viewer/src/ui.rs:291
+#: apps/terminal/src/window.rs:727
 msgid "_Copy"
 msgstr ""
 
@@ -6227,6 +6174,11 @@ msgstr ""
 msgid "Password protected"
 msgstr ""
 
+#: apps/document-viewer/src/dialogs.rs:82
+#: apps/settings/src/ui/extensions.rs:368
+msgid "None"
+msgstr ""
+
 #. Translators: document security in Properties, "None; not permitted: printing, copying".
 #: apps/document-viewer/src/dialogs.rs:88
 msgid "{security}; not permitted: {actions}"
@@ -6252,7 +6204,7 @@ msgstr ""
 msgid "Creator"
 msgstr ""
 
-#: apps/document-viewer/src/dialogs.rs:103 apps/files/src/ui/properties.rs:179
+#: apps/document-viewer/src/dialogs.rs:103 apps/files/src/ui/properties.rs:180
 #: apps/image-viewer/src/ui.rs:554
 msgid "Created"
 msgstr ""
@@ -6284,7 +6236,7 @@ msgid "Yes"
 msgstr ""
 
 #: apps/document-viewer/src/dialogs.rs:135
-#: apps/document-viewer/src/shortcuts.rs:13 apps/files/src/ui/properties.rs:256
+#: apps/document-viewer/src/shortcuts.rs:13 apps/files/src/ui/properties.rs:257
 #: apps/files/src/ui/shortcuts.rs:62 apps/image-viewer/src/shortcuts.rs:16
 #: apps/image-viewer/src/ui.rs:585 apps/system-monitor/src/proc_view.rs:438
 #: apps/system-monitor/src/proc_view.rs:441
@@ -6384,8 +6336,8 @@ msgid "Find and Select"
 msgstr ""
 
 #: apps/document-viewer/src/shortcuts.rs:20 apps/terminal/src/shortcuts.rs:37
-#: apps/terminal/src/shortcuts.rs:39 apps/terminal/src/window.rs:315
-#: apps/terminal/src/window.rs:427 apps/terminal/src/window.rs:430
+#: apps/terminal/src/shortcuts.rs:39 apps/terminal/src/window.rs:320
+#: apps/terminal/src/window.rs:432 apps/terminal/src/window.rs:435
 #: apps/text-editor/src/doc.rs:165 apps/text-editor/src/doc.rs:169
 #: apps/text-editor/src/shortcuts.rs:46 apps/web/src/shortcuts.rs:48
 msgid "Find"
@@ -6393,13 +6345,13 @@ msgstr ""
 
 #: apps/document-viewer/src/shortcuts.rs:21
 #: apps/text-editor/src/shortcuts.rs:48 apps/web/src/shortcuts.rs:49
-#: apps/web/src/window.rs:552
+#: apps/web/src/window.rs:557
 msgid "Next Match"
 msgstr ""
 
 #: apps/document-viewer/src/shortcuts.rs:22
 #: apps/text-editor/src/shortcuts.rs:49 apps/web/src/shortcuts.rs:50
-#: apps/web/src/window.rs:551
+#: apps/web/src/window.rs:556
 msgid "Previous Match"
 msgstr ""
 
@@ -6426,16 +6378,16 @@ msgid "Go to Page"
 msgstr ""
 
 #: apps/document-viewer/src/shortcuts.rs:34 apps/files/src/ui/shortcuts.rs:23
-#: apps/files/src/ui/window.rs:190 apps/files/src/ui/window.rs:193
-#: apps/files/src/ui/window.rs:380 apps/help/src/shortcuts.rs:30
+#: apps/files/src/ui/window.rs:191 apps/files/src/ui/window.rs:194
+#: apps/files/src/ui/window.rs:381 apps/help/src/shortcuts.rs:30
 #: apps/help/src/ui.rs:316 apps/help/src/ui.rs:319 apps/web/src/shortcuts.rs:38
-#: apps/web/src/window.rs:338
+#: apps/web/src/window.rs:339
 msgid "Forward"
 msgstr ""
 
 #: apps/document-viewer/src/shortcuts.rs:38 apps/files/src/ui/shortcuts.rs:39
 #: apps/image-viewer/src/shortcuts.rs:29 apps/terminal/src/shortcuts.rs:48
-#: apps/text-editor/src/shortcuts.rs:56 apps/video-player/src/ui.rs:165
+#: apps/text-editor/src/shortcuts.rs:56 apps/video-player/src/ui.rs:166
 #: apps/web/src/shortcuts.rs:59
 msgid "View"
 msgstr ""
@@ -6450,7 +6402,7 @@ msgstr ""
 
 #: apps/document-viewer/src/shortcuts.rs:50
 #: apps/image-viewer/src/shortcuts.rs:42 apps/terminal/src/shortcuts.rs:23
-#: apps/video-player/src/ui.rs:167 apps/web/src/shortcuts.rs:70
+#: apps/video-player/src/ui.rs:168 apps/web/src/shortcuts.rs:70
 msgid "Fullscreen"
 msgstr ""
 
@@ -6463,8 +6415,8 @@ msgid "View PDF documents"
 msgstr ""
 
 #: apps/document-viewer/src/ui.rs:249 apps/document-viewer/src/ui.rs:252
-#: apps/image-viewer/src/ui.rs:279 apps/video-player/src/ui.rs:313
-#: apps/video-player/src/ui.rs:316
+#: apps/image-viewer/src/ui.rs:279 apps/video-player/src/ui.rs:314
+#: apps/video-player/src/ui.rs:317
 msgid "Open…"
 msgstr ""
 
@@ -6484,8 +6436,8 @@ msgstr ""
 msgid "Current Page"
 msgstr ""
 
-#: apps/document-viewer/src/ui.rs:283 apps/files/src/ui/window.rs:223
-#: apps/text-editor/src/window.rs:47 apps/web/src/window.rs:233
+#: apps/document-viewer/src/ui.rs:283 apps/files/src/ui/window.rs:224
+#: apps/text-editor/src/window.rs:47 apps/web/src/window.rs:234
 msgid "New _Window"
 msgstr ""
 
@@ -6506,7 +6458,7 @@ msgid "_Presentation"
 msgstr ""
 
 #: apps/document-viewer/src/ui.rs:294 apps/image-viewer/src/ui.rs:306
-#: apps/web/src/window.rs:208 apps/web/src/window.rs:249
+#: apps/web/src/window.rs:209 apps/web/src/window.rs:250
 msgid "_Fullscreen"
 msgstr ""
 
@@ -6588,8 +6540,8 @@ msgstr ""
 msgid "Caret navigation off"
 msgstr ""
 
-#: apps/document-viewer/src/ui.rs:922 apps/files/src/ui/window.rs:1589
-#: apps/files/src/ui/window.rs:1598 apps/terminal/src/window.rs:724
+#: apps/document-viewer/src/ui.rs:922 apps/files/src/ui/window.rs:1590
+#: apps/files/src/ui/window.rs:1599 apps/terminal/src/window.rs:729
 msgid "Select _All"
 msgstr ""
 
@@ -6603,7 +6555,7 @@ msgstr ""
 msgid "of {n}"
 msgstr ""
 
-#: apps/document-viewer/src/ui.rs:1308 apps/maps/src/ui.rs:1218
+#: apps/document-viewer/src/ui.rs:1308 apps/maps/src/ui.rs:1219
 #: apps/weather/src/ui.rs:903
 msgid "Searching…"
 msgstr ""
@@ -6628,14 +6580,14 @@ msgstr ""
 msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr ""
 
-#: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1251
-#: apps/maps/src/ui.rs:1254 apps/settings/src/ui/mod.rs:425
+#: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1252
+#: apps/maps/src/ui.rs:1255 apps/settings/src/ui/mod.rs:425
 #: apps/settings/src/ui/picker.rs:33
 msgid "No results found"
 msgstr ""
 
 #: apps/document-viewer/src/ui.rs:1645 apps/settings/src/ui/picker.rs:34
-#: apps/text-editor/src/doc.rs:865 apps/web/src/window.rs:2380
+#: apps/text-editor/src/doc.rs:865 apps/web/src/window.rs:2385
 msgid "{n} result"
 msgid_plural "{n} results"
 msgstr[0] ""
@@ -6783,7 +6735,7 @@ msgid "Trash emptied"
 msgstr ""
 
 #: apps/files/src/ops.rs:119 apps/files/src/pathbar.rs:108
-#: apps/files/src/ui/sidebar.rs:322 apps/files/src/ui/window.rs:339
+#: apps/files/src/ui/sidebar.rs:323 apps/files/src/ui/window.rs:340
 msgid "Trash"
 msgstr ""
 
@@ -6828,7 +6780,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr ""
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/web/src/window.rs:2335
+#: apps/web/src/window.rs:2340
 msgid "Cancelled"
 msgstr ""
 
@@ -6854,11 +6806,11 @@ msgid_plural "{n} items could not be found in the Trash"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/files/src/pathbar.rs:109 apps/files/src/ui/sidebar.rs:311
+#: apps/files/src/pathbar.rs:109 apps/files/src/ui/sidebar.rs:312
 msgid "Recent"
 msgstr ""
 
-#: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:385
+#: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:386
 #: apps/files/src/ui/tab.rs:1256 apps/settings/src/bluez.rs:235
 #: apps/settings/src/panels.rs:60 apps/system-monitor/src/res_view.rs:385
 msgid "Network"
@@ -6868,8 +6820,8 @@ msgstr ""
 msgid "Starred"
 msgstr ""
 
-#: apps/files/src/pathbar.rs:113 apps/files/src/ui/sidebar.rs:391
-#: apps/files/src/ui/window.rs:131
+#: apps/files/src/pathbar.rs:113 apps/files/src/ui/sidebar.rs:392
+#: apps/files/src/ui/window.rs:132
 msgid "Other Locations"
 msgstr ""
 
@@ -7127,8 +7079,8 @@ msgstr ""
 msgid "File Operations — {} % done"
 msgstr ""
 
-#: apps/files/src/ui/jobs.rs:100 apps/files/src/ui/window.rs:303
-#: apps/files/src/ui/window.rs:306
+#: apps/files/src/ui/jobs.rs:100 apps/files/src/ui/window.rs:304
+#: apps/files/src/ui/window.rs:307
 msgid "File Operations"
 msgstr ""
 
@@ -7164,120 +7116,123 @@ msgstr ""
 msgid "Access and organize files"
 msgstr ""
 
-#: apps/files/src/ui/mod.rs:359 apps/files/src/ui/window.rs:155
-#: apps/files/src/ui/window.rs:455
+#: apps/files/src/ui/mod.rs:359 apps/files/src/ui/window.rs:156
+#: apps/files/src/ui/window.rs:456
 msgid "Files"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:58
+#: apps/files/src/ui/properties.rs:59
 msgid "{items}, totalling {bytes}{suffix}"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:87
+#: apps/files/src/ui/properties.rs:88
 msgid "Could not read properties: {}"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:128 apps/files/src/ui/properties.rs:231
+#: apps/files/src/ui/properties.rs:129 apps/files/src/ui/properties.rs:232
 #: apps/settings/src/ui/apps.rs:518
 msgid "Calculating…"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:145 apps/files/src/ui/properties.rs:148
+#: apps/files/src/ui/properties.rs:146 apps/files/src/ui/properties.rs:149
 msgid "Open Parent Folder"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:170
+#: apps/files/src/ui/properties.rs:171
 msgid "Link Target"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:174
+#: apps/files/src/ui/properties.rs:175
 msgid "Original Location"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:178
+#: apps/files/src/ui/properties.rs:179
 msgid "Accessed"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:190 apps/files/src/ui/properties.rs:283
+#: apps/files/src/ui/properties.rs:191 apps/files/src/ui/properties.rs:284
 msgid "Owner"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:208
+#: apps/files/src/ui/properties.rs:209
 msgid "{free} of {total}"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:226
+#: apps/files/src/ui/properties.rs:227
 msgid "{n} item selected"
 msgid_plural "{n} items selected"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/files/src/ui/properties.rs:271 apps/settings/src/ui/apps.rs:404
-#: apps/web/src/window.rs:1928
+#: apps/files/src/ui/properties.rs:272 apps/settings/src/ui/apps.rs:404
+#: apps/web/src/window.rs:1933
 msgid "Permissions"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:284
+#: apps/files/src/ui/properties.rs:285
 msgid "Group"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:285
+#: apps/files/src/ui/properties.rs:286
 msgid "Others"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:291
+#: apps/files/src/ui/properties.rs:292
+msgctxt "file permission"
 msgid "Read"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:292
+#: apps/files/src/ui/properties.rs:293
+msgctxt "file permission"
 msgid "Write"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:293
+#: apps/files/src/ui/properties.rs:294
+msgctxt "file permission"
 msgid "Execute"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:298
+#: apps/files/src/ui/properties.rs:299
 msgid "Owner can read"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:299
+#: apps/files/src/ui/properties.rs:300
 msgid "Owner can write"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:300
+#: apps/files/src/ui/properties.rs:301
 msgid "Owner can execute"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:301
+#: apps/files/src/ui/properties.rs:302
 msgid "Group can read"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:302
+#: apps/files/src/ui/properties.rs:303
 msgid "Group can write"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:303
+#: apps/files/src/ui/properties.rs:304
 msgid "Group can execute"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:304
+#: apps/files/src/ui/properties.rs:305
 msgid "Others can read"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:305
+#: apps/files/src/ui/properties.rs:306
 msgid "Others can write"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:306
+#: apps/files/src/ui/properties.rs:307
 msgid "Others can execute"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:342
+#: apps/files/src/ui/properties.rs:343
 msgid "Could not change permissions: {}"
 msgstr ""
 
-#: apps/files/src/ui/properties.rs:355
+#: apps/files/src/ui/properties.rs:356
 msgid "You are not the owner, so you cannot change these permissions."
 msgstr ""
 
@@ -7286,7 +7241,7 @@ msgid "Windows and Tabs"
 msgstr ""
 
 #: apps/files/src/ui/shortcuts.rs:14 apps/terminal/src/shortcuts.rs:13
-#: apps/terminal/src/window.rs:265 apps/terminal/src/window.rs:268
+#: apps/terminal/src/window.rs:270 apps/terminal/src/window.rs:273
 #: apps/text-editor/src/shortcuts.rs:13 apps/text-editor/src/window.rs:141
 #: apps/web/src/overview.rs:91 apps/web/src/shortcuts.rs:10
 #: apps/web/src/tab.rs:352
@@ -7307,7 +7262,7 @@ msgid "Hide the Location Entry"
 msgstr ""
 
 #: apps/files/src/ui/shortcuts.rs:29 apps/web/src/shortcuts.rs:39
-#: apps/web/src/window.rs:339 apps/web/src/window.rs:1492
+#: apps/web/src/window.rs:340 apps/web/src/window.rs:1497
 msgid "Reload"
 msgstr ""
 
@@ -7323,11 +7278,11 @@ msgstr ""
 msgid "Extra mouse buttons"
 msgstr ""
 
-#: apps/files/src/ui/shortcuts.rs:41 apps/files/src/ui/window.rs:783
+#: apps/files/src/ui/shortcuts.rs:41 apps/files/src/ui/window.rs:784
 msgid "Grid View"
 msgstr ""
 
-#: apps/files/src/ui/shortcuts.rs:42 apps/files/src/ui/window.rs:785
+#: apps/files/src/ui/shortcuts.rs:42 apps/files/src/ui/window.rs:786
 msgid "List View"
 msgstr ""
 
@@ -7343,7 +7298,7 @@ msgstr ""
 msgid "Open in New Tab"
 msgstr ""
 
-#: apps/files/src/ui/shortcuts.rs:58 apps/files/src/ui/window.rs:1486
+#: apps/files/src/ui/shortcuts.rs:58 apps/files/src/ui/window.rs:1487
 msgid "New Folder"
 msgstr ""
 
@@ -7371,76 +7326,72 @@ msgstr ""
 msgid "Paste"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:152
-msgid "Menu"
-msgstr ""
-
-#: apps/files/src/ui/sidebar.rs:305 apps/files/src/ui/window.rs:135
-#: apps/files/src/ui/window.rs:812 apps/web/src/window.rs:340
-#: crates/helix-eds/src/vcard.rs:695 crates/helix-eds/src/vcard.rs:719
+#: apps/files/src/ui/sidebar.rs:306 apps/files/src/ui/window.rs:136
+#: apps/files/src/ui/window.rs:813
+msgctxt "home folder"
 msgid "Home"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:424
+#: apps/files/src/ui/sidebar.rs:425
 msgid "Eject {name}"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:426
+#: apps/files/src/ui/sidebar.rs:427
 msgid "Unmount {name}"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:519 apps/files/src/ui/window.rs:1551
+#: apps/files/src/ui/sidebar.rs:520 apps/files/src/ui/window.rs:1552
 msgid "Open in New _Tab"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:520 apps/files/src/ui/window.rs:1552
+#: apps/files/src/ui/sidebar.rs:521 apps/files/src/ui/window.rs:1553
 msgid "Open in New _Window"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:525 apps/files/src/ui/window.rs:1568
+#: apps/files/src/ui/sidebar.rs:526 apps/files/src/ui/window.rs:1569
 msgid "Rena_me…"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:526
+#: apps/files/src/ui/sidebar.rs:527
 msgid "_Remove from Bookmarks"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:529
+#: apps/files/src/ui/sidebar.rs:530
 msgid "_Eject"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:532
+#: apps/files/src/ui/sidebar.rs:533
 msgid "_Unmount"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:535 apps/files/src/ui/window.rs:1588
+#: apps/files/src/ui/sidebar.rs:536 apps/files/src/ui/window.rs:1589
 msgid "_Empty Trash…"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:540 apps/files/src/ui/window.rs:1544
-#: apps/files/src/ui/window.rs:1579 apps/files/src/ui/window.rs:1603
+#: apps/files/src/ui/sidebar.rs:541 apps/files/src/ui/window.rs:1545
+#: apps/files/src/ui/window.rs:1580 apps/files/src/ui/window.rs:1604
 #: apps/system-monitor/src/proc_view.rs:156
 msgid "_Properties"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:595 apps/files/src/ui/window.rs:1522
+#: apps/files/src/ui/sidebar.rs:596 apps/files/src/ui/window.rs:1523
 msgid "Could not save bookmarks: {e}"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:610
+#: apps/files/src/ui/sidebar.rs:611
 msgid "Bookmark _Name"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:621
+#: apps/files/src/ui/sidebar.rs:622
 msgid "Rename Bookmark"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:626 apps/files/src/ui/window.rs:1449
+#: apps/files/src/ui/sidebar.rs:627 apps/files/src/ui/window.rs:1450
 #: apps/music/src/pages.rs:1525
 msgid "_Rename"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:637
+#: apps/files/src/ui/sidebar.rs:638
 msgid "Could not save bookmarks: {err}"
 msgstr ""
 
@@ -7510,230 +7461,230 @@ msgstr ""
 msgid "Server Address"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:208
+#: apps/files/src/ui/window.rs:209
 msgid "Enter a location"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:224 apps/terminal/src/window.rs:728
+#: apps/files/src/ui/window.rs:225 apps/terminal/src/window.rs:733
 #: apps/text-editor/src/window.rs:46
 msgid "New _Tab"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:232
+#: apps/files/src/ui/window.rs:233
 msgid "_About Files"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:250
+#: apps/files/src/ui/window.rs:251
 msgid "_Reversed Order"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:251 apps/logs/src/ui.rs:294
+#: apps/files/src/ui/window.rs:252 apps/logs/src/ui.rs:294
 msgid "Sort"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:253 apps/image-viewer/src/ui.rs:296
+#: apps/files/src/ui/window.rs:254 apps/image-viewer/src/ui.rs:296
 msgid "Zoom _In"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:254
+#: apps/files/src/ui/window.rs:255
 msgid "Zoom _Out"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:255
+#: apps/files/src/ui/window.rs:256
 msgid "_Reset Size"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:258 apps/files/src/ui/window.rs:1602
+#: apps/files/src/ui/window.rs:259 apps/files/src/ui/window.rs:1603
 msgid "Show _Hidden Files"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:263 apps/files/src/ui/window.rs:265
-#: apps/files/src/ui/window.rs:387
+#: apps/files/src/ui/window.rs:264 apps/files/src/ui/window.rs:266
+#: apps/files/src/ui/window.rs:388
 msgid "View Options"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:311
+#: apps/files/src/ui/window.rs:312
 msgid "Search current folder"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:314
+#: apps/files/src/ui/window.rs:315
 msgid "Search Current Folder"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:340
+#: apps/files/src/ui/window.rs:341
 msgid "_Empty…"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:630
+#: apps/files/src/ui/window.rs:631
 msgid "Search: {}"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:719
+#: apps/files/src/ui/window.rs:720
 msgid "{base} — Searching…"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:721
+#: apps/files/src/ui/window.rs:722
 msgid "{base} — Loading…"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:730
+#: apps/files/src/ui/window.rs:731
 msgid "“{}” selected"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:732
+#: apps/files/src/ui/window.rs:733
 msgid "“{}” selected ({})"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:747
+#: apps/files/src/ui/window.rs:748
 msgid "{n} folder selected"
 msgid_plural "{n} folders selected"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/files/src/ui/window.rs:749
+#: apps/files/src/ui/window.rs:750
 msgid "{n} item selected ({bytes})"
 msgid_plural "{n} items selected ({bytes})"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/files/src/ui/window.rs:1061
+#: apps/files/src/ui/window.rs:1062
 msgid "Could not open file: {}"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1089
+#: apps/files/src/ui/window.rs:1090
 msgid "Unable to mount “{}”: {}"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1110
+#: apps/files/src/ui/window.rs:1111
 msgid "Unable to eject “{name}”: {error}"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1225
+#: apps/files/src/ui/window.rs:1226
 msgid "Nothing to paste"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1282
+#: apps/files/src/ui/window.rs:1283
 msgid "“{}” moved to Trash"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1287
+#: apps/files/src/ui/window.rs:1288
 msgid "{n} item moved to Trash"
 msgid_plural "{n} items moved to Trash"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/files/src/ui/window.rs:1365
+#: apps/files/src/ui/window.rs:1366
 msgid "Permanently Delete “{}”?"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1370
+#: apps/files/src/ui/window.rs:1371
 msgid "Permanently Delete {n} Item?"
 msgid_plural "Permanently Delete {n} Items?"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/files/src/ui/window.rs:1379
+#: apps/files/src/ui/window.rs:1380
 msgid "If you delete an item, it will be permanently lost."
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1393
+#: apps/files/src/ui/window.rs:1394
 msgid "Empty Trash?"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1394
+#: apps/files/src/ui/window.rs:1395
 msgid "All items in the Trash will be permanently deleted."
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1395
+#: apps/files/src/ui/window.rs:1396
 msgid "_Empty Trash"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1406
+#: apps/files/src/ui/window.rs:1407
 msgid "Nothing to undo"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1421
+#: apps/files/src/ui/window.rs:1422
 msgid "Could not undo rename: {}"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1445
+#: apps/files/src/ui/window.rs:1446
 msgid "Rename Folder"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1447
+#: apps/files/src/ui/window.rs:1448
 msgid "Rename File"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1470
+#: apps/files/src/ui/window.rs:1471
 msgid "Could not rename: {}"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1487 apps/music/src/pages.rs:1527
+#: apps/files/src/ui/window.rs:1488 apps/music/src/pages.rs:1527
 msgid "_Create"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1498
+#: apps/files/src/ui/window.rs:1499
 msgid "Could not create folder: {}"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1516
+#: apps/files/src/ui/window.rs:1517
 msgid "Location is already bookmarked"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1521
+#: apps/files/src/ui/window.rs:1522
 msgid "“{}” added to bookmarks"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1540
+#: apps/files/src/ui/window.rs:1541
 msgid "_Restore From Trash"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1541
+#: apps/files/src/ui/window.rs:1542
 msgid "_Delete From Trash…"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1554 apps/image-viewer/src/ui.rs:287
+#: apps/files/src/ui/window.rs:1555 apps/image-viewer/src/ui.rs:287
 msgid "Open _With…"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1557
+#: apps/files/src/ui/window.rs:1558
 msgid "Open Item _Location"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1561
+#: apps/files/src/ui/window.rs:1562
 msgid "Cu_t"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1564
+#: apps/files/src/ui/window.rs:1565
 msgid "Paste Into Folder"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1570
+#: apps/files/src/ui/window.rs:1571
 msgid "Create _Link"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1572
+#: apps/files/src/ui/window.rs:1573
 msgid "Mo_ve to Trash"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1574
+#: apps/files/src/ui/window.rs:1575
 msgid "_Delete Permanently…"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1578 apps/maps/src/ui.rs:437
-#: apps/maps/src/ui.rs:2262
+#: apps/files/src/ui/window.rs:1579 apps/maps/src/ui.rs:438
+#: apps/maps/src/ui.rs:2263
 msgid "Copy Location"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1594
+#: apps/files/src/ui/window.rs:1595
 msgid "New _Folder…"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1597 apps/terminal/src/window.rs:723
+#: apps/files/src/ui/window.rs:1598 apps/terminal/src/window.rs:728
 msgid "_Paste"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1601
+#: apps/files/src/ui/window.rs:1602
 msgid "Add to _Bookmarks"
 msgstr ""
 
@@ -7826,7 +7777,7 @@ msgstr ""
 #: apps/fonts/src/fontinfo.rs:257 apps/fonts/src/fontinfo.rs:280
 #: apps/fonts/src/ui.rs:656 apps/fonts/src/ui.rs:657
 #: apps/settings/src/ui/appearance.rs:106 apps/terminal/src/prefs_dialog.rs:27
-#: apps/terminal/src/window.rs:177 apps/text-editor/src/prefs.rs:60
+#: apps/terminal/src/window.rs:182 apps/text-editor/src/prefs.rs:61
 msgid "Style"
 msgstr ""
 
@@ -7875,7 +7826,7 @@ msgstr ""
 msgid "File"
 msgstr ""
 
-#: apps/fonts/src/fontinfo.rs:295 apps/system-monitor/src/format.rs:36
+#: apps/fonts/src/fontinfo.rs:295 apps/system-monitor/src/format.rs:37
 msgid "{bytes} bytes"
 msgstr ""
 
@@ -8026,7 +7977,7 @@ msgid_plural "{n} characters"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/fonts/src/ui.rs:1148 apps/terminal/src/window.rs:443
+#: apps/fonts/src/ui.rs:1148 apps/terminal/src/window.rs:448
 msgid "Aa"
 msgstr ""
 
@@ -8256,7 +8207,7 @@ msgid "help page rendering failed"
 msgstr ""
 
 #: apps/help/src/ui.rs:274 apps/text-editor/src/doc.rs:150
-#: apps/web/src/tab.rs:199 apps/web/src/window.rs:2398
+#: apps/web/src/tab.rs:199 apps/web/src/window.rs:2403
 msgid "_Reload"
 msgstr ""
 
@@ -8371,8 +8322,8 @@ msgstr ""
 msgid "Pan a Zoomed Image"
 msgstr ""
 
-#: apps/image-viewer/src/shortcuts.rs:43 apps/video-player/src/ui.rs:168
-#: apps/video-player/src/ui.rs:844
+#: apps/image-viewer/src/shortcuts.rs:43 apps/video-player/src/ui.rs:169
+#: apps/video-player/src/ui.rs:845
 msgid "Leave Fullscreen"
 msgstr ""
 
@@ -8400,7 +8351,7 @@ msgstr ""
 msgid "Open Images (Ctrl+O)"
 msgstr ""
 
-#: apps/image-viewer/src/ui.rs:288 apps/terminal/src/window.rs:281
+#: apps/image-viewer/src/ui.rs:288 apps/terminal/src/window.rs:286
 msgid "_New Window"
 msgstr ""
 
@@ -8509,7 +8460,7 @@ msgid "Focal Length"
 msgstr ""
 
 #: apps/image-viewer/src/ui.rs:569 apps/image-viewer/src/ui.rs:571
-#: apps/settings/src/ui/apps.rs:222 apps/web/src/window.rs:2229
+#: apps/settings/src/ui/apps.rs:222 apps/web/src/window.rs:2234
 msgid "Open Folder"
 msgstr ""
 
@@ -8638,7 +8589,7 @@ msgstr ""
 msgid "All"
 msgstr ""
 
-#: apps/logs/src/category.rs:31 apps/terminal/src/window.rs:164
+#: apps/logs/src/category.rs:31
 msgid "System"
 msgstr ""
 
@@ -8911,7 +8862,7 @@ msgstr ""
 msgid "Opening hours"
 msgstr ""
 
-#: apps/maps/src/nominatim.rs:157 apps/maps/src/ui.rs:287
+#: apps/maps/src/nominatim.rs:157 apps/maps/src/ui.rs:288
 msgid "Wikipedia"
 msgstr ""
 
@@ -9109,6 +9060,11 @@ msgstr ""
 msgid "Start on {name}"
 msgstr ""
 
+#: apps/maps/src/osrm.rs:244
+msgctxt "route instruction"
+msgid "Start"
+msgstr ""
+
 #: apps/maps/src/osrm.rs:247
 msgid "Arrive at destination"
 msgstr ""
@@ -9206,8 +9162,8 @@ msgstr ""
 msgid "The tile URL must contain {z}, {x} and {y}"
 msgstr ""
 
-#: apps/maps/src/shortcuts.rs:20 apps/maps/src/ui.rs:387
-#: apps/maps/src/ui.rs:697
+#: apps/maps/src/shortcuts.rs:20 apps/maps/src/ui.rs:388
+#: apps/maps/src/ui.rs:698
 msgid "Map"
 msgstr ""
 
@@ -9247,8 +9203,8 @@ msgstr ""
 msgid "Move to the Results"
 msgstr ""
 
-#: apps/maps/src/shortcuts.rs:50 apps/maps/src/ui.rs:2252
-#: apps/maps/src/ui.rs:2326
+#: apps/maps/src/shortcuts.rs:50 apps/maps/src/ui.rs:2253
+#: apps/maps/src/ui.rs:2327
 msgid "Directions"
 msgstr ""
 
@@ -9260,339 +9216,339 @@ msgstr ""
 msgid "The tile server did not return an image"
 msgstr ""
 
-#: apps/maps/src/ui.rs:23
+#: apps/maps/src/ui.rs:24
 msgid "Maps"
 msgstr ""
 
-#: apps/maps/src/ui.rs:24
+#: apps/maps/src/ui.rs:25
 msgid "Find places around the world"
 msgstr ""
 
-#: apps/maps/src/ui.rs:27
+#: apps/maps/src/ui.rs:28
 msgid "Current Location (Ctrl+L)"
 msgstr ""
 
-#: apps/maps/src/ui.rs:248
+#: apps/maps/src/ui.rs:249
 msgid "Open Wikipedia Article"
 msgstr ""
 
-#: apps/maps/src/ui.rs:249
+#: apps/maps/src/ui.rs:250
 msgid "Call {}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:250
+#: apps/maps/src/ui.rs:251
 msgid "Open {other}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:431
+#: apps/maps/src/ui.rs:432
 msgid "What's Here?"
 msgstr ""
 
-#: apps/maps/src/ui.rs:433
+#: apps/maps/src/ui.rs:434
 msgid "Directions From Here"
 msgstr ""
 
-#: apps/maps/src/ui.rs:436
+#: apps/maps/src/ui.rs:437
 msgid "Directions To Here"
 msgstr ""
 
-#: apps/maps/src/ui.rs:450
+#: apps/maps/src/ui.rs:451
 msgid "Search for places or coordinates"
 msgstr ""
 
-#: apps/maps/src/ui.rs:453
+#: apps/maps/src/ui.rs:454
 msgid "Search for Places"
 msgstr ""
 
-#: apps/maps/src/ui.rs:483
+#: apps/maps/src/ui.rs:484
 msgid "_About Maps"
 msgstr ""
 
-#: apps/maps/src/ui.rs:508 apps/maps/src/ui.rs:510
+#: apps/maps/src/ui.rs:509 apps/maps/src/ui.rs:511
 msgid "Favorites"
 msgstr ""
 
-#: apps/maps/src/ui.rs:512
+#: apps/maps/src/ui.rs:513
 msgid "Directions (Ctrl+D)"
 msgstr ""
 
-#: apps/maps/src/ui.rs:644 apps/maps/src/ui.rs:1365
+#: apps/maps/src/ui.rs:645 apps/maps/src/ui.rs:1366
 msgid "Dropped Pin"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1004 apps/maps/src/ui.rs:1022
+#: apps/maps/src/ui.rs:1005 apps/maps/src/ui.rs:1023
 msgid "Location copied"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1031
+#: apps/maps/src/ui.rs:1032
 msgid "Location link copied"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1056 apps/maps/src/ui.rs:1469
+#: apps/maps/src/ui.rs:1057 apps/maps/src/ui.rs:1470
 msgid "My Location"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1166
+#: apps/maps/src/ui.rs:1167
 msgid "Could not open link: {e}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1182
+#: apps/maps/src/ui.rs:1183
 msgid "Selected place: {name}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1259
+#: apps/maps/src/ui.rs:1260
 msgid "{n} place found"
 msgid_plural "{n} places found"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/maps/src/ui.rs:1314
+#: apps/maps/src/ui.rs:1315
 msgid "Selected place: {}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1356 apps/music/src/ui.rs:1645
+#: apps/maps/src/ui.rs:1357 apps/music/src/ui.rs:1645
 msgid "Remove from Favorites"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1358 apps/maps/src/ui.rs:2257
+#: apps/maps/src/ui.rs:1359 apps/maps/src/ui.rs:2258
 #: apps/music/src/pages.rs:388 apps/music/src/ui.rs:1647
 #: apps/music/src/ui.rs:1792
 msgid "Add to Favorites"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1380
+#: apps/maps/src/ui.rs:1381
 msgid "Added to favorites"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1382
+#: apps/maps/src/ui.rs:1383
 msgid "Removed from favorites"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1394
+#: apps/maps/src/ui.rs:1395
 msgid ""
 "No favorites yet.\n"
 "Star a place to add it here."
 msgstr ""
 
-#: apps/maps/src/ui.rs:1435 apps/maps/src/ui.rs:1441
+#: apps/maps/src/ui.rs:1436 apps/maps/src/ui.rs:1442
 msgid "Location unavailable"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1449
+#: apps/maps/src/ui.rs:1450
 msgid "Your location"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1452
+#: apps/maps/src/ui.rs:1453
 msgid "Your location (accuracy {})"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1465
+#: apps/maps/src/ui.rs:1466
 msgid "Location found"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1488
+#: apps/maps/src/ui.rs:1489
 msgid "Finding your location"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1490
+#: apps/maps/src/ui.rs:1491
 msgid "Finding Your Location…"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1493
+#: apps/maps/src/ui.rs:1494
 msgid "Finding your location…"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1580
+#: apps/maps/src/ui.rs:1581
 msgid ""
 "The public demo routing server may only provide car routes. Configure a "
 "routing server in Preferences for other modes."
 msgstr ""
 
-#: apps/maps/src/ui.rs:1596
+#: apps/maps/src/ui.rs:1597
 msgid "Enter a start and a destination"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1607
+#: apps/maps/src/ui.rs:1608
 msgid "Finding route…"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1648
+#: apps/maps/src/ui.rs:1649
 msgid "Start: {}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1652
+#: apps/maps/src/ui.rs:1653
 msgid "Route start: {}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1666
+#: apps/maps/src/ui.rs:1667
 msgid "Destination: {}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1670
+#: apps/maps/src/ui.rs:1671
 msgid "Route destination: {}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1689
+#: apps/maps/src/ui.rs:1690
 msgid "Route found: {}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1723
+#: apps/maps/src/ui.rs:1724
 msgid "Search failed: {e}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1778
+#: apps/maps/src/ui.rs:1779
 msgid "No route: {e}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1800
+#: apps/maps/src/ui.rs:1801
 msgid "Map Tiles"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1802
+#: apps/maps/src/ui.rs:1803
 msgid ""
 "The default OpenStreetMap tile server is run by volunteers and has a usage "
 "policy. Production use needs a commercial or self-hosted provider."
 msgstr ""
 
-#: apps/maps/src/ui.rs:1807
+#: apps/maps/src/ui.rs:1808
 msgid "Tile URL ({z}, {x}, {y}, optional {s})"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1812
+#: apps/maps/src/ui.rs:1813
 msgid "Attribution"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1817
+#: apps/maps/src/ui.rs:1818
 msgid "Attribution link"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1822
+#: apps/maps/src/ui.rs:1823
 msgid "Maximum zoom level"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1830
+#: apps/maps/src/ui.rs:1831
 msgid "Services"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1831
+#: apps/maps/src/ui.rs:1832
 msgid ""
 "Search uses a Nominatim-compatible server, directions an OSRM-compatible "
 "server. The public defaults allow at most one request per second."
 msgstr ""
 
-#: apps/maps/src/ui.rs:1837
+#: apps/maps/src/ui.rs:1838
 msgid "Search server"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1842
+#: apps/maps/src/ui.rs:1843
 msgid "Routing server"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1847
+#: apps/maps/src/ui.rs:1848
 msgid "Maximum search results"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1857
+#: apps/maps/src/ui.rs:1858
 msgid "Units"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1858
+#: apps/maps/src/ui.rs:1859
 msgid "Imperial"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1858
+#: apps/maps/src/ui.rs:1859
 msgid "Metric"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1863
+#: apps/maps/src/ui.rs:1864
 msgid "Show scale"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1872
+#: apps/maps/src/ui.rs:1873
 msgid "Tile cache"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1873
+#: apps/maps/src/ui.rs:1874
 msgid "Downloaded map tiles are kept for 7 days"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1884
+#: apps/maps/src/ui.rs:1885
 msgid "Reset service settings to defaults"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1886
+#: apps/maps/src/ui.rs:1887
 msgid ""
 "Built-in defaults; administrators can set them in /etc/xdg/helix-maps/"
 "endpoints.toml"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1888
+#: apps/maps/src/ui.rs:1889
 msgid "System defaults from {}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1975
+#: apps/maps/src/ui.rs:1976
 msgid "The search server must be an http(s) URL"
 msgstr ""
 
-#: apps/maps/src/ui.rs:1984
+#: apps/maps/src/ui.rs:1985
 msgid "The routing server must be an http(s) URL"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2023
+#: apps/maps/src/ui.rs:2024
 msgid "Tile cache cleared"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2024
+#: apps/maps/src/ui.rs:2025
 msgid "Could not clear the cache: {e}"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2025
+#: apps/maps/src/ui.rs:2026
 msgid "Could not clear the cache"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2055
+#: apps/maps/src/ui.rs:2056
 msgid "Unnamed Place"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2227
+#: apps/maps/src/ui.rs:2228
 msgid "Looking up address"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2258 apps/music/src/pages.rs:420
+#: apps/maps/src/ui.rs:2259 apps/music/src/pages.rs:420
 msgid "Favorite"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2265
+#: apps/maps/src/ui.rs:2266
 msgid "Share Location Link"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2270
+#: apps/maps/src/ui.rs:2271
 msgid "Open in OpenStreetMap"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2364 apps/maps/src/ui.rs:2367
-#: apps/settings/src/ui/displays.rs:846
+#: apps/maps/src/ui.rs:2365 apps/maps/src/ui.rs:2368
+msgctxt "route"
 msgid "From"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2369 apps/maps/src/ui.rs:2372
-#: apps/settings/src/ui/displays.rs:847
+#: apps/maps/src/ui.rs:2370 apps/maps/src/ui.rs:2373
+msgctxt "route"
 msgid "To"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2373
+#: apps/maps/src/ui.rs:2374
 msgid "Start at My Location"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2377
+#: apps/maps/src/ui.rs:2378
 msgid "Swap Start and Destination"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2388
+#: apps/maps/src/ui.rs:2389
 msgid "Find Route"
 msgstr ""
 
-#: apps/maps/src/ui.rs:2393
+#: apps/maps/src/ui.rs:2394
 msgid "Finding route"
 msgstr ""
 
@@ -9628,7 +9584,6 @@ msgid "song"
 msgstr ""
 
 #: apps/music/src/gnome_import.rs:141 apps/music/src/playlist.rs:312
-#: apps/music/src/queue.rs:44
 msgid "Playlist"
 msgstr ""
 
@@ -9723,11 +9678,15 @@ msgstr ""
 msgid "Now Playing"
 msgstr ""
 
+#: apps/music/src/pages.rs:345
+msgid "Playing"
+msgstr ""
+
 #: apps/music/src/pages.rs:354
 msgid "Artist"
 msgstr ""
 
-#: apps/music/src/pages.rs:358 apps/music/src/player.rs:55
+#: apps/music/src/pages.rs:358
 msgid "Album"
 msgstr ""
 
@@ -9964,6 +9923,16 @@ msgid "{n} song"
 msgid_plural "{n} songs"
 msgstr[0] ""
 msgstr[1] ""
+
+#: apps/music/src/player.rs:55
+msgctxt "ReplayGain mode"
+msgid "Track"
+msgstr ""
+
+#: apps/music/src/player.rs:56
+msgctxt "ReplayGain mode"
+msgid "Album"
+msgstr ""
 
 #: apps/music/src/playlist.rs:451
 msgid "Favorite Songs"
@@ -10361,8 +10330,8 @@ msgstr ""
 msgid "settings"
 msgstr ""
 
-#: apps/settings/src/bluez.rs:66 apps/settings/src/ui/network.rs:180
-#: apps/settings/src/ui/network.rs:463 apps/settings/src/ui/wifi.rs:470
+#: apps/settings/src/bluez.rs:66 apps/settings/src/ui/network.rs:181
+#: apps/settings/src/ui/network.rs:464 apps/settings/src/ui/wifi.rs:470
 #: apps/settings/src/ui/wifi.rs:833
 msgid "Connected"
 msgstr ""
@@ -10419,9 +10388,9 @@ msgstr ""
 msgid "Modem"
 msgstr ""
 
-#: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:96
-#: apps/settings/src/ui/displays.rs:120 apps/settings/src/ui/displays.rs:121
-#: apps/settings/src/ui/displays.rs:380 apps/text-editor/src/prefs.rs:119
+#: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:97
+#: apps/settings/src/ui/displays.rs:121 apps/settings/src/ui/displays.rs:122
+#: apps/settings/src/ui/displays.rs:381
 msgid "Display"
 msgstr ""
 
@@ -10434,8 +10403,8 @@ msgid "Other Device"
 msgstr ""
 
 #: apps/settings/src/defaults.rs:15 apps/web/src/app.rs:126
-#: apps/web/src/app.rs:150 apps/web/src/app.rs:904 apps/web/src/window.rs:319
-#: apps/web/src/window.rs:1568
+#: apps/web/src/app.rs:150 apps/web/src/app.rs:904 apps/web/src/window.rs:320
+#: apps/web/src/window.rs:1573
 msgid "Web"
 msgstr ""
 
@@ -10540,7 +10509,7 @@ msgstr ""
 msgid "Full access: it can do anything you can"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:112 apps/system-monitor/src/format.rs:94
+#: apps/settings/src/extensions.rs:112 apps/system-monitor/src/format.rs:95
 msgid "Running"
 msgstr ""
 
@@ -10573,46 +10542,51 @@ msgid "Stopped working: {}"
 msgstr ""
 
 #: apps/settings/src/nm.rs:120
-msgid "Enhanced Open"
+msgctxt "Wi-Fi security"
+msgid "None"
 msgstr ""
 
 #: apps/settings/src/nm.rs:121
-msgid "WEP"
+msgid "Enhanced Open"
 msgstr ""
 
 #: apps/settings/src/nm.rs:122
-msgid "WPA/WPA2 Personal"
+msgid "WEP"
 msgstr ""
 
 #: apps/settings/src/nm.rs:123
-msgid "WPA3 Personal"
+msgid "WPA/WPA2 Personal"
 msgstr ""
 
 #: apps/settings/src/nm.rs:124
+msgid "WPA3 Personal"
+msgstr ""
+
+#: apps/settings/src/nm.rs:125
 msgid "WPA/WPA2 Enterprise"
 msgstr ""
 
-#: apps/settings/src/nm.rs:559
+#: apps/settings/src/nm.rs:560
 msgid "No signal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:560
+#: apps/settings/src/nm.rs:561
 msgid "Weak signal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:561
+#: apps/settings/src/nm.rs:562
 msgid "OK signal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:562
+#: apps/settings/src/nm.rs:563
 msgid "Good signal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:563
+#: apps/settings/src/nm.rs:564
 msgid "Excellent signal"
 msgstr ""
 
-#: apps/settings/src/nm.rs:721 apps/settings/src/ui/wifi.rs:123
+#: apps/settings/src/nm.rs:722 apps/settings/src/ui/wifi.rs:123
 msgid "Hotspot"
 msgstr ""
 
@@ -10676,7 +10650,7 @@ msgid "hot corner;workspace;screen edges;tiling;app switching;multi-monitor;"
 msgstr ""
 
 #: apps/settings/src/panels.rs:132 apps/terminal/src/prefs_dialog.rs:24
-#: apps/text-editor/src/prefs.rs:57
+#: apps/text-editor/src/prefs.rs:58
 msgid "Appearance"
 msgstr ""
 
@@ -11272,12 +11246,10 @@ msgid "Invert Colors"
 msgstr ""
 
 #: apps/settings/src/ui/access.rs:536 apps/settings/src/ui/access.rs:542
-#: apps/system-monitor/src/format.rs:113 apps/system-monitor/src/format.rs:123
 msgid "High"
 msgstr ""
 
 #: apps/settings/src/ui/access.rs:536 apps/settings/src/ui/access.rs:542
-#: apps/system-monitor/src/format.rs:115 apps/system-monitor/src/format.rs:125
 msgid "Low"
 msgstr ""
 
@@ -11298,7 +11270,7 @@ msgid "Cursor Size"
 msgstr ""
 
 #: apps/settings/src/ui/appearance.rs:108 apps/terminal/src/prefs_dialog.rs:31
-#: apps/terminal/src/window.rs:166 apps/text-editor/src/prefs.rs:64
+#: apps/terminal/src/window.rs:171 apps/text-editor/src/prefs.rs:65
 #: apps/web/src/dialogs.rs:128
 msgid "Dark"
 msgstr ""
@@ -11740,173 +11712,183 @@ msgstr ""
 msgid "Could not change the time zone: {e}"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:23
+#: apps/settings/src/ui/displays.rs:24
 msgid "Join Displays"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:24
+#: apps/settings/src/ui/displays.rs:25
 msgid "Mirror"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:25
+#: apps/settings/src/ui/displays.rs:26
 msgid "Single Display"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:30
+#: apps/settings/src/ui/displays.rs:31
 msgid "Landscape"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:31
+#: apps/settings/src/ui/displays.rs:32
 msgid "Portrait Right"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:32
+#: apps/settings/src/ui/displays.rs:33
 msgid "Portrait Left"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:33
+#: apps/settings/src/ui/displays.rs:34
 msgid "Landscape (Flipped)"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:87
+#: apps/settings/src/ui/displays.rs:88
 msgid "Loading Displays…"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:90
+#: apps/settings/src/ui/displays.rs:91
 msgid "Arrangement"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:91
+#: apps/settings/src/ui/displays.rs:92
 msgid "Display Mode"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:97
+#: apps/settings/src/ui/displays.rs:98
 msgid "Display to Use"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:106
+#: apps/settings/src/ui/displays.rs:107
 msgid "Display Arrangement"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:107
+#: apps/settings/src/ui/displays.rs:108
 msgid ""
 "Drag displays to match how they stand on your desk; with the keyboard, move "
 "the selected display with the arrow keys"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:115
+#: apps/settings/src/ui/displays.rs:116
 msgid "Primary Display"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:116
+#: apps/settings/src/ui/displays.rs:117
 msgid "Holds the top bar and new windows"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:122
+#: apps/settings/src/ui/displays.rs:123
 msgid "Display to Set Up"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:124
+#: apps/settings/src/ui/displays.rs:125
 msgid "Orientation"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:129
+#: apps/settings/src/ui/displays.rs:130
 msgid "Resolution"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:131
+#: apps/settings/src/ui/displays.rs:132
 msgid "Refresh Rate"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:133
+#: apps/settings/src/ui/displays.rs:134
 msgid "Scale"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:134
+#: apps/settings/src/ui/displays.rs:135
 msgid "Makes everything larger or smaller"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:138
+#: apps/settings/src/ui/displays.rs:139
 msgid "Adjust for TV"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:139
+#: apps/settings/src/ui/displays.rs:140
 msgid "Shrinks the picture for TVs that cut off its edges"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:155
+#: apps/settings/src/ui/displays.rs:156
 msgid "The display settings changed."
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:156 apps/web/src/dialogs.rs:413
+#: apps/settings/src/ui/displays.rs:157 apps/web/src/dialogs.rs:413
 msgid "_Reset"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:158 apps/settings/src/ui/netedit.rs:286
+#: apps/settings/src/ui/displays.rs:159 apps/settings/src/ui/netedit.rs:286
 msgid "_Apply"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:177
+#: apps/settings/src/ui/displays.rs:178
 msgid "Displays Are Not Available"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:178
+#: apps/settings/src/ui/displays.rs:179
 msgid "The display service is not running."
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:259
+#: apps/settings/src/ui/displays.rs:260
 msgid "Changing the displays is not allowed in this session."
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:294
+#: apps/settings/src/ui/displays.rs:295
 msgid "Could not change the displays: {e}"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:374
+#: apps/settings/src/ui/displays.rs:375
 msgid "Mirrored Displays"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:481
+#: apps/settings/src/ui/displays.rs:482
 msgid "These displays have no resolution in common to mirror"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:734
+#: apps/settings/src/ui/displays.rs:735
 msgid "{display} at {x}, {y}"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:765
+#: apps/settings/src/ui/displays.rs:766
 msgid "{time}, Hours"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:766
+#: apps/settings/src/ui/displays.rs:767
 msgid "{time}, Minutes"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:816 apps/settings/src/ui/displays.rs:825
+#: apps/settings/src/ui/displays.rs:817 apps/settings/src/ui/displays.rs:826
 msgid "Night Light"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:817
+#: apps/settings/src/ui/displays.rs:818
 msgid "Makes the screen warmer in the evening, which can help you sleep."
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:831
+#: apps/settings/src/ui/displays.rs:832
 msgid "Sunset to Sunrise"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:832
+#: apps/settings/src/ui/displays.rs:833
 msgid "Manual Schedule"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:858
+#: apps/settings/src/ui/displays.rs:851
+msgctxt "time range"
+msgid "From"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:857
+msgctxt "time range"
+msgid "To"
+msgstr ""
+
+#: apps/settings/src/ui/displays.rs:869
 msgid "Color Temperature"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:859
+#: apps/settings/src/ui/displays.rs:870
 msgid "Cooler"
 msgstr ""
 
-#: apps/settings/src/ui/displays.rs:859
+#: apps/settings/src/ui/displays.rs:870
 msgid "Warmer"
 msgstr ""
 
@@ -12259,7 +12241,7 @@ msgstr ""
 msgid "Otherwise apps from all workspaces are included"
 msgstr ""
 
-#: apps/settings/src/ui/netedit.rs:33 apps/settings/src/ui/network.rs:26
+#: apps/settings/src/ui/netedit.rs:33 apps/settings/src/ui/network.rs:27
 msgid "Manual"
 msgstr ""
 
@@ -12341,7 +12323,7 @@ msgstr ""
 msgid "Enter routes as destination/prefix and gateway, separated by commas"
 msgstr ""
 
-#: apps/settings/src/ui/netedit.rs:222 apps/settings/src/ui/network.rs:196
+#: apps/settings/src/ui/netedit.rs:222 apps/settings/src/ui/network.rs:197
 #: apps/weather/src/ui.rs:388
 msgid "Details"
 msgstr ""
@@ -12390,187 +12372,192 @@ msgstr ""
 msgid "Could not remove it: {e}"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:45
+#: apps/settings/src/ui/network.rs:46
 msgid "Loading Network…"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:129
+#: apps/settings/src/ui/network.rs:130
 msgid "Connections"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:130
+#: apps/settings/src/ui/network.rs:131
 msgid ""
 "NetworkManager is not running, so wired connections and VPNs cannot be shown."
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:178
+#: apps/settings/src/ui/network.rs:179
 msgid "Connected — {speed} Mb/s"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:183 apps/settings/src/ui/network.rs:464
+#: apps/settings/src/ui/network.rs:184 apps/settings/src/ui/network.rs:465
 #: apps/settings/src/ui/wifi.rs:472
 msgid "Connecting…"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:185
+#: apps/settings/src/ui/network.rs:186
 msgid "Cable unplugged"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:198 apps/settings/src/ui/wifi.rs:501
+#: apps/settings/src/ui/network.rs:199 apps/settings/src/ui/wifi.rs:501
 msgid "Details of {name}"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:204
+#: apps/settings/src/ui/network.rs:205
 msgid "Wired ({interface})"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:206
+#: apps/settings/src/ui/network.rs:207
 msgid "Wired"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:265
+#: apps/settings/src/ui/network.rs:266
 msgid "Could not change the wired connection"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:279
+#: apps/settings/src/ui/network.rs:280
 msgid "In use"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:281
+#: apps/settings/src/ui/network.rs:282
 msgid "Select to use this profile"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:305
+#: apps/settings/src/ui/network.rs:306
 msgid "Could not use {name}"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:315
+#: apps/settings/src/ui/network.rs:316
 msgid "Add Profile"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:316
+#: apps/settings/src/ui/network.rs:317
 msgid "Another set of settings for this connection"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:317
+#: apps/settings/src/ui/network.rs:318
 msgid "Add…"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:320
+#: apps/settings/src/ui/network.rs:321
 msgid "Add Profile for {name}"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:326
+#: apps/settings/src/ui/network.rs:327
 msgid "Wired Profile {n}"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:351
+#: apps/settings/src/ui/network.rs:352
 msgid "Could not add a profile: {e}"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:406 apps/settings/src/ui/wifi.rs:666
+#: apps/settings/src/ui/network.rs:407 apps/settings/src/ui/wifi.rs:666
 msgid "Link Speed"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:406 apps/settings/src/ui/wifi.rs:667
+#: apps/settings/src/ui/network.rs:407 apps/settings/src/ui/wifi.rs:667
 msgid "{n} Mb/s"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:411 apps/settings/src/ui/wifi.rs:734
+#: apps/settings/src/ui/network.rs:412 apps/settings/src/ui/wifi.rs:734
 msgid "Hardware Address"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:423
+#: apps/settings/src/ui/network.rs:424
 msgid "Remove Profile"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:434
+#: apps/settings/src/ui/network.rs:435
 msgid "VPN"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:439 apps/settings/src/ui/network.rs:441
+#: apps/settings/src/ui/network.rs:440 apps/settings/src/ui/network.rs:442
 msgid "Import VPN From File…"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:453
+#: apps/settings/src/ui/network.rs:454
 msgid ""
 "No VPNs are set up. Import a WireGuard or OpenVPN configuration file with "
 "the + button."
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:465
+#: apps/settings/src/ui/network.rs:466
 msgid "Disconnecting…"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:505
+#: apps/settings/src/ui/network.rs:506
 msgid "Could not change {name}"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:547
+#: apps/settings/src/ui/network.rs:548
 msgid "Remove VPN"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:580
+#: apps/settings/src/ui/network.rs:571
+msgctxt "VPN type"
+msgid "Other"
+msgstr ""
+
+#: apps/settings/src/ui/network.rs:581
 msgid "VPN Configuration Files"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:587
+#: apps/settings/src/ui/network.rs:588
 msgid "Import VPN"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:606
+#: apps/settings/src/ui/network.rs:607
 msgid "Could not import the VPN: {e}"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:630
+#: apps/settings/src/ui/network.rs:631
 msgid "nmcli is not installed"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:709
+#: apps/settings/src/ui/network.rs:710
 msgid "Network Proxy"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:710
+#: apps/settings/src/ui/network.rs:711
 msgid "Mode"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:711
+#: apps/settings/src/ui/network.rs:712
 msgid "Network Proxy Mode"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:713
+#: apps/settings/src/ui/network.rs:714
 msgid "Configuration URL"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:717
+#: apps/settings/src/ui/network.rs:718
 msgid "HTTP Proxy"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:718
+#: apps/settings/src/ui/network.rs:719
 msgid "HTTPS Proxy"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:719
+#: apps/settings/src/ui/network.rs:720
 msgid "FTP Proxy"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:720
+#: apps/settings/src/ui/network.rs:721
 msgid "SOCKS Host"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:730
+#: apps/settings/src/ui/network.rs:731
 msgid "Port"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:730
+#: apps/settings/src/ui/network.rs:731
 msgid "{proxy} Port"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:739
+#: apps/settings/src/ui/network.rs:740
 msgid "Ignore Hosts"
 msgstr ""
 
-#: apps/settings/src/ui/network.rs:742
+#: apps/settings/src/ui/network.rs:743
 msgid "Hosts and networks reached without the proxy, separated by commas"
 msgstr ""
 
@@ -13641,97 +13628,112 @@ msgstr ""
 msgid "_End Process"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:13
+#: apps/system-monitor/src/format.rs:14
 msgid "KiB"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:14
+#: apps/system-monitor/src/format.rs:15
 msgid "MiB"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:15
+#: apps/system-monitor/src/format.rs:16
 msgid "GiB"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:16
+#: apps/system-monitor/src/format.rs:17
 msgid "TiB"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:17
+#: apps/system-monitor/src/format.rs:18
 msgid "PiB"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:18
+#: apps/system-monitor/src/format.rs:19
 msgid "EiB"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:58
+#: apps/system-monitor/src/format.rs:59
 msgid "bits/s"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:59
+#: apps/system-monitor/src/format.rs:60
 msgid "kbit/s"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:60
+#: apps/system-monitor/src/format.rs:61
 msgid "Mbit/s"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:61
+#: apps/system-monitor/src/format.rs:62
 msgid "Gbit/s"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:62
+#: apps/system-monitor/src/format.rs:63
 msgid "Tbit/s"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:95
+#: apps/system-monitor/src/format.rs:96
 msgid "Sleeping"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:96
+#: apps/system-monitor/src/format.rs:97
 msgid "Uninterruptible"
 msgstr ""
 
 #: apps/system-monitor/src/format.rs:98
-msgid "Tracing Stop"
+msgid "Stopped"
 msgstr ""
 
 #: apps/system-monitor/src/format.rs:99
-msgid "Zombie"
+msgid "Tracing Stop"
 msgstr ""
 
 #: apps/system-monitor/src/format.rs:100
-msgid "Dead"
+msgid "Zombie"
 msgstr ""
 
 #: apps/system-monitor/src/format.rs:101
-msgid "Idle"
+msgid "Dead"
 msgstr ""
 
 #: apps/system-monitor/src/format.rs:102
-msgid "Paging"
+msgid "Idle"
 msgstr ""
 
 #: apps/system-monitor/src/format.rs:103
-msgid "Wakekill"
+msgid "Paging"
 msgstr ""
 
 #: apps/system-monitor/src/format.rs:104
+msgid "Wakekill"
+msgstr ""
+
+#: apps/system-monitor/src/format.rs:105
 msgid "Parked"
 msgstr ""
 
-#: apps/system-monitor/src/format.rs:112 apps/system-monitor/src/format.rs:122
+#: apps/system-monitor/src/format.rs:113 apps/system-monitor/src/format.rs:123
+msgctxt "process priority"
 msgid "Very High"
 msgstr ""
 
-#. Translators: playback speed 1×.
 #: apps/system-monitor/src/format.rs:114 apps/system-monitor/src/format.rs:124
-#: apps/video-player/src/ui.rs:32
+msgctxt "process priority"
+msgid "High"
+msgstr ""
+
+#: apps/system-monitor/src/format.rs:115 apps/system-monitor/src/format.rs:125
+msgctxt "process priority"
 msgid "Normal"
 msgstr ""
 
 #: apps/system-monitor/src/format.rs:116 apps/system-monitor/src/format.rs:126
+msgctxt "process priority"
+msgid "Low"
+msgstr ""
+
+#: apps/system-monitor/src/format.rs:117 apps/system-monitor/src/format.rs:127
+msgctxt "process priority"
 msgid "Very Low"
 msgstr ""
 
@@ -13974,9 +13976,9 @@ msgid "terminal"
 msgstr ""
 
 #: apps/terminal/src/app.rs:229 apps/terminal/src/paths.rs:70
-#: apps/terminal/src/shortcuts.rs:27 apps/terminal/src/window.rs:238
-#: apps/terminal/src/window.rs:251 apps/terminal/src/window.rs:494
-#: apps/terminal/src/window.rs:904
+#: apps/terminal/src/shortcuts.rs:27 apps/terminal/src/window.rs:243
+#: apps/terminal/src/window.rs:256 apps/terminal/src/window.rs:499
+#: apps/terminal/src/window.rs:909
 msgid "Terminal"
 msgstr ""
 
@@ -14012,16 +14014,16 @@ msgstr ""
 msgid "Helix High Contrast Dark"
 msgstr ""
 
-#: apps/terminal/src/prefs_dialog.rs:29 apps/text-editor/src/prefs.rs:62
+#: apps/terminal/src/prefs_dialog.rs:29 apps/text-editor/src/prefs.rs:63
 msgid "Follow System"
 msgstr ""
 
-#: apps/terminal/src/prefs_dialog.rs:30 apps/terminal/src/window.rs:165
-#: apps/text-editor/src/prefs.rs:63 apps/web/src/dialogs.rs:128
+#: apps/terminal/src/prefs_dialog.rs:30 apps/terminal/src/window.rs:170
+#: apps/text-editor/src/prefs.rs:64 apps/web/src/dialogs.rs:128
 msgid "Light"
 msgstr ""
 
-#: apps/terminal/src/prefs_dialog.rs:46 apps/text-editor/src/prefs.rs:92
+#: apps/terminal/src/prefs_dialog.rs:46 apps/text-editor/src/prefs.rs:93
 msgid "Use System Font"
 msgstr ""
 
@@ -14029,7 +14031,7 @@ msgstr ""
 msgid "Terminal Font"
 msgstr ""
 
-#: apps/terminal/src/prefs_dialog.rs:62 apps/text-editor/src/prefs.rs:107
+#: apps/terminal/src/prefs_dialog.rs:62 apps/text-editor/src/prefs.rs:108
 msgid "Custom Font"
 msgstr ""
 
@@ -14134,123 +14136,128 @@ msgstr ""
 msgid "Ctrl + scroll"
 msgstr ""
 
-#: apps/terminal/src/window.rs:80
+#: apps/terminal/src/window.rs:81
 msgid "A process"
 msgstr ""
 
-#: apps/terminal/src/window.rs:124 apps/text-editor/src/doc.rs:819
+#: apps/terminal/src/window.rs:125 apps/text-editor/src/doc.rs:819
 msgid "Invalid regular expression"
 msgstr ""
 
-#: apps/terminal/src/window.rs:140
+#: apps/terminal/src/window.rs:141
 msgid "No matches"
 msgstr ""
 
-#: apps/terminal/src/window.rs:164
+#: apps/terminal/src/window.rs:166
+msgctxt "style"
+msgid "System"
+msgstr ""
+
+#: apps/terminal/src/window.rs:167
 msgid "Follow System Style"
 msgstr ""
 
-#: apps/terminal/src/window.rs:165
+#: apps/terminal/src/window.rs:170
 msgid "Light Style"
 msgstr ""
 
-#: apps/terminal/src/window.rs:166
+#: apps/terminal/src/window.rs:171
 msgid "Dark Style"
 msgstr ""
 
-#: apps/terminal/src/window.rs:231
+#: apps/terminal/src/window.rs:236
 msgid "Reset Zoom, now {text}"
 msgstr ""
 
-#: apps/terminal/src/window.rs:282
+#: apps/terminal/src/window.rs:287
 msgid "_Show All Tabs"
 msgstr ""
 
-#: apps/terminal/src/window.rs:287
+#: apps/terminal/src/window.rs:292
 msgid "_About Terminal"
 msgstr ""
 
-#: apps/terminal/src/window.rs:433 apps/terminal/src/window.rs:435
+#: apps/terminal/src/window.rs:438 apps/terminal/src/window.rs:440
 msgid "Previous Match (older output)"
 msgstr ""
 
-#: apps/terminal/src/window.rs:438 apps/terminal/src/window.rs:440
+#: apps/terminal/src/window.rs:443 apps/terminal/src/window.rs:445
 msgid "Next Match (newer output)"
 msgstr ""
 
-#: apps/terminal/src/window.rs:444 apps/terminal/src/window.rs:446
+#: apps/terminal/src/window.rs:449 apps/terminal/src/window.rs:451
 msgid "Match Case"
 msgstr ""
 
-#: apps/terminal/src/window.rs:449 apps/terminal/src/window.rs:451
+#: apps/terminal/src/window.rs:454 apps/terminal/src/window.rs:456
 msgid "Regular Expression"
 msgstr ""
 
-#: apps/terminal/src/window.rs:542
+#: apps/terminal/src/window.rs:547
 msgid "Failed to start “{what}”: {error}"
 msgstr ""
 
-#: apps/terminal/src/window.rs:550
+#: apps/terminal/src/window.rs:555
 msgid "Could not start “{what}”"
 msgstr ""
 
-#: apps/terminal/src/window.rs:574
+#: apps/terminal/src/window.rs:579
 msgid "Process exited with status {code}"
 msgstr ""
 
-#: apps/terminal/src/window.rs:718
+#: apps/terminal/src/window.rs:723
 msgid "_Open Link"
 msgstr ""
 
-#: apps/terminal/src/window.rs:719
+#: apps/terminal/src/window.rs:724
 msgid "Copy _Link"
 msgstr ""
 
-#: apps/terminal/src/window.rs:727 apps/text-editor/src/window.rs:51
-#: apps/web/src/window.rs:206 apps/web/src/window.rs:247
+#: apps/terminal/src/window.rs:732 apps/text-editor/src/window.rs:51
+#: apps/web/src/window.rs:207 apps/web/src/window.rs:248
 msgid "_Find…"
 msgstr ""
 
-#: apps/terminal/src/window.rs:930
+#: apps/terminal/src/window.rs:935
 msgid "Running as root"
 msgstr ""
 
-#: apps/terminal/src/window.rs:934
+#: apps/terminal/src/window.rs:939
 msgid "Connected to a remote host"
 msgstr ""
 
-#: apps/terminal/src/window.rs:935
+#: apps/terminal/src/window.rs:940
 msgid "Connected to {host}"
 msgstr ""
 
-#: apps/terminal/src/window.rs:956
+#: apps/terminal/src/window.rs:961
 msgid "No longer running as root"
 msgstr ""
 
-#: apps/terminal/src/window.rs:957
+#: apps/terminal/src/window.rs:962
 msgid "Remote session ended"
 msgstr ""
 
-#: apps/terminal/src/window.rs:1269
+#: apps/terminal/src/window.rs:1274
 msgid "Close Window?"
 msgstr ""
 
-#: apps/terminal/src/window.rs:1271
+#: apps/terminal/src/window.rs:1276
 msgid "Close Tab?"
 msgstr ""
 
-#: apps/terminal/src/window.rs:1274
+#: apps/terminal/src/window.rs:1279
 msgid "“{}” is still running. Closing will stop it."
 msgstr ""
 
-#: apps/terminal/src/window.rs:1277
+#: apps/terminal/src/window.rs:1282
 msgid ""
 "Some programs are still running:\n"
 "{list}\n"
 "Closing will stop them."
 msgstr ""
 
-#: apps/terminal/src/window.rs:1283
+#: apps/terminal/src/window.rs:1288
 msgid "C_lose"
 msgstr ""
 
@@ -14389,71 +14396,76 @@ msgstr ""
 msgid "Classic Mac OS (CR)"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:67 apps/web/src/dialogs.rs:124
+#: apps/text-editor/src/prefs.rs:68 apps/web/src/dialogs.rs:124
 msgid "Color Scheme"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:88
+#: apps/text-editor/src/prefs.rs:89
 msgid "Font"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:97
+#: apps/text-editor/src/prefs.rs:98
 msgid "Editor Font"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:124
+#: apps/text-editor/src/prefs.rs:120
+msgctxt "how text is shown"
+msgid "Display"
+msgstr ""
+
+#: apps/text-editor/src/prefs.rs:125
 msgid "Show Line Numbers"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:131
+#: apps/text-editor/src/prefs.rs:132
 msgid "Highlight Current Line"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:138
+#: apps/text-editor/src/prefs.rs:139
 msgid "Show Right Margin"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:145
+#: apps/text-editor/src/prefs.rs:146
 msgid "Right Margin Position"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:155
+#: apps/text-editor/src/prefs.rs:156
 msgid "Wrap Text"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:161
+#: apps/text-editor/src/prefs.rs:162
 msgid "Editor"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:165
+#: apps/text-editor/src/prefs.rs:166
 msgid "Indentation"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:170
+#: apps/text-editor/src/prefs.rs:171
 msgid "Tab Width"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:177
+#: apps/text-editor/src/prefs.rs:178
 msgid "Insert Spaces Instead of Tabs"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:190
+#: apps/text-editor/src/prefs.rs:191
 msgid "Automatic Indentation"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:197
+#: apps/text-editor/src/prefs.rs:198
 msgid "Session"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:202
+#: apps/text-editor/src/prefs.rs:203
 msgid "Restore Session"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:206
+#: apps/text-editor/src/prefs.rs:207
 msgid "Reopen documents and unsaved changes from the previous session"
 msgstr ""
 
-#: apps/text-editor/src/prefs.rs:213
+#: apps/text-editor/src/prefs.rs:214
 msgid ""
 "The org.gnome.TextEditor settings schema is not installed; changes last "
 "until the editor quits."
@@ -14812,155 +14824,171 @@ msgstr ""
 msgid "movie"
 msgstr ""
 
-#: apps/video-player/src/mpris.rs:152 apps/video-player/src/ui.rs:21
+#: apps/video-player/src/mpris.rs:152 apps/video-player/src/ui.rs:22
 msgid "Video Player"
 msgstr ""
 
-#: apps/video-player/src/player.rs:98
+#: apps/video-player/src/player.rs:97
+msgctxt "audio or subtitle stream"
+msgid "Track"
+msgstr ""
+
+#: apps/video-player/src/player.rs:99
 msgid "Track {}"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:49
+#. Translators: playback speed 1×.
+#: apps/video-player/src/ui.rs:33
+msgctxt "playback speed"
+msgid "Normal"
+msgstr ""
+
+#: apps/video-player/src/ui.rs:50
 msgid "Play videos"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:152
+#: apps/video-player/src/ui.rs:153
 msgid "Previous Frame (paused)"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:153
+#: apps/video-player/src/ui.rs:154
 msgid "Next Frame (paused)"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:159
+#: apps/video-player/src/ui.rs:160
 msgid "Volume Up"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:160
+#: apps/video-player/src/ui.rs:161
 msgid "Volume Down"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:175
+#: apps/video-player/src/ui.rs:176
 msgid "Take Screenshot"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:291
+#: apps/video-player/src/ui.rs:292
 msgid "Take _Screenshot"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:300
+#: apps/video-player/src/ui.rs:301
 msgid "_About Video Player"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:379
+#: apps/video-player/src/ui.rs:380
 msgid "Watch Videos"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:380
+#: apps/video-player/src/ui.rs:381
 msgid "Drag and drop videos here"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:388
+#: apps/video-player/src/ui.rs:389
 msgid "_Open Another File…"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:396
+#: apps/video-player/src/ui.rs:397
 msgid "Cannot Play File"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:437
+#: apps/video-player/src/ui.rs:438
 msgid "Loading"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:518
+#: apps/video-player/src/ui.rs:519
 msgid "Playback Speed: 1×"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:521 apps/video-player/src/ui.rs:526
+#: apps/video-player/src/ui.rs:522 apps/video-player/src/ui.rs:527
 msgid "Audio and Subtitles"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:529 apps/video-player/src/ui.rs:846
+#: apps/video-player/src/ui.rs:530 apps/video-player/src/ui.rs:847
 msgid "Enter Fullscreen"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1039
+#: apps/video-player/src/ui.rs:1040
 msgid "Videos"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1048
+#: apps/video-player/src/ui.rs:1049
 msgid "Open Video"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1069 apps/video-player/src/ui.rs:1751
+#: apps/video-player/src/ui.rs:1070 apps/video-player/src/ui.rs:1752
 msgid "Subtitles"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1076
+#: apps/video-player/src/ui.rs:1077
 msgid "Load Subtitle File"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1164
+#: apps/video-player/src/ui.rs:1165
 msgid "The required codec is not installed: <b>{codec}</b>"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1177
+#: apps/video-player/src/ui.rs:1178
 msgid "Cannot play file. {detail}"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1179
+#: apps/video-player/src/ui.rs:1180
 msgid "Cannot play file. The required codec is not installed: {}"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1319
+#: apps/video-player/src/ui.rs:1320
 msgid "No decodable video stream"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1330
+#: apps/video-player/src/ui.rs:1331
 msgid "Missing codec: {m}"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1338
+#: apps/video-player/src/ui.rs:1339
 msgid "Resume from {}?"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1339
+#: apps/video-player/src/ui.rs:1340
 msgid "_Resume"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1360
+#: apps/video-player/src/ui.rs:1361
 msgid "_Resume from {}"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1655
+#: apps/video-player/src/ui.rs:1656
 msgid "Playback Speed: {key}×"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1684
+#: apps/video-player/src/ui.rs:1685
 msgid "Muted"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1709
+#: apps/video-player/src/ui.rs:1710
 msgid "Playing video"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1736
+#: apps/video-player/src/ui.rs:1737
 msgid "Audio"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1750
+#: apps/video-player/src/ui.rs:1740
+msgctxt "subtitles"
+msgid "None"
+msgstr ""
+
+#: apps/video-player/src/ui.rs:1751
 msgid "Load Subtitle File…"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1843
+#: apps/video-player/src/ui.rs:1844
 msgid "Screenshot saved as “{}”"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1849
+#: apps/video-player/src/ui.rs:1850
 msgid "Could not save screenshot: {err}"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1850
+#: apps/video-player/src/ui.rs:1851
 msgid "Could not save screenshot"
 msgstr ""
 
@@ -15734,7 +15762,7 @@ msgid "Could not clear browsing data: {e}"
 msgstr ""
 
 #: apps/web/src/dialogs.rs:487 apps/web/src/shortcuts.rs:55
-#: apps/web/src/window.rs:50
+#: apps/web/src/window.rs:51
 msgid "History"
 msgstr ""
 
@@ -15910,8 +15938,8 @@ msgstr ""
 msgid "Enter a site address, such as example.org"
 msgstr ""
 
-#: apps/web/src/overview.rs:55 apps/web/src/window.rs:317
-#: apps/web/src/window.rs:538 apps/web/src/window.rs:1566
+#: apps/web/src/overview.rs:55 apps/web/src/window.rs:318
+#: apps/web/src/window.rs:543 apps/web/src/window.rs:1571
 msgid "Private Browsing"
 msgstr ""
 
@@ -16089,8 +16117,8 @@ msgstr ""
 msgid "Page"
 msgstr ""
 
-#: apps/web/src/shortcuts.rs:52 apps/web/src/window.rs:345
-#: apps/web/src/window.rs:349 apps/web/src/window.rs:1536
+#: apps/web/src/shortcuts.rs:52 apps/web/src/window.rs:350
+#: apps/web/src/window.rs:354 apps/web/src/window.rs:1541
 msgid "Reader View"
 msgstr ""
 
@@ -16098,8 +16126,8 @@ msgstr ""
 msgid "Bookmark Page"
 msgstr ""
 
-#: apps/web/src/shortcuts.rs:54 apps/web/src/window.rs:375
-#: apps/web/src/window.rs:378
+#: apps/web/src/shortcuts.rs:54 apps/web/src/window.rs:380
+#: apps/web/src/window.rs:383
 msgid "Site Information"
 msgstr ""
 
@@ -16198,391 +16226,396 @@ msgstr ""
 msgid "portal returned no token"
 msgstr ""
 
-#: apps/web/src/window.rs:49 apps/web/src/window.rs:703
+#: apps/web/src/window.rs:50 apps/web/src/window.rs:708
 msgid "Bookmark"
 msgstr ""
 
-#: apps/web/src/window.rs:63
+#: apps/web/src/window.rs:64
 msgid "{title}, {kind}"
 msgstr ""
 
 #. Translators: accessible name of an address-bar suggestion: its title, its kind ("Bookmark", "History", …) and its address.
-#: apps/web/src/window.rs:67
+#: apps/web/src/window.rs:68
 msgid "{title}, {kind}, {url}"
 msgstr ""
 
-#: apps/web/src/window.rs:80
+#: apps/web/src/window.rs:81
 msgid "not signed by a trusted authority"
 msgstr ""
 
-#: apps/web/src/window.rs:81
+#: apps/web/src/window.rs:82
 msgid "issued for a different site"
 msgstr ""
 
-#: apps/web/src/window.rs:82
+#: apps/web/src/window.rs:83
 msgid "not valid yet"
 msgstr ""
 
-#: apps/web/src/window.rs:83
+#: apps/web/src/window.rs:84
 msgid "expired"
 msgstr ""
 
-#: apps/web/src/window.rs:84
+#: apps/web/src/window.rs:85
 msgid "revoked"
 msgstr ""
 
-#: apps/web/src/window.rs:85
+#: apps/web/src/window.rs:86
 msgid "uses an insecure algorithm"
 msgstr ""
 
-#: apps/web/src/window.rs:86 apps/web/src/window.rs:94
+#: apps/web/src/window.rs:87 apps/web/src/window.rs:95
 msgid "could not be checked"
 msgstr ""
 
-#: apps/web/src/window.rs:101
+#: apps/web/src/window.rs:102
 msgid "{n} suggestion"
 msgid_plural "{n} suggestions"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/web/src/window.rs:209
+#: apps/web/src/window.rs:210
 msgid "Open in _Browser"
 msgstr ""
 
-#: apps/web/src/window.rs:213
+#: apps/web/src/window.rs:214
 msgid "Web Application _Settings…"
 msgstr ""
 
-#: apps/web/src/window.rs:217
+#: apps/web/src/window.rs:218
 msgid "_Uninstall Web Application…"
 msgstr ""
 
-#: apps/web/src/window.rs:224 apps/web/src/window.rs:267
+#: apps/web/src/window.rs:225 apps/web/src/window.rs:268
 msgid "_About Web"
 msgstr ""
 
-#: apps/web/src/window.rs:232
+#: apps/web/src/window.rs:233
 msgid "_New Tab"
 msgstr ""
 
-#: apps/web/src/window.rs:235
+#: apps/web/src/window.rs:236
 msgid "New _Private Window"
 msgstr ""
 
-#: apps/web/src/window.rs:245
+#: apps/web/src/window.rs:246
 msgid "_Reopen Closed Tab"
 msgstr ""
 
-#: apps/web/src/window.rs:246
+#: apps/web/src/window.rs:247
 msgid "Site _Information"
 msgstr ""
 
-#: apps/web/src/window.rs:251
+#: apps/web/src/window.rs:252
 msgid "Install Site as _Web Application…"
 msgstr ""
 
-#: apps/web/src/window.rs:256
+#: apps/web/src/window.rs:257
 msgid "_History"
 msgstr ""
 
-#: apps/web/src/window.rs:257
+#: apps/web/src/window.rs:258
 msgid "_Passwords"
 msgstr ""
 
-#: apps/web/src/window.rs:258
+#: apps/web/src/window.rs:259
 msgid "_Import Bookmarks…"
 msgstr ""
 
-#: apps/web/src/window.rs:259
+#: apps/web/src/window.rs:260
 msgid "_Export Bookmarks…"
 msgstr ""
 
-#: apps/web/src/window.rs:368
+#: apps/web/src/window.rs:343
+msgctxt "home page"
+msgid "Home"
+msgstr ""
+
+#: apps/web/src/window.rs:373
 msgid "Search or enter address"
 msgstr ""
 
-#: apps/web/src/window.rs:370
+#: apps/web/src/window.rs:375
 msgid "Address and Search"
 msgstr ""
 
-#: apps/web/src/window.rs:381 apps/web/src/window.rs:384
-#: apps/web/src/window.rs:1644
+#: apps/web/src/window.rs:386 apps/web/src/window.rs:389
+#: apps/web/src/window.rs:1649
 msgid "Bookmark This Page"
 msgstr ""
 
-#: apps/web/src/window.rs:447
+#: apps/web/src/window.rs:452
 msgid "Clear Finished"
 msgstr ""
 
-#: apps/web/src/window.rs:474 apps/web/src/window.rs:478
+#: apps/web/src/window.rs:479 apps/web/src/window.rs:483
 msgid "Downloads"
 msgstr ""
 
-#: apps/web/src/window.rs:491
+#: apps/web/src/window.rs:496
 msgid "Search bookmarks"
 msgstr ""
 
-#: apps/web/src/window.rs:493
+#: apps/web/src/window.rs:498
 msgid "Search Bookmarks"
 msgstr ""
 
-#: apps/web/src/window.rs:518 apps/web/src/window.rs:522
+#: apps/web/src/window.rs:523 apps/web/src/window.rs:527
 msgid "Bookmarks"
 msgstr ""
 
-#: apps/web/src/window.rs:528
+#: apps/web/src/window.rs:533
 msgid "Private"
 msgstr ""
 
-#: apps/web/src/window.rs:530 apps/web/src/window.rs:535
+#: apps/web/src/window.rs:535 apps/web/src/window.rs:540
 msgid "Private browsing: history and site data are not saved"
 msgstr ""
 
-#: apps/web/src/window.rs:546
+#: apps/web/src/window.rs:551
 msgid "Find in page"
 msgstr ""
 
-#: apps/web/src/window.rs:550
+#: apps/web/src/window.rs:555
 msgid "Find in Page"
 msgstr ""
 
-#: apps/web/src/window.rs:651
+#: apps/web/src/window.rs:656
 msgid "Suggestions"
 msgstr ""
 
-#: apps/web/src/window.rs:678
+#: apps/web/src/window.rs:683
 msgid "_Name"
 msgstr ""
 
-#: apps/web/src/window.rs:682
+#: apps/web/src/window.rs:687
 msgid "_Tags (comma separated)"
 msgstr ""
 
-#: apps/web/src/window.rs:692 apps/web/src/window.rs:2079
+#: apps/web/src/window.rs:697 apps/web/src/window.rs:2084
 msgid "Remove Bookmark"
 msgstr ""
 
-#: apps/web/src/window.rs:978
+#: apps/web/src/window.rs:983
 msgid "Tab muted"
 msgstr ""
 
-#: apps/web/src/window.rs:980
+#: apps/web/src/window.rs:985
 msgid "Tab unmuted"
 msgstr ""
 
-#: apps/web/src/window.rs:1452
+#: apps/web/src/window.rs:1457
 msgid "Unmute Tab"
 msgstr ""
 
-#: apps/web/src/window.rs:1454
+#: apps/web/src/window.rs:1459
 msgid "Mute Tab"
 msgstr ""
 
-#: apps/web/src/window.rs:1534
+#: apps/web/src/window.rs:1539
 msgid "Leave Reader View"
 msgstr ""
 
 #. Translators: window title: page title, then "Web" or "Private Browsing".
-#: apps/web/src/window.rs:1574
+#: apps/web/src/window.rs:1579
 msgid "{title} — {suffix}"
 msgstr ""
 
-#: apps/web/src/window.rs:1622
+#: apps/web/src/window.rs:1627
 msgid "Current zoom {level}"
 msgstr ""
 
-#: apps/web/src/window.rs:1638
+#: apps/web/src/window.rs:1643
 msgid "Edit Bookmark"
 msgstr ""
 
-#: apps/web/src/window.rs:1790
+#: apps/web/src/window.rs:1795
 msgid "Search {} for “{}”"
 msgstr ""
 
-#: apps/web/src/window.rs:1874
+#: apps/web/src/window.rs:1879
 msgid "Start Page"
 msgstr ""
 
-#: apps/web/src/window.rs:1886
+#: apps/web/src/window.rs:1891
 msgid "This is a page built into Web."
 msgstr ""
 
-#: apps/web/src/window.rs:1887
+#: apps/web/src/window.rs:1892
 msgid "Your connection to this site is secure."
 msgstr ""
 
-#: apps/web/src/window.rs:1888
+#: apps/web/src/window.rs:1893
 msgid ""
 "Your connection to this site is not encrypted. Do not enter passwords or "
 "other sensitive information."
 msgstr ""
 
-#: apps/web/src/window.rs:1889
+#: apps/web/src/window.rs:1894
 msgid ""
 "This site's security certificate has problems. The connection may not be "
 "private."
 msgstr ""
 
-#: apps/web/src/window.rs:1890
+#: apps/web/src/window.rs:1895
 msgid "This page is stored on your computer."
 msgstr ""
 
-#: apps/web/src/window.rs:1903
+#: apps/web/src/window.rs:1908
 msgid "Issued to: {s}"
 msgstr ""
 
-#: apps/web/src/window.rs:1906
+#: apps/web/src/window.rs:1911
 msgid "Issued by: {s}"
 msgstr ""
 
-#: apps/web/src/window.rs:1909
+#: apps/web/src/window.rs:1914
 msgid "Expires: {d}"
 msgstr ""
 
-#: apps/web/src/window.rs:1912
+#: apps/web/src/window.rs:1917
 msgid "Problems: {list}"
 msgstr ""
 
-#: apps/web/src/window.rs:1940
+#: apps/web/src/window.rs:1945
 msgid "Allowed"
 msgstr ""
 
-#: apps/web/src/window.rs:1940
+#: apps/web/src/window.rs:1945
 msgid "Denied"
 msgstr ""
 
-#: apps/web/src/window.rs:1946
+#: apps/web/src/window.rs:1951
 msgid "Reset {} Permission"
 msgstr ""
 
-#: apps/web/src/window.rs:1973
+#: apps/web/src/window.rs:1978
 msgid "{} permission reset"
 msgstr ""
 
 #. Translators: announced when the site information opens: the site's host name, then its security status sentence.
-#: apps/web/src/window.rs:1996
+#: apps/web/src/window.rs:2001
 msgid "{host}. {status}"
 msgstr ""
 
-#: apps/web/src/window.rs:2082
+#: apps/web/src/window.rs:2087
 msgid "Remove Bookmark {title}"
 msgstr ""
 
-#: apps/web/src/window.rs:2150
+#: apps/web/src/window.rs:2155
 msgid "Not found"
 msgstr ""
 
-#: apps/web/src/window.rs:2151
+#: apps/web/src/window.rs:2156
 msgid "{n} match"
 msgid_plural "{n} matches"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/web/src/window.rs:2219
+#: apps/web/src/window.rs:2224
 msgid "Cancel {name}"
 msgstr ""
 
-#: apps/web/src/window.rs:2226
+#: apps/web/src/window.rs:2231
 msgid "Open {name}"
 msgstr ""
 
-#: apps/web/src/window.rs:2233
+#: apps/web/src/window.rs:2238
 msgid "Open Folder of {name}"
 msgstr ""
 
-#: apps/web/src/window.rs:2246
+#: apps/web/src/window.rs:2251
 msgid "New downloads"
 msgstr ""
 
-#: apps/web/src/window.rs:2250
+#: apps/web/src/window.rs:2255
 msgid "Downloading {name}"
 msgstr ""
 
-#: apps/web/src/window.rs:2268
+#: apps/web/src/window.rs:2273
 msgid "Could not open the download: {}"
 msgstr ""
 
-#: apps/web/src/window.rs:2284
+#: apps/web/src/window.rs:2289
 msgid "Could not open the folder: {}"
 msgstr ""
 
-#: apps/web/src/window.rs:2320
+#: apps/web/src/window.rs:2325
 msgid "Finished"
 msgstr ""
 
-#: apps/web/src/window.rs:2323
+#: apps/web/src/window.rs:2328
 msgid "Download finished: {name}"
 msgstr ""
 
-#: apps/web/src/window.rs:2337
+#: apps/web/src/window.rs:2342
 msgid "Failed: {}"
 msgstr ""
 
-#: apps/web/src/window.rs:2340
+#: apps/web/src/window.rs:2345
 msgid "Download failed: {}"
 msgstr ""
 
-#: apps/web/src/window.rs:2366
+#: apps/web/src/window.rs:2371
 msgid "No Bookmarks"
 msgstr ""
 
-#: apps/web/src/window.rs:2367
+#: apps/web/src/window.rs:2372
 msgid "Bookmark pages with the star in the address bar or Ctrl+D"
 msgstr ""
 
-#: apps/web/src/window.rs:2399
+#: apps/web/src/window.rs:2404
 msgid "_Duplicate"
 msgstr ""
 
-#: apps/web/src/window.rs:2404
+#: apps/web/src/window.rs:2409
 msgid "Un_pin Tab"
 msgstr ""
 
-#: apps/web/src/window.rs:2406
+#: apps/web/src/window.rs:2411
 msgid "_Pin Tab"
 msgstr ""
 
-#: apps/web/src/window.rs:2412
+#: apps/web/src/window.rs:2417
 msgid "Un_mute Tab"
 msgstr ""
 
-#: apps/web/src/window.rs:2414
+#: apps/web/src/window.rs:2419
 msgid "_Mute Tab"
 msgstr ""
 
-#: apps/web/src/window.rs:2418
+#: apps/web/src/window.rs:2423
 msgid "Move to New _Window"
 msgstr ""
 
-#: apps/web/src/window.rs:2421
+#: apps/web/src/window.rs:2426
 msgid "Close _Other Tabs"
 msgstr ""
 
-#: apps/web/src/window.rs:2422
+#: apps/web/src/window.rs:2427
 msgid "Close Tabs to the _Right"
 msgstr ""
 
-#: apps/web/src/window.rs:2423
+#: apps/web/src/window.rs:2428
 msgid "_Close Tab"
 msgstr ""
 
-#: apps/web/src/window.rs:2463
+#: apps/web/src/window.rs:2468
 msgid "Start page"
 msgstr ""
 
-#: apps/web/src/window.rs:2464
+#: apps/web/src/window.rs:2469
 msgid "Secure connection"
 msgstr ""
 
-#: apps/web/src/window.rs:2465
+#: apps/web/src/window.rs:2470
 msgid "Connection is not secure"
 msgstr ""
 
-#: apps/web/src/window.rs:2466
+#: apps/web/src/window.rs:2471
 msgid "Certificate problems"
 msgstr ""
 
-#: apps/web/src/window.rs:2467
+#: apps/web/src/window.rs:2472
 msgid "Local page"
 msgstr ""
 
@@ -16630,23 +16663,52 @@ msgstr ""
 msgid "Remove the user name and password from the address"
 msgstr ""
 
-#: crates/helix-eds/src/vcard.rs:685 crates/helix-eds/src/vcard.rs:718
+#: crates/helix-eds/src/vcard.rs:686 crates/helix-eds/src/vcard.rs:719
+msgctxt "phone number type"
 msgid "Mobile"
 msgstr ""
 
-#: crates/helix-eds/src/vcard.rs:688 crates/helix-eds/src/vcard.rs:722
+#: crates/helix-eds/src/vcard.rs:689 crates/helix-eds/src/vcard.rs:723
+msgctxt "phone number type"
 msgid "Work Fax"
 msgstr ""
 
-#: crates/helix-eds/src/vcard.rs:690 crates/helix-eds/src/vcard.rs:721
+#: crates/helix-eds/src/vcard.rs:691 crates/helix-eds/src/vcard.rs:722
+msgctxt "phone number type"
 msgid "Home Fax"
 msgstr ""
 
-#: crates/helix-eds/src/vcard.rs:693 crates/helix-eds/src/vcard.rs:723
+#: crates/helix-eds/src/vcard.rs:694 crates/helix-eds/src/vcard.rs:724
+msgctxt "phone number type"
 msgid "Pager"
 msgstr ""
 
-#: crates/helix-eds/src/vcard.rs:697 crates/helix-eds/src/vcard.rs:709
-#: crates/helix-eds/src/vcard.rs:720 crates/helix-eds/src/vcard.rs:730
+#: crates/helix-eds/src/vcard.rs:696 crates/helix-eds/src/vcard.rs:720
+msgctxt "phone number type"
+msgid "Home"
+msgstr ""
+
+#: crates/helix-eds/src/vcard.rs:698 crates/helix-eds/src/vcard.rs:721
+msgctxt "phone number type"
 msgid "Work"
+msgstr ""
+
+#: crates/helix-eds/src/vcard.rs:700 crates/helix-eds/src/vcard.rs:725
+msgctxt "phone number type"
+msgid "Other"
+msgstr ""
+
+#: crates/helix-eds/src/vcard.rs:708 crates/helix-eds/src/vcard.rs:731
+msgctxt "email, address or website type"
+msgid "Personal"
+msgstr ""
+
+#: crates/helix-eds/src/vcard.rs:710 crates/helix-eds/src/vcard.rs:734
+msgctxt "email, address or website type"
+msgid "Work"
+msgstr ""
+
+#: crates/helix-eds/src/vcard.rs:712 crates/helix-eds/src/vcard.rs:735
+msgctxt "email, address or website type"
+msgid "Other"
 msgstr ""

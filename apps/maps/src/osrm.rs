@@ -1,7 +1,7 @@
 //! OSRM-compatible routing: request URL and response parsing.
 
 use crate::geo::LatLon;
-use helix_app_common::i18n::tr;
+use helix_app_common::i18n::{tr, trc};
 use helix_app_common::trf;
 use serde_json::Value;
 
@@ -241,7 +241,7 @@ pub fn instruction(kind: &str, modifier: &str, name: &str, exit: Option<u64>) ->
             if named {
                 trf!("Start on {name}", name = n)
             } else {
-                tr("Start").to_string()
+                trc("route instruction", "Start")
             }
         }
         "arrive" => tr("Arrive at destination").to_string(),

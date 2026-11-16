@@ -16,6 +16,7 @@ use crate::bus;
 use crate::netconf;
 use crate::nm::{self, Device, Nm, Saved};
 use helix_app_common::i18n::{n_, tr};
+use helix_app_common::nc_;
 use helix_app_common::trf;
 
 pub struct NetworkPanel;
@@ -567,7 +568,7 @@ fn vpn_kind(saved: &Saved) -> String {
         "l2tp" => "L2TP".into(),
         "vpnc" => "Cisco (vpnc)".into(),
         "strongswan" | "libreswan" => "IPsec".into(),
-        "" => tr("Other").into(),
+        "" => tr(nc_!("VPN type", "Other")).into(),
         other => other.to_string(),
     }
 }

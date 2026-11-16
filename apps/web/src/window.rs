@@ -16,6 +16,7 @@ use crate::store;
 use crate::tab::{display_uri, Change, Security, Tab};
 use crate::urlinput;
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
@@ -94,7 +95,7 @@ fn tls_problems(flags: gio::TlsCertificateFlags) -> String {
         return tr("could not be checked").to_string();
     }
     // Translators: separator between certificate problems in a list.
-    words.join(tr(", "))
+    words.join(tr(nc_!("list separator", ", ")))
 }
 
 fn suggestion_count(n: usize) -> String {
@@ -337,7 +338,11 @@ impl Window {
         let back = icon_button("go-previous-symbolic", tr("Back"), "win.back");
         let forward = icon_button("go-next-symbolic", tr("Forward"), "win.forward");
         let reload = icon_button("view-refresh-symbolic", tr("Reload"), "win.reload");
-        let home = icon_button("go-home-symbolic", tr("Home"), "win.home");
+        let home = icon_button(
+            "go-home-symbolic",
+            tr(nc_!("home page", "Home")),
+            "win.home",
+        );
         // A button acting as a toggle: the pressed state follows the tab's
         // reader mode, which changes only once the page has reloaded.
         let reader = gtk::Button::builder()

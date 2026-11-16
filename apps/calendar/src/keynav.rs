@@ -5,6 +5,7 @@ use chrono::{Datelike, Duration, NaiveDate, Weekday};
 
 use crate::dates;
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use helix_app_common::trnf;
 
 /// A navigation key, independent of GDK.
@@ -105,12 +106,12 @@ pub fn day_label(d: NaiveDate, today: NaiveDate, selected: bool, titles: &[&str]
             "{n} event: {titles}",
             "{n} events: {titles}",
             titles.len(),
-            titles = titles.join(tr(", "))
+            titles = titles.join(tr(nc_!("list separator", ", ")))
         )
     });
     // Translators: separator between the parts of an accessible name
     // ("Friday, 13 November 2026, today, 2 events: …").
-    parts.join(tr(", "))
+    parts.join(tr(nc_!("list separator", ", ")))
 }
 
 #[cfg(test)]

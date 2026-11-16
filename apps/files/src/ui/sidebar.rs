@@ -8,6 +8,7 @@ use std::rc::{Rc, Weak};
 use super::{Window, OTHER_LOCATIONS};
 use crate::bookmarks;
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use helix_app_common::trf;
 
 #[derive(Clone)]
@@ -302,7 +303,7 @@ impl Sidebar {
             icon: themed(icon),
         };
         v.push(loc(
-            tr("Home"),
+            tr(nc_!("home folder", "Home")),
             "user-home-symbolic",
             gio::File::for_path(&home),
             0,

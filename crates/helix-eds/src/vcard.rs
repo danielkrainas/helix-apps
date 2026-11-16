@@ -2,7 +2,7 @@
 //! a typed [`Contact`] view that preserves properties it does not manage.
 
 use crate::contentline::{self, escape_text, fold, Property};
-use crate::n_;
+use crate::nc_;
 use base64::Engine;
 
 /// A raw vCard: an ordered list of properties (without BEGIN/END).
@@ -678,25 +678,26 @@ fn decode_photo(p: &Property) -> Option<Photo> {
     }
 }
 
-/// Human label for a phone's TYPE set (English; translate it with
-/// `helix_app_common::i18n::tr` where it is shown).
+/// Human label for a phone's TYPE set (English, with a translation
+/// context; show it with `helix_app_common::i18n::tr`, compare it only
+/// with other labels from here).
 pub fn phone_label(t: &Typed) -> &'static str {
     if t.has("CELL") {
-        n_("Mobile")
+        nc_!("phone number type", "Mobile")
     } else if t.has("FAX") {
         if t.has("WORK") {
-            n_("Work Fax")
+            nc_!("phone number type", "Work Fax")
         } else {
-            n_("Home Fax")
+            nc_!("phone number type", "Home Fax")
         }
     } else if t.has("PAGER") {
-        n_("Pager")
+        nc_!("phone number type", "Pager")
     } else if t.has("HOME") {
-        n_("Home")
+        nc_!("phone number type", "Home")
     } else if t.has("WORK") {
-        n_("Work")
+        nc_!("phone number type", "Work")
     } else {
-        n_("Other")
+        nc_!("phone number type", "Other")
     }
 }
 
@@ -704,31 +705,34 @@ pub fn phone_label(t: &Typed) -> &'static str {
 pub fn generic_label(types: &[String]) -> &'static str {
     let has = |x: &str| types.iter().any(|t| t.eq_ignore_ascii_case(x));
     if has("HOME") {
-        n_("Personal")
+        nc_!("email, address or website type", "Personal")
     } else if has("WORK") {
-        n_("Work")
+        nc_!("email, address or website type", "Work")
     } else {
-        n_("Other")
+        nc_!("email, address or website type", "Other")
     }
 }
 
 /// Phone type choices offered by editors: (label, TYPE values); the labels
 /// are English, translate them where they are shown.
 pub const PHONE_TYPES: &[(&str, &[&str])] = &[
-    (n_("Mobile"), &["CELL"]),
-    (n_("Home"), &["HOME", "VOICE"]),
-    (n_("Work"), &["WORK", "VOICE"]),
-    (n_("Home Fax"), &["HOME", "FAX"]),
-    (n_("Work Fax"), &["WORK", "FAX"]),
-    (n_("Pager"), &["PAGER"]),
-    (n_("Other"), &["VOICE"]),
+    (nc_!("phone number type", "Mobile"), &["CELL"]),
+    (nc_!("phone number type", "Home"), &["HOME", "VOICE"]),
+    (nc_!("phone number type", "Work"), &["WORK", "VOICE"]),
+    (nc_!("phone number type", "Home Fax"), &["HOME", "FAX"]),
+    (nc_!("phone number type", "Work Fax"), &["WORK", "FAX"]),
+    (nc_!("phone number type", "Pager"), &["PAGER"]),
+    (nc_!("phone number type", "Other"), &["VOICE"]),
 ];
 
 /// Email / address / URL type choices: (label, TYPE values).
 pub const GENERIC_TYPES: &[(&str, &[&str])] = &[
-    (n_("Personal"), &["HOME"]),
-    (n_("Work"), &["WORK"]),
-    (n_("Other"), &["OTHER"]),
+    (
+        nc_!("email, address or website type", "Personal"),
+        &["HOME"],
+    ),
+    (nc_!("email, address or website type", "Work"), &["WORK"]),
+    (nc_!("email, address or website type", "Other"), &["OTHER"]),
 ];
 
 /// Index into [`PHONE_TYPES`] that best matches `t`.
@@ -798,8 +802,14 @@ mod tests {
         assert_eq!(c.emails.len(), 2);
         assert!(c.emails[0].pref);
         assert_eq!(c.emails[0].types, vec!["WORK"]);
-        assert_eq!(phone_label(&c.phones[0]), "Mobile");
-        assert_eq!(phone_label(&c.phones[1]), "Work Fax");
+        assert_eq!(
+            phone_label(&c.phones[0]),
+            nc_!("phone number type", "Mobile")
+        );
+        assert_eq!(
+            phone_label(&c.phones[1]),
+            nc_!("phone number type", "Work Fax")
+        );
         assert_eq!(c.addresses[0].street, "12 St James, Square");
         assert_eq!(
             c.addresses[0].formatted(),
@@ -884,7 +894,7 @@ mod tests {
         assert_eq!(cards.len(), 2);
         let c = Contact::from_vcard(&cards[0]);
         assert_eq!(c.display_name(), "John Doe");
-        assert_eq!(phone_label(&c.phones[0]), "Home");
+        assert_eq!(phone_label(&c.phones[0]), nc_!("phone number type", "Home"));
     }
 
     #[test]
@@ -903,12 +913,15 @@ mod tests {
     fn type_indices() {
         assert_eq!(
             PHONE_TYPES[phone_type_index(&Typed::new(&["CELL"], "1"))].0,
-            "Mobile"
+            nc_!("phone number type", "Mobile")
         );
         assert_eq!(
             GENERIC_TYPES[generic_type_index(&["WORK".into()])].0,
-            "Work"
+            nc_!("email, address or website type", "Work")
         );
-        assert_eq!(GENERIC_TYPES[generic_type_index(&[])].0, "Other");
+        assert_eq!(
+            GENERIC_TYPES[generic_type_index(&[])].0,
+            nc_!("email, address or website type", "Other")
+        );
     }
 }

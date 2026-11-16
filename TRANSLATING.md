@@ -66,8 +66,21 @@ toasts and announcements, with the functions in
 | `tr("Text")` | A literal; returns `&'static str`. |
 | `trf!("Open {name}", name = n)` | A message with placeholders. |
 | `trnf!("{n} file", "{n} files", count)` | A count; never build plurals with `if n == 1`. |
-| `trc("context", "Text")` | Short text that needs a different translation elsewhere. |
+| `trc("context", "Text")` | Short text that needs a different translation elsewhere (returns a `String`). |
+| `tr(nc_!("context", "Text"))` | The same where a `&'static str` is needed. |
 | `n_("Text")` | Marks text in a `const`/`static` table; call `tr` where it is shown. |
+| `nc_!("context", "Text")` | `n_` with a context; `tr` shows it without the context. |
+
+All apps share one catalogue, so a message is translated once for every
+place it appears. Give a message a context (`trc`, `nc_!`) when it is a
+word or two that could be read in more than one sense, or that other
+languages inflect differently by what it refers to: "Home" (the home
+folder, a home page, a home phone number), "Other", "None", "Normal",
+"From"/"To", a list separator `", "`. Name the sense in the context
+("phone number type", "home folder", "list separator"), and add a
+`// Translators:` comment on the line above when the context alone
+does not say what the message means. Labels made with `nc_!` carry
+their context: compare them with each other, not with a literal.
 
 Every app calls `helix_app_common::i18n::init()` first thing in `main`.
 Write whole sentences with placeholders rather than gluing pieces

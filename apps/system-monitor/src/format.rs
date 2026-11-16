@@ -1,6 +1,7 @@
 //! Human-readable formatting of sizes, rates, states and priorities.
 
-use helix_app_common::i18n::{format_number, n_, tr};
+use helix_app_common::i18n::{format_number, tr};
+use helix_app_common::nc_;
 use helix_app_common::trf;
 
 /// Formats a byte count, SI (kB = 1000) or IEC (KiB = 1024).
@@ -109,21 +110,21 @@ pub fn state(c: char) -> &'static str {
 /// Nice value → priority label.
 pub fn priority(nice: i32) -> &'static str {
     match nice {
-        i32::MIN..=-15 => tr("Very High"),
-        -14..=-5 => tr("High"),
-        -4..=4 => tr("Normal"),
-        5..=14 => tr("Low"),
-        _ => tr("Very Low"),
+        i32::MIN..=-15 => tr(nc_!("process priority", "Very High")),
+        -14..=-5 => tr(nc_!("process priority", "High")),
+        -4..=4 => tr(nc_!("process priority", "Normal")),
+        5..=14 => tr(nc_!("process priority", "Low")),
+        _ => tr(nc_!("process priority", "Very Low")),
     }
 }
 
 /// Preset priorities offered by the Change Priority dialog.
 pub const PRIORITY_PRESETS: [(&str, i32); 5] = [
-    (n_("Very High"), -20),
-    (n_("High"), -5),
-    (n_("Normal"), 0),
-    (n_("Low"), 5),
-    (n_("Very Low"), 19),
+    (nc_!("process priority", "Very High"), -20),
+    (nc_!("process priority", "High"), -5),
+    (nc_!("process priority", "Normal"), 0),
+    (nc_!("process priority", "Low"), 5),
+    (nc_!("process priority", "Very Low"), 19),
 ];
 
 /// Formats a percentage with one decimal.
@@ -174,7 +175,7 @@ mod tests {
         assert_eq!(priority(5), "Low");
         assert_eq!(priority(19), "Very Low");
         for (label, nice) in PRIORITY_PRESETS {
-            assert_eq!(priority(nice), label);
+            assert_eq!(priority(nice), tr(label));
         }
         assert_eq!(percent(12.345), "12.3 %");
     }

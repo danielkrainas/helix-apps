@@ -34,6 +34,16 @@ pub(crate) const fn n_(msgid: &'static str) -> &'static str {
     msgid
 }
 
+/// Like [`n_`], with a context for a short label that needs different
+/// translations in different places; the same encoding as
+/// `helix_app_common::nc_!`, which `i18n::tr` understands.
+macro_rules! nc_ {
+    ($context:literal, $msgid:literal $(,)?) => {
+        concat!($context, "\u{4}", $msgid)
+    };
+}
+pub(crate) use nc_;
+
 /// A random 40-hex-digit identifier (the shape EDS uses for UIDs).
 pub fn new_id() -> String {
     use std::collections::hash_map::RandomState;

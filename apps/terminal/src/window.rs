@@ -16,6 +16,7 @@ use crate::paths;
 use crate::process::{self, Tint};
 use crate::search;
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use helix_app_common::trf;
 
 pub struct Tab {
@@ -161,7 +162,11 @@ fn style_switcher() -> gtk::Box {
         .accessible_role(gtk::AccessibleRole::Group)
         .build();
     for (label, name, target) in [
-        (tr("System"), tr("Follow System Style"), "auto"),
+        (
+            tr(nc_!("style", "System")),
+            tr("Follow System Style"),
+            "auto",
+        ),
         (tr("Light"), tr("Light Style"), "day"),
         (tr("Dark"), tr("Dark Style"), "night"),
     ] {

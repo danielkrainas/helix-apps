@@ -12,6 +12,7 @@ use std::rc::Rc;
 
 use crate::datefield::DateField;
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use helix_app_common::trf;
 
 type Choices = &'static [(&'static str, &'static [&'static str])];
@@ -133,14 +134,14 @@ impl TypedList {
         let idx = self.index_for(t);
         types.set_selected(idx);
         let row = adw::EntryRow::builder()
-            .title(self.choices[idx as usize].0)
+            .title(tr(self.choices[idx as usize].0))
             .text(&t.value)
             .build();
         let r = row.clone();
         let choices = self.choices;
         types.connect_selected_notify(move |d| {
             if let Some((l, _)) = choices.get(d.selected() as usize) {
-                r.set_title(l);
+                r.set_title(tr(l));
             }
         });
         let remove = gtk::Button::builder()
@@ -377,7 +378,10 @@ impl Editor {
         page.append(&address_box);
         page.append(&urls.group);
 
-        let misc = adw::PreferencesGroup::builder().title(tr("Other")).build();
+        // Translators: heading of the contact editor's group with the birthday and anniversary.
+        let misc = adw::PreferencesGroup::builder()
+            .title(tr(nc_!("contact details", "Other")))
+            .build();
         let birthday = DateField::new(tr("Birthday"), &contact.birthday);
         let anniversary = DateField::new(tr("Anniversary"), &contact.anniversary);
         misc.add(&birthday.row);

@@ -6,6 +6,7 @@ use std::rc::Rc;
 
 use crate::app::App;
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 
 fn switch_row(
     app: &Rc<App>,
@@ -116,7 +117,7 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     page.add(&font);
 
     let display = adw::PreferencesGroup::builder()
-        .title(tr("Display"))
+        .title(tr(nc_!("how text is shown", "Display")))
         .build();
     switch_row(
         app,

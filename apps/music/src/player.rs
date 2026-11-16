@@ -2,6 +2,7 @@
 
 use gst::prelude::*;
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -51,8 +52,8 @@ impl ReplayGain {
     pub fn label(self) -> &'static str {
         match self {
             ReplayGain::Off => tr("Off"),
-            ReplayGain::Track => tr("Track"),
-            ReplayGain::Album => tr("Album"),
+            ReplayGain::Track => tr(nc_!("ReplayGain mode", "Track")),
+            ReplayGain::Album => tr(nc_!("ReplayGain mode", "Album")),
         }
     }
 

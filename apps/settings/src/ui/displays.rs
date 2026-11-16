@@ -13,6 +13,7 @@ use super::{follow, spawn_worker, Ctx, Panel};
 use crate::bus;
 use crate::displays::{self, Arrangement, Config};
 use helix_app_common::i18n::{n_, tr};
+use helix_app_common::nc_;
 use helix_app_common::trf;
 
 pub struct DisplaysPanel;
@@ -843,8 +844,18 @@ fn night_light_group(prefs: &Prefs) -> adw::PreferencesGroup {
         });
     }
     group.add(&schedule);
-    let from = time_row(prefs, "night-light-schedule-from", 20.0, tr("From"));
-    let to = time_row(prefs, "night-light-schedule-to", 6.0, tr("To"));
+    let from = time_row(
+        prefs,
+        "night-light-schedule-from",
+        20.0,
+        tr(nc_!("time range", "From")),
+    );
+    let to = time_row(
+        prefs,
+        "night-light-schedule-to",
+        6.0,
+        tr(nc_!("time range", "To")),
+    );
     group.add(&from);
     group.add(&to);
     let temperature = widgets::scale_row(

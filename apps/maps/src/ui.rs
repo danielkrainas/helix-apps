@@ -10,6 +10,7 @@ use crate::tiles::{self, TileSource};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use helix_app_common::i18n::{n_, tr};
+use helix_app_common::nc_;
 use helix_app_common::trf;
 use helix_app_common::trnf;
 use helix_app_common::Labelled;
@@ -2361,15 +2362,15 @@ fn build_route_page(current: Mode) -> (gtk::Widget, RoutePage) {
         .column_spacing(6)
         .build();
     let from = gtk::Entry::builder()
-        .placeholder_text(tr("From"))
+        .placeholder_text(tr(nc_!("route", "From")))
         .hexpand(true)
         .build()
-        .labelled(tr("From"));
+        .labelled(tr(nc_!("route", "From")));
     let to = gtk::Entry::builder()
-        .placeholder_text(tr("To"))
+        .placeholder_text(tr(nc_!("route", "To")))
         .hexpand(true)
         .build()
-        .labelled(tr("To"));
+        .labelled(tr(nc_!("route", "To")));
     let my_loc = icon_button("find-location-symbolic", tr("Start at My Location"));
     my_loc.set_action_name(Some("win.route-my-location"));
     let swap = icon_button(
