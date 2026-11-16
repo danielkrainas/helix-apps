@@ -220,9 +220,9 @@ msgstr "10 seconden vooruit"
 msgid "Mute or Unmute"
 msgstr "Dempen of dempen opheffen"
 
-#: apps/audio-player/src/ui.rs:179 apps/calculator/src/ui.rs:491
-#: apps/calculator/src/ui.rs:497 apps/calculator/src/ui.rs:503
-#: apps/calculator/src/ui.rs:509 apps/calendar/src/shortcuts.rs:51
+#: apps/audio-player/src/ui.rs:179 apps/calculator/src/ui.rs:505
+#: apps/calculator/src/ui.rs:511 apps/calculator/src/ui.rs:517
+#: apps/calculator/src/ui.rs:523 apps/calendar/src/shortcuts.rs:51
 #: apps/clocks/src/shortcuts.rs:18 apps/contacts/src/shortcuts.rs:24
 #: apps/disk-usage/src/shortcuts.rs:47
 #: apps/document-scanner/src/shortcuts.rs:48 apps/files/src/ui/dialogs.rs:563
@@ -269,7 +269,7 @@ msgstr "Sneltoetsen"
 msgid "Close Window"
 msgstr "Venster sluiten"
 
-#: apps/audio-player/src/ui.rs:184 apps/calculator/src/ui.rs:510
+#: apps/audio-player/src/ui.rs:184 apps/calculator/src/ui.rs:524
 #: apps/calendar/src/shortcuts.rs:54 apps/clocks/src/shortcuts.rs:27
 #: apps/contacts/src/shortcuts.rs:28 apps/disk-usage/src/shortcuts.rs:52
 #: apps/document-scanner/src/shortcuts.rs:53 apps/files/src/ui/shortcuts.rs:16
@@ -286,7 +286,7 @@ msgstr "Afsluiten"
 #: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:11
 #: apps/settings/src/ui/apps.rs:530 apps/settings/src/ui/bluetooth.rs:129
 #: apps/settings/src/ui/users.rs:575 apps/text-editor/src/shortcuts.rs:15
-#: apps/web/src/window.rs:2227
+#: apps/web/src/window.rs:2232
 msgid "Open"
 msgstr "Openen"
 
@@ -306,7 +306,7 @@ msgid "_About Audio Player"
 msgstr "_Over Audiospeler"
 
 #: apps/audio-player/src/ui.rs:237 apps/audio-player/src/ui.rs:239
-#: apps/calculator/src/ui.rs:697 apps/calculator/src/ui.rs:699
+#: apps/calculator/src/ui.rs:712 apps/calculator/src/ui.rs:714
 #: apps/calendar/src/ui.rs:297 apps/calendar/src/ui.rs:299
 #: apps/camera/src/ui.rs:366 apps/camera/src/ui.rs:370
 #: apps/characters/src/ui.rs:378 apps/characters/src/ui.rs:380
@@ -378,7 +378,7 @@ msgid "Repeat"
 msgstr "Herhalen"
 
 #: apps/audio-player/src/ui.rs:378 apps/audio-player/src/ui.rs:380
-#: apps/settings/src/ui/sound.rs:110 apps/video-player/src/ui.rs:482
+#: apps/settings/src/ui/sound.rs:116 apps/video-player/src/ui.rs:482
 #: apps/video-player/src/ui.rs:484
 msgid "Mute"
 msgstr "Dempen"
@@ -386,7 +386,7 @@ msgstr "Dempen"
 #: apps/audio-player/src/ui.rs:386 apps/audio-player/src/ui.rs:394
 #: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:1804
 #: apps/music/src/ui.rs:1811 apps/music/src/ui.rs:1816
-#: apps/settings/src/ui/sound.rs:147 apps/video-player/src/ui.rs:158
+#: apps/settings/src/ui/sound.rs:163 apps/video-player/src/ui.rs:158
 #: apps/video-player/src/ui.rs:491 apps/video-player/src/ui.rs:497
 #: apps/video-player/src/ui.rs:503
 msgid "Volume"
@@ -516,7 +516,7 @@ msgstr "Ongeldige exponent"
 msgid "Unexpected “{c}”"
 msgstr "Onverwacht ‘{c}’"
 
-#: apps/calculator/src/engine.rs:402 apps/calculator/src/engine.rs:1323
+#: apps/calculator/src/engine.rs:402 apps/calculator/src/engine.rs:1349
 msgid "Malformed number"
 msgstr "Ongeldig getal"
 
@@ -545,81 +545,81 @@ msgstr "Onverwacht ‘{name}’"
 msgid "Expression is incomplete"
 msgstr "Expressie is onvolledig"
 
-#: apps/calculator/src/engine.rs:911
+#: apps/calculator/src/engine.rs:937
 msgid "Result is undefined"
 msgstr "Resultaat is ongedefinieerd"
 
-#: apps/calculator/src/engine.rs:953
+#: apps/calculator/src/engine.rs:979
 msgid "Cannot convert {from_unit} to {to_unit}"
 msgstr "Kan {from_unit} niet omrekenen naar {to_unit}"
 
-#: apps/calculator/src/engine.rs:980
+#: apps/calculator/src/engine.rs:1006
 msgid "Boolean NOT is only defined for integers"
 msgstr "Booleaanse NOT is alleen gedefinieerd voor gehele getallen"
 
-#: apps/calculator/src/engine.rs:1020
+#: apps/calculator/src/engine.rs:1046
 msgid "Negative numbers have no real fractional powers"
 msgstr "Negatieve getallen hebben geen reële gebroken machten"
 
-#: apps/calculator/src/engine.rs:1082
+#: apps/calculator/src/engine.rs:1108
 msgid "{name} has no inverse"
 msgstr "{name} heeft geen inverse"
 
-#: apps/calculator/src/engine.rs:1106
+#: apps/calculator/src/engine.rs:1132
 msgid ""
 "Tangent is undefined for angles that are multiples of π (180°) from π∕2 (90°)"
 msgstr ""
 "Tangens is ongedefinieerd voor hoeken die een veelvoud van π (180°) "
 "verwijderd zijn van π∕2 (90°)"
 
-#: apps/calculator/src/engine.rs:1113
+#: apps/calculator/src/engine.rs:1139
 msgid "Inverse sine is undefined for values outside [-1, 1]"
 msgstr "Arcsinus is ongedefinieerd voor waarden buiten [-1, 1]"
 
-#: apps/calculator/src/engine.rs:1120
+#: apps/calculator/src/engine.rs:1146
 msgid "Inverse cosine is undefined for values outside [-1, 1]"
 msgstr "Arccosinus is ongedefinieerd voor waarden buiten [-1, 1]"
 
-#: apps/calculator/src/engine.rs:1132
+#: apps/calculator/src/engine.rs:1158
 msgid "Inverse hyperbolic cosine is undefined for values less than one"
 msgstr ""
 "Inverse cosinus hyperbolicus is ongedefinieerd voor waarden kleiner dan één"
 
-#: apps/calculator/src/engine.rs:1139
+#: apps/calculator/src/engine.rs:1165
 msgid "Inverse hyperbolic tangent is undefined for values outside (-1, 1)"
 msgstr ""
 "Inverse tangens hyperbolicus is ongedefinieerd voor waarden buiten (-1, 1)"
 
-#: apps/calculator/src/engine.rs:1146 apps/calculator/src/engine.rs:1153
-#: apps/calculator/src/engine.rs:1160
+#: apps/calculator/src/engine.rs:1172 apps/calculator/src/engine.rs:1179
+#: apps/calculator/src/engine.rs:1186
 msgid "Logarithm of zero or negative values is undefined"
 msgstr "Logaritme van nul of negatieve waarden is ongedefinieerd"
 
-#: apps/calculator/src/engine.rs:1181
+#: apps/calculator/src/engine.rs:1207
 msgid "{name} is only available in programming mode"
 msgstr "{name} is alleen beschikbaar in de programmeermodus"
 
-#: apps/calculator/src/engine.rs:1219
+#: apps/calculator/src/engine.rs:1245
 msgid "Factorial is only defined for non-negative integers"
 msgstr "Faculteit is alleen gedefinieerd voor niet-negatieve gehele getallen"
 
-#: apps/calculator/src/engine.rs:1292
+#: apps/calculator/src/engine.rs:1318
 msgid "Square root of a negative number"
 msgstr "Vierkantswortel van een negatief getal"
 
-#: apps/calculator/src/engine.rs:1312
+#: apps/calculator/src/engine.rs:1338
 msgid "Boolean operations are only defined for integers"
 msgstr "Booleaanse bewerkingen zijn alleen gedefinieerd voor gehele getallen"
 
-#: apps/calculator/src/engine.rs:1330
+#: apps/calculator/src/engine.rs:1356
 msgid "Digit “{c}” is not valid in base {base}"
 msgstr "Cijfer ‘{c}’ is niet geldig in grondtal {base}"
 
-#: apps/calculator/src/engine.rs:1351
+#: apps/calculator/src/engine.rs:1377
 msgid "Even roots of negative numbers are undefined"
 msgstr "Even machtswortels van negatieve getallen zijn ongedefinieerd"
 
-#: apps/calculator/src/engine.rs:1361
+#: apps/calculator/src/engine.rs:1387
 msgid "Factorial is only defined for non-negative numbers"
 msgstr "Faculteit is alleen gedefinieerd voor niet-negatieve getallen"
 
@@ -730,21 +730,21 @@ msgstr "Betalingsperiode"
 msgid "{} is undefined for these values"
 msgstr "{} is ongedefinieerd voor deze waarden"
 
-#: apps/calculator/src/format.rs:32 apps/document-scanner/src/settings.rs:29
+#: apps/calculator/src/format.rs:33 apps/document-scanner/src/settings.rs:29
 #: apps/document-scanner/src/ui.rs:1730 apps/document-scanner/src/ui.rs:1797
 #: apps/settings/src/ui/netedit.rs:32 apps/settings/src/ui/network.rs:28
 msgid "Automatic"
 msgstr "Automatisch"
 
-#: apps/calculator/src/format.rs:33
+#: apps/calculator/src/format.rs:34
 msgid "Fixed"
 msgstr "Vast"
 
-#: apps/calculator/src/format.rs:34
+#: apps/calculator/src/format.rs:35
 msgid "Scientific"
 msgstr "Wetenschappelijk"
 
-#: apps/calculator/src/format.rs:35
+#: apps/calculator/src/format.rs:36
 msgid "Engineering"
 msgstr "Technisch"
 
@@ -776,261 +776,261 @@ msgstr "Financieel"
 msgid "Programming"
 msgstr "Programmeren"
 
-#: apps/calculator/src/ui.rs:183
+#: apps/calculator/src/ui.rs:184
 msgid "Open parenthesis"
 msgstr "Haakje openen"
 
-#: apps/calculator/src/ui.rs:184
+#: apps/calculator/src/ui.rs:185
 msgid "Close parenthesis"
 msgstr "Haakje sluiten"
 
-#: apps/calculator/src/ui.rs:220
+#: apps/calculator/src/ui.rs:234
 msgid "Divide [/]"
 msgstr "Delen [/]"
 
-#: apps/calculator/src/ui.rs:224
+#: apps/calculator/src/ui.rs:238
 msgid "Backspace"
 msgstr "Backspace"
 
-#: apps/calculator/src/ui.rs:230
+#: apps/calculator/src/ui.rs:244
 msgid "Clear [Escape]"
 msgstr "Wissen [Escape]"
 
-#: apps/calculator/src/ui.rs:238
+#: apps/calculator/src/ui.rs:252
 msgid "Multiply [*]"
 msgstr "Vermenigvuldigen [*]"
 
-#: apps/calculator/src/ui.rs:246
+#: apps/calculator/src/ui.rs:260
 msgid "Subtract [-]"
 msgstr "Aftrekken [-]"
 
-#: apps/calculator/src/ui.rs:247
+#: apps/calculator/src/ui.rs:261
 msgid "Square [Ctrl+2]"
 msgstr "Kwadraat [Ctrl+2]"
 
-#: apps/calculator/src/ui.rs:248
+#: apps/calculator/src/ui.rs:262
 msgid "Square root [Ctrl+R]"
 msgstr "Vierkantswortel [Ctrl+R]"
 
-#: apps/calculator/src/ui.rs:253 apps/calculator/src/ui.rs:297
+#: apps/calculator/src/ui.rs:267 apps/calculator/src/ui.rs:311
 msgid "Modulus divide"
 msgstr "Modulo-deling"
 
-#: apps/calculator/src/ui.rs:255
+#: apps/calculator/src/ui.rs:269
 msgid "Decimal point"
 msgstr "Decimaalteken"
 
-#: apps/calculator/src/ui.rs:258 apps/calculator/src/ui.rs:441
+#: apps/calculator/src/ui.rs:272 apps/calculator/src/ui.rs:455
 msgid "Factorial"
 msgstr "Faculteit"
 
-#: apps/calculator/src/ui.rs:260
+#: apps/calculator/src/ui.rs:274
 msgid "Percentage [%]"
 msgstr "Percentage [%]"
 
-#: apps/calculator/src/ui.rs:262
+#: apps/calculator/src/ui.rs:276
 msgid "Add [+]"
 msgstr "Optellen [+]"
 
-#: apps/calculator/src/ui.rs:266
+#: apps/calculator/src/ui.rs:280
 msgid "Calculate result [Enter]"
 msgstr "Resultaat berekenen [Enter]"
 
-#: apps/calculator/src/ui.rs:276
+#: apps/calculator/src/ui.rs:290
 msgid "Sine"
 msgstr "Sinus"
 
-#: apps/calculator/src/ui.rs:277
+#: apps/calculator/src/ui.rs:291
 msgid "Cosine"
 msgstr "Cosinus"
 
-#: apps/calculator/src/ui.rs:278
+#: apps/calculator/src/ui.rs:292
 msgid "Tangent"
 msgstr "Tangens"
 
-#: apps/calculator/src/ui.rs:279
+#: apps/calculator/src/ui.rs:293
 msgid "Exponent [^]"
 msgstr "Exponent [^]"
 
-#: apps/calculator/src/ui.rs:282
+#: apps/calculator/src/ui.rs:296
 msgid "Inverse sine"
 msgstr "Arcsinus"
 
-#: apps/calculator/src/ui.rs:283
+#: apps/calculator/src/ui.rs:297
 msgid "Inverse cosine"
 msgstr "Arccosinus"
 
-#: apps/calculator/src/ui.rs:284
+#: apps/calculator/src/ui.rs:298
 msgid "Inverse tangent"
 msgstr "Arctangens"
 
-#: apps/calculator/src/ui.rs:285
+#: apps/calculator/src/ui.rs:299
 msgid "Inverse"
 msgstr "Inverse"
 
-#: apps/calculator/src/ui.rs:288
+#: apps/calculator/src/ui.rs:302
 msgid "Natural logarithm"
 msgstr "Natuurlijke logaritme"
 
-#: apps/calculator/src/ui.rs:289
+#: apps/calculator/src/ui.rs:303
 msgid "Logarithm"
 msgstr "Logaritme"
 
-#: apps/calculator/src/ui.rs:290
+#: apps/calculator/src/ui.rs:304
 msgid "Exponential"
 msgstr "Exponentieel"
 
-#: apps/calculator/src/ui.rs:291
+#: apps/calculator/src/ui.rs:305
 msgid "Factorial [!]"
 msgstr "Faculteit [!]"
 
-#: apps/calculator/src/ui.rs:294
+#: apps/calculator/src/ui.rs:308
 msgid "Pi [Ctrl+P]"
 msgstr "Pi [Ctrl+P]"
 
-#: apps/calculator/src/ui.rs:295
+#: apps/calculator/src/ui.rs:309
 msgid "Euler's number"
 msgstr "Getal van Euler"
 
-#: apps/calculator/src/ui.rs:296
+#: apps/calculator/src/ui.rs:310
 msgid "Absolute value [|]"
 msgstr "Absolute waarde [|]"
 
-#: apps/calculator/src/ui.rs:300 apps/calculator/src/ui.rs:332
+#: apps/calculator/src/ui.rs:314 apps/calculator/src/ui.rs:346
 msgid "Last answer"
 msgstr "Laatste antwoord"
 
-#: apps/calculator/src/ui.rs:301
+#: apps/calculator/src/ui.rs:315
 msgid "Scientific exponent"
 msgstr "Wetenschappelijke exponent"
 
-#: apps/calculator/src/ui.rs:302
+#: apps/calculator/src/ui.rs:316
 msgid "Cube root"
 msgstr "Derdemachtswortel"
 
-#: apps/calculator/src/ui.rs:303
+#: apps/calculator/src/ui.rs:317
 msgid "Random number"
 msgstr "Willekeurig getal"
 
-#: apps/calculator/src/ui.rs:313
+#: apps/calculator/src/ui.rs:327
 msgid "Boolean AND"
 msgstr "Booleaanse AND"
 
-#: apps/calculator/src/ui.rs:314
+#: apps/calculator/src/ui.rs:328
 msgid "Shift left"
 msgstr "Naar links schuiven"
 
-#: apps/calculator/src/ui.rs:319
+#: apps/calculator/src/ui.rs:333
 msgid "Boolean OR"
 msgstr "Booleaanse OR"
 
-#: apps/calculator/src/ui.rs:320
+#: apps/calculator/src/ui.rs:334
 msgid "Shift right"
 msgstr "Naar rechts schuiven"
 
-#: apps/calculator/src/ui.rs:325
+#: apps/calculator/src/ui.rs:339
 msgid "Boolean exclusive OR"
 msgstr "Booleaanse exclusieve OR"
 
-#: apps/calculator/src/ui.rs:326
+#: apps/calculator/src/ui.rs:340
 msgid "Boolean NOT"
 msgstr "Booleaanse NOT"
 
-#: apps/calculator/src/ui.rs:329
+#: apps/calculator/src/ui.rs:343
 msgid "One's complement"
 msgstr "Enen-complement"
 
-#: apps/calculator/src/ui.rs:330
+#: apps/calculator/src/ui.rs:344
 msgid "Two's complement"
 msgstr "Twee-complement"
 
-#: apps/calculator/src/ui.rs:331 apps/calculator/src/ui.rs:351
-#: apps/calculator/src/ui.rs:431
+#: apps/calculator/src/ui.rs:345 apps/calculator/src/ui.rs:365
+#: apps/calculator/src/ui.rs:445
 msgid "Exponent"
 msgstr "Exponent"
 
-#: apps/calculator/src/ui.rs:350 apps/calculator/src/ui.rs:437
+#: apps/calculator/src/ui.rs:364 apps/calculator/src/ui.rs:451
 msgid "Percentage"
 msgstr "Percentage"
 
-#: apps/calculator/src/ui.rs:403 apps/calculator/src/ui.rs:409
-#: apps/calculator/src/ui.rs:415 apps/calculator/src/ui.rs:420
-#: apps/calculator/src/ui.rs:421 apps/calculator/src/ui.rs:423
-#: apps/calculator/src/ui.rs:428 apps/calculator/src/ui.rs:430
-#: apps/calculator/src/ui.rs:436 apps/calculator/src/ui.rs:441
-#: apps/calculator/src/ui.rs:443 apps/calculator/src/ui.rs:449
-#: apps/calculator/src/ui.rs:455 apps/calculator/src/ui.rs:461
-#: apps/calculator/src/ui.rs:1594
+#: apps/calculator/src/ui.rs:417 apps/calculator/src/ui.rs:423
+#: apps/calculator/src/ui.rs:429 apps/calculator/src/ui.rs:434
+#: apps/calculator/src/ui.rs:435 apps/calculator/src/ui.rs:437
+#: apps/calculator/src/ui.rs:442 apps/calculator/src/ui.rs:444
+#: apps/calculator/src/ui.rs:450 apps/calculator/src/ui.rs:455
+#: apps/calculator/src/ui.rs:457 apps/calculator/src/ui.rs:463
+#: apps/calculator/src/ui.rs:469 apps/calculator/src/ui.rs:475
+#: apps/calculator/src/ui.rs:1627
 msgid "Calculation"
 msgstr "Berekening"
 
-#: apps/calculator/src/ui.rs:404
+#: apps/calculator/src/ui.rs:418
 msgid "Calculate result"
 msgstr "Resultaat berekenen"
 
-#: apps/calculator/src/ui.rs:410 apps/maps/src/ui.rs:1877
+#: apps/calculator/src/ui.rs:424 apps/maps/src/ui.rs:1877
 msgid "Clear"
 msgstr "Wissen"
 
-#: apps/calculator/src/ui.rs:416
+#: apps/calculator/src/ui.rs:430
 msgid "Undo last calculation"
 msgstr "Laatste berekening ongedaan maken"
 
-#: apps/calculator/src/ui.rs:420 apps/calendar/src/editor.rs:469
+#: apps/calculator/src/ui.rs:434 apps/calendar/src/editor.rs:469
 #: apps/calendar/src/manage.rs:71
 msgid "Add"
 msgstr "Toevoegen"
 
-#: apps/calculator/src/ui.rs:421
+#: apps/calculator/src/ui.rs:435
 msgid "Subtract"
 msgstr "Aftrekken"
 
-#: apps/calculator/src/ui.rs:424
+#: apps/calculator/src/ui.rs:438
 msgid "Multiply"
 msgstr "Vermenigvuldigen"
 
-#: apps/calculator/src/ui.rs:428
+#: apps/calculator/src/ui.rs:442
 msgid "Divide"
 msgstr "Delen"
 
-#: apps/calculator/src/ui.rs:444
+#: apps/calculator/src/ui.rs:458
 msgid "Absolute value"
 msgstr "Absolute waarde"
 
-#: apps/calculator/src/ui.rs:450
+#: apps/calculator/src/ui.rs:464
 msgid "Square"
 msgstr "Kwadraat"
 
-#: apps/calculator/src/ui.rs:456
+#: apps/calculator/src/ui.rs:470
 msgid "Square root"
 msgstr "Vierkantswortel"
 
-#: apps/calculator/src/ui.rs:462
+#: apps/calculator/src/ui.rs:476
 msgid "Pi"
 msgstr "Pi"
 
-#: apps/calculator/src/ui.rs:467 apps/calculator/src/ui.rs:473
-#: apps/calculator/src/ui.rs:479 apps/calculator/src/ui.rs:485
+#: apps/calculator/src/ui.rs:481 apps/calculator/src/ui.rs:487
+#: apps/calculator/src/ui.rs:493 apps/calculator/src/ui.rs:499
 msgid "Modes"
 msgstr "Modi"
 
-#: apps/calculator/src/ui.rs:468
+#: apps/calculator/src/ui.rs:482
 msgid "Basic mode"
 msgstr "Basismodus"
 
-#: apps/calculator/src/ui.rs:474
+#: apps/calculator/src/ui.rs:488
 msgid "Advanced mode"
 msgstr "Geavanceerde modus"
 
-#: apps/calculator/src/ui.rs:480
+#: apps/calculator/src/ui.rs:494
 msgid "Financial mode"
 msgstr "Financiële modus"
 
-#: apps/calculator/src/ui.rs:486
+#: apps/calculator/src/ui.rs:500
 msgid "Programming mode"
 msgstr "Programmeermodus"
 
-#: apps/calculator/src/ui.rs:492 apps/calculator/src/ui.rs:1554
+#: apps/calculator/src/ui.rs:506 apps/calculator/src/ui.rs:1587
 #: apps/disk-usage/src/shortcuts.rs:49 apps/disk-usage/src/ui.rs:1775
 #: apps/document-scanner/src/shortcuts.rs:50 apps/files/src/ui/shortcuts.rs:80
 #: apps/maps/src/shortcuts.rs:13 apps/maps/src/ui.rs:1804
@@ -1042,33 +1042,33 @@ msgstr "Programmeermodus"
 msgid "Preferences"
 msgstr "Voorkeuren"
 
-#: apps/calculator/src/ui.rs:498
+#: apps/calculator/src/ui.rs:512
 msgid "Keyboard shortcuts"
 msgstr "Sneltoetsen"
 
-#: apps/calculator/src/ui.rs:504
+#: apps/calculator/src/ui.rs:518
 msgid "Close window"
 msgstr "Venster sluiten"
 
-#: apps/calculator/src/ui.rs:586 apps/calculator/src/ui.rs:653
+#: apps/calculator/src/ui.rs:600 apps/calculator/src/ui.rs:668
 msgid "Calculator"
 msgstr "Rekenmachine"
 
-#: apps/calculator/src/ui.rs:587
+#: apps/calculator/src/ui.rs:601
 msgid "Perform arithmetic, scientific, financial and programming calculations"
 msgstr ""
 "Rekenkundige, wetenschappelijke, financiële en programmeerberekeningen "
 "uitvoeren"
 
-#: apps/calculator/src/ui.rs:676 apps/calculator/src/ui.rs:677
+#: apps/calculator/src/ui.rs:691 apps/calculator/src/ui.rs:692
 msgid "Calculator mode"
 msgstr "Rekenmachinemodus"
 
-#: apps/calculator/src/ui.rs:681
+#: apps/calculator/src/ui.rs:696
 msgid "_Clear History"
 msgstr "_Geschiedenis wissen"
 
-#: apps/calculator/src/ui.rs:684 apps/disk-usage/src/ui.rs:186
+#: apps/calculator/src/ui.rs:699 apps/disk-usage/src/ui.rs:186
 #: apps/document-scanner/src/ui.rs:174 apps/document-scanner/src/ui.rs:190
 #: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:485
 #: apps/music/src/ui.rs:304 apps/system-monitor/src/ui.rs:247
@@ -1077,55 +1077,55 @@ msgstr "_Geschiedenis wissen"
 msgid "_Preferences"
 msgstr "_Voorkeuren"
 
-#: apps/calculator/src/ui.rs:691
+#: apps/calculator/src/ui.rs:706
 msgid "_About Calculator"
 msgstr "_Over Rekenmachine"
 
-#: apps/calculator/src/ui.rs:720
+#: apps/calculator/src/ui.rs:735
 msgid "Expression"
 msgstr "Expressie"
 
-#: apps/calculator/src/ui.rs:732
+#: apps/calculator/src/ui.rs:747
 msgid "Binary"
 msgstr "Binair"
 
-#: apps/calculator/src/ui.rs:732
+#: apps/calculator/src/ui.rs:747
 msgid "Decimal"
 msgstr "Decimaal"
 
-#: apps/calculator/src/ui.rs:732
+#: apps/calculator/src/ui.rs:747
 msgid "Hexadecimal"
 msgstr "Hexadecimaal"
 
-#: apps/calculator/src/ui.rs:732
+#: apps/calculator/src/ui.rs:747
 msgid "Octal"
 msgstr "Octaal"
 
-#: apps/calculator/src/ui.rs:740 apps/calculator/src/ui.rs:741
+#: apps/calculator/src/ui.rs:755 apps/calculator/src/ui.rs:756
 msgid "Number base"
 msgstr "Grondtal"
 
-#: apps/calculator/src/ui.rs:750 apps/calculator/src/ui.rs:751
+#: apps/calculator/src/ui.rs:765 apps/calculator/src/ui.rs:766
 msgid "Word size"
 msgstr "Woordgrootte"
 
-#: apps/calculator/src/ui.rs:1278
+#: apps/calculator/src/ui.rs:1311
 msgid "Insert expression"
 msgstr "Expressie invoegen"
 
-#: apps/calculator/src/ui.rs:1284
+#: apps/calculator/src/ui.rs:1317
 msgid "Insert result"
 msgstr "Resultaat invoegen"
 
-#: apps/calculator/src/ui.rs:1454 apps/calculator/src/ui.rs:1458
+#: apps/calculator/src/ui.rs:1487 apps/calculator/src/ui.rs:1491
 msgid "Bit {bit}"
 msgstr "Bit {bit}"
 
-#: apps/calculator/src/ui.rs:1525
+#: apps/calculator/src/ui.rs:1558
 msgid "C_alculate"
 msgstr "_Berekenen"
 
-#: apps/calculator/src/ui.rs:1525 apps/calendar/src/editor.rs:1039
+#: apps/calculator/src/ui.rs:1558 apps/calendar/src/editor.rs:1039
 #: apps/calendar/src/manage.rs:374 apps/calendar/src/ui.rs:2470
 #: apps/clocks/src/ui.rs:410 apps/clocks/src/ui.rs:1352
 #: apps/clocks/src/ui.rs:1907 apps/disk-usage/src/ui.rs:320
@@ -1150,43 +1150,43 @@ msgstr "_Berekenen"
 msgid "_Cancel"
 msgstr "_Annuleren"
 
-#: apps/calculator/src/ui.rs:1558 apps/disk-usage/src/ui.rs:441
+#: apps/calculator/src/ui.rs:1591 apps/disk-usage/src/ui.rs:441
 msgid "Results"
 msgstr "Resultaten"
 
-#: apps/calculator/src/ui.rs:1564
+#: apps/calculator/src/ui.rs:1597
 msgid "Number _Format"
 msgstr "Getal_notatie"
 
-#: apps/calculator/src/ui.rs:1575
+#: apps/calculator/src/ui.rs:1608
 msgid "_Decimal Places"
 msgstr "_Decimalen"
 
-#: apps/calculator/src/ui.rs:1579
+#: apps/calculator/src/ui.rs:1612
 msgid "_Thousands Separators"
 msgstr "_Scheidingstekens voor duizendtallen"
 
-#: apps/calculator/src/ui.rs:1584
+#: apps/calculator/src/ui.rs:1617
 msgid "_Trailing Zeroes"
 msgstr "_Volgnullen"
 
-#: apps/calculator/src/ui.rs:1598
+#: apps/calculator/src/ui.rs:1631
 msgid "_Angle Units"
 msgstr "_Hoekeenheden"
 
-#: apps/calculator/src/ui.rs:1601
+#: apps/calculator/src/ui.rs:1634
 msgid "Degrees"
 msgstr "Graden"
 
-#: apps/calculator/src/ui.rs:1602
+#: apps/calculator/src/ui.rs:1635
 msgid "Radians"
 msgstr "Radialen"
 
-#: apps/calculator/src/ui.rs:1603
+#: apps/calculator/src/ui.rs:1636
 msgid "Gradians"
 msgstr "Gon"
 
-#: apps/calculator/src/ui.rs:1663
+#: apps/calculator/src/ui.rs:1696
 msgid "{} equals {}"
 msgstr "{} is gelijk aan {}"
 
@@ -1388,7 +1388,7 @@ msgid "New Event"
 msgstr "Nieuwe afspraak"
 
 #: apps/calendar/src/editor.rs:464 apps/contacts/src/ui.rs:340
-#: apps/files/src/ui/jobs.rs:157 apps/web/src/window.rs:2221
+#: apps/files/src/ui/jobs.rs:157 apps/web/src/window.rs:2226
 msgid "Cancel"
 msgstr "Annuleren"
 
@@ -2007,7 +2007,7 @@ msgstr "Afspraken zoeken"
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
 #: apps/files/src/ui/tab.rs:968 apps/settings/src/ui/mod.rs:227
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:739
-#: apps/web/src/window.rs:2377
+#: apps/web/src/window.rs:2382
 msgid "No Results Found"
 msgstr "Geen resultaten gevonden"
 
@@ -2015,7 +2015,7 @@ msgstr "Geen resultaten gevonden"
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
 #: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:228
 #: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:740
-#: apps/web/src/window.rs:2378
+#: apps/web/src/window.rs:2383
 msgid "Try a different search"
 msgstr "Probeer een andere zoekopdracht"
 
@@ -2598,7 +2598,7 @@ msgstr "Tekentabel en emojikiezer"
 
 #: apps/characters/src/ui.rs:199 apps/contacts/src/ui.rs:1104
 #: apps/files/src/ui/tab.rs:1199 apps/logs/src/ui.rs:719
-#: apps/text-editor/src/doc.rs:860
+#: apps/text-editor/src/doc.rs:866
 msgid "No results"
 msgstr "Geen resultaten"
 
@@ -2852,7 +2852,7 @@ msgstr "Ronde"
 #: apps/clocks/src/shortcuts.rs:35 apps/clocks/src/ui.rs:1759
 #: apps/clocks/src/ui.rs:2086 apps/maps/src/ui.rs:1887
 #: apps/settings/src/ui/apps.rs:490 apps/settings/src/ui/apps.rs:550
-#: apps/web/src/window.rs:1950
+#: apps/web/src/window.rs:1955
 msgid "Reset"
 msgstr "Herstellen"
 
@@ -3180,7 +3180,7 @@ msgid "Snooze"
 msgstr "Sluimeren"
 
 #: apps/clocks/src/ui.rs:1647 apps/system-monitor/src/shortcuts.rs:49
-#: apps/web/src/window.rs:1497
+#: apps/web/src/window.rs:1498
 msgid "Stop"
 msgstr "Stoppen"
 
@@ -5669,7 +5669,7 @@ msgstr "_Terugzetten"
 msgid "Restoring image to {desc}"
 msgstr "Kopie terugzetten naar {desc}"
 
-#: apps/disks/src/ui.rs:2213 apps/web/src/window.rs:2209
+#: apps/disks/src/ui.rs:2213 apps/web/src/window.rs:2214
 msgid "Starting…"
 msgstr "Starten…"
 
@@ -5882,7 +5882,7 @@ msgstr "Scanners vernieuwen"
 msgid "Document"
 msgstr "Document"
 
-#: apps/document-scanner/src/shortcuts.rs:20 apps/text-editor/src/doc.rs:489
+#: apps/document-scanner/src/shortcuts.rs:20 apps/text-editor/src/doc.rs:490
 msgid "New Document"
 msgstr "Nieuw document"
 
@@ -6257,7 +6257,7 @@ msgstr "Zijden scannen"
 msgid "For the document feeder"
 msgstr "Voor de documentinvoer"
 
-#: apps/document-scanner/src/ui.rs:1781
+#: apps/document-scanner/src/ui.rs:1781 apps/settings/src/ui/sound.rs:247
 msgid "Front"
 msgstr "Voorkant"
 
@@ -6809,7 +6809,7 @@ msgid "No results found"
 msgstr "Geen resultaten gevonden"
 
 #: apps/document-viewer/src/ui.rs:1644 apps/settings/src/ui/picker.rs:35
-#: apps/text-editor/src/doc.rs:863 apps/web/src/window.rs:2385
+#: apps/text-editor/src/doc.rs:869 apps/web/src/window.rs:2390
 msgid "{n} result"
 msgid_plural "{n} results"
 msgstr[0] "{n} resultaat"
@@ -7006,7 +7006,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr "Kon ‘{file}’ niet verwerken: {error}"
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/web/src/window.rs:2340
+#: apps/web/src/window.rs:2345
 msgid "Cancelled"
 msgstr "Geannuleerd"
 
@@ -7166,7 +7166,7 @@ msgid "Applications"
 msgstr "Toepassingen"
 
 #: apps/files/src/ui/dialogs.rs:364 apps/settings/src/ui/appearance.rs:107
-#: apps/settings/src/ui/sound.rs:736 apps/settings/src/values.rs:204
+#: apps/settings/src/ui/sound.rs:829 apps/settings/src/values.rs:204
 msgid "Default"
 msgstr "Standaard"
 
@@ -7400,7 +7400,7 @@ msgstr[0] "{n} item geselecteerd"
 msgstr[1] "{n} items geselecteerd"
 
 #: apps/files/src/ui/properties.rs:281 apps/settings/src/ui/apps.rs:404
-#: apps/web/src/window.rs:1933
+#: apps/web/src/window.rs:1938
 msgid "Permissions"
 msgstr "Rechten"
 
@@ -7497,7 +7497,7 @@ msgid "Hide the Location Entry"
 msgstr "Het locatieveld verbergen"
 
 #: apps/files/src/ui/shortcuts.rs:29 apps/web/src/shortcuts.rs:39
-#: apps/web/src/window.rs:340 apps/web/src/window.rs:1497
+#: apps/web/src/window.rs:340 apps/web/src/window.rs:1498
 msgid "Reload"
 msgstr "Herladen"
 
@@ -8422,15 +8422,15 @@ msgstr "Opdrachten kopiëren"
 msgid "_Quit"
 msgstr "_Afsluiten"
 
-#: apps/help/src/sandbox.rs:336 apps/web/src/sandbox.rs:336
+#: apps/help/src/sandbox.rs:336 apps/web/src/sandbox.rs:338
 msgid "The page used too much memory and was stopped."
 msgstr "De pagina gebruikte te veel geheugen en is gestopt."
 
-#: apps/help/src/sandbox.rs:338 apps/web/src/sandbox.rs:338
+#: apps/help/src/sandbox.rs:338 apps/web/src/sandbox.rs:340
 msgid "The process showing this page stopped unexpectedly."
 msgstr "Het proces dat deze pagina toont, is onverwacht gestopt."
 
-#: apps/help/src/sandbox.rs:342 apps/web/src/sandbox.rs:342
+#: apps/help/src/sandbox.rs:342 apps/web/src/sandbox.rs:344
 msgid "Page Crashed"
 msgstr "Pagina gecrasht"
 
@@ -8467,7 +8467,7 @@ msgid "help page rendering failed"
 msgstr "weergeven van hulppagina mislukt"
 
 #: apps/help/src/ui.rs:274 apps/text-editor/src/doc.rs:149
-#: apps/web/src/tab.rs:199 apps/web/src/window.rs:2403
+#: apps/web/src/tab.rs:199 apps/web/src/window.rs:2408
 msgid "_Reload"
 msgstr "_Herladen"
 
@@ -8695,7 +8695,7 @@ msgid "Focal Length"
 msgstr "Brandpuntsafstand"
 
 #: apps/image-viewer/src/ui.rs:574 apps/image-viewer/src/ui.rs:576
-#: apps/settings/src/ui/apps.rs:222 apps/web/src/window.rs:2234
+#: apps/settings/src/ui/apps.rs:222 apps/web/src/window.rs:2239
 msgid "Open Folder"
 msgstr "Map openen"
 
@@ -10619,7 +10619,7 @@ msgstr "Headset"
 msgid "Headphones"
 msgstr "Koptelefoon"
 
-#: apps/settings/src/bluez.rs:223 apps/settings/src/sound.rs:645
+#: apps/settings/src/bluez.rs:223 apps/settings/src/sound.rs:722
 msgid "Speaker"
 msgstr "Luidspreker"
 
@@ -10667,7 +10667,7 @@ msgstr "Ander apparaat"
 
 #: apps/settings/src/defaults.rs:15 apps/web/src/app.rs:126
 #: apps/web/src/app.rs:150 apps/web/src/app.rs:904 apps/web/src/window.rs:320
-#: apps/web/src/window.rs:1573
+#: apps/web/src/window.rs:1574
 msgid "Web"
 msgstr "Web"
 
@@ -10927,7 +10927,7 @@ msgid "dark;light;style;theme;icon;icons;accent;color;colour;wallpaper;backgroun
 msgstr "donker;licht;stijl;thema;pictogram;pictogrammen;accent;kleur;bureaubladachtergrond;achtergrond;"
 
 #: apps/settings/src/panels.rs:144 apps/settings/src/ui/notifications.rs:100
-#: apps/settings/src/ui/sound.rs:249
+#: apps/settings/src/ui/sound.rs:283
 msgid "Apps"
 msgstr "Apps"
 
@@ -11047,43 +11047,43 @@ msgstr "Luidsprekers"
 msgid "Screenshots"
 msgstr "Schermafdrukken"
 
-#: apps/settings/src/sound.rs:635
+#: apps/settings/src/sound.rs:712
 msgid "Front Left"
 msgstr "Linksvoor"
 
-#: apps/settings/src/sound.rs:636
+#: apps/settings/src/sound.rs:713
 msgid "Front Right"
 msgstr "Rechtsvoor"
 
-#: apps/settings/src/sound.rs:637
+#: apps/settings/src/sound.rs:714
 msgid "Front Center"
 msgstr "Midden voor"
 
-#: apps/settings/src/sound.rs:638
+#: apps/settings/src/sound.rs:715
 msgid "Rear Left"
 msgstr "Linksachter"
 
-#: apps/settings/src/sound.rs:639
+#: apps/settings/src/sound.rs:716
 msgid "Rear Right"
 msgstr "Rechtsachter"
 
-#: apps/settings/src/sound.rs:640
+#: apps/settings/src/sound.rs:717
 msgid "Rear Center"
 msgstr "Midden achter"
 
-#: apps/settings/src/sound.rs:641
+#: apps/settings/src/sound.rs:718
 msgid "Side Left"
 msgstr "Zijkant links"
 
-#: apps/settings/src/sound.rs:642
+#: apps/settings/src/sound.rs:719
 msgid "Side Right"
 msgstr "Zijkant rechts"
 
-#: apps/settings/src/sound.rs:643
+#: apps/settings/src/sound.rs:720
 msgid "Subwoofer"
 msgstr "Subwoofer"
 
-#: apps/settings/src/sound.rs:644
+#: apps/settings/src/sound.rs:721
 msgid "Mono"
 msgstr "Mono"
 
@@ -12307,11 +12307,11 @@ msgstr "Kon deze toetsen niet gebruiken: {msg}"
 msgid "Primary Button"
 msgstr "Primaire knop"
 
-#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:211
+#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:229
 msgid "Left"
 msgstr "Links"
 
-#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:213
+#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:231
 msgid "Right"
 msgstr "Rechts"
 
@@ -13092,147 +13092,163 @@ msgstr "De zoekopdracht wissen en sluiten"
 msgid "About Settings"
 msgstr "Over Instellingen"
 
-#: apps/settings/src/ui/sound.rs:135
+#: apps/settings/src/ui/sound.rs:141
 msgid "Input"
 msgstr "Invoer"
 
-#: apps/settings/src/ui/sound.rs:135
+#: apps/settings/src/ui/sound.rs:141
 msgid "Output"
 msgstr "Uitvoer"
 
-#: apps/settings/src/ui/sound.rs:139
+#: apps/settings/src/ui/sound.rs:145
 msgid "Output Device"
 msgstr "Uitvoerapparaat"
 
-#: apps/settings/src/ui/sound.rs:141
+#: apps/settings/src/ui/sound.rs:147
 msgid "Input Device"
 msgstr "Invoerapparaat"
 
-#: apps/settings/src/ui/sound.rs:150
+#: apps/settings/src/ui/sound.rs:154
+msgid "Output Port"
+msgstr "Uitvoerpoort"
+
+#: apps/settings/src/ui/sound.rs:156
+msgid "Input Port"
+msgstr "Invoerpoort"
+
+#: apps/settings/src/ui/sound.rs:166
 msgid "Mute Output"
 msgstr "Uitvoer dempen"
 
-#: apps/settings/src/ui/sound.rs:152
+#: apps/settings/src/ui/sound.rs:168
 msgid "Mute Input"
 msgstr "Invoer dempen"
 
-#: apps/settings/src/ui/sound.rs:155
+#: apps/settings/src/ui/sound.rs:171
 msgid "Output Volume"
 msgstr "Uitvoervolume"
 
-#: apps/settings/src/ui/sound.rs:157
+#: apps/settings/src/ui/sound.rs:173
 msgid "Input Volume"
 msgstr "Invoervolume"
 
-#: apps/settings/src/ui/sound.rs:164
+#: apps/settings/src/ui/sound.rs:180
 msgid "Configuration"
 msgstr "Configuratie"
 
-#: apps/settings/src/ui/sound.rs:170
+#: apps/settings/src/ui/sound.rs:186
 msgid "Output Configuration"
 msgstr "Uitvoerconfiguratie"
 
-#: apps/settings/src/ui/sound.rs:172
+#: apps/settings/src/ui/sound.rs:188
 msgid "Input Configuration"
 msgstr "Invoerconfiguratie"
 
-#: apps/settings/src/ui/sound.rs:190
+#: apps/settings/src/ui/sound.rs:208
 msgid "Loading Sound…"
 msgstr "Geluid laden…"
 
-#: apps/settings/src/ui/sound.rs:194
+#: apps/settings/src/ui/sound.rs:212
 msgid "Sound Is Not Available"
 msgstr "Geluid is niet beschikbaar"
 
-#: apps/settings/src/ui/sound.rs:195
+#: apps/settings/src/ui/sound.rs:213
 msgid "No sound server is running."
 msgstr "Er is geen geluidsserver actief."
 
-#: apps/settings/src/ui/sound.rs:204 apps/settings/src/ui/sound.rs:214
+#: apps/settings/src/ui/sound.rs:222 apps/settings/src/ui/sound.rs:232
 msgid "Balance"
 msgstr "Balans"
 
-#: apps/settings/src/ui/sound.rs:219
+#: apps/settings/src/ui/sound.rs:237 apps/settings/src/ui/sound.rs:248
+msgid "Fade"
+msgstr "Fader"
+
+#: apps/settings/src/ui/sound.rs:245
+msgid "Rear"
+msgstr "Achter"
+
+#: apps/settings/src/ui/sound.rs:253
 msgid "Test Speakers"
 msgstr "Luidsprekers testen"
 
-#: apps/settings/src/ui/sound.rs:220
+#: apps/settings/src/ui/sound.rs:254
 msgid "Play a sound on each speaker"
 msgstr "Een geluid afspelen op elke luidspreker"
 
-#: apps/settings/src/ui/sound.rs:221
+#: apps/settings/src/ui/sound.rs:255
 msgid "Test…"
 msgstr "Testen…"
 
-#: apps/settings/src/ui/sound.rs:230 apps/settings/src/ui/sound.rs:243
+#: apps/settings/src/ui/sound.rs:264 apps/settings/src/ui/sound.rs:277
 msgid "Input Level"
 msgstr "Invoerniveau"
 
-#: apps/settings/src/ui/sound.rs:252
+#: apps/settings/src/ui/sound.rs:286
 msgid "Sounds"
 msgstr "Geluiden"
 
-#: apps/settings/src/ui/sound.rs:258
+#: apps/settings/src/ui/sound.rs:292
 msgid "Over-Amplification"
 msgstr "Oversturing"
 
-#: apps/settings/src/ui/sound.rs:259
+#: apps/settings/src/ui/sound.rs:293
 msgid "Lets the volume go above 100 %, which can distort the sound"
 msgstr "Laat het volume boven 100 % gaan, wat het geluid kan vervormen"
 
-#: apps/settings/src/ui/sound.rs:266
+#: apps/settings/src/ui/sound.rs:300
 msgid "System Sounds"
 msgstr "Systeemgeluiden"
 
-#: apps/settings/src/ui/sound.rs:267
+#: apps/settings/src/ui/sound.rs:301
 msgid "Sounds for events such as a message arriving"
 msgstr "Geluiden voor gebeurtenissen zoals een binnenkomend bericht"
 
-#: apps/settings/src/ui/sound.rs:460
+#: apps/settings/src/ui/sound.rs:524
 msgid "Could not change the sound settings: {e}"
 msgstr "Kon de geluidsinstellingen niet wijzigen: {e}"
 
-#: apps/settings/src/ui/sound.rs:483
+#: apps/settings/src/ui/sound.rs:547
 msgid "No output devices"
 msgstr "Geen uitvoerapparaten"
 
-#: apps/settings/src/ui/sound.rs:485
+#: apps/settings/src/ui/sound.rs:549
 msgid "No input devices"
 msgstr "Geen invoerapparaten"
 
-#: apps/settings/src/ui/sound.rs:586
+#: apps/settings/src/ui/sound.rs:679
 msgid "Unknown App"
 msgstr "Onbekende app"
 
-#: apps/settings/src/ui/sound.rs:595
+#: apps/settings/src/ui/sound.rs:688
 msgid "Mute {app}"
 msgstr "{app} dempen"
 
-#: apps/settings/src/ui/sound.rs:596
+#: apps/settings/src/ui/sound.rs:689
 msgid "Volume of {app}"
 msgstr "Volume van {app}"
 
-#: apps/settings/src/ui/sound.rs:640
+#: apps/settings/src/ui/sound.rs:733
 msgid "No apps are playing sound."
 msgstr "Er spelen geen apps geluid af."
 
-#: apps/settings/src/ui/sound.rs:685
+#: apps/settings/src/ui/sound.rs:778
 msgid "Select a speaker to play a sound on it."
 msgstr "Selecteer een luidspreker om er een geluid op af te spelen."
 
-#: apps/settings/src/ui/sound.rs:719
+#: apps/settings/src/ui/sound.rs:812
 msgid "Could not play the test sound: {e}"
 msgstr "Kon het testgeluid niet afspelen: {e}"
 
-#: apps/settings/src/ui/sound.rs:728
+#: apps/settings/src/ui/sound.rs:821
 msgid "Test {device}"
 msgstr "{device} testen"
 
-#: apps/settings/src/ui/sound.rs:740
+#: apps/settings/src/ui/sound.rs:833
 msgid "Alert Sound"
 msgstr "Waarschuwingsgeluid"
 
-#: apps/settings/src/ui/sound.rs:778
+#: apps/settings/src/ui/sound.rs:871
 msgid "Could not change the alert sound: {e}"
 msgstr "Kon het waarschuwingsgeluid niet wijzigen: {e}"
 
@@ -14537,7 +14553,7 @@ msgstr "Ctrl + scrollen"
 msgid "A process"
 msgstr "Een proces"
 
-#: apps/terminal/src/window.rs:125 apps/text-editor/src/doc.rs:817
+#: apps/terminal/src/window.rs:125 apps/text-editor/src/doc.rs:823
 msgid "Invalid regular expression"
 msgstr "Ongeldige reguliere expressie"
 
@@ -14736,39 +14752,39 @@ msgstr "Vervangen door"
 msgid "Replace _All"
 msgstr "_Alles vervangen"
 
-#: apps/text-editor/src/doc.rs:490
+#: apps/text-editor/src/doc.rs:491
 msgid "New Document {n}"
 msgstr "Nieuw document {n}"
 
-#: apps/text-editor/src/doc.rs:497
+#: apps/text-editor/src/doc.rs:498
 msgid "Draft"
 msgstr "Concept"
 
-#: apps/text-editor/src/doc.rs:859
+#: apps/text-editor/src/doc.rs:865
 msgid "Invalid expression"
 msgstr "Ongeldige expressie"
 
 #. Translators: the current search match, "3 of 12".
-#: apps/text-editor/src/doc.rs:862
+#: apps/text-editor/src/doc.rs:868
 msgid "{current} of {n}"
 msgstr "{current} van {n}"
 
-#: apps/text-editor/src/doc.rs:955
+#: apps/text-editor/src/doc.rs:961
 msgid "Replaced {n} occurrence"
 msgid_plural "Replaced {n} occurrences"
 msgstr[0] "{n} keer vervangen"
 msgstr[1] "{n} keer vervangen"
 
-#: apps/text-editor/src/doc.rs:1129
+#: apps/text-editor/src/doc.rs:1135
 msgid "The file has been deleted from disk. Saving will recreate it."
 msgstr ""
 "Het bestand is van de schijf verwijderd. Opslaan zal het opnieuw aanmaken."
 
-#: apps/text-editor/src/doc.rs:1131
+#: apps/text-editor/src/doc.rs:1137
 msgid "The file has changed on disk."
 msgstr "Het bestand is op de schijf gewijzigd."
 
-#: apps/text-editor/src/doc.rs:1156
+#: apps/text-editor/src/doc.rs:1162
 msgid "Could not reload: {}"
 msgstr "Kon niet herladen: {}"
 
@@ -16374,7 +16390,7 @@ msgid "Enter a site address, such as example.org"
 msgstr "Voer een siteadres in, zoals example.org"
 
 #: apps/web/src/overview.rs:55 apps/web/src/window.rs:318
-#: apps/web/src/window.rs:543 apps/web/src/window.rs:1571
+#: apps/web/src/window.rs:543 apps/web/src/window.rs:1572
 msgid "Private Browsing"
 msgstr "Privénavigatie"
 
@@ -16567,7 +16583,7 @@ msgid "Page"
 msgstr "Pagina"
 
 #: apps/web/src/shortcuts.rs:52 apps/web/src/window.rs:350
-#: apps/web/src/window.rs:354 apps/web/src/window.rs:1541
+#: apps/web/src/window.rs:354 apps/web/src/window.rs:1542
 msgid "Reader View"
 msgstr "Leesweergave"
 
@@ -16790,7 +16806,7 @@ msgid "Address and Search"
 msgstr "Adres en zoeken"
 
 #: apps/web/src/window.rs:386 apps/web/src/window.rs:389
-#: apps/web/src/window.rs:1649
+#: apps/web/src/window.rs:1650
 msgid "Bookmark This Page"
 msgstr "Bladwijzer voor deze pagina maken"
 
@@ -16842,7 +16858,7 @@ msgstr "_Naam"
 msgid "_Tags (comma separated)"
 msgstr "_Labels (gescheiden door komma's)"
 
-#: apps/web/src/window.rs:697 apps/web/src/window.rs:2084
+#: apps/web/src/window.rs:697 apps/web/src/window.rs:2089
 msgid "Remove Bookmark"
 msgstr "Bladwijzer verwijderen"
 
@@ -16854,48 +16870,48 @@ msgstr "Tabblad gedempt"
 msgid "Tab unmuted"
 msgstr "Dempen van tabblad opgeheven"
 
-#: apps/web/src/window.rs:1457
+#: apps/web/src/window.rs:1458
 msgid "Unmute Tab"
 msgstr "Dempen van tabblad opheffen"
 
-#: apps/web/src/window.rs:1459
+#: apps/web/src/window.rs:1460
 msgid "Mute Tab"
 msgstr "Tabblad dempen"
 
-#: apps/web/src/window.rs:1539
+#: apps/web/src/window.rs:1540
 msgid "Leave Reader View"
 msgstr "Leesweergave verlaten"
 
 #. Translators: window title: page title, then "Web" or "Private Browsing".
-#: apps/web/src/window.rs:1579
+#: apps/web/src/window.rs:1580
 msgid "{title} — {suffix}"
 msgstr "{title} — {suffix}"
 
-#: apps/web/src/window.rs:1627
+#: apps/web/src/window.rs:1628
 msgid "Current zoom {level}"
 msgstr "Huidige zoom {level}"
 
-#: apps/web/src/window.rs:1643
+#: apps/web/src/window.rs:1644
 msgid "Edit Bookmark"
 msgstr "Bladwijzer bewerken"
 
-#: apps/web/src/window.rs:1795
+#: apps/web/src/window.rs:1800
 msgid "Search {} for “{}”"
 msgstr "In {} zoeken naar ‘{}’"
 
-#: apps/web/src/window.rs:1879
+#: apps/web/src/window.rs:1884
 msgid "Start Page"
 msgstr "Beginpagina"
 
-#: apps/web/src/window.rs:1891
+#: apps/web/src/window.rs:1896
 msgid "This is a page built into Web."
 msgstr "Dit is een pagina die in Web is ingebouwd."
 
-#: apps/web/src/window.rs:1892
+#: apps/web/src/window.rs:1897
 msgid "Your connection to this site is secure."
 msgstr "Uw verbinding met deze site is beveiligd."
 
-#: apps/web/src/window.rs:1893
+#: apps/web/src/window.rs:1898
 msgid ""
 "Your connection to this site is not encrypted. Do not enter passwords or "
 "other sensitive information."
@@ -16903,7 +16919,7 @@ msgstr ""
 "Uw verbinding met deze site is niet versleuteld. Voer geen wachtwoorden of "
 "andere gevoelige informatie in."
 
-#: apps/web/src/window.rs:1894
+#: apps/web/src/window.rs:1899
 msgid ""
 "This site's security certificate has problems. The connection may not be "
 "private."
@@ -16911,171 +16927,171 @@ msgstr ""
 "Het beveiligingscertificaat van deze site heeft problemen. De verbinding is "
 "mogelijk niet privé."
 
-#: apps/web/src/window.rs:1895
+#: apps/web/src/window.rs:1900
 msgid "This page is stored on your computer."
 msgstr "Deze pagina is opgeslagen op uw computer."
 
-#: apps/web/src/window.rs:1908
+#: apps/web/src/window.rs:1913
 msgid "Issued to: {s}"
 msgstr "Uitgegeven aan: {s}"
 
-#: apps/web/src/window.rs:1911
+#: apps/web/src/window.rs:1916
 msgid "Issued by: {s}"
 msgstr "Uitgegeven door: {s}"
 
-#: apps/web/src/window.rs:1914
+#: apps/web/src/window.rs:1919
 msgid "Expires: {d}"
 msgstr "Verloopt: {d}"
 
-#: apps/web/src/window.rs:1917
+#: apps/web/src/window.rs:1922
 msgid "Problems: {list}"
 msgstr "Problemen: {list}"
 
-#: apps/web/src/window.rs:1945
+#: apps/web/src/window.rs:1950
 msgid "Allowed"
 msgstr "Toegestaan"
 
-#: apps/web/src/window.rs:1945
+#: apps/web/src/window.rs:1950
 msgid "Denied"
 msgstr "Geweigerd"
 
-#: apps/web/src/window.rs:1951
+#: apps/web/src/window.rs:1956
 msgid "Reset {} Permission"
 msgstr "Recht voor {} herstellen"
 
-#: apps/web/src/window.rs:1978
+#: apps/web/src/window.rs:1983
 msgid "{} permission reset"
 msgstr "Recht voor {} hersteld"
 
 #. Translators: announced when the site information opens: the site's host name, then its security status sentence.
-#: apps/web/src/window.rs:2001
+#: apps/web/src/window.rs:2006
 msgid "{host}. {status}"
 msgstr "{host}. {status}"
 
-#: apps/web/src/window.rs:2087
+#: apps/web/src/window.rs:2092
 msgid "Remove Bookmark {title}"
 msgstr "Bladwijzer {title} verwijderen"
 
-#: apps/web/src/window.rs:2155
+#: apps/web/src/window.rs:2160
 msgid "Not found"
 msgstr "Niet gevonden"
 
-#: apps/web/src/window.rs:2156
+#: apps/web/src/window.rs:2161
 msgid "{n} match"
 msgid_plural "{n} matches"
 msgstr[0] "{n} overeenkomst"
 msgstr[1] "{n} overeenkomsten"
 
-#: apps/web/src/window.rs:2224
+#: apps/web/src/window.rs:2229
 msgid "Cancel {name}"
 msgstr "{name} annuleren"
 
-#: apps/web/src/window.rs:2231
+#: apps/web/src/window.rs:2236
 msgid "Open {name}"
 msgstr "{name} openen"
 
-#: apps/web/src/window.rs:2238
+#: apps/web/src/window.rs:2243
 msgid "Open Folder of {name}"
 msgstr "Map van {name} openen"
 
-#: apps/web/src/window.rs:2251
+#: apps/web/src/window.rs:2256
 msgid "New downloads"
 msgstr "Nieuwe downloads"
 
-#: apps/web/src/window.rs:2255
+#: apps/web/src/window.rs:2260
 msgid "Downloading {name}"
 msgstr "{name} wordt gedownload"
 
-#: apps/web/src/window.rs:2273
+#: apps/web/src/window.rs:2278
 msgid "Could not open the download: {}"
 msgstr "Kon de download niet openen: {}"
 
-#: apps/web/src/window.rs:2289
+#: apps/web/src/window.rs:2294
 msgid "Could not open the folder: {}"
 msgstr "Kon de map niet openen: {}"
 
-#: apps/web/src/window.rs:2325
+#: apps/web/src/window.rs:2330
 msgid "Finished"
 msgstr "Voltooid"
 
-#: apps/web/src/window.rs:2328
+#: apps/web/src/window.rs:2333
 msgid "Download finished: {name}"
 msgstr "Download voltooid: {name}"
 
-#: apps/web/src/window.rs:2342
+#: apps/web/src/window.rs:2347
 msgid "Failed: {}"
 msgstr "Mislukt: {}"
 
-#: apps/web/src/window.rs:2345
+#: apps/web/src/window.rs:2350
 msgid "Download failed: {}"
 msgstr "Download mislukt: {}"
 
-#: apps/web/src/window.rs:2371
+#: apps/web/src/window.rs:2376
 msgid "No Bookmarks"
 msgstr "Geen bladwijzers"
 
-#: apps/web/src/window.rs:2372
+#: apps/web/src/window.rs:2377
 msgid "Bookmark pages with the star in the address bar or Ctrl+D"
 msgstr "Maak bladwijzers met de ster in de adresbalk of met Ctrl+D"
 
-#: apps/web/src/window.rs:2404
+#: apps/web/src/window.rs:2409
 msgid "_Duplicate"
 msgstr "_Dupliceren"
 
-#: apps/web/src/window.rs:2409
+#: apps/web/src/window.rs:2414
 msgid "Un_pin Tab"
 msgstr "Tabblad _losmaken"
 
-#: apps/web/src/window.rs:2411
+#: apps/web/src/window.rs:2416
 msgid "_Pin Tab"
 msgstr "Tabblad _vastzetten"
 
-#: apps/web/src/window.rs:2417
+#: apps/web/src/window.rs:2422
 msgid "Un_mute Tab"
 msgstr "Dempen van tabblad _opheffen"
 
-#: apps/web/src/window.rs:2419
+#: apps/web/src/window.rs:2424
 msgid "_Mute Tab"
 msgstr "Tabblad _dempen"
 
-#: apps/web/src/window.rs:2423
+#: apps/web/src/window.rs:2428
 msgid "Move to New _Window"
 msgstr "Naar nieuw _venster verplaatsen"
 
-#: apps/web/src/window.rs:2426
+#: apps/web/src/window.rs:2431
 msgid "Close _Other Tabs"
 msgstr "_Andere tabbladen sluiten"
 
-#: apps/web/src/window.rs:2427
+#: apps/web/src/window.rs:2432
 msgid "Close Tabs to the _Right"
 msgstr "Tabbladen aan de _rechterkant sluiten"
 
-#: apps/web/src/window.rs:2428
+#: apps/web/src/window.rs:2433
 msgid "_Close Tab"
 msgstr "Tabblad _sluiten"
 
-#: apps/web/src/window.rs:2468
+#: apps/web/src/window.rs:2473
 msgid "Start page"
 msgstr "Beginpagina"
 
-#: apps/web/src/window.rs:2469
+#: apps/web/src/window.rs:2474
 msgid "Secure connection"
 msgstr "Beveiligde verbinding"
 
-#: apps/web/src/window.rs:2470
+#: apps/web/src/window.rs:2475
 msgid "Connection is not secure"
 msgstr "Verbinding is niet beveiligd"
 
-#: apps/web/src/window.rs:2471
+#: apps/web/src/window.rs:2476
 msgid "Certificate problems"
 msgstr "Certificaatproblemen"
 
-#: apps/web/src/window.rs:2472
+#: apps/web/src/window.rs:2477
 msgid "Local page"
 msgstr "Lokale pagina"
 
 #. Translators: a button's tooltip: what it does and its keyboard shortcut, "Search (Ctrl+F)".
-#: crates/helix-app-common/src/a11y.rs:263
+#: crates/helix-app-common/src/a11y.rs:266
 msgid "{label} ({shortcut})"
 msgstr "{label} ({shortcut})"
 

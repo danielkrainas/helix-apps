@@ -1532,6 +1532,7 @@ dependencies = [
  "async-channel",
  "gtk4",
  "helix-app-common",
+ "helix-test-audio",
  "libadwaita",
  "qrcode",
  "serde",

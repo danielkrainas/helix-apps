@@ -54,6 +54,10 @@ struct Side {
     volume: gtk::Scale,
     mute: gtk::ToggleButton,
     profile: adw::ComboRow,
+    /// The device's ports (speakers or headphones…), when it has several.
+    port: adw::ComboRow,
+    /// Device and port names, as the port row lists them.
+    ports: RefCell<(String, Vec<String>)>,
     /// Device names, as the device row lists them.
     names: RefCell<Vec<String>>,
     /// Card name and profile names, as the profile row lists them.
@@ -68,6 +72,8 @@ struct State {
     inp: Side,
     balance_row: adw::ActionRow,
     balance: gtk::Scale,
+    fade_row: adw::ActionRow,
+    fade: gtk::Scale,
     level: gtk::LevelBar,
     apps: adw::PreferencesGroup,
     app_rows: RefCell<Vec<(u64, gtk::Scale, gtk::ToggleButton, gtk::Widget)>>,
@@ -142,6 +148,16 @@ fn side(output: bool) -> Side {
         })
         .build();
     group.add(&device);
+    let port = adw::ComboRow::builder()
+        .use_markup(false)
+        .title(if output {
+            tr("Output Port")
+        } else {
+            tr("Input Port")
+        })
+        .visible(false)
+        .build();
+    group.add(&port);
     let row = adw::ActionRow::builder()
         .use_markup(false)
         .title(tr("Volume"))
@@ -178,6 +194,8 @@ fn side(output: bool) -> Side {
         volume,
         mute,
         profile,
+        port,
+        ports: RefCell::default(),
         names: RefCell::default(),
         profiles: RefCell::default(),
     }
@@ -214,6 +232,22 @@ impl Panel for SoundPanel {
         helix_app_common::set_accessible_label(&balance, tr("Balance"));
         balance_row.add_suffix(&balance);
         out.group.add(&balance_row);
+        let fade_row = adw::ActionRow::builder()
+            .use_markup(false)
+            .title(tr("Fade"))
+            .visible(false)
+            .build();
+        let fade = gtk::Scale::with_range(gtk::Orientation::Horizontal, -1.0, 1.0, 0.05);
+        fade.set_hexpand(true);
+        fade.set_valign(gtk::Align::Center);
+        fade.set_draw_value(false);
+        fade.set_width_request(150);
+        fade.add_mark(-1.0, gtk::PositionType::Bottom, Some(tr("Rear")));
+        fade.add_mark(0.0, gtk::PositionType::Bottom, None);
+        fade.add_mark(1.0, gtk::PositionType::Bottom, Some(tr("Front")));
+        helix_app_common::set_accessible_label(&fade, tr("Fade"));
+        fade_row.add_suffix(&fade);
+        out.group.add(&fade_row);
         out.group.add(&out.profile);
         let (test_row, test) = widgets::action_row(
             tr("Test Speakers"),
@@ -279,6 +313,8 @@ impl Panel for SoundPanel {
             inp,
             balance_row,
             balance,
+            fade_row,
+            fade,
             level,
             apps,
             app_rows: RefCell::default(),
@@ -295,6 +331,14 @@ impl Panel for SoundPanel {
         connect_side(&state, false);
         let weak = Rc::downgrade(&state);
         state.balance.connect_value_changed(move |_| {
+            if let Some(state) = weak.upgrade() {
+                if !state.quiet.get() {
+                    send_volume(&state, true);
+                }
+            }
+        });
+        let weak = Rc::downgrade(&state);
+        state.fade.connect_value_changed(move |_| {
             if let Some(state) = weak.upgrade() {
                 if !state.quiet.get() {
                     send_volume(&state, true);
@@ -398,6 +442,21 @@ fn connect_side(state: &Rc<State>, output: bool) {
         );
     });
     let weak = Rc::downgrade(state);
+    s.port.connect_selected_notify(move |row| {
+        let Some(state) = weak.upgrade() else { return };
+        if state.quiet.get() {
+            return;
+        }
+        let (device, names) = side_of(&state, output).ports.borrow().clone();
+        if let Some(p) = names.get(row.selected() as usize).cloned() {
+            let (server, weak) = (state.server.clone(), Rc::downgrade(&state));
+            spawn_worker(
+                move || sound::set_port(&server, output, &device, &p),
+                move |r| done(&weak, r),
+            );
+        }
+    });
+    let weak = Rc::downgrade(state);
     s.profile.connect_selected_notify(move |row| {
         let Some(state) = weak.upgrade() else { return };
         if state.quiet.get() {
@@ -430,9 +489,14 @@ fn send_volume(state: &Rc<State>, output: bool) {
     state.hold();
     let level = side_of(state, output).volume.value();
     let volumes = if output {
-        d.volumes(level, state.balance.value())
+        let fade = if d.fade().is_some() {
+            state.fade.value()
+        } else {
+            0.0
+        };
+        d.volumes(level, state.balance.value(), fade)
     } else {
-        d.volumes(level, 0.0)
+        d.volumes(level, 0.0, 0.0)
     };
     let server = state.server.clone();
     state
@@ -487,6 +551,7 @@ fn show_side(state: &State, s: &Sound, output: bool) {
         side.volume.set_sensitive(false);
         side.mute.set_sensitive(false);
         side.profile.set_visible(false);
+        side.port.set_visible(false);
         return;
     };
     side.device.set_subtitle("");
@@ -511,6 +576,29 @@ fn show_side(state: &State, s: &Sound, output: bool) {
             d.level() * 100.0
         ))]);
     side.mute.set_active(d.muted);
+
+    // Its ports (speakers or headphones…): the plugged-in ones, and the
+    // one in use.
+    let ports: Vec<&sound::Port> = d
+        .ports
+        .iter()
+        .filter(|p| p.available || p.name == d.active_port)
+        .collect();
+    if ports.len() > 1 {
+        let names: Vec<String> = ports.iter().map(|p| p.name.clone()).collect();
+        let key = (d.name.clone(), names.clone());
+        if *side.ports.borrow() != key {
+            let labels: Vec<String> = ports.iter().map(|p| p.description.clone()).collect();
+            side.port.set_model(Some(&string_list(&labels)));
+            *side.ports.borrow_mut() = key;
+        }
+        if let Some(i) = names.iter().position(|n| *n == d.active_port) {
+            side.port.set_selected(i as u32);
+        }
+        side.port.set_visible(true);
+    } else {
+        side.port.set_visible(false);
+    }
 
     // The card's profiles (HDMI or analogue, A2DP or HFP…).
     match s
@@ -555,6 +643,11 @@ fn show(state: &Rc<State>, r: sound::Result<Sound>) {
     state.balance_row.set_visible(balance.is_some());
     if let (Some(b), false) = (balance, state.holding()) {
         state.balance.set_value(b);
+    }
+    let fade = s.output().and_then(Device::fade);
+    state.fade_row.set_visible(fade.is_some());
+    if let (Some(f), false) = (fade, state.holding()) {
+        state.fade.set_value(f);
     }
     show_apps(state, &s);
     state.quiet.set(false);

@@ -90,7 +90,25 @@ pub struct Device {
     pub muted: bool,
     /// The card it belongs to, when it has one.
     pub card: Option<u64>,
+    /// Its ports (speakers or headphones, internal or external
+    /// microphone…), and the one in use.
+    pub ports: Vec<Port>,
+    pub active_port: String,
 }
+
+/// A port of a device: where the sound goes or comes from.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Port {
+    pub name: String,
+    pub description: String,
+    /// False when the port is known to be unplugged.
+    pub available: bool,
+}
+
+const LEFT: [&str; 3] = ["front-left", "rear-left", "side-left"];
+const RIGHT: [&str; 3] = ["front-right", "rear-right", "side-right"];
+const FRONT: [&str; 3] = ["front-left", "front-right", "front-center"];
+const REAR: [&str; 3] = ["rear-left", "rear-right", "rear-center"];
 
 impl Device {
     /// The loudest channel's volume (what the slider shows).
@@ -114,13 +132,47 @@ impl Device {
         Some((l, r))
     }
 
-    /// Channel volumes for `level` and `balance` (other channels at
-    /// `level`).
-    pub fn volumes(&self, level: f64, balance: f64) -> Vec<f64> {
+    fn loudest(&self, set: &[&str]) -> Option<f64> {
+        self.channels
+            .iter()
+            .zip(&self.volume)
+            .filter(|(c, _)| set.contains(&c.as_str()))
+            .map(|(_, v)| *v)
+            .reduce(f64::max)
+    }
+
+    /// Front/rear fade, −1 (rear) … 1 (front), for devices with front and
+    /// rear speakers.
+    pub fn fade(&self) -> Option<f64> {
+        let front = self.loudest(&FRONT)?;
+        let rear = self.loudest(&REAR)?;
+        let m = front.max(rear);
+        if m <= 0.0 {
+            return Some(0.0);
+        }
+        Some((front - rear) / m)
+    }
+
+    /// Channel volumes for `level`, `balance` (left channels quieter
+    /// towards the right, and the other way) and `fade` (rear channels
+    /// quieter towards the front, and the other way); the centre and
+    /// subwoofer stay at `level` unless faded.
+    pub fn volumes(&self, level: f64, balance: f64, fade: f64) -> Vec<f64> {
         let mut v = vec![level; self.channels.len().max(1)];
-        if let Some((l, r)) = self.left_right() {
-            v[l] = level * (1.0 - balance.max(0.0));
-            v[r] = level * (1.0 + balance.min(0.0));
+        for (i, c) in self.channels.iter().enumerate() {
+            let c = c.as_str();
+            if LEFT.contains(&c) {
+                v[i] *= 1.0 - balance.max(0.0);
+            }
+            if RIGHT.contains(&c) {
+                v[i] *= 1.0 + balance.min(0.0);
+            }
+            if REAR.contains(&c) {
+                v[i] *= 1.0 - fade.max(0.0);
+            }
+            if FRONT.contains(&c) {
+                v[i] *= 1.0 + fade.min(0.0);
+            }
         }
         v
     }
@@ -238,6 +290,21 @@ fn device(v: &Value) -> Device {
         channels,
         muted: v.get("mute").and_then(Value::as_bool).unwrap_or(false),
         card: v.get("card").and_then(Value::as_u64),
+        ports: v
+            .get("ports")
+            .and_then(Value::as_array)
+            .map(|ports| {
+                ports
+                    .iter()
+                    .map(|p| Port {
+                        name: s(p, "name"),
+                        description: s(p, "description"),
+                        available: s(p, "availability") != "not available",
+                    })
+                    .collect()
+            })
+            .unwrap_or_default(),
+        active_port: s(v, "active_port"),
     }
 }
 
@@ -386,6 +453,16 @@ pub fn set_app_mute(server: &Server, index: u64, muted: bool) -> Result<()> {
     server
         .pactl(&["set-sink-input-mute", &i, if muted { "1" } else { "0" }])
         .map(drop)
+}
+
+/// Switches a device to one of its ports.
+pub fn set_port(server: &Server, output: bool, device: &str, port: &str) -> Result<()> {
+    let verb = if output {
+        "set-sink-port"
+    } else {
+        "set-source-port"
+    };
+    server.pactl(&[verb, device, port]).map(|_| ())
 }
 
 pub fn set_profile(server: &Server, card: &str, profile: &str) -> Result<()> {
@@ -781,7 +858,7 @@ pub mod tests {
         std::thread::sleep(std::time::Duration::from_millis(300));
 
         let speakers = &s.outputs[0];
-        set_volume(server, true, "speakers", &speakers.volumes(0.5, 0.5)).unwrap();
+        set_volume(server, true, "speakers", &speakers.volumes(0.5, 0.5, 0.0)).unwrap();
         assert!(rx.recv_timeout(std::time::Duration::from_secs(3)).is_ok());
         assert!(until(|| {
             let d = read(server).unwrap().outputs[0].clone();
@@ -800,10 +877,9 @@ pub mod tests {
             || read(server).unwrap().output().unwrap().name == "hdmi"
         ));
 
-        // The level meter runs until dropped. (Without a session manager
-        // nothing links streams here, so no levels arrive and the test
-        // tone cannot play; a private WirePlumber would open the real
-        // sound hardware.)
+        // The level meter runs until dropped. (Nothing links streams on
+        // this server; the fake audio session below has a linking policy
+        // and checks the levels.)
         let m = meter(server, "mic", |l| (0.0..=1.0).contains(&l)).unwrap();
         let started = std::time::Instant::now();
         std::mem::drop(m);
@@ -849,6 +925,61 @@ pub mod tests {
         let _ = player.wait();
     }
 
+    /// The speaker test plays on exactly the channel asked for, on each
+    /// channel of a 5.1 null sink, and the input meter moves while a test
+    /// source plays into the microphone (fake audio session: a private
+    /// PipeWire with null devices and a linking policy, no hardware).
+    #[test]
+    fn speaker_test_and_meter_with_fake_audio() {
+        use helix_test_audio::{FakeAudio, MICROPHONE, SURROUND};
+        let Some(audio) = FakeAudio::start() else {
+            return;
+        };
+        let server = Server {
+            address: Some(audio.pulse_server()),
+        };
+        let s = read(&server).unwrap();
+        let surround = s.outputs.iter().find(|d| d.name == SURROUND).unwrap();
+        assert_eq!(surround.channels.len(), 6);
+        for (i, channel) in surround.channels.iter().enumerate() {
+            let (srv, sink, ch) = (server.clone(), SURROUND.to_string(), channel.clone());
+            let player = std::thread::spawn(move || test_speaker(&srv, &sink, &ch));
+            // The tone lasts 0.6 s; listen to the middle of it.
+            std::thread::sleep(std::time::Duration::from_millis(100));
+            let peaks = audio
+                .peaks(
+                    &format!("{SURROUND}.monitor"),
+                    6,
+                    std::time::Duration::from_millis(300),
+                )
+                .unwrap();
+            player.join().unwrap().unwrap();
+            for (j, p) in peaks.iter().enumerate() {
+                if i == j {
+                    assert!(*p > 0.1, "{channel}: silent: {peaks:?}");
+                } else {
+                    assert!(*p < 0.01, "{channel}: also on {j}: {peaks:?}");
+                }
+            }
+        }
+
+        let (tx, rx) = std::sync::mpsc::channel();
+        let m = meter(&server, MICROPHONE, move |l| tx.send(l).is_ok()).unwrap();
+        let next = || {
+            rx.recv_timeout(std::time::Duration::from_secs(5))
+                .expect("no levels from the meter")
+        };
+        let quiet = (0..6).map(|_| next()).fold(0.0f32, f32::max);
+        assert!(quiet < 0.01, "a silent microphone shows {quiet}");
+        let tone = audio
+            .play(MICROPHONE, &["MONO"], &["MONO"], 440.0, 0.5)
+            .unwrap();
+        let moved = (0..40).any(|_| next() > 0.2);
+        assert!(moved, "the meter did not move while the test source played");
+        drop(tone);
+        drop(m);
+    }
+
     #[test]
     fn no_server() {
         let server = Server {
@@ -881,9 +1012,40 @@ pub mod tests {
         let d = &s.outputs[0];
         assert_eq!(d.volume, [1.0, 0.5], "channel-map order");
         assert_eq!(d.balance(), Some(-0.5));
-        assert_eq!(d.volumes(0.8, -0.5), [0.8, 0.4]);
-        assert_eq!(d.volumes(0.8, 0.25), [0.6000000000000001, 0.8]);
+        assert_eq!(d.volumes(0.8, -0.5, 0.0), [0.8, 0.4]);
+        assert_eq!(d.volumes(0.8, 0.25, 0.0), [0.6000000000000001, 0.8]);
+        assert_eq!(d.fade(), None, "no rear speakers");
+        assert!(d.ports.is_empty());
         assert_eq!(channel_label("lfe"), "Subwoofer");
+    }
+
+    #[test]
+    fn fade_and_ports() {
+        let sinks: Vec<Value> = serde_json::from_str(
+            r#"[{"index":1,"name":"surround","description":"Surround","mute":false,
+                 "channel_map":"front-left,front-right,rear-left,rear-right,front-center,lfe",
+                 "volume":{"front-left":{"value":65536},"front-right":{"value":65536},
+                           "rear-left":{"value":32768},"rear-right":{"value":32768},
+                           "front-center":{"value":65536},"lfe":{"value":65536}},
+                 "active_port":"analog-output-speaker",
+                 "ports":[{"name":"analog-output-speaker","description":"Speakers","availability":"available"},
+                          {"name":"analog-output-headphones","description":"Headphones","availability":"not available"}]}]"#,
+        )
+        .unwrap();
+        let s = parse(&sinks, &[], &[], &[]);
+        let d = &s.outputs[0];
+        assert_eq!(d.fade(), Some(0.5), "towards the front");
+        assert_eq!(d.balance(), Some(0.0));
+        // Rear quieter (fade to the front), right quieter (balance left).
+        assert_eq!(d.volumes(1.0, -0.5, 0.5), [1.0, 0.5, 0.5, 0.25, 1.0, 1.0]);
+        assert_eq!(d.volumes(1.0, 0.0, -1.0), [0.0, 0.0, 1.0, 1.0, 0.0, 1.0]);
+        assert_eq!(d.active_port, "analog-output-speaker");
+        let ports: Vec<(&str, bool)> = d
+            .ports
+            .iter()
+            .map(|p| (p.description.as_str(), p.available))
+            .collect();
+        assert_eq!(ports, [("Speakers", true), ("Headphones", false)]);
     }
 
     #[test]

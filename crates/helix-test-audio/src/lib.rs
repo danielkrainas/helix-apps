@@ -19,7 +19,8 @@
 //! The linking policy (a thread polling `pw-dump`) links every playback
 //! stream to its target (`target.object`, else the default sink) and every
 //! recording stream from its target (a source, or a sink's monitor), channel
-//! by channel; it also makes a default chosen through PulseAudio
+//! by channel (a one-channel stream with a position, such as a speaker test
+//! on FL, to that position only; a MONO one to every channel); it also makes a default chosen through PulseAudio
 //! (`default.configured.audio.*`) the default, as a session manager would.
 //! It does not move streams that are already linked, and the devices have
 //! no cards or profiles.
@@ -556,6 +557,14 @@ impl Graph {
         if outs.is_empty() || ins.is_empty() {
             return Vec::new();
         }
+        // A single positioned channel (a mono stream mapped to FL, as a
+        // speaker test is) goes to that position only.
+        let positioned = |c: &str| !c.is_empty() && c != "MONO" && c != "UNK";
+        if outs.len() == 1 && positioned(&outs[0].channel) {
+            if let Some(i) = ins.iter().find(|i| i.channel == outs[0].channel) {
+                return vec![(outs[0].id, i.id)];
+            }
+        }
         if outs.len() == 1 {
             return ins.iter().map(|i| (outs[0].id, i.id)).collect();
         }
@@ -773,5 +782,7 @@ mod tests {
         assert_eq!(Graph::pair(&[&x, &y], &[&c, &d]), vec![(5, 3), (6, 4)]);
         let m = p(7, "MONO");
         assert_eq!(Graph::pair(&[&m], &[&c, &d]), vec![(7, 3), (7, 4)]);
+        let fl = p(8, "FL");
+        assert_eq!(Graph::pair(&[&fl], &[&c, &d]), vec![(8, 4)], "FL only");
     }
 }

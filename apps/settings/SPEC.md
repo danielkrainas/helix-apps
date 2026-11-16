@@ -648,13 +648,19 @@ and the `set-*` commands (`sound.rs`). The page follows `pactl subscribe`
   slider ("Output Volume", value text "N %") to 100 %, or 150 % with
   over-amplification (a "100 %" mark then), *Balance* (left … right, for
   outputs with front-left and front-right channels: the far channel is
-  turned down), *Configuration* (the card's available profiles, by
+  turned down; left and right channels of every row — front, rear,
+  side — follow it), *Fade* (rear … front, for outputs with front and
+  rear channels: the far row is turned down; centre and subwoofer follow
+  the front row only when faded to the rear), *Output Port* (the
+  device's ports — speakers, headphones, line out —, the plugged-in ones
+  and the one in use, `set-sink-port`; shown when there are two or
+  more), *Configuration* (the card's available profiles, by
   priority — HDMI or analogue, A2DP or HFP —, `set-card-profile`; shown
   when there are two or more), *Test Speakers* (a dialog with one button
   per channel; each plays a 0.6 s tone on that channel alone with
   `pacat --channel-map=<position>`).
-- *Input*: device, volume and mute as for output (monitors of outputs
-  are not inputs), *Input Level* (a level bar fed by `parec` of the input,
+- *Input*: device, *Input Port* (`set-source-port`), volume and mute as
+  for output (monitors of outputs are not inputs), *Input Level* (a level bar fed by `parec` of the input,
   20 readings a second, falling back slowly; it runs only while the page
   is on screen), *Configuration*.
 - *Apps*: one row per playing stream (event sounds, speaker tests and
@@ -674,12 +680,16 @@ and the `set-*` commands (`sound.rs`). The page follows `pactl subscribe`
   kept), and readings leave a slider alone for 0.8 s after the user
   moved it.
 - Tested against a private PipeWire with pipewire-pulse in a temporary
-  runtime directory, with virtual outputs and input (`sound.rs`). Without
-  a session manager nothing links streams there, so the test tone and
-  the level readings themselves were not heard or seen in tests (a
-  private WirePlumber would open the real sound hardware). Not yet: the
-  front/rear fade, a system sounds volume (only the on/off switch), port
-  choice within a device.
+  runtime directory, with virtual outputs and input (`sound.rs`), and
+  against the fake audio session of `crates/helix-test-audio` (a private
+  PipeWire with null speakers, a 5.1 sink and a microphone, and a minimal
+  linking policy; no hardware): the speaker test is recorded from the
+  5.1 sink's monitor and sounds on its channel only, for each of the six
+  channels, and the input level stays at zero until a test source plays
+  into the microphone, then rises. Fade, ports and profiles are tested on
+  `pactl` output (null devices have neither ports nor cards). Not yet: a
+  system sounds volume (only the on/off switch; it needs the
+  stream-restore extension, which `pactl` does not reach).
 
 #### Bluetooth
 BlueZ (`org.bluez` on the system bus: the object manager at `/`,
