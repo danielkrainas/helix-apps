@@ -175,16 +175,19 @@ impl FakeAudio {
             N.fetch_add(1, Ordering::SeqCst)
         ));
         let _ = std::fs::remove_dir_all(&dir);
-        // Native clients (pw-cat) read client.conf from here: give their
-        // streams ports the way the daemon's stream.properties does for
-        // PulseAudio clients (a session manager would configure them).
-        let client_conf = dir.join("config/pipewire/client.conf.d");
-        std::fs::create_dir_all(&client_conf).ok()?;
-        std::fs::write(
-            client_conf.join("helix-fake-audio.conf"),
-            "stream.properties = { adapter.auto-port-config = { mode = dsp position = preserve } }\n",
-        )
-        .ok()?;
+        // Native clients (pw-cat) read client.conf from here, or
+        // client-rt.conf before PipeWire 1.2: give their streams ports the
+        // way the daemon's stream.properties does for PulseAudio clients (a
+        // session manager would configure them).
+        for name in ["client.conf.d", "client-rt.conf.d"] {
+            let client_conf = dir.join("config/pipewire").join(name);
+            std::fs::create_dir_all(&client_conf).ok()?;
+            std::fs::write(
+                client_conf.join("helix-fake-audio.conf"),
+                "stream.properties = { adapter.auto-port-config = { mode = dsp position = preserve } }\n",
+            )
+            .ok()?;
+        }
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -288,13 +291,12 @@ impl FakeAudio {
         freq: f32,
         amplitude: f32,
     ) -> Option<Tone> {
+        // An AU stream on stdin, not `--raw`: pw-cat before PipeWire 1.2
+        // (Ubuntu 24.04's 1.0.5, on CI) has no --raw, but every version
+        // reads AU (which allows an unknown length) from a pipe.
         let mut child = self
             .command("pw-cat")
-            .args(["--playback", "--raw", "--format", "f32", "--rate"])
-            .arg(RATE.to_string())
-            .arg("--channels")
-            .arg(channels.len().to_string())
-            .arg("--channel-map")
+            .args(["--playback", "--channel-map"])
             .arg(channels.join(","))
             .arg("--target")
             .arg(target)
@@ -308,7 +310,21 @@ impl FakeAudio {
         let stop = Arc::new(AtomicBool::new(false));
         let mask: Vec<bool> = channels.iter().map(|c| loud.contains(c)).collect();
         let s = stop.clone();
+        let header: Vec<u8> = [
+            u32::from_be_bytes(*b".snd"),
+            24,       // header size
+            u32::MAX, // length unknown
+            6,        // 32-bit IEEE float, big-endian
+            RATE,
+            mask.len() as u32,
+        ]
+        .iter()
+        .flat_map(|w| w.to_be_bytes())
+        .collect();
         let writer = std::thread::spawn(move || {
+            if stdin.write_all(&header).is_err() {
+                return;
+            }
             let mut n: u64 = 0;
             let block = (RATE / 100) as usize;
             let started = Instant::now();
@@ -319,7 +335,7 @@ impl FakeAudio {
                         * (2.0 * std::f32::consts::PI * freq * n as f32 / RATE as f32).sin();
                     n += 1;
                     for on in &mask {
-                        buf.extend_from_slice(&(if *on { v } else { 0.0 }).to_le_bytes());
+                        buf.extend_from_slice(&(if *on { v } else { 0.0 }).to_be_bytes());
                     }
                 }
                 if stdin.write_all(&buf).is_err() {
