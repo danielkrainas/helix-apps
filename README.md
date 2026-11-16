@@ -72,6 +72,11 @@ development packages. `.github/workflows/ci.yml` lists the Ubuntu names.
   service fails instead of starting the real one;
   `tools/testing/check-test-buses.sh` (in CI) rejects buses started any
   other way.
+- **Tests and audio**: `crates/helix-test-audio` gives tests a fake audio
+  session: a private PipeWire with null speakers (stereo and 5.1) and a
+  null microphone, its built-in PulseAudio server and a minimal linking
+  policy, in a scratch runtime directory. Tests play tones into it and read
+  per-channel levels back; nothing reaches the host's audio devices.
 - **Release** (`.github/workflows/release.yml`): a `vX.Y.Z` tag that matches
   the workspace version builds the `helix-apps` package as .deb, .rpm and
   tarball (x86_64, aarch64) and as an Arch Linux package (x86_64), and

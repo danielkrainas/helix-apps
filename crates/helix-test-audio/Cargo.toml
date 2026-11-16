@@ -1,0 +1,12 @@
+[package]
+name = "helix-test-audio"
+description = "A fake audio session for tests: a private PipeWire with null devices and a minimal linking policy"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+serde_json.workspace = true

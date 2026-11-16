@@ -2,6 +2,7 @@
 members = [
     "crates/helix-app-common",
     "crates/helix-eds",
+    "crates/helix-test-audio",
     "apps/contacts",
     "apps/calendar",
     "apps/calculator",
