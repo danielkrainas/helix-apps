@@ -4,7 +4,7 @@ use gst::prelude::*;
 use helix_app_common::i18n::tr;
 use helix_app_common::nc_;
 use std::cell::Cell;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
 /// Environment variable overriding the audio sink (a `gst-launch` bin
@@ -77,20 +77,38 @@ pub enum State {
 
 /// Tracks which stream starts were queued from `about-to-finish`.
 ///
-/// The flag is read when GStreamer posts each `stream-start`, not when the
-/// main loop gets to the message: by then the next `about-to-finish` may
-/// already have fired (short tracks, or a busy main loop).
+/// Decided by order, not timing: the first stream after [`Player::load`]
+/// is never gapless, and each later one is gapless when `about-to-finish`
+/// handed playbin a URI for it. Timing can't tell them apart:
+/// `about-to-finish` runs where the data is decoded and may fire for a
+/// short track before its own `stream-start` has reached the sink (fast
+/// decoding, or `fakesink sync=false`), and the main loop may handle the
+/// messages later still. The decision is made as each `stream-start` is
+/// posted and kept per message.
 #[derive(Default)]
 struct Gapless {
-    /// Set by `about-to-finish` when it hands playbin the next URI.
-    queued: AtomicBool,
+    /// Whether the stream `load` started has posted its `stream-start`.
+    first_started: AtomicBool,
+    /// URIs `about-to-finish` handed playbin whose streams haven't started.
+    queued: AtomicU32,
     /// Per posted `stream-start` message: whether it was gapless.
     starts: Mutex<Vec<(gst::Seqnum, bool)>>,
 }
 
 impl Gapless {
     fn reset(&self) {
-        self.queued.store(false, Ordering::SeqCst);
+        self.first_started.store(false, Ordering::SeqCst);
+        self.queued.store(0, Ordering::SeqCst);
+    }
+
+    /// For a `stream-start` being posted: whether it was gapless.
+    fn started(&self) -> bool {
+        if !self.first_started.swap(true, Ordering::SeqCst) {
+            return false;
+        }
+        self.queued
+            .try_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1))
+            .is_ok()
     }
 
     fn take(&self, msg: &gst::Message) -> bool {
@@ -137,7 +155,7 @@ impl Player {
             // Runs on the posting thread, in order with `about-to-finish`.
             bus.set_sync_handler(move |_, msg| {
                 if let gst::MessageView::StreamStart(_) = msg.view() {
-                    let was = gapless.queued.swap(false, Ordering::SeqCst);
+                    let was = gapless.started();
                     if let Ok(mut starts) = gapless.starts.lock() {
                         // Messages dropped unread (e.g. a bus flush) must not
                         // pile up.
@@ -157,7 +175,7 @@ impl Player {
             playbin.connect("about-to-finish", false, move |args| {
                 let pb = args[0].get::<gst::Element>().ok()?;
                 if let Some(uri) = next_uri.lock().ok().and_then(|mut n| n.take()) {
-                    gapless.queued.store(true, Ordering::SeqCst);
+                    gapless.queued.fetch_add(1, Ordering::SeqCst);
                     pb.set_property("uri", uri);
                 }
                 None
@@ -353,6 +371,20 @@ mod tests {
     fn volume_curve() {
         assert_eq!(slider_to_linear(0.5), 0.125);
         assert_eq!(slider_to_linear(2.0), 1.0);
+    }
+
+    /// `about-to-finish` firing before the first track's `stream-start`
+    /// is posted (a short track decoded fast) doesn't make the first track
+    /// gapless or the second not.
+    #[test]
+    fn gapless_by_order() {
+        let g = Gapless::default();
+        g.queued.fetch_add(1, Ordering::SeqCst);
+        assert!(!g.started(), "the loaded track");
+        assert!(g.started(), "the queued track");
+        assert!(!g.started(), "nothing else was queued");
+        g.reset();
+        assert!(!g.started(), "the first track after a load");
     }
 
     /// Plays two short files through a fake sink and checks that the second
