@@ -77,6 +77,14 @@ development packages. `.github/workflows/ci.yml` lists the Ubuntu names.
   null microphone, its built-in PulseAudio server and a minimal linking
   policy, in a scratch runtime directory. Tests play tones into it and read
   per-channel levels back; nothing reaches the host's audio devices.
+- **Tests and input methods**: `crates/helix-test-ime` is a fake IBus on a
+  private bus (never the host's `ibus-daemon`). With GTK's IBus module
+  (`ibus-gtk4`) on a headless Broadway display, its test composes and
+  commits CJK text in the kinds of text field the apps use (entries,
+  search entries, entry rows, text views, the terminal) and checks the
+  caret rectangle given for the candidate window. Key handlers in the
+  capture phase on a text field must leave keys alone while
+  `helix_app_common::ime::is_composing`.
 - **Release** (`.github/workflows/release.yml`): a `vX.Y.Z` tag that matches
   the workspace version builds the `helix-apps` package as .deb, .rpm and
   tarball (x86_64, aarch64) and as an Arch Linux package (x86_64), and

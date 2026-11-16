@@ -1570,6 +1570,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "helix-test-ime"
+version = "0.1.0"
+dependencies = [
+ "glib",
+ "gtk4",
+ "helix-app-common",
+ "libadwaita",
+ "serde",
+ "vte4",
+ "zbus",
+]
+
+[[package]]
 name = "helix-text-editor"
 version = "0.1.0"
 dependencies = [

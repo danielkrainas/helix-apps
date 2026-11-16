@@ -961,6 +961,7 @@ fn build(app: &adw::Application) -> Ui {
             }
             if mods
                 .intersects(gtk::gdk::ModifierType::CONTROL_MASK | gtk::gdk::ModifierType::ALT_MASK)
+                || helix_app_common::ime::is_composing(&ui.entry)
             {
                 return glib::Propagation::Proceed;
             }
@@ -989,6 +990,7 @@ fn build(app: &adw::Application) -> Ui {
             glib::Propagation::Proceed
         });
         entry.add_controller(keys);
+        helix_app_common::ime::track_composition(&entry);
     }
 
     // Window actions.

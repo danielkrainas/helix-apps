@@ -17,8 +17,10 @@ jobs:
       # Build libraries, plus what the tests use at runtime: a private D-Bus
       # (dbus-daemon), GStreamer elements (fakesink, audiotestsrc, rgvolume),
       # SANE's test backend, tracker3, Evolution Data Server's daemons,
-      # fonts, glib-compile-schemas, and PipeWire with the PulseAudio tools
-      # for the fake audio session (crates/helix-test-audio).
+      # fonts, glib-compile-schemas, PipeWire with the PulseAudio tools for
+      # the fake audio session (crates/helix-test-audio), and GTK's IBus
+      # module for the input-method tests (crates/helix-test-ime; the
+      # IBus daemon itself is a fake on a private bus).
       - name: Install system packages
         run: |
           sudo apt-get update
@@ -31,6 +33,7 @@ jobs:
             gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
             libsane1 tracker evolution-data-server \
             pipewire-bin libpipewire-0.3-modules libspa-0.2-modules pulseaudio-utils \
+            ibus-gtk4 \
             fontconfig fonts-dejavu-core
 
       - uses: dtolnay/rust-toolchain@stable

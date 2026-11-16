@@ -1099,6 +1099,7 @@ impl Window {
             w.entry_key(key, mods)
         });
         self.entry.add_controller(keys);
+        helix_app_common::ime::track_composition(&self.entry);
 
         let focus = gtk::EventControllerFocus::new();
         let cb = self.weak_fn(|w, ()| {
@@ -1669,6 +1670,10 @@ impl Window {
     // ---- address entry ----------------------------------------------------
 
     fn entry_key(&self, key: gdk::Key, mods: gdk::ModifierType) -> glib::Propagation {
+        // While an input method composes, its keys are its own.
+        if helix_app_common::ime::is_composing(&self.entry) {
+            return glib::Propagation::Proceed;
+        }
         let visible = self.suggest_pop.is_visible();
         match key {
             gdk::Key::Down | gdk::Key::Up if visible => {

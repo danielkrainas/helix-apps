@@ -362,6 +362,7 @@ impl Doc {
             }
         });
         self.view.add_controller(keys);
+        helix_app_common::ime::track_composition(&self.view);
 
         // Ctrl+scroll zooms.
         let scroll = gtk::EventControllerScroll::new(gtk::EventControllerScrollFlags::VERTICAL);
@@ -648,7 +649,12 @@ impl Doc {
             & (gdk::ModifierType::CONTROL_MASK
                 | gdk::ModifierType::ALT_MASK
                 | gdk::ModifierType::SUPER_MASK);
-        if !mods.is_empty() || !self.view.is_editable() {
+        // While an input method composes, Return, Tab and the rest are
+        // its own.
+        if !mods.is_empty()
+            || !self.view.is_editable()
+            || helix_app_common::ime::is_composing(&self.view)
+        {
             return glib::Propagation::Proceed;
         }
         let buf = &self.buffer;

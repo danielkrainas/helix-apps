@@ -1,0 +1,20 @@
+[package]
+name = "helix-test-ime"
+description = "A fake IBus input-method daemon on a private bus, for testing CJK input in the apps' text fields"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+helix-app-common.workspace = true
+zbus = { version = "5", default-features = false, features = ["async-io", "blocking-api"] }
+serde.workspace = true
+
+[dev-dependencies]
+gtk.workspace = true
+adw.workspace = true
+glib.workspace = true
+vte4 = { version = "0.8", features = ["v0_76"] }

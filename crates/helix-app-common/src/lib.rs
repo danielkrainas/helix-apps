@@ -11,6 +11,7 @@ pub mod about;
 pub mod errors;
 pub mod focus;
 pub mod i18n;
+pub mod ime;
 pub mod keys;
 pub mod shortcuts;
 pub mod style;
