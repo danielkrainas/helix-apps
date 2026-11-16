@@ -78,6 +78,12 @@ pub fn suspend_delays() -> Vec<Choice<i64>> {
     )
 }
 
+/// `org.helix.shell banner-ignore-timeout` and
+/// `critical-banner-ignore-timeout` presets (seconds; 0 = never).
+pub fn banner_ignore_timeouts() -> Vec<Choice<i64>> {
+    duration_choices(&[0, 10, 30, 60, 300], Some(tr("Never")))
+}
+
 fn days_label(d: i64) -> String {
     trnf!("{n} day", "{n} days", d)
 }
@@ -386,6 +392,31 @@ mod tests {
         assert_eq!(suspend_delays()[0].label, "15 minutes");
         assert_eq!(recent_ages().last().unwrap().value, -1);
         assert_eq!(old_files_ages()[0].label, "1 day");
+    }
+
+    /// Stored seconds ↔ the choice shown in the banner timeout rows.
+    #[test]
+    fn banner_ignore_timeout_choices() {
+        let label = |v: i64| format_duration(v as u32);
+        let labels: Vec<String> = banner_ignore_timeouts()
+            .into_iter()
+            .map(|c| c.label)
+            .collect();
+        assert_eq!(
+            labels,
+            ["Never", "10 seconds", "30 seconds", "1 minute", "5 minutes"]
+        );
+        for (value, index) in [(0, 0), (10, 1), (30, 2), (60, 3), (300, 4)] {
+            let (list, i) = with_current(banner_ignore_timeouts(), value, label);
+            assert_eq!((list.len(), i), (5, index), "{value}");
+            assert_eq!(list[i].value, value);
+        }
+        // Another stored value is shown as it is, in order.
+        let (list, i) = with_current(banner_ignore_timeouts(), 45, label);
+        assert_eq!((list.len(), i), (6, 3));
+        assert_eq!(list[i].label, "45 seconds");
+        let (list, i) = with_current(banner_ignore_timeouts(), 600, label);
+        assert_eq!((i, list[i].label.as_str()), (5, "10 minutes"));
     }
 
     #[test]

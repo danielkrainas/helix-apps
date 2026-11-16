@@ -97,6 +97,20 @@ impl Prefs {
         }
     }
 
+    /// Preferences over an existing `gio::Settings` (for example one made
+    /// from a schema in a test's own directory, on a memory backend).
+    pub fn from_settings(settings: gio::Settings) -> Self {
+        let keys = settings
+            .settings_schema()
+            .map(|schema| schema.list_keys().iter().map(|k| k.to_string()).collect())
+            .unwrap_or_default();
+        Prefs {
+            settings: Some(settings),
+            keys: Rc::new(keys),
+            memory: Rc::default(),
+        }
+    }
+
     /// Whether the GSettings schema is installed.
     pub fn is_persistent(&self) -> bool {
         self.settings.is_some()
