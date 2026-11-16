@@ -711,13 +711,12 @@ mod tests {
     #[test]
     fn take_button_selects_and_captures_an_area() {
         let Some(bus) = fake::private_bus() else {
-            eprintln!("dbus-daemon unavailable; skipping");
             return;
         };
         let state = Arc::new(Mutex::new(fake::State::default()));
         let _shell = fake::serve(&bus, &state);
         // Before GTK or GIO read it: the app's captures use this bus.
-        std::env::set_var("DBUS_SESSION_BUS_ADDRESS", &bus.address);
+        std::env::set_var("DBUS_SESSION_BUS_ADDRESS", bus.address());
         std::env::set_var("GDK_DEBUG", "no-portals");
         let Some(_display) = helix_app_common::testing::headless_gtk() else {
             eprintln!("no headless GTK display (gtk4-broadwayd); skipping");

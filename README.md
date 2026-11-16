@@ -64,6 +64,14 @@ development packages. `.github/workflows/ci.yml` lists the Ubuntu names.
 - **CI** (`.github/workflows/ci.yml`): clippy with warnings as errors; the
   tests, run headless on a private D-Bus session; the Evolution Data Server
   tests; and schema, desktop-file and packaging-layout checks.
+- **Tests and D-Bus**: run the tests as CI does with
+  `tools/testing/run-tests.sh cargo test --workspace` (headless, in-memory
+  GSettings, a private session bus that can start no services). A test that
+  needs its own bus uses `helix_app_common::test_bus::TestBus`, which loads
+  no service files (or only the test's own fakes), so a call to a missing
+  service fails instead of starting the real one;
+  `tools/testing/check-test-buses.sh` (in CI) rejects buses started any
+  other way.
 - **Release** (`.github/workflows/release.yml`): a `vX.Y.Z` tag that matches
   the workspace version builds the `helix-apps` package as .deb, .rpm and
   tarball (x86_64, aarch64) and as an Arch Linux package (x86_64), and

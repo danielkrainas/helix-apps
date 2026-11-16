@@ -516,8 +516,8 @@ mod tests {
         );
     }
 
-    /// Runs `tracker3 endpoint -o nepomuk` on a private `dbus-run-session`
-    /// bus to create the database and insert sample data.
+    /// Runs `tracker3 endpoint -o nepomuk` on a private bus that can start
+    /// no services, to create the database and insert sample data.
     fn create_scratch_db(db: &Path) -> bool {
         let script = format!(
             r#"tracker3 endpoint -b org.helix.MusicTest -o nepomuk -d '{db}' --session >/dev/null 2>&1 &
@@ -536,8 +536,13 @@ kill $P; wait $P
 exit $R"#,
             db = db.display()
         );
-        Command::new("/usr/bin/dbus-run-session")
-            .args(["--", "sh", "-c", &script])
+        let Some(bus) = helix_app_common::test_bus::TestBus::start() else {
+            return false;
+        };
+        Command::new("sh")
+            .args(["-c", &script])
+            .env("DBUS_SESSION_BUS_ADDRESS", bus.address())
+            .env("GIO_USE_VFS", "local")
             .env_remove("DISPLAY")
             .env_remove("WAYLAND_DISPLAY")
             .stdout(Stdio::null())

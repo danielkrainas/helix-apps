@@ -14,6 +14,8 @@ pub mod keys;
 pub mod shortcuts;
 pub mod style;
 #[doc(hidden)]
+pub mod test_bus;
+#[doc(hidden)]
 pub mod testing;
 pub mod window_state;
 

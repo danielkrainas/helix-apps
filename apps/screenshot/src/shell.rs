@@ -286,7 +286,6 @@ fn describe(e: zbus::Error) -> CaptureError {
 #[cfg(test)]
 pub(crate) mod fake {
     use super::*;
-    use std::io::BufRead;
     use std::sync::{Arc, Mutex};
 
     /// A 1×1 PNG.
@@ -424,67 +423,22 @@ pub(crate) mod fake {
         }
     }
 
-    static BUSES: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
-
-    pub struct Bus {
-        daemon: std::process::Child,
-        pub address: String,
-    }
-
-    impl Drop for Bus {
-        fn drop(&mut self) {
-            let _ = self.daemon.kill();
-            let _ = self.daemon.wait();
-        }
-    }
+    pub use helix_app_common::test_bus::TestBus as Bus;
 
     /// A private bus that starts no services.
     pub fn private_bus() -> Option<Bus> {
-        let config = std::env::temp_dir().join(format!(
-            "helix-screenshot-test-bus-{}-{}.conf",
-            std::process::id(),
-            BUSES.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-        ));
-        std::fs::write(
-            &config,
-            "<!DOCTYPE busconfig PUBLIC \"-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN\"\n \
-             \"http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd\">\n\
-             <busconfig><type>session</type><listen>unix:tmpdir=/tmp</listen>\
-             <policy context=\"default\"><allow send_destination=\"*\" eavesdrop=\"true\"/>\
-             <allow eavesdrop=\"true\"/><allow own=\"*\"/></policy></busconfig>\n",
-        )
-        .ok()?;
-        let daemon = std::process::Command::new("dbus-daemon")
-            .arg(format!("--config-file={}", config.display()))
-            .args(["--nofork", "--print-address=1"])
-            .stdout(std::process::Stdio::piped())
-            .spawn();
-        let mut daemon = daemon.ok()?;
-        let mut line = String::new();
-        let read = daemon
-            .stdout
-            .take()
-            .map(|out| std::io::BufReader::new(out).read_line(&mut line));
-        // Read once the address is out.
-        let _ = std::fs::remove_file(&config);
-        read?.ok()?;
-        let address = line.trim().to_string();
-        if address.is_empty() {
-            let _ = daemon.kill();
-            return None;
-        }
-        Some(Bus { daemon, address })
+        Bus::start()
     }
 
     pub fn connect(bus: &Bus) -> Connection {
-        zbus::blocking::connection::Builder::address(bus.address.as_str())
+        zbus::blocking::connection::Builder::address(bus.address())
             .unwrap()
             .build()
             .unwrap()
     }
 
     pub fn serve(bus: &Bus, state: &Arc<Mutex<State>>) -> Connection {
-        zbus::blocking::connection::Builder::address(bus.address.as_str())
+        zbus::blocking::connection::Builder::address(bus.address())
             .unwrap()
             .name(SHELL_NAME)
             .unwrap()
@@ -512,10 +466,7 @@ mod tests {
 
     #[test]
     fn captures_through_a_fake_shell() {
-        let Some(bus) = private_bus() else {
-            eprintln!("dbus-daemon unavailable; skipping");
-            return;
-        };
+        let Some(bus) = private_bus() else { return };
         let state = Arc::new(Mutex::new(State::default()));
         let _shell = serve(&bus, &state);
         let app = connect(&bus);
@@ -601,10 +552,7 @@ mod tests {
 
     #[test]
     fn name_taken_and_no_shell() {
-        let Some(bus) = private_bus() else {
-            eprintln!("dbus-daemon unavailable; skipping");
-            return;
-        };
+        let Some(bus) = private_bus() else { return };
         let app = connect(&bus);
         // No shell on the bus.
         assert_eq!(

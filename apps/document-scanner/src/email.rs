@@ -215,43 +215,14 @@ mod tests {
     /// service activation, nothing reaches the real portal or a mail client).
     #[test]
     fn portal_call_on_private_bus() {
-        let daemon = Path::new("/usr/bin/dbus-daemon");
-        if !daemon.exists() {
-            eprintln!("dbus-daemon not installed; skipping");
+        let Some(bus) = helix_app_common::test_bus::TestBus::start() else {
             return;
-        }
+        };
+        let address = bus.address();
         let tmp = tempfile::tempdir().unwrap();
-        let conf = tmp.path().join("bus.conf");
-        std::fs::write(
-            &conf,
-            format!(
-                "<!DOCTYPE busconfig PUBLIC \"-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN\" \
-                 \"http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd\">\
-                 <busconfig><type>session</type><listen>unix:dir={}</listen>\
-                 <policy context=\"default\"><allow send_destination=\"*\" eavesdrop=\"true\"/>\
-                 <allow eavesdrop=\"true\"/><allow own=\"*\"/></policy></busconfig>",
-                tmp.path().display()
-            ),
-        )
-        .unwrap();
-        let mut child = std::process::Command::new(daemon)
-            .arg(format!("--config-file={}", conf.display()))
-            .args(["--nofork", "--print-address=1"])
-            .env_remove("DISPLAY")
-            .env_remove("WAYLAND_DISPLAY")
-            .stdout(std::process::Stdio::piped())
-            .spawn()
-            .unwrap();
-        let mut line = String::new();
-        {
-            use std::io::BufRead;
-            let mut r = std::io::BufReader::new(child.stdout.take().unwrap());
-            r.read_line(&mut line).unwrap();
-        }
-        let address = line.trim().to_string();
         let result = std::panic::catch_unwind(|| {
             let (tx, rx) = mpsc::channel();
-            let _server = zbus::blocking::connection::Builder::address(address.as_str())
+            let _server = zbus::blocking::connection::Builder::address(address)
                 .unwrap()
                 .name(PORTAL_BUS)
                 .unwrap()
@@ -259,7 +230,7 @@ mod tests {
                 .unwrap()
                 .build()
                 .unwrap();
-            let client = zbus::blocking::connection::Builder::address(address.as_str())
+            let client = zbus::blocking::connection::Builder::address(address)
                 .unwrap()
                 .build()
                 .unwrap();
@@ -275,8 +246,7 @@ mod tests {
                 assert_eq!(c, &std::fs::read(f).unwrap());
             }
         });
-        let _ = child.kill();
-        let _ = child.wait();
+        drop(bus);
         if let Err(e) = result {
             std::panic::resume_unwind(e);
         }

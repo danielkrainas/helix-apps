@@ -4,17 +4,24 @@
 #
 #   crates/helix-eds/tests/run-private-eds.sh cargo test -p helix-eds --test private_bus
 #
-# (The script sets HELIX_EDS_PRIVATE_BUS=1 for the test.)
+# (The script sets HELIX_EDS_PRIVATE_BUS=1 for the test.) The bus loads no
+# service files (tools/testing/session.conf): the daemons are started here,
+# and nothing else can be started on it.
 set -u
 if [ -z "${HELIX_EDS_INNER:-}" ]; then
     export HELIX_EDS_INNER=1
+    conf=$(cd "$(dirname "$0")/../../../tools/testing" && pwd)/session.conf
     exec env -u DISPLAY -u WAYLAND_DISPLAY -u DBUS_SESSION_BUS_ADDRESS \
-        /usr/bin/dbus-run-session -- "$0" "$@"
+        /usr/bin/dbus-run-session --config-file="$conf" -- "$0" "$@"
 fi
 
 case "${DBUS_SESSION_BUS_ADDRESS:-}" in
     ""|*"/run/user/"*"/bus"*) echo "refusing: not a private bus" >&2; exit 99;;
 esac
+if busctl --address="$DBUS_SESSION_BUS_ADDRESS" list --activatable --no-legend 2>/dev/null |
+    awk '$1 != "org.freedesktop.DBus"' | grep -q .; then
+    echo "refusing: the private bus can start real services" >&2; exit 99
+fi
 
 S=$(mktemp -d "${TMPDIR:-/tmp}/helix-eds-test.XXXXXX")
 export CARGO_HOME=${CARGO_HOME:-$HOME/.cargo} RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.rustup}

@@ -272,8 +272,6 @@ mod tests {
 #[cfg(test)]
 mod mock_portal {
     use super::*;
-    use std::io::{BufRead, BufReader};
-    use std::process::{Child, Command, Stdio};
     use std::sync::{Arc, Mutex};
     use zbus::interface;
     use zbus::message::Header;
@@ -389,78 +387,24 @@ mod mock_portal {
         }
     }
 
-    /// A private message bus: no service activation, killed on drop.
-    struct Bus {
-        child: Child,
-        address: String,
-        dir: std::path::PathBuf,
+    // A private message bus: no service activation, killed on drop.
+    use helix_app_common::test_bus::TestBus as Bus;
+
+    trait Serve {
+        fn connect(&self) -> Connection;
+        fn serve(&self, state: Shared) -> Connection;
     }
 
-    impl Bus {
-        fn start() -> Option<Bus> {
-            let n = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .ok()?
-                .as_nanos();
-            let dir =
-                std::env::temp_dir().join(format!("helix-maps-bus-{}-{n}", std::process::id()));
-            std::fs::create_dir_all(&dir).ok()?;
-            let config = dir.join("bus.conf");
-            std::fs::write(
-                &config,
-                format!(
-                    r#"<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN"
- "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
-<busconfig>
-  <type>session</type>
-  <listen>unix:dir={}</listen>
-  <auth>EXTERNAL</auth>
-  <policy context="default">
-    <allow send_destination="*" eavesdrop="true"/>
-    <allow eavesdrop="true"/>
-    <allow own="*"/>
-  </policy>
-</busconfig>"#,
-                    dir.display()
-                ),
-            )
-            .ok()?;
-            let mut child = Command::new("/usr/bin/dbus-daemon")
-                .arg(format!("--config-file={}", config.display()))
-                .arg("--nofork")
-                .arg("--print-address=1")
-                .env_remove("DISPLAY")
-                .env_remove("WAYLAND_DISPLAY")
-                .env_remove("DBUS_SESSION_BUS_ADDRESS")
-                .stdout(Stdio::piped())
-                .stderr(Stdio::null())
-                .spawn()
-                .ok()?;
-            let mut line = String::new();
-            BufReader::new(child.stdout.take()?)
-                .read_line(&mut line)
-                .ok()?;
-            let address = line.trim().to_string();
-            if address.is_empty() {
-                let _ = child.kill();
-                return None;
-            }
-            Some(Bus {
-                child,
-                address,
-                dir,
-            })
-        }
-
+    impl Serve for Bus {
         fn connect(&self) -> Connection {
-            zbus::blocking::connection::Builder::address(self.address.as_str())
+            zbus::blocking::connection::Builder::address(self.address())
                 .unwrap()
                 .build()
                 .unwrap()
         }
 
         fn serve(&self, state: Shared) -> Connection {
-            zbus::blocking::connection::Builder::address(self.address.as_str())
+            zbus::blocking::connection::Builder::address(self.address())
                 .unwrap()
                 .name(PORTAL_BUS)
                 .unwrap()
@@ -471,20 +415,8 @@ mod mock_portal {
         }
     }
 
-    impl Drop for Bus {
-        fn drop(&mut self) {
-            let _ = self.child.kill();
-            let _ = self.child.wait();
-            let _ = std::fs::remove_dir_all(&self.dir);
-        }
-    }
-
     fn bus() -> Option<Bus> {
-        let b = Bus::start();
-        if b.is_none() {
-            eprintln!("skipping: /usr/bin/dbus-daemon unavailable");
-        }
-        b
+        Bus::start()
     }
 
     #[test]

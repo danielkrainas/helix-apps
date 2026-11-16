@@ -40,12 +40,16 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
-      # Headless, on a private session bus, with in-memory GSettings, so no
-      # test can reach a display, a user bus or real settings.
+      # Tests start their buses through helix_app_common::test_bus or
+      # tools/testing/session.conf, which can start no real services.
+      - name: Check test buses
+        run: tools/testing/check-test-buses.sh
+
+      # Headless, on a private session bus that can start no services, with
+      # in-memory GSettings, so no test can reach a display, a user bus, a
+      # real service or real settings.
       - name: Test
-        run: |
-          env -u DISPLAY -u WAYLAND_DISPLAY GSETTINGS_BACKEND=memory \
-            dbus-run-session -- cargo test --workspace --locked
+        run: tools/testing/run-tests.sh cargo test --workspace --locked
 
       # The helix-eds tests against real Evolution Data Server daemons on a
       # private bus with scratch data.

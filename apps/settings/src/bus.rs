@@ -237,66 +237,19 @@ pub mod testbus {
     //! A private `dbus-daemon` for tests: fakes of system and session
     //! services run on it, never on the user's buses.
 
-    use std::io::BufRead;
     use zbus::blocking::Connection;
 
-    pub struct Bus {
-        daemon: std::process::Child,
-        pub address: String,
-    }
+    pub use helix_app_common::test_bus::TestBus as Bus;
 
-    impl Drop for Bus {
-        fn drop(&mut self) {
-            let _ = self.daemon.kill();
-            let _ = self.daemon.wait();
-        }
-    }
-
-    /// A new private bus, or `None` (with a note) without `dbus-daemon`.
+    /// A new private bus that can start no services (so nothing real,
+    /// such as the permission store, runs on it), or `None` (with a
+    /// note) without `dbus-daemon`.
     pub fn private_bus() -> Option<Bus> {
-        // No service directories: nothing real is started on it by
-        // activation (the session configuration would start, say, the
-        // real permission store).
-        static N: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
-        let conf = std::env::temp_dir().join(format!(
-            "helix-settings-test-bus-{}-{}.conf",
-            std::process::id(),
-            N.fetch_add(1, std::sync::atomic::Ordering::SeqCst)
-        ));
-        std::fs::write(
-            &conf,
-            "<!DOCTYPE busconfig PUBLIC \"-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN\" \
-             \"http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd\">\
-             <busconfig><type>session</type><listen>unix:tmpdir=/tmp</listen>\
-             <auth>EXTERNAL</auth><policy context=\"default\">\
-             <allow send_destination=\"*\" eavesdrop=\"true\"/><allow eavesdrop=\"true\"/>\
-             <allow own=\"*\"/></policy></busconfig>",
-        )
-        .ok()?;
-        let daemon = std::process::Command::new("dbus-daemon")
-            .arg(format!("--config-file={}", conf.display()))
-            .args(["--nofork", "--print-address=1"])
-            .stdout(std::process::Stdio::piped())
-            .spawn();
-        let Ok(mut daemon) = daemon else {
-            eprintln!("dbus-daemon unavailable; skipping");
-            return None;
-        };
-        let mut line = String::new();
-        std::io::BufReader::new(daemon.stdout.take()?)
-            .read_line(&mut line)
-            .ok()?;
-        let address = line.trim().to_string();
-        let _ = std::fs::remove_file(&conf);
-        if address.is_empty() {
-            let _ = daemon.kill();
-            return None;
-        }
-        Some(Bus { daemon, address })
+        Bus::start()
     }
 
     pub fn connect(bus: &Bus) -> Connection {
-        zbus::blocking::connection::Builder::address(bus.address.as_str())
+        zbus::blocking::connection::Builder::address(bus.address())
             .unwrap()
             .build()
             .unwrap()
