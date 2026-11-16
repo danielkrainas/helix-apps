@@ -79,9 +79,12 @@ pub fn announce(widget: &impl IsA<gtk::Widget>, message: &str, urgency: Urgency)
     if std::env::var_os("HELIX_A11Y_CHECK").is_some() {
         eprintln!("helix-a11y: announce ({urgency:?}): {message}");
     }
-    // Only AT-SPI contexts implement announcements; GTK 4.22 crashes
-    // (calls a NULL function) when announcing through the fallback "test"
-    // context used without an accessibility bus or on Broadway.
+    // Only AT-SPI contexts implement announcements; GTK 4.22 (seen with
+    // 4.22.4) crashes, calling a NULL function, when announcing through the
+    // fallback "test" context used without an accessibility bus or on
+    // Broadway (#120). libadwaita 1.9's toasts and dialogs are safe there.
+    // tests/broadway_announce.rs checks this and that nothing announces
+    // directly.
     if widget.as_ref().at_context().type_().name() == "GtkAtSpiContext" {
         widget.as_ref().announce(message, priority);
     }
