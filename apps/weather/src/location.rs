@@ -51,11 +51,11 @@ fn token(prefix: &str) -> String {
 /// Extracts a fix from a portal `LocationUpdated` dictionary.
 pub fn fix_from_portal(d: &Dict) -> Option<Fix> {
     let f = |k: &str| d.get(k).and_then(|v| f64::try_from(v).ok());
-    let (latitude, longitude) = (f(tr("Latitude"))?, f(tr("Longitude"))?);
+    let (latitude, longitude) = (f("Latitude")?, f("Longitude")?);
     valid(latitude, longitude).then_some(Fix {
         latitude,
         longitude,
-        accuracy: f(tr("Accuracy")),
+        accuracy: f("Accuracy"),
     })
 }
 

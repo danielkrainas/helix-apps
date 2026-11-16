@@ -639,7 +639,7 @@ impl Ui {
 
         // Stopwatch keys, active only on the stopwatch page.
         let ctl = gtk::ShortcutController::new();
-        for (trigger, which) in [("space", 0), ("l", 1), (tr("Delete"), 2), ("BackSpace", 2)] {
+        for (trigger, which) in [("space", 0), ("l", 1), ("Delete", 2), ("BackSpace", 2)] {
             let weak = Rc::downgrade(self);
             let action = gtk::CallbackAction::new(move |_, _| {
                 let Some(ui) = weak.upgrade() else {

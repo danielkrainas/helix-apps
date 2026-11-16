@@ -62,8 +62,8 @@ pub struct State {
 impl Default for State {
     fn default() -> Self {
         State {
-            status: tr("Stopped"),
-            loop_status: tr("None"),
+            status: "Stopped",
+            loop_status: "None",
             shuffle: false,
             volume: 1.0,
             position_us: 0,

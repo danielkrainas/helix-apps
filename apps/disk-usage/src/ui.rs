@@ -173,7 +173,7 @@ fn item_menu() -> gio::Menu {
     let trash = gio::MenuItem::new(Some(tr("Move to _Trash…")), Some("win.trash-item"));
     // Delete is a bubble-phase shortcut, not an application accelerator,
     // so the menu is told about it explicitly.
-    trash.set_attribute_value("accel", Some(&tr("Delete").to_variant()));
+    trash.set_attribute_value("accel", Some(&"Delete".to_variant()));
     s2.append_item(&trash);
     menu.append_section(None, &s2);
     menu

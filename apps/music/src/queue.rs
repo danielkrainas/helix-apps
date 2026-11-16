@@ -1,7 +1,5 @@
 //! Play queue: ordering, shuffle and repeat logic.
 
-use helix_app_common::i18n::tr;
-
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Repeat {
     #[default]
@@ -40,9 +38,9 @@ impl Repeat {
     /// MPRIS `LoopStatus` value.
     pub fn mpris(self) -> &'static str {
         match self {
-            Repeat::None => tr("None"),
-            Repeat::All => tr("Playlist"),
-            Repeat::One => tr("Track"),
+            Repeat::None => "None",
+            Repeat::All => "Playlist",
+            Repeat::One => "Track",
         }
     }
 

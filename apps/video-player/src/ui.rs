@@ -1190,7 +1190,7 @@ impl Ui {
         self.update_action_states();
         self.mpris.update(|s| {
             s.has_media = false;
-            s.status = tr("Stopped");
+            s.status = "Stopped";
         });
         self.mpris.changed(&[Prop::Metadata, Prop::PlaybackStatus]);
     }
@@ -1400,9 +1400,9 @@ impl Ui {
         self.set_inhibit(playing);
         let has_media = self.st.borrow().uri.is_some() && !self.st.borrow().error;
         let status = match (playing, has_media) {
-            (true, _) => tr("Playing"),
-            (false, true) => tr("Paused"),
-            (false, false) => tr("Stopped"),
+            (true, _) => "Playing",
+            (false, true) => "Paused",
+            (false, false) => "Stopped",
         };
         self.mpris.update(|s| s.status = status);
         self.mpris.changed(&[Prop::PlaybackStatus]);

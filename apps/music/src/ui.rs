@@ -976,15 +976,15 @@ impl App {
             self.update_inhibit();
         }
         let status = if playing {
-            tr("Playing")
+            "Playing"
         } else if self
             .player
             .as_ref()
             .is_some_and(|p| p.state() == player::State::Paused)
         {
-            tr("Paused")
+            "Paused"
         } else {
-            tr("Stopped")
+            "Stopped"
         };
         if let Some(m) = &self.mpris {
             m.update(|s| s.status = status);

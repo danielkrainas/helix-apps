@@ -149,7 +149,7 @@ impl Sidebar {
         let open_menu = gtk::CallbackAction::new(move |_, _| {
             weak.upgrade().is_some_and(|s| s.popup_focused()).into()
         });
-        for trigger in [tr("Menu"), "<Shift>F10"] {
+        for trigger in ["Menu", "<Shift>F10"] {
             keys.add_shortcut(gtk::Shortcut::new(
                 gtk::ShortcutTrigger::parse_string(trigger),
                 Some(open_menu.clone()),

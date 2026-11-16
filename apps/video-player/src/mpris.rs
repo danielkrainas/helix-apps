@@ -62,7 +62,7 @@ pub struct State {
 impl Default for State {
     fn default() -> Self {
         State {
-            status: tr("Stopped"),
+            status: "Stopped",
             rate: 1.0,
             volume: 1.0,
             position_us: 0,

@@ -63,9 +63,9 @@ pub enum Status {
 impl Status {
     pub fn as_str(self) -> &'static str {
         match self {
-            Status::Playing => tr("Playing"),
-            Status::Paused => tr("Paused"),
-            Status::Stopped => tr("Stopped"),
+            Status::Playing => "Playing",
+            Status::Paused => "Paused",
+            Status::Stopped => "Stopped",
         }
     }
 }
@@ -176,9 +176,9 @@ pub fn changed_properties(old: &Snapshot, new: &Snapshot) -> HashMap<&'static st
 
 fn loop_status(s: &Snapshot) -> &'static str {
     if s.loop_track {
-        tr("Track")
+        "Track"
     } else {
-        tr("None")
+        "None"
     }
 }
 

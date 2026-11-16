@@ -343,9 +343,9 @@ pub fn run(conn: &Connection, op: &Op) -> Result<OpOutput, String> {
         )),
         Op::Check { block } | Op::Repair { block } => {
             let method = if matches!(op, Op::Check { .. }) {
-                tr("Check")
+                "Check"
             } else {
-                tr("Repair")
+                "Repair"
             };
             let r = call(conn, block, FILESYSTEM, method, &(opts(),))?;
             let ok: bool = r.body().deserialize().map_err(|e| e.to_string())?;

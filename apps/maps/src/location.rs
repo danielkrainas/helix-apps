@@ -51,7 +51,7 @@ fn token(prefix: &str) -> String {
 /// Extracts a fix from a `LocationUpdated` dictionary.
 pub fn fix_from_dict(d: &Dict) -> Option<Fix> {
     let f = |k: &str| d.get(k).and_then(|v| f64::try_from(v).ok());
-    let (lat, lon) = (f(tr("Latitude"))?, f(tr("Longitude"))?);
+    let (lat, lon) = (f("Latitude")?, f("Longitude")?);
     if !(lat.is_finite()
         && lon.is_finite()
         && (-90.0..=90.0).contains(&lat)
@@ -66,7 +66,7 @@ pub fn fix_from_dict(d: &Dict) -> Option<Fix> {
     Some(Fix {
         lat,
         lon,
-        accuracy: f(tr("Accuracy")).unwrap_or(f64::NAN),
+        accuracy: f("Accuracy").unwrap_or(f64::NAN),
         description,
     })
 }

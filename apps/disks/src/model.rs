@@ -499,11 +499,11 @@ fn block_volume(snap: &Snapshot, path: &str, depth: usize) -> Volume {
             .map(|t| t.str("Type"))
             .unwrap_or_default();
         PartitionInfo {
-            number: p.u64(tr("Number")) as u32,
+            number: p.u64("Number") as u32,
             type_id: p.str("Type"),
             name: p.str("Name"),
             uuid: p.str("UUID"),
-            flags: p.u64(tr("Flags")),
+            flags: p.u64("Flags"),
             is_container: p.bool("IsContainer"),
             is_contained: p.bool("IsContained"),
             table_path,
@@ -511,14 +511,14 @@ fn block_volume(snap: &Snapshot, path: &str, depth: usize) -> Volume {
         }
     });
     let offset = iface(snap, path, iface::PARTITION)
-        .map(|p| p.u64(tr("Offset")))
+        .map(|p| p.u64("Offset"))
         .unwrap_or(0);
     // Extended partitions' block devices report 1 KiB; the partition entry
     // has the real extent.
     let size = iface(snap, path, iface::PARTITION)
-        .map(|p| p.u64(tr("Size")))
+        .map(|p| p.u64("Size"))
         .filter(|s| *s > 0)
-        .unwrap_or_else(|| b.u64(tr("Size")));
+        .unwrap_or_else(|| b.u64("Size"));
     let filesystem = iface(snap, path, iface::FILESYSTEM).map(|f| f.bytestrings("MountPoints"));
     let encrypted = iface(snap, path, iface::ENCRYPTED).map(|e| {
         e.path("CleartextDevice").or_else(|| {
@@ -573,7 +573,7 @@ fn partitions_of(snap: &Snapshot, table: &str) -> Vec<String> {
         .iter()
         .filter_map(|(path, ifs)| {
             let p = ifs.get(iface::PARTITION)?;
-            (p.path("Table").as_deref() == Some(table)).then(|| (p.u64(tr("Offset")), path.clone()))
+            (p.path("Table").as_deref() == Some(table)).then(|| (p.u64("Offset"), path.clone()))
         })
         .collect();
     v.sort();
@@ -616,8 +616,8 @@ fn logical_volumes(snap: &Snapshot, table: &str, ext_offset: u64, ext_size: u64)
         .filter(|p| {
             iface(snap, p, iface::PARTITION).is_some_and(|pp| {
                 pp.bool("IsContained")
-                    && pp.u64(tr("Offset")) >= ext_offset
-                    && pp.u64(tr("Offset")) < ext_end
+                    && pp.u64("Offset") >= ext_offset
+                    && pp.u64("Offset") < ext_end
             })
         })
         .map(|p| block_volume(snap, p, 1))
@@ -691,11 +691,11 @@ pub fn build(snap: &Snapshot) -> Model {
             .as_deref()
             .and_then(|bp| iface(snap, bp, iface::BLOCK));
         let disk_size = b
-            .map(|b| b.u64(tr("Size")))
+            .map(|b| b.u64("Size"))
             .filter(|s| *s > 0)
-            .unwrap_or(d.u64(tr("Size")));
+            .unwrap_or(d.u64("Size"));
         let (table_type, volumes) = match &block_path {
-            Some(bp) => disk_volumes(snap, bp, b.map(|b| b.u64(tr("Size"))).unwrap_or(0)),
+            Some(bp) => disk_volumes(snap, bp, b.map(|b| b.u64("Size")).unwrap_or(0)),
             None => (None, Vec::new()),
         };
         disks.push(Drive {
@@ -736,10 +736,10 @@ pub fn build(snap: &Snapshot) -> Model {
         let (Some(l), Some(b)) = (ifs.get(iface::LOOP), ifs.get(iface::BLOCK)) else {
             continue;
         };
-        if ifs.contains_key(iface::PARTITION) || b.u64(tr("Size")) == 0 {
+        if ifs.contains_key(iface::PARTITION) || b.u64("Size") == 0 {
             continue;
         }
-        let size = b.u64(tr("Size"));
+        let size = b.u64("Size");
         let (table_type, volumes) = disk_volumes(snap, path, size);
         let backing = l.bytestring("BackingFile");
         loops.push(Drive {
