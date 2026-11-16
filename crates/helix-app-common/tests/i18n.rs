@@ -7,51 +7,12 @@
 use helix_app_common::i18n::{self, tr, trn};
 use helix_app_common::{trf, trnf};
 
-/// Writes a GNU .mo file (no hash table, so gettext binary-searches the
-/// sorted originals).
-fn write_mo(path: &std::path::Path, entries: &[(&str, &str)]) {
-    let mut entries: Vec<(&[u8], &[u8])> = entries
-        .iter()
-        .map(|(k, v)| (k.as_bytes(), v.as_bytes()))
-        .collect();
-    entries.sort();
-    let n = entries.len() as u32;
-    let header = 28u32;
-    let orig_table = header;
-    let trans_table = orig_table + n * 8;
-    let mut data_off = trans_table + n * 8;
-    let mut out: Vec<u8> = Vec::new();
-    for v in [0x9504_12de_u32, 0, n, orig_table, trans_table, 0, data_off] {
-        out.extend_from_slice(&v.to_le_bytes());
-    }
-    let mut blobs: Vec<u8> = Vec::new();
-    let table = |s: &[u8], blobs: &mut Vec<u8>, off: &mut u32| {
-        let entry = [(s.len() as u32).to_le_bytes(), off.to_le_bytes()].concat();
-        blobs.extend_from_slice(s);
-        blobs.push(0);
-        *off += s.len() as u32 + 1;
-        entry
-    };
-    let mut origs = Vec::new();
-    for (k, _) in &entries {
-        origs.extend(table(k, &mut blobs, &mut data_off));
-    }
-    let mut trans = Vec::new();
-    for (_, v) in &entries {
-        trans.extend(table(v, &mut blobs, &mut data_off));
-    }
-    out.extend(origs);
-    out.extend(trans);
-    out.extend(blobs);
-    std::fs::write(path, out).unwrap();
-}
-
 #[test]
 fn translations_from_helix_localedir() {
     let dir = std::env::temp_dir().join(format!("helix-i18n-test-{}", std::process::id()));
     let messages = dir.join("xx/LC_MESSAGES");
     std::fs::create_dir_all(&messages).unwrap();
-    write_mo(
+    i18n::write_test_catalogue(
         &messages.join(format!("{}.mo", i18n::DOMAIN)),
         &[
             (

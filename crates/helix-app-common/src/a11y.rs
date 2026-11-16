@@ -236,30 +236,70 @@ pub trait Labelled: IsA<gtk::Widget> + Sized {
         set_accessible_label(&self, label);
         self
     }
+
+    /// Builder-style [`set_label_and_shortcut`].
+    fn with_shortcut(self, label: &str, accel: &str) -> Self {
+        set_label_and_shortcut(&self, label, accel);
+        self
+    }
 }
 
 impl<T: IsA<gtk::Widget>> Labelled for T {}
 
-/// The accessible name for a button whose tooltip may end in a keyboard
-/// shortcut: "Search (Ctrl+F)" → "Search". Other parenthesised text is
-/// kept ("Next Match (newer output)").
-pub fn name_from_tooltip(tooltip: &str) -> &str {
-    let t = tooltip.trim_end();
-    if let Some(body) = t.strip_suffix(')') {
-        if let Some(open) = body.rfind('(') {
-            let inner = &body[open + 1..];
-            let is_key = |w: &str| {
-                matches!(w, "Ctrl" | "Alt" | "Shift" | "Super" | "Esc" | "Escape")
-                    || (w.len() >= 2
-                        && w.starts_with('F')
-                        && w[1..].chars().all(|c| c.is_ascii_digit()))
-            };
-            if inner.split(['+', ' ', ',']).any(is_key) {
-                return body[..open].trim_end();
-            }
-        }
+/// A tooltip naming a control's keyboard shortcut: `label` and the keys
+/// of `accel` (a GTK accelerator such as `"<Control>f"`), written by GTK
+/// in the user's language: "Search (Ctrl+F)", "Suchen (Strg+F)".
+pub fn shortcut_tooltip(label: &str, accel: &str) -> String {
+    let keys = gtk::accelerator_parse(accel)
+        .map(|(key, mods)| gtk::accelerator_get_label(key, mods).to_string())
+        .unwrap_or_else(|| accel.to_string());
+    tooltip_with_keys(label, &keys)
+}
+
+/// [`shortcut_tooltip`] with the keys already written out.
+fn tooltip_with_keys(label: &str, keys: &str) -> String {
+    // Translators: a button's tooltip: what it does and its keyboard
+    // shortcut, "Search (Ctrl+F)".
+    crate::trf!("{label} ({shortcut})", label = label, shortcut = keys)
+}
+
+/// The shortcut of `accel` as the ARIA key-shortcuts property writes it
+/// ("Control+Shift+G"), or `None` when it does not parse.
+fn aria_key_shortcut(accel: &str) -> Option<String> {
+    let (key, mods) = gtk::accelerator_parse(accel)?;
+    let mut parts: Vec<String> = [
+        (gtk::gdk::ModifierType::CONTROL_MASK, "Control"),
+        (gtk::gdk::ModifierType::ALT_MASK, "Alt"),
+        (gtk::gdk::ModifierType::SHIFT_MASK, "Shift"),
+        (gtk::gdk::ModifierType::SUPER_MASK, "Meta"),
+    ]
+    .into_iter()
+    .filter(|(m, _)| mods.contains(*m))
+    .map(|(_, name)| name.to_string())
+    .collect();
+    let name = key.name()?.to_string();
+    parts.push(match name.as_str() {
+        "minus" => "-".into(),
+        "plus" | "equal" => "+".into(),
+        n if n.chars().count() == 1 => n.to_uppercase(),
+        _ => name,
+    });
+    Some(parts.join("+"))
+}
+
+/// Shows `label` and the keys of `accel` as `widget`'s tooltip (see
+/// [`shortcut_tooltip`]) and gives it `label` alone as its accessible
+/// name, with the shortcut in its key-shortcuts property, which screen
+/// readers announce on their own. The name is never taken back out of
+/// the translated tooltip.
+pub fn set_label_and_shortcut(widget: &impl IsA<gtk::Widget>, label: &str, accel: &str) {
+    widget.set_tooltip_text(Some(&shortcut_tooltip(label, accel)));
+    set_accessible_label(widget, label);
+    if let Some(keys) = aria_key_shortcut(accel) {
+        widget
+            .as_ref()
+            .update_property(&[accessible::Property::KeyShortcuts(&keys)]);
     }
-    t
 }
 
 /// An icon-only button whose tooltip and accessible name are `label`.
@@ -324,7 +364,7 @@ pub fn name_buttons_from_tooltips(root: &impl IsA<gtk::Widget>) {
     fn walk(w: &gtk::Widget) {
         if (w.is::<gtk::Button>() || w.is::<gtk::MenuButton>()) && !has_name(w) {
             if let Some(tip) = w.tooltip_text() {
-                set_accessible_label(w, name_from_tooltip(&tip));
+                set_accessible_label(w, &tip);
             }
         }
         let mut child = w.first_child();
@@ -621,7 +661,7 @@ pub fn install_check(app: &impl IsA<gtk::Application>) {
 
 #[cfg(test)]
 mod tests {
-    use super::{name_from_tooltip, Recent, REPEAT_WINDOW};
+    use super::{tooltip_with_keys, Recent, REPEAT_WINDOW};
     use std::time::{Duration, Instant};
 
     #[test]
@@ -637,15 +677,8 @@ mod tests {
     }
 
     #[test]
-    fn shortcut_is_not_part_of_the_name() {
-        assert_eq!(name_from_tooltip("Search (Ctrl+F)"), "Search");
-        assert_eq!(name_from_tooltip("Up (Alt+Up)"), "Up");
-        assert_eq!(name_from_tooltip("Sidebar (F9)"), "Sidebar");
-        assert_eq!(name_from_tooltip("Back"), "Back");
-        assert_eq!(
-            name_from_tooltip("Next Match (newer output)"),
-            "Next Match (newer output)"
-        );
-        assert_eq!(name_from_tooltip("Zoom (%)"), "Zoom (%)");
+    fn shortcut_tooltips() {
+        assert_eq!(tooltip_with_keys("Search", "Ctrl+F"), "Search (Ctrl+F)");
+        assert_eq!(tooltip_with_keys("Zoom In", "Ctrl++"), "Zoom In (Ctrl++)");
     }
 }

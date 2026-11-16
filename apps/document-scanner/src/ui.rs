@@ -270,7 +270,7 @@ fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .tooltip_text(tooltip)
         .action_name(action)
         .build()
-        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
+        .labelled(tooltip)
 }
 
 impl Win {

@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::shortcut_tooltip;
 use helix_app_common::Labelled;
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
@@ -278,7 +279,7 @@ impl Viewer {
         let open_btn = gtk::Button::builder()
             .label(tr("Open…"))
             .action_name("win.open")
-            .tooltip_text(tr("Open Images (Ctrl+O)"))
+            .tooltip_text(shortcut_tooltip(tr("Open Images"), "<Control>o"))
             .build();
         header.pack_start(&open_btn);
         let menu = gio::Menu::new();
@@ -325,9 +326,8 @@ impl Viewer {
         header.pack_end(&menu_btn);
         let props_btn = gtk::ToggleButton::builder()
             .icon_name("dialog-information-symbolic")
-            .tooltip_text(tr("Image Properties (F9)"))
             .build()
-            .labelled(tr("Image Properties"));
+            .with_shortcut(tr("Image Properties"), "F9");
         header.pack_end(&props_btn);
 
         // Image area.
@@ -342,7 +342,7 @@ impl Viewer {
                 .action_name(action)
                 .tooltip_text(tip)
                 .build()
-                .labelled(helix_app_common::a11y::name_from_tooltip(tip));
+                .labelled(tip);
             b.add_css_class("osd");
             b.add_css_class("circular");
             b.add_css_class("iv-nav");
@@ -375,30 +375,32 @@ impl Viewer {
         controls.add_css_class("osd");
         controls.add_css_class("toolbar");
         controls.add_css_class("iv-controls");
-        let tool = |icon: &str, action: &str, tip: &str| {
+        let tool = |icon: &str, action: &str, label: &str, accel: &str| {
             let b = gtk::Button::builder()
                 .icon_name(icon)
                 .action_name(action)
-                .tooltip_text(tip)
                 .build()
-                .labelled(helix_app_common::a11y::name_from_tooltip(tip));
+                .with_shortcut(label, accel);
             b.add_css_class("flat");
             b
         };
         controls.append(&tool(
             "object-rotate-left-symbolic",
             "win.rotate-left",
-            tr("Rotate Left (Ctrl+Shift+R)"),
+            tr("Rotate Left"),
+            "<Control><Shift>r",
         ));
         controls.append(&tool(
             "object-rotate-right-symbolic",
             "win.rotate-right",
-            tr("Rotate Right (Ctrl+R)"),
+            tr("Rotate Right"),
+            "<Control>r",
         ));
         let save_btn = tool(
             "document-save-symbolic",
             "win.save",
-            tr("Save Rotation (Ctrl+S)"),
+            tr("Save Rotation"),
+            "<Control>s",
         );
         save_btn.set_visible(false);
         controls.append(&save_btn);
@@ -406,7 +408,8 @@ impl Viewer {
         controls.append(&tool(
             "zoom-out-symbolic",
             "win.zoom-out",
-            tr("Zoom Out (Ctrl+−)"),
+            tr("Zoom Out"),
+            "<Control>minus",
         ));
         let zoom_menu = gio::Menu::new();
         zoom_menu.append(Some(tr("Best Fit")), Some("win.zoom-fit"));
@@ -423,13 +426,15 @@ impl Viewer {
         controls.append(&tool(
             "zoom-in-symbolic",
             "win.zoom-in",
-            tr("Zoom In (Ctrl++)"),
+            tr("Zoom In"),
+            "<Control>plus",
         ));
         controls.append(&gtk::Separator::new(gtk::Orientation::Vertical));
         controls.append(&tool(
             "view-fullscreen-symbolic",
             "win.fullscreen",
-            tr("Fullscreen (F11)"),
+            tr("Fullscreen"),
+            "F11",
         ));
         let controls_rev = gtk::Revealer::builder()
             .transition_type(gtk::RevealerTransitionType::Crossfade)

@@ -5,7 +5,7 @@ use crate::layout::{self, Span, MIB};
 use crate::parttypes;
 use crate::props::{Props, PropsExt, Snapshot};
 use crate::smart::Smart;
-use helix_app_common::i18n::tr;
+use helix_app_common::i18n::{tr, trc};
 use helix_app_common::nc_;
 use helix_app_common::trf;
 
@@ -112,26 +112,15 @@ pub struct Model {
     pub drives: Vec<Drive>,
 }
 
-/// A state in title case read mid-sentence: ordinary words in lower case
-/// ("Not Mounted" → "not mounted", "Mounted at /" → "mounted at /"),
-/// names and acronyms ("LUKS Encryption", "Ext4") as they are.
-fn lower_first(text: &str) -> String {
-    let ordinary = |w: &str| {
-        let mut c = w.chars();
-        c.next().is_some_and(|f| f.is_alphabetic()) && c.all(|c| c.is_lowercase())
-    };
-    let words: Vec<&str> = text.split(' ').collect();
-    if words.iter().all(|w| ordinary(w)) {
-        return text.to_lowercase();
-    }
-    match words.first() {
-        Some(first) if ordinary(first) => {
-            let mut chars = text.chars();
-            let c = chars.next().unwrap_or_default();
-            c.to_lowercase().chain(chars).collect()
-        }
-        _ => text.to_string(),
-    }
+/// The state of what a volume holds.
+#[derive(Debug, Clone, PartialEq)]
+enum State {
+    MountedAt(String),
+    NotMounted,
+    Unlocked,
+    Locked,
+    Active,
+    NotActive,
 }
 
 /// Human name of a filesystem / content type (`IdType`).
@@ -201,13 +190,13 @@ impl Volume {
         fs_name(&self.id_type, &self.id_version)
     }
 
-    /// Content description, e.g. `Ext4 (version 1.0) — Mounted at /home`.
-    pub fn contents(&self) -> String {
+    /// What the volume holds, e.g. `Ext4 (version 1.0)`, and its state.
+    fn content_parts(&self) -> (String, Option<State>) {
         if self.is_free() {
-            return tr("Unallocated Space").into();
+            return (tr("Unallocated Space").into(), None);
         }
         if self.is_container() {
-            return tr("Extended Partition").into();
+            return (tr("Extended Partition").into(), None);
         }
         let mut name = self.type_name();
         if !self.id_version.is_empty() && self.id_type != "vfat" {
@@ -217,54 +206,79 @@ impl Volume {
                 id_version = self.id_version
             );
         }
-        if let Some(mps) = &self.filesystem {
-            return match mps.first() {
-                Some(mp) => trf!("{name} — Mounted at {mp}", name = name, mp = mp),
-                None => trf!("{name} — Not Mounted", name = name),
-            };
-        }
-        if let Some(clear) = &self.encrypted {
-            return if clear.is_some() {
-                trf!("{name} — Unlocked", name = name)
+        let state = if let Some(mps) = &self.filesystem {
+            Some(match mps.first() {
+                Some(mp) => State::MountedAt(mp.clone()),
+                None => State::NotMounted,
+            })
+        } else if let Some(clear) = &self.encrypted {
+            Some(if clear.is_some() {
+                State::Unlocked
             } else {
-                trf!("{name} — Locked", name = name)
-            };
+                State::Locked
+            })
+        } else {
+            self.swap_active.map(|active| {
+                if active {
+                    State::Active
+                } else {
+                    State::NotActive
+                }
+            })
+        };
+        if state.is_none() && self.id_usage.is_empty() && self.id_type.is_empty() {
+            return (tr("Unknown").into(), None);
         }
-        if let Some(active) = self.swap_active {
-            return if active {
-                trf!("{name} — Active", name = name)
-            } else {
-                trf!("{name} — Not Active", name = name)
-            };
+        (name, state)
+    }
+
+    /// Content description, e.g. `Ext4 (version 1.0) — Mounted at /home`.
+    pub fn contents(&self) -> String {
+        let (name, state) = self.content_parts();
+        match state {
+            None => name,
+            Some(State::MountedAt(mp)) => {
+                trf!("{name} — Mounted at {mp}", name = name, mp = mp)
+            }
+            Some(State::NotMounted) => trf!("{name} — Not Mounted", name = name),
+            Some(State::Unlocked) => trf!("{name} — Unlocked", name = name),
+            Some(State::Locked) => trf!("{name} — Locked", name = name),
+            Some(State::Active) => trf!("{name} — Active", name = name),
+            Some(State::NotActive) => trf!("{name} — Not Active", name = name),
         }
-        if self.id_usage.is_empty() && self.id_type.is_empty() {
-            return tr("Unknown").into();
-        }
-        name
     }
 
     /// What assistive technology says for the volume selected in the
     /// volume bar: name, `size` (already formatted), what it contains and
-    /// its state, e.g. "Data, 512 GB, Ext4, mounted at /home".
+    /// its state, e.g. "Data, 512 GB, Ext4, mounted at /home". Built from
+    /// those parts, so no translated text is taken apart.
     pub fn spoken(&self, size: &str) -> String {
         let name = self.short_name();
         if self.is_free() {
             return trf!("{name}, {size}, not partitioned", name = name, size = size);
         }
-        let contents = self.contents();
+        let (contents, state) = self.content_parts();
         let mut parts = vec![name.clone(), size.to_string()];
-        for part in contents.split(" — ") {
-            // "Ext4" is not repeated after a volume named "Ext4".
-            if part != name {
-                parts.push(lower_first(part));
-            }
+        // "Ext4" is not repeated after a volume named "Ext4".
+        if contents != name {
+            parts.push(contents);
+        }
+        if let Some(state) = state {
+            parts.push(match state {
+                State::MountedAt(mp) => trf!("mounted at {mp}", mp = mp),
+                State::NotMounted => trc("volume state, read after its name", "not mounted"),
+                State::Unlocked => trc("volume state, read after its name", "unlocked"),
+                State::Locked => trc("volume state, read after its name", "locked"),
+                State::Active => trc("swap state, read after its name", "active"),
+                State::NotActive => trc("swap state, read after its name", "not active"),
+            });
         }
         if let Some(t) = self.partition_type().filter(|t| !t.is_empty()) {
             if !self.is_container() {
                 parts.push(trf!("partition type {t}", t = t));
             }
         }
-        parts.join(", ")
+        parts.join(tr(nc_!("list separator", ", ")))
     }
 
     /// Short name for the volume bar.
@@ -1143,10 +1157,79 @@ mod tests {
             mounted > 0 && free > 0,
             "fixtures lack mounted or free volumes"
         );
-        assert_eq!(lower_first("Mounted at /"), "mounted at /");
-        assert_eq!(lower_first("Not Mounted"), "not mounted");
-        assert_eq!(lower_first("LUKS Encryption"), "LUKS Encryption");
-        assert_eq!(lower_first("Ext4 (version 1.0)"), "Ext4 (version 1.0)");
+    }
+
+    /// Spoken names are built from translated parts, never by taking a
+    /// translated description apart: with a pseudo-translation whose
+    /// descriptions use another separator, each part is still spoken
+    /// once and whole. Runs [`pseudo_translated_child`] in a child
+    /// process, since it switches the process to that catalogue.
+    #[test]
+    fn spoken_names_with_a_pseudo_translation() {
+        let dir = std::env::temp_dir().join(format!("helix-disks-pseudo-{}", std::process::id()));
+        let messages = dir.join("xx/LC_MESSAGES");
+        std::fs::create_dir_all(&messages).unwrap();
+        helix_app_common::i18n::write_test_catalogue(
+            &messages.join(format!("{}.mo", helix_app_common::i18n::DOMAIN)),
+            &[
+                ("", "Content-Type: text/plain; charset=UTF-8\n"),
+                ("{name} — Mounted at {mp}", "⟦{name} :: Ṁöûñţéð àţ {mp}⟧"),
+                ("{name} — Unlocked", "⟦{name} :: Ûñļöçķéð⟧"),
+                ("mounted at {mp}", "⟦ṁöûñţéð àţ {mp}⟧"),
+                (
+                    "volume state, read after its name\u{4}unlocked",
+                    "⟦ûñļöçķéð⟧",
+                ),
+                ("Ext4", "⟦Éxţ4⟧"),
+                ("LUKS Encryption", "⟦ĻÛĶŠ Éñçŕýþţîöñ⟧"),
+                ("list separator\u{4}, ", " / "),
+            ],
+        );
+        let status = std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", "model::tests::pseudo_translated_child"])
+            .args(["--ignored", "--nocapture"])
+            .env("HELIX_DISKS_PSEUDO", "1")
+            .env("HELIX_LOCALEDIR", &dir)
+            .env("LANGUAGE", "xx")
+            .status()
+            .unwrap();
+        std::fs::remove_dir_all(&dir).ok();
+        assert!(status.success());
+    }
+
+    #[test]
+    #[ignore = "run by spoken_names_with_a_pseudo_translation"]
+    fn pseudo_translated_child() {
+        if std::env::var_os("HELIX_DISKS_PSEUDO").is_none() {
+            return;
+        }
+        // LANGUAGE is ignored in the C locale; use any installed real one.
+        let translated = ["en_US.UTF-8", "C.UTF-8", "en_GB.UTF-8"].iter().any(|l| {
+            std::env::set_var("LC_ALL", l);
+            helix_app_common::i18n::init_for_tests();
+            tr("Ext4") != "Ext4"
+        });
+        if !translated {
+            eprintln!("no locale accepts LANGUAGE here; skipping");
+            return;
+        }
+        let m = build(&snapshot());
+        let volumes: Vec<&Volume> = m.drives.iter().flat_map(|d| d.all_volumes()).collect();
+        for v in &volumes {
+            assert!(!v.spoken("1 GB").contains("::"), "{}", v.spoken("1 GB"));
+        }
+        let root = volumes.iter().find(|v| v.label == "root").unwrap();
+        assert_eq!(root.contents(), "⟦⟦Éxţ4⟧ (version 1.0) :: Ṁöûñţéð àţ /⟧");
+        assert_eq!(
+            root.spoken("1 GB"),
+            "root / 1 GB / ⟦Éxţ4⟧ (version 1.0) / ⟦ṁöûñţéð àţ /⟧"
+        );
+        let luks = volumes.iter().find(|v| v.encrypted.is_some()).unwrap();
+        // Named after its contents, which are not repeated.
+        assert_eq!(
+            luks.spoken("1 GB"),
+            "⟦ĻÛĶŠ Éñçŕýþţîöñ⟧ / 1 GB / ⟦ûñļöçķéð⟧ / partition type Linux LUKS"
+        );
     }
 
     #[test]

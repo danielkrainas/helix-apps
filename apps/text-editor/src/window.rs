@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::shortcut_tooltip;
 use helix_app_common::Labelled;
 use std::cell::Cell;
 use std::rc::{Rc, Weak};
@@ -131,17 +132,16 @@ impl Window {
             .use_underline(true)
             .action_name("win.open")
             .popover(&recent_popover)
-            .tooltip_text(tr("Open a File (Ctrl+O)"))
+            .tooltip_text(shortcut_tooltip(tr("Open a File"), "<Control>o"))
             .dropdown_tooltip(tr("Recent Documents"))
             .build();
 
         let new_tab_btn = gtk::Button::from_icon_name("tab-new-symbolic");
         new_tab_btn.set_action_name(Some("win.new-tab"));
-        new_tab_btn.set_tooltip_text(Some(tr("New Tab (Ctrl+T)")));
-        helix_app_common::set_accessible_label(&new_tab_btn, tr("New Tab"));
+        helix_app_common::set_label_and_shortcut(&new_tab_btn, tr("New Tab"), "<Control>t");
         let save_btn = gtk::Button::with_mnemonic(tr("_Save"));
         save_btn.set_action_name(Some("win.save"));
-        save_btn.set_tooltip_text(Some(tr("Save (Ctrl+S)")));
+        save_btn.set_tooltip_text(Some(&shortcut_tooltip(tr("Save"), "<Control>s")));
         let menu_btn = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&primary_menu())
@@ -180,7 +180,7 @@ impl Window {
         header.pack_end(&save_btn);
         let save_icon_btn = helix_app_common::icon_button("document-save-symbolic", tr("Save"));
         save_icon_btn.set_action_name(Some("win.save"));
-        save_icon_btn.set_tooltip_text(Some(tr("Save (Ctrl+S)")));
+        helix_app_common::set_label_and_shortcut(&save_icon_btn, tr("Save"), "<Control>s");
         save_icon_btn.set_visible(false);
         header.pack_end(&save_icon_btn);
 
@@ -219,7 +219,7 @@ impl Window {
         let pos_btn = gtk::MenuButton::builder()
             .label(tr("Ln 1, Col 1"))
             .popover(&goto_popover)
-            .tooltip_text(tr("Go to Line (Ctrl+I)"))
+            .tooltip_text(shortcut_tooltip(tr("Go to Line"), "<Control>i"))
             .css_classes(["flat"])
             .build();
         let indent_label = gtk::Label::new(None);

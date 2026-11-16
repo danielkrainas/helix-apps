@@ -11,6 +11,7 @@ use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use helix_app_common::i18n::{n_, tr};
 use helix_app_common::nc_;
+use helix_app_common::shortcut_tooltip;
 use helix_app_common::trf;
 use helix_app_common::trnf;
 use helix_app_common::Labelled;
@@ -25,7 +26,8 @@ const APP_NAME: &str = n_("Maps");
 const COMMENTS: &str = n_("Find places around the world");
 const SCHEMA: &str = "org.gnome.Maps";
 const DEFAULT_MODE: &str = "pedestrian";
-const LOCATE_TOOLTIP: &str = n_("Current Location (Ctrl+L)");
+const LOCATE_LABEL: &str = n_("Current Location");
+const LOCATE_ACCEL: &str = "<Control>l";
 
 /// Window accelerators; every key here is listed in the shortcuts window
 /// (checked by a test in `shortcuts.rs`).
@@ -217,7 +219,7 @@ fn icon_button(icon: &str, tooltip: &str) -> gtk::Button {
         .icon_name(icon)
         .tooltip_text(tooltip)
         .build()
-        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
+        .labelled(tooltip)
 }
 
 /// An icon-only button that acts as a toggle: exposed as a toggle button
@@ -228,7 +230,7 @@ fn icon_toggle(icon: &str, tooltip: &str) -> gtk::Button {
         .tooltip_text(tooltip)
         .accessible_role(gtk::AccessibleRole::ToggleButton)
         .build()
-        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip));
+        .labelled(tooltip);
     set_pressed(&b, false);
     b
 }
@@ -443,7 +445,8 @@ impl Ui {
 
         // --- Header ----------------------------------------------------------
         let header = adw::HeaderBar::new();
-        let locate_button = icon_button("find-location-symbolic", tr(LOCATE_TOOLTIP));
+        let locate_button = icon_button("find-location-symbolic", tr(LOCATE_LABEL));
+        helix_app_common::set_label_and_shortcut(&locate_button, tr(LOCATE_LABEL), LOCATE_ACCEL);
         locate_button.set_action_name(Some("win.locate"));
         header.pack_start(&locate_button);
 
@@ -510,7 +513,12 @@ impl Ui {
             .build()
             .labelled(tr("Favorites"));
         header.pack_end(&fav_button);
-        let directions_button = icon_toggle("go-jump-symbolic", tr("Directions (Ctrl+D)"));
+        let directions_button = icon_toggle("go-jump-symbolic", tr("Directions"));
+        helix_app_common::set_label_and_shortcut(
+            &directions_button,
+            tr("Directions"),
+            "<Control>d",
+        );
         directions_button.set_action_name(Some("win.directions"));
         header.pack_end(&directions_button);
 
@@ -1496,7 +1504,7 @@ impl Ui {
             );
         } else {
             b.set_icon_name("find-location-symbolic");
-            b.set_tooltip_text(Some(tr(LOCATE_TOOLTIP)));
+            b.set_tooltip_text(Some(&shortcut_tooltip(tr(LOCATE_LABEL), LOCATE_ACCEL)));
         }
         // The button keeps its name and stays focusable; a second press
         // while locating is ignored.

@@ -278,7 +278,7 @@ fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .focus_on_click(false)
         .css_classes(["flat"])
         .build()
-        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
+        .labelled(tooltip)
 }
 
 /// The main menu and its first section, which holds "Resume from 12:34"

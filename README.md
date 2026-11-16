@@ -116,10 +116,12 @@ Shared helpers live in `helix_app_common::a11y`.
   accessible *description*, so icon-only buttons are built with
   `icon_button` / `icon_toggle_button` / `icon_menu_button`, or get
   `.labelled("…")` / `set_accessible_label` after their builder. Names
-  are short and leave out keyboard shortcuts (`name_from_tooltip` strips
-  a trailing "(Ctrl+F)"); buttons whose meaning follows a state (Play /
-  Pause) change icon, tooltip and name together with
-  `set_icon_and_label`. Toggle buttons keep one name and expose their
+  are short and leave out keyboard shortcuts: `.with_shortcut(label,
+  accel)` / `set_label_and_shortcut` names the button `label` and shows
+  "label (Ctrl+F)" as its tooltip (`shortcut_tooltip` for the tooltip
+  alone), so no name is cut out of translated text. Buttons whose
+  meaning follows a state (Play / Pause) change icon, tooltip and name
+  together with `set_icon_and_label`. Toggle buttons keep one name and expose their
   state as "pressed". Controls outside an `Adw*Row` that sit next to a
   visible label are tied to it with `label_widget`.
 - **Status changes are announced.** Changes shown without focus moving

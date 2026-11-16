@@ -2,6 +2,7 @@
 
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use helix_app_common::shortcut_tooltip;
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use serde::{Deserialize, Serialize};
@@ -235,17 +236,17 @@ impl App {
         let scan_btn = gtk::Button::builder()
             .label(tr("Scan Folder…"))
             .action_name("win.scan-folder")
-            .tooltip_text(tr("Scan a folder (Ctrl+O)"))
+            .tooltip_text(shortcut_tooltip(tr("Scan a folder"), "<Control>o"))
             .build();
         start_header.pack_start(&scan_btn);
         // In narrow windows the button shows only its icon.
         let scan_icon_btn = gtk::Button::builder()
             .icon_name("folder-open-symbolic")
             .action_name("win.scan-folder")
-            .tooltip_text(tr("Scan a folder (Ctrl+O)"))
             .visible(false)
             .build()
             .labelled(tr("Scan Folder"));
+        scan_icon_btn.set_tooltip_text(Some(&shortcut_tooltip(tr("Scan a folder"), "<Control>o")));
         start_header.pack_start(&scan_icon_btn);
         let narrow = adw::Breakpoint::new(adw::BreakpointCondition::new_length(
             adw::BreakpointConditionLengthType::MaxWidth,
@@ -303,9 +304,8 @@ impl App {
         let rescan_btn = gtk::Button::builder()
             .icon_name("view-refresh-symbolic")
             .action_name("win.rescan")
-            .tooltip_text(tr("Rescan (Ctrl+R)"))
             .build()
-            .labelled(tr("Rescan"));
+            .with_shortcut(tr("Rescan"), "<Control>r");
         results_header.pack_end(&rescan_btn);
 
         // Progress view.
@@ -378,10 +378,9 @@ impl App {
         let up_button = gtk::Button::builder()
             .icon_name("go-up-symbolic")
             .action_name("win.chart-up")
-            .tooltip_text(tr("Up (Alt+Up)"))
             .css_classes(["flat"])
             .build()
-            .labelled(tr("Up"));
+            .with_shortcut(tr("Up"), "<Alt>Up");
         let rings_btn = gtk::ToggleButton::builder()
             .label(tr("Rings"))
             .tooltip_text(tr("Rings Chart"))

@@ -62,10 +62,9 @@ pub struct Doc {
     auto_indent: Cell<bool>,
 }
 
-fn icon_button(icon: &str, tooltip: &str) -> gtk::Button {
+fn icon_button(icon: &str, label: &str, accel: &str) -> gtk::Button {
     let b = gtk::Button::from_icon_name(icon);
-    b.set_tooltip_text(Some(tooltip));
-    helix_app_common::set_accessible_label(&b, helix_app_common::a11y::name_from_tooltip(tooltip));
+    helix_app_common::set_label_and_shortcut(&b, label, accel);
     b.add_css_class("flat");
     b
 }
@@ -170,8 +169,8 @@ impl Doc {
         let count = gtk::Label::new(None);
         count.add_css_class("dim-label");
         count.add_css_class("numeric");
-        let prev = icon_button("go-up-symbolic", tr("Previous Match (Ctrl+Shift+G)"));
-        let next = icon_button("go-down-symbolic", tr("Next Match (Ctrl+G)"));
+        let prev = icon_button("go-up-symbolic", tr("Previous Match"), "<Control><Shift>g");
+        let next = icon_button("go-down-symbolic", tr("Next Match"), "<Control>g");
         // Search options live in a menu so the bar fits narrow windows.
         let case_btn = option_check(tr("_Case Sensitive"));
         let word_btn = option_check(tr("Match _Whole Words Only"));
@@ -186,10 +185,9 @@ impl Doc {
         options.add_css_class("flat");
         let replace_toggle = gtk::ToggleButton::new();
         replace_toggle.set_icon_name("edit-find-replace-symbolic");
-        replace_toggle.set_tooltip_text(Some(tr("Replace (Ctrl+H)")));
-        helix_app_common::set_accessible_label(&replace_toggle, tr("Replace"));
+        helix_app_common::set_label_and_shortcut(&replace_toggle, tr("Replace"), "<Control>h");
         replace_toggle.add_css_class("flat");
-        let close = icon_button("window-close-symbolic", tr("Close (Escape)"));
+        let close = icon_button("window-close-symbolic", tr("Close"), "Escape");
         let find_row = gtk::Box::new(gtk::Orientation::Horizontal, 4);
         for w in [
             entry.upcast_ref::<gtk::Widget>(),

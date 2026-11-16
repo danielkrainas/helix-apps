@@ -154,7 +154,7 @@ fn button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .action_name(action)
         .valign(gtk::Align::Center)
         .build()
-        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip));
+        .labelled(tooltip);
     b.add_css_class("flat");
     b
 }

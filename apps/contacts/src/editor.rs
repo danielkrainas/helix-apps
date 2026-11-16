@@ -102,7 +102,7 @@ impl TypedList {
             .css_classes(["flat"])
             .valign(gtk::Align::Center)
             .build()
-            .labelled(helix_app_common::a11y::name_from_tooltip(add_label));
+            .labelled(add_label);
         let weak = Rc::downgrade(&list);
         add.connect_clicked(move |_| {
             if let Some(l) = weak.upgrade() {

@@ -1164,10 +1164,7 @@ impl App {
         };
         self.bar.repeat.set_icon_name(icon);
         self.bar.repeat.set_tooltip_text(Some(tip));
-        helix_app_common::set_accessible_label(
-            &self.bar.repeat,
-            helix_app_common::a11y::name_from_tooltip(tip),
-        );
+        helix_app_common::set_accessible_label(&self.bar.repeat, tip);
         if let Some(m) = &self.mpris {
             m.update(|s| {
                 s.shuffle = shuffle;
@@ -1674,7 +1671,7 @@ fn flat_button(icon: &str, tip: &str) -> gtk::Button {
         .valign(gtk::Align::Center)
         .css_classes(["flat"])
         .build()
-        .labelled(helix_app_common::a11y::name_from_tooltip(tip))
+        .labelled(tip)
 }
 
 /// Below this width (in sp) the window uses its narrow layout: the view

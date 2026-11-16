@@ -10,6 +10,7 @@ use crate::state::{self, DocState, StateStore};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use helix_app_common::i18n::{n_, tr};
+use helix_app_common::shortcut_tooltip;
 use helix_app_common::trf;
 use helix_app_common::trnf;
 use helix_app_common::Labelled;
@@ -219,7 +220,7 @@ fn icon_button(icon: &str, tooltip: &str, action: &str) -> gtk::Button {
         .tooltip_text(tooltip)
         .action_name(action)
         .build()
-        .labelled(helix_app_common::a11y::name_from_tooltip(tooltip))
+        .labelled(tooltip)
 }
 
 impl Win {
@@ -253,17 +254,16 @@ impl Win {
         header.pack_start(&open_btn);
         let sidebar_btn = gtk::ToggleButton::builder()
             .icon_name("sidebar-show-symbolic")
-            .tooltip_text(tr("Sidebar (F9)"))
             .action_name("win.sidebar")
             .build()
-            .labelled(tr("Sidebar"));
+            .with_shortcut(tr("Sidebar"), "F9");
         header.pack_start(&sidebar_btn);
 
         let page_entry = gtk::Entry::builder()
             .width_chars(4)
             .max_width_chars(8)
             .xalign(1.0)
-            .tooltip_text(tr("Go to page (Ctrl+L)"))
+            .tooltip_text(shortcut_tooltip(tr("Go to page"), "<Control>l"))
             .build();
         page_entry.add_css_class("dv-page-entry");
         let page_of = gtk::Label::new(None);
@@ -367,10 +367,9 @@ impl Win {
         header.pack_end(&page_box);
         let search_btn = gtk::Button::builder()
             .icon_name("system-search-symbolic")
-            .tooltip_text(tr("Search (Ctrl+F)"))
             .action_name("win.search")
             .build()
-            .labelled(tr("Search"));
+            .with_shortcut(tr("Search"), "<Control>f");
         header.pack_end(&search_btn);
         let header_doc: Vec<gtk::Widget> = vec![
             sidebar_btn.upcast(),

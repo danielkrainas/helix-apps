@@ -437,6 +437,49 @@ pub fn justify_end() -> gtk::Justification {
     }
 }
 
+/// Writes a GNU .mo catalogue of `entries` (original, translation) to
+/// `path`, for tests that run with a made-up translation. Originals with
+/// a context are written `"context\u{4}text"`, plural ones
+/// `"one\0many"`. No hash table, so gettext binary-searches the sorted
+/// originals.
+#[doc(hidden)]
+pub fn write_test_catalogue(path: &std::path::Path, entries: &[(&str, &str)]) {
+    let mut entries: Vec<(&[u8], &[u8])> = entries
+        .iter()
+        .map(|(k, v)| (k.as_bytes(), v.as_bytes()))
+        .collect();
+    entries.sort();
+    let n = entries.len() as u32;
+    let header = 28u32;
+    let orig_table = header;
+    let trans_table = orig_table + n * 8;
+    let mut data_off = trans_table + n * 8;
+    let mut out: Vec<u8> = Vec::new();
+    for v in [0x9504_12de_u32, 0, n, orig_table, trans_table, 0, data_off] {
+        out.extend_from_slice(&v.to_le_bytes());
+    }
+    let mut blobs: Vec<u8> = Vec::new();
+    let table = |s: &[u8], blobs: &mut Vec<u8>, off: &mut u32| {
+        let entry = [(s.len() as u32).to_le_bytes(), off.to_le_bytes()].concat();
+        blobs.extend_from_slice(s);
+        blobs.push(0);
+        *off += s.len() as u32 + 1;
+        entry
+    };
+    let mut origs = Vec::new();
+    for (k, _) in &entries {
+        origs.extend(table(k, &mut blobs, &mut data_off));
+    }
+    let mut trans = Vec::new();
+    for (_, v) in &entries {
+        trans.extend(table(v, &mut blobs, &mut data_off));
+    }
+    out.extend(origs);
+    out.extend(trans);
+    out.extend(blobs);
+    std::fs::write(path, out).unwrap();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

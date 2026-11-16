@@ -1030,10 +1030,7 @@ fn update_controls(state: &State) {
     };
     ui.shutter.set_icon_name(icon);
     ui.shutter.set_tooltip_text(Some(tip));
-    helix_app_common::set_accessible_label(
-        &ui.shutter,
-        helix_app_common::a11y::name_from_tooltip(tip),
-    );
+    helix_app_common::set_accessible_label(&ui.shutter, tip);
     ui.video_toggle
         .set_sensitive(!recording && state.formats.iter().any(|(_, ok)| *ok));
     ui.photo_toggle.set_sensitive(!recording);

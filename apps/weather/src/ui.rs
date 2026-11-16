@@ -263,10 +263,9 @@ fn build(app: &adw::Application) -> Ui {
     let popover = gtk::Popover::builder().child(&pop_box).build();
     let places_button = gtk::MenuButton::builder()
         .icon_name("find-location-symbolic")
-        .tooltip_text(tr("Places (Ctrl+L)"))
         .popover(&popover)
         .build()
-        .labelled(tr("Places"));
+        .with_shortcut(tr("Places"), "<Control>l");
     header.pack_start(&places_button);
 
     let menu = gio::Menu::new();
@@ -303,10 +302,9 @@ fn build(app: &adw::Application) -> Ui {
     header.pack_end(&menu_button);
     let refresh_button = gtk::Button::builder()
         .icon_name("view-refresh-symbolic")
-        .tooltip_text(tr("Refresh (F5)"))
         .action_name("app.refresh")
         .build()
-        .labelled(tr("Refresh"));
+        .with_shortcut(tr("Refresh"), "F5");
     header.pack_end(&refresh_button);
     let header_spinner = gtk::Spinner::builder()
         .visible(false)
