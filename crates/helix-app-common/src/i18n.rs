@@ -82,6 +82,10 @@ fn bind() {
 pub fn init_for_tests() {
     bind();
     cache().lock().unwrap_or_else(|e| e.into_inner()).clear();
+    date_cache()
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .clear();
 }
 
 fn cache() -> &'static Mutex<HashMap<&'static str, &'static str>> {
@@ -324,20 +328,33 @@ fn format_c(fmt: &str, value: f64) -> Option<String> {
     String::from_utf8(buf).ok()
 }
 
+type DateKey = (&'static str, u32);
+
+fn date_cache() -> &'static Mutex<HashMap<DateKey, &'static str>> {
+    static CACHE: OnceLock<Mutex<HashMap<DateKey, &'static str>>> = OnceLock::new();
+    CACHE.get_or_init(Default::default)
+}
+
+/// Whether the locale writes a month as a number, as its abbreviated
+/// month names show ("11月" in Chinese, Japanese and Korean). Headings and
+/// dates then use that form too: glibc's full Chinese month name is
+/// "十一月", which Chinese UIs do not write in "2026年11月".
+fn numeral_month(abbr: &str) -> bool {
+    abbr.chars().any(|c| c.is_ascii_digit())
+}
+
 /// A date part in the current locale through GLib (`%OB`, `%Ob`, `%A`,
-/// `%a`), cached for the life of the process like [`tr`].
+/// `%a`), cached for the life of the process like [`tr`]. Padding is
+/// trimmed (Japanese abbreviates January as " 1月").
 fn date_part(format: &'static str, index: u32, date: (i32, i32, i32)) -> &'static str {
-    type Key = (&'static str, u32);
-    static CACHE: OnceLock<Mutex<HashMap<Key, &'static str>>> = OnceLock::new();
-    let cache = CACHE.get_or_init(Default::default);
-    let mut cache = cache.lock().unwrap_or_else(|e| e.into_inner());
+    let mut cache = date_cache().lock().unwrap_or_else(|e| e.into_inner());
     if let Some(s) = cache.get(&(format, index)) {
         return s;
     }
     let text = glib::DateTime::from_utc(date.0, date.1, date.2, 12, 0, 0.0)
         .ok()
         .and_then(|d| d.format(format).ok())
-        .map(|s| s.to_string())
+        .map(|s| s.trim().to_string())
         .unwrap_or_default();
     let text: &'static str = Box::leak(text.into_boxed_str());
     cache.insert((format, index), text);
@@ -348,6 +365,10 @@ fn date_part(format: &'static str, index: u32, date: (i32, i32, i32)) -> &'stati
 /// in the current locale; `month` is 1-12.
 pub fn month_name(month: u32) -> &'static str {
     let m = month.clamp(1, 12);
+    let abbr = month_abbr(m);
+    if numeral_month(abbr) {
+        return abbr;
+    }
     date_part("%OB", m, (2024, m as i32, 1))
 }
 
@@ -363,6 +384,10 @@ pub fn month_abbr(month: u32) -> &'static str {
 /// "13 марта" rather than "март").
 pub fn month_name_in_date(month: u32) -> &'static str {
     let m = month.clamp(1, 12);
+    let abbr = month_abbr_in_date(m);
+    if numeral_month(abbr) {
+        return abbr;
+    }
     date_part("%B", m, (2024, m as i32, 1))
 }
 
