@@ -7,6 +7,7 @@
 use crate::ical::{parse_events, Event};
 use crate::source::Source;
 use crate::vcard::Contact;
+use crate::{n_, tr};
 use futures_lite::StreamExt;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -35,15 +36,30 @@ const VIEW_FLAGS_NOTIFY_INITIAL: u32 = 1;
 
 #[derive(Debug, Clone)]
 pub enum Error {
+    /// From the bus or an EDS service (which translates its own messages).
     Bus(String),
     Invalid(String),
+    /// The source, by its display name, cannot be changed.
+    ReadOnly(String),
+    /// The source, by its display name, cannot be removed.
+    NotRemovable(String),
+    /// A contact's vCard could not be read.
+    BadContact,
 }
 
 impl std::fmt::Display for Error {
+    /// Messages of this crate's own are translated (see
+    /// [`crate::set_translator`]).
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let named = |template: &'static str, name: &str| tr(template).replace("{name}", name);
         match self {
             Error::Bus(e) => write!(f, "{}", clean_dbus_error(e)),
             Error::Invalid(e) => write!(f, "{e}"),
+            Error::ReadOnly(name) => f.write_str(&named(n_("“{name}” is read-only"), name)),
+            Error::NotRemovable(name) => {
+                f.write_str(&named(n_("“{name}” cannot be removed"), name))
+            }
+            Error::BadContact => f.write_str(tr(n_("The contact could not be read"))),
         }
     }
 }
@@ -244,10 +260,7 @@ impl Eds {
     /// Saves a source's edited data.
     pub fn write_source(&self, source: &Source) -> Result<()> {
         if !source.writable {
-            return Err(Error::Invalid(format!(
-                "source {} is read-only",
-                source.uid
-            )));
+            return Err(Error::ReadOnly(source.display_name()));
         }
         let p = proxy(
             &self.conn,
@@ -262,10 +275,7 @@ impl Eds {
     /// Deletes a source (and its data, for local sources).
     pub fn remove_source(&self, source: &Source) -> Result<()> {
         if !source.removable {
-            return Err(Error::Invalid(format!(
-                "source {} cannot be removed",
-                source.uid
-            )));
+            return Err(Error::NotRemovable(source.display_name()));
         }
         let p = proxy(
             &self.conn,
@@ -443,7 +453,7 @@ impl Book {
 
     pub fn contact(&self, uid: &str) -> Result<Contact> {
         let v: String = self.proxy.call("GetContact", &(uid,))?;
-        Contact::parse(&v).ok_or_else(|| Error::Invalid("unparsable vCard".into()))
+        Contact::parse(&v).ok_or(Error::BadContact)
     }
 
     /// Creates contacts and returns their new UIDs.
@@ -566,5 +576,32 @@ mod tests {
         let e = Error::Bus("org.gnome.evolution.dataserver.Client.NotOpened: Not opened".into());
         assert_eq!(e.to_string(), "Not opened");
         assert_eq!(ModType::ThisAndFuture.nick(), "this-and-future");
+    }
+
+    /// This crate's own errors are shown through the app's translator.
+    /// The only test that sets it (it is set once per process).
+    #[test]
+    fn own_errors_are_translated() {
+        fn pseudo(msgid: &'static str) -> &'static str {
+            match msgid {
+                "“{name}” is read-only" => "⟦«{name}» ŕéàð-öñļý⟧",
+                "“{name}” cannot be removed" => "⟦«{name}» çàññöţ ƀé ŕéṁöṽéð⟧",
+                "The contact could not be read" => "⟦Ţĥé çöñţàçţ çöûļð ñöţ ƀé ŕéàð⟧",
+                other => other,
+            }
+        }
+        crate::set_translator(pseudo);
+        assert_eq!(
+            Error::ReadOnly("Birthdays".into()).to_string(),
+            "⟦«Birthdays» ŕéàð-öñļý⟧"
+        );
+        assert_eq!(
+            Error::NotRemovable("Personal".into()).to_string(),
+            "⟦«Personal» çàññöţ ƀé ŕéṁöṽéð⟧"
+        );
+        assert_eq!(
+            Error::BadContact.to_string(),
+            "⟦Ţĥé çöñţàçţ çöûļð ñöţ ƀé ŕéàð⟧"
+        );
     }
 }

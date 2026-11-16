@@ -43,6 +43,7 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<ui::Options, Str
 
 fn main() -> glib::ExitCode {
     helix_app_common::i18n::init();
+    helix_eds::set_translator(helix_app_common::i18n::tr);
     match parse_args(std::env::args().skip(1)) {
         Ok(opts) => ui::run(opts),
         Err(e) if e.is_empty() => {

@@ -34,6 +34,24 @@ pub(crate) const fn n_(msgid: &'static str) -> &'static str {
     msgid
 }
 
+static TRANSLATOR: std::sync::OnceLock<fn(&'static str) -> &'static str> =
+    std::sync::OnceLock::new();
+
+/// Sets how this crate translates the messages it shows on its own (its
+/// errors' `Display`): apps pass `helix_app_common::i18n::tr` at start-up,
+/// after `i18n::init`. Until then, and in tests, messages are English.
+pub fn set_translator(translate: fn(&'static str) -> &'static str) {
+    let _ = TRANSLATOR.set(translate);
+}
+
+/// `msgid` (marked with [`n_`]) through the app's translator.
+pub(crate) fn tr(msgid: &'static str) -> &'static str {
+    match TRANSLATOR.get() {
+        Some(translate) => translate(msgid),
+        None => msgid,
+    }
+}
+
 /// Like [`n_`], with a context for a short label that needs different
 /// translations in different places; the same encoding as
 /// `helix_app_common::nc_!`, which `i18n::tr` understands.
