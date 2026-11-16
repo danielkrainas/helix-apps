@@ -77,7 +77,7 @@ impl Default for State {
 /// Track id object path for a file path.
 pub fn track_id(path: &std::path::Path) -> String {
     format!(
-        "/org/helix/Music/Track/{:016x}",
+        "/org/helixdesktop/Music/Track/{:016x}",
         crate::index::fnv1a(path.as_os_str().as_encoded_bytes())
     )
 }
@@ -148,7 +148,7 @@ impl Root {
     }
     #[zbus(property)]
     fn desktop_entry(&self) -> &str {
-        "org.helix.Music"
+        "org.helixdesktop.Music"
     }
     #[zbus(property)]
     fn supported_uri_schemes(&self) -> Vec<String> {
@@ -420,7 +420,7 @@ mod tests {
         let map = metadata_map(Some(&m));
         assert!(map["mpris:trackid"]
             .to_string()
-            .contains("/org/helix/Music/Track/"));
+            .contains("/org/helixdesktop/Music/Track/"));
         assert_eq!(i64::try_from(&map["mpris:length"]).unwrap(), 5_000_000);
         assert!(!map.contains_key("xesam:albumArtist"));
         let empty = metadata_map(None);

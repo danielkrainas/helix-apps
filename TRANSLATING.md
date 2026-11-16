@@ -145,7 +145,7 @@ extracted, so test-only strings never reach the template;
 
 ## Tooling shared with helix-desktop
 
-[helix-desktop](https://github.com/danielkrainas/helix-desktop) has a
+[helixdesktop/desktop](https://github.com/helixdesktop/desktop) has a
 copy of these tools in its own `tools/i18n/` for its `helix-desktop`
 domain. The two copies are kept in step by hand:
 

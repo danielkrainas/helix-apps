@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Logs.
 
-- **App ID**: `org.helix.Logs`
+- **App ID**: `org.helixdesktop.Logs`
 - **Binary**: `helix-logs`
 - **Crate**: `apps/logs`
 

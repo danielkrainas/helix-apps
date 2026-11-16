@@ -2,7 +2,7 @@
 
 Drop-in replacement for Showtime.
 
-- **App ID**: `org.helix.VideoPlayer`
+- **App ID**: `org.helixdesktop.VideoPlayer`
 - **Binary**: `helix-video-player`
 - **Crate**: `apps/video-player`
 
@@ -164,7 +164,7 @@ Play video files.
   `/org/mpris/MediaPlayer2`.
 - `org.mpris.MediaPlayer2`: Raise, Quit; CanQuit/CanRaise true,
   HasTrackList false, Identity “Video Player”, DesktopEntry
-  `org.helix.VideoPlayer`, SupportedUriSchemes `file`, SupportedMimeTypes
+  `org.helixdesktop.VideoPlayer`, SupportedUriSchemes `file`, SupportedMimeTypes
   (list from the .desktop file), Fullscreen/CanSetFullscreen.
 - `org.mpris.MediaPlayer2.Player`: Play, Pause, PlayPause, Stop, Seek,
   SetPosition, OpenUri, Next/Previous (no-ops); PlaybackStatus, Rate

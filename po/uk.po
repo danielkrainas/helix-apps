@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: helix-apps\n"
-"Report-Msgid-Bugs-To: https://github.com/danielkrainas/helix-apps/issues\n"
+"Report-Msgid-Bugs-To: https://github.com/helixdesktop/apps/issues\n"
 "PO-Revision-Date: 2026-11-15 12:00+0000\n"
 "Last-Translator: Machine translation (unreviewed)\n"
 "Language-Team: Ukrainian\n"
@@ -15,11 +15,11 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.desktop
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.desktop
 msgid "music;sound;audio;player;waveform;"
 msgstr "музика;звук;аудіо;програвач;хвиля;music;sound;audio;player;waveform;"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
 msgid ""
 "Audio Player plays a single audio file with a clear waveform to see and seek "
 "through. Playback can be controlled entirely from the keyboard, and the "
@@ -30,64 +30,64 @@ msgstr ""
 "повністю керувати з клавіатури, також працюють мультимедійні клавіші та "
 "мультимедійні елементи керування стільниці."
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/characters/data/org.helix.Characters.metainfo.xml
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
-#: apps/disks/data/org.helix.Disks.metainfo.xml
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
-#: apps/files/data/org.helix.Files.metainfo.xml
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
-#: apps/help/data/org.helix.Help.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
-#: apps/logs/data/org.helix.Logs.metainfo.xml
-#: apps/maps/data/org.helix.Maps.metainfo.xml
-#: apps/music/data/org.helix.Music.metainfo.xml
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
-#: apps/settings/data/org.helix.Settings.metainfo.xml
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
-#: apps/tour/data/org.helix.Tour.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
-#: apps/weather/data/org.helix.Weather.metainfo.xml
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid "Better support for screen readers, high contrast and large text"
 msgstr ""
 "Краща підтримка зчитувачів екрана, високої контрастності та великого тексту"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/characters/data/org.helix.Characters.metainfo.xml
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
-#: apps/disks/data/org.helix.Disks.metainfo.xml
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
-#: apps/files/data/org.helix.Files.metainfo.xml
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
-#: apps/help/data/org.helix.Help.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
-#: apps/logs/data/org.helix.Logs.metainfo.xml
-#: apps/maps/data/org.helix.Maps.metainfo.xml
-#: apps/music/data/org.helix.Music.metainfo.xml
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
-#: apps/settings/data/org.helix.Settings.metainfo.xml
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
-#: apps/tour/data/org.helix.Tour.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
-#: apps/weather/data/org.helix.Weather.metainfo.xml
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid ""
 "Every app has a Keyboard Shortcuts window (Ctrl+?) and remembers its window "
 "size"
@@ -95,37 +95,37 @@ msgstr ""
 "Кожна програма має вікно клавіатурних скорочень (Ctrl+?) і запам'ятовує "
 "розмір свого вікна"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
 msgid "Listen to audio files"
 msgstr "Слухайте звукові файли"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/characters/data/org.helix.Characters.metainfo.xml
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
-#: apps/disks/data/org.helix.Disks.metainfo.xml
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
-#: apps/files/data/org.helix.Files.metainfo.xml
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
-#: apps/help/data/org.helix.Help.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
-#: apps/logs/data/org.helix.Logs.metainfo.xml
-#: apps/maps/data/org.helix.Maps.metainfo.xml
-#: apps/music/data/org.helix.Music.metainfo.xml
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
-#: apps/settings/data/org.helix.Settings.metainfo.xml
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
-#: apps/tour/data/org.helix.Tour.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
-#: apps/weather/data/org.helix.Weather.metainfo.xml
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid ""
 "The About window links to the issue tracker and offers troubleshooting "
 "information"
@@ -133,47 +133,47 @@ msgstr ""
 "Вікно «Про програму» містить посилання на систему відстеження вад і надає "
 "відомості для усунення проблем"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/characters/data/org.helix.Characters.metainfo.xml
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
-#: apps/disks/data/org.helix.Disks.metainfo.xml
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
-#: apps/files/data/org.helix.Files.metainfo.xml
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
-#: apps/help/data/org.helix.Help.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
-#: apps/logs/data/org.helix.Logs.metainfo.xml
-#: apps/maps/data/org.helix.Maps.metainfo.xml
-#: apps/music/data/org.helix.Music.metainfo.xml
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
-#: apps/settings/data/org.helix.Settings.metainfo.xml
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
-#: apps/tour/data/org.helix.Tour.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
-#: apps/weather/data/org.helix.Weather.metainfo.xml
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid "The first release of the Helix apps."
 msgstr "Перший випуск програм Helix."
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
 msgid "audio"
 msgstr "аудіо"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
-#: apps/music/data/org.helix.Music.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
 msgid "player"
 msgstr "програвач"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
 msgid "sound"
 msgstr "звук"
 
@@ -441,15 +441,15 @@ msgstr "Не вдалося запустити декодер"
 msgid "No audio stream"
 msgstr "Немає звукового потоку"
 
-#: apps/calculator/data/org.helix.Calculator.desktop
+#: apps/calculator/data/org.helixdesktop.Calculator.desktop
 msgid "Perform arithmetic, scientific or financial calculations"
 msgstr "Виконання арифметичних, наукових або фінансових обчислень"
 
-#: apps/calculator/data/org.helix.Calculator.desktop
+#: apps/calculator/data/org.helixdesktop.Calculator.desktop
 msgid "calculation;arithmetic;scientific;financial;programming;"
 msgstr "обчислення;арифметика;науковий;фінансовий;програмування;калькулятор;calculation;arithmetic;scientific;financial;programming;"
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid ""
 "Calculator solves everything from simple sums to scientific, financial and "
 "programming problems. Type an expression the way you would write it, or use "
@@ -460,23 +460,23 @@ msgstr ""
 "скористайтеся кнопками. Попередні результати зберігаються в історії, тож їх "
 "можна використати знову."
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid "Perform calculations"
 msgstr "Виконуйте обчислення"
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid "arithmetic"
 msgstr "арифметика"
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid "calculation"
 msgstr "обчислення"
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid "financial"
 msgstr "фінансовий"
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid "scientific"
 msgstr "науковий"
 
@@ -1192,15 +1192,15 @@ msgstr "Гради"
 msgid "{} equals {}"
 msgstr "{} дорівнює {}"
 
-#: apps/calendar/data/org.helix.Calendar.desktop
+#: apps/calendar/data/org.helixdesktop.Calendar.desktop
 msgid "Access and manage your calendars"
 msgstr "Доступ до календарів і керування ними"
 
-#: apps/calendar/data/org.helix.Calendar.desktop
+#: apps/calendar/data/org.helixdesktop.Calendar.desktop
 msgid "calendar;event;reminder;agenda;"
 msgstr "календар;подія;нагадування;розклад;calendar;event;reminder;agenda;"
 
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
 msgid ""
 "Calendar shows your events by week or month, and lets you add, change and "
 "search them. It works with the calendars of your online accounts as well as "
@@ -1211,19 +1211,19 @@ msgstr ""
 "записів, а також із локальними календарями та вебкалендарями, на які ви "
 "підписані."
 
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
 msgid "Manage your schedule"
 msgstr "Керуйте своїм розкладом"
 
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
 msgid "calendar"
 msgstr "календар"
 
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
 msgid "event"
 msgstr "подія"
 
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
 msgid "reminder"
 msgstr "нагадування"
 
@@ -2167,11 +2167,11 @@ msgstr "Імпортувати до календаря"
 msgid "_Import"
 msgstr "_Імпортувати"
 
-#: apps/camera/data/org.helix.Camera.desktop
+#: apps/camera/data/org.helixdesktop.Camera.desktop
 msgid "photo;video;webcam;selfie;snapshot;"
 msgstr "фото;відео;вебкамера;селфі;знімок;photo;video;webcam;selfie;snapshot;"
 
-#: apps/camera/data/org.helix.Camera.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
 msgid ""
 "Camera takes photos and records videos with your webcam or any other camera "
 "connected to the computer. A countdown, a shutter sound and a quick look at "
@@ -2182,21 +2182,21 @@ msgstr ""
 "затвора та швидкий перегляд останнього знімка — на відстані одного клацання "
 "чи натискання клавіші."
 
-#: apps/camera/data/org.helix.Camera.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
 msgid "camera"
 msgstr "камера"
 
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
 msgid "photo"
 msgstr "фото"
 
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
 msgid "video"
 msgstr "відео"
 
-#: apps/camera/data/org.helix.Camera.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
 msgid "webcam"
 msgstr "вебкамера"
 
@@ -2472,11 +2472,11 @@ msgstr "Скасувати зворотний відлік"
 msgid "Open {}"
 msgstr "Відкрити {}"
 
-#: apps/characters/data/org.helix.Characters.desktop
+#: apps/characters/data/org.helixdesktop.Characters.desktop
 msgid "character;emoji;unicode;symbol;glyph;font;letter;"
 msgstr "символ;емодзі;юнікод;знак;гліф;шрифт;літера;character;emoji;unicode;symbol;glyph;font;letter;"
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid ""
 "Characters lets you find and copy letters, symbols and emoji that are not on "
 "your keyboard. Browse by category or search by name; characters you used "
@@ -2486,23 +2486,23 @@ msgstr ""
 "на вашій клавіатурі. Переглядайте за категоріями або шукайте за назвою; "
 "нещодавно використані символи завжди під рукою."
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid "Find and insert special characters"
 msgstr "Пошук і вставлення спеціальних символів"
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid "character"
 msgstr "символ"
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid "emoji"
 msgstr "емодзі"
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid "symbol"
 msgstr "знак"
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid "unicode"
 msgstr "юнікод"
 
@@ -2670,21 +2670,21 @@ msgstr "Див. також"
 msgid "_Copy Character"
 msgstr "_Копіювати символ"
 
-#: apps/clocks/data/org.helix.Clocks-autostart.desktop
+#: apps/clocks/data/org.helixdesktop.Clocks-autostart.desktop
 msgid "Rings alarms set in Clocks"
 msgstr "Подає сигнали будильників, встановлених у Годинниках"
 
-#: apps/clocks/data/org.helix.Clocks.desktop
+#: apps/clocks/data/org.helixdesktop.Clocks.desktop
 msgid "Clocks for world times, plus alarms, stopwatch and a timer"
 msgstr "Годинники світового часу, а також будильники, секундомір і таймер"
 
-#: apps/clocks/data/org.helix.Clocks.desktop
+#: apps/clocks/data/org.helixdesktop.Clocks.desktop
 msgid "time;timer;alarm;world clock;stopwatch;time zone;"
 msgstr ""
 "час;таймер;будильник;світовий годинник;секундомір;часовий "
 "пояс;time;timer;alarm;world clock;stopwatch;time zone;"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid ""
 "Clocks shows the time in cities around the world, and has alarms, a "
 "stopwatch and timers. Alarms and timers notify you even when the window is "
@@ -2694,27 +2694,27 @@ msgstr ""
 "секундомір і таймери. Будильники й таймери сповіщають вас навіть тоді, коли "
 "вікно закрито."
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "Keep track of time"
 msgstr "Стежте за часом"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "alarm"
 msgstr "будильник"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "clock"
 msgstr "годинник"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "stopwatch"
 msgstr "секундомір"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "timer"
 msgstr "таймер"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "world"
 msgstr "світ"
 
@@ -3334,15 +3334,15 @@ msgstr "Коло {}, час кола {}, загалом {}"
 msgid ", {} compared with the previous lap"
 msgstr ", {} порівняно з попереднім колом"
 
-#: apps/contacts/data/org.helix.Contacts.desktop
+#: apps/contacts/data/org.helixdesktop.Contacts.desktop
 msgid "A contacts manager"
 msgstr "Менеджер контактів"
 
-#: apps/contacts/data/org.helix.Contacts.desktop
+#: apps/contacts/data/org.helixdesktop.Contacts.desktop
 msgid "friends;address book;people;vcard;"
 msgstr "друзі;адресна книга;люди;контакти;friends;address book;people;vcard;"
 
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
 msgid ""
 "Contacts keeps the addresses, phone numbers and other details of the people "
 "you know in one place. It uses the address books of your online accounts and "
@@ -3352,15 +3352,15 @@ msgstr ""
 "вам людей в одному місці. Програма використовує адресні книги ваших "
 "мережевих облікових записів і може імпортувати та експортувати файли vCard."
 
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
 msgid "address book"
 msgstr "адресна книга"
 
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
 msgid "contact"
 msgstr "контакт"
 
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
 msgid "people"
 msgstr "люди"
 
@@ -3981,15 +3981,15 @@ msgstr "Немає програми для відкриття вебсайтів
 msgid "Copy {}"
 msgstr "Копіювати {}"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.desktop
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.desktop
 msgid "storage;space;cleanup;disk;usage;"
 msgstr "сховище;місце;очищення;диск;використання;storage;space;cleanup;disk;usage;"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
 msgid "Check folder sizes and free space"
 msgstr "Перевірка розмірів тек і вільного місця"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
 msgid ""
 "Disk Usage Analyzer shows how the space on your drives is used, folder by "
 "folder. Scan your home folder, a drive or any other folder and explore it as "
@@ -3999,20 +3999,20 @@ msgstr ""
 "дисках, теку за текою. Скануйте домашню теку, диск або будь-яку іншу теку й "
 "досліджуйте її у вигляді списку чи кільцевої діаграми."
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
 msgid "cleanup"
 msgstr "очищення"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid "disk"
 msgstr "диск"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
 msgid "space"
 msgstr "місце"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
 msgid "storage"
 msgstr "сховище"
 
@@ -4366,11 +4366,11 @@ msgstr "Використано {} з {} (доступно {})"
 msgid "Scan {}"
 msgstr "Сканувати {}"
 
-#: apps/disks/data/org.helix.Disks.desktop
+#: apps/disks/data/org.helixdesktop.Disks.desktop
 msgid "disk;drive;volume;partition;format;mount;smart;image;iso;usb;"
 msgstr "диск;накопичувач;том;розділ;форматування;монтування;smart;образ;iso;usb;disk;drive;volume;partition;format;mount;image;"
 
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid ""
 "Disks shows the drives and media connected to the computer, their partitions "
 "and their health. Format, partition, mount, encrypt and check volumes, "
@@ -4380,19 +4380,19 @@ msgstr ""
 "розділи та стан. Форматуйте, розбивайте на розділи, монтуйте, шифруйте та "
 "перевіряйте томи, під'єднуйте образи дисків і читайте дані SMART."
 
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid "drive"
 msgstr "накопичувач"
 
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid "format"
 msgstr "форматування"
 
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid "partition"
 msgstr "розділ"
 
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid "volume"
 msgstr "том"
 
@@ -5734,11 +5734,11 @@ msgstr "Образ відновлено"
 msgid "{} were written."
 msgstr "Записано {}."
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.desktop
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.desktop
 msgid "scan;scanner;flatbed;adf;"
 msgstr "сканування;сканер;планшетний;adf;scan;scanner;flatbed;"
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
 msgid ""
 "Document Scanner makes a digital copy of paper documents and photos with "
 "your scanner. Scan one page or a whole stack, crop and rotate the pages, and "
@@ -5748,25 +5748,25 @@ msgstr ""
 "допомогою вашого сканера. Скануйте одну сторінку чи цілу стопку, обрізайте й "
 "обертайте сторінки та зберігайте їх як PDF або зображення."
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
 msgid "Scan documents and photos"
 msgstr "Сканування документів і фотографій"
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
 msgid "document"
 msgstr "документ"
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
 msgid "pdf"
 msgstr "pdf"
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
 msgid "scan"
 msgstr "сканування"
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
 msgid "scanner"
 msgstr "сканер"
 
@@ -6376,11 +6376,11 @@ msgstr "Зберігати оригінальний файл"
 msgid "Saves an unprocessed copy with “_orig” before the extension"
 msgstr "Зберігає необроблену копію з «_orig» перед розширенням"
 
-#: apps/document-viewer/data/org.helix.DocumentViewer.desktop
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.desktop
 msgid "pdf;document;viewer;presentation;print;"
 msgstr "pdf;документ;переглядач;презентація;друк;document;viewer;presentation;print;"
 
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
 msgid ""
 "Document Viewer shows PDF documents and lets you search, select and copy "
 "their text. Read comfortably with thumbnails, an outline, night mode and a "
@@ -6390,16 +6390,16 @@ msgstr ""
 "копіювати їхній текст. Читайте зручно завдяки мініатюрам, змісту, нічному "
 "режиму та режиму презентації."
 
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
 msgid "View and read documents"
 msgstr "Перегляд і читання документів"
 
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
 msgid "reader"
 msgstr "читач"
 
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
 msgid "viewer"
 msgstr "переглядач"
 
@@ -6851,13 +6851,13 @@ msgstr[2] "{n} результатів"
 msgid "Printing failed: {msg}"
 msgstr "Помилка друку: {msg}"
 
-#: apps/files/data/org.helix.Files.desktop
+#: apps/files/data/org.helixdesktop.Files.desktop
 msgid "folder;manager;explore;disk;filesystem;"
 msgstr ""
 "тека;менеджер;огляд;диск;файлова "
 "система;файли;folder;manager;explore;disk;filesystem;"
 
-#: apps/files/data/org.helix.Files.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
 msgid ""
 "Files gives you access to the files and folders on your computer, on "
 "removable media and on the network. Copy, move, rename, compress and search "
@@ -6868,15 +6868,15 @@ msgstr ""
 "файли, використовуючи вкладки, бічну панель місць і перегляд списком або "
 "сіткою."
 
-#: apps/files/data/org.helix.Files.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
 msgid "explorer"
 msgstr "провідник"
 
-#: apps/files/data/org.helix.Files.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
 msgid "folder"
 msgstr "тека"
 
-#: apps/files/data/org.helix.Files.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
 msgid "manager"
 msgstr "менеджер"
 
@@ -7974,11 +7974,11 @@ msgstr "Вст_авити"
 msgid "Add to _Bookmarks"
 msgstr "Додати до _закладок"
 
-#: apps/fonts/data/org.helix.Fonts.desktop
+#: apps/fonts/data/org.helixdesktop.Fonts.desktop
 msgid "fonts;fontface;typeface;install;preview;"
 msgstr "шрифти;гарнітура;накреслення;встановити;перегляд;fonts;fontface;typeface;install;preview;"
 
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
 msgid ""
 "Fonts lists the fonts installed on your computer and shows what each one "
 "looks like. Open a font file to preview its characters and details and to "
@@ -7988,15 +7988,15 @@ msgstr ""
 "як виглядає кожен із них. Відкрийте файл шрифту, щоб переглянути його "
 "символи та подробиці і встановити його."
 
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
 msgid "font"
 msgstr "шрифт"
 
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
 msgid "typeface"
 msgstr "гарнітура"
 
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
 msgid "typography"
 msgstr "типографіка"
 
@@ -8283,19 +8283,19 @@ msgstr "Встановлено"
 msgid "Open License Web Page"
 msgstr "Відкрити вебсторінку ліцензії"
 
-#: apps/help/data/org.helix.Help.desktop
+#: apps/help/data/org.helixdesktop.Help.desktop
 msgid "Get help with your desktop and applications"
 msgstr "Отримання довідки щодо стільниці та програм"
 
-#: apps/help/data/org.helix.Help.desktop
+#: apps/help/data/org.helixdesktop.Help.desktop
 msgid "help;documentation;manual;guide;"
 msgstr "довідка;документація;посібник;інструкція;help;documentation;manual;guide;"
 
-#: apps/help/data/org.helix.Help.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
 msgid "Get help with your desktop"
 msgstr "Отримайте довідку щодо стільниці"
 
-#: apps/help/data/org.helix.Help.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
 msgid ""
 "Help shows the documentation for the desktop and the apps you use. Search "
 "the help pages, follow links between topics and print the pages you need."
@@ -8304,15 +8304,15 @@ msgstr ""
 "Шукайте на сторінках довідки, переходьте за посиланнями між темами й "
 "друкуйте потрібні сторінки."
 
-#: apps/help/data/org.helix.Help.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
 msgid "documentation"
 msgstr "документація"
 
-#: apps/help/data/org.helix.Help.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
 msgid "help"
 msgstr "довідка"
 
-#: apps/help/data/org.helix.Help.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
 msgid "manual"
 msgstr "посібник"
 
@@ -8553,11 +8553,11 @@ msgstr "_Про програму"
 msgid "Search help"
 msgstr "Шукати в довідці"
 
-#: apps/image-viewer/data/org.helix.ImageViewer.desktop
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.desktop
 msgid "Picture;Slideshow;Graphics;Photo;Image;"
 msgstr "Зображення;Слайдшоу;Графіка;Фото;Картинка;Picture;Slideshow;Graphics;Photo;Image;"
 
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
 msgid ""
 "Image Viewer shows images, one at a time, and lets you move through the "
 "folder they are in. Zoom, rotate, view details, start a slideshow or set an "
@@ -8567,11 +8567,11 @@ msgstr ""
 "ними в межах їхньої теки. Масштабуйте, обертайте, переглядайте подробиці, "
 "запускайте слайдшоу або встановлюйте зображення як тло."
 
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
 msgid "image"
 msgstr "зображення"
 
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
 msgid "picture"
 msgstr "картинка"
 
@@ -8835,11 +8835,11 @@ msgstr "Не вдалося зберегти зображення"
 msgid "The portal closed the request"
 msgstr "Портал закрив запит"
 
-#: apps/logs/data/org.helix.Logs.desktop
+#: apps/logs/data/org.helixdesktop.Logs.desktop
 msgid "log;journal;debug;error;event;"
 msgstr "журнал;налагодження;помилка;подія;log;journal;debug;error;event;"
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid ""
 "Logs shows the detailed event logs of the system, grouped into useful "
 "categories. Search the logs, look at the details of a message and export "
@@ -8849,23 +8849,23 @@ msgstr ""
 "категорії. Шукайте в журналах, переглядайте подробиці повідомлень та "
 "експортуйте потрібне для звіту про ваду."
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid "View system logs"
 msgstr "Перегляд системних журналів"
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid "debug"
 msgstr "налагодження"
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid "journal"
 msgstr "журнал"
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid "log"
 msgstr "лог"
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid "system"
 msgstr "система"
 
@@ -9041,11 +9041,11 @@ msgstr "Час"
 msgid "Could not run journalctl: {e}"
 msgstr "Не вдалося запустити journalctl: {e}"
 
-#: apps/maps/data/org.helix.Maps.desktop
+#: apps/maps/data/org.helixdesktop.Maps.desktop
 msgid "maps;location;directions;route;places;search;"
 msgstr "мапи;карти;розташування;маршрут;місця;пошук;maps;location;directions;route;places;search;"
 
-#: apps/maps/data/org.helix.Maps.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
 msgid ""
 "Maps lets you search for places, see where you are and get directions. Keep "
 "your favourite places at hand and switch between the street map and other "
@@ -9055,19 +9055,19 @@ msgstr ""
 "маршрути. Тримайте улюблені місця під рукою й перемикайтеся між вуличною "
 "мапою та іншими стилями мап."
 
-#: apps/maps/data/org.helix.Maps.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
 msgid "directions"
 msgstr "маршрути"
 
-#: apps/maps/data/org.helix.Maps.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
 msgid "location"
 msgstr "розташування"
 
-#: apps/maps/data/org.helix.Maps.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
 msgid "map"
 msgstr "мапа"
 
-#: apps/maps/data/org.helix.Maps.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
 msgid "route"
 msgstr "маршрут"
 
@@ -9853,13 +9853,13 @@ msgstr "Знайти маршрут"
 msgid "Finding route"
 msgstr "Пошук маршруту"
 
-#: apps/music/data/org.helix.Music.desktop
+#: apps/music/data/org.helixdesktop.Music.desktop
 msgid "Music;Player;Songs;Album;Artist;Playlist;"
 msgstr ""
 "Музика;Програвач;Пісні;Альбом;Виконавець;Список "
 "відтворення;Music;Player;Songs;Album;Artist;Playlist;"
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid ""
 "Music plays the songs in your Music folder, organized by album, artist and "
 "playlist. Make playlists, mark your favourite songs and control playback "
@@ -9870,23 +9870,23 @@ msgstr ""
 "позначайте улюблені пісні й керуйте відтворенням за допомогою мультимедійних "
 "елементів керування стільниці."
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid "Play and organize your music"
 msgstr "Відтворюйте та впорядковуйте свою музику"
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid "album"
 msgstr "альбом"
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid "music"
 msgstr "музика"
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid "playlist"
 msgstr "список відтворення"
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid "song"
 msgstr "пісня"
 
@@ -10383,13 +10383,13 @@ msgstr "Зараз відтворюється"
 msgid "Show Now Playing"
 msgstr "Показати поточне відтворення"
 
-#: apps/screenshot/data/org.helix.Screenshot.desktop
+#: apps/screenshot/data/org.helixdesktop.Screenshot.desktop
 msgid "snapshot;capture;print;screenshot;area;window;"
 msgstr ""
 "знімок;захоплення;екран;знімок "
 "екрана;область;вікно;snapshot;capture;print;screenshot;area;window;"
 
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
 msgid ""
 "Screenshot saves an image of the whole screen, a window or a selected area. "
 "Take the picture after a delay, include the pointer, then copy it or save it "
@@ -10399,19 +10399,19 @@ msgstr ""
 "Робіть знімок із затримкою, з вказівником чи без нього, а потім копіюйте "
 "його або зберігайте у файл."
 
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
 msgid "Take screenshots"
 msgstr "Створюйте знімки екрана"
 
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
 msgid "capture"
 msgstr "захоплення"
 
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
 msgid "screen"
 msgstr "екран"
 
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
 msgid "screenshot"
 msgstr "знімок екрана"
 
@@ -10622,15 +10622,15 @@ msgstr "Знімок екрана збережено"
 msgid "Could Not Save Screenshot"
 msgstr "Не вдалося зберегти знімок екрана"
 
-#: apps/settings/data/org.helix.Settings.desktop
+#: apps/settings/data/org.helixdesktop.Settings.desktop
 msgid "Configure the desktop and system"
 msgstr "Налаштування стільниці та системи"
 
-#: apps/settings/data/org.helix.Settings.desktop
+#: apps/settings/data/org.helixdesktop.Settings.desktop
 msgid "preferences;settings;configuration;control;appearance;background;wallpaper;mouse;keyboard;accessibility;privacy;power;"
 msgstr "налаштування;параметри;конфігурація;керування;вигляд;тло;шпалери;миша;клавіатура;доступність;приватність;живлення;preferences;settings;configuration;control;appearance;background;wallpaper;mouse;keyboard;accessibility;privacy;power;"
 
-#: apps/settings/data/org.helix.Settings.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
 msgid ""
 "Settings brings the preferences of the Helix desktop together in one place. "
 "Change the appearance, displays, sound, network, accessibility options and "
@@ -10639,19 +10639,19 @@ msgstr ""
 "Параметри збирають налаштування стільниці Helix в одному місці. Змінюйте "
 "вигляд, екрани, звук, мережу, спеціальні можливості та багато іншого."
 
-#: apps/settings/data/org.helix.Settings.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
 msgid "configuration"
 msgstr "конфігурація"
 
-#: apps/settings/data/org.helix.Settings.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
 msgid "control center"
 msgstr "центр керування"
 
-#: apps/settings/data/org.helix.Settings.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
 msgid "preferences"
 msgstr "налаштування"
 
-#: apps/settings/data/org.helix.Settings.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
 msgid "settings"
 msgstr "параметри"
 
@@ -13909,15 +13909,15 @@ msgstr "Лишилося {}"
 msgid "{id} (IBus)"
 msgstr "{id} (IBus)"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.desktop
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.desktop
 msgid "Monitor;System;Process;CPU;Memory;Network;History;Usage;Performance;Task;Manager;Activity;"
 msgstr "Монітор;Система;Процес;Процесор;Пам'ять;Мережа;Історія;Використання;Продуктивність;Завдання;Диспетчер;Активність;Monitor;System;Process;CPU;Memory;Network;History;Usage;Performance;Task;Manager;Activity;"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "Monitor processes and resources"
 msgstr "Стежте за процесами та ресурсами"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid ""
 "System Monitor shows which programs are running and how much processor, "
 "memory, network and disk they use. Search processes, change their priority, "
@@ -13928,23 +13928,23 @@ msgstr ""
 "змінюйте їхній пріоритет, зупиняйте або завершуйте їх і стежте за "
 "використанням з часом."
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "cpu"
 msgstr "процесор"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "memory"
 msgstr "пам'ять"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "monitor"
 msgstr "монітор"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "process"
 msgstr "процес"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "task"
 msgstr "завдання"
 
@@ -14470,13 +14470,13 @@ msgstr "Показувати всі файлові системи"
 msgid "Include virtual and duplicate mounts"
 msgstr "Включати віртуальні й повторні точки монтування"
 
-#: apps/terminal/data/org.helix.Terminal.desktop
+#: apps/terminal/data/org.helixdesktop.Terminal.desktop
 msgid "command;prompt;cmd;commandline;run;shell;terminal;console;"
 msgstr ""
 "команда;запрошення;cmd;командний "
 "рядок;виконати;оболонка;термінал;консоль;command;prompt;commandline;run;shell;terminal;console;"
 
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
 msgid ""
 "Terminal gives you a command line in tabs and windows. It shows when a "
 "command runs with administrator rights or on a remote computer, and can "
@@ -14486,19 +14486,19 @@ msgstr ""
 "команда виконується з правами адміністратора або на віддаленому комп'ютері, "
 "і вміє шукати у виводі."
 
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
 msgid "command line"
 msgstr "командний рядок"
 
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
 msgid "console"
 msgstr "консоль"
 
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
 msgid "shell"
 msgstr "оболонка"
 
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
 msgid "terminal"
 msgstr "термінал"
 
@@ -14791,13 +14791,13 @@ msgstr ""
 msgid "C_lose"
 msgstr "_Закрити"
 
-#: apps/text-editor/data/org.helix.TextEditor.desktop
+#: apps/text-editor/data/org.helixdesktop.TextEditor.desktop
 msgid "Text;Plaintext;Write;Notepad;Editor;"
 msgstr ""
 "Текст;Звичайний "
 "текст;Писати;Блокнот;Редактор;Text;Plaintext;Write;Notepad;Editor;"
 
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
 msgid ""
 "Text Editor is a simple editor for notes, documents and source code. It "
 "keeps unsaved changes safe, highlights code and can find and replace text."
@@ -14806,19 +14806,19 @@ msgstr ""
 "коду. Він зберігає незбережені зміни в безпеці, підсвічує код і вміє шукати "
 "та замінювати текст."
 
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
 msgid "code"
 msgstr "код"
 
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
 msgid "editor"
 msgstr "редактор"
 
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
 msgid "notepad"
 msgstr "блокнот"
 
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
 msgid "text"
 msgstr "текст"
 
@@ -15164,15 +15164,15 @@ msgstr "_Відкинути все"
 msgid "_Save All"
 msgstr "З_берегти все"
 
-#: apps/tour/data/org.helix.Tour.desktop
+#: apps/tour/data/org.helixdesktop.Tour.desktop
 msgid "welcome;introduction;guide;tutorial;help;"
 msgstr "вітання;вступ;посібник;підручник;довідка;welcome;introduction;guide;tutorial;help;"
 
-#: apps/tour/data/org.helix.Tour.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
 msgid "Get to know the desktop"
 msgstr "Ознайомтеся зі стільницею"
 
-#: apps/tour/data/org.helix.Tour.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
 msgid ""
 "Tour introduces the Helix desktop the first time you log in. Learn how to "
 "start apps, switch between them and find your way around."
@@ -15180,15 +15180,15 @@ msgstr ""
 "Тур знайомить зі стільницею Helix під час першого входу. Дізнайтеся, як "
 "запускати програми, перемикатися між ними та орієнтуватися в системі."
 
-#: apps/tour/data/org.helix.Tour.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
 msgid "introduction"
 msgstr "вступ"
 
-#: apps/tour/data/org.helix.Tour.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
 msgid "tour"
 msgstr "тур"
 
-#: apps/tour/data/org.helix.Tour.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
 msgid "welcome"
 msgstr "вітання"
 
@@ -15350,11 +15350,11 @@ msgstr "Дізнатися більше про Helix"
 msgid "_About Tour"
 msgstr "_Про програму"
 
-#: apps/video-player/data/org.helix.VideoPlayer.desktop
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.desktop
 msgid "Video;Movie;Film;Clip;Player;Media;"
 msgstr "Відео;Фільм;Кіно;Кліп;Програвач;Медіа;Video;Movie;Film;Clip;Player;Media;"
 
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
 msgid ""
 "Video Player plays video files with a simple, unobtrusive interface. "
 "Subtitles, frame-by-frame stepping and screenshots of the current frame are "
@@ -15363,11 +15363,11 @@ msgstr ""
 "Відеопрогравач відтворює відеофайли з простим, ненав'язливим інтерфейсом. "
 "Субтитри, покадровий перегляд і знімки поточного кадру вбудовані."
 
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
 msgid "Watch videos"
 msgstr "Дивіться відео"
 
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
 msgid "movie"
 msgstr "фільм"
 
@@ -15539,19 +15539,19 @@ msgstr "Не вдалося зберегти знімок екрана: {err}"
 msgid "Could not save screenshot"
 msgstr "Не вдалося зберегти знімок екрана"
 
-#: apps/weather/data/org.helix.Weather.desktop
+#: apps/weather/data/org.helixdesktop.Weather.desktop
 msgid "Show weather conditions and forecast"
 msgstr "Показ погодних умов і прогнозу"
 
-#: apps/weather/data/org.helix.Weather.desktop
+#: apps/weather/data/org.helixdesktop.Weather.desktop
 msgid "forecast;temperature;"
 msgstr "прогноз;температура;погода;forecast;temperature;"
 
-#: apps/weather/data/org.helix.Weather.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
 msgid "Check the weather"
 msgstr "Дізнайтеся погоду"
 
-#: apps/weather/data/org.helix.Weather.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
 msgid ""
 "Weather shows the current conditions and the forecast for the places you "
 "choose. See the next hours and days at a glance, with temperatures in the "
@@ -15561,15 +15561,15 @@ msgstr ""
 "Переглядайте найближчі години й дні з першого погляду, з температурою в "
 "зручних вам одиницях."
 
-#: apps/weather/data/org.helix.Weather.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
 msgid "forecast"
 msgstr "прогноз"
 
-#: apps/weather/data/org.helix.Weather.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
 msgid "temperature"
 msgstr "температура"
 
-#: apps/weather/data/org.helix.Weather.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
 msgid "weather"
 msgstr "погода"
 
@@ -16086,15 +16086,15 @@ msgstr "Гроза з невеликим градом"
 msgid "Thunderstorm with heavy hail"
 msgstr "Гроза з сильним градом"
 
-#: apps/web/data/org.helix.Web.desktop
+#: apps/web/data/org.helixdesktop.Web.desktop
 msgid "Web Browser"
 msgstr "Веббраузер"
 
-#: apps/web/data/org.helix.Web.desktop
+#: apps/web/data/org.helixdesktop.Web.desktop
 msgid "web;browser;internet;"
 msgstr "веб;браузер;інтернет;web;browser;internet;"
 
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid ""
 "Web is a browser for the Helix desktop with a clean, simple interface. It "
 "has tabs, bookmarks, history, private browsing, a reader view and web apps "
@@ -16104,15 +16104,15 @@ msgstr ""
 "вкладки, закладки, історію, приватний перегляд, режим читання та "
 "вебпрограми, що працюють у власному вікні."
 
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid "browser"
 msgstr "браузер"
 
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid "internet"
 msgstr "інтернет"
 
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid "web"
 msgstr "веб"
 

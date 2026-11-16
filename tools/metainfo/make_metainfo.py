@@ -16,7 +16,8 @@ import re
 from xml.sax.saxutils import escape
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-HOMEPAGE = "https://github.com/danielkrainas/helix-apps"
+HOMEPAGE = "https://helixdesktop.org"
+REPOSITORY = "https://github.com/helixdesktop/apps"
 
 # directory: (summary, [description paragraphs], [keywords])
 APPS = {
@@ -137,7 +138,7 @@ def releases():
 
 
 def desktop_file(directory):
-    files = [f for f in glob.glob(os.path.join(ROOT, "apps", directory, "data", "org.helix.*.desktop"))
+    files = [f for f in glob.glob(os.path.join(ROOT, "apps", directory, "data", "org.helixdesktop.*.desktop"))
              if not f.endswith("-autostart.desktop")]
     assert len(files) == 1, (directory, files)
     return files[0]
@@ -167,7 +168,7 @@ def metainfo(directory):
   <description>
 {paras}
   </description>
-  <developer id="io.github.danielkrainas">
+  <developer id="org.helixdesktop">
     <name>The Helix Project</name>
   </developer>
   <categories>
@@ -176,8 +177,8 @@ def metainfo(directory):
   <launchable type="desktop-id">{app_id}.desktop</launchable>
   <icon type="stock">{app_id}</icon>
   <url type="homepage">{HOMEPAGE}</url>
-  <url type="bugtracker">{HOMEPAGE}/issues</url>
-  <url type="vcs-browser">{HOMEPAGE}</url>
+  <url type="bugtracker">{REPOSITORY}/issues</url>
+  <url type="vcs-browser">{REPOSITORY}</url>
   <keywords>
 {kws}
   </keywords>

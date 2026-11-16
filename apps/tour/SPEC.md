@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Tour.
 
-- **App ID**: `org.helix.Tour`
+- **App ID**: `org.helixdesktop.Tour`
 - **Binary**: `helix-tour`
 - **Crate**: `apps/tour`
 
@@ -116,10 +116,10 @@ Welcome and feature tour for new users.
 
 ### Autostart (first login)
 - The **session**, not the shell, launches the tour. The app ships an XDG
-  autostart entry `data/org.helix.Tour-autostart.desktop`
+  autostart entry `data/org.helixdesktop.Tour-autostart.desktop`
   (`Exec=helix-tour --autostart`, `TryExec=helix-tour`, `NoDisplay=true`,
   `OnlyShowIn=Helix;`), installed as
-  `$sysconfdir/xdg/autostart/org.helix.Tour.desktop` (normally
+  `$sysconfdir/xdg/autostart/org.helixdesktop.Tour.desktop` (normally
   `/etc/xdg/autostart/`). The app decides itself whether to show anything,
   so the entry runs on every login and costs one short-lived process.
 - What helix-desktop's session must do: just honour the XDG Autostart spec
@@ -129,7 +129,7 @@ Welcome and feature tour for new users.
   `Helix`), `TryExec`, `X-GNOME-Autostart-enabled`). No Tour-specific
   logic, D-Bus call or GSettings key is needed in the shell or session.
   Users can disable it by putting a `Hidden=true` copy in
-  `~/.config/autostart/org.helix.Tour.desktop`.
+  `~/.config/autostart/org.helixdesktop.Tour.desktop`.
 - Note: helix-desktop's `helix-session` has an XDG autostart implementation
   (`crates/helix-session/src/autostart.rs`), but it runs only when the
   session config sets `[session] autostart = true` (default `false`);

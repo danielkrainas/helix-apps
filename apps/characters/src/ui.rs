@@ -15,7 +15,7 @@ use crate::search;
 use helix_app_common::i18n::tr;
 use helix_app_common::trnf;
 
-pub const APP_ID: &str = "org.helix.Characters";
+pub const APP_ID: &str = "org.helixdesktop.Characters";
 const SCHEMA: &str = "org.gnome.Characters";
 
 struct App {

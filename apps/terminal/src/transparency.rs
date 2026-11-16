@@ -1,9 +1,9 @@
-//! Background transparency setting (`org.helix.Terminal`).
+//! Background transparency setting (`org.helixdesktop.Terminal`).
 
 use helix_app_common::Prefs;
 
 /// Helix's own schema for settings `org.gnome.Console` lacks.
-pub const SCHEMA: &str = "org.helix.Terminal";
+pub const SCHEMA: &str = "org.helixdesktop.Terminal";
 /// GNOME Terminal profile key names, same meaning and types.
 pub const KEY_ENABLED: &str = "use-transparent-background";
 pub const KEY_PERCENT: &str = "background-transparency-percent";
@@ -54,7 +54,7 @@ mod tests {
     use super::*;
     use gtk::gio::prelude::*;
 
-    const XML: &str = include_str!("../data/org.helix.Terminal.gschema.xml");
+    const XML: &str = include_str!("../data/org.helixdesktop.Terminal.gschema.xml");
 
     #[test]
     fn alpha() {
@@ -84,7 +84,7 @@ mod tests {
     /// defaults.
     #[test]
     fn memory_fallback() {
-        let prefs = Prefs::new("org.helix.Terminal.DoesNotExist");
+        let prefs = Prefs::new("org.helixdesktop.Terminal.DoesNotExist");
         assert_eq!(
             Transparency::load(&prefs),
             Transparency {
@@ -109,7 +109,7 @@ mod tests {
         let dir =
             std::env::temp_dir().join(format!("helix-terminal-schemas-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("org.helix.Terminal.gschema.xml"), XML).unwrap();
+        std::fs::write(dir.join("org.helixdesktop.Terminal.gschema.xml"), XML).unwrap();
         let compiled = std::process::Command::new("glib-compile-schemas")
             .arg("--strict")
             .arg(&dir)

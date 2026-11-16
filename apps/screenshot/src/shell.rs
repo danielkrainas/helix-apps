@@ -17,7 +17,7 @@ use helix_app_common::trf;
 const SHELL_NAME: &str = "org.gnome.Shell";
 const SHELL_PATH: &str = "/org/gnome/Shell/Screenshot";
 const SHELL_IFACE: &str = "org.gnome.Shell.Screenshot";
-const PICKER_IFACE: &str = "org.helix.ScreenshotWindowPicker";
+const PICKER_IFACE: &str = "org.helixdesktop.ScreenshotWindowPicker";
 /// The name the shell requires its callers to own.
 pub const CALLER_NAME: &str = "org.gnome.Screenshot";
 
@@ -404,7 +404,7 @@ pub(crate) mod fake {
 
     struct FakePicker(Arc<Mutex<State>>);
 
-    #[zbus::interface(name = "org.helix.ScreenshotWindowPicker")]
+    #[zbus::interface(name = "org.helixdesktop.ScreenshotWindowPicker")]
     impl FakePicker {
         async fn pick_window(
             &self,

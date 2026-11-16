@@ -1,4 +1,4 @@
-//! Extensions panel: Helix shell extensions through `org.helix.Extensions1`.
+//! Extensions panel: Helix shell extensions through `org.helixdesktop.Extensions1`.
 
 use adw::prelude::*;
 use gtk::{gdk, glib};
@@ -13,7 +13,7 @@ use crate::extensions::{self as ext, Ext, Failure, Kind, Setting, Val};
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 
-const SCHEMA: &str = "org.helix.extensions";
+const SCHEMA: &str = "org.helixdesktop.extensions";
 /// Changes closer together than this are read once.
 const SETTLE: Duration = Duration::from_millis(300);
 

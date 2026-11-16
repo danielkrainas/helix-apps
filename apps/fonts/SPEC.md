@@ -2,7 +2,7 @@
 
 Drop-in replacement for gnome-font-viewer.
 
-- **App ID**: `org.helix.Fonts`
+- **App ID**: `org.helixdesktop.Fonts`
 - **Binary**: `helix-fonts`
 - **Crate**: `apps/fonts`
 

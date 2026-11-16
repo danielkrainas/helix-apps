@@ -10,8 +10,8 @@ use crate::i18n::tr;
 use adw::prelude::*;
 use std::cell::RefCell;
 
-pub const WEBSITE: &str = "https://github.com/danielkrainas/helix-apps";
-pub const ISSUE_URL: &str = "https://github.com/danielkrainas/helix-apps/issues";
+pub const WEBSITE: &str = "https://helixdesktop.org";
+pub const ISSUE_URL: &str = "https://github.com/helixdesktop/apps/issues";
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// The suite's release history, as it appears in every metainfo file.

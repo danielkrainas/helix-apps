@@ -21,7 +21,7 @@ use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
-pub const APP_ID: &str = "org.helix.Weather";
+pub const APP_ID: &str = "org.helixdesktop.Weather";
 const SCHEMA: &str = "org.gnome.Weather";
 const GWEATHER_SCHEMA: &str = "org.gnome.GWeather4";
 const APP_DIR: &str = "helix-weather";

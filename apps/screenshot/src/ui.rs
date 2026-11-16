@@ -14,7 +14,7 @@ use crate::shell::{self, CaptureError, Mode, Request};
 use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 
-pub const APP_ID: &str = "org.helix.Screenshot";
+pub const APP_ID: &str = "org.helixdesktop.Screenshot";
 const APP_NAME: &str = n_("Screenshot");
 const COMMENTS: &str = n_("Save images of your screen or individual windows");
 
@@ -724,7 +724,7 @@ mod tests {
         };
         adw::init().unwrap();
         let app = adw::Application::builder()
-            .application_id("org.helix.Screenshot.Test")
+            .application_id("org.helixdesktop.Screenshot.Test")
             .flags(gio::ApplicationFlags::NON_UNIQUE)
             .build();
         app.register(gio::Cancellable::NONE).unwrap();

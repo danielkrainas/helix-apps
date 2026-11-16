@@ -1,5 +1,5 @@
 //! Bluetooth through BlueZ (`org.bluez` on the system bus) and file
-//! sending through the shell (`org.helix.BluetoothSendTo`, helix-desktop-spec
+//! sending through the shell (`org.helixdesktop.BluetoothSendTo`, helixdesktop/spec
 //! `contracts/dbus/org.bluez.obex.md`). Blocking zbus; worker threads only.
 
 use helix_app_common::i18n::{n_, tr};
@@ -17,8 +17,8 @@ const ROOT: Obj<'static> = Obj::new(BLUEZ, "/", ADAPTER);
 const SHELL: &str = "org.gnome.Shell";
 const SEND_TO: Obj<'static> = Obj::new(
     SHELL,
-    "/org/helix/BluetoothSendTo",
-    "org.helix.BluetoothSendTo",
+    "/org/helixdesktop/BluetoothSendTo",
+    "org.helixdesktop.BluetoothSendTo",
 );
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -450,7 +450,7 @@ pub mod tests {
 
     pub struct FakeSendTo(pub Log);
 
-    #[zbus::interface(name = "org.helix.BluetoothSendTo")]
+    #[zbus::interface(name = "org.helixdesktop.BluetoothSendTo")]
     impl FakeSendTo {
         fn send_files(&self, device: String, files: Vec<String>) {
             self.0
@@ -536,10 +536,10 @@ pub mod tests {
         conn.request_name(BLUEZ).unwrap();
     }
 
-    /// A fake shell serving only `org.helix.BluetoothSendTo`.
+    /// A fake shell serving only `org.helixdesktop.BluetoothSendTo`.
     pub fn serve_send_to(conn: &Connection, log: &Log) {
         conn.object_server()
-            .at("/org/helix/BluetoothSendTo", FakeSendTo(log.clone()))
+            .at("/org/helixdesktop/BluetoothSendTo", FakeSendTo(log.clone()))
             .unwrap();
         conn.request_name(SHELL).unwrap();
     }

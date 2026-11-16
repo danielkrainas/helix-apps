@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Characters
+Comment=Character map and emoji picker
+Keywords=character;emoji;unicode;symbol;glyph;font;letter;
+Exec=helix-characters
+Icon=org.helixdesktop.Characters
+Terminal=false
+Type=Application
+Categories=GTK;Utility;
+StartupNotify=true
+DBusActivatable=false

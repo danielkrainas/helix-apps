@@ -23,7 +23,7 @@ use crate::udisks;
 use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 
-pub const APP_ID: &str = "org.helix.Disks";
+pub const APP_ID: &str = "org.helixdesktop.Disks";
 const SCHEMA: &str = "org.gnome.Disks";
 const BAR_HEIGHT: i32 = 96;
 const BAR_MIN_SEGMENT: f64 = 40.0;

@@ -1,5 +1,5 @@
 //! Monitors through `org.gnome.Mutter.DisplayConfig` on the session bus
-//! (served by helix-comp; helix-desktop-spec
+//! (served by helix-comp; helixdesktop/spec
 //! `contracts/dbus/org.gnome.Mutter.DisplayConfig.md`), and the layout
 //! logic of the Displays panel (pure). Blocking zbus; worker threads only.
 

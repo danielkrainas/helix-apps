@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Clocks.
 
-- **App ID**: `org.helix.Clocks`
+- **App ID**: `org.helixdesktop.Clocks`
 - **Binary**: `helix-clocks`
 - **Crate**: `apps/clocks`
 
@@ -95,7 +95,7 @@ World clocks, alarms, stopwatch, and timer.
   `CreateSession` with `accuracy` = city, `Start`, first
   `LocationUpdated`, then `Session.Close`); if the portal is missing or
   refuses, **GeoClue2** on the system bus (`Manager.GetClient`, `DesktopId`
-  = `org.helix.Clocks`, `RequestedAccuracyLevel` = city (4), `Start`, first
+  = `org.helixdesktop.Clocks`, `RequestedAccuracyLevel` = city (4), `Start`, first
   `LocationUpdated` → `Location.Latitude/Longitude`, then `Stop` and
   `DeleteClient`). Runs on a worker thread; gives up after 30 s.
 - Naming: the nearest `<city>` (≤ 100 km) of the GWeather location database
@@ -138,13 +138,13 @@ World clocks, alarms, stopwatch, and timer.
   Helix calls `org.freedesktop.portal.Background.RequestBackground` with
   `reason`, `autostart=true`, `commandline=['helix-clocks', '--hidden']`
   and `dbus-activatable=false` (preceded by the best-effort host-app
-  `org.freedesktop.host.portal.Registry.Register('org.helix.Clocks')` for
+  `org.freedesktop.host.portal.Registry.Register('org.helixdesktop.Clocks')` for
   newer portals). When the last alarm is disabled during the session it
   calls it again with `autostart=false` to remove the login entry. If the
   portal is unavailable or refuses background running, the Alarms page shows
   "Alarms only ring while Clocks is running."
-- **Autostart fallback** (no portal): `data/org.helix.Clocks-autostart.desktop`
-  is installed by packagers as `/etc/xdg/autostart/org.helix.Clocks.desktop`
+- **Autostart fallback** (no portal): `data/org.helixdesktop.Clocks-autostart.desktop`
+  is installed by packagers as `/etc/xdg/autostart/org.helixdesktop.Clocks.desktop`
   (`Exec=helix-clocks --hidden`, `NoDisplay=true`). It is not installed by
   the build and costs nothing when unused: `--hidden` exits at once when no
   alarm is enabled.
@@ -248,9 +248,9 @@ window (used by autostart; see Alarms). Plus GApplication's standard options
 (`--help`).
 
 ### Packaging
-- `data/org.helix.Clocks.desktop` → `/usr/share/applications/`.
-- `data/org.helix.Clocks-autostart.desktop` →
-  `/etc/xdg/autostart/org.helix.Clocks.desktop` (non-portal autostart
+- `data/org.helixdesktop.Clocks.desktop` → `/usr/share/applications/`.
+- `data/org.helixdesktop.Clocks-autostart.desktop` →
+  `/etc/xdg/autostart/org.helixdesktop.Clocks.desktop` (non-portal autostart
   fallback; optional).
 - `data/org.gnome.clocks.gschema.xml` → only when the GNOME schema is not
   installed.

@@ -1,10 +1,10 @@
 # Helix Apps
 
-Companion application suite for [Helix](https://github.com/danielkrainas/helix-desktop).
+Companion application suite for [Helix](https://helixdesktop.org).
 
 These apps are intended as a drop-in replacement for the GNOME core application suite. They use only public contracts (XDG portals, GSettings, standard session D-Bus interfaces) so they can be developed and tested against a normal GNOME session and run unchanged under Helix.
 
-The core desktop (session, compositor, shell, portals) lives in [helix-desktop](https://github.com/danielkrainas/helix-desktop). The living specification lives in [helix-desktop-spec](https://github.com/danielkrainas/helix-desktop-spec).
+The core desktop (session, compositor, shell, portals) lives in [helixdesktop/desktop](https://github.com/helixdesktop/desktop). The living specification lives in [helixdesktop/spec](https://github.com/helixdesktop/spec).
 
 ## Target suite
 
@@ -95,7 +95,7 @@ development packages. `.github/workflows/ci.yml` lists the Ubuntu names.
   - desktop files, the D-Bus service file and the polkit policy in their
     standard places;
   - Tour's and Clocks' autostart entries in `/etc/xdg/autostart`;
-  - each app's icon (`org.helix.<App>.svg`) in
+  - each app's icon (`org.helixdesktop.<App>.svg`) in
     `/usr/share/icons/hicolor/scalable/apps`;
   - the Web and Help AppArmor profiles in `/etc/apparmor.d`.
 
@@ -107,7 +107,7 @@ development packages. `.github/workflows/ci.yml` lists the Ubuntu names.
 ## App icons
 
 Every app ships its own scalable icon, named after its application id
-(`apps/<app>/data/icons/org.helix.<App>.svg`), so launchers, the dock,
+(`apps/<app>/data/icons/org.helixdesktop.<App>.svg`), so launchers, the dock,
 About dialogs and window lists show it whatever icon theme is in use.
 They share one Helix style: a rounded tile with a diagonal gradient in
 the app's colour and a white symbol with a soft shadow, drawn from plain

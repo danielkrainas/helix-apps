@@ -2,7 +2,7 @@
 
 Drop-in replacement for Yelp.
 
-- **App ID**: `org.helix.Help`
+- **App ID**: `org.helixdesktop.Help`
 - **Binary**: `helix-help`
 - **Crate**: `apps/help`
 
@@ -180,7 +180,7 @@ argument shows `help:gnome-help` if installed, else the home page.
   `userns` (bubblewrap and WebKit's helper processes are children of
   helix-help and inherit it), with `include if exists <local/helix-help>`.
   A unit test keeps it identical to the profile the failure page generates.
-- `data/org.helix.Help.desktop` → `/usr/share/applications/`;
+- `data/org.helixdesktop.Help.desktop` → `/usr/share/applications/`;
   `data/org.gnome.yelp.gschema.xml` → `/usr/share/glib-2.0/schemas/` only
   where Yelp's schema is not installed.
 

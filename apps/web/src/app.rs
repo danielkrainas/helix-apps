@@ -20,7 +20,7 @@ use crate::webapp::WebApp;
 use crate::window::Window;
 use helix_app_common::i18n::tr;
 
-pub const APP_ID: &str = "org.helix.Web";
+pub const APP_ID: &str = "org.helixdesktop.Web";
 pub const APP_DIR: &str = "helix-web";
 const SAVE_DELAY: std::time::Duration = std::time::Duration::from_secs(2);
 

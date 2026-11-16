@@ -83,7 +83,7 @@ pub struct Track {
 
 impl Track {
     pub fn object_path(&self) -> String {
-        format!("/org/helix/AudioPlayer/Track/{}", self.id)
+        format!("/org/helixdesktop/AudioPlayer/Track/{}", self.id)
     }
 }
 
@@ -220,7 +220,7 @@ impl Root {
     }
     #[zbus(property)]
     fn desktop_entry(&self) -> &str {
-        "org.helix.AudioPlayer"
+        "org.helixdesktop.AudioPlayer"
     }
     #[zbus(property)]
     fn supported_uri_schemes(&self) -> Vec<String> {
@@ -467,7 +467,7 @@ mod tests {
         let m = build_metadata(Some(&track()));
         assert_eq!(
             get(&m, "mpris:trackid"),
-            &Value::from(ObjectPath::try_from("/org/helix/AudioPlayer/Track/3").unwrap())
+            &Value::from(ObjectPath::try_from("/org/helixdesktop/AudioPlayer/Track/3").unwrap())
         );
         assert_eq!(get(&m, "mpris:length"), &Value::from(61_500_000i64));
         assert_eq!(get(&m, "xesam:title"), &Value::from("Song"));

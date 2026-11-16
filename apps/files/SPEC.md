@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Files (Nautilus).
 
-- **App ID**: `org.helix.Files`
+- **App ID**: `org.helixdesktop.Files`
 - **Binary**: `helix-files`
 - **Crate**: `apps/files`
 
@@ -250,7 +250,7 @@ Missing schemas fall back to in-memory defaults (`helix-app-common::Prefs`).
 without Nautilus installed.
 
 ### D-Bus
-- The application is unique (`org.helix.Files`); launching again opens a
+- The application is unique (`org.helixdesktop.Files`); launching again opens a
   window in the running instance.
 - Implements `org.freedesktop.FileManager1` at
   `/org/freedesktop/FileManager1` on the session bus, through the
@@ -271,7 +271,7 @@ without Nautilus installed.
   distribution installs exactly one `FileManager1` D-Bus service file
   (or the session starts the preferred one first); Helix Files does not
   fight for the name at runtime.
-- D-Bus activation: `data/org.helix.Files.FileManager1.service`
+- D-Bus activation: `data/org.helixdesktop.Files.FileManager1.service`
   (`Name=org.freedesktop.FileManager1`,
   `Exec=/usr/bin/helix-files --gapplication-service`) installs to
   `$datadir/dbus-1/services/` (normally `/usr/share/dbus-1/services/`).

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: helix-apps\n"
-"Report-Msgid-Bugs-To: https://github.com/danielkrainas/helix-apps/issues\n"
+"Report-Msgid-Bugs-To: https://github.com/helixdesktop/apps/issues\n"
 "PO-Revision-Date: 2026-11-15 12:00+0000\n"
 "Last-Translator: Machine translation (unreviewed)\n"
 "Language-Team: Italian\n"
@@ -14,11 +14,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.desktop
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.desktop
 msgid "music;sound;audio;player;waveform;"
 msgstr "musica;suono;audio;lettore;forma d'onda;music;player;"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
 msgid ""
 "Audio Player plays a single audio file with a clear waveform to see and seek "
 "through. Playback can be controlled entirely from the keyboard, and the "
@@ -29,64 +29,64 @@ msgstr ""
 "essere controllata interamente da tastiera e funzionano anche i tasti "
 "multimediali e i controlli multimediali del desktop."
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/characters/data/org.helix.Characters.metainfo.xml
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
-#: apps/disks/data/org.helix.Disks.metainfo.xml
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
-#: apps/files/data/org.helix.Files.metainfo.xml
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
-#: apps/help/data/org.helix.Help.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
-#: apps/logs/data/org.helix.Logs.metainfo.xml
-#: apps/maps/data/org.helix.Maps.metainfo.xml
-#: apps/music/data/org.helix.Music.metainfo.xml
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
-#: apps/settings/data/org.helix.Settings.metainfo.xml
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
-#: apps/tour/data/org.helix.Tour.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
-#: apps/weather/data/org.helix.Weather.metainfo.xml
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid "Better support for screen readers, high contrast and large text"
 msgstr ""
 "Migliore supporto per lettori dello schermo, contrasto elevato e testo grande"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/characters/data/org.helix.Characters.metainfo.xml
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
-#: apps/disks/data/org.helix.Disks.metainfo.xml
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
-#: apps/files/data/org.helix.Files.metainfo.xml
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
-#: apps/help/data/org.helix.Help.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
-#: apps/logs/data/org.helix.Logs.metainfo.xml
-#: apps/maps/data/org.helix.Maps.metainfo.xml
-#: apps/music/data/org.helix.Music.metainfo.xml
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
-#: apps/settings/data/org.helix.Settings.metainfo.xml
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
-#: apps/tour/data/org.helix.Tour.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
-#: apps/weather/data/org.helix.Weather.metainfo.xml
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid ""
 "Every app has a Keyboard Shortcuts window (Ctrl+?) and remembers its window "
 "size"
@@ -94,37 +94,37 @@ msgstr ""
 "Ogni applicazione ha una finestra Scorciatoie da tastiera (Ctrl+?) e ricorda "
 "la dimensione della propria finestra"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
 msgid "Listen to audio files"
 msgstr "Ascoltare file audio"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/characters/data/org.helix.Characters.metainfo.xml
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
-#: apps/disks/data/org.helix.Disks.metainfo.xml
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
-#: apps/files/data/org.helix.Files.metainfo.xml
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
-#: apps/help/data/org.helix.Help.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
-#: apps/logs/data/org.helix.Logs.metainfo.xml
-#: apps/maps/data/org.helix.Maps.metainfo.xml
-#: apps/music/data/org.helix.Music.metainfo.xml
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
-#: apps/settings/data/org.helix.Settings.metainfo.xml
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
-#: apps/tour/data/org.helix.Tour.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
-#: apps/weather/data/org.helix.Weather.metainfo.xml
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid ""
 "The About window links to the issue tracker and offers troubleshooting "
 "information"
@@ -132,47 +132,47 @@ msgstr ""
 "La finestra Informazioni rimanda al sistema di tracciamento dei problemi e "
 "offre informazioni per la risoluzione dei problemi"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/characters/data/org.helix.Characters.metainfo.xml
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
-#: apps/disks/data/org.helix.Disks.metainfo.xml
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
-#: apps/files/data/org.helix.Files.metainfo.xml
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
-#: apps/help/data/org.helix.Help.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
-#: apps/logs/data/org.helix.Logs.metainfo.xml
-#: apps/maps/data/org.helix.Maps.metainfo.xml
-#: apps/music/data/org.helix.Music.metainfo.xml
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
-#: apps/settings/data/org.helix.Settings.metainfo.xml
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
-#: apps/tour/data/org.helix.Tour.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
-#: apps/weather/data/org.helix.Weather.metainfo.xml
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid "The first release of the Helix apps."
 msgstr "Il primo rilascio delle applicazioni Helix."
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
 msgid "audio"
 msgstr "audio"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
-#: apps/music/data/org.helix.Music.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
 msgid "player"
 msgstr "lettore"
 
-#: apps/audio-player/data/org.helix.AudioPlayer.metainfo.xml
+#: apps/audio-player/data/org.helixdesktop.AudioPlayer.metainfo.xml
 msgid "sound"
 msgstr "suono"
 
@@ -440,15 +440,15 @@ msgstr "Impossibile avviare il decodificatore"
 msgid "No audio stream"
 msgstr "Nessun flusso audio"
 
-#: apps/calculator/data/org.helix.Calculator.desktop
+#: apps/calculator/data/org.helixdesktop.Calculator.desktop
 msgid "Perform arithmetic, scientific or financial calculations"
 msgstr "Esegue calcoli aritmetici, scientifici o finanziari"
 
-#: apps/calculator/data/org.helix.Calculator.desktop
+#: apps/calculator/data/org.helixdesktop.Calculator.desktop
 msgid "calculation;arithmetic;scientific;financial;programming;"
 msgstr "calcolo;aritmetica;scientifica;finanziaria;programmazione;calcolatrice;calculator;"
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid ""
 "Calculator solves everything from simple sums to scientific, financial and "
 "programming problems. Type an expression the way you would write it, or use "
@@ -459,23 +459,23 @@ msgstr ""
 "si scriverebbe oppure usare il tastierino. I risultati precedenti restano "
 "nella cronologia per poterli riutilizzare."
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid "Perform calculations"
 msgstr "Eseguire calcoli"
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid "arithmetic"
 msgstr "aritmetica"
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid "calculation"
 msgstr "calcolo"
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid "financial"
 msgstr "finanziaria"
 
-#: apps/calculator/data/org.helix.Calculator.metainfo.xml
+#: apps/calculator/data/org.helixdesktop.Calculator.metainfo.xml
 msgid "scientific"
 msgstr "scientifica"
 
@@ -1190,15 +1190,15 @@ msgstr "Gradi centesimali"
 msgid "{} equals {}"
 msgstr "{} uguale a {}"
 
-#: apps/calendar/data/org.helix.Calendar.desktop
+#: apps/calendar/data/org.helixdesktop.Calendar.desktop
 msgid "Access and manage your calendars"
 msgstr "Accede e gestisce i propri calendari"
 
-#: apps/calendar/data/org.helix.Calendar.desktop
+#: apps/calendar/data/org.helixdesktop.Calendar.desktop
 msgid "calendar;event;reminder;agenda;"
 msgstr "calendario;evento;promemoria;agenda;appuntamento;calendar;"
 
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
 msgid ""
 "Calendar shows your events by week or month, and lets you add, change and "
 "search them. It works with the calendars of your online accounts as well as "
@@ -1208,19 +1208,19 @@ msgstr ""
 "aggiungerli, modificarli e cercarli. Funziona con i calendari degli account "
 "online, con quelli locali e con i calendari web a cui ci si è iscritti."
 
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
 msgid "Manage your schedule"
 msgstr "Gestire i propri impegni"
 
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
 msgid "calendar"
 msgstr "calendario"
 
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
 msgid "event"
 msgstr "evento"
 
-#: apps/calendar/data/org.helix.Calendar.metainfo.xml
+#: apps/calendar/data/org.helixdesktop.Calendar.metainfo.xml
 msgid "reminder"
 msgstr "promemoria"
 
@@ -2156,11 +2156,11 @@ msgstr "Importa nel calendario"
 msgid "_Import"
 msgstr "_Importa"
 
-#: apps/camera/data/org.helix.Camera.desktop
+#: apps/camera/data/org.helixdesktop.Camera.desktop
 msgid "photo;video;webcam;selfie;snapshot;"
 msgstr "foto;video;webcam;selfie;scatto;fotocamera;camera;"
 
-#: apps/camera/data/org.helix.Camera.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
 msgid ""
 "Camera takes photos and records videos with your webcam or any other camera "
 "connected to the computer. A countdown, a shutter sound and a quick look at "
@@ -2171,21 +2171,21 @@ msgstr ""
 "scatto e un'anteprima rapida dell'ultima acquisizione sono a portata di clic "
 "o di tasto."
 
-#: apps/camera/data/org.helix.Camera.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
 msgid "camera"
 msgstr "fotocamera"
 
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
 msgid "photo"
 msgstr "foto"
 
-#: apps/camera/data/org.helix.Camera.metainfo.xml
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
 msgid "video"
 msgstr "video"
 
-#: apps/camera/data/org.helix.Camera.metainfo.xml
+#: apps/camera/data/org.helixdesktop.Camera.metainfo.xml
 msgid "webcam"
 msgstr "webcam"
 
@@ -2460,11 +2460,11 @@ msgstr "Annulla conto alla rovescia"
 msgid "Open {}"
 msgstr "Apri {}"
 
-#: apps/characters/data/org.helix.Characters.desktop
+#: apps/characters/data/org.helixdesktop.Characters.desktop
 msgid "character;emoji;unicode;symbol;glyph;font;letter;"
 msgstr "carattere;emoji;unicode;simbolo;glifo;font;lettera;character;symbol;"
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid ""
 "Characters lets you find and copy letters, symbols and emoji that are not on "
 "your keyboard. Browse by category or search by name; characters you used "
@@ -2474,23 +2474,23 @@ msgstr ""
 "sono presenti sulla tastiera. È possibile sfogliare per categoria o cercare "
 "per nome; i caratteri usati di recente restano a portata di mano."
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid "Find and insert special characters"
 msgstr "Trovare e inserire caratteri speciali"
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid "character"
 msgstr "carattere"
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid "emoji"
 msgstr "emoji"
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid "symbol"
 msgstr "simbolo"
 
-#: apps/characters/data/org.helix.Characters.metainfo.xml
+#: apps/characters/data/org.helixdesktop.Characters.metainfo.xml
 msgid "unicode"
 msgstr "unicode"
 
@@ -2657,20 +2657,20 @@ msgstr "Vedere anche"
 msgid "_Copy Character"
 msgstr "_Copia carattere"
 
-#: apps/clocks/data/org.helix.Clocks-autostart.desktop
+#: apps/clocks/data/org.helixdesktop.Clocks-autostart.desktop
 msgid "Rings alarms set in Clocks"
 msgstr "Fa suonare le sveglie impostate in Orologi"
 
-#: apps/clocks/data/org.helix.Clocks.desktop
+#: apps/clocks/data/org.helixdesktop.Clocks.desktop
 msgid "Clocks for world times, plus alarms, stopwatch and a timer"
 msgstr "Orologi con l'ora nel mondo, sveglie, cronometro e timer"
 
-#: apps/clocks/data/org.helix.Clocks.desktop
+#: apps/clocks/data/org.helixdesktop.Clocks.desktop
 msgid "time;timer;alarm;world clock;stopwatch;time zone;"
 msgstr ""
 "ora;timer;sveglia;orologio mondiale;cronometro;fuso orario;time;alarm;clock;"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid ""
 "Clocks shows the time in cities around the world, and has alarms, a "
 "stopwatch and timers. Alarms and timers notify you even when the window is "
@@ -2680,27 +2680,27 @@ msgstr ""
 "cronometro e timer. Sveglie e timer inviano notifiche anche quando la "
 "finestra è chiusa."
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "Keep track of time"
 msgstr "Tenere traccia del tempo"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "alarm"
 msgstr "sveglia"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "clock"
 msgstr "orologio"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "stopwatch"
 msgstr "cronometro"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "timer"
 msgstr "timer"
 
-#: apps/clocks/data/org.helix.Clocks.metainfo.xml
+#: apps/clocks/data/org.helixdesktop.Clocks.metainfo.xml
 msgid "world"
 msgstr "mondo"
 
@@ -3316,15 +3316,15 @@ msgstr "Giro {}, tempo sul giro {}, totale {}"
 msgid ", {} compared with the previous lap"
 msgstr ", {} rispetto al giro precedente"
 
-#: apps/contacts/data/org.helix.Contacts.desktop
+#: apps/contacts/data/org.helixdesktop.Contacts.desktop
 msgid "A contacts manager"
 msgstr "Un gestore di contatti"
 
-#: apps/contacts/data/org.helix.Contacts.desktop
+#: apps/contacts/data/org.helixdesktop.Contacts.desktop
 msgid "friends;address book;people;vcard;"
 msgstr "amici;rubrica;persone;vcard;contatti;contacts;address book;"
 
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
 msgid ""
 "Contacts keeps the addresses, phone numbers and other details of the people "
 "you know in one place. It uses the address books of your online accounts and "
@@ -3334,15 +3334,15 @@ msgstr ""
 "gli altri dettagli delle persone che si conoscono. Usa le rubriche degli "
 "account online e può importare ed esportare file vCard."
 
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
 msgid "address book"
 msgstr "rubrica"
 
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
 msgid "contact"
 msgstr "contatto"
 
-#: apps/contacts/data/org.helix.Contacts.metainfo.xml
+#: apps/contacts/data/org.helixdesktop.Contacts.metainfo.xml
 msgid "people"
 msgstr "persone"
 
@@ -3955,15 +3955,15 @@ msgstr "Nessuna applicazione disponibile per aprire siti web"
 msgid "Copy {}"
 msgstr "Copia {}"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.desktop
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.desktop
 msgid "storage;space;cleanup;disk;usage;"
 msgstr "archiviazione;spazio;pulizia;disco;utilizzo;storage;disk;usage;"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
 msgid "Check folder sizes and free space"
 msgstr "Controllare la dimensione delle cartelle e lo spazio libero"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
 msgid ""
 "Disk Usage Analyzer shows how the space on your drives is used, folder by "
 "folder. Scan your home folder, a drive or any other folder and explore it as "
@@ -3974,20 +3974,20 @@ msgstr ""
 "un'unità o qualsiasi altra cartella ed esplorarla come elenco o come grafico "
 "ad anelli."
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
 msgid "cleanup"
 msgstr "pulizia"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid "disk"
 msgstr "disco"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
 msgid "space"
 msgstr "spazio"
 
-#: apps/disk-usage/data/org.helix.DiskUsage.metainfo.xml
+#: apps/disk-usage/data/org.helixdesktop.DiskUsage.metainfo.xml
 msgid "storage"
 msgstr "archiviazione"
 
@@ -4337,11 +4337,11 @@ msgstr "{} usati di {} ({} disponibili)"
 msgid "Scan {}"
 msgstr "Analizza {}"
 
-#: apps/disks/data/org.helix.Disks.desktop
+#: apps/disks/data/org.helixdesktop.Disks.desktop
 msgid "disk;drive;volume;partition;format;mount;smart;image;iso;usb;"
 msgstr "disco;unità;volume;partizione;formattare;montare;smart;immagine;iso;usb;disk;drive;partition;"
 
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid ""
 "Disks shows the drives and media connected to the computer, their partitions "
 "and their health. Format, partition, mount, encrypt and check volumes, "
@@ -4352,19 +4352,19 @@ msgstr ""
 "montare, cifrare e controllare i volumi, collegare immagini disco e leggere "
 "i dati SMART."
 
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid "drive"
 msgstr "unità"
 
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid "format"
 msgstr "formattazione"
 
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid "partition"
 msgstr "partizione"
 
-#: apps/disks/data/org.helix.Disks.metainfo.xml
+#: apps/disks/data/org.helixdesktop.Disks.metainfo.xml
 msgid "volume"
 msgstr "volume"
 
@@ -5704,11 +5704,11 @@ msgstr "Immagine ripristinata"
 msgid "{} were written."
 msgstr "Sono stati scritti {}."
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.desktop
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.desktop
 msgid "scan;scanner;flatbed;adf;"
 msgstr "scansione;scanner;piano;adf;acquisizione;scan;"
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
 msgid ""
 "Document Scanner makes a digital copy of paper documents and photos with "
 "your scanner. Scan one page or a whole stack, crop and rotate the pages, and "
@@ -5718,25 +5718,25 @@ msgstr ""
 "tramite lo scanner. È possibile acquisire una pagina o un'intera pila, "
 "ritagliare e ruotare le pagine e salvarle come PDF o come immagini."
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
 msgid "Scan documents and photos"
 msgstr "Acquisire documenti e foto"
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
 msgid "document"
 msgstr "documento"
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
 msgid "pdf"
 msgstr "pdf"
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
 msgid "scan"
 msgstr "scansione"
 
-#: apps/document-scanner/data/org.helix.DocumentScanner.metainfo.xml
+#: apps/document-scanner/data/org.helixdesktop.DocumentScanner.metainfo.xml
 msgid "scanner"
 msgstr "scanner"
 
@@ -6346,11 +6346,11 @@ msgstr "Mantieni il file originale"
 msgid "Saves an unprocessed copy with “_orig” before the extension"
 msgstr "Salva una copia non elaborata con «_orig» prima dell'estensione"
 
-#: apps/document-viewer/data/org.helix.DocumentViewer.desktop
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.desktop
 msgid "pdf;document;viewer;presentation;print;"
 msgstr "pdf;documento;visualizzatore;presentazione;stampa;document;viewer;"
 
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
 msgid ""
 "Document Viewer shows PDF documents and lets you search, select and copy "
 "their text. Read comfortably with thumbnails, an outline, night mode and a "
@@ -6360,16 +6360,16 @@ msgstr ""
 "selezionarne e copiarne il testo. Lettura comoda con miniature, struttura, "
 "modalità notte e modalità presentazione."
 
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
 msgid "View and read documents"
 msgstr "Visualizzare e leggere documenti"
 
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
 msgid "reader"
 msgstr "lettore"
 
-#: apps/document-viewer/data/org.helix.DocumentViewer.metainfo.xml
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
+#: apps/document-viewer/data/org.helixdesktop.DocumentViewer.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
 msgid "viewer"
 msgstr "visualizzatore"
 
@@ -6820,11 +6820,11 @@ msgstr[1] "{n} risultati"
 msgid "Printing failed: {msg}"
 msgstr "Stampa non riuscita: {msg}"
 
-#: apps/files/data/org.helix.Files.desktop
+#: apps/files/data/org.helixdesktop.Files.desktop
 msgid "folder;manager;explore;disk;filesystem;"
 msgstr "cartella;gestore;esplora;disco;file system;file;folder;manager;"
 
-#: apps/files/data/org.helix.Files.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
 msgid ""
 "Files gives you access to the files and folders on your computer, on "
 "removable media and on the network. Copy, move, rename, compress and search "
@@ -6835,15 +6835,15 @@ msgstr ""
 "comprimere e cercare file, con schede, una barra laterale delle risorse e "
 "una vista a elenco o a griglia."
 
-#: apps/files/data/org.helix.Files.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
 msgid "explorer"
 msgstr "esplora risorse"
 
-#: apps/files/data/org.helix.Files.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
 msgid "folder"
 msgstr "cartella"
 
-#: apps/files/data/org.helix.Files.metainfo.xml
+#: apps/files/data/org.helixdesktop.Files.metainfo.xml
 msgid "manager"
 msgstr "gestore"
 
@@ -7922,11 +7922,11 @@ msgstr "_Incolla"
 msgid "Add to _Bookmarks"
 msgstr "Aggiungi ai _segnalibri"
 
-#: apps/fonts/data/org.helix.Fonts.desktop
+#: apps/fonts/data/org.helixdesktop.Fonts.desktop
 msgid "fonts;fontface;typeface;install;preview;"
 msgstr "caratteri;font;tipo di carattere;installa;anteprima;fonts;typeface;"
 
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
 msgid ""
 "Fonts lists the fonts installed on your computer and shows what each one "
 "looks like. Open a font file to preview its characters and details and to "
@@ -7936,15 +7936,15 @@ msgstr ""
 "l'aspetto di ciascuno. È possibile aprire un file di carattere per "
 "visualizzarne in anteprima i glifi e i dettagli e per installarlo."
 
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
 msgid "font"
 msgstr "carattere"
 
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
 msgid "typeface"
 msgstr "tipo di carattere"
 
-#: apps/fonts/data/org.helix.Fonts.metainfo.xml
+#: apps/fonts/data/org.helixdesktop.Fonts.metainfo.xml
 msgid "typography"
 msgstr "tipografia"
 
@@ -8230,19 +8230,19 @@ msgstr "Installato"
 msgid "Open License Web Page"
 msgstr "Apri la pagina web della licenza"
 
-#: apps/help/data/org.helix.Help.desktop
+#: apps/help/data/org.helixdesktop.Help.desktop
 msgid "Get help with your desktop and applications"
 msgstr "Ottiene aiuto sul desktop e sulle applicazioni"
 
-#: apps/help/data/org.helix.Help.desktop
+#: apps/help/data/org.helixdesktop.Help.desktop
 msgid "help;documentation;manual;guide;"
 msgstr "aiuto;documentazione;manuale;guida;help;"
 
-#: apps/help/data/org.helix.Help.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
 msgid "Get help with your desktop"
 msgstr "Ottenere aiuto sul desktop"
 
-#: apps/help/data/org.helix.Help.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
 msgid ""
 "Help shows the documentation for the desktop and the apps you use. Search "
 "the help pages, follow links between topics and print the pages you need."
@@ -8251,15 +8251,15 @@ msgstr ""
 "possibile cercare nelle pagine di aiuto, seguire i collegamenti tra gli "
 "argomenti e stampare le pagine necessarie."
 
-#: apps/help/data/org.helix.Help.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
 msgid "documentation"
 msgstr "documentazione"
 
-#: apps/help/data/org.helix.Help.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
 msgid "help"
 msgstr "aiuto"
 
-#: apps/help/data/org.helix.Help.metainfo.xml
+#: apps/help/data/org.helixdesktop.Help.metainfo.xml
 msgid "manual"
 msgstr "manuale"
 
@@ -8499,11 +8499,11 @@ msgstr "_Informazioni su Aiuto"
 msgid "Search help"
 msgstr "Cerca nell'aiuto"
 
-#: apps/image-viewer/data/org.helix.ImageViewer.desktop
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.desktop
 msgid "Picture;Slideshow;Graphics;Photo;Image;"
 msgstr "Immagine;Presentazione;Grafica;Foto;Picture;Slideshow;Graphics;Photo;Image;"
 
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
 msgid ""
 "Image Viewer shows images, one at a time, and lets you move through the "
 "folder they are in. Zoom, rotate, view details, start a slideshow or set an "
@@ -8514,11 +8514,11 @@ msgstr ""
 "visualizzare i dettagli, avviare una presentazione o impostare un'immagine "
 "come sfondo."
 
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
 msgid "image"
 msgstr "immagine"
 
-#: apps/image-viewer/data/org.helix.ImageViewer.metainfo.xml
+#: apps/image-viewer/data/org.helixdesktop.ImageViewer.metainfo.xml
 msgid "picture"
 msgstr "foto"
 
@@ -8782,11 +8782,11 @@ msgstr "Impossibile salvare l'immagine"
 msgid "The portal closed the request"
 msgstr "Il portale ha chiuso la richiesta"
 
-#: apps/logs/data/org.helix.Logs.desktop
+#: apps/logs/data/org.helixdesktop.Logs.desktop
 msgid "log;journal;debug;error;event;"
 msgstr "registro;log;journal;debug;errore;evento;"
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid ""
 "Logs shows the detailed event logs of the system, grouped into useful "
 "categories. Search the logs, look at the details of a message and export "
@@ -8796,23 +8796,23 @@ msgstr ""
 "in categorie utili. È possibile cercare nei registri, esaminare i dettagli "
 "di un messaggio ed esportare ciò che serve per una segnalazione di bug."
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid "View system logs"
 msgstr "Visualizzare i registri di sistema"
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid "debug"
 msgstr "debug"
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid "journal"
 msgstr "journal"
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid "log"
 msgstr "registro"
 
-#: apps/logs/data/org.helix.Logs.metainfo.xml
+#: apps/logs/data/org.helixdesktop.Logs.metainfo.xml
 msgid "system"
 msgstr "sistema"
 
@@ -8988,11 +8988,11 @@ msgstr "Ora"
 msgid "Could not run journalctl: {e}"
 msgstr "Impossibile eseguire journalctl: {e}"
 
-#: apps/maps/data/org.helix.Maps.desktop
+#: apps/maps/data/org.helixdesktop.Maps.desktop
 msgid "maps;location;directions;route;places;search;"
 msgstr "mappe;posizione;indicazioni;percorso;luoghi;cerca;maps;"
 
-#: apps/maps/data/org.helix.Maps.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
 msgid ""
 "Maps lets you search for places, see where you are and get directions. Keep "
 "your favourite places at hand and switch between the street map and other "
@@ -9002,19 +9002,19 @@ msgstr ""
 "indicazioni stradali. È possibile tenere a portata di mano i luoghi "
 "preferiti e passare dalla mappa stradale ad altri stili di mappa."
 
-#: apps/maps/data/org.helix.Maps.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
 msgid "directions"
 msgstr "indicazioni"
 
-#: apps/maps/data/org.helix.Maps.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
 msgid "location"
 msgstr "posizione"
 
-#: apps/maps/data/org.helix.Maps.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
 msgid "map"
 msgstr "mappa"
 
-#: apps/maps/data/org.helix.Maps.metainfo.xml
+#: apps/maps/data/org.helixdesktop.Maps.metainfo.xml
 msgid "route"
 msgstr "percorso"
 
@@ -9801,11 +9801,11 @@ msgstr "Trova percorso"
 msgid "Finding route"
 msgstr "Ricerca del percorso"
 
-#: apps/music/data/org.helix.Music.desktop
+#: apps/music/data/org.helixdesktop.Music.desktop
 msgid "Music;Player;Songs;Album;Artist;Playlist;"
 msgstr "Musica;Lettore;Brani;Album;Artista;Playlist;Music;Player;Songs;"
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid ""
 "Music plays the songs in your Music folder, organized by album, artist and "
 "playlist. Make playlists, mark your favourite songs and control playback "
@@ -9816,23 +9816,23 @@ msgstr ""
 "preferiti e controllare la riproduzione dai controlli multimediali del "
 "desktop."
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid "Play and organize your music"
 msgstr "Riprodurre e organizzare la musica"
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid "album"
 msgstr "album"
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid "music"
 msgstr "musica"
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid "playlist"
 msgstr "playlist"
 
-#: apps/music/data/org.helix.Music.metainfo.xml
+#: apps/music/data/org.helixdesktop.Music.metainfo.xml
 msgid "song"
 msgstr "brano"
 
@@ -10323,11 +10323,11 @@ msgstr "In riproduzione"
 msgid "Show Now Playing"
 msgstr "Mostra in riproduzione"
 
-#: apps/screenshot/data/org.helix.Screenshot.desktop
+#: apps/screenshot/data/org.helixdesktop.Screenshot.desktop
 msgid "snapshot;capture;print;screenshot;area;window;"
 msgstr "istantanea;cattura;stampa;schermata;area;finestra;screenshot;"
 
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
 msgid ""
 "Screenshot saves an image of the whole screen, a window or a selected area. "
 "Take the picture after a delay, include the pointer, then copy it or save it "
@@ -10337,19 +10337,19 @@ msgstr ""
 "un'area selezionata. È possibile scattare dopo un ritardo, includere il "
 "puntatore e poi copiare l'immagine o salvarla in un file."
 
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
 msgid "Take screenshots"
 msgstr "Catturare schermate"
 
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
 msgid "capture"
 msgstr "cattura"
 
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
 msgid "screen"
 msgstr "schermo"
 
-#: apps/screenshot/data/org.helix.Screenshot.metainfo.xml
+#: apps/screenshot/data/org.helixdesktop.Screenshot.metainfo.xml
 msgid "screenshot"
 msgstr "schermata"
 
@@ -10561,15 +10561,15 @@ msgstr "Schermata salvata"
 msgid "Could Not Save Screenshot"
 msgstr "Impossibile salvare la schermata"
 
-#: apps/settings/data/org.helix.Settings.desktop
+#: apps/settings/data/org.helixdesktop.Settings.desktop
 msgid "Configure the desktop and system"
 msgstr "Configura il desktop e il sistema"
 
-#: apps/settings/data/org.helix.Settings.desktop
+#: apps/settings/data/org.helixdesktop.Settings.desktop
 msgid "preferences;settings;configuration;control;appearance;background;wallpaper;mouse;keyboard;accessibility;privacy;power;"
 msgstr "preferenze;impostazioni;configurazione;controllo;aspetto;sfondo;mouse;tastiera;accessibilità;privacy;alimentazione;settings;"
 
-#: apps/settings/data/org.helix.Settings.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
 msgid ""
 "Settings brings the preferences of the Helix desktop together in one place. "
 "Change the appearance, displays, sound, network, accessibility options and "
@@ -10579,19 +10579,19 @@ msgstr ""
 "possibile modificare l'aspetto, gli schermi, l'audio, la rete, le opzioni di "
 "accessibilità e molto altro."
 
-#: apps/settings/data/org.helix.Settings.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
 msgid "configuration"
 msgstr "configurazione"
 
-#: apps/settings/data/org.helix.Settings.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
 msgid "control center"
 msgstr "centro di controllo"
 
-#: apps/settings/data/org.helix.Settings.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
 msgid "preferences"
 msgstr "preferenze"
 
-#: apps/settings/data/org.helix.Settings.metainfo.xml
+#: apps/settings/data/org.helixdesktop.Settings.metainfo.xml
 msgid "settings"
 msgstr "impostazioni"
 
@@ -13847,15 +13847,15 @@ msgstr "{} rimanenti"
 msgid "{id} (IBus)"
 msgstr "{id} (IBus)"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.desktop
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.desktop
 msgid "Monitor;System;Process;CPU;Memory;Network;History;Usage;Performance;Task;Manager;Activity;"
 msgstr "Monitor;Sistema;Processo;CPU;Memoria;Rete;Cronologia;Utilizzo;Prestazioni;Attività;Gestore;System;Process;Task;Manager;"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "Monitor processes and resources"
 msgstr "Monitorare processi e risorse"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid ""
 "System Monitor shows which programs are running and how much processor, "
 "memory, network and disk they use. Search processes, change their priority, "
@@ -13866,23 +13866,23 @@ msgstr ""
 "processi, cambiarne la priorità, fermarli o terminarli e osservare "
 "l'utilizzo nel tempo."
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "cpu"
 msgstr "cpu"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "memory"
 msgstr "memoria"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "monitor"
 msgstr "monitor"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "process"
 msgstr "processo"
 
-#: apps/system-monitor/data/org.helix.SystemMonitor.metainfo.xml
+#: apps/system-monitor/data/org.helixdesktop.SystemMonitor.metainfo.xml
 msgid "task"
 msgstr "attività"
 
@@ -14411,13 +14411,13 @@ msgstr "Mostra tutti i file system"
 msgid "Include virtual and duplicate mounts"
 msgstr "Include mount virtuali e duplicati"
 
-#: apps/terminal/data/org.helix.Terminal.desktop
+#: apps/terminal/data/org.helixdesktop.Terminal.desktop
 msgid "command;prompt;cmd;commandline;run;shell;terminal;console;"
 msgstr ""
 "comando;prompt;cmd;riga di "
 "comando;esegui;shell;terminale;console;command;terminal;"
 
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
 msgid ""
 "Terminal gives you a command line in tabs and windows. It shows when a "
 "command runs with administrator rights or on a remote computer, and can "
@@ -14427,19 +14427,19 @@ msgstr ""
 "comando viene eseguito con diritti di amministratore o su un computer remoto "
 "e permette di cercare nell'output."
 
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
 msgid "command line"
 msgstr "riga di comando"
 
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
 msgid "console"
 msgstr "console"
 
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
 msgid "shell"
 msgstr "shell"
 
-#: apps/terminal/data/org.helix.Terminal.metainfo.xml
+#: apps/terminal/data/org.helixdesktop.Terminal.metainfo.xml
 msgid "terminal"
 msgstr "terminale"
 
@@ -14732,11 +14732,11 @@ msgstr ""
 msgid "C_lose"
 msgstr "_Chiudi"
 
-#: apps/text-editor/data/org.helix.TextEditor.desktop
+#: apps/text-editor/data/org.helixdesktop.TextEditor.desktop
 msgid "Text;Plaintext;Write;Notepad;Editor;"
 msgstr "Testo;Testo semplice;Scrivi;Blocco note;Editor;Text;Plaintext;Notepad;"
 
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
 msgid ""
 "Text Editor is a simple editor for notes, documents and source code. It "
 "keeps unsaved changes safe, highlights code and can find and replace text."
@@ -14745,19 +14745,19 @@ msgstr ""
 "Mantiene al sicuro le modifiche non salvate, evidenzia il codice e può "
 "trovare e sostituire testo."
 
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
 msgid "code"
 msgstr "codice"
 
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
 msgid "editor"
 msgstr "editor"
 
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
 msgid "notepad"
 msgstr "blocco note"
 
-#: apps/text-editor/data/org.helix.TextEditor.metainfo.xml
+#: apps/text-editor/data/org.helixdesktop.TextEditor.metainfo.xml
 msgid "text"
 msgstr "testo"
 
@@ -15103,15 +15103,15 @@ msgstr "_Scarta tutto"
 msgid "_Save All"
 msgstr "_Salva tutto"
 
-#: apps/tour/data/org.helix.Tour.desktop
+#: apps/tour/data/org.helixdesktop.Tour.desktop
 msgid "welcome;introduction;guide;tutorial;help;"
 msgstr "benvenuto;introduzione;guida;tutorial;aiuto;welcome;tour;"
 
-#: apps/tour/data/org.helix.Tour.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
 msgid "Get to know the desktop"
 msgstr "Conoscere il desktop"
 
-#: apps/tour/data/org.helix.Tour.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
 msgid ""
 "Tour introduces the Helix desktop the first time you log in. Learn how to "
 "start apps, switch between them and find your way around."
@@ -15119,15 +15119,15 @@ msgstr ""
 "Tour presenta il desktop Helix al primo accesso. Insegna come avviare le "
 "applicazioni, passare dall'una all'altra e orientarsi."
 
-#: apps/tour/data/org.helix.Tour.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
 msgid "introduction"
 msgstr "introduzione"
 
-#: apps/tour/data/org.helix.Tour.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
 msgid "tour"
 msgstr "tour"
 
-#: apps/tour/data/org.helix.Tour.metainfo.xml
+#: apps/tour/data/org.helixdesktop.Tour.metainfo.xml
 msgid "welcome"
 msgstr "benvenuto"
 
@@ -15289,11 +15289,11 @@ msgstr "Scopri di più su Helix"
 msgid "_About Tour"
 msgstr "_Informazioni su Tour"
 
-#: apps/video-player/data/org.helix.VideoPlayer.desktop
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.desktop
 msgid "Video;Movie;Film;Clip;Player;Media;"
 msgstr "Video;Film;Filmato;Clip;Lettore;Media;Movie;Player;"
 
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
 msgid ""
 "Video Player plays video files with a simple, unobtrusive interface. "
 "Subtitles, frame-by-frame stepping and screenshots of the current frame are "
@@ -15303,11 +15303,11 @@ msgstr ""
 "Sottotitoli, avanzamento fotogramma per fotogramma e istantanee del "
 "fotogramma attuale sono integrati."
 
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
 msgid "Watch videos"
 msgstr "Guardare video"
 
-#: apps/video-player/data/org.helix.VideoPlayer.metainfo.xml
+#: apps/video-player/data/org.helixdesktop.VideoPlayer.metainfo.xml
 msgid "movie"
 msgstr "film"
 
@@ -15480,19 +15480,19 @@ msgstr "Impossibile salvare la schermata: {err}"
 msgid "Could not save screenshot"
 msgstr "Impossibile salvare la schermata"
 
-#: apps/weather/data/org.helix.Weather.desktop
+#: apps/weather/data/org.helixdesktop.Weather.desktop
 msgid "Show weather conditions and forecast"
 msgstr "Mostra le condizioni meteo e le previsioni"
 
-#: apps/weather/data/org.helix.Weather.desktop
+#: apps/weather/data/org.helixdesktop.Weather.desktop
 msgid "forecast;temperature;"
 msgstr "previsioni;temperatura;meteo;tempo;weather;forecast;"
 
-#: apps/weather/data/org.helix.Weather.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
 msgid "Check the weather"
 msgstr "Controllare il meteo"
 
-#: apps/weather/data/org.helix.Weather.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
 msgid ""
 "Weather shows the current conditions and the forecast for the places you "
 "choose. See the next hours and days at a glance, with temperatures in the "
@@ -15502,15 +15502,15 @@ msgstr ""
 "prossime ore e i prossimi giorni a colpo d'occhio, con le temperature "
 "nell'unità preferita."
 
-#: apps/weather/data/org.helix.Weather.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
 msgid "forecast"
 msgstr "previsioni"
 
-#: apps/weather/data/org.helix.Weather.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
 msgid "temperature"
 msgstr "temperatura"
 
-#: apps/weather/data/org.helix.Weather.metainfo.xml
+#: apps/weather/data/org.helixdesktop.Weather.metainfo.xml
 msgid "weather"
 msgstr "meteo"
 
@@ -16028,15 +16028,15 @@ msgstr "Temporale con grandine debole"
 msgid "Thunderstorm with heavy hail"
 msgstr "Temporale con grandine forte"
 
-#: apps/web/data/org.helix.Web.desktop
+#: apps/web/data/org.helixdesktop.Web.desktop
 msgid "Web Browser"
 msgstr "Browser web"
 
-#: apps/web/data/org.helix.Web.desktop
+#: apps/web/data/org.helixdesktop.Web.desktop
 msgid "web;browser;internet;"
 msgstr "web;browser;internet;navigatore;navigazione;"
 
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid ""
 "Web is a browser for the Helix desktop with a clean, simple interface. It "
 "has tabs, bookmarks, history, private browsing, a reader view and web apps "
@@ -16046,15 +16046,15 @@ msgstr ""
 "Offre schede, segnalibri, cronologia, navigazione privata, una vista di "
 "lettura e applicazioni web eseguite in una finestra propria."
 
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid "browser"
 msgstr "browser"
 
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid "internet"
 msgstr "internet"
 
-#: apps/web/data/org.helix.Web.metainfo.xml
+#: apps/web/data/org.helixdesktop.Web.metainfo.xml
 msgid "web"
 msgstr "web"
 

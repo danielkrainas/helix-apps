@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Screenshot
+Comment=Save images of your screen or individual windows
+Keywords=snapshot;capture;print;screenshot;area;window;
+Exec=helix-screenshot --interactive
+Icon=org.helixdesktop.Screenshot
+Terminal=false
+Type=Application
+Categories=GTK;Utility;
+StartupNotify=true
+DBusActivatable=false

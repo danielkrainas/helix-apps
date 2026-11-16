@@ -14,7 +14,7 @@ use crate::window::Window;
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 
-pub const APP_ID: &str = "org.helix.TextEditor";
+pub const APP_ID: &str = "org.helixdesktop.TextEditor";
 pub const APP_DIR: &str = "helix-text-editor";
 const AUTOSAVE_DELAY: std::time::Duration = std::time::Duration::from_secs(3);
 

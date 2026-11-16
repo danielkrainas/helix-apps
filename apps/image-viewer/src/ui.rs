@@ -23,7 +23,7 @@ use crate::wallpaper;
 use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 
-pub const APP_ID: &str = "org.helix.ImageViewer";
+pub const APP_ID: &str = "org.helixdesktop.ImageViewer";
 const APP_NAME: &str = n_("Image Viewer");
 const CONTROLS_TIMEOUT: Duration = Duration::from_secs(2);
 const SLIDESHOW_INTERVAL: Duration = Duration::from_secs(5);

@@ -2,7 +2,7 @@
 
 Drop-in replacement for Snapshot.
 
-- **App ID**: `org.helix.Camera`
+- **App ID**: `org.helixdesktop.Camera`
 - **Binary**: `helix-camera`
 - **Crate**: `apps/camera`
 

@@ -2,7 +2,7 @@
 
 Drop-in replacement for Loupe.
 
-- **App ID**: `org.helix.ImageViewer`
+- **App ID**: `org.helixdesktop.ImageViewer`
 - **Binary**: `helix-image-viewer`
 - **Crate**: `apps/image-viewer`
 

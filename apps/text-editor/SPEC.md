@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Text Editor.
 
-- **App ID**: `org.helix.TextEditor`
+- **App ID**: `org.helixdesktop.TextEditor`
 - **Binary**: `helix-text-editor`
 - **Crate**: `apps/text-editor`
 

@@ -18,7 +18,7 @@ use crate::res_view::{parse_color, Colors, ResView};
 use crate::sampler::{self, clamp_interval, Config, Control, Msg};
 use helix_app_common::i18n::{n_, tr};
 
-pub const APP_ID: &str = "org.helix.SystemMonitor";
+pub const APP_ID: &str = "org.helixdesktop.SystemMonitor";
 const SCHEMA: &str = "org.gnome.gnome-system-monitor";
 
 pub(crate) const PAGES: [(&str, &str, &str); 3] = [

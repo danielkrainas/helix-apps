@@ -18,7 +18,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
-pub const APP_ID: &str = "org.helix.VideoPlayer";
+pub const APP_ID: &str = "org.helixdesktop.VideoPlayer";
 const APP_NAME: &str = n_("Video Player");
 const HIDE_DELAY: Duration = Duration::from_secs(2);
 const SEEK_STEP: f64 = 10.0;

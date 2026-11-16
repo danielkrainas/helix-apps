@@ -1,4 +1,4 @@
-//! Helix shell extensions through `org.helix.Extensions1` (helix-desktop-spec
+//! Helix shell extensions through `org.helixdesktop.Extensions1` (helixdesktop/spec
 //! `contracts/extensions/README.md`, "Session bus"): what the Extensions
 //! panel shows and changes. Blocking zbus; call only from worker threads.
 
@@ -10,8 +10,8 @@ use zbus::blocking::Connection;
 use zbus::zvariant::{OwnedValue, Value};
 
 pub const BUS: &str = "org.gnome.Shell";
-pub const PATH: &str = "/org/helix/Extensions1";
-pub const IFACE: &str = "org.helix.Extensions1";
+pub const PATH: &str = "/org/helixdesktop/Extensions1";
+pub const IFACE: &str = "org.helixdesktop.Extensions1";
 
 /// What an extension's permission lets it do (as the shell words it),
 /// completing "Can: …".

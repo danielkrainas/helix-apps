@@ -216,7 +216,10 @@ pub mod tests {
         };
         t.insert(
             ("background".into(), "background".into()),
-            entry(&[("org.gnome.Maps", &["no"]), ("org.helix.Clocks", &["yes"])]),
+            entry(&[
+                ("org.gnome.Maps", &["no"]),
+                ("org.helixdesktop.Clocks", &["yes"]),
+            ]),
         );
         t.insert(
             ("location".into(), "location".into()),
@@ -281,7 +284,7 @@ pub mod tests {
         reset(&app, "org.gnome.Maps").unwrap();
         assert!(read(&app, "org.gnome.Maps").unwrap().is_empty());
         assert_eq!(
-            read(&app, "org.helix.Clocks").unwrap().len(),
+            read(&app, "org.helixdesktop.Clocks").unwrap().len(),
             1,
             "others kept"
         );

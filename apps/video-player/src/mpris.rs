@@ -80,7 +80,7 @@ impl Default for State {
 impl State {
     pub fn track_path(&self) -> String {
         if self.has_media {
-            format!("/org/helix/VideoPlayer/Track/{}", self.track)
+            format!("/org/helixdesktop/VideoPlayer/Track/{}", self.track)
         } else {
             NO_TRACK.to_string()
         }
@@ -153,7 +153,7 @@ impl Root {
     }
     #[zbus(property)]
     fn desktop_entry(&self) -> &str {
-        "org.helix.VideoPlayer"
+        "org.helixdesktop.VideoPlayer"
     }
     #[zbus(property)]
     fn supported_uri_schemes(&self) -> Vec<String> {
@@ -409,6 +409,6 @@ mod tests {
         let m = s.metadata();
         assert_eq!(m.len(), 4);
         assert_eq!(i64::try_from(m["mpris:length"].clone()).unwrap(), 5_000_000);
-        assert_eq!(s.track_path(), "/org/helix/VideoPlayer/Track/3");
+        assert_eq!(s.track_path(), "/org/helixdesktop/VideoPlayer/Track/3");
     }
 }

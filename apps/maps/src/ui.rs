@@ -21,7 +21,7 @@ use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
 use std::rc::{Rc, Weak};
 
-const APP_ID: &str = "org.helix.Maps";
+const APP_ID: &str = "org.helixdesktop.Maps";
 const APP_NAME: &str = n_("Maps");
 const COMMENTS: &str = n_("Find places around the world");
 const SCHEMA: &str = "org.gnome.Maps";

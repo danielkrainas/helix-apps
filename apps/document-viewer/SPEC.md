@@ -2,7 +2,7 @@
 
 Drop-in replacement for Papers.
 
-- **App ID**: `org.helix.DocumentViewer`
+- **App ID**: `org.helixdesktop.DocumentViewer`
 - **Binary**: `helix-document-viewer`
 - **Crate**: `apps/document-viewer`
 

@@ -11,7 +11,7 @@ fn main() {
     collect(src, src, &mut files);
     files.sort();
     let mut xml = String::from(
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<gresources>\n  <gresource prefix=\"/org/helix/Apps/icons\">\n",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<gresources>\n  <gresource prefix=\"/org/helixdesktop/Apps/icons\">\n",
     );
     for f in &files {
         xml.push_str(&format!("    <file>{f}</file>\n"));

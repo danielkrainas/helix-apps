@@ -2,7 +2,7 @@
 //! shown now, from `org.gnome.Mutter.DisplayConfig`, handed to
 //! helix-desktop's `helix-login-monitors` through `pkexec`, which puts it
 //! into `/etc/xdg/helix/monitors.toml` for the login screen
-//! (helix-desktop-spec `components/greeter.md`, "The monitor"; the format
+//! (helixdesktop/spec `components/greeter.md`, "The monitor"; the format
 //! is in `contracts/dbus/org.gnome.Mutter.DisplayConfig.md`, "Remembered
 //! configurations"). Blocking; worker threads only.
 

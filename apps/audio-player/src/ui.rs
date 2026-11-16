@@ -20,7 +20,7 @@ use crate::waveform;
 use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 
-pub const APP_ID: &str = "org.helix.AudioPlayer";
+pub const APP_ID: &str = "org.helixdesktop.AudioPlayer";
 const APP_NAME: &str = n_("Audio Player");
 const STATE_DIR: &str = "helix-audio-player";
 const TICK: Duration = Duration::from_millis(50);

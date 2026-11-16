@@ -209,7 +209,7 @@ pub fn show_about(parent: &impl IsA<gtk::Widget>, app_name: &str, app_id: &str, 
 
 /// Resource path of Helix's own symbolic icons (`icons/` in this crate),
 /// for icons the Adwaita theme does not ship.
-pub const ICON_RESOURCE_PATH: &str = "/org/helix/Apps/icons";
+pub const ICON_RESOURCE_PATH: &str = "/org/helixdesktop/Apps/icons";
 
 /// Names of the icons bundled under [`ICON_RESOURCE_PATH`].
 pub fn bundled_icon_names() -> Vec<String> {
@@ -287,8 +287,8 @@ mod tests {
             std::env::temp_dir().join(format!("helix-app-common-schemas-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(
-            dir.join("org.helix.Test.gschema.xml"),
-            r#"<schemalist><schema id="org.helix.Test" path="/org/helix/test/">
+            dir.join("org.helixdesktop.Test.gschema.xml"),
+            r#"<schemalist><schema id="org.helixdesktop.Test" path="/org/helixdesktop/test/">
                  <key name="answer" type="i"><default>42</default></key>
                </schema></schemalist>"#,
         )
@@ -303,9 +303,9 @@ mod tests {
         // Read once per thread, so set it before the first lookup here.
         std::env::set_var("HELIX_APPS_SCHEMA_DIR", &dir);
         std::env::set_var("GSETTINGS_BACKEND", "memory");
-        let prefs = Prefs::new("org.helix.Test");
+        let prefs = Prefs::new("org.helixdesktop.Test");
         assert_eq!(prefs.get::<i32>("answer", 0), 42);
-        assert!(lookup_schema("org.helix.NoSuchSchema").is_none());
+        assert!(lookup_schema("org.helixdesktop.NoSuchSchema").is_none());
         std::fs::remove_dir_all(&dir).ok();
     }
 }

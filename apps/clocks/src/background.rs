@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn shipped_autostart_file_matches_commandline() {
-        let text = include_str!("../data/org.helix.Clocks-autostart.desktop");
+        let text = include_str!("../data/org.helixdesktop.Clocks-autostart.desktop");
         assert!(text
             .lines()
             .any(|l| l == format!("Exec={}", AUTOSTART_COMMANDLINE.join(" "))));

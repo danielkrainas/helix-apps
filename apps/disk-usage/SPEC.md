@@ -2,7 +2,7 @@
 
 Drop-in replacement for Baobab.
 
-- **App ID**: `org.helix.DiskUsage`
+- **App ID**: `org.helixdesktop.DiskUsage`
 - **Binary**: `helix-disk-usage`
 - **Crate**: `apps/disk-usage`
 

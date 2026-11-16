@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Clocks
+Comment=Rings alarms set in Clocks
+Exec=helix-clocks --hidden
+Icon=org.helixdesktop.Clocks
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-GNOME-AutoRestart=false
+X-GNOME-Autostart-Phase=Applications

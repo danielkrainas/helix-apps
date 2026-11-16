@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Calendar
+Comment=Access and manage your calendars
+Keywords=calendar;event;reminder;agenda;
+Exec=helix-calendar %F
+Icon=org.helixdesktop.Calendar
+Terminal=false
+Type=Application
+Categories=GTK;Utility;Calendar;
+MimeType=text/calendar;
+StartupNotify=true
+DBusActivatable=false

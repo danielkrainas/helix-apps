@@ -2,7 +2,7 @@
 
 Drop-in replacement for Decibels.
 
-- **App ID**: `org.helix.AudioPlayer`
+- **App ID**: `org.helixdesktop.AudioPlayer`
 - **Binary**: `helix-audio-player`
 - **Crate**: `apps/audio-player`
 
@@ -114,7 +114,7 @@ or queue (see *Decisions*).
   disable.
 - `org.mpris.MediaPlayer2`: `Raise`, `Quit`; `CanQuit`=true, `CanRaise`=true,
   `HasTrackList`=false, `Fullscreen`/`CanSetFullscreen`=false, `Identity`
-  "Audio Player", `DesktopEntry` "org.helix.AudioPlayer",
+  "Audio Player", `DesktopEntry` "org.helixdesktop.AudioPlayer",
   `SupportedUriSchemes` ["file"], `SupportedMimeTypes` (same list as the
   desktop file).
 - `org.mpris.MediaPlayer2.Player`: `Play`, `Pause`, `PlayPause`, `Stop`,
@@ -127,7 +127,7 @@ or queue (see *Decisions*).
   `CanPlay`/`CanPause`/`CanSeek` true when a file is loaded, `CanControl`
   true. `PropertiesChanged` is emitted for changed properties (never for
   `Position`); `Seeked` is emitted after user/remote seeks and on repeat.
-- Metadata: `mpris:trackid` (`/org/helix/AudioPlayer/Track/<n>`, n
+- Metadata: `mpris:trackid` (`/org/helixdesktop/AudioPlayer/Track/<n>`, n
   increments per opened file), `mpris:length` (µs, when known),
   `xesam:title`, `xesam:artist` (array), `xesam:album`, `xesam:url`.
 

@@ -20,7 +20,7 @@ use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
-pub const APP_ID: &str = "org.helix.DiskUsage";
+pub const APP_ID: &str = "org.helixdesktop.DiskUsage";
 /// `excluded-uris` lives here.
 const SCHEMA_PREFERENCES: &str = "org.gnome.baobab.preferences";
 /// `active-chart`, `window-size`, `is-maximized` live here.

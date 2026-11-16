@@ -19,7 +19,7 @@ use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
-pub const APP_ID: &str = "org.helix.Contacts";
+pub const APP_ID: &str = "org.helixdesktop.Contacts";
 const SCHEMA: &str = "org.gnome.Contacts";
 const DEFAULTS_SCHEMA: &str = "org.gnome.Evolution.DefaultSources";
 const EDS_BOOK_SCHEMA: &str = "org.gnome.evolution-data-server.addressbook";

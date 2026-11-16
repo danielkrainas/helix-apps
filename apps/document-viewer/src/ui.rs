@@ -19,7 +19,7 @@ use std::collections::HashMap;
 use std::rc::{Rc, Weak};
 use std::time::Duration;
 
-pub const APP_ID: &str = "org.helix.DocumentViewer";
+pub const APP_ID: &str = "org.helixdesktop.DocumentViewer";
 const APP_NAME: &str = n_("Document Viewer");
 const BIN: &str = "helix-document-viewer";
 

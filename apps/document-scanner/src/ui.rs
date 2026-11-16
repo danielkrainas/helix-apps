@@ -19,7 +19,7 @@ use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
 use std::rc::{Rc, Weak};
 
-pub const APP_ID: &str = "org.helix.DocumentScanner";
+pub const APP_ID: &str = "org.helixdesktop.DocumentScanner";
 const APP_NAME: &str = n_("Document Scanner");
 const SCHEMA: &str = "org.gnome.SimpleScan";
 const DEFAULT_DPI: [i32; 7] = [75, 150, 200, 300, 600, 1200, 2400];

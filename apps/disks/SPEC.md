@@ -1,6 +1,6 @@
 # Disks
 
-App ID: `org.helix.Disks`
+App ID: `org.helixdesktop.Disks`
 Binary: `helix-disks`
 Crate: `helix-disks` (`apps/disks`)
 

@@ -2,7 +2,7 @@
 
 Drop-in replacement for Simple Scan.
 
-- **App ID**: `org.helix.DocumentScanner`
+- **App ID**: `org.helixdesktop.DocumentScanner`
 - **Binary**: `helix-document-scanner`
 - **Crate**: `apps/document-scanner`
 
@@ -203,7 +203,7 @@ contradict storing a URI (and the user's own value is unset, `''`). The
 bundled
 `data/org.gnome.SimpleScan.gschema.xml` installs to
 `/usr/share/glib-2.0/schemas/` only where Simple Scan's own schema is not
-installed. `data/org.helix.DocumentScanner.desktop` installs to
+installed. `data/org.helixdesktop.DocumentScanner.desktop` installs to
 `/usr/share/applications/`.
 
 ## Decisions

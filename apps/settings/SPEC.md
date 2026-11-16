@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Settings.
 
-- **App ID**: `org.helix.Settings`
+- **App ID**: `org.helixdesktop.Settings`
 - **Binary**: `helix-settings-app`
 - **Crate**: `apps/settings` (package `helix-settings-app`)
 
@@ -115,7 +115,7 @@ Primary configuration UI for the desktop and system.
   missing (for example `accent-color` on schemas older than GNOME 47) the
   value lives in memory only (`helix_app_common::Prefs`) and the row says
   *Not supported by this system*.
-- `data/org.helix.Settings.gnome-compat.gschema.xml` holds GNOME-compatible
+- `data/org.helixdesktop.Settings.gnome-compat.gschema.xml` holds GNOME-compatible
   definitions of exactly the keys used (same schema ids, paths, types,
   defaults and enum nicks), for systems that do not ship the GNOME schemas.
 - Delay choices are combo rows over fixed presets (seconds). A stored value
@@ -269,8 +269,8 @@ in the compat schema.
   relocatable schema is not installed or the list is empty.
 
 #### Extensions
-Helix shell extensions (helix-desktop-spec `contracts/extensions/README.md`),
-through `org.helix.Extensions1` at `/org/helix/Extensions1` on the session
+Helix shell extensions (helixdesktop/spec `contracts/extensions/README.md`),
+through `org.helixdesktop.Extensions1` at `/org/helixdesktop/Extensions1` on the session
 bus (owned by the shell, `org.gnome.Shell`). The shell's own "Extensions…"
 menu entry opens this panel when Settings is installed.
 
@@ -282,7 +282,7 @@ menu entry opens this panel when Settings is installed.
   list follows the service: it is read when the panel is built, again on
   every `Changed(id)` signal (at most every 0.3 s), and when the service
   appears or goes away.
-- *Use Extensions*: a switch row, the inverse of `org.helix.extensions
+- *Use Extensions*: a switch row, the inverse of `org.helixdesktop.extensions
   disable-all` (marked *Not supported by this system* without the schema).
 - One expander row per extension, user and system ones by name, then
   development ones (with "Development" in the subtitle). Title: its name;
@@ -582,7 +582,7 @@ shell's agent) may ask for a password.
 
 #### Displays
 `org.gnome.Mutter.DisplayConfig` on the session bus (served by helix-comp;
-helix-desktop-spec `contracts/dbus/org.gnome.Mutter.DisplayConfig.md`):
+helixdesktop/spec `contracts/dbus/org.gnome.Mutter.DisplayConfig.md`):
 `GetCurrentState`, `ApplyMonitorsConfig`, `ApplyMonitorsConfigAllowed`,
 followed live through its signals (`MonitorsChanged`) and it coming or
 going (`displays.rs`).
@@ -727,7 +727,7 @@ adapter (by object path, normally `hci0`).
   connected and BlueZ reports a battery). Activating one opens a dialog:
   *Connection* (switch: `Connect` / `Disconnect`), *Type* (from BlueZ's
   `Icon`: Headset, Keyboard, Phone…), *Address*, *Battery*, *Send Files…*
-  (the shell's `org.helix.BluetoothSendTo.SendFiles(address, [])`, which
+  (the shell's `org.helixdesktop.BluetoothSendTo.SendFiles(address, [])`, which
   asks for the files and shows progress; a toast says sending needs the
   Helix shell when it is not there) and *Forget…* (confirmed, then
   `Adapter1.RemoveDevice`). The dialog follows the device and closes when
@@ -740,7 +740,7 @@ adapter (by object path, normally `hci0`).
   with NAME: reason" ("Pairing with NAME was cancelled" when refused),
   success is announced ("Paired with NAME").
 - *Received Files*: files other devices send are saved in the Downloads
-  folder by the shell (helix-desktop-spec `contracts/dbus/org.bluez.obex.md`);
+  folder by the shell (helixdesktop/spec `contracts/dbus/org.bluez.obex.md`);
   *Open* shows the folder.
 - Errors of user actions are toasts ("Could not turn Bluetooth on: …");
   polkit or user refusals are not reported.

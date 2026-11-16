@@ -189,7 +189,7 @@ mod tests {
     fn missing_schema_falls_back_to_file() {
         let dir = temp("fallback");
         let path = dir.join("settings.json");
-        let prefs = Prefs::new("org.helix.Camera.DoesNotExist");
+        let prefs = Prefs::new("org.helixdesktop.Camera.DoesNotExist");
         assert!(!prefs.is_persistent());
         let s = Settings {
             countdown: 3,

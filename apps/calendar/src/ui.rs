@@ -22,7 +22,7 @@ use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
-pub const APP_ID: &str = "org.helix.Calendar";
+pub const APP_ID: &str = "org.helixdesktop.Calendar";
 const SCHEMA: &str = "org.gnome.calendar";
 const IFACE_SCHEMA: &str = "org.gnome.desktop.interface";
 const DESKTOP_CAL_SCHEMA: &str = "org.gnome.desktop.calendar";

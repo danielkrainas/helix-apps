@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Calendar.
 
-- **App ID**: `org.helix.Calendar`
+- **App ID**: `org.helixdesktop.Calendar`
 - **Binary**: `helix-calendar`
 - **Crate**: `apps/calendar`
 

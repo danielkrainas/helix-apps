@@ -17,7 +17,7 @@ use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
-pub const APP_ID: &str = "org.helix.Fonts";
+pub const APP_ID: &str = "org.helixdesktop.Fonts";
 const PREVIEW_SIZES: [u32; 8] = [8, 10, 12, 18, 24, 36, 48, 72];
 
 /// One face shown on a font page.

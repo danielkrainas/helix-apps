@@ -39,7 +39,7 @@ version = "0.1.0"
 edition = "2021"
 license = "CC0-1.0"
 authors = ["Daniel Krainas"]
-repository = "https://github.com/danielkrainas/helix-apps"
+repository = "https://github.com/helixdesktop/apps"
 
 [workspace.dependencies]
 gtk = { package = "gtk4", version = "0.9", features = ["v4_14"] }

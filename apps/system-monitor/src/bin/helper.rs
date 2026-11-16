@@ -1,5 +1,5 @@
 //! `helix-system-monitor-helper`: privileged helper run through `pkexec`
-//! (polkit action `org.helix.SystemMonitor.manage-processes`) to signal or
+//! (polkit action `org.helixdesktop.SystemMonitor.manage-processes`) to signal or
 //! renice processes the calling user does not own.
 //!
 //! Exit status: 0 success, 2 invalid arguments, 3 no such process,

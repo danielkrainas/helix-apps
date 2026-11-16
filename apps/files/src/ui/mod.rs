@@ -20,7 +20,7 @@ use std::rc::Rc;
 use crate::sorting::SortKey;
 pub use window::Window;
 
-pub const APP_ID: &str = "org.helix.Files";
+pub const APP_ID: &str = "org.helixdesktop.Files";
 const PREFS: &str = "org.gnome.nautilus.preferences";
 const WINDOW_STATE: &str = "org.gnome.nautilus.window-state";
 const LIST_VIEW: &str = "org.gnome.nautilus.list-view";
@@ -390,7 +390,7 @@ pub fn run() -> glib::ExitCode {
         install_app_actions(&s);
         dbus::register(&s);
         // Started by D-Bus activation (`--gapplication-service`, see
-        // data/org.helix.Files.FileManager1.service): no window is opened
+        // data/org.helixdesktop.Files.FileManager1.service): no window is opened
         // until a method call arrives; linger briefly once idle.
         if app.flags().contains(gio::ApplicationFlags::IS_SERVICE) {
             app.set_inactivity_timeout(10_000);

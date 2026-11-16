@@ -231,15 +231,18 @@ mod tests {
             std::env::temp_dir().join(format!("helix-test-bus-services-{}", std::process::id()));
         std::fs::create_dir_all(&services).unwrap();
         std::fs::write(
-            services.join("org.helix.TestFake.service"),
-            "[D-BUS Service]\nName=org.helix.TestFake\nExec=/bin/false\n",
+            services.join("org.helixdesktop.TestFake.service"),
+            "[D-BUS Service]\nName=org.helixdesktop.TestFake\nExec=/bin/false\n",
         )
         .unwrap();
         let bus = TestBus::with_services(&[&services]);
         let names = bus.as_ref().map(|b| activatable_names(b.address()));
         let _ = std::fs::remove_dir_all(&services);
         let Some(names) = names else { return };
-        assert_eq!(names.unwrap(), vec!["org.helix.TestFake".to_string()]);
+        assert_eq!(
+            names.unwrap(),
+            vec!["org.helixdesktop.TestFake".to_string()]
+        );
     }
 
     /// The bus the whole test run is on (`tools/testing/run-tests.sh`,

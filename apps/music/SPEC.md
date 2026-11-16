@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Music.
 
-- **App ID**: `org.helix.Music`
+- **App ID**: `org.helixdesktop.Music`
 - **Binary**: `helix-music`
 - **Crate**: `apps/music`
 
@@ -192,7 +192,7 @@ Music library and player.
 ### MPRIS
 - Bus name `org.mpris.MediaPlayer2.HelixMusic`, object
   `/org/mpris/MediaPlayer2`, interfaces `org.mpris.MediaPlayer2`
-  (Identity "Music", DesktopEntry `org.helix.Music`, Raise, Quit) and
+  (Identity "Music", DesktopEntry `org.helixdesktop.Music`, Raise, Quit) and
   `org.mpris.MediaPlayer2.Player` (Play/Pause/PlayPause/Stop/Next/Previous/
   Seek/SetPosition, PlaybackStatus, LoopStatus, Shuffle, Volume, Metadata
   with `mpris:trackid`, `mpris:length`, `mpris:artUrl`, `xesam:title`,

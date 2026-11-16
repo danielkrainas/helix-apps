@@ -672,7 +672,7 @@ mod tests {
 
     #[test]
     fn enum_choices_use_gnome_nicks() {
-        let xml = include_str!("../../data/org.helix.Settings.gnome-compat.gschema.xml");
+        let xml = include_str!("../../data/org.helixdesktop.Settings.gnome-compat.gschema.xml");
         for (nick, _) in VISUAL_BELL_TYPES
             .iter()
             .chain(SCREEN_POSITIONS)

@@ -13,7 +13,7 @@ use crate::state::{self, Outcome};
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 
-pub const APP_ID: &str = "org.helix.Tour";
+pub const APP_ID: &str = "org.helixdesktop.Tour";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Tracks whether the window was shown and whether an outcome was saved.

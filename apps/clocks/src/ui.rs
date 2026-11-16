@@ -26,7 +26,7 @@ use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
-pub const APP_ID: &str = "org.helix.Clocks";
+pub const APP_ID: &str = "org.helixdesktop.Clocks";
 const SCHEMA: &str = "org.gnome.clocks";
 const WINDOW_SCHEMA: &str = "org.gnome.clocks.state.window";
 const IFACE_SCHEMA: &str = "org.gnome.desktop.interface";

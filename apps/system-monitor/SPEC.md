@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME System Monitor.
 
-- **App ID**: `org.helix.SystemMonitor`
+- **App ID**: `org.helixdesktop.SystemMonitor`
 - **Binary**: `helix-system-monitor`
 - **Crate**: `apps/system-monitor`
 
@@ -116,8 +116,8 @@ View processes, resources, and file systems.
   process gone) are shown as a toast.
 
 ### Privileged helper and polkit
-- Polkit action **`org.helix.SystemMonitor.manage-processes`**
-  (`data/org.helix.SystemMonitor.policy`, installs to
+- Polkit action **`org.helixdesktop.SystemMonitor.manage-processes`**
+  (`data/org.helixdesktop.SystemMonitor.policy`, installs to
   `/usr/share/polkit-1/actions/`). Modelled on the installed GNOME policy
   (`org.gnome.gnome-system-monitor.kill` / `.renice`, which use
   `auth_admin_keep` for active sessions and `no` otherwise) but a single
@@ -215,7 +215,7 @@ keys with the published names, types, ranges and defaults.
 
 ## Decisions
 - Privileged process actions: ship polkit action
-  `org.helix.SystemMonitor.manage-processes` plus a small helper binary
+  `org.helixdesktop.SystemMonitor.manage-processes` plus a small helper binary
   invoked via `pkexec` (see "Privileged helper and polkit").
 - Process-list column visibility, widths, order and sort state use the real
   `org.gnome.gnome-system-monitor.proctree` keys (GNOME column numbers),

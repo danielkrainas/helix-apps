@@ -3,7 +3,7 @@
 Drop-in replacement for the classic GNOME Screenshot app
 (`gnome-screenshot`).
 
-- **App ID**: `org.helix.Screenshot`
+- **App ID**: `org.helixdesktop.Screenshot`
 - **Binary**: `helix-screenshot`
 - **Crate**: `apps/screenshot`
 
@@ -26,10 +26,10 @@ xfce4-screenshooter cannot do under Helix (area selection in particular).
 - D-Bus `org.gnome.Shell.Screenshot` (bus `org.gnome.Shell`, object
   `/org/gnome/Shell/Screenshot`): `Screenshot`, `ScreenshotWindow`,
   `ScreenshotArea`, `SelectArea`
-  (`helix-desktop-spec/contracts/dbus/org.gnome.Shell.Screenshot.md`).
+  (`helixdesktop/spec/contracts/dbus/org.gnome.Shell.Screenshot.md`).
 - D-Bus well-known name `org.gnome.Screenshot` on the session bus, owned
   while a capture runs: the shell only answers callers that own it.
-- Helix-private `org.helix.ScreenshotWindowPicker.PickWindow` at the same
+- Helix-private `org.helixdesktop.ScreenshotWindowPicker.PickWindow` at the same
   object (optional; see "Window").
 - XDG user directories (`XDG_PICTURES_DIR`), `XDG_RUNTIME_DIR`.
 - The clipboard (`image/png` and the other image formats GTK offers for a
@@ -101,7 +101,7 @@ xfce4-screenshooter cannot do under Helix (area selection in particular).
   focused during the delay), as in the classic app; the window frame Helix
   draws for X11 windows is included.
 - From the options page with a delay of 0, the shell's window picker is
-  used instead when it is offered (`org.helix.ScreenshotWindowPicker`
+  used instead when it is offered (`org.helixdesktop.ScreenshotWindowPicker`
   `PickWindow`): the user clicks the window to capture; Escape cancels and
   returns to the window, as for Area. When the shell does not have the
   picker (`UnknownMethod`/`UnknownInterface`/`UnknownObject`), the focused

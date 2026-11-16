@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Document Scanner
+Comment=Make a digital copy of your photos and documents
+Keywords=scan;scanner;flatbed;adf;
+Exec=helix-document-scanner
+Icon=org.helixdesktop.DocumentScanner
+Terminal=false
+Type=Application
+Categories=GTK;Graphics;Scanning;
+StartupNotify=true
+DBusActivatable=false

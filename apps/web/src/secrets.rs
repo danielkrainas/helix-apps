@@ -7,7 +7,7 @@
 //!
 //! | attribute | value |
 //! |---|---|
-//! | `xdg:schema` | `org.helix.Web.Password` |
+//! | `xdg:schema` | `org.helixdesktop.Web.Password` |
 //! | `origin` | `scheme://host[:port]` of the page with the login form |
 //! | `target-origin` | origin the form submits to |
 //! | `username` | the user name (may be empty) |
@@ -24,7 +24,7 @@ use zbus::blocking::{Connection, Proxy};
 use zbus::zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Value};
 use zeroize::{Zeroize, Zeroizing};
 
-pub const SCHEMA: &str = "org.helix.Web.Password";
+pub const SCHEMA: &str = "org.helixdesktop.Web.Password";
 pub const ATTR_SCHEMA: &str = "xdg:schema";
 pub const ATTR_ORIGIN: &str = "origin";
 pub const ATTR_TARGET: &str = "target-origin";
@@ -695,7 +695,7 @@ mod tests {
     fn attributes_and_labels() {
         let l = login("https://example.com", "ada", "pw");
         let a = l.attributes();
-        assert_eq!(a[ATTR_SCHEMA], "org.helix.Web.Password");
+        assert_eq!(a[ATTR_SCHEMA], "org.helixdesktop.Web.Password");
         assert_eq!(a[ATTR_ORIGIN], "https://example.com");
         assert_eq!(a[ATTR_USERNAME], "ada");
         assert_eq!(l.label(), "Password for ada on example.com");

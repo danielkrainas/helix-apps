@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Console (kgx).
 
-- **App ID**: `org.helix.Terminal`
+- **App ID**: `org.helixdesktop.Terminal`
 - **Binary**: `helix-terminal`
 - **Crate**: `apps/terminal`
 
@@ -141,8 +141,8 @@ Read-only: `org.gnome.desktop.interface monospace-font-name`.
 
 `org.gnome.Console` has no transparency setting, and the bundled copy must
 stay identical to the real schema, so the transparency keys live in
-Helix's own schema `org.helix.Terminal` (path `/org/helix/Terminal/`,
-`data/org.helix.Terminal.gschema.xml`), read through a second `Prefs`
+Helix's own schema `org.helixdesktop.Terminal` (path `/org/helixdesktop/Terminal/`,
+`data/org.helixdesktop.Terminal.gschema.xml`), read through a second `Prefs`
 (in-memory fallback when not installed). The key names and types are the
 ones GNOME Terminal uses in its profiles, so the meaning is the same:
 
@@ -199,7 +199,7 @@ Ctrl+W and Ctrl+Q are deliberately *not* bound (they belong to the shell).
   (`auto`=0 … `hacker`=3), `font-scale` range added, the non-existent
   `ignore-scrollback-limit` dropped (unlimited = negative
   `scrollback-lines`), `shell` added.
-- Background transparency is stored in Helix's own `org.helix.Terminal`
+- Background transparency is stored in Helix's own `org.helixdesktop.Terminal`
   schema using GNOME Terminal's profile key names, rather than adding
   non-standard keys to `org.gnome.Console`. Default transparency when
   turned on is 20 % (GNOME Terminal uses 50 %; 20 % keeps text readable

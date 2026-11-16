@@ -80,7 +80,7 @@ pub fn show(app: &Rc<App>, parent: &impl IsA<gtk::Widget>) {
     appearance.add(&use_system);
     appearance.add(&font_row);
 
-    // Transparency (org.helix.Terminal, GNOME Terminal key names).
+    // Transparency (org.helixdesktop.Terminal, GNOME Terminal key names).
     let current = app.transparency();
     let transparent = adw::SwitchRow::builder()
         .title(tr("Transparent Background"))

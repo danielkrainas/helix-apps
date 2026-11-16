@@ -520,10 +520,10 @@ mod tests {
     /// no services, to create the database and insert sample data.
     fn create_scratch_db(db: &Path) -> bool {
         let script = format!(
-            r#"tracker3 endpoint -b org.helix.MusicTest -o nepomuk -d '{db}' --session >/dev/null 2>&1 &
+            r#"tracker3 endpoint -b org.helixdesktop.MusicTest -o nepomuk -d '{db}' --session >/dev/null 2>&1 &
 P=$!
-for i in $(seq 50); do tracker3 sparql -b org.helix.MusicTest -q 'ASK {{}}' >/dev/null 2>&1 && break; sleep 0.1; done
-tracker3 sparql -b org.helix.MusicTest -u -q '
+for i in $(seq 50); do tracker3 sparql -b org.helixdesktop.MusicTest -q 'ASK {{}}' >/dev/null 2>&1 && break; sleep 0.1; done
+tracker3 sparql -b org.helixdesktop.MusicTest -u -q '
 INSERT DATA {{
  <urn:song1> a nmm:MusicPiece, nfo:Audio ; nao:hasTag nao:predefined-tag-favorite ; nie:isStoredAs <file:///music/a%20b/one.mp3> .
  <file:///music/a%20b/one.mp3> a nfo:FileDataObject ; nie:url "file:///music/a%20b/one.mp3" .

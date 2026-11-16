@@ -15,7 +15,7 @@ use crate::transparency::{self, Transparency};
 use crate::window::Window;
 use helix_app_common::i18n::tr;
 
-pub const APP_ID: &str = "org.helix.Terminal";
+pub const APP_ID: &str = "org.helixdesktop.Terminal";
 pub const SCHEMA: &str = "org.gnome.Console";
 const IFACE_SCHEMA: &str = "org.gnome.desktop.interface";
 const DEFAULT_SIZE: (i32, i32) = (800, 520);
@@ -91,7 +91,7 @@ pub struct App {
     pub this: Weak<App>,
     pub gtk: adw::Application,
     pub prefs: Prefs,
-    /// `org.helix.Terminal`: settings Console's schema has no key for.
+    /// `org.helixdesktop.Terminal`: settings Console's schema has no key for.
     pub helix_prefs: Prefs,
     iface: Option<gio::Settings>,
     pub windows: RefCell<Vec<Rc<Window>>>,

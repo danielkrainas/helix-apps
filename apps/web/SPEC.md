@@ -2,7 +2,7 @@
 
 Drop-in replacement for Epiphany (GNOME Web).
 
-- **App ID**: `org.helix.Web`
+- **App ID**: `org.helixdesktop.Web`
 - **Binary**: `helix-web`
 - **Crate**: `apps/web`
 
@@ -251,7 +251,7 @@ Web browser.
 
   | attribute | value |
   |---|---|
-  | `xdg:schema` | `org.helix.Web.Password` |
+  | `xdg:schema` | `org.helixdesktop.Web.Password` |
   | `origin` | `scheme://host[:port]` of the page with the login form |
   | `target-origin` | origin of the form's `action` (page origin if none) |
   | `username` | user name, may be empty |
@@ -313,14 +313,14 @@ Web browser.
 - "Install Site as Web Application…" uses the XDG DynamicLauncher portal:
   `PrepareInstall("", title, icon, {launcher_type: 2 (web app), target:
   URL, editable_name, editable_icon, modal, handle_token})`, waits for the
-  Request `Response`, then `Install(token, "org.helix.Web.WebApp_ID.desktop",
+  Request `Response`, then `Install(token, "org.helixdesktop.Web.WebApp_ID.desktop",
   entry, {})`. Icon: the site's favicon as PNG, else the app icon from the
   theme. ID = sanitised chosen name + 6 hex digits of a hash of the URL.
   The desktop entry (Name/Icon are added by the portal):
   `Exec=<helix-web path> --web-app=ID "URL"` (Exec quoting per the Desktop
   Entry spec, `%` doubled, line breaks removed), `StartupWMClass` = app ID,
   `Categories=Network;GTK;`, `X-Helix-Web-App-Url=URL`.
-- Web-app mode: application ID `org.helix.Web.WebApp_ID` (own instance),
+- Web-app mode: application ID `org.helixdesktop.Web.WebApp_ID` (own instance),
   data (cookies, history, permissions) in
   `$XDG_DATA_HOME/helix-web/web-apps/ID/`, cache in
   `$XDG_CACHE_HOME/helix-web/web-apps/ID/`; no session restore. The window
@@ -418,7 +418,7 @@ Web browser.
   `include if exists <local/helix-web>` for site additions. The
   in-app failure page generates the same profile with the running binary's
   path added; a unit test keeps the shipped file identical to the generator.
-- `data/org.helix.Web.desktop` → `/usr/share/applications/`.
+- `data/org.helixdesktop.Web.desktop` → `/usr/share/applications/`.
 - `data/org.gnome.Epiphany.gschema.xml` → `/usr/share/glib-2.0/schemas/`
   only where Epiphany's schema is not installed.
 
@@ -448,7 +448,7 @@ Web browser.
 
 ## Decisions
 - Password manager: implemented with a pure-Rust Secret Service client
-  over zbus (no libsecret), Helix schema `org.helix.Web.Password`; tests run
+  over zbus (no libsecret), Helix schema `org.helixdesktop.Web.Password`; tests run
   only against an in-process mock service on a private peer-to-peer
   connection.
 - Web apps: "Install Site as Web Application" via the XDG DynamicLauncher

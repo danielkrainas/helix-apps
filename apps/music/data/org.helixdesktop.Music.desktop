@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Music
+Comment=Play and organize your music collection
+Keywords=Music;Player;Songs;Album;Artist;Playlist;
+Exec=helix-music
+Icon=org.helixdesktop.Music
+Terminal=false
+Type=Application
+Categories=GTK;AudioVideo;Audio;Player;
+StartupNotify=true
+DBusActivatable=false

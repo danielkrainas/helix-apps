@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Tour
+Comment=Get to know the Helix desktop
+TryExec=helix-tour
+Exec=helix-tour --autostart
+Icon=org.helixdesktop.Tour
+Terminal=false
+NoDisplay=true
+OnlyShowIn=Helix;
+X-GNOME-Autostart-enabled=true

@@ -78,7 +78,7 @@ pub fn suspend_delays() -> Vec<Choice<i64>> {
     )
 }
 
-/// `org.helix.shell banner-ignore-timeout` and
+/// `org.helixdesktop.shell banner-ignore-timeout` and
 /// `critical-banner-ignore-timeout` presets (seconds; 0 = never).
 pub fn banner_ignore_timeouts() -> Vec<Choice<i64>> {
     duration_choices(&[0, 10, 30, 60, 300], Some(tr("Never")))
@@ -346,7 +346,7 @@ mod tests {
 
     #[test]
     fn compat_schema_has_nicks() {
-        let xml = include_str!("../data/org.helix.Settings.gnome-compat.gschema.xml");
+        let xml = include_str!("../data/org.helixdesktop.Settings.gnome-compat.gschema.xml");
         let nicks = ACCENT_COLORS
             .iter()
             .map(|c| c.0)

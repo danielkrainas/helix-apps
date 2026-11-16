@@ -22,7 +22,7 @@ use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 use helix_app_common::trnf;
 
-pub const APP_ID: &str = "org.helix.Music";
+pub const APP_ID: &str = "org.helixdesktop.Music";
 pub const APP_NAME: &str = n_("Music");
 pub const DATA: &str = "helix-music";
 const SCHEMA: &str = "org.gnome.Music";

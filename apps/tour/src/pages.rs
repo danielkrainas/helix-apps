@@ -85,7 +85,7 @@ pub const PAGES: &[Page] = &[
 
 /// Index of the page that carries the "Learn More" link.
 pub const HELP_PAGE: usize = 5;
-pub const PROJECT_URL: &str = "https://github.com/danielkrainas/helix-desktop";
+pub const PROJECT_URL: &str = "https://helixdesktop.org";
 
 #[cfg(test)]
 mod tests {

@@ -14,7 +14,7 @@ use crate::format::{self, NumberFormat, Options};
 use helix_app_common::i18n::{n_, tr};
 use helix_app_common::trf;
 
-pub const APP_ID: &str = "org.helix.Calculator";
+pub const APP_ID: &str = "org.helixdesktop.Calculator";
 const SCHEMA: &str = "org.gnome.calculator";
 const MAX_HISTORY: usize = 100;
 

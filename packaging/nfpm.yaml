@@ -12,7 +12,7 @@ section: gnome
 priority: optional
 maintainer: Daniel Krainas
 vendor: Helix
-homepage: https://github.com/danielkrainas/helix-apps
+homepage: https://helixdesktop.org
 license: CC0-1.0
 description: |-
   Core apps for the Helix desktop

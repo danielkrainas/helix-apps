@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Contacts.
 
-- **App ID**: `org.helix.Contacts`
+- **App ID**: `org.helixdesktop.Contacts`
 - **Binary**: `helix-contacts`
 - **Crate**: `apps/contacts`
 

@@ -16,7 +16,7 @@ use crate::worker;
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 
-pub const APP_ID: &str = "org.helix.Logs";
+pub const APP_ID: &str = "org.helixdesktop.Logs";
 const SCHEMA: &str = "org.gnome.Logs";
 const BATCH: usize = 200;
 const SORT_DESC: &str = "descending-time";

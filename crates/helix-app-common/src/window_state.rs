@@ -334,7 +334,7 @@ mod tests {
     fn settings_store_without_schema_uses_the_file() {
         std::env::set_var("GSETTINGS_BACKEND", "memory");
         let dir = std::env::temp_dir().join(format!("helix-ws2-{}", std::process::id()));
-        let prefs = Prefs::new("org.helix.NoSuchSchema");
+        let prefs = Prefs::new("org.helixdesktop.NoSuchSchema");
         let store = Store::Settings {
             prefs,
             size: SizeKeys::Pair("window-size"),

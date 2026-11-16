@@ -36,7 +36,7 @@ use std::rc::Rc;
 
 use crate::panels::{self, PanelId};
 
-pub const APP_ID: &str = "org.helix.Settings";
+pub const APP_ID: &str = "org.helixdesktop.Settings";
 const DEFAULT_PANEL: PanelId = PanelId::Appearance;
 
 /// A settings panel implementation.

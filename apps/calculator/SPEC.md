@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Calculator.
 
-- **App ID**: `org.helix.Calculator`
+- **App ID**: `org.helixdesktop.Calculator`
 - **Binary**: `helix-calculator`
 - **Crate**: `apps/calculator`
 

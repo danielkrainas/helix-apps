@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Characters.
 
-- **App ID**: `org.helix.Characters`
+- **App ID**: `org.helixdesktop.Characters`
 - **Binary**: `helix-characters`
 - **Crate**: `apps/characters`
 

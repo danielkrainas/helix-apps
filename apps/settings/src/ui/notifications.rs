@@ -12,13 +12,13 @@ use helix_app_common::Prefs;
 
 const NOTIFICATIONS: &str = "org.gnome.desktop.notifications";
 const APP_SCHEMA: &str = "org.gnome.desktop.notifications.application";
-/// Helix's shell settings (helix-desktop-spec
-/// `contracts/gsettings/org.helix.shell.md`).
-const SHELL: &str = "org.helix.shell";
+/// Helix's shell settings (helixdesktop/spec
+/// `contracts/gsettings/org.helixdesktop.shell.md`).
+const SHELL: &str = "org.helixdesktop.shell";
 const BANNER_TIMEOUT: &str = "banner-ignore-timeout";
 const CRITICAL_BANNER_TIMEOUT: &str = "critical-banner-ignore-timeout";
 
-/// The banner ignore-timeout keys the installed `org.helix.shell` has
+/// The banner ignore-timeout keys the installed `org.helixdesktop.shell` has
 /// (an older helix-desktop has neither), with their defaults.
 fn banner_timeout_keys(shell: &Prefs) -> Vec<(&'static str, i64)> {
     [(BANNER_TIMEOUT, 10), (CRITICAL_BANNER_TIMEOUT, 30)]
@@ -144,18 +144,18 @@ mod tests {
     use super::*;
     use crate::ui::widgets::{get_num, set_num};
 
-    /// helix-desktop's `org.helix.shell` with the timeout keys, and an
+    /// helix-desktop's `org.helixdesktop.shell` with the timeout keys, and an
     /// older one without them.
-    const NEW_SHELL: &str = r#"<schemalist><schema id="org.helix.shell" path="/org/helix/shell/">
+    const NEW_SHELL: &str = r#"<schemalist><schema id="org.helixdesktop.shell" path="/org/helixdesktop/shell/">
         <key name="panel-left" type="as"><default>[]</default></key>
         <key name="banner-ignore-timeout" type="u"><range min="0" max="600"/><default>10</default></key>
         <key name="critical-banner-ignore-timeout" type="u"><range min="0" max="600"/><default>30</default></key>
         </schema></schemalist>"#;
-    const OLD_SHELL: &str = r#"<schemalist><schema id="org.helix.shell" path="/org/helix/shell/">
+    const OLD_SHELL: &str = r#"<schemalist><schema id="org.helixdesktop.shell" path="/org/helixdesktop/shell/">
         <key name="panel-left" type="as"><default>[]</default></key>
         </schema></schemalist>"#;
 
-    /// `org.helix.shell` compiled from `xml` in a scratch directory, on a
+    /// `org.helixdesktop.shell` compiled from `xml` in a scratch directory, on a
     /// memory backend; `None` when glib-compile-schemas is unavailable.
     fn shell_prefs(name: &str, xml: &str) -> Option<Prefs> {
         let dir = std::env::temp_dir().join(format!(
@@ -163,7 +163,7 @@ mod tests {
             std::process::id()
         ));
         std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("org.helix.shell.gschema.xml"), xml).unwrap();
+        std::fs::write(dir.join("org.helixdesktop.shell.gschema.xml"), xml).unwrap();
         let compiled = std::process::Command::new("glib-compile-schemas")
             .arg("--strict")
             .arg(&dir)
@@ -194,8 +194,8 @@ mod tests {
             return;
         };
         assert!(banner_timeout_keys(&old).is_empty());
-        // No org.helix.shell at all.
-        assert!(banner_timeout_keys(&Prefs::new("org.helix.NoSuchShell")).is_empty());
+        // No org.helixdesktop.shell at all.
+        assert!(banner_timeout_keys(&Prefs::new("org.helixdesktop.NoSuchShell")).is_empty());
     }
 
     #[test]

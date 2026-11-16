@@ -14,7 +14,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 use webkit6::prelude::*;
 
-const APP_ID: &str = "org.helix.Help";
+const APP_ID: &str = "org.helixdesktop.Help";
 const SCHEMA: &str = "org.gnome.yelp";
 const SCHEMES: &[&str] = &["help", "ghelp", "help-list"];
 

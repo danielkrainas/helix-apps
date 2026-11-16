@@ -3,7 +3,7 @@
 //! installed launcher starts (`helix-web --web-app=ID URL`).
 //!
 //! Each web app runs as its own application instance with the ID
-//! `org.helix.Web.WebApp_<ID>` and keeps its own WebKit data in
+//! `org.helixdesktop.Web.WebApp_<ID>` and keeps its own WebKit data in
 //! `$XDG_DATA_HOME/helix-web/web-apps/<ID>/`.
 
 use helix_app_common::i18n::tr;
@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use zbus::blocking::{Connection, Proxy};
 use zbus::zvariant::{OwnedObjectPath, OwnedValue, Value};
 
-pub const APP_ID_PREFIX: &str = "org.helix.Web.WebApp_";
+pub const APP_ID_PREFIX: &str = "org.helixdesktop.Web.WebApp_";
 /// Desktop entry key recording the start URL.
 pub const URL_KEY: &str = "X-Helix-Web-App-Url";
 
@@ -451,12 +451,12 @@ mod tests {
         assert!(e.starts_with("[Desktop Entry]\nType=Application\n"));
         assert!(e.contains("Exec=/usr/bin/helix-web --web-app=mail_abc123 \"https://mail.example.com/inbox?x=1 Exec=evil\"\n"));
         assert!(!e.lines().any(|l| l.starts_with("Exec=evil")));
-        assert!(e.contains("StartupWMClass=org.helix.Web.WebApp_mail_abc123\n"));
+        assert!(e.contains("StartupWMClass=org.helixdesktop.Web.WebApp_mail_abc123\n"));
         assert!(!e.contains("\nName="));
         assert!(!e.contains("\nIcon="));
         assert_eq!(
             app.desktop_file_id(),
-            "org.helix.Web.WebApp_mail_abc123.desktop"
+            "org.helixdesktop.Web.WebApp_mail_abc123.desktop"
         );
     }
 

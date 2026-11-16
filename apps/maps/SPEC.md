@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Maps.
 
-- **App ID**: `org.helix.Maps`
+- **App ID**: `org.helixdesktop.Maps`
 - **Binary**: `helix-maps`
 - **Crate**: `apps/maps`
 
@@ -238,7 +238,7 @@ separate cache directory).
 - `--help`, `--version`.
 
 ### Packaging
-- `data/org.helix.Maps.desktop` (handles `x-scheme-handler/geo` and
+- `data/org.helixdesktop.Maps.desktop` (handles `x-scheme-handler/geo` and
   `x-scheme-handler/maps`). Installs to `$prefix/share/applications`.
 - `data/org.gnome.Maps.gschema.xml`: the used `org.gnome.Maps` keys, for
   `$prefix/share/glib-2.0/schemas` — install only when the system does not

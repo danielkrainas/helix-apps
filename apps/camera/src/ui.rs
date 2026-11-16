@@ -21,7 +21,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::time::Instant;
 
-pub const APP_ID: &str = "org.helix.Camera";
+pub const APP_ID: &str = "org.helixdesktop.Camera";
 
 struct Ui {
     window: adw::ApplicationWindow,

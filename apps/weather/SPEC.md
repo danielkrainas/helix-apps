@@ -2,7 +2,7 @@
 
 Drop-in replacement for GNOME Weather.
 
-- **App ID**: `org.helix.Weather`
+- **App ID**: `org.helixdesktop.Weather`
 - **Binary**: `helix-weather`
 - **Crate**: `apps/weather`
 
@@ -156,7 +156,7 @@ WMO codes map to a description and a standard symbolic icon
   on, and at every 30-minute auto-refresh: the XDG **Location portal**
   (`CreateSession` with city accuracy, `Start`, first `LocationUpdated`,
   `Session.Close`), falling back to **GeoClue2** on the system bus
-  (`DesktopId` = `org.helix.Weather`, city accuracy). Worker thread, 30 s
+  (`DesktopId` = `org.helixdesktop.Weather`, city accuracy). Worker thread, 30 s
   timeout.
 - **Reverse geocoding**: (1) offline, the nearest `<city>` within 50 km in
   the GWeather database gives the name, region (state), country and time

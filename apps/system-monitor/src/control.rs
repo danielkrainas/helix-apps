@@ -1,7 +1,7 @@
 //! Process control: signals and priority changes. Processes the current user
 //! owns are handled directly; other users' processes (and raising priority,
 //! which needs CAP_SYS_NICE) go through the privileged helper run with
-//! `pkexec` under the polkit action `org.helix.SystemMonitor.manage-processes`.
+//! `pkexec` under the polkit action `org.helixdesktop.SystemMonitor.manage-processes`.
 
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
@@ -111,8 +111,8 @@ pub fn renice(pid: i32, nice: i32) -> Result<(), Error> {
 
 /// Installed location of the helper; must match the
 /// `org.freedesktop.policykit.exec.path` annotation of the polkit action
-/// `org.helix.SystemMonitor.manage-processes`
-/// (`data/org.helix.SystemMonitor.policy`).
+/// `org.helixdesktop.SystemMonitor.manage-processes`
+/// (`data/org.helixdesktop.SystemMonitor.policy`).
 pub const HELPER_PATH: &str = "/usr/libexec/helix-system-monitor/helix-system-monitor-helper";
 
 /// Helper path, overridable with `HELIX_SYSTEM_MONITOR_HELPER` for

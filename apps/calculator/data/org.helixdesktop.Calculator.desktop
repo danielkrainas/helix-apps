@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Calculator
+Comment=Perform arithmetic, scientific or financial calculations
+Keywords=calculation;arithmetic;scientific;financial;programming;
+Exec=helix-calculator
+Icon=org.helixdesktop.Calculator
+Terminal=false
+Type=Application
+Categories=GTK;Utility;Calculator;
+StartupNotify=true
+DBusActivatable=false
