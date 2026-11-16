@@ -133,7 +133,17 @@ impl Library {
         let mut start_page = None;
         let content = match found.format {
             Format::Mallard => {
-                let m = MallardDoc::load(&found.dir)?;
+                // Pages missing from a translation come from the next
+                // locale's copy (in the end the untranslated one).
+                let dirs: Vec<PathBuf> = match doc {
+                    DocRef::Id(id) => discovery::find_all(id, &self.dirs, &self.locales)
+                        .into_iter()
+                        .filter(|f| f.format == Format::Mallard)
+                        .map(|f| f.dir)
+                        .collect(),
+                    DocRef::Path(_) => vec![found.dir.clone()],
+                };
+                let m = MallardDoc::load_dirs(&dirs)?;
                 if let DocRef::Path(p) = doc {
                     if p.is_file() {
                         start_page = m
@@ -225,7 +235,7 @@ impl Library {
                 let uri = file_uri(&d.found.entry);
                 Some((
                     d.title(),
-                    html::page(
+                    html::ui_page(
                         &d.title(),
                         &format!(
                             "<meta http-equiv=\"refresh\" content=\"0;url={0}\"><p><a href=\"{0}\">{1}</a></p>",
@@ -249,16 +259,23 @@ impl Library {
     }
 
     fn resource(&self, doc: &DocRef, rel: &str) -> Option<Response> {
-        let f = self.resolve(doc)?;
-        let base = f.dir.canonicalize().ok()?;
-        let path = base.join(rel).canonicalize().ok()?;
-        if !path.starts_with(&base) || !path.is_file() {
-            return None;
-        }
-        let body = std::fs::read(&path).ok()?;
-        Some(Response {
-            mime: html::guess_mime(rel).to_string(),
-            body,
+        // A figure missing from a translation comes from the next copy, as
+        // pages do.
+        let copies = match doc {
+            DocRef::Id(id) => discovery::find_all(id, &self.dirs, &self.locales),
+            DocRef::Path(_) => self.resolve(doc).into_iter().collect(),
+        };
+        copies.iter().find_map(|f| {
+            let base = f.dir.canonicalize().ok()?;
+            let path = base.join(rel).canonicalize().ok()?;
+            if !path.starts_with(&base) || !path.is_file() {
+                return None;
+            }
+            let body = std::fs::read(&path).ok()?;
+            Some(Response {
+                mime: html::guess_mime(rel).to_string(),
+                body,
+            })
         })
     }
 
@@ -282,7 +299,7 @@ impl Library {
             }
             body.push_str("</ul>");
         }
-        html::page(tr("Help"), &body)
+        html::ui_page(tr("Help"), &body)
     }
 
     fn search_all(&self, q: &str) -> String {
@@ -324,7 +341,7 @@ fn mallard_listing(docref: &DocRef, m: &MallardDoc) -> (String, String) {
         escape(tr("Pages")),
         html::link_list("links-topic", None, &items)
     );
-    (tr("Pages").into(), html::page(tr("Pages"), &body))
+    (tr("Pages").into(), html::ui_page(tr("Pages"), &body))
 }
 
 fn result_item(docref: &DocRef, e: &search::Entry, q: &str, doc_title: Option<&str>) -> String {
@@ -368,7 +385,7 @@ fn results_page(q: &str, items: &[String], back: Option<(String, String)>) -> St
             items.concat()
         ));
     }
-    html::page(&trf!("Search: {q}", q = q), &body)
+    html::ui_page(&trf!("Search: {q}", q = q), &body)
 }
 
 fn search_page(docref: &DocRef, d: &LoadedDoc, q: &str) -> String {
@@ -427,6 +444,71 @@ mod tests {
 
     fn body(r: Response) -> String {
         String::from_utf8(r.body).unwrap()
+    }
+
+    #[test]
+    fn pages_state_their_language() {
+        let root = std::env::temp_dir().join(format!("helix-help-lang-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        let page = |dir: &Path, id: &str, attrs: &str, title: &str| {
+            fs::create_dir_all(dir).unwrap();
+            fs::write(
+                dir.join(format!("{id}.page")),
+                format!(
+                    "<page {NS} id=\"{id}\"{attrs}><info><link type=\"guide\" xref=\"index\"/></info>\
+                     <title>{title}</title></page>"
+                ),
+            )
+            .unwrap();
+        };
+        let de = root.join("help/de/fixture");
+        let c = root.join("help/C/fixture");
+        page(&de, "index", "", "Hilfe");
+        page(&de, "wifi", "", "Drahtlose Netzwerke");
+        page(&de, "quoted", " xml:lang=\"de-CH\"", "Zitat");
+        page(&c, "index", "", "Help");
+        page(&c, "wifi", "", "Wireless networks");
+        page(&c, "print", "", "Printing");
+        let db = root.join("help/fr/manual");
+        fs::create_dir_all(&db).unwrap();
+        fs::write(
+            db.join("index.docbook"),
+            "<book><title>Manuel</title><chapter id=\"a\"><title>Un</title><para>x</para></chapter></book>",
+        )
+        .unwrap();
+        let lib = Library::new(
+            vec![root.join("help")],
+            vec!["de".into(), "fr".into(), "C".into()],
+        );
+        let cwd = Path::new("/");
+        let get = |u: &str| body(lib.respond(&uri::parse(u, cwd)));
+        let lang_of = |h: &str| {
+            let a = h.find("<html lang=\"").expect("page states its language") + 12;
+            h[a..a + h[a..].find('"').unwrap()].to_string()
+        };
+
+        // Translated pages say so; a page the translation lacks falls back
+        // to the untranslated copy and says it is English.
+        let index = get("help:fixture");
+        assert!(index.contains("Hilfe"));
+        assert_eq!(lang_of(&index), "de");
+        let wifi = get("help:fixture/wifi");
+        assert!(wifi.contains("Drahtlose Netzwerke"));
+        assert_eq!(lang_of(&wifi), "de");
+        let print = get("help:fixture/print");
+        assert!(print.contains("Printing"));
+        assert_eq!(lang_of(&print), "en");
+        // A page's own xml:lang wins.
+        assert_eq!(lang_of(&get("help:fixture/quoted")), "de-CH");
+        // DocBook: the language of its directory.
+        assert_eq!(lang_of(&get("help:manual")), "fr");
+        assert_eq!(lang_of(&get("help:manual/a")), "fr");
+        // Help's own pages are in the language of its interface.
+        let ui = crate::locale::ui_lang();
+        assert_eq!(lang_of(&get("help:")), ui);
+        assert_eq!(lang_of(&get("help:nope")), ui);
+        assert_eq!(lang_of(&get("help:?search=printing")), ui);
+        fs::remove_dir_all(&root).unwrap();
     }
 
     #[test]

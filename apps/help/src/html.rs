@@ -5,10 +5,14 @@ use helix_app_common::i18n::tr;
 
 pub const CSS: &str = include_str!("style.css");
 
-/// Wraps rendered body markup in a complete HTML document.
-pub fn page(title: &str, body: &str) -> String {
+/// Wraps rendered body markup in a complete HTML document in language
+/// `lang` (a BCP 47 tag; `None` when it is not known).
+pub fn page(lang: Option<&str>, title: &str, body: &str) -> String {
+    let lang = lang
+        .map(|l| format!(" lang=\"{}\"", escape_attr(l)))
+        .unwrap_or_default();
     format!(
-        "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\">\
+        "<!DOCTYPE html>\n<html{lang}><head><meta charset=\"utf-8\">\
          <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
          <meta name=\"color-scheme\" content=\"light dark\">\
          <title>{}</title><style>{CSS}</style></head>\
@@ -32,8 +36,13 @@ pub fn trail(items: &[(String, String)]) -> String {
     )
 }
 
+/// A page of Help's own, in the language of its interface.
+pub fn ui_page(title: &str, body: &str) -> String {
+    page(Some(crate::locale::ui_lang()), title, body)
+}
+
 pub fn error_page(title: &str, message: &str) -> String {
-    page(
+    ui_page(
         title,
         &format!(
             "<h1>{}</h1><p class=\"error\">{}</p><p><a href=\"help:\">{}</a></p>",

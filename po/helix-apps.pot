@@ -2549,8 +2549,8 @@ msgstr ""
 msgid "Code point"
 msgstr ""
 
-#: apps/characters/src/ui.rs:600 apps/help/src/mallard.rs:513
-#: apps/help/src/mallard.rs:1032
+#: apps/characters/src/ui.rs:600 apps/help/src/mallard.rs:535
+#: apps/help/src/mallard.rs:1057
 msgid "See Also"
 msgstr ""
 
@@ -4061,7 +4061,7 @@ msgstr ""
 
 #: apps/disk-usage/src/ui.rs:1004 apps/disks/src/ui.rs:457
 #: apps/files/src/ui/properties.rs:129 apps/files/src/ui/properties.rs:232
-#: apps/help/src/docbook.rs:316 apps/help/src/ui.rs:400
+#: apps/help/src/docbook.rs:326 apps/help/src/ui.rs:400
 msgid "Contents"
 msgstr ""
 
@@ -5689,7 +5689,7 @@ msgstr ""
 
 #: apps/document-scanner/src/shortcuts.rs:28
 #: apps/document-viewer/src/dialogs.rs:105 apps/document-viewer/src/ui.rs:532
-#: apps/help/src/library.rs:324 apps/help/src/library.rs:327
+#: apps/help/src/library.rs:341 apps/help/src/library.rs:344
 msgid "Pages"
 msgstr ""
 
@@ -8023,7 +8023,7 @@ msgstr ""
 msgid "manual"
 msgstr ""
 
-#: apps/help/src/html.rs:42
+#: apps/help/src/html.rs:51
 msgid "All help documents"
 msgstr ""
 
@@ -8035,57 +8035,61 @@ msgstr ""
 msgid "No help document was found at {}."
 msgstr ""
 
-#: apps/help/src/library.rs:199
+#: apps/help/src/library.rs:209
 msgid "Document Not Found"
 msgstr ""
 
-#: apps/help/src/library.rs:212
+#: apps/help/src/library.rs:222
 msgid "External Link"
 msgstr ""
 
-#: apps/help/src/library.rs:233
+#: apps/help/src/library.rs:243
 msgid "Open {title}"
 msgstr ""
 
-#: apps/help/src/library.rs:242
+#: apps/help/src/library.rs:252
 msgid "Page Not Found"
 msgstr ""
 
-#: apps/help/src/library.rs:243
+#: apps/help/src/library.rs:253
 msgid "The page “{page}” was not found in this document."
 msgstr ""
 
-#: apps/help/src/library.rs:267 apps/help/src/library.rs:285
+#: apps/help/src/library.rs:284 apps/help/src/library.rs:302
 #: apps/help/src/ui.rs:45 apps/help/src/ui.rs:59 apps/help/src/ui.rs:371
 #: apps/help/src/ui.rs:419 apps/help/src/ui.rs:469
 msgid "Help"
 msgstr ""
 
-#: apps/help/src/library.rs:271
+#: apps/help/src/library.rs:288
 msgid "No help documents are installed."
 msgstr ""
 
-#: apps/help/src/library.rs:358
+#: apps/help/src/library.rs:375
 msgid "Search results for “{q}”"
 msgstr ""
 
-#: apps/help/src/library.rs:363
+#: apps/help/src/library.rs:380
 msgid "No matching pages were found."
 msgstr ""
 
-#: apps/help/src/library.rs:371
+#: apps/help/src/library.rs:388
 msgid "Search: {q}"
 msgstr ""
 
-#: apps/help/src/mallard.rs:177
+#: apps/help/src/mallard.rs:181
 msgid "{}: not a Mallard page"
 msgstr ""
 
-#: apps/help/src/mallard.rs:228
+#: apps/help/src/mallard.rs:222
+msgid "No help document was given."
+msgstr ""
+
+#: apps/help/src/mallard.rs:250
 msgid "{}: no Mallard pages"
 msgstr ""
 
-#: apps/help/src/mallard.rs:526 apps/help/src/mallard.rs:1048
+#: apps/help/src/mallard.rs:548 apps/help/src/mallard.rs:1073
 msgid "More Information"
 msgstr ""
 

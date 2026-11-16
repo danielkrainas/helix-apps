@@ -11,6 +11,7 @@ use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
 pub const IF_NS: &str = "http://projectmallard.org/if/1.0/";
+const XML_NS: &str = "http://www.w3.org/XML/1998/namespace";
 
 /// Tokens that are true for `if:test` conditionals.
 const TRUE_TOKENS: &[&str] = &[
@@ -92,6 +93,9 @@ pub struct Page {
     pub sections: Vec<Target>,
     pub body: String,
     pub source: String,
+    /// The page's language (BCP 47): its `xml:lang`, else that of the
+    /// help directory it was read from.
+    pub lang: Option<String>,
 }
 
 #[derive(Debug, Default)]
@@ -191,6 +195,11 @@ pub fn parse_page(source: String, path: PathBuf) -> Result<Page, String> {
         })
         .collect();
     let body = body_text(root);
+    let lang = root
+        .attribute((XML_NS, "lang"))
+        .filter(|l| !l.is_empty())
+        .map(str::to_string)
+        .or_else(|| path.parent().and_then(crate::locale::dir_lang));
     drop(doc);
     Ok(Page {
         id,
@@ -199,29 +208,42 @@ pub fn parse_page(source: String, path: PathBuf) -> Result<Page, String> {
         sections,
         body,
         source,
+        lang,
     })
 }
 
 impl MallardDoc {
-    /// Loads every `*.page` file in `dir`.
-    pub fn load(dir: &Path) -> Result<MallardDoc, String> {
+    /// Loads a document from its directories in order of preference (one
+    /// per locale, a translation before the untranslated `C` copy): each
+    /// page comes from the first directory that has it, so a page missing
+    /// from a translation is shown in the original language.
+    pub fn load_dirs(dirs: &[PathBuf]) -> Result<MallardDoc, String> {
+        let Some(dir) = dirs.first() else {
+            return Err(tr("No help document was given.").into());
+        };
         let mut doc = MallardDoc {
-            dir: dir.to_path_buf(),
+            dir: dir.clone(),
             pages: BTreeMap::new(),
         };
-        let rd = std::fs::read_dir(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-        let mut files: Vec<PathBuf> = rd
-            .flatten()
-            .map(|e| e.path())
-            .filter(|p| p.extension().is_some_and(|e| e == "page"))
-            .collect();
-        files.sort();
-        for f in files {
-            match xmlutil::read_flat(&f).and_then(|src| parse_page(src, f.clone())) {
-                Ok(p) => {
-                    doc.pages.entry(p.id.clone()).or_insert(p);
+        for (i, dir) in dirs.iter().enumerate() {
+            let rd = match std::fs::read_dir(dir) {
+                Ok(rd) => rd,
+                Err(e) if i == 0 => return Err(format!("{}: {e}", dir.display())),
+                Err(_) => continue,
+            };
+            let mut files: Vec<PathBuf> = rd
+                .flatten()
+                .map(|e| e.path())
+                .filter(|p| p.extension().is_some_and(|e| e == "page"))
+                .collect();
+            files.sort();
+            for f in files {
+                match xmlutil::read_flat(&f).and_then(|src| parse_page(src, f.clone())) {
+                    Ok(p) => {
+                        doc.pages.entry(p.id.clone()).or_insert(p);
+                    }
+                    Err(e) => eprintln!("helix-help: {e}"),
                 }
-                Err(e) => eprintln!("helix-help: {e}"),
             }
         }
         if doc.pages.is_empty() {
@@ -530,7 +552,10 @@ impl MallardDoc {
         let title = xmlutil::child(root, "title")
             .map(xmlutil::text_of)
             .unwrap_or_else(|| page.meta.title.clone());
-        Some((title.clone(), html::page(&title, &body)))
+        Some((
+            title.clone(),
+            html::page(page.lang.as_deref(), &title, &body),
+        ))
     }
 }
 

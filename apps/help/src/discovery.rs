@@ -117,17 +117,24 @@ pub fn detect_path(path: &Path) -> Option<Found> {
 /// in order. Locales take precedence over directories, so a translation in
 /// `/usr/share` beats an untranslated copy in `~/.local/share`.
 pub fn find(id: &str, dirs: &[PathBuf], locales: &[String]) -> Option<Found> {
+    find_all(id, dirs, locales).into_iter().next()
+}
+
+/// Every copy of document `id`, in the order [`find`] prefers them (the
+/// first is what `find` returns).
+pub fn find_all(id: &str, dirs: &[PathBuf], locales: &[String]) -> Vec<Found> {
     if id.is_empty() || id.contains('/') || id.starts_with('.') {
-        return None;
+        return Vec::new();
     }
+    let mut out = Vec::new();
     for loc in locales {
         for d in dirs {
             if let Some(f) = detect_dir(&d.join(loc).join(id), id) {
-                return Some(f);
+                out.push(f);
             }
         }
     }
-    None
+    out
 }
 
 /// Every document id available in any of the locales.

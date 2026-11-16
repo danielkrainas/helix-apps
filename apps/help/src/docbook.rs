@@ -30,6 +30,9 @@ pub struct DocBookDoc {
     /// Element id → containing chunk id (`index` for the root page).
     pub ids: HashMap<String, String>,
     pub entries: Vec<search::Entry>,
+    /// The document's language (BCP 47): its root's `lang` or `xml:lang`,
+    /// else that of the help directory it was read from.
+    pub lang: Option<String>,
     source: String,
 }
 
@@ -179,7 +182,7 @@ impl DocBookDoc {
     }
 
     pub fn from_source(source: String, dir: PathBuf, entry: PathBuf) -> Result<DocBookDoc, String> {
-        let (title, chunks, ids, entries) = {
+        let (title, chunks, ids, entries, lang) = {
             let doc = xmlutil::parse(&source).map_err(|e| format!("{}: {e}", entry.display()))?;
             let root = doc.root_element();
             let title = title_of(root);
@@ -230,8 +233,14 @@ impl DocBookDoc {
                     ids.entry(id.to_string()).or_insert(owner);
                 }
             }
-            (title, chunks, ids, entries)
+            let lang = root
+                .attribute("lang")
+                .or_else(|| root.attribute((XML_NS, "lang")))
+                .filter(|l| !l.is_empty())
+                .map(str::to_string);
+            (title, chunks, ids, entries, lang)
         };
+        let lang = lang.or_else(|| crate::locale::dir_lang(&dir));
         Ok(DocBookDoc {
             dir,
             entry,
@@ -239,6 +248,7 @@ impl DocBookDoc {
             chunks,
             ids,
             entries,
+            lang,
             source,
         })
     }
@@ -407,7 +417,10 @@ impl DocBookDoc {
                 body.push_str("</span></nav>");
             }
         }
-        Some((title.clone(), html::page(&title, &body)))
+        Some((
+            title.clone(),
+            html::page(self.lang.as_deref(), &title, &body),
+        ))
     }
 }
 
