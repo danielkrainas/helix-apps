@@ -115,6 +115,15 @@ Web browser.
   History, Passwords, Import Bookmarks…, Export Bookmarks…, Preferences,
   Keyboard Shortcuts, About Web. The web-app menu also has Keyboard
   Shortcuts. The shortcuts window (Ctrl+?) lists every accelerator below.
+- Narrow windows: the minimum size is 360×294 (the suite's; also for the
+  sandbox-failure window). Below 600 sp an `AdwBreakpoint` moves Back,
+  Forward, Reload, Home (start) and Reader View, Bookmarks, Downloads and
+  the tab overview button (end) into a bottom bar (the same widgets, so
+  their state, popovers and focus order go along); the address entry and
+  the main menu stay in the header; the "Private" pill becomes an icon;
+  permission and password prompt bars put their buttons below the
+  message. `HELIX_A11Y_CHECK=size` shrinks the window to 360×294 and
+  reports content that does not fit or controls that are cut off.
 - Ctrl+Shift+W closes the window (Ctrl+W closes the tab).
 - Private windows: title "Private Browsing", header bar carries a
   "Private" indicator icon, and they never appear in the saved session.

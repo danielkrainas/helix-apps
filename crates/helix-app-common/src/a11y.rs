@@ -595,6 +595,82 @@ fn size_problems(window: &gtk::Window, shrunk: bool) -> Vec<String> {
                 ));
             }
         }
+        out.extend(clipped_controls(window));
+    }
+    out
+}
+
+/// Visible controls (buttons, entries, switches, …) that the window cuts
+/// off, so they cannot be reached: their bounds reach past the window's.
+#[doc(hidden)]
+pub fn clipped_controls(window: &gtk::Window) -> Vec<String> {
+    // The content's area (the window's own bounds include shadows).
+    let Some(area) = window.child().and_then(|c| c.compute_bounds(window)) else {
+        return Vec::new();
+    };
+    let (x0, y0) = (area.x(), area.y());
+    let (w, h) = (area.x() + area.width(), area.y() + area.height());
+    let mut out = Vec::new();
+    // The content only: a GtkWindow's own title bar sits outside it.
+    let mut stack: Vec<gtk::Widget> = window
+        .child()
+        .and_then(|c| c.first_child())
+        .into_iter()
+        .collect();
+    while let Some(widget) = stack.pop() {
+        if let Some(next) = widget.next_sibling() {
+            stack.push(next);
+        }
+        // Scrolled content is reached by scrolling; popovers are their
+        // own surfaces.
+        if !widget.is_visible()
+            || !widget.is_mapped()
+            || widget.is::<gtk::ScrolledWindow>()
+            || widget.is::<gtk::Popover>()
+        {
+            continue;
+        }
+        let control = widget.is::<gtk::Button>()
+            || widget.is::<gtk::MenuButton>()
+            || widget.is::<gtk::Entry>()
+            || widget.is::<gtk::SearchEntry>()
+            || widget.is::<gtk::Switch>()
+            || widget.is::<gtk::DropDown>();
+        if control {
+            if let Some(b) = widget.compute_bounds(window) {
+                let slack = 1.0;
+                if b.x() < x0 - slack
+                    || b.y() < y0 - slack
+                    || b.x() + b.width() > w + slack
+                    || b.y() + b.height() > h + slack
+                    || b.width() < 1.0
+                {
+                    let name = widget
+                        .tooltip_text()
+                        .map(|t| t.to_string())
+                        .or_else(|| {
+                            widget
+                                .downcast_ref::<gtk::Button>()
+                                .and_then(|b| b.label())
+                                .map(|l| l.to_string())
+                        })
+                        .unwrap_or_else(|| widget.type_().name().to_string());
+                    out.push(format!(
+                        "“{name}” is cut off at {:.0},{:.0} {:.0}×{:.0} in a {:.0}×{:.0} window",
+                        b.x() - x0,
+                        b.y() - y0,
+                        b.width(),
+                        b.height(),
+                        w - x0,
+                        h - y0
+                    ));
+                }
+            }
+            continue;
+        }
+        if let Some(child) = widget.first_child() {
+            stack.push(child);
+        }
     }
     out
 }
@@ -603,7 +679,8 @@ fn size_problems(window: &gtk::Window, shrunk: bool) -> Vec<String> {
 /// inputs of every window `app` shows (see the module docs), and main
 /// windows whose minimum size is not [`MIN_WIDTH`] × [`MIN_HEIGHT`]. With
 /// `HELIX_A11Y_CHECK=size` each main window is also shrunk to that size
-/// once it is shown, and reported if its content keeps it larger. The
+/// once it is shown, and reported if its content keeps it larger or cuts
+/// off a control (a button, entry, switch, …). The
 /// check repeats every two seconds, so rows, pages and dialogs shown later
 /// are covered; each problem is reported once.
 pub fn install_check(app: &impl IsA<gtk::Application>) {

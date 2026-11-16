@@ -325,6 +325,8 @@ pub fn failure_window(
         .title(app_name)
         .default_width(680)
         .default_height(640)
+        .width_request(helix_app_common::MIN_WIDTH)
+        .height_request(helix_app_common::MIN_HEIGHT)
         .content(&view)
         .build()
 }
