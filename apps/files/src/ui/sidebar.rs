@@ -54,6 +54,126 @@ fn themed(name: &str) -> gio::Icon {
     gio::ThemedIcon::new(name).upcast()
 }
 
+fn location(label: &str, icon: &str, file: gio::File, section: u8) -> Place {
+    Place {
+        kind: Kind::Location(file),
+        section,
+        label: label.into(),
+        icon: themed(icon),
+    }
+}
+
+/// The places that are always there: Home, Recent, Trash and the user
+/// folders, then Network and Other Locations (the last two).
+fn fixed_places(trash_full: bool) -> Vec<Place> {
+    let home = glib::home_dir();
+    let mut v = vec![
+        location(
+            tr(nc_!("home folder", "Home")),
+            "user-home-symbolic",
+            gio::File::for_path(&home),
+            0,
+        ),
+        location(
+            tr("Recent"),
+            "document-open-recent-symbolic",
+            gio::File::for_uri("recent:///"),
+            0,
+        ),
+        location(
+            tr("Trash"),
+            if trash_full {
+                "user-trash-full-symbolic"
+            } else {
+                "user-trash-symbolic"
+            },
+            gio::File::for_uri("trash:///"),
+            0,
+        ),
+    ];
+    for (dir, icon) in [
+        (glib::UserDirectory::Desktop, "user-desktop-symbolic"),
+        (glib::UserDirectory::Documents, "folder-documents-symbolic"),
+        (glib::UserDirectory::Downloads, "folder-download-symbolic"),
+        (glib::UserDirectory::Music, "folder-music-symbolic"),
+        (glib::UserDirectory::Pictures, "folder-pictures-symbolic"),
+        (glib::UserDirectory::Videos, "folder-videos-symbolic"),
+    ] {
+        if let Some(p) = glib::user_special_dir(dir) {
+            if p != home && p.is_dir() {
+                let name = p
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_default();
+                v.push(location(&name, icon, gio::File::for_path(&p), 1));
+            }
+        }
+    }
+    v.push(location(
+        tr("Network"),
+        "network-workgroup-symbolic",
+        gio::File::for_uri("network:///"),
+        4,
+    ));
+    v.push(location(
+        tr("Other Locations"),
+        "list-add-symbolic",
+        gio::File::for_uri(OTHER_LOCATIONS),
+        4,
+    ));
+    v
+}
+
+fn bookmark_places() -> Vec<Place> {
+    bookmarks::load()
+        .into_iter()
+        .enumerate()
+        .map(|(i, b)| bookmark_place(i, &b))
+        .collect()
+}
+
+fn bookmark_place(i: usize, b: &bookmarks::Bookmark) -> Place {
+    let file = gio::File::for_uri(&b.uri);
+    let icon = if file.is_native() {
+        "folder-symbolic"
+    } else {
+        "folder-remote-symbolic"
+    };
+    Place {
+        kind: Kind::Bookmark(i, file),
+        section: 2,
+        label: b.display_label(),
+        icon: themed(icon),
+    }
+}
+
+/// A sidebar row showing `p`: its icon and label in `content` (where the
+/// eject button goes), its location as the tooltip.
+fn place_row(p: &Place) -> (gtk::ListBoxRow, gtk::Box) {
+    let content = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+    content.append(&gtk::Image::from_gicon(&p.icon));
+    let label = gtk::Label::builder()
+        .label(&p.label)
+        .xalign(0.0)
+        .hexpand(true)
+        .ellipsize(gtk::pango::EllipsizeMode::End)
+        .build();
+    content.append(&label);
+    let row = gtk::ListBoxRow::builder()
+        .child(&content)
+        .tooltip_text(
+            p.file()
+                .map(|f| super::window::display_location(&f))
+                .unwrap_or_default(),
+        )
+        .build();
+    // GTK would name the row after its tooltip (a path or URI such as
+    // "trash:///"); screen readers should say the label.
+    helix_app_common::set_accessible_label(&row, &p.label);
+    row.set_widget_name(&p.section.to_string());
+    (row, content)
+}
+
 impl Sidebar {
     pub fn new(win: &Rc<Window>) -> Rc<Sidebar> {
         let list = gtk::ListBox::new();
@@ -294,72 +414,9 @@ impl Sidebar {
     }
 
     fn collect(&self) -> Vec<Place> {
-        let mut v = Vec::new();
-        let home = glib::home_dir();
-        let loc = |label: &str, icon: &str, file: gio::File, section: u8| Place {
-            kind: Kind::Location(file),
-            section,
-            label: label.into(),
-            icon: themed(icon),
-        };
-        v.push(loc(
-            tr(nc_!("home folder", "Home")),
-            "user-home-symbolic",
-            gio::File::for_path(&home),
-            0,
-        ));
-        v.push(loc(
-            tr("Recent"),
-            "document-open-recent-symbolic",
-            gio::File::for_uri("recent:///"),
-            0,
-        ));
-        let trash_icon = if self.trash_full.get() {
-            "user-trash-full-symbolic"
-        } else {
-            "user-trash-symbolic"
-        };
-        v.push(loc(
-            tr("Trash"),
-            trash_icon,
-            gio::File::for_uri("trash:///"),
-            0,
-        ));
-
-        for (dir, icon) in [
-            (glib::UserDirectory::Desktop, "user-desktop-symbolic"),
-            (glib::UserDirectory::Documents, "folder-documents-symbolic"),
-            (glib::UserDirectory::Downloads, "folder-download-symbolic"),
-            (glib::UserDirectory::Music, "folder-music-symbolic"),
-            (glib::UserDirectory::Pictures, "folder-pictures-symbolic"),
-            (glib::UserDirectory::Videos, "folder-videos-symbolic"),
-        ] {
-            if let Some(p) = glib::user_special_dir(dir) {
-                if p != home && p.is_dir() {
-                    let name = p
-                        .file_name()
-                        .map(|n| n.to_string_lossy().into_owned())
-                        .unwrap_or_default();
-                    v.push(loc(&name, icon, gio::File::for_path(&p), 1));
-                }
-            }
-        }
-
-        for (i, b) in bookmarks::load().into_iter().enumerate() {
-            let file = gio::File::for_uri(&b.uri);
-            let icon = if file.is_native() {
-                "folder-symbolic"
-            } else {
-                "folder-remote-symbolic"
-            };
-            v.push(Place {
-                kind: Kind::Bookmark(i, file),
-                section: 2,
-                label: b.display_label(),
-                icon: themed(icon),
-            });
-        }
-
+        let mut v = fixed_places(self.trash_full.get());
+        let network = v.split_off(v.len() - 2);
+        v.extend(bookmark_places());
         for m in self.monitor.mounts() {
             if m.is_shadowed() {
                 continue;
@@ -382,18 +439,7 @@ impl Sidebar {
                 section: 3,
             });
         }
-        v.push(loc(
-            tr("Network"),
-            "network-workgroup-symbolic",
-            gio::File::for_uri("network:///"),
-            4,
-        ));
-        v.push(loc(
-            tr("Other Locations"),
-            "list-add-symbolic",
-            gio::File::for_uri(OTHER_LOCATIONS),
-            4,
-        ));
+        v.extend(network);
         v
     }
 
@@ -410,15 +456,7 @@ impl Sidebar {
             self.list.remove(&row);
         }
         for (i, p) in places.iter().enumerate() {
-            let b = gtk::Box::new(gtk::Orientation::Horizontal, 10);
-            b.append(&gtk::Image::from_gicon(&p.icon));
-            let label = gtk::Label::builder()
-                .label(&p.label)
-                .xalign(0.0)
-                .hexpand(true)
-                .ellipsize(gtk::pango::EllipsizeMode::End)
-                .build();
-            b.append(&label);
+            let (row, b) = place_row(p);
             if let Kind::Mount(m) = &p.kind {
                 if m.can_eject() || m.can_unmount() {
                     let (verb, spoken) = if m.can_eject() {
@@ -443,18 +481,6 @@ impl Sidebar {
                     b.append(&btn);
                 }
             }
-            let row = gtk::ListBoxRow::builder()
-                .child(&b)
-                .tooltip_text(
-                    p.file()
-                        .map(|f| super::window::display_location(&f))
-                        .unwrap_or_default(),
-                )
-                .build();
-            // GTK would name the row after its tooltip (a path or URI
-            // such as "trash:///"); screen readers should say the label.
-            helix_app_common::set_accessible_label(&row, &p.label);
-            row.set_widget_name(&p.section.to_string());
             let key = p
                 .file()
                 .map_or_else(|| p.label.clone(), |f| f.uri().to_string());
@@ -644,5 +670,120 @@ impl Sidebar {
         glib::idle_add_local_once(move || {
             entry.grab_focus();
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::process::{Child, Command, Stdio};
+
+    /// A private headless GTK display (`gtk4-broadwayd`, reached through a
+    /// socket in the test's runtime directory), with GTK's test
+    /// accessibility backend.
+    struct Headless(Child);
+
+    impl Drop for Headless {
+        fn drop(&mut self) {
+            let _ = self.0.kill();
+            let _ = self.0.wait();
+        }
+    }
+
+    /// Starts [`Headless`] and GTK on it; `None` when it cannot.
+    fn headless_gtk() -> Option<Headless> {
+        // URIs such as network:/// would start gvfs daemons otherwise.
+        std::env::set_var("GIO_USE_VFS", "local");
+        let runtime = glib::user_runtime_dir();
+        let display = 40 + std::process::id() % 500;
+        let web = runtime.join(format!("helix-files-test-web-{display}.socket"));
+        let child = Command::new("gtk4-broadwayd")
+            .arg(format!(":{display}"))
+            .arg("--unixsocket")
+            .arg(&web)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .ok()?;
+        let daemon = Headless(child);
+        // Its display socket is listening once the web one is.
+        for _ in 0..100 {
+            if web.exists() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+        let ready = web.exists();
+        std::fs::remove_file(&web).ok();
+        if !ready {
+            return None;
+        }
+        std::env::set_var("GDK_BACKEND", "broadway");
+        std::env::set_var("BROADWAY_DISPLAY", format!(":{display}"));
+        std::env::set_var("GTK_A11Y", "test");
+        gtk::init().ok()?;
+        Some(daemon)
+    }
+
+    /// `None` when GTK's own accessible label of `widget` is `expected`,
+    /// else what GTK says about it.
+    fn label_mismatch(widget: &impl IsA<gtk::Accessible>, expected: &str) -> Option<String> {
+        use glib::translate::ToGlibPtr;
+        let expected = std::ffi::CString::new(expected).unwrap();
+        // SAFETY: `widget` is a live GtkAccessible; the label property
+        // takes one string argument; the result is NULL or a newly
+        // allocated message.
+        unsafe {
+            let accessible: *mut gtk::ffi::GtkAccessible = widget.as_ref().to_glib_none().0;
+            let message = gtk::ffi::gtk_test_accessible_check_property(
+                accessible,
+                gtk::ffi::GTK_ACCESSIBLE_PROPERTY_LABEL,
+                expected.as_ptr(),
+            );
+            if message.is_null() {
+                return None;
+            }
+            let text = std::ffi::CStr::from_ptr(message)
+                .to_string_lossy()
+                .into_owned();
+            glib::ffi::g_free(message.cast());
+            Some(text)
+        }
+    }
+
+    /// The rows are named by their labels on AT-SPI, not by their
+    /// tooltips (a path or a URI such as "trash:///").
+    #[test]
+    fn rows_are_named_by_their_labels() {
+        let Some(_display) = headless_gtk() else {
+            eprintln!("no headless GTK display (gtk4-broadwayd); skipping");
+            return;
+        };
+        let mut places = fixed_places(false);
+        places.push(bookmark_place(
+            0,
+            &bookmarks::Bookmark {
+                uri: "sftp://example.org/srv/share".into(),
+                label: Some("Shared".into()),
+            },
+        ));
+        let labels: Vec<&str> = places.iter().map(|p| p.label.as_str()).collect();
+        for expected in [
+            "Home",
+            "Recent",
+            "Trash",
+            "Shared",
+            "Network",
+            "Other Locations",
+        ] {
+            assert!(labels.contains(&expected), "{expected} in {labels:?}");
+        }
+        for p in &places {
+            let (row, _) = place_row(p);
+            let tooltip = row.tooltip_text().unwrap_or_default();
+            assert!(!tooltip.is_empty(), "{}", p.label);
+            assert_eq!(label_mismatch(&row, &p.label), None, "{}", p.label);
+            assert!(label_mismatch(&row, &tooltip).is_some(), "{tooltip}");
+        }
     }
 }
