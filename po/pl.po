@@ -285,7 +285,7 @@ msgstr "Zakończenie"
 #: apps/audio-player/src/ui.rs:217 apps/camera/src/ui.rs:280
 #: apps/disk-usage/src/shortcuts.rs:30 apps/document-viewer/src/shortcuts.rs:11
 #: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:11
-#: apps/settings/src/ui/apps.rs:530 apps/settings/src/ui/bluetooth.rs:129
+#: apps/settings/src/ui/apps.rs:600 apps/settings/src/ui/bluetooth.rs:129
 #: apps/settings/src/ui/users.rs:575 apps/text-editor/src/shortcuts.rs:15
 #: apps/web/src/window.rs:2232
 msgid "Open"
@@ -1142,9 +1142,10 @@ msgstr "_Oblicz"
 #: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:656
 #: apps/music/src/pages.rs:1522 apps/music/src/pages.rs:1620
-#: apps/music/src/pages.rs:1682 apps/settings/src/ui/bluetooth.rs:647
-#: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
-#: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
+#: apps/music/src/pages.rs:1682 apps/settings/src/ui/apps.rs:553
+#: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
+#: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
+#: apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1288
 #: apps/text-editor/src/window.rs:975 apps/web/src/dialogs.rs:413
 #: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
@@ -2868,7 +2869,7 @@ msgstr "Okrążenie"
 
 #: apps/clocks/src/shortcuts.rs:35 apps/clocks/src/ui.rs:1759
 #: apps/clocks/src/ui.rs:2086 apps/maps/src/ui.rs:1887
-#: apps/settings/src/ui/apps.rs:490 apps/settings/src/ui/apps.rs:550
+#: apps/settings/src/ui/apps.rs:490 apps/settings/src/ui/apps.rs:620
 #: apps/web/src/window.rs:1955
 msgid "Reset"
 msgstr "Wyzeruj"
@@ -4557,8 +4558,9 @@ msgstr "Urządzenie ZFS"
 #: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
 #: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
 #: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
-#: apps/settings/src/ui/about.rs:230 apps/settings/src/values.rs:283
-#: apps/system-monitor/src/format.rs:107 apps/weather/src/wmo.rs:37
+#: apps/settings/src/ui/about.rs:230 apps/settings/src/ui/apps.rs:526
+#: apps/settings/src/values.rs:283 apps/system-monitor/src/format.rs:107
+#: apps/weather/src/wmo.rs:37
 msgid "Unknown"
 msgstr "Nieznane"
 
@@ -7419,7 +7421,7 @@ msgid "Could not read properties: {}"
 msgstr "Nie można odczytać właściwości: {}"
 
 #: apps/files/src/ui/properties.rs:132 apps/files/src/ui/properties.rs:241
-#: apps/settings/src/ui/apps.rs:518
+#: apps/settings/src/ui/apps.rs:519 apps/settings/src/ui/apps.rs:529
 msgid "Calculating…"
 msgstr "Obliczanie…"
 
@@ -11784,31 +11786,69 @@ msgstr "Zapomnienie wybranych domyślnych programów dla tych typów plików"
 msgid "Links"
 msgstr "Odnośniki"
 
-#: apps/settings/src/ui/apps.rs:518
+#: apps/settings/src/ui/apps.rs:519
+msgid "Installed Size"
+msgstr "Rozmiar po instalacji"
+
+#: apps/settings/src/ui/apps.rs:529
 msgid "App Data"
 msgstr "Dane programu"
 
-#: apps/settings/src/ui/apps.rs:528
+#: apps/settings/src/ui/apps.rs:538
+msgid "Uninstall"
+msgstr "Odinstaluj"
+
+#: apps/settings/src/ui/apps.rs:539
+msgid "Removes the app; its data stays"
+msgstr "Usuwa aplikację; jej dane pozostają"
+
+#: apps/settings/src/ui/apps.rs:540
+msgid "Uninstall…"
+msgstr "Odinstaluj…"
+
+#: apps/settings/src/ui/apps.rs:548
+msgid "Uninstall {name}?"
+msgstr "Odinstalować {name}?"
+
+#: apps/settings/src/ui/apps.rs:549
+msgid "The app is removed from this computer. Its data and settings are kept."
+msgstr ""
+"Aplikacja zostanie usunięta z tego komputera. Jej dane i ustawienia zostaną "
+"zachowane."
+
+#: apps/settings/src/ui/apps.rs:554 apps/web/src/dialogs.rs:1130
+msgid "_Uninstall"
+msgstr "_Odinstaluj"
+
+#: apps/settings/src/ui/apps.rs:572
+msgid "App uninstalled"
+msgstr "Odinstalowano aplikację"
+
+#: apps/settings/src/ui/apps.rs:575 apps/settings/src/ui/apps.rs:584
+msgid "Could not uninstall: {e}"
+msgstr "Nie można odinstalować: {e}"
+
+#: apps/settings/src/ui/apps.rs:598
 msgid "Open in Software"
 msgstr "Otwórz w menedżerze oprogramowania"
 
-#: apps/settings/src/ui/apps.rs:529
+#: apps/settings/src/ui/apps.rs:599
 msgid "Details, updates and uninstalling"
 msgstr "Szczegóły, aktualizacje i odinstalowywanie"
 
-#: apps/settings/src/ui/apps.rs:541
+#: apps/settings/src/ui/apps.rs:611
 msgid "No software center is installed"
 msgstr "Nie zainstalowano menedżera oprogramowania"
 
-#: apps/settings/src/ui/apps.rs:548
+#: apps/settings/src/ui/apps.rs:618
 msgid "Reset Permissions"
 msgstr "Przywróć uprawnienia"
 
-#: apps/settings/src/ui/apps.rs:549
+#: apps/settings/src/ui/apps.rs:619
 msgid "The app asks again next time"
 msgstr "Program zapyta ponownie następnym razem"
 
-#: apps/settings/src/ui/apps.rs:567
+#: apps/settings/src/ui/apps.rs:637
 msgid "Could not reset the permissions: {e}"
 msgstr "Nie można przywrócić uprawnień: {e}"
 
@@ -16426,10 +16466,6 @@ msgid "The launcher is removed. Its saved site data stays on disk."
 msgstr ""
 "Program uruchamiający zostanie usunięty. Zapisane dane witryny pozostaną na "
 "dysku."
-
-#: apps/web/src/dialogs.rs:1130
-msgid "_Uninstall"
-msgstr "_Odinstaluj"
 
 #: apps/web/src/dialogs.rs:1142
 msgid "Could Not Uninstall"

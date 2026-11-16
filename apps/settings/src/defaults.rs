@@ -180,9 +180,119 @@ pub fn dir_size(dir: &std::path::Path) -> u64 {
         .sum()
 }
 
+/// A Flatpak app's installation, from its exported desktop file
+/// (`<installation>/exports/share/applications/<id>.desktop`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct FlatpakApp {
+    pub id: String,
+    /// The installation (`~/.local/share/flatpak` or `/var/lib/flatpak`).
+    pub installation: std::path::PathBuf,
+    /// Whether it is the user's own installation (else the system's).
+    pub user: bool,
+}
+
+impl FlatpakApp {
+    pub fn from_desktop_file(path: &std::path::Path, home: &std::path::Path) -> Option<Self> {
+        let text = path.to_str()?;
+        let (root, rest) = text.split_once("/exports/share/applications/")?;
+        let id = rest.strip_suffix(".desktop")?.to_string();
+        if id.is_empty() || id.contains('/') {
+            return None;
+        }
+        let installation = std::path::PathBuf::from(root);
+        Some(FlatpakApp {
+            user: installation.starts_with(home),
+            installation,
+            id,
+        })
+    }
+
+    /// The deployed files of the active version (`app/<id>/current/active`,
+    /// links resolved), whose size is the app's installed size.
+    pub fn deploy_dir(&self) -> Option<std::path::PathBuf> {
+        self.installation
+            .join("app")
+            .join(&self.id)
+            .join("current/active")
+            .canonicalize()
+            .ok()
+    }
+
+    /// The command that uninstalls it from its installation (the system
+    /// installation asks for authorization through polkit).
+    pub fn uninstall_command(&self) -> Vec<String> {
+        vec![
+            "flatpak".into(),
+            "uninstall".into(),
+            "--noninteractive".into(),
+            if self.user { "--user" } else { "--system" }.into(),
+            self.id.clone(),
+        ]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn flatpak_apps() {
+        let home = std::path::Path::new("/home/u");
+        let user = FlatpakApp::from_desktop_file(
+            std::path::Path::new(
+                "/home/u/.local/share/flatpak/exports/share/applications/org.x.App.desktop",
+            ),
+            home,
+        )
+        .unwrap();
+        assert_eq!(user.id, "org.x.App");
+        assert!(user.user);
+        assert_eq!(
+            user.uninstall_command(),
+            [
+                "flatpak",
+                "uninstall",
+                "--noninteractive",
+                "--user",
+                "org.x.App"
+            ]
+        );
+        let system = FlatpakApp::from_desktop_file(
+            std::path::Path::new("/var/lib/flatpak/exports/share/applications/org.y.App.desktop"),
+            home,
+        )
+        .unwrap();
+        assert!(!system.user);
+        assert_eq!(
+            system.installation,
+            std::path::Path::new("/var/lib/flatpak")
+        );
+        assert_eq!(system.uninstall_command()[3], "--system");
+        assert!(FlatpakApp::from_desktop_file(
+            std::path::Path::new("/usr/share/applications/org.z.desktop"),
+            home
+        )
+        .is_none());
+
+        // The installed size counts the active deployment, through the
+        // installation's links.
+        let root = std::env::temp_dir().join(format!("helix-flatpak-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let deploy = root.join("app/org.x.App/x86_64/stable/abc123");
+        std::fs::create_dir_all(deploy.join("files/bin")).unwrap();
+        std::fs::write(deploy.join("files/bin/app"), [0u8; 100]).unwrap();
+        std::os::unix::fs::symlink("x86_64/stable", root.join("app/org.x.App/current")).unwrap();
+        std::os::unix::fs::symlink("abc123", root.join("app/org.x.App/x86_64/stable/active"))
+            .unwrap();
+        let app = FlatpakApp {
+            id: "org.x.App".into(),
+            installation: root.clone(),
+            user: true,
+        };
+        let dir = app.deploy_dir().unwrap();
+        assert_eq!(dir_size(&dir), 100);
+        std::fs::remove_dir_all(&root).unwrap();
+    }
 
     #[test]
     fn media_lists() {

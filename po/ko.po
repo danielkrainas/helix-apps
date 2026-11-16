@@ -279,7 +279,7 @@ msgstr "끝내기"
 #: apps/audio-player/src/ui.rs:217 apps/camera/src/ui.rs:280
 #: apps/disk-usage/src/shortcuts.rs:30 apps/document-viewer/src/shortcuts.rs:11
 #: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:11
-#: apps/settings/src/ui/apps.rs:530 apps/settings/src/ui/bluetooth.rs:129
+#: apps/settings/src/ui/apps.rs:600 apps/settings/src/ui/bluetooth.rs:129
 #: apps/settings/src/ui/users.rs:575 apps/text-editor/src/shortcuts.rs:15
 #: apps/web/src/window.rs:2232
 msgid "Open"
@@ -1129,9 +1129,10 @@ msgstr "계산(_A)"
 #: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:656
 #: apps/music/src/pages.rs:1522 apps/music/src/pages.rs:1620
-#: apps/music/src/pages.rs:1682 apps/settings/src/ui/bluetooth.rs:647
-#: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
-#: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
+#: apps/music/src/pages.rs:1682 apps/settings/src/ui/apps.rs:553
+#: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
+#: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
+#: apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1288
 #: apps/text-editor/src/window.rs:975 apps/web/src/dialogs.rs:413
 #: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
@@ -2824,7 +2825,7 @@ msgstr "랩"
 
 #: apps/clocks/src/shortcuts.rs:35 apps/clocks/src/ui.rs:1759
 #: apps/clocks/src/ui.rs:2086 apps/maps/src/ui.rs:1887
-#: apps/settings/src/ui/apps.rs:490 apps/settings/src/ui/apps.rs:550
+#: apps/settings/src/ui/apps.rs:490 apps/settings/src/ui/apps.rs:620
 #: apps/web/src/window.rs:1955
 msgid "Reset"
 msgstr "초기화"
@@ -4470,8 +4471,9 @@ msgstr "ZFS 장치"
 #: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
 #: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
 #: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
-#: apps/settings/src/ui/about.rs:230 apps/settings/src/values.rs:283
-#: apps/system-monitor/src/format.rs:107 apps/weather/src/wmo.rs:37
+#: apps/settings/src/ui/about.rs:230 apps/settings/src/ui/apps.rs:526
+#: apps/settings/src/values.rs:283 apps/system-monitor/src/format.rs:107
+#: apps/weather/src/wmo.rs:37
 msgid "Unknown"
 msgstr "알 수 없음"
 
@@ -7279,7 +7281,7 @@ msgid "Could not read properties: {}"
 msgstr "속성을 읽을 수 없습니다: {}"
 
 #: apps/files/src/ui/properties.rs:132 apps/files/src/ui/properties.rs:241
-#: apps/settings/src/ui/apps.rs:518
+#: apps/settings/src/ui/apps.rs:519 apps/settings/src/ui/apps.rs:529
 msgid "Calculating…"
 msgstr "계산하는 중…"
 
@@ -11601,31 +11603,67 @@ msgstr "이 파일 형식에 대해 선택한 기본 앱을 잊습니다"
 msgid "Links"
 msgstr "링크"
 
-#: apps/settings/src/ui/apps.rs:518
+#: apps/settings/src/ui/apps.rs:519
+msgid "Installed Size"
+msgstr "설치 크기"
+
+#: apps/settings/src/ui/apps.rs:529
 msgid "App Data"
 msgstr "앱 데이터"
 
-#: apps/settings/src/ui/apps.rs:528
+#: apps/settings/src/ui/apps.rs:538
+msgid "Uninstall"
+msgstr "제거"
+
+#: apps/settings/src/ui/apps.rs:539
+msgid "Removes the app; its data stays"
+msgstr "앱을 제거합니다. 데이터는 유지됩니다"
+
+#: apps/settings/src/ui/apps.rs:540
+msgid "Uninstall…"
+msgstr "제거…"
+
+#: apps/settings/src/ui/apps.rs:548
+msgid "Uninstall {name}?"
+msgstr "{name}을(를) 제거할까요?"
+
+#: apps/settings/src/ui/apps.rs:549
+msgid "The app is removed from this computer. Its data and settings are kept."
+msgstr "앱이 이 컴퓨터에서 제거됩니다. 데이터와 설정은 유지됩니다."
+
+#: apps/settings/src/ui/apps.rs:554 apps/web/src/dialogs.rs:1130
+msgid "_Uninstall"
+msgstr "제거(_U)"
+
+#: apps/settings/src/ui/apps.rs:572
+msgid "App uninstalled"
+msgstr "앱을 제거했습니다"
+
+#: apps/settings/src/ui/apps.rs:575 apps/settings/src/ui/apps.rs:584
+msgid "Could not uninstall: {e}"
+msgstr "제거할 수 없습니다: {e}"
+
+#: apps/settings/src/ui/apps.rs:598
 msgid "Open in Software"
 msgstr "소프트웨어에서 열기"
 
-#: apps/settings/src/ui/apps.rs:529
+#: apps/settings/src/ui/apps.rs:599
 msgid "Details, updates and uninstalling"
 msgstr "자세한 정보, 업데이트, 제거"
 
-#: apps/settings/src/ui/apps.rs:541
+#: apps/settings/src/ui/apps.rs:611
 msgid "No software center is installed"
 msgstr "소프트웨어 센터가 설치되어 있지 않습니다"
 
-#: apps/settings/src/ui/apps.rs:548
+#: apps/settings/src/ui/apps.rs:618
 msgid "Reset Permissions"
 msgstr "권한 초기화"
 
-#: apps/settings/src/ui/apps.rs:549
+#: apps/settings/src/ui/apps.rs:619
 msgid "The app asks again next time"
 msgstr "다음에 앱이 다시 묻습니다"
 
-#: apps/settings/src/ui/apps.rs:567
+#: apps/settings/src/ui/apps.rs:637
 msgid "Could not reset the permissions: {e}"
 msgstr "권한을 초기화할 수 없습니다: {e}"
 
@@ -16208,10 +16246,6 @@ msgstr "웹 앱을 제거하시겠습니까?"
 #: apps/web/src/dialogs.rs:1126
 msgid "The launcher is removed. Its saved site data stays on disk."
 msgstr "실행 항목을 제거합니다. 저장된 사이트 데이터는 디스크에 남습니다."
-
-#: apps/web/src/dialogs.rs:1130
-msgid "_Uninstall"
-msgstr "제거(_U)"
 
 #: apps/web/src/dialogs.rs:1142
 msgid "Could Not Uninstall"

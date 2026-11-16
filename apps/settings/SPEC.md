@@ -560,16 +560,25 @@ shell's agent) may ask for a password.
   - *Opens*: the file types it is GIO's default for (by description),
     *Reset File Types* (forgets the user's choices for them), and the link
     schemes it handles (`x-scheme-handler/…`);
-  - for Flatpak apps (desktop file under `…/flatpak/exports/`), *App Data*:
-    the size of `~/.var/app/<id>`, counted on a worker thread;
+  - for Flatpak apps (desktop file under
+    `<installation>/exports/share/applications/`): *Installed Size* (the
+    active deployment, `<installation>/app/<id>/current/active`, links
+    resolved), *App Data* (the size of `~/.var/app/<id>`), both counted on
+    a worker thread, and *Uninstall* (after a confirmation,
+    `flatpak uninstall --noninteractive --user|--system <id>` for the
+    installation it came from; the system installation asks for
+    authorization through polkit; its data is kept; a toast says how it
+    went);
   - *Open in Software* (`appstream://<id>`; a toast when nothing handles
     it), where updates and uninstalling are; *Reset Permissions*
     (`DeletePermission` for each of its entries: the portals ask again).
 - Tested against a fake permission store on a private bus
   (`permissions.rs`) and the media and type logic in unit tests
-  (`defaults.rs`). Not yet: uninstalling from here (Software does it),
-  a Flatpak app's installed size, per-app storage for other kinds of
-  apps, file-type-level choices other than reset.
+  (`defaults.rs`: also the Flatpak installation, installed size through
+  the deployment links, and the uninstall command). The uninstall command
+  itself has not been run in tests (it would change the host's
+  installations). Not yet: per-app storage for other kinds of apps,
+  file-type-level choices other than reset.
 
 #### Displays
 `org.gnome.Mutter.DisplayConfig` on the session bus (served by helix-comp;

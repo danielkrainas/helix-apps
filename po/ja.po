@@ -285,7 +285,7 @@ msgstr "終了"
 #: apps/audio-player/src/ui.rs:217 apps/camera/src/ui.rs:280
 #: apps/disk-usage/src/shortcuts.rs:30 apps/document-viewer/src/shortcuts.rs:11
 #: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:11
-#: apps/settings/src/ui/apps.rs:530 apps/settings/src/ui/bluetooth.rs:129
+#: apps/settings/src/ui/apps.rs:600 apps/settings/src/ui/bluetooth.rs:129
 #: apps/settings/src/ui/users.rs:575 apps/text-editor/src/shortcuts.rs:15
 #: apps/web/src/window.rs:2232
 msgid "Open"
@@ -1134,9 +1134,10 @@ msgstr "計算(_A)"
 #: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:656
 #: apps/music/src/pages.rs:1522 apps/music/src/pages.rs:1620
-#: apps/music/src/pages.rs:1682 apps/settings/src/ui/bluetooth.rs:647
-#: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
-#: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
+#: apps/music/src/pages.rs:1682 apps/settings/src/ui/apps.rs:553
+#: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
+#: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
+#: apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1288
 #: apps/text-editor/src/window.rs:975 apps/web/src/dialogs.rs:413
 #: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
@@ -2835,7 +2836,7 @@ msgstr "ラップ"
 
 #: apps/clocks/src/shortcuts.rs:35 apps/clocks/src/ui.rs:1759
 #: apps/clocks/src/ui.rs:2086 apps/maps/src/ui.rs:1887
-#: apps/settings/src/ui/apps.rs:490 apps/settings/src/ui/apps.rs:550
+#: apps/settings/src/ui/apps.rs:490 apps/settings/src/ui/apps.rs:620
 #: apps/web/src/window.rs:1955
 msgid "Reset"
 msgstr "リセット"
@@ -4486,8 +4487,9 @@ msgstr "ZFS デバイス"
 #: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
 #: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
 #: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
-#: apps/settings/src/ui/about.rs:230 apps/settings/src/values.rs:283
-#: apps/system-monitor/src/format.rs:107 apps/weather/src/wmo.rs:37
+#: apps/settings/src/ui/about.rs:230 apps/settings/src/ui/apps.rs:526
+#: apps/settings/src/values.rs:283 apps/system-monitor/src/format.rs:107
+#: apps/weather/src/wmo.rs:37
 msgid "Unknown"
 msgstr "不明"
 
@@ -7309,7 +7311,7 @@ msgid "Could not read properties: {}"
 msgstr "プロパティを読み取れませんでした: {}"
 
 #: apps/files/src/ui/properties.rs:132 apps/files/src/ui/properties.rs:241
-#: apps/settings/src/ui/apps.rs:518
+#: apps/settings/src/ui/apps.rs:519 apps/settings/src/ui/apps.rs:529
 msgid "Calculating…"
 msgstr "計算中…"
 
@@ -11656,31 +11658,67 @@ msgstr "これらのファイルの種類に対するデフォルトアプリの
 msgid "Links"
 msgstr "リンク"
 
-#: apps/settings/src/ui/apps.rs:518
+#: apps/settings/src/ui/apps.rs:519
+msgid "Installed Size"
+msgstr "インストールサイズ"
+
+#: apps/settings/src/ui/apps.rs:529
 msgid "App Data"
 msgstr "アプリのデータ"
 
-#: apps/settings/src/ui/apps.rs:528
+#: apps/settings/src/ui/apps.rs:538
+msgid "Uninstall"
+msgstr "アンインストール"
+
+#: apps/settings/src/ui/apps.rs:539
+msgid "Removes the app; its data stays"
+msgstr "アプリを削除します。データは残ります"
+
+#: apps/settings/src/ui/apps.rs:540
+msgid "Uninstall…"
+msgstr "アンインストール…"
+
+#: apps/settings/src/ui/apps.rs:548
+msgid "Uninstall {name}?"
+msgstr "{name} をアンインストールしますか?"
+
+#: apps/settings/src/ui/apps.rs:549
+msgid "The app is removed from this computer. Its data and settings are kept."
+msgstr "アプリはこのコンピューターから削除されます。データと設定は残ります。"
+
+#: apps/settings/src/ui/apps.rs:554 apps/web/src/dialogs.rs:1130
+msgid "_Uninstall"
+msgstr "アンインストール(_U)"
+
+#: apps/settings/src/ui/apps.rs:572
+msgid "App uninstalled"
+msgstr "アプリをアンインストールしました"
+
+#: apps/settings/src/ui/apps.rs:575 apps/settings/src/ui/apps.rs:584
+msgid "Could not uninstall: {e}"
+msgstr "アンインストールできませんでした: {e}"
+
+#: apps/settings/src/ui/apps.rs:598
 msgid "Open in Software"
 msgstr "ソフトウェアで開く"
 
-#: apps/settings/src/ui/apps.rs:529
+#: apps/settings/src/ui/apps.rs:599
 msgid "Details, updates and uninstalling"
 msgstr "詳細、更新、アンインストール"
 
-#: apps/settings/src/ui/apps.rs:541
+#: apps/settings/src/ui/apps.rs:611
 msgid "No software center is installed"
 msgstr "ソフトウェアセンターがインストールされていません"
 
-#: apps/settings/src/ui/apps.rs:548
+#: apps/settings/src/ui/apps.rs:618
 msgid "Reset Permissions"
 msgstr "権限をリセット"
 
-#: apps/settings/src/ui/apps.rs:549
+#: apps/settings/src/ui/apps.rs:619
 msgid "The app asks again next time"
 msgstr "次回、アプリが再度確認します"
 
-#: apps/settings/src/ui/apps.rs:567
+#: apps/settings/src/ui/apps.rs:637
 msgid "Could not reset the permissions: {e}"
 msgstr "権限をリセットできませんでした: {e}"
 
@@ -16281,10 +16319,6 @@ msgstr "ウェブアプリケーションをアンインストールしますか
 #: apps/web/src/dialogs.rs:1126
 msgid "The launcher is removed. Its saved site data stays on disk."
 msgstr "ランチャーは削除されます。保存されたサイトデータはディスクに残ります。"
-
-#: apps/web/src/dialogs.rs:1130
-msgid "_Uninstall"
-msgstr "アンインストール(_U)"
 
 #: apps/web/src/dialogs.rs:1142
 msgid "Could Not Uninstall"

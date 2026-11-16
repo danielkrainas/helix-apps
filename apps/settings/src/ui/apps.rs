@@ -508,13 +508,24 @@ fn app_dialog(state: &Rc<State>, info: &gio::AppInfo) {
     }
     page.add(&opens);
 
-    // Flatpak apps: their data, and Software for the rest.
+    // Flatpak apps: their size and data, and uninstalling; Software for
+    // the rest.
     let flatpak = desktop
         .as_ref()
         .and_then(|d| d.filename())
-        .is_some_and(|f| f.to_string_lossy().contains("/flatpak/exports/"));
+        .and_then(|f| defaults::FlatpakApp::from_desktop_file(&f, &glib::home_dir()));
     let more = widgets::group("");
-    if flatpak {
+    if let Some(fp) = &flatpak {
+        let installed = InfoRow::new(tr("Installed Size"), tr("Calculating…"));
+        more.add(&installed.row);
+        let (s, fp2) = (installed.clone(), fp.clone());
+        spawn_worker(
+            move || fp2.deploy_dir().map(|d| defaults::dir_size(&d)),
+            move |n| match n {
+                Some(n) => s.set(&defaults::size_label(n)),
+                None => s.set(tr("Unknown")),
+            },
+        );
         let storage = InfoRow::new(tr("App Data"), tr("Calculating…"));
         more.add(&storage.row);
         let dir = glib::home_dir().join(".var/app").join(&app);
@@ -523,6 +534,65 @@ fn app_dialog(state: &Rc<State>, info: &gio::AppInfo) {
             move || defaults::dir_size(&dir),
             move |n| s.set(&defaults::size_label(n)),
         );
+        let (row, button) = widgets::action_row(
+            tr("Uninstall"),
+            tr("Removes the app; its data stays"),
+            tr("Uninstall…"),
+            None,
+        );
+        button.add_css_class("destructive-action");
+        let (ctx, fp, name) = (Rc::downgrade(&state.ctx), fp.clone(), info.display_name());
+        button.connect_clicked(move |b| {
+            let Some(ctx) = ctx.upgrade() else { return };
+            let dialog = adw::AlertDialog::new(
+                Some(&trf!("Uninstall {name}?", name = name)),
+                Some(tr(
+                    "The app is removed from this computer. Its data and settings are kept.",
+                )),
+            );
+            dialog.add_response("cancel", tr("_Cancel"));
+            dialog.add_response("uninstall", tr("_Uninstall"));
+            dialog.set_response_appearance("uninstall", adw::ResponseAppearance::Destructive);
+            dialog.set_default_response(Some("cancel"));
+            dialog.set_close_response("cancel");
+            let (c, fp, b) = (Rc::downgrade(&ctx), fp.clone(), b.clone());
+            dialog.connect_response(Some("uninstall"), move |_, _| {
+                b.set_sensitive(false);
+                let (c, cmd, b) = (c.clone(), fp.uninstall_command(), b.clone());
+                spawn_worker(
+                    move || {
+                        std::process::Command::new(&cmd[0])
+                            .args(&cmd[1..])
+                            .stdin(std::process::Stdio::null())
+                            .output()
+                    },
+                    move |r| {
+                        let Some(ctx) = c.upgrade() else { return };
+                        match r {
+                            Ok(o) if o.status.success() => ctx.toast(tr("App uninstalled")),
+                            Ok(o) => {
+                                b.set_sensitive(true);
+                                ctx.toast(&trf!(
+                                    "Could not uninstall: {e}",
+                                    e = helix_app_common::errors::detail(
+                                        String::from_utf8_lossy(&o.stderr).trim()
+                                    )
+                                ));
+                            }
+                            Err(e) => {
+                                b.set_sensitive(true);
+                                ctx.toast(&trf!(
+                                    "Could not uninstall: {e}",
+                                    e = helix_app_common::errors::io_detail(&e)
+                                ));
+                            }
+                        }
+                    },
+                );
+            });
+            dialog.present(Some(&ctx.window));
+        });
+        more.add(&row);
     }
     let (software_row, software) = widgets::action_row(
         tr("Open in Software"),
