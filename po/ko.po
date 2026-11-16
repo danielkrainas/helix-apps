@@ -226,7 +226,7 @@ msgstr "음소거 또는 음소거 해제"
 #: apps/maps/src/ui.rs:1855 apps/music/src/shortcuts.rs:29
 #: apps/settings/src/ui/access.rs:62 apps/settings/src/ui/extensions.rs:99
 #: apps/settings/src/ui/input.rs:64 apps/settings/src/ui/multitasking.rs:26
-#: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:155
+#: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:154
 #: apps/settings/src/ui/shortcuts.rs:16 apps/system-monitor/src/shortcuts.rs:25
 #: apps/system-monitor/src/ui.rs:510 apps/terminal/src/prefs_dialog.rs:18
 #: apps/terminal/src/shortcuts.rs:60 apps/text-editor/src/shortcuts.rs:68
@@ -1875,7 +1875,7 @@ msgid "Toggle Sidebar"
 msgstr "가장자리 창 표시 전환"
 
 #: apps/calendar/src/ui.rs:253 apps/calendar/src/ui.rs:507
-#: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:154
+#: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:155
 #: apps/web/src/dialogs.rs:589
 msgid "Today"
 msgstr "오늘"
@@ -2803,7 +2803,7 @@ msgstr "협정 세계시(UTC)"
 msgid "Yesterday"
 msgstr "어제"
 
-#: apps/clocks/src/tz.rs:314 apps/weather/src/timefmt.rs:155
+#: apps/clocks/src/tz.rs:314 apps/weather/src/timefmt.rs:156
 msgid "Tomorrow"
 msgstr "내일"
 
@@ -2841,13 +2841,13 @@ msgstr "{amount} 느림"
 
 #. Translators: after noon in 12-hour times, "2:05 PM".
 #: apps/clocks/src/tz.rs:383 apps/clocks/src/ui.rs:1383
-#: apps/weather/src/timefmt.rs:131 apps/weather/src/timefmt.rs:145
+#: apps/weather/src/timefmt.rs:132 apps/weather/src/timefmt.rs:146
 msgid "PM"
 msgstr "오후"
 
 #. Translators: before noon in 12-hour times, "9:05 AM".
 #: apps/clocks/src/tz.rs:386 apps/clocks/src/ui.rs:1383
-#: apps/weather/src/timefmt.rs:131 apps/weather/src/timefmt.rs:145
+#: apps/weather/src/timefmt.rs:132 apps/weather/src/timefmt.rs:146
 msgid "AM"
 msgstr "오전"
 
@@ -11325,7 +11325,7 @@ msgid "Trigger a secondary click by holding down the primary button"
 msgstr "주 단추를 누르고 있으면 보조 클릭을 합니다"
 
 #: apps/settings/src/ui/access.rs:407 apps/settings/src/ui/access.rs:426
-#: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:134
+#: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:136
 msgid "Delay"
 msgstr "지연 시간"
 
@@ -11703,8 +11703,8 @@ msgstr "{name}와(과) 페어링할 수 없습니다: {e}"
 msgid "Connection"
 msgstr "연결"
 
-#: apps/settings/src/ui/bluetooth.rs:517 apps/settings/src/ui/power.rs:40
-#: apps/settings/src/ui/power.rs:70 apps/settings/src/ui/power.rs:79
+#: apps/settings/src/ui/bluetooth.rs:517 apps/settings/src/ui/power.rs:39
+#: apps/settings/src/ui/power.rs:69 apps/settings/src/ui/power.rs:78
 msgid "Battery"
 msgstr "배터리"
 
@@ -12742,59 +12742,59 @@ msgstr ""
 msgid "{message}, showing the first {choices}"
 msgstr "{message}, 처음 {choices}개 표시"
 
-#: apps/settings/src/ui/power.rs:78
+#: apps/settings/src/ui/power.rs:77
 msgid "Battery Level"
 msgstr "배터리 잔량"
 
-#: apps/settings/src/ui/power.rs:84
+#: apps/settings/src/ui/power.rs:83
 msgid "Power Saving"
 msgstr "절전"
 
-#: apps/settings/src/ui/power.rs:90
+#: apps/settings/src/ui/power.rs:89
 msgid "Dim Screen"
 msgstr "화면 어둡게"
 
-#: apps/settings/src/ui/power.rs:91
+#: apps/settings/src/ui/power.rs:90
 msgid "Reduces the screen brightness when the computer is inactive"
 msgstr "컴퓨터를 사용하지 않을 때 화면 밝기를 낮춥니다"
 
-#: apps/settings/src/ui/power.rs:100
+#: apps/settings/src/ui/power.rs:99
 msgid "Screen Blank"
 msgstr "화면 끄기"
 
-#: apps/settings/src/ui/power.rs:102
+#: apps/settings/src/ui/power.rs:101
 msgid "Turns the screen off after a period of inactivity"
 msgstr "일정 시간 사용하지 않으면 화면을 끕니다"
 
-#: apps/settings/src/ui/power.rs:106
-msgid "When Plugged In"
-msgstr "전원 연결 시"
-
 #: apps/settings/src/ui/power.rs:107
-msgid "On Battery Power"
-msgstr "배터리 사용 시"
+msgid "Automatic Suspend When Plugged In"
+msgstr "전원 연결 시 자동 대기 모드"
 
-#: apps/settings/src/ui/power.rs:124
-msgid "Automatic Suspend {label}"
-msgstr "자동 대기 모드 {label}"
+#: apps/settings/src/ui/power.rs:108
+msgid "Suspend Delay When Plugged In"
+msgstr "전원 연결 시 대기 모드 지연"
 
-#: apps/settings/src/ui/power.rs:126
+#: apps/settings/src/ui/power.rs:112
+msgid "Automatic Suspend On Battery Power"
+msgstr "배터리 사용 시 자동 대기 모드"
+
+#: apps/settings/src/ui/power.rs:113
+msgid "Suspend Delay On Battery Power"
+msgstr "배터리 사용 시 대기 모드 지연"
+
+#: apps/settings/src/ui/power.rs:128
 msgid "Pauses the computer after a period of inactivity"
 msgstr "일정 시간 사용하지 않으면 컴퓨터를 일시 중지합니다"
 
-#: apps/settings/src/ui/power.rs:139
-msgid "Suspend Delay {label}"
-msgstr "대기 모드 지연 시간 {label}"
-
-#: apps/settings/src/ui/power.rs:162
+#: apps/settings/src/ui/power.rs:161
 msgid "Show Battery Percentage"
 msgstr "배터리 백분율 표시"
 
-#: apps/settings/src/ui/power.rs:163
+#: apps/settings/src/ui/power.rs:162
 msgid "Show the exact charge level in the top bar"
 msgstr "상단 표시줄에 정확한 충전량을 표시합니다"
 
-#: apps/settings/src/ui/power.rs:196
+#: apps/settings/src/ui/power.rs:195
 msgid "Power Button Behavior"
 msgstr "전원 단추 동작"
 
@@ -15302,22 +15302,22 @@ msgstr "예상하지 못한 역 지오코딩 데이터: {e}"
 msgid "No place name at this position"
 msgstr "이 위치에 장소 이름이 없습니다"
 
-#: apps/weather/src/timefmt.rs:165
+#: apps/weather/src/timefmt.rs:166
 msgid "Updated just now"
 msgstr "방금 업데이트됨"
 
-#: apps/weather/src/timefmt.rs:168
+#: apps/weather/src/timefmt.rs:169
 msgid "Updated {n} minute ago"
 msgid_plural "Updated {n} minutes ago"
 msgstr[0] "{n}분 전에 업데이트됨"
 
-#: apps/weather/src/timefmt.rs:171
+#: apps/weather/src/timefmt.rs:172
 msgid "Updated {n} hour ago"
 msgid_plural "Updated {n} hours ago"
 msgstr[0] "{n}시간 전에 업데이트됨"
 
 #. Translators: "Updated Mon 3 Nov, 14:05"; put the parts in your language's order.
-#: apps/weather/src/timefmt.rs:175
+#: apps/weather/src/timefmt.rs:176
 msgid "Updated {weekday} {day} {month}, {time}"
 msgstr "{month} {day}일 ({weekday}) {time}에 업데이트됨"
 

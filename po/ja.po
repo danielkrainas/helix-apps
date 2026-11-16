@@ -232,7 +232,7 @@ msgstr "ミュートまたはミュート解除"
 #: apps/maps/src/ui.rs:1855 apps/music/src/shortcuts.rs:29
 #: apps/settings/src/ui/access.rs:62 apps/settings/src/ui/extensions.rs:99
 #: apps/settings/src/ui/input.rs:64 apps/settings/src/ui/multitasking.rs:26
-#: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:155
+#: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:154
 #: apps/settings/src/ui/shortcuts.rs:16 apps/system-monitor/src/shortcuts.rs:25
 #: apps/system-monitor/src/ui.rs:510 apps/terminal/src/prefs_dialog.rs:18
 #: apps/terminal/src/shortcuts.rs:60 apps/text-editor/src/shortcuts.rs:68
@@ -1883,7 +1883,7 @@ msgid "Toggle Sidebar"
 msgstr "サイドバーの切り替え"
 
 #: apps/calendar/src/ui.rs:253 apps/calendar/src/ui.rs:507
-#: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:154
+#: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:155
 #: apps/web/src/dialogs.rs:589
 msgid "Today"
 msgstr "今日"
@@ -2814,7 +2814,7 @@ msgstr "協定世界時 (UTC)"
 msgid "Yesterday"
 msgstr "昨日"
 
-#: apps/clocks/src/tz.rs:314 apps/weather/src/timefmt.rs:155
+#: apps/clocks/src/tz.rs:314 apps/weather/src/timefmt.rs:156
 msgid "Tomorrow"
 msgstr "明日"
 
@@ -2852,13 +2852,13 @@ msgstr "{amount}遅れています"
 
 #. Translators: after noon in 12-hour times, "2:05 PM".
 #: apps/clocks/src/tz.rs:383 apps/clocks/src/ui.rs:1383
-#: apps/weather/src/timefmt.rs:131 apps/weather/src/timefmt.rs:145
+#: apps/weather/src/timefmt.rs:132 apps/weather/src/timefmt.rs:146
 msgid "PM"
 msgstr "午後"
 
 #. Translators: before noon in 12-hour times, "9:05 AM".
 #: apps/clocks/src/tz.rs:386 apps/clocks/src/ui.rs:1383
-#: apps/weather/src/timefmt.rs:131 apps/weather/src/timefmt.rs:145
+#: apps/weather/src/timefmt.rs:132 apps/weather/src/timefmt.rs:146
 msgid "AM"
 msgstr "午前"
 
@@ -11380,7 +11380,7 @@ msgid "Trigger a secondary click by holding down the primary button"
 msgstr "主ボタンを押し続けると副ボタンのクリックになります"
 
 #: apps/settings/src/ui/access.rs:407 apps/settings/src/ui/access.rs:426
-#: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:134
+#: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:136
 msgid "Delay"
 msgstr "遅延"
 
@@ -11758,8 +11758,8 @@ msgstr "{name} とペアリングできませんでした: {e}"
 msgid "Connection"
 msgstr "接続"
 
-#: apps/settings/src/ui/bluetooth.rs:517 apps/settings/src/ui/power.rs:40
-#: apps/settings/src/ui/power.rs:70 apps/settings/src/ui/power.rs:79
+#: apps/settings/src/ui/bluetooth.rs:517 apps/settings/src/ui/power.rs:39
+#: apps/settings/src/ui/power.rs:69 apps/settings/src/ui/power.rs:78
 msgid "Battery"
 msgstr "バッテリー"
 
@@ -12798,59 +12798,59 @@ msgstr ""
 msgid "{message}, showing the first {choices}"
 msgstr "{message}、最初の {choices} 件を表示中"
 
-#: apps/settings/src/ui/power.rs:78
+#: apps/settings/src/ui/power.rs:77
 msgid "Battery Level"
 msgstr "バッテリー残量"
 
-#: apps/settings/src/ui/power.rs:84
+#: apps/settings/src/ui/power.rs:83
 msgid "Power Saving"
 msgstr "省電力"
 
-#: apps/settings/src/ui/power.rs:90
+#: apps/settings/src/ui/power.rs:89
 msgid "Dim Screen"
 msgstr "画面を暗くする"
 
-#: apps/settings/src/ui/power.rs:91
+#: apps/settings/src/ui/power.rs:90
 msgid "Reduces the screen brightness when the computer is inactive"
 msgstr "コンピューターを使用していないときに画面の明るさを下げます"
 
-#: apps/settings/src/ui/power.rs:100
+#: apps/settings/src/ui/power.rs:99
 msgid "Screen Blank"
 msgstr "ブランクスクリーン"
 
-#: apps/settings/src/ui/power.rs:102
+#: apps/settings/src/ui/power.rs:101
 msgid "Turns the screen off after a period of inactivity"
 msgstr "一定時間操作がないと画面をオフにします"
 
-#: apps/settings/src/ui/power.rs:106
-msgid "When Plugged In"
-msgstr "電源接続時"
-
 #: apps/settings/src/ui/power.rs:107
-msgid "On Battery Power"
-msgstr "バッテリー駆動時"
+msgid "Automatic Suspend When Plugged In"
+msgstr "電源接続時の自動サスペンド"
 
-#: apps/settings/src/ui/power.rs:124
-msgid "Automatic Suspend {label}"
-msgstr "自動サスペンド ({label})"
+#: apps/settings/src/ui/power.rs:108
+msgid "Suspend Delay When Plugged In"
+msgstr "電源接続時のサスペンドまでの時間"
 
-#: apps/settings/src/ui/power.rs:126
+#: apps/settings/src/ui/power.rs:112
+msgid "Automatic Suspend On Battery Power"
+msgstr "バッテリー駆動時の自動サスペンド"
+
+#: apps/settings/src/ui/power.rs:113
+msgid "Suspend Delay On Battery Power"
+msgstr "バッテリー駆動時のサスペンドまでの時間"
+
+#: apps/settings/src/ui/power.rs:128
 msgid "Pauses the computer after a period of inactivity"
 msgstr "一定時間操作がないとコンピューターを一時停止します"
 
-#: apps/settings/src/ui/power.rs:139
-msgid "Suspend Delay {label}"
-msgstr "サスペンドまでの時間 ({label})"
-
-#: apps/settings/src/ui/power.rs:162
+#: apps/settings/src/ui/power.rs:161
 msgid "Show Battery Percentage"
 msgstr "バッテリー残量をパーセントで表示"
 
-#: apps/settings/src/ui/power.rs:163
+#: apps/settings/src/ui/power.rs:162
 msgid "Show the exact charge level in the top bar"
 msgstr "トップバーに正確な充電レベルを表示します"
 
-#: apps/settings/src/ui/power.rs:196
+#: apps/settings/src/ui/power.rs:195
 msgid "Power Button Behavior"
 msgstr "電源ボタンの動作"
 
@@ -15368,22 +15368,22 @@ msgstr "予期しない逆ジオコーディングデータ: {e}"
 msgid "No place name at this position"
 msgstr "この位置には地名がありません"
 
-#: apps/weather/src/timefmt.rs:165
+#: apps/weather/src/timefmt.rs:166
 msgid "Updated just now"
 msgstr "たった今更新"
 
-#: apps/weather/src/timefmt.rs:168
+#: apps/weather/src/timefmt.rs:169
 msgid "Updated {n} minute ago"
 msgid_plural "Updated {n} minutes ago"
 msgstr[0] "{n} 分前に更新"
 
-#: apps/weather/src/timefmt.rs:171
+#: apps/weather/src/timefmt.rs:172
 msgid "Updated {n} hour ago"
 msgid_plural "Updated {n} hours ago"
 msgstr[0] "{n} 時間前に更新"
 
 #. Translators: "Updated Mon 3 Nov, 14:05"; put the parts in your language's order.
-#: apps/weather/src/timefmt.rs:175
+#: apps/weather/src/timefmt.rs:176
 msgid "Updated {weekday} {day} {month}, {time}"
 msgstr "{month}{day}日({weekday}) {time} に更新"
 

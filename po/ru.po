@@ -234,7 +234,7 @@ msgstr "Выключить или включить звук"
 #: apps/maps/src/ui.rs:1855 apps/music/src/shortcuts.rs:29
 #: apps/settings/src/ui/access.rs:62 apps/settings/src/ui/extensions.rs:99
 #: apps/settings/src/ui/input.rs:64 apps/settings/src/ui/multitasking.rs:26
-#: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:155
+#: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:154
 #: apps/settings/src/ui/shortcuts.rs:16 apps/system-monitor/src/shortcuts.rs:25
 #: apps/system-monitor/src/ui.rs:510 apps/terminal/src/prefs_dialog.rs:18
 #: apps/terminal/src/shortcuts.rs:60 apps/text-editor/src/shortcuts.rs:68
@@ -1899,7 +1899,7 @@ msgid "Toggle Sidebar"
 msgstr "Показать/скрыть боковую панель"
 
 #: apps/calendar/src/ui.rs:253 apps/calendar/src/ui.rs:507
-#: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:154
+#: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:155
 #: apps/web/src/dialogs.rs:589
 msgid "Today"
 msgstr "Сегодня"
@@ -2839,7 +2839,7 @@ msgstr "Всемирное координированное время (UTC)"
 msgid "Yesterday"
 msgstr "Вчера"
 
-#: apps/clocks/src/tz.rs:314 apps/weather/src/timefmt.rs:155
+#: apps/clocks/src/tz.rs:314 apps/weather/src/timefmt.rs:156
 msgid "Tomorrow"
 msgstr "Завтра"
 
@@ -2883,13 +2883,13 @@ msgstr "на {amount} меньше"
 
 #. Translators: after noon in 12-hour times, "2:05 PM".
 #: apps/clocks/src/tz.rs:383 apps/clocks/src/ui.rs:1383
-#: apps/weather/src/timefmt.rs:131 apps/weather/src/timefmt.rs:145
+#: apps/weather/src/timefmt.rs:132 apps/weather/src/timefmt.rs:146
 msgid "PM"
 msgstr "PM"
 
 #. Translators: before noon in 12-hour times, "9:05 AM".
 #: apps/clocks/src/tz.rs:386 apps/clocks/src/ui.rs:1383
-#: apps/weather/src/timefmt.rs:131 apps/weather/src/timefmt.rs:145
+#: apps/weather/src/timefmt.rs:132 apps/weather/src/timefmt.rs:146
 msgid "AM"
 msgstr "AM"
 
@@ -11482,7 +11482,7 @@ msgid "Trigger a secondary click by holding down the primary button"
 msgstr "Выполнять вторичный щелчок удержанием основной кнопки"
 
 #: apps/settings/src/ui/access.rs:407 apps/settings/src/ui/access.rs:426
-#: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:134
+#: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:136
 msgid "Delay"
 msgstr "Задержка"
 
@@ -11861,8 +11861,8 @@ msgstr "Не удалось выполнить сопряжение с {name}: {
 msgid "Connection"
 msgstr "Подключение"
 
-#: apps/settings/src/ui/bluetooth.rs:517 apps/settings/src/ui/power.rs:40
-#: apps/settings/src/ui/power.rs:70 apps/settings/src/ui/power.rs:79
+#: apps/settings/src/ui/bluetooth.rs:517 apps/settings/src/ui/power.rs:39
+#: apps/settings/src/ui/power.rs:69 apps/settings/src/ui/power.rs:78
 msgid "Battery"
 msgstr "Аккумулятор"
 
@@ -12904,59 +12904,59 @@ msgstr ""
 msgid "{message}, showing the first {choices}"
 msgstr "{message}, показаны первые {choices}"
 
-#: apps/settings/src/ui/power.rs:78
+#: apps/settings/src/ui/power.rs:77
 msgid "Battery Level"
 msgstr "Уровень заряда"
 
-#: apps/settings/src/ui/power.rs:84
+#: apps/settings/src/ui/power.rs:83
 msgid "Power Saving"
 msgstr "Энергосбережение"
 
-#: apps/settings/src/ui/power.rs:90
+#: apps/settings/src/ui/power.rs:89
 msgid "Dim Screen"
 msgstr "Затемнять экран"
 
-#: apps/settings/src/ui/power.rs:91
+#: apps/settings/src/ui/power.rs:90
 msgid "Reduces the screen brightness when the computer is inactive"
 msgstr "Уменьшает яркость экрана, когда компьютер не используется"
 
-#: apps/settings/src/ui/power.rs:100
+#: apps/settings/src/ui/power.rs:99
 msgid "Screen Blank"
 msgstr "Гашение экрана"
 
-#: apps/settings/src/ui/power.rs:102
+#: apps/settings/src/ui/power.rs:101
 msgid "Turns the screen off after a period of inactivity"
 msgstr "Выключает экран после периода бездействия"
 
-#: apps/settings/src/ui/power.rs:106
-msgid "When Plugged In"
-msgstr "При питании от сети"
-
 #: apps/settings/src/ui/power.rs:107
-msgid "On Battery Power"
-msgstr "При питании от аккумулятора"
+msgid "Automatic Suspend When Plugged In"
+msgstr "Автоматический ждущий режим при питании от сети"
 
-#: apps/settings/src/ui/power.rs:124
-msgid "Automatic Suspend {label}"
-msgstr "Автоматический переход в ждущий режим {label}"
+#: apps/settings/src/ui/power.rs:108
+msgid "Suspend Delay When Plugged In"
+msgstr "Задержка ждущего режима при питании от сети"
 
-#: apps/settings/src/ui/power.rs:126
+#: apps/settings/src/ui/power.rs:112
+msgid "Automatic Suspend On Battery Power"
+msgstr "Автоматический ждущий режим при питании от батареи"
+
+#: apps/settings/src/ui/power.rs:113
+msgid "Suspend Delay On Battery Power"
+msgstr "Задержка ждущего режима при питании от батареи"
+
+#: apps/settings/src/ui/power.rs:128
 msgid "Pauses the computer after a period of inactivity"
 msgstr "Приостанавливает работу компьютера после периода бездействия"
 
-#: apps/settings/src/ui/power.rs:139
-msgid "Suspend Delay {label}"
-msgstr "Задержка перехода в ждущий режим {label}"
-
-#: apps/settings/src/ui/power.rs:162
+#: apps/settings/src/ui/power.rs:161
 msgid "Show Battery Percentage"
 msgstr "Показывать заряд в процентах"
 
-#: apps/settings/src/ui/power.rs:163
+#: apps/settings/src/ui/power.rs:162
 msgid "Show the exact charge level in the top bar"
 msgstr "Показывать точный уровень заряда на верхней панели"
 
-#: apps/settings/src/ui/power.rs:196
+#: apps/settings/src/ui/power.rs:195
 msgid "Power Button Behavior"
 msgstr "Действие кнопки питания"
 
@@ -15476,18 +15476,18 @@ msgstr "Неожиданные данные обратного геокодир�
 msgid "No place name at this position"
 msgstr "В этой точке нет названия места"
 
-#: apps/weather/src/timefmt.rs:165
+#: apps/weather/src/timefmt.rs:166
 msgid "Updated just now"
 msgstr "Обновлено только что"
 
-#: apps/weather/src/timefmt.rs:168
+#: apps/weather/src/timefmt.rs:169
 msgid "Updated {n} minute ago"
 msgid_plural "Updated {n} minutes ago"
 msgstr[0] "Обновлено {n} минуту назад"
 msgstr[1] "Обновлено {n} минуты назад"
 msgstr[2] "Обновлено {n} минут назад"
 
-#: apps/weather/src/timefmt.rs:171
+#: apps/weather/src/timefmt.rs:172
 msgid "Updated {n} hour ago"
 msgid_plural "Updated {n} hours ago"
 msgstr[0] "Обновлено {n} час назад"
@@ -15495,7 +15495,7 @@ msgstr[1] "Обновлено {n} часа назад"
 msgstr[2] "Обновлено {n} часов назад"
 
 #. Translators: "Updated Mon 3 Nov, 14:05"; put the parts in your language's order.
-#: apps/weather/src/timefmt.rs:175
+#: apps/weather/src/timefmt.rs:176
 msgid "Updated {weekday} {day} {month}, {time}"
 msgstr "Обновлено: {weekday}, {day} {month}, {time}"
 

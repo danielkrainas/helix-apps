@@ -9,7 +9,6 @@ use super::{spawn_worker, Ctx, Panel};
 use crate::dbus;
 use crate::values::{self, POWER_BUTTON_ACTIONS};
 use helix_app_common::i18n::tr;
-use helix_app_common::trf;
 
 const POWER: &str = "org.gnome.settings-daemon.plugins.power";
 const INTERFACE: &str = "org.gnome.desktop.interface";
@@ -102,9 +101,17 @@ impl Panel for PowerPanel {
         blank.set_subtitle(tr("Turns the screen off after a period of inactivity"));
         saving.add(&blank);
         let mut battery_rows = Vec::new();
-        for (source, label) in [
-            ("ac", tr("When Plugged In")),
-            ("battery", tr("On Battery Power")),
+        for (source, title, delay_name) in [
+            (
+                "ac",
+                tr("Automatic Suspend When Plugged In"),
+                tr("Suspend Delay When Plugged In"),
+            ),
+            (
+                "battery",
+                tr("Automatic Suspend On Battery Power"),
+                tr("Suspend Delay On Battery Power"),
+            ),
         ] {
             let type_key: &'static str = if source == "ac" {
                 "sleep-inactive-ac-type"
@@ -116,13 +123,8 @@ impl Panel for PowerPanel {
             } else {
                 "sleep-inactive-battery-timeout"
             };
-            let sw = widgets::nick_switch(
-                &power,
-                type_key,
-                ("suspend", "nothing"),
-                "suspend",
-                &trf!("Automatic Suspend {label}", label = label),
-            );
+            let sw =
+                widgets::nick_switch(&power, type_key, ("suspend", "nothing"), "suspend", title);
             sw.set_subtitle(tr("Pauses the computer after a period of inactivity"));
             let delay = preset_combo(
                 &power,
@@ -134,10 +136,7 @@ impl Panel for PowerPanel {
                 tr("Delay"),
             );
             // Both rows read "Delay"; say which suspend each belongs to.
-            helix_app_common::set_accessible_label(
-                &delay,
-                &trf!("Suspend Delay {label}", label = label),
-            );
+            helix_app_common::set_accessible_label(&delay, delay_name);
             sw.bind_property("active", &delay, "sensitive")
                 .sync_create()
                 .build();

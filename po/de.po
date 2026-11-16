@@ -232,7 +232,7 @@ msgstr "Stummschalten oder Stummschaltung aufheben"
 #: apps/maps/src/ui.rs:1855 apps/music/src/shortcuts.rs:29
 #: apps/settings/src/ui/access.rs:62 apps/settings/src/ui/extensions.rs:99
 #: apps/settings/src/ui/input.rs:64 apps/settings/src/ui/multitasking.rs:26
-#: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:155
+#: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:154
 #: apps/settings/src/ui/shortcuts.rs:16 apps/system-monitor/src/shortcuts.rs:25
 #: apps/system-monitor/src/ui.rs:510 apps/terminal/src/prefs_dialog.rs:18
 #: apps/terminal/src/shortcuts.rs:60 apps/text-editor/src/shortcuts.rs:68
@@ -1898,7 +1898,7 @@ msgid "Toggle Sidebar"
 msgstr "Seitenleiste ein-/ausblenden"
 
 #: apps/calendar/src/ui.rs:253 apps/calendar/src/ui.rs:507
-#: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:154
+#: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:155
 #: apps/web/src/dialogs.rs:589
 msgid "Today"
 msgstr "Heute"
@@ -2833,7 +2833,7 @@ msgstr "Koordinierte Weltzeit (UTC)"
 msgid "Yesterday"
 msgstr "Gestern"
 
-#: apps/clocks/src/tz.rs:314 apps/weather/src/timefmt.rs:155
+#: apps/clocks/src/tz.rs:314 apps/weather/src/timefmt.rs:156
 msgid "Tomorrow"
 msgstr "Morgen"
 
@@ -2874,13 +2874,13 @@ msgstr "{amount} früher"
 
 #. Translators: after noon in 12-hour times, "2:05 PM".
 #: apps/clocks/src/tz.rs:383 apps/clocks/src/ui.rs:1383
-#: apps/weather/src/timefmt.rs:131 apps/weather/src/timefmt.rs:145
+#: apps/weather/src/timefmt.rs:132 apps/weather/src/timefmt.rs:146
 msgid "PM"
 msgstr "PM"
 
 #. Translators: before noon in 12-hour times, "9:05 AM".
 #: apps/clocks/src/tz.rs:386 apps/clocks/src/ui.rs:1383
-#: apps/weather/src/timefmt.rs:131 apps/weather/src/timefmt.rs:145
+#: apps/weather/src/timefmt.rs:132 apps/weather/src/timefmt.rs:146
 msgid "AM"
 msgstr "AM"
 
@@ -11438,7 +11438,7 @@ msgid "Trigger a secondary click by holding down the primary button"
 msgstr "Einen Sekundärklick durch Gedrückthalten der primären Taste auslösen"
 
 #: apps/settings/src/ui/access.rs:407 apps/settings/src/ui/access.rs:426
-#: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:134
+#: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:136
 msgid "Delay"
 msgstr "Verzögerung"
 
@@ -11820,8 +11820,8 @@ msgstr "Kopplung mit {name} nicht möglich: {e}"
 msgid "Connection"
 msgstr "Verbindung"
 
-#: apps/settings/src/ui/bluetooth.rs:517 apps/settings/src/ui/power.rs:40
-#: apps/settings/src/ui/power.rs:70 apps/settings/src/ui/power.rs:79
+#: apps/settings/src/ui/bluetooth.rs:517 apps/settings/src/ui/power.rs:39
+#: apps/settings/src/ui/power.rs:69 apps/settings/src/ui/power.rs:78
 msgid "Battery"
 msgstr "Akku"
 
@@ -12867,59 +12867,59 @@ msgstr ""
 msgid "{message}, showing the first {choices}"
 msgstr "{message}, die ersten {choices} werden angezeigt"
 
-#: apps/settings/src/ui/power.rs:78
+#: apps/settings/src/ui/power.rs:77
 msgid "Battery Level"
 msgstr "Akkuladestand"
 
-#: apps/settings/src/ui/power.rs:84
+#: apps/settings/src/ui/power.rs:83
 msgid "Power Saving"
 msgstr "Energiesparen"
 
-#: apps/settings/src/ui/power.rs:90
+#: apps/settings/src/ui/power.rs:89
 msgid "Dim Screen"
 msgstr "Bildschirm abdunkeln"
 
-#: apps/settings/src/ui/power.rs:91
+#: apps/settings/src/ui/power.rs:90
 msgid "Reduces the screen brightness when the computer is inactive"
 msgstr "Verringert die Bildschirmhelligkeit, wenn der Rechner untätig ist"
 
-#: apps/settings/src/ui/power.rs:100
+#: apps/settings/src/ui/power.rs:99
 msgid "Screen Blank"
 msgstr "Bildschirm ausschalten"
 
-#: apps/settings/src/ui/power.rs:102
+#: apps/settings/src/ui/power.rs:101
 msgid "Turns the screen off after a period of inactivity"
 msgstr "Schaltet den Bildschirm nach einer Zeit der Untätigkeit aus"
 
-#: apps/settings/src/ui/power.rs:106
-msgid "When Plugged In"
-msgstr "Im Netzbetrieb"
-
 #: apps/settings/src/ui/power.rs:107
-msgid "On Battery Power"
-msgstr "Im Akkubetrieb"
+msgid "Automatic Suspend When Plugged In"
+msgstr "Automatische Bereitschaft im Netzbetrieb"
 
-#: apps/settings/src/ui/power.rs:124
-msgid "Automatic Suspend {label}"
-msgstr "Automatische Bereitschaft {label}"
+#: apps/settings/src/ui/power.rs:108
+msgid "Suspend Delay When Plugged In"
+msgstr "Bereitschaftsverzögerung im Netzbetrieb"
 
-#: apps/settings/src/ui/power.rs:126
+#: apps/settings/src/ui/power.rs:112
+msgid "Automatic Suspend On Battery Power"
+msgstr "Automatische Bereitschaft im Akkubetrieb"
+
+#: apps/settings/src/ui/power.rs:113
+msgid "Suspend Delay On Battery Power"
+msgstr "Bereitschaftsverzögerung im Akkubetrieb"
+
+#: apps/settings/src/ui/power.rs:128
 msgid "Pauses the computer after a period of inactivity"
 msgstr "Pausiert den Rechner nach einer Zeit der Untätigkeit"
 
-#: apps/settings/src/ui/power.rs:139
-msgid "Suspend Delay {label}"
-msgstr "Verzögerung bis Bereitschaft {label}"
-
-#: apps/settings/src/ui/power.rs:162
+#: apps/settings/src/ui/power.rs:161
 msgid "Show Battery Percentage"
 msgstr "Akkuladung in Prozent anzeigen"
 
-#: apps/settings/src/ui/power.rs:163
+#: apps/settings/src/ui/power.rs:162
 msgid "Show the exact charge level in the top bar"
 msgstr "Den genauen Ladestand in der oberen Leiste anzeigen"
 
-#: apps/settings/src/ui/power.rs:196
+#: apps/settings/src/ui/power.rs:195
 msgid "Power Button Behavior"
 msgstr "Verhalten des Ein-/Ausschalters"
 
@@ -15452,24 +15452,24 @@ msgstr "Unerwartete Daten bei der Rückwärts-Geokodierung: {e}"
 msgid "No place name at this position"
 msgstr "Kein Ortsname an dieser Position"
 
-#: apps/weather/src/timefmt.rs:165
+#: apps/weather/src/timefmt.rs:166
 msgid "Updated just now"
 msgstr "Gerade aktualisiert"
 
-#: apps/weather/src/timefmt.rs:168
+#: apps/weather/src/timefmt.rs:169
 msgid "Updated {n} minute ago"
 msgid_plural "Updated {n} minutes ago"
 msgstr[0] "Vor {n} Minute aktualisiert"
 msgstr[1] "Vor {n} Minuten aktualisiert"
 
-#: apps/weather/src/timefmt.rs:171
+#: apps/weather/src/timefmt.rs:172
 msgid "Updated {n} hour ago"
 msgid_plural "Updated {n} hours ago"
 msgstr[0] "Vor {n} Stunde aktualisiert"
 msgstr[1] "Vor {n} Stunden aktualisiert"
 
 #. Translators: "Updated Mon 3 Nov, 14:05"; put the parts in your language's order.
-#: apps/weather/src/timefmt.rs:175
+#: apps/weather/src/timefmt.rs:176
 msgid "Updated {weekday} {day} {month}, {time}"
 msgstr "Aktualisiert {weekday}, {day}. {month}, {time}"
 

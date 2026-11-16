@@ -231,7 +231,7 @@ msgstr "Dempen of dempen opheffen"
 #: apps/maps/src/ui.rs:1855 apps/music/src/shortcuts.rs:29
 #: apps/settings/src/ui/access.rs:62 apps/settings/src/ui/extensions.rs:99
 #: apps/settings/src/ui/input.rs:64 apps/settings/src/ui/multitasking.rs:26
-#: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:155
+#: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:154
 #: apps/settings/src/ui/shortcuts.rs:16 apps/system-monitor/src/shortcuts.rs:25
 #: apps/system-monitor/src/ui.rs:510 apps/terminal/src/prefs_dialog.rs:18
 #: apps/terminal/src/shortcuts.rs:60 apps/text-editor/src/shortcuts.rs:68
@@ -1892,7 +1892,7 @@ msgid "Toggle Sidebar"
 msgstr "Zijbalk tonen/verbergen"
 
 #: apps/calendar/src/ui.rs:253 apps/calendar/src/ui.rs:507
-#: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:154
+#: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:155
 #: apps/web/src/dialogs.rs:589
 msgid "Today"
 msgstr "Vandaag"
@@ -2827,7 +2827,7 @@ msgstr "Gecoördineerde wereldtijd (UTC)"
 msgid "Yesterday"
 msgstr "Gisteren"
 
-#: apps/clocks/src/tz.rs:314 apps/weather/src/timefmt.rs:155
+#: apps/clocks/src/tz.rs:314 apps/weather/src/timefmt.rs:156
 msgid "Tomorrow"
 msgstr "Morgen"
 
@@ -2868,13 +2868,13 @@ msgstr "{amount} achter"
 
 #. Translators: after noon in 12-hour times, "2:05 PM".
 #: apps/clocks/src/tz.rs:383 apps/clocks/src/ui.rs:1383
-#: apps/weather/src/timefmt.rs:131 apps/weather/src/timefmt.rs:145
+#: apps/weather/src/timefmt.rs:132 apps/weather/src/timefmt.rs:146
 msgid "PM"
 msgstr "PM"
 
 #. Translators: before noon in 12-hour times, "9:05 AM".
 #: apps/clocks/src/tz.rs:386 apps/clocks/src/ui.rs:1383
-#: apps/weather/src/timefmt.rs:131 apps/weather/src/timefmt.rs:145
+#: apps/weather/src/timefmt.rs:132 apps/weather/src/timefmt.rs:146
 msgid "AM"
 msgstr "AM"
 
@@ -11403,7 +11403,7 @@ msgstr ""
 "Een secundaire klik uitvoeren door de primaire knop ingedrukt te houden"
 
 #: apps/settings/src/ui/access.rs:407 apps/settings/src/ui/access.rs:426
-#: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:134
+#: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:136
 msgid "Delay"
 msgstr "Vertraging"
 
@@ -11785,8 +11785,8 @@ msgstr "Kon niet koppelen met {name}: {e}"
 msgid "Connection"
 msgstr "Verbinding"
 
-#: apps/settings/src/ui/bluetooth.rs:517 apps/settings/src/ui/power.rs:40
-#: apps/settings/src/ui/power.rs:70 apps/settings/src/ui/power.rs:79
+#: apps/settings/src/ui/bluetooth.rs:517 apps/settings/src/ui/power.rs:39
+#: apps/settings/src/ui/power.rs:69 apps/settings/src/ui/power.rs:78
 msgid "Battery"
 msgstr "Accu"
 
@@ -12834,59 +12834,59 @@ msgstr ""
 msgid "{message}, showing the first {choices}"
 msgstr "{message}, de eerste {choices} worden getoond"
 
-#: apps/settings/src/ui/power.rs:78
+#: apps/settings/src/ui/power.rs:77
 msgid "Battery Level"
 msgstr "Accuniveau"
 
-#: apps/settings/src/ui/power.rs:84
+#: apps/settings/src/ui/power.rs:83
 msgid "Power Saving"
 msgstr "Energiebesparing"
 
-#: apps/settings/src/ui/power.rs:90
+#: apps/settings/src/ui/power.rs:89
 msgid "Dim Screen"
 msgstr "Scherm dimmen"
 
-#: apps/settings/src/ui/power.rs:91
+#: apps/settings/src/ui/power.rs:90
 msgid "Reduces the screen brightness when the computer is inactive"
 msgstr "Vermindert de schermhelderheid als de computer inactief is"
 
-#: apps/settings/src/ui/power.rs:100
+#: apps/settings/src/ui/power.rs:99
 msgid "Screen Blank"
 msgstr "Scherm uitschakelen"
 
-#: apps/settings/src/ui/power.rs:102
+#: apps/settings/src/ui/power.rs:101
 msgid "Turns the screen off after a period of inactivity"
 msgstr "Schakelt het scherm uit na een periode van inactiviteit"
 
-#: apps/settings/src/ui/power.rs:106
-msgid "When Plugged In"
-msgstr "Bij netstroom"
-
 #: apps/settings/src/ui/power.rs:107
-msgid "On Battery Power"
-msgstr "Op accuvoeding"
+msgid "Automatic Suspend When Plugged In"
+msgstr "Automatische pauzestand bij netstroom"
 
-#: apps/settings/src/ui/power.rs:124
-msgid "Automatic Suspend {label}"
-msgstr "Automatische pauzestand ({label})"
+#: apps/settings/src/ui/power.rs:108
+msgid "Suspend Delay When Plugged In"
+msgstr "Vertraging pauzestand bij netstroom"
 
-#: apps/settings/src/ui/power.rs:126
+#: apps/settings/src/ui/power.rs:112
+msgid "Automatic Suspend On Battery Power"
+msgstr "Automatische pauzestand op accuvoeding"
+
+#: apps/settings/src/ui/power.rs:113
+msgid "Suspend Delay On Battery Power"
+msgstr "Vertraging pauzestand op accuvoeding"
+
+#: apps/settings/src/ui/power.rs:128
 msgid "Pauses the computer after a period of inactivity"
 msgstr "Pauzeert de computer na een periode van inactiviteit"
 
-#: apps/settings/src/ui/power.rs:139
-msgid "Suspend Delay {label}"
-msgstr "Vertraging pauzestand ({label})"
-
-#: apps/settings/src/ui/power.rs:162
+#: apps/settings/src/ui/power.rs:161
 msgid "Show Battery Percentage"
 msgstr "Accupercentage tonen"
 
-#: apps/settings/src/ui/power.rs:163
+#: apps/settings/src/ui/power.rs:162
 msgid "Show the exact charge level in the top bar"
 msgstr "Het exacte laadniveau in de bovenbalk tonen"
 
-#: apps/settings/src/ui/power.rs:196
+#: apps/settings/src/ui/power.rs:195
 msgid "Power Button Behavior"
 msgstr "Gedrag van aan-uitknop"
 
@@ -15403,24 +15403,24 @@ msgstr "Onverwachte gegevens van omgekeerde geocodering: {e}"
 msgid "No place name at this position"
 msgstr "Geen plaatsnaam op deze positie"
 
-#: apps/weather/src/timefmt.rs:165
+#: apps/weather/src/timefmt.rs:166
 msgid "Updated just now"
 msgstr "Zojuist bijgewerkt"
 
-#: apps/weather/src/timefmt.rs:168
+#: apps/weather/src/timefmt.rs:169
 msgid "Updated {n} minute ago"
 msgid_plural "Updated {n} minutes ago"
 msgstr[0] "{n} minuut geleden bijgewerkt"
 msgstr[1] "{n} minuten geleden bijgewerkt"
 
-#: apps/weather/src/timefmt.rs:171
+#: apps/weather/src/timefmt.rs:172
 msgid "Updated {n} hour ago"
 msgid_plural "Updated {n} hours ago"
 msgstr[0] "{n} uur geleden bijgewerkt"
 msgstr[1] "{n} uur geleden bijgewerkt"
 
 #. Translators: "Updated Mon 3 Nov, 14:05"; put the parts in your language's order.
-#: apps/weather/src/timefmt.rs:175
+#: apps/weather/src/timefmt.rs:176
 msgid "Updated {weekday} {day} {month}, {time}"
 msgstr "Bijgewerkt {weekday} {day} {month}, {time}"
 
