@@ -217,8 +217,10 @@ apps/web/src/shortcuts.rs
 apps/web/src/tab.rs
 apps/web/src/webapp.rs
 apps/web/src/window.rs
+crates/helix-app-common/src/a11y.rs
 crates/helix-app-common/src/about.rs
 crates/helix-app-common/src/shortcuts.rs
+crates/helix-eds/src/client.rs
 crates/helix-eds/src/source.rs
 crates/helix-eds/src/vcard.rs
 apps/audio-player/data/org.helix.AudioPlayer.desktop
