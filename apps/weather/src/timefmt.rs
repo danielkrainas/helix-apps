@@ -107,8 +107,9 @@ impl DateTime {
         helix_app_common::i18n::weekday_abbr(self.weekday() as u32)
     }
 
+    /// The month's abbreviation as it reads next to the day ("3 Nov").
     pub fn month_short(&self) -> &'static str {
-        helix_app_common::i18n::month_abbr(self.month)
+        helix_app_common::i18n::month_abbr_in_date(self.month)
     }
 
     /// Truncated to the hour.

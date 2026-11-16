@@ -1889,7 +1889,7 @@ fn format_vcard_date(v: &str) -> Option<String> {
     if !(1..=12).contains(&m) {
         return None;
     }
-    let month = helix_app_common::i18n::month_name(m);
+    let month = helix_app_common::i18n::month_name_in_date(m);
     Some(match y {
         // Translators: a birthday or anniversary, "17" "May" "1990".
         Some(y) => trf!("{day} {month} {year}", day = d, month = month, year = y),

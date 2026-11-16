@@ -104,7 +104,7 @@ pub fn long_date(d: NaiveDate) -> String {
         "{weekday}, {day} {month} {year}",
         weekday = helix_app_common::i18n::weekday_name(d.weekday().num_days_from_monday()),
         day = d.day(),
-        month = month_name(d.month()),
+        month = helix_app_common::i18n::month_name_in_date(d.month()),
         year = d.year()
     )
 }

@@ -991,7 +991,7 @@ impl Ui {
                 "{weekday}, {day} {month} {year}",
                 weekday = helix_app_common::i18n::weekday_name(lt.weekday().num_days_from_monday()),
                 day = lt.day(),
-                month = helix_app_common::i18n::month_name(lt.month()),
+                month = helix_app_common::i18n::month_name_in_date(lt.month()),
                 year = lt.year()
             ));
         }

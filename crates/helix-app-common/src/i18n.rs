@@ -357,6 +357,22 @@ pub fn month_abbr(month: u32) -> &'static str {
     date_part("%Ob", m, (2024, m as i32, 1))
 }
 
+/// The month's name as it reads in a date, next to a day number ("13
+/// March"); `month` is 1-12. Languages that inflect month names use the
+/// form a date needs (Russian, Polish and Ukrainian: the genitive,
+/// "13 марта" rather than "март").
+pub fn month_name_in_date(month: u32) -> &'static str {
+    let m = month.clamp(1, 12);
+    date_part("%B", m, (2024, m as i32, 1))
+}
+
+/// The month's abbreviated name as it reads in a date ("13 Mar"); see
+/// [`month_name_in_date`].
+pub fn month_abbr_in_date(month: u32) -> &'static str {
+    let m = month.clamp(1, 12);
+    date_part("%b", m, (2024, m as i32, 1))
+}
+
 /// The weekday's name ("Monday"); `day` counts from Monday = 0.
 pub fn weekday_name(day: u32) -> &'static str {
     let d = day % 7;
@@ -444,6 +460,8 @@ mod tests {
     fn date_names_in_the_c_locale() {
         assert_eq!(month_name(1), "January");
         assert_eq!(month_abbr(12), "Dec");
+        assert_eq!(month_name_in_date(3), "March");
+        assert_eq!(month_abbr_in_date(3), "Mar");
         assert_eq!(weekday_name(0), "Monday");
         assert_eq!(weekday_abbr(6), "Sun");
     }
