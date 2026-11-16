@@ -155,18 +155,20 @@ pub fn prompt_text(s: &Submission, kind: Offer) -> String {
         .split_once("://")
         .map(|(_, h)| h)
         .unwrap_or(&s.origin);
-    let who = if s.username.is_empty() {
-        String::new()
-    } else {
-        trf!(" for “{}”", s.username)
-    };
-    match kind {
-        Offer::Update => trf!(
-            "Update the saved password{who} on {host}?",
-            who = who,
+    let user = &s.username;
+    match (kind, user.is_empty()) {
+        (Offer::Update, true) => trf!("Update the saved password on {host}?", host = host),
+        (Offer::Update, false) => trf!(
+            "Update the saved password for “{user}” on {host}?",
+            user = user,
             host = host
         ),
-        _ => trf!("Save password{who} on {host}?", who = who, host = host),
+        (_, true) => trf!("Save password on {host}?", host = host),
+        (_, false) => trf!(
+            "Save password for “{user}” on {host}?",
+            user = user,
+            host = host
+        ),
     }
 }
 
@@ -218,6 +220,18 @@ mod tests {
         assert_eq!(
             prompt_text(&s, Offer::Update),
             "Update the saved password for “ada” on e.com?"
+        );
+        let anonymous = Submission {
+            username: String::new(),
+            ..s
+        };
+        assert_eq!(
+            prompt_text(&anonymous, Offer::Save),
+            "Save password on e.com?"
+        );
+        assert_eq!(
+            prompt_text(&anonymous, Offer::Update),
+            "Update the saved password on e.com?"
         );
     }
 

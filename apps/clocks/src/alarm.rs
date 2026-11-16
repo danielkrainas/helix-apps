@@ -2,6 +2,7 @@
 
 use chrono::{DateTime, Datelike, Duration, LocalResult, NaiveDateTime, TimeZone, Utc, Weekday};
 use helix_app_common::i18n::tr;
+use helix_app_common::nc_;
 use helix_app_common::trf;
 
 /// A set of weekdays; bit 0 = Monday … bit 6 = Sunday.
@@ -88,21 +89,38 @@ pub fn repeat_hint(days: Weekdays) -> String {
         0x1f => tr("Rings Monday to Friday").into(),
         0x60 => tr("Rings Saturday and Sunday").into(),
         _ => {
-            let names: Vec<&str> = Weekdays::ALL
-                .iter()
-                .filter(|d| days.contains(**d))
-                .map(|d| full_name(*d))
+            let picked: Vec<Weekday> = Weekdays::ALL
+                .into_iter()
+                .filter(|d| days.contains(*d))
                 .collect();
-            match names.as_slice() {
-                [one] => trf!("Rings every {one}", one = one),
+            match picked.as_slice() {
+                [] => String::new(),
+                [one] => every_day_hint(*one).into(),
                 [rest @ .., last] => trf!(
                     "Rings every {join} and {last}",
-                    join = rest.join(", "),
-                    last = last
+                    join = rest
+                        .iter()
+                        .map(|d| full_name(*d))
+                        .collect::<Vec<_>>()
+                        .join(tr(nc_!("list separator", ", "))),
+                    last = full_name(*last)
                 ),
-                [] => String::new(),
             }
         }
+    }
+}
+
+/// The hint for an alarm that repeats on one weekday, a whole sentence
+/// so languages can inflect the day ("каждую среду").
+fn every_day_hint(d: Weekday) -> &'static str {
+    match d {
+        Weekday::Mon => tr("Rings every Monday"),
+        Weekday::Tue => tr("Rings every Tuesday"),
+        Weekday::Wed => tr("Rings every Wednesday"),
+        Weekday::Thu => tr("Rings every Thursday"),
+        Weekday::Fri => tr("Rings every Friday"),
+        Weekday::Sat => tr("Rings every Saturday"),
+        Weekday::Sun => tr("Rings every Sunday"),
     }
 }
 
@@ -372,6 +390,7 @@ mod tests {
         assert_eq!(repeat_hint(Weekdays(0x7f)), "Rings every day");
         assert_eq!(repeat_hint(Weekdays(0x1f)), "Rings Monday to Friday");
         assert_eq!(repeat_hint(Weekdays(0b100)), "Rings every Wednesday");
+        assert_eq!(repeat_hint(Weekdays(0b1000000)), "Rings every Sunday");
         assert_eq!(
             repeat_hint(Weekdays(0b10101)),
             "Rings every Monday, Wednesday and Friday"

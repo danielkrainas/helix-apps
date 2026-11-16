@@ -81,13 +81,6 @@ fn main() -> ExitCode {
         Err(e) if e.raw_os_error() == Some(libc::ESRCH) => {
             fail(EXIT_NO_PROCESS, trf!("no process with ID {pid}", pid = pid))
         }
-        Err(e) => fail(
-            EXIT_FAILED,
-            trf!(
-                "cannot {describe}: {e}",
-                describe = command.describe(),
-                e = e
-            ),
-        ),
+        Err(e) => fail(EXIT_FAILED, command.failure(&e)),
     }
 }

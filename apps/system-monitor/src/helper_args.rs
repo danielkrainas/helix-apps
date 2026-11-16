@@ -105,6 +105,26 @@ impl Command {
     }
 }
 
+impl Command {
+    /// The error message when the command failed with `error`.
+    pub fn failure(self, error: &dyn std::fmt::Display) -> String {
+        match self {
+            Command::Signal { signal, pid } => trf!(
+                "cannot send SIG{name} to process {pid}: {error}",
+                name = signal.name(),
+                pid = pid,
+                error = error
+            ),
+            Command::Renice { nice, pid } => trf!(
+                "cannot set nice value of process {pid} to {nice}: {error}",
+                pid = pid,
+                nice = nice,
+                error = error
+            ),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Invocation {
     pub command: Command,
@@ -384,5 +404,18 @@ mod tests {
             "set nice value of process 5 to -3"
         );
         assert_eq!(Signal::Kill.number(), libc::SIGKILL);
+        let denied = std::io::Error::from_raw_os_error(libc::EPERM);
+        assert_eq!(
+            Command::Signal {
+                signal: Signal::Kill,
+                pid: 5
+            }
+            .failure(&denied),
+            format!("cannot send SIGKILL to process 5: {denied}")
+        );
+        assert_eq!(
+            Command::Renice { nice: 4, pid: 5 }.failure(&"busy"),
+            "cannot set nice value of process 5 to 4: busy"
+        );
     }
 }
