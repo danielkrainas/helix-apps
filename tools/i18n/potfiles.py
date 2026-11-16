@@ -7,6 +7,10 @@ then the desktop files and metainfo.
 
 The rule for Rust sources is the same as the unit test that checks
 po/POTFILES (crates/helix-app-common/tests/potfiles.rs).
+
+Shared with helix-desktop's tools/i18n/potfiles.py (which lists its
+crates and one desktop file): keep the rule in step (see "Tooling shared
+with helix-desktop" in TRANSLATING.md).
 """
 
 import os
@@ -15,13 +19,15 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CALL = re.compile(r'(?<![A-Za-z0-9_])(tr|trc|trn|n_)\(\s*"|(?<![A-Za-z0-9_])(trn?f|nc_)!\(')
+# Not shown to people: tests, examples and test-support crates.
+SKIP_DIRS = ("tests", "target", "examples", "helix-test-audio")
 
 
 def rust_files():
     out = []
     for top in ("apps", "crates"):
         for dirpath, dirnames, filenames in os.walk(os.path.join(ROOT, top)):
-            dirnames[:] = sorted(d for d in dirnames if d not in ("tests", "target"))
+            dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
             for f in sorted(filenames):
                 if f.endswith(".rs"):
                     p = os.path.join(dirpath, f)

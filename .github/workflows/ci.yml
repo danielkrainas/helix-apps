@@ -58,6 +58,10 @@ jobs:
       - name: Test against Evolution Data Server
         run: crates/helix-eds/tests/run-private-eds.sh cargo test -p helix-eds --test private_bus --locked
 
+      # The extractor leaves test-only strings out and keeps the rest.
+      - name: Test the i18n tools
+        run: python3 tools/i18n/test_extract_rs.py
+
       # po/POTFILES and the template must match the sources.
       - name: Check translation template
         run: tools/i18n/update-pot.sh --check

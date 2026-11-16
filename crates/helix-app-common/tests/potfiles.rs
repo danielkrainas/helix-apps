@@ -41,7 +41,8 @@ fn walk(dir: &Path, out: &mut Vec<String>) {
         let p = e.path();
         let name = e.file_name().to_string_lossy().to_string();
         if p.is_dir() {
-            if name != "tests" && name != "target" {
+            // Not shown to people: tests, examples, test-support crates.
+            if !["tests", "target", "examples", "helix-test-audio"].contains(&name.as_str()) {
                 walk(&p, out);
             }
         } else if name.ends_with(".rs") {

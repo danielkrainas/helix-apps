@@ -131,3 +131,27 @@ CI runs it with `--check`, and a unit test checks that `po/POTFILES`
 lists every source file with messages. `tools/i18n/mark_strings.py`
 is the heuristic marker used to convert the existing code; it can mark
 new code in bulk, but review its changes.
+Code in `#[cfg(test)] mod … { … }` blocks (wherever they are in a file),
+`tests/` and `examples/` directories and test-support crates is not
+extracted, so test-only strings never reach the template;
+`tools/i18n/test_extract_rs.py` (in CI) checks this.
+
+## Tooling shared with helix-desktop
+
+[helix-desktop](https://github.com/danielkrainas/helix-desktop) has a
+copy of these tools in its own `tools/i18n/` for its `helix-desktop`
+domain. The two copies are kept in step by hand:
+
+| Shared | What differs on purpose |
+| --- | --- |
+| `extract_rs.py` | the i18n crate it documents (`helix_app_common::i18n` / `helix-i18n`), `nc_!` (apps only), the template header |
+| `update-pot.sh` | the template name; apps also extract AppStream metainfo |
+| `potfiles.py` | which directories and data files are listed |
+| `check-po.py` | apps also check markup, access keys and desktop keywords |
+| `pseudo.py`, `make-pseudo.sh` | the template name |
+| `mark_strings.py` | each repo's helper names and crate path |
+
+When you change one of these files, make the same change in the other
+repository (or open an issue there), and say so in the commit.
+`tools/i18n/compare-with-desktop.sh [PATH]` diffs the two copies with the
+project names masked, so only real drift shows.

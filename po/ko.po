@@ -1116,22 +1116,22 @@ msgid "C_alculate"
 msgstr "계산(_A)"
 
 #: apps/calculator/src/ui.rs:1525 apps/calendar/src/editor.rs:1039
-#: apps/calendar/src/ui.rs:2470 apps/clocks/src/ui.rs:410
-#: apps/clocks/src/ui.rs:1352 apps/clocks/src/ui.rs:1907
-#: apps/disk-usage/src/ui.rs:320 apps/disk-usage/src/ui.rs:1687
-#: apps/disks/src/ui.rs:1217 apps/disks/src/ui.rs:1317
-#: apps/disks/src/ui.rs:1434 apps/disks/src/ui.rs:1509
-#: apps/disks/src/ui.rs:1644 apps/disks/src/ui.rs:1701
-#: apps/disks/src/ui.rs:1789 apps/disks/src/ui.rs:2014
-#: apps/disks/src/ui.rs:2222 apps/document-scanner/src/ui.rs:1266
-#: apps/document-scanner/src/ui.rs:1381 apps/document-scanner/src/ui.rs:1419
-#: apps/document-viewer/src/dialogs.rs:169 apps/files/src/ui/dialogs.rs:28
-#: apps/files/src/ui/dialogs.rs:74 apps/files/src/ui/dialogs.rs:220
-#: apps/files/src/ui/sidebar.rs:653 apps/music/src/pages.rs:1522
-#: apps/music/src/pages.rs:1620 apps/music/src/pages.rs:1682
-#: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
-#: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
-#: apps/system-monitor/src/dialogs.rs:142
+#: apps/calendar/src/manage.rs:374 apps/calendar/src/ui.rs:2470
+#: apps/clocks/src/ui.rs:410 apps/clocks/src/ui.rs:1352
+#: apps/clocks/src/ui.rs:1907 apps/disk-usage/src/ui.rs:320
+#: apps/disk-usage/src/ui.rs:1687 apps/disks/src/ui.rs:1217
+#: apps/disks/src/ui.rs:1317 apps/disks/src/ui.rs:1434
+#: apps/disks/src/ui.rs:1509 apps/disks/src/ui.rs:1644
+#: apps/disks/src/ui.rs:1701 apps/disks/src/ui.rs:1789
+#: apps/disks/src/ui.rs:2014 apps/disks/src/ui.rs:2222
+#: apps/document-scanner/src/ui.rs:1266 apps/document-scanner/src/ui.rs:1381
+#: apps/document-scanner/src/ui.rs:1419 apps/document-viewer/src/dialogs.rs:169
+#: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
+#: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:653
+#: apps/music/src/pages.rs:1522 apps/music/src/pages.rs:1620
+#: apps/music/src/pages.rs:1682 apps/settings/src/ui/bluetooth.rs:647
+#: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
+#: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1288
 #: apps/text-editor/src/window.rs:975 apps/web/src/dialogs.rs:413
 #: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
@@ -1589,6 +1589,7 @@ msgid "Calendar Name"
 msgstr "캘린더 이름"
 
 #: apps/calendar/src/manage.rs:68 apps/calendar/src/manage.rs:128
+#: apps/calendar/src/manage.rs:284
 msgid "Calendar Colour"
 msgstr "캘린더 색"
 
@@ -1626,6 +1627,55 @@ msgstr "구독"
 #: apps/calendar/src/manage.rs:197
 msgid "Subscribed to “{n}”"
 msgstr "“{n}”을(를) 구독했습니다"
+
+#: apps/calendar/src/manage.rs:286
+msgid "Colour of {display}"
+msgstr "{display}의 색상"
+
+#: apps/calendar/src/manage.rs:292
+msgid "Show in Calendar"
+msgstr "캘린더에 표시"
+
+#: apps/calendar/src/manage.rs:293
+msgid "Show {display}"
+msgstr "{display} 표시"
+
+#: apps/calendar/src/manage.rs:297 apps/clocks/src/ui.rs:1460
+#: apps/contacts/src/editor.rs:302 apps/disk-usage/src/ui.rs:1007
+#: apps/disks/src/ui.rs:1632 apps/files/src/sorting.rs:43
+#: apps/files/src/ui/tab.rs:190 apps/settings/src/ui/netedit.rs:235
+#: apps/settings/src/ui/users.rs:81
+msgid "Name"
+msgstr "이름"
+
+#: apps/calendar/src/manage.rs:308 apps/calendar/src/manage.rs:313
+msgid "The name cannot be empty"
+msgstr "이름은 비워 둘 수 없습니다"
+
+#: apps/calendar/src/manage.rs:361
+msgid "Remove Calendar"
+msgstr "캘린더 제거"
+
+#: apps/calendar/src/manage.rs:365
+msgid "Remove Calendar {}"
+msgstr "캘린더 {} 제거"
+
+#: apps/calendar/src/manage.rs:369
+msgid "Remove “{}”?"
+msgstr "“{}”을(를) 제거할까요?"
+
+#: apps/calendar/src/manage.rs:370
+msgid "The calendar and all its events will be deleted. This cannot be undone."
+msgstr "캘린더와 모든 일정이 삭제됩니다. 되돌릴 수 없습니다."
+
+#: apps/calendar/src/manage.rs:375 apps/settings/src/ui/netedit.rs:390
+#: apps/web/src/dialogs.rs:928
+msgid "_Remove"
+msgstr "제거(_R)"
+
+#: apps/calendar/src/manage.rs:384
+msgid "Calendar removed"
+msgstr "캘린더를 제거했습니다"
 
 #: apps/calendar/src/model.rs:45 apps/calendar/src/ui.rs:2282
 msgid "(No title)"
@@ -3075,13 +3125,6 @@ msgstr "분"
 #: apps/clocks/src/ui.rs:1384
 msgid "AM or PM"
 msgstr "오전 또는 오후"
-
-#: apps/clocks/src/ui.rs:1460 apps/contacts/src/editor.rs:302
-#: apps/disk-usage/src/ui.rs:1007 apps/disks/src/ui.rs:1632
-#: apps/files/src/sorting.rs:43 apps/files/src/ui/tab.rs:190
-#: apps/settings/src/ui/netedit.rs:235 apps/settings/src/ui/users.rs:81
-msgid "Name"
-msgstr "이름"
 
 #: apps/clocks/src/ui.rs:1476
 msgid "Ring Duration"
@@ -5179,7 +5222,7 @@ msgstr "잠금 해제…"
 
 #: apps/disks/src/ui.rs:1199 apps/document-scanner/src/ui.rs:895
 #: apps/document-scanner/src/ui.rs:1566 apps/files/src/ui/jobs.rs:260
-#: apps/screenshot/src/ui.rs:620 apps/screenshot/src/ui.rs:672
+#: apps/screenshot/src/ui.rs:629 apps/screenshot/src/ui.rs:681
 #: apps/terminal/src/window.rs:475
 msgid "_Close"
 msgstr "닫기(_C)"
@@ -6035,7 +6078,7 @@ msgstr "현재 문서를 저장하시겠습니까?"
 msgid "Documents that are not saved will be permanently lost."
 msgstr "저장하지 않은 문서는 영구히 사라집니다."
 
-#: apps/document-scanner/src/ui.rs:1268 apps/screenshot/src/ui.rs:652
+#: apps/document-scanner/src/ui.rs:1268 apps/screenshot/src/ui.rs:661
 #: apps/text-editor/src/window.rs:142 apps/text-editor/src/window.rs:984
 msgid "_Save"
 msgstr "저장(_S)"
@@ -10377,35 +10420,35 @@ msgstr "클립보드에 복사(_C)"
 msgid "_Save…"
 msgstr "저장(_S)…"
 
-#: apps/screenshot/src/ui.rs:588
+#: apps/screenshot/src/ui.rs:597
 msgid "The capture thread failed."
 msgstr "캡처 스레드가 실패했습니다."
 
-#: apps/screenshot/src/ui.rs:603
+#: apps/screenshot/src/ui.rs:612
 msgid "Could not load the screenshot: {e}"
 msgstr "스크린샷을 불러올 수 없습니다: {e}"
 
-#: apps/screenshot/src/ui.rs:619
+#: apps/screenshot/src/ui.rs:628
 msgid "Could Not Take Screenshot"
 msgstr "스크린샷을 찍을 수 없습니다"
 
-#: apps/screenshot/src/ui.rs:633
+#: apps/screenshot/src/ui.rs:642
 msgid "Screenshot copied to clipboard"
 msgstr "스크린샷을 클립보드에 복사했습니다"
 
-#: apps/screenshot/src/ui.rs:642
+#: apps/screenshot/src/ui.rs:651
 msgid "PNG Images"
 msgstr "PNG 이미지"
 
-#: apps/screenshot/src/ui.rs:647
+#: apps/screenshot/src/ui.rs:656
 msgid "Save Screenshot"
 msgstr "스크린샷 저장"
 
-#: apps/screenshot/src/ui.rs:667
+#: apps/screenshot/src/ui.rs:676
 msgid "Screenshot saved"
 msgstr "스크린샷을 저장했습니다"
 
-#: apps/screenshot/src/ui.rs:671
+#: apps/screenshot/src/ui.rs:680
 msgid "Could Not Save Screenshot"
 msgstr "스크린샷을 저장할 수 없습니다"
 
@@ -12549,10 +12592,6 @@ msgstr "{name}을(를) 제거하시겠습니까?"
 #: apps/settings/src/ui/netedit.rs:385
 msgid "Its settings and password are removed from this computer."
 msgstr "이 컴퓨터에서 설정과 암호를 제거합니다."
-
-#: apps/settings/src/ui/netedit.rs:390 apps/web/src/dialogs.rs:928
-msgid "_Remove"
-msgstr "제거(_R)"
 
 #: apps/settings/src/ui/netedit.rs:412
 msgid "Could not remove it: {e}"

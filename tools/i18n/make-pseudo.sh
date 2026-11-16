@@ -7,6 +7,8 @@
 #
 # Every translated message shows in ⟦àççéñţéđ⟧ brackets; plain English
 # text in the window is a string that is not marked for translation.
+# Shared with helix-desktop's tools/i18n/make-pseudo.sh (see "Tooling
+# shared with helix-desktop" in TRANSLATING.md).
 set -eu
 out=${1:?usage: tools/i18n/make-pseudo.sh OUTDIR}
 root=$(cd "$(dirname "$0")/../.." && pwd)

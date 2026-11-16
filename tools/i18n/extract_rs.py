@@ -16,6 +16,9 @@ comment on the lines just before a call becomes a comment for
 translators in the template. GNU xgettext before 0.24 has no Rust
 parser, so the suite keeps this small one; desktop files and metainfo
 still go through xgettext (see update-pot.sh).
+
+Shared with helix-desktop's tools/i18n/extract_rs.py: keep the two in
+step (see "Tooling shared with helix-desktop" in TRANSLATING.md).
 """
 
 import re
@@ -122,6 +125,41 @@ class Lexer:
         return None
 
 
+TEST_MOD = re.compile(r"#\[cfg\(test\)\]\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+\w+\s*\{")
+
+
+def blank_tests(text):
+    """Blanks every `#[cfg(test)] mod … { … }` block, keeping newlines so
+    line numbers stay right."""
+    while True:
+        m = TEST_MOD.search(text)
+        if not m:
+            return text
+        lx = Lexer(text)
+        lx.i = m.end()
+        depth = 1
+        while lx.i < len(text) and depth:
+            c = text[lx.i]
+            if text.startswith(("//", "/*"), lx.i):
+                lx.skip_ws_comments()
+                continue
+            lit = lx.string_at(lx.i) if c in "\"rb" else None
+            if lit is not None:
+                lx.i = lit[1]
+                continue
+            if c == "'":
+                mm = re.compile(r"'(\\.[^']*|[^\\'])'").match(text, lx.i)
+                lx.i = mm.end() if mm else lx.i + 1
+                continue
+            if c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+            lx.i += 1
+        block = text[m.start():lx.i]
+        text = text[:m.start()] + re.sub(r"[^\n]", " ", block) + text[lx.i:]
+
+
 def translator_comment(text, pos):
     """`// Translators:` comment lines right above the line of pos."""
     start = text.rfind("\n", 0, pos)
@@ -141,10 +179,9 @@ def translator_comment(text, pos):
 
 
 def extract(path, text, out):
-    # Unit tests are not translated.
-    m = re.search(r"#\[cfg\(test\)\]\s*mod\s+\w+\s*\{", text)
-    if m:
-        text = text[:m.start()]
+    # Unit tests and test helpers (`#[cfg(test)] mod … { … }`, wherever
+    # they are in the file) are not translated.
+    text = blank_tests(text)
     lx = Lexer(text)
     s = text
     n = len(s)

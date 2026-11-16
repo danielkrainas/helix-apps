@@ -4,12 +4,23 @@
     python3 tools/i18n/check-po.py            check every language in po/LINGUAS
     python3 tools/i18n/check-po.py de fr      check some
 
-For each catalogue: `msgfmt --check` passes, and every translated message
-keeps what the app fills in or parses: `{name}` placeholders, printf
-conversions, Pango markup tags and entities, one `_` access key if the
-original has one, the number of line breaks, and the `;`-terminated list
-form of desktop-file keywords. po/LINGUAS and the po/*.po files must
+    python3 tools/i18n/check-po.py --untranslated   also list untranslated
+                                                    and fuzzy messages
+
+For each catalogue: `msgfmt --check` passes, the header names its
+language and plural rule, and every translated message keeps what the
+app fills in or parses: `{name}` placeholders, printf conversions, Pango
+markup tags and entities, one `_` access key if the original has one,
+the number of line breaks, the `;`-terminated list form of desktop-file
+keywords and, in date and time patterns (`%A, %B %e`), the same kinds of
+fields (a language may write `%e` as `%-d`, but a 12-hour time keeps its
+AM/PM and a date its weekday). po/LINGUAS and the po/*.po files must
 match. Untranslated and fuzzy messages are counted, not errors.
+
+Shared with helix-desktop's tools/i18n/check-po.py, which has the same
+placeholder, line-break, header and date-pattern checks but no markup,
+access-key or desktop-keyword ones: keep the common checks in step (see
+"Tooling shared with helix-desktop" in TRANSLATING.md).
 """
 
 import os
@@ -25,6 +36,22 @@ PRINTF = re.compile(r"%(?:\d+\$)?[-+#0]*\d*(?:\.\d+)?[sdifuxXcp%]")
 TAG = re.compile(r"</?[a-zA-Z][^<>]*>")
 ENT = re.compile(r"&[a-zA-Z]+;|&#\d+;")
 MNEMONIC = re.compile(r"_(?=[^\s_{}])")
+# A strftime/GLib DateTime conversion: optional padding flag, optional
+# E/O modifier, the field letter.
+CONV = re.compile(r"%[-_0^#]?[EO]?([A-Za-z%])")
+# The kinds of field a date or time pattern shows.
+KIND = {
+    "H": "hour", "k": "hour", "I": "hour", "l": "hour",
+    "M": "minute", "S": "second",
+    "p": "ampm", "P": "ampm",
+    "a": "weekday", "A": "weekday", "u": "weekday", "w": "weekday",
+    "b": "month", "B": "month", "h": "month", "m": "month",
+    "d": "day", "e": "day",
+    "Y": "year", "y": "year", "C": "year", "G": "year", "g": "year",
+}
+# Twelve-hour fields: a 12-hour pattern stays one (and a 24-hour one too).
+TWELVE = set("Il")
+TWENTY_FOUR = set("Hk")
 
 
 def unquote(s):
@@ -99,8 +126,33 @@ def parse(path):
     return entries
 
 
+def is_date_pattern(text):
+    """A pattern made only of conversions and punctuation ("%A, %B %e")."""
+    return bool(CONV.search(text)) and not re.search(r"[A-Za-z]", CONV.sub("", text))
+
+
+def date_problems(src, s):
+    out = []
+    letters = CONV.findall(s)
+    bad = [c for c in letters if c not in KIND and c != "%"]
+    if bad:
+        out.append(f"unknown date fields {bad}")
+    kinds = lambda t: sorted({KIND[c] for c in CONV.findall(t) if c in KIND})
+    if kinds(s) != kinds(src):
+        out.append(f"date fields {kinds(s)} instead of {kinds(src)}")
+    src_letters = set(CONV.findall(src))
+    if src_letters & TWELVE and not set(letters) & TWELVE:
+        out.append("a 12-hour time without a 12-hour field (%l or %I)")
+    if src_letters & TWENTY_FOUR and not set(letters) & TWENTY_FOUR:
+        out.append("a 24-hour time without a 24-hour field (%H or %k)")
+    return out
+
+
 def problems(e, s, src):
     out = []
+    date = is_date_pattern(src)
+    if date:
+        out += date_problems(src, s)
     def keys(rx, t):
         found = rx.findall(t)
         if rx is PH:
@@ -111,6 +163,8 @@ def problems(e, s, src):
         return sorted(found)
     for name, rx in (("placeholders", PH), ("printf conversions", PRINTF),
                      ("markup tags", TAG)):
+        if date and rx is PRINTF:
+            continue
         if keys(rx, s) != keys(rx, src):
             out.append(f"{name} {keys(rx, s)} instead of {keys(rx, src)}")
     # Markup: entities may become words ("&amp;" → "and"), but a bare "&"
@@ -131,7 +185,7 @@ def problems(e, s, src):
     return out
 
 
-def check(lang):
+def check(lang, list_untranslated=False):
     path = os.path.join(PO, f"{lang}.po")
     errors = 0
     r = subprocess.run(["msgfmt", "--check", "--statistics", "-o", os.devnull, path],
@@ -145,8 +199,14 @@ def check(lang):
         if e["id"] == "" and "ctx" not in e:
             header = e["str"].get(0, "")
             continue
-        if e["obsolete"] or "fuzzy" in e["flags"]:
+        if e["obsolete"]:
             continue
+        if "fuzzy" in e["flags"] or not all(e["str"].values()):
+            if list_untranslated:
+                ctx = f"[{e['ctx']}] " if "ctx" in e else ""
+                print(f"po/{lang}.po: untranslated: {ctx}{e['id']!r}")
+            if "fuzzy" in e["flags"]:
+                continue
         forms = [e["str"][i] for i in sorted(e["str"])]
         for i, s in enumerate(forms):
             if not s:
@@ -160,23 +220,32 @@ def check(lang):
                 ctx = f"[{e['ctx']}] " if "ctx" in e else ""
                 print(f"po/{lang}.po: {ctx}{e['id'][:60]!r}: form {i} has {p}")
                 errors += 1
-    if header is not None and "Plural-Forms: nplurals=INTEGER" in header:
-        print(f"po/{lang}.po: Plural-Forms is not set")
+    if header is None:
+        print(f"po/{lang}.po: no header")
         errors += 1
+    else:
+        if "Plural-Forms: nplurals=INTEGER" in header or "Plural-Forms:" not in header:
+            print(f"po/{lang}.po: Plural-Forms is not set")
+            errors += 1
+        if f"Language: {lang}\n" not in header:
+            print(f"po/{lang}.po: the header's Language is not {lang}")
+            errors += 1
     print(f"po/{lang}.po: {stats}")
     return errors
 
 
 def main():
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    list_untranslated = "--untranslated" in sys.argv
     with open(os.path.join(PO, "LINGUAS"), encoding="utf-8") as f:
         linguas = [w for line in f if not line.startswith("#") for w in line.split()]
     files = sorted(f[:-3] for f in os.listdir(PO) if f.endswith(".po"))
     errors = 0
-    if sorted(linguas) != files:
+    if not args and sorted(linguas) != files:
         print(f"po/LINGUAS lists {sorted(linguas)} but po/ has {files}")
         errors += 1
-    for lang in sys.argv[1:] or linguas:
-        errors += check(lang)
+    for lang in args or linguas:
+        errors += check(lang, list_untranslated)
     if errors:
         print(f"{errors} problem(s)")
         sys.exit(1)

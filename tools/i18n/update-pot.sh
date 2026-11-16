@@ -7,7 +7,9 @@
 # Rust sources go through tools/i18n/extract_rs.py (GNU xgettext before
 # 0.24 cannot parse Rust); desktop files and AppStream metainfo through
 # xgettext, which knows their translatable keys. Needs python3 and the
-# GNU gettext tools.
+# GNU gettext tools. Shared with helix-desktop's tools/i18n/update-pot.sh
+# (same scheme, its own template): see "Tooling shared with helix-desktop"
+# in TRANSLATING.md.
 set -eu
 
 root=$(cd "$(dirname "$0")/../.." && pwd)
@@ -47,7 +49,7 @@ if $check; then
     strip() { msgcat --no-wrap --no-location "$1"; }
     strip "$tmp/helix-apps.pot" > "$tmp/new"
     strip po/helix-apps.pot > "$tmp/old"
-    cmp -s "$tmp/new" "$tmp/old" || { echo "po/helix-apps.pot is out of date; run tools/i18n/update-pot.sh" >&2; status=1; }
+    cmp -s "$tmp/new" "$tmp/old" || { echo "po/helix-apps.pot is out of date; run tools/i18n/update-pot.sh" >&2; diff "$tmp/old" "$tmp/new" | head -40 >&2; status=1; }
     exit $status
 fi
 
