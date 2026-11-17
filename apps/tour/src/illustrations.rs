@@ -190,7 +190,54 @@ fn pointer(cr: &Context, p: &Palette, x: f64, y: f64) {
     let _ = cr.stroke();
 }
 
-fn draw_welcome(cr: &Context, p: &Palette) {
+/// Helix's mark (`data/brand/helix-mark.svg`, the project's official
+/// logo), drawn `size` units square centred on the canvas: rendered by
+/// GTK's SVG loader at the device size and cached. False when it cannot
+/// be loaded (no SVG loader), for the drawn fallback.
+fn draw_mark(cr: &Context, size: f64, device_scale: f64) -> bool {
+    use gtk::gdk::prelude::GdkCairoContextExt;
+    use gtk::{gdk_pixbuf::Pixbuf, gio, glib};
+    use std::cell::RefCell;
+    const SVG: &[u8] = include_bytes!("../data/brand/helix-mark.svg");
+    thread_local! {
+        static MARK: RefCell<Option<(i32, Option<Pixbuf>)>> = const { RefCell::new(None) };
+    }
+    let px = (size * device_scale).ceil().max(1.0) as i32;
+    let pixbuf = MARK.with(|m| {
+        let mut m = m.borrow_mut();
+        if let Some((_, pb)) = m.as_ref().filter(|(cached, _)| *cached == px) {
+            return pb.clone();
+        }
+        let stream = gio::MemoryInputStream::from_bytes(&glib::Bytes::from_static(SVG));
+        let pb =
+            Pixbuf::from_stream_at_scale(&stream, px, px, true, None::<&gio::Cancellable>).ok();
+        *m = Some((px, pb.clone()));
+        pb
+    });
+    let Some(pb) = pixbuf else { return false };
+    let _ = cr.save();
+    let k = size / f64::from(pb.width().max(pb.height()));
+    cr.translate(
+        (f64::from(WIDTH) - f64::from(pb.width()) * k) / 2.0,
+        (f64::from(HEIGHT) - f64::from(pb.height()) * k) / 2.0,
+    );
+    cr.scale(k, k);
+    cr.set_source_pixbuf(&pb, 0.0, 0.0);
+    let _ = cr.paint();
+    let _ = cr.restore();
+    true
+}
+
+/// The welcome page: Helix's mark; without an SVG loader, a drawn helix.
+fn draw_welcome(cr: &Context, p: &Palette, scale: f64) {
+    // Sharp on HiDPI screens: the surface's own scale on top of the fit.
+    let device_scale = scale * cr.target().device_scale().0.max(1.0);
+    if !draw_mark(cr, 190.0, device_scale) {
+        draw_strands(cr, p);
+    }
+}
+
+fn draw_strands(cr: &Context, p: &Palette) {
     // Two intertwined strands with rungs: a stylised helix.
     let (x0, x1, cy, amp, period) = (50.0, 310.0, 110.0, 58.0, 130.0);
     let strand = |phase: f64, x: f64| cy + amp * ((x - x0) / period * 2.0 * PI + phase).sin();
@@ -453,7 +500,7 @@ pub fn draw(art: Art, cr: &Context, width: i32, height: i32, dark: bool) {
     cr.scale(scale, scale);
     cr.set_line_cap(gtk::cairo::LineCap::Round);
     match art {
-        Art::Welcome => draw_welcome(cr, p),
+        Art::Welcome => draw_welcome(cr, p, scale),
         Art::Overview => draw_overview(cr, p),
         Art::Launcher => draw_launcher(cr, p),
         Art::Workspaces => draw_workspaces(cr, p),

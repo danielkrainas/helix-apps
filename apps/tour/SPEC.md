@@ -31,7 +31,7 @@ Welcome and feature tour for new users.
   button; no primary menu (About is not reachable from the window, as with
   other single-purpose first-run helpers).
 - The window shows one of two views:
-  1. **Welcome**: a drawn Helix illustration, the title
+  1. **Welcome**: Helix's mark (the official logo), the title
      "Welcome to Helix", a line naming the installed system
      ("You are running *Fedora Linux 41 (Workstation Edition)*."), a short
      invitation, and two buttons: **Start Tour** (suggested, default
