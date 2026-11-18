@@ -200,6 +200,66 @@ mod tests {
         assert_eq!(frame.par, (1, 1));
     }
 
+    /// A frame tagged "rotate-90" (as phones tag vertical videos) comes
+    /// out of the player's video filter upright: 64×48 becomes 48×64.
+    /// Untagged frames keep their size.
+    #[test]
+    fn video_filter_turns_tagged_frames_upright() {
+        gst::init().unwrap();
+        for (tags, size) in [
+            (Some("image-orientation=rotate-90"), (48, 64)),
+            (Some("image-orientation=rotate-180"), (64, 48)),
+            (None, (64, 48)),
+        ] {
+            let pipeline = gst::Pipeline::new();
+            let src = gst::parse::bin_from_description(
+                "videotestsrc num-buffers=3 ! capsfilter caps=video/x-raw,format=I420,width=64,height=48",
+                true,
+            )
+            .unwrap();
+            let filter = crate::player::make_video_filter().expect("video filter");
+            let slot = Arc::new(FrameSlot::default());
+            let sink = make_video_sink(slot.clone(), || {});
+            sink.set_sync(false);
+            pipeline
+                .add_many([src.upcast_ref(), &filter, sink.upcast_ref()])
+                .unwrap();
+            match tags {
+                Some(tags) => {
+                    let inject = gst::ElementFactory::make("taginject")
+                        .property_from_str("tags", tags)
+                        .build()
+                        .unwrap();
+                    pipeline.add(&inject).unwrap();
+                    gst::Element::link_many([
+                        src.upcast_ref(),
+                        &inject,
+                        &filter,
+                        sink.upcast_ref(),
+                    ])
+                    .unwrap();
+                }
+                None => {
+                    gst::Element::link_many([src.upcast_ref(), &filter, sink.upcast_ref()])
+                        .unwrap();
+                }
+            }
+            pipeline.set_state(gst::State::Playing).unwrap();
+            let msg = pipeline
+                .bus()
+                .unwrap()
+                .timed_pop_filtered(
+                    gst::ClockTime::from_seconds(10),
+                    &[gst::MessageType::Eos, gst::MessageType::Error],
+                )
+                .expect("pipeline timed out");
+            assert_eq!(msg.type_(), gst::MessageType::Eos, "{msg:?}");
+            let frame = Frame::from_sample(&slot.take().expect("a frame")).expect("valid frame");
+            pipeline.set_state(gst::State::Null).unwrap();
+            assert_eq!((frame.width, frame.height), size, "tags {tags:?}");
+        }
+    }
+
     #[test]
     fn slot_keeps_latest_only() {
         gst::init().unwrap();

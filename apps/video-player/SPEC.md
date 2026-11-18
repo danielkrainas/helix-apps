@@ -88,6 +88,13 @@ Play video files.
   letter/pillar-boxed and centred in whatever area it gets (aspect-fit math
   in `fit.rs`). It is shown in a `GtkPicture` (`content-fit=contain`) on a
   black background.
+- **Rotated videos play upright.** playbin's `video-filter` is
+  `videoconvert ! videoflip video-direction=auto`: a file whose
+  `image-orientation` tag says it is turned (phones record vertical videos
+  as landscape frames with a rotation in the MP4's display matrix) is
+  turned upright, flipped ones are mirrored back, and untagged video passes
+  through untouched. The display size, the window fit and Take Screenshot
+  all see the upright picture.
 - **The window fits the video.** Outside fullscreen, when a video's display
   size becomes known (its first frame, or a change of resolution), the
   window takes the video's aspect ratio so there are no black bars (a

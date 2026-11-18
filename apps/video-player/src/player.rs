@@ -33,6 +33,17 @@ pub fn make_audio_sink(desc: Option<&str>) -> Option<gst::Element> {
     }
 }
 
+/// The video filter: turns the picture upright as the file's
+/// `image-orientation` tag says (phones record vertical videos as
+/// landscape frames tagged "rotate-90"); without a tag it passes frames
+/// through untouched. `videoconvert` first, so formats `videoflip` cannot
+/// take (10-bit video, for one) are converted rather than failing.
+pub fn make_video_filter() -> Option<gst::Element> {
+    gst::parse::bin_from_description("videoconvert ! videoflip video-direction=auto", true)
+        .ok()
+        .map(|bin| bin.upcast())
+}
+
 /// Creates a playbin rendering into `video_sink`.
 pub fn make_playbin(
     video_sink: &gst::Element,
@@ -44,6 +55,9 @@ pub fn make_playbin(
     playbin.set_property("video-sink", video_sink);
     if let Some(audio) = make_audio_sink(audio_sink_desc) {
         playbin.set_property("audio-sink", &audio);
+    }
+    if let Some(filter) = make_video_filter() {
+        playbin.set_property("video-filter", &filter);
     }
     if let Ok(tempo) = gst::ElementFactory::make("scaletempo").build() {
         playbin.set_property("audio-filter", &tempo);
