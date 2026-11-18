@@ -315,7 +315,7 @@ msgstr ""
 #: apps/image-viewer/src/ui.rs:325 apps/logs/src/ui.rs:308
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
 #: apps/music/src/ui.rs:317 apps/music/src/ui.rs:319
-#: apps/screenshot/src/ui.rs:287 apps/screenshot/src/ui.rs:289
+#: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
 #: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:296 apps/terminal/src/window.rs:300
@@ -360,7 +360,7 @@ msgstr ""
 #: apps/audio-player/src/ui.rs:348 apps/audio-player/src/ui.rs:351
 #: apps/audio-player/src/ui.rs:1283 apps/music/src/pages.rs:694
 #: apps/music/src/ui.rs:968 apps/music/src/ui.rs:1754 apps/music/src/ui.rs:1758
-#: apps/video-player/src/ui.rs:443 apps/video-player/src/ui.rs:1396
+#: apps/video-player/src/ui.rs:443 apps/video-player/src/ui.rs:1460
 msgid "Play"
 msgstr ""
 
@@ -391,7 +391,7 @@ msgstr ""
 
 #: apps/audio-player/src/ui.rs:755 apps/disks/src/ui.rs:1988
 #: apps/document-viewer/src/ui.rs:1483 apps/files/src/ui/dialogs.rs:662
-#: apps/video-player/src/ui.rs:1043
+#: apps/video-player/src/ui.rs:1056
 msgid "All Files"
 msgstr ""
 
@@ -420,7 +420,7 @@ msgstr ""
 
 #: apps/audio-player/src/ui.rs:1281 apps/clocks/src/ui.rs:1758
 #: apps/clocks/src/ui.rs:2241 apps/music/src/ui.rs:968
-#: apps/video-player/src/ui.rs:1396
+#: apps/video-player/src/ui.rs:1460
 msgid "Pause"
 msgstr ""
 
@@ -1374,7 +1374,7 @@ msgid "Cancel"
 msgstr ""
 
 #: apps/calendar/src/editor.rs:467 apps/document-scanner/src/shortcuts.rs:21
-#: apps/document-scanner/src/ui.rs:323 apps/screenshot/src/shortcuts.rs:18
+#: apps/document-scanner/src/ui.rs:323 apps/screenshot/src/shortcuts.rs:20
 #: apps/text-editor/src/shortcuts.rs:16 apps/text-editor/src/window.rs:144
 #: apps/text-editor/src/window.rs:181 apps/text-editor/src/window.rs:183
 #: apps/web/src/tab.rs:191
@@ -5221,7 +5221,7 @@ msgstr ""
 
 #: apps/disks/src/ui.rs:1211 apps/document-scanner/src/ui.rs:895
 #: apps/document-scanner/src/ui.rs:1566 apps/files/src/ui/jobs.rs:260
-#: apps/screenshot/src/ui.rs:629 apps/screenshot/src/ui.rs:681
+#: apps/screenshot/src/ui.rs:646 apps/screenshot/src/ui.rs:707
 #: apps/terminal/src/window.rs:475 crates/helix-app-common/src/errors.rs:353
 msgid "_Close"
 msgstr ""
@@ -6060,7 +6060,7 @@ msgstr ""
 msgid "Documents that are not saved will be permanently lost."
 msgstr ""
 
-#: apps/document-scanner/src/ui.rs:1268 apps/screenshot/src/ui.rs:661
+#: apps/document-scanner/src/ui.rs:1268 apps/screenshot/src/ui.rs:687
 #: apps/text-editor/src/window.rs:142 apps/text-editor/src/window.rs:984
 msgid "_Save"
 msgstr ""
@@ -10222,7 +10222,7 @@ msgstr ""
 msgid "option --file needs a file name"
 msgstr ""
 
-#: apps/screenshot/src/main.rs:44 apps/screenshot/src/ui.rs:104
+#: apps/screenshot/src/main.rs:45 apps/screenshot/src/ui.rs:104
 msgid "Could not save {path}: {e}"
 msgstr ""
 
@@ -10281,17 +10281,21 @@ msgstr ""
 msgid "D-Bus error: {e}"
 msgstr ""
 
-#: apps/screenshot/src/shortcuts.rs:15 apps/screenshot/src/ui.rs:18
-#: apps/screenshot/src/ui.rs:364
+#: apps/screenshot/src/shortcuts.rs:16 apps/screenshot/src/ui.rs:18
+#: apps/screenshot/src/ui.rs:367
 msgid "Screenshot"
 msgstr ""
 
-#: apps/screenshot/src/shortcuts.rs:17
+#: apps/screenshot/src/shortcuts.rs:18
+msgid "Retake"
+msgstr ""
+
+#: apps/screenshot/src/shortcuts.rs:19
 msgid "Copy to Clipboard"
 msgstr ""
 
-#: apps/screenshot/src/shortcuts.rs:19 apps/screenshot/src/ui.rs:360
-#: apps/screenshot/src/ui.rs:363
+#: apps/screenshot/src/shortcuts.rs:21 apps/screenshot/src/ui.rs:363
+#: apps/screenshot/src/ui.rs:366
 msgid "New Screenshot"
 msgstr ""
 
@@ -10315,79 +10319,87 @@ msgstr ""
 msgid "Screenshot of a selected area, {width} × {height}"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:280
+#: apps/screenshot/src/ui.rs:283
 msgid "_About Screenshot"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:293
+#: apps/screenshot/src/ui.rs:296
 msgid "_Screen"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:294
+#: apps/screenshot/src/ui.rs:297
 msgid "_Window"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:295
+#: apps/screenshot/src/ui.rs:298
 msgid "_Area"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:307 apps/screenshot/src/ui.rs:311
+#: apps/screenshot/src/ui.rs:310 apps/screenshot/src/ui.rs:314
 msgid "Take"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:315
+#: apps/screenshot/src/ui.rs:318
 msgid "_Delay in Seconds"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:319
+#: apps/screenshot/src/ui.rs:322
 msgid "Show _Pointer"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:323
+#: apps/screenshot/src/ui.rs:326
 msgid "Options"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:329
+#: apps/screenshot/src/ui.rs:332
 msgid "_Take Screenshot"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:384
-msgid "_Copy to Clipboard"
+#: apps/screenshot/src/ui.rs:387
+msgid "_Retake"
 msgstr ""
 
 #: apps/screenshot/src/ui.rs:390
+msgid "Take the screenshot again"
+msgstr ""
+
+#: apps/screenshot/src/ui.rs:394
+msgid "_Copy to Clipboard"
+msgstr ""
+
+#: apps/screenshot/src/ui.rs:400
 msgid "_Save…"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:597
+#: apps/screenshot/src/ui.rs:614
 msgid "The capture thread failed."
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:612
+#: apps/screenshot/src/ui.rs:629
 msgid "Could not load the screenshot: {e}"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:628
+#: apps/screenshot/src/ui.rs:645
 msgid "Could Not Take Screenshot"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:642
+#: apps/screenshot/src/ui.rs:668
 msgid "Screenshot copied to clipboard"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:651
+#: apps/screenshot/src/ui.rs:677
 msgid "PNG Images"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:656
+#: apps/screenshot/src/ui.rs:682
 msgid "Save Screenshot"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:676
+#: apps/screenshot/src/ui.rs:702
 msgid "Screenshot saved"
 msgstr ""
 
-#: apps/screenshot/src/ui.rs:680
+#: apps/screenshot/src/ui.rs:706
 msgid "Could Not Save Screenshot"
 msgstr ""
 
@@ -15001,12 +15013,12 @@ msgstr ""
 msgid "Video Player"
 msgstr ""
 
-#: apps/video-player/src/player.rs:97
+#: apps/video-player/src/player.rs:111
 msgctxt "audio or subtitle stream"
 msgid "Track"
 msgstr ""
 
-#: apps/video-player/src/player.rs:99
+#: apps/video-player/src/player.rs:113
 msgid "Track {}"
 msgstr ""
 
@@ -15080,88 +15092,88 @@ msgstr ""
 msgid "Enter Fullscreen"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1040
+#: apps/video-player/src/ui.rs:1053
 msgid "Videos"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1049
+#: apps/video-player/src/ui.rs:1062
 msgid "Open Video"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1070 apps/video-player/src/ui.rs:1752
+#: apps/video-player/src/ui.rs:1083 apps/video-player/src/ui.rs:1816
 msgid "Subtitles"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1077
+#: apps/video-player/src/ui.rs:1090
 msgid "Load Subtitle File"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1165
+#: apps/video-player/src/ui.rs:1178
 msgid "The required codec is not installed: <b>{codec}</b>"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1178
+#: apps/video-player/src/ui.rs:1191
 msgid "Cannot play file. {detail}"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1180
+#: apps/video-player/src/ui.rs:1193
 msgid "Cannot play file. The required codec is not installed: {}"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1320
+#: apps/video-player/src/ui.rs:1384
 msgid "No decodable video stream"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1331
+#: apps/video-player/src/ui.rs:1395
 msgid "Missing codec: {m}"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1339
+#: apps/video-player/src/ui.rs:1403
 msgid "Resume from {}?"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1340
+#: apps/video-player/src/ui.rs:1404
 msgid "_Resume"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1361
+#: apps/video-player/src/ui.rs:1425
 msgid "_Resume from {}"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1656
+#: apps/video-player/src/ui.rs:1720
 msgid "Playback Speed: {key}×"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1685
+#: apps/video-player/src/ui.rs:1749
 msgid "Muted"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1710
+#: apps/video-player/src/ui.rs:1774
 msgid "Playing video"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1737
+#: apps/video-player/src/ui.rs:1801
 msgid "Audio"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1740
+#: apps/video-player/src/ui.rs:1804
 msgctxt "subtitles"
 msgid "None"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1751
+#: apps/video-player/src/ui.rs:1815
 msgid "Load Subtitle File…"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1844
+#: apps/video-player/src/ui.rs:1908
 msgid "Screenshot saved as “{}”"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1850
+#: apps/video-player/src/ui.rs:1914
 msgid "Could not save screenshot: {err}"
 msgstr ""
 
-#: apps/video-player/src/ui.rs:1851
+#: apps/video-player/src/ui.rs:1915
 msgid "Could not save screenshot"
 msgstr ""
 

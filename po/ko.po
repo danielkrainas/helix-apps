@@ -317,7 +317,7 @@ msgstr "오디오 플레이어 정보(_A)"
 #: apps/image-viewer/src/ui.rs:325 apps/logs/src/ui.rs:308
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
 #: apps/music/src/ui.rs:317 apps/music/src/ui.rs:319
-#: apps/screenshot/src/ui.rs:287 apps/screenshot/src/ui.rs:289
+#: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
 #: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:296 apps/terminal/src/window.rs:300
@@ -362,7 +362,7 @@ msgstr "재생 속도(음높이 유지 안 함)"
 #: apps/audio-player/src/ui.rs:348 apps/audio-player/src/ui.rs:351
 #: apps/audio-player/src/ui.rs:1283 apps/music/src/pages.rs:694
 #: apps/music/src/ui.rs:968 apps/music/src/ui.rs:1754 apps/music/src/ui.rs:1758
-#: apps/video-player/src/ui.rs:443 apps/video-player/src/ui.rs:1396
+#: apps/video-player/src/ui.rs:443 apps/video-player/src/ui.rs:1460
 msgid "Play"
 msgstr "재생"
 
@@ -393,7 +393,7 @@ msgstr "오디오 파일"
 
 #: apps/audio-player/src/ui.rs:755 apps/disks/src/ui.rs:1988
 #: apps/document-viewer/src/ui.rs:1483 apps/files/src/ui/dialogs.rs:662
-#: apps/video-player/src/ui.rs:1043
+#: apps/video-player/src/ui.rs:1056
 msgid "All Files"
 msgstr "모든 파일"
 
@@ -422,7 +422,7 @@ msgstr "{position} / {duration}"
 
 #: apps/audio-player/src/ui.rs:1281 apps/clocks/src/ui.rs:1758
 #: apps/clocks/src/ui.rs:2241 apps/music/src/ui.rs:968
-#: apps/video-player/src/ui.rs:1396
+#: apps/video-player/src/ui.rs:1460
 msgid "Pause"
 msgstr "일시 정지"
 
@@ -1383,7 +1383,7 @@ msgid "Cancel"
 msgstr "취소"
 
 #: apps/calendar/src/editor.rs:467 apps/document-scanner/src/shortcuts.rs:21
-#: apps/document-scanner/src/ui.rs:323 apps/screenshot/src/shortcuts.rs:18
+#: apps/document-scanner/src/ui.rs:323 apps/screenshot/src/shortcuts.rs:20
 #: apps/text-editor/src/shortcuts.rs:16 apps/text-editor/src/window.rs:144
 #: apps/text-editor/src/window.rs:181 apps/text-editor/src/window.rs:183
 #: apps/web/src/tab.rs:191
@@ -5224,7 +5224,7 @@ msgstr "잠금 해제…"
 
 #: apps/disks/src/ui.rs:1211 apps/document-scanner/src/ui.rs:895
 #: apps/document-scanner/src/ui.rs:1566 apps/files/src/ui/jobs.rs:260
-#: apps/screenshot/src/ui.rs:629 apps/screenshot/src/ui.rs:681
+#: apps/screenshot/src/ui.rs:646 apps/screenshot/src/ui.rs:707
 #: apps/terminal/src/window.rs:475 crates/helix-app-common/src/errors.rs:353
 msgid "_Close"
 msgstr "닫기(_C)"
@@ -6080,7 +6080,7 @@ msgstr "현재 문서를 저장하시겠습니까?"
 msgid "Documents that are not saved will be permanently lost."
 msgstr "저장하지 않은 문서는 영구히 사라집니다."
 
-#: apps/document-scanner/src/ui.rs:1268 apps/screenshot/src/ui.rs:661
+#: apps/document-scanner/src/ui.rs:1268 apps/screenshot/src/ui.rs:687
 #: apps/text-editor/src/window.rs:142 apps/text-editor/src/window.rs:984
 msgid "_Save"
 msgstr "저장(_S)"
@@ -10280,7 +10280,7 @@ msgstr "알 수 없는 옵션 -{c}"
 msgid "option --file needs a file name"
 msgstr "--file 옵션에 파일 이름이 필요합니다"
 
-#: apps/screenshot/src/main.rs:44 apps/screenshot/src/ui.rs:104
+#: apps/screenshot/src/main.rs:45 apps/screenshot/src/ui.rs:104
 msgid "Could not save {path}: {e}"
 msgstr "{path}을(를) 저장할 수 없습니다: {e}"
 
@@ -10341,17 +10341,21 @@ msgstr "셸이 오류를 보고했습니다({name})."
 msgid "D-Bus error: {e}"
 msgstr "D-Bus 오류: {e}"
 
-#: apps/screenshot/src/shortcuts.rs:15 apps/screenshot/src/ui.rs:18
-#: apps/screenshot/src/ui.rs:364
+#: apps/screenshot/src/shortcuts.rs:16 apps/screenshot/src/ui.rs:18
+#: apps/screenshot/src/ui.rs:367
 msgid "Screenshot"
 msgstr "스크린샷"
 
-#: apps/screenshot/src/shortcuts.rs:17
+#: apps/screenshot/src/shortcuts.rs:18
+msgid "Retake"
+msgstr "다시 찍기"
+
+#: apps/screenshot/src/shortcuts.rs:19
 msgid "Copy to Clipboard"
 msgstr "클립보드에 복사"
 
-#: apps/screenshot/src/shortcuts.rs:19 apps/screenshot/src/ui.rs:360
-#: apps/screenshot/src/ui.rs:363
+#: apps/screenshot/src/shortcuts.rs:21 apps/screenshot/src/ui.rs:363
+#: apps/screenshot/src/ui.rs:366
 msgid "New Screenshot"
 msgstr "새 스크린샷"
 
@@ -10375,79 +10379,87 @@ msgstr "창 스크린샷, {width} × {height}"
 msgid "Screenshot of a selected area, {width} × {height}"
 msgstr "선택 영역 스크린샷, {width} × {height}"
 
-#: apps/screenshot/src/ui.rs:280
+#: apps/screenshot/src/ui.rs:283
 msgid "_About Screenshot"
 msgstr "스크린샷 정보(_A)"
 
-#: apps/screenshot/src/ui.rs:293
+#: apps/screenshot/src/ui.rs:296
 msgid "_Screen"
 msgstr "화면(_S)"
 
-#: apps/screenshot/src/ui.rs:294
+#: apps/screenshot/src/ui.rs:297
 msgid "_Window"
 msgstr "창(_W)"
 
-#: apps/screenshot/src/ui.rs:295
+#: apps/screenshot/src/ui.rs:298
 msgid "_Area"
 msgstr "영역(_A)"
 
-#: apps/screenshot/src/ui.rs:307 apps/screenshot/src/ui.rs:311
+#: apps/screenshot/src/ui.rs:310 apps/screenshot/src/ui.rs:314
 msgid "Take"
 msgstr "찍기"
 
-#: apps/screenshot/src/ui.rs:315
+#: apps/screenshot/src/ui.rs:318
 msgid "_Delay in Seconds"
 msgstr "지연 시간(초)(_D)"
 
-#: apps/screenshot/src/ui.rs:319
+#: apps/screenshot/src/ui.rs:322
 msgid "Show _Pointer"
 msgstr "포인터 표시(_P)"
 
-#: apps/screenshot/src/ui.rs:323
+#: apps/screenshot/src/ui.rs:326
 msgid "Options"
 msgstr "옵션"
 
-#: apps/screenshot/src/ui.rs:329
+#: apps/screenshot/src/ui.rs:332
 msgid "_Take Screenshot"
 msgstr "스크린샷 찍기(_T)"
 
-#: apps/screenshot/src/ui.rs:384
+#: apps/screenshot/src/ui.rs:387
+msgid "_Retake"
+msgstr "다시 찍기(_R)"
+
+#: apps/screenshot/src/ui.rs:390
+msgid "Take the screenshot again"
+msgstr "스크린샷을 다시 찍습니다"
+
+#: apps/screenshot/src/ui.rs:394
 msgid "_Copy to Clipboard"
 msgstr "클립보드에 복사(_C)"
 
-#: apps/screenshot/src/ui.rs:390
+#: apps/screenshot/src/ui.rs:400
 msgid "_Save…"
 msgstr "저장(_S)…"
 
-#: apps/screenshot/src/ui.rs:597
+#: apps/screenshot/src/ui.rs:614
 msgid "The capture thread failed."
 msgstr "캡처 스레드가 실패했습니다."
 
-#: apps/screenshot/src/ui.rs:612
+#: apps/screenshot/src/ui.rs:629
 msgid "Could not load the screenshot: {e}"
 msgstr "스크린샷을 불러올 수 없습니다: {e}"
 
-#: apps/screenshot/src/ui.rs:628
+#: apps/screenshot/src/ui.rs:645
 msgid "Could Not Take Screenshot"
 msgstr "스크린샷을 찍을 수 없습니다"
 
-#: apps/screenshot/src/ui.rs:642
+#: apps/screenshot/src/ui.rs:668
 msgid "Screenshot copied to clipboard"
 msgstr "스크린샷을 클립보드에 복사했습니다"
 
-#: apps/screenshot/src/ui.rs:651
+#: apps/screenshot/src/ui.rs:677
 msgid "PNG Images"
 msgstr "PNG 이미지"
 
-#: apps/screenshot/src/ui.rs:656
+#: apps/screenshot/src/ui.rs:682
 msgid "Save Screenshot"
 msgstr "스크린샷 저장"
 
-#: apps/screenshot/src/ui.rs:676
+#: apps/screenshot/src/ui.rs:702
 msgid "Screenshot saved"
 msgstr "스크린샷을 저장했습니다"
 
-#: apps/screenshot/src/ui.rs:680
+#: apps/screenshot/src/ui.rs:706
 msgid "Could Not Save Screenshot"
 msgstr "스크린샷을 저장할 수 없습니다"
 
@@ -15182,12 +15194,12 @@ msgstr "영화"
 msgid "Video Player"
 msgstr "동영상 플레이어"
 
-#: apps/video-player/src/player.rs:97
+#: apps/video-player/src/player.rs:111
 msgctxt "audio or subtitle stream"
 msgid "Track"
 msgstr "트랙"
 
-#: apps/video-player/src/player.rs:99
+#: apps/video-player/src/player.rs:113
 msgid "Track {}"
 msgstr "트랙 {}"
 
@@ -15261,88 +15273,88 @@ msgstr "오디오 및 자막"
 msgid "Enter Fullscreen"
 msgstr "전체 화면으로 보기"
 
-#: apps/video-player/src/ui.rs:1040
+#: apps/video-player/src/ui.rs:1053
 msgid "Videos"
 msgstr "동영상"
 
-#: apps/video-player/src/ui.rs:1049
+#: apps/video-player/src/ui.rs:1062
 msgid "Open Video"
 msgstr "동영상 열기"
 
-#: apps/video-player/src/ui.rs:1070 apps/video-player/src/ui.rs:1752
+#: apps/video-player/src/ui.rs:1083 apps/video-player/src/ui.rs:1816
 msgid "Subtitles"
 msgstr "자막"
 
-#: apps/video-player/src/ui.rs:1077
+#: apps/video-player/src/ui.rs:1090
 msgid "Load Subtitle File"
 msgstr "자막 파일 불러오기"
 
-#: apps/video-player/src/ui.rs:1165
+#: apps/video-player/src/ui.rs:1178
 msgid "The required codec is not installed: <b>{codec}</b>"
 msgstr "필요한 코덱이 설치되어 있지 않습니다: <b>{codec}</b>"
 
-#: apps/video-player/src/ui.rs:1178
+#: apps/video-player/src/ui.rs:1191
 msgid "Cannot play file. {detail}"
 msgstr "파일을 재생할 수 없습니다. {detail}"
 
-#: apps/video-player/src/ui.rs:1180
+#: apps/video-player/src/ui.rs:1193
 msgid "Cannot play file. The required codec is not installed: {}"
 msgstr "파일을 재생할 수 없습니다. 필요한 코덱이 설치되어 있지 않습니다: {}"
 
-#: apps/video-player/src/ui.rs:1320
+#: apps/video-player/src/ui.rs:1384
 msgid "No decodable video stream"
 msgstr "디코딩할 수 있는 동영상 스트림이 없습니다"
 
-#: apps/video-player/src/ui.rs:1331
+#: apps/video-player/src/ui.rs:1395
 msgid "Missing codec: {m}"
 msgstr "코덱 없음: {m}"
 
-#: apps/video-player/src/ui.rs:1339
+#: apps/video-player/src/ui.rs:1403
 msgid "Resume from {}?"
 msgstr "{}부터 이어서 재생하시겠습니까?"
 
-#: apps/video-player/src/ui.rs:1340
+#: apps/video-player/src/ui.rs:1404
 msgid "_Resume"
 msgstr "이어서 재생(_R)"
 
-#: apps/video-player/src/ui.rs:1361
+#: apps/video-player/src/ui.rs:1425
 msgid "_Resume from {}"
 msgstr "{}부터 이어서 재생(_R)"
 
-#: apps/video-player/src/ui.rs:1656
+#: apps/video-player/src/ui.rs:1720
 msgid "Playback Speed: {key}×"
 msgstr "재생 속도: {key}×"
 
-#: apps/video-player/src/ui.rs:1685
+#: apps/video-player/src/ui.rs:1749
 msgid "Muted"
 msgstr "음소거됨"
 
-#: apps/video-player/src/ui.rs:1710
+#: apps/video-player/src/ui.rs:1774
 msgid "Playing video"
 msgstr "동영상 재생 중"
 
-#: apps/video-player/src/ui.rs:1737
+#: apps/video-player/src/ui.rs:1801
 msgid "Audio"
 msgstr "오디오"
 
-#: apps/video-player/src/ui.rs:1740
+#: apps/video-player/src/ui.rs:1804
 msgctxt "subtitles"
 msgid "None"
 msgstr "없음"
 
-#: apps/video-player/src/ui.rs:1751
+#: apps/video-player/src/ui.rs:1815
 msgid "Load Subtitle File…"
 msgstr "자막 파일 불러오기…"
 
-#: apps/video-player/src/ui.rs:1844
+#: apps/video-player/src/ui.rs:1908
 msgid "Screenshot saved as “{}”"
 msgstr "스크린샷을 “{}”(으)로 저장했습니다"
 
-#: apps/video-player/src/ui.rs:1850
+#: apps/video-player/src/ui.rs:1914
 msgid "Could not save screenshot: {err}"
 msgstr "스크린샷을 저장할 수 없습니다: {err}"
 
-#: apps/video-player/src/ui.rs:1851
+#: apps/video-player/src/ui.rs:1915
 msgid "Could not save screenshot"
 msgstr "스크린샷을 저장할 수 없습니다"
 

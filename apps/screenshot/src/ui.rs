@@ -229,6 +229,9 @@ struct Win {
     preview_title: adw::WindowTitle,
     settings: RefCell<Settings>,
     shot: RefCell<Option<Shot>>,
+    /// What the last capture asked for: Retake asks for it again (a new
+    /// selection in Area mode, a new click in Window mode).
+    last: RefCell<Option<Request>>,
     busy: Cell<bool>,
     /// Started from the command line with a capture: a cancelled
     /// selection ends the app instead of showing the options.
@@ -380,6 +383,13 @@ impl Win {
             .margin_end(12)
             .css_classes(["card"])
             .build();
+        let retake_button = gtk::Button::builder()
+            .label(tr("_Retake"))
+            .use_underline(true)
+            .action_name("win.retake")
+            .tooltip_text(tr("Take the screenshot again"))
+            .css_classes(["pill"])
+            .build();
         let copy_button = gtk::Button::builder()
             .label(tr("_Copy to Clipboard"))
             .use_underline(true)
@@ -392,13 +402,17 @@ impl Win {
             .action_name("win.save")
             .css_classes(["pill", "suggested-action"])
             .build();
+        // One row, or a column of equally wide buttons when the window is
+        // too narrow for the row (long labels in some languages).
         let actions = gtk::Box::builder()
-            .spacing(12)
-            .halign(gtk::Align::Center)
+            .layout_manager(&crate::row_or_column::RowOrColumn::new(12))
             .margin_bottom(18)
+            .margin_start(12)
+            .margin_end(12)
             .build();
-        actions.append(&copy_button);
-        actions.append(&save_button);
+        for button in [&retake_button, &copy_button, &save_button] {
+            actions.append(button);
+        }
         let preview_page = adw::ToolbarView::new();
         preview_page.add_top_bar(&preview_header);
         preview_page.set_content(Some(&frame));
@@ -441,6 +455,7 @@ impl Win {
             preview_title,
             settings: RefCell::new(settings),
             shot: RefCell::new(None),
+            last: RefCell::new(None),
             busy: Cell::new(false),
             exit_on_cancel: Cell::new(false),
             status,
@@ -521,6 +536,7 @@ impl Win {
             actions.add_action(&action);
         };
         add("new", |w| w.show_options());
+        add("retake", Win::retake);
         add("copy", |w| w.copy());
         add("save", Win::save);
         self.window.insert_action_group("win", Some(actions));
@@ -541,7 +557,7 @@ impl Win {
     }
 
     fn set_preview_actions(&self, on: bool) {
-        for name in ["new", "copy", "save"] {
+        for name in ["new", "retake", "copy", "save"] {
             if let Some(a) = self
                 .actions
                 .lookup_action(name)
@@ -584,6 +600,7 @@ impl Win {
         if self.busy.replace(true) {
             return;
         }
+        self.last.replace(Some(req.clone()));
         let hold = self.app.hold();
         self.window.set_visible(false);
         let w = self.clone();
@@ -631,6 +648,15 @@ impl Win {
                 }
             }
         });
+    }
+
+    /// The same capture again: the whole screen or the window again, or a
+    /// new area to select. Cancelling the selection keeps the shot shown.
+    fn retake(self: &Rc<Self>) {
+        let Some(req) = self.last.borrow().clone() else {
+            return;
+        };
+        Win::take(self, req);
     }
 
     fn copy(&self) {
@@ -723,6 +749,7 @@ mod tests {
             return;
         };
         adw::init().unwrap();
+        crate::row_or_column::check_row_then_column();
         let app = adw::Application::builder()
             .application_id("org.helixdesktop.Screenshot.Test")
             .flags(gio::ApplicationFlags::NON_UNIQUE)
@@ -751,6 +778,31 @@ mod tests {
             "{calls:?}"
         );
 
+        // Retake asks for a new area and captures it again.
+        WidgetExt::activate_action(&window, "win.retake", None)
+            .expect("Retake is enabled on the preview");
+        wait_for("the retaken shot", || {
+            weak.upgrade().is_some_and(|w| !w.busy.get())
+                && state.lock().unwrap().calls.len() == 4
+                && window.is_visible()
+        });
+        let calls = state.lock().unwrap().calls.clone();
+        assert_eq!(calls[2], "SelectArea", "{calls:?}");
+        assert!(calls[3].starts_with("ScreenshotArea "), "{calls:?}");
+        assert_eq!(stack.visible_child_name().as_deref(), Some("preview"));
+
+        // A retake whose selection is cancelled keeps the shot shown.
+        state.lock().unwrap().cancel_select = true;
+        WidgetExt::activate_action(&window, "win.retake", None).unwrap();
+        wait_for("the cancelled retake", || {
+            weak.upgrade().is_some_and(|w| !w.busy.get())
+                && state.lock().unwrap().calls.len() == 5
+                && window.is_visible()
+        });
+        assert_eq!(stack.visible_child_name().as_deref(), Some("preview"));
+        assert!(weak.upgrade().unwrap().shot.borrow().is_some());
+        state.lock().unwrap().cancel_select = false;
+
         // A refused or failed capture is shown, not ignored: the options
         // again, with a dialog saying why.
         state.lock().unwrap().fail_capture = true;
@@ -760,7 +812,7 @@ mod tests {
         take_button.emit_clicked();
         wait_for("the error", || {
             weak.upgrade().is_some_and(|w| !w.busy.get())
-                && state.lock().unwrap().calls.len() == 4
+                && state.lock().unwrap().calls.len() == 7
                 && window.is_visible()
         });
         assert!(

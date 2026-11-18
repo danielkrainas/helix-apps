@@ -322,7 +322,7 @@ msgstr "_Over Audiospeler"
 #: apps/image-viewer/src/ui.rs:325 apps/logs/src/ui.rs:308
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
 #: apps/music/src/ui.rs:317 apps/music/src/ui.rs:319
-#: apps/screenshot/src/ui.rs:287 apps/screenshot/src/ui.rs:289
+#: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
 #: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:296 apps/terminal/src/window.rs:300
@@ -367,7 +367,7 @@ msgstr "Afspeelsnelheid (toonhoogte niet behouden)"
 #: apps/audio-player/src/ui.rs:348 apps/audio-player/src/ui.rs:351
 #: apps/audio-player/src/ui.rs:1283 apps/music/src/pages.rs:694
 #: apps/music/src/ui.rs:968 apps/music/src/ui.rs:1754 apps/music/src/ui.rs:1758
-#: apps/video-player/src/ui.rs:443 apps/video-player/src/ui.rs:1396
+#: apps/video-player/src/ui.rs:443 apps/video-player/src/ui.rs:1460
 msgid "Play"
 msgstr "Afspelen"
 
@@ -398,7 +398,7 @@ msgstr "Audiobestanden"
 
 #: apps/audio-player/src/ui.rs:755 apps/disks/src/ui.rs:1988
 #: apps/document-viewer/src/ui.rs:1483 apps/files/src/ui/dialogs.rs:662
-#: apps/video-player/src/ui.rs:1043
+#: apps/video-player/src/ui.rs:1056
 msgid "All Files"
 msgstr "Alle bestanden"
 
@@ -427,7 +427,7 @@ msgstr "{position} van {duration}"
 
 #: apps/audio-player/src/ui.rs:1281 apps/clocks/src/ui.rs:1758
 #: apps/clocks/src/ui.rs:2241 apps/music/src/ui.rs:968
-#: apps/video-player/src/ui.rs:1396
+#: apps/video-player/src/ui.rs:1460
 msgid "Pause"
 msgstr "Pauzeren"
 
@@ -1394,7 +1394,7 @@ msgid "Cancel"
 msgstr "Annuleren"
 
 #: apps/calendar/src/editor.rs:467 apps/document-scanner/src/shortcuts.rs:21
-#: apps/document-scanner/src/ui.rs:323 apps/screenshot/src/shortcuts.rs:18
+#: apps/document-scanner/src/ui.rs:323 apps/screenshot/src/shortcuts.rs:20
 #: apps/text-editor/src/shortcuts.rs:16 apps/text-editor/src/window.rs:144
 #: apps/text-editor/src/window.rs:181 apps/text-editor/src/window.rs:183
 #: apps/web/src/tab.rs:191
@@ -5279,7 +5279,7 @@ msgstr "Ontgrendelen…"
 
 #: apps/disks/src/ui.rs:1211 apps/document-scanner/src/ui.rs:895
 #: apps/document-scanner/src/ui.rs:1566 apps/files/src/ui/jobs.rs:260
-#: apps/screenshot/src/ui.rs:629 apps/screenshot/src/ui.rs:681
+#: apps/screenshot/src/ui.rs:646 apps/screenshot/src/ui.rs:707
 #: apps/terminal/src/window.rs:475 crates/helix-app-common/src/errors.rs:353
 msgid "_Close"
 msgstr "_Sluiten"
@@ -6139,7 +6139,7 @@ msgstr "Huidig document opslaan?"
 msgid "Documents that are not saved will be permanently lost."
 msgstr "Documenten die niet zijn opgeslagen, gaan definitief verloren."
 
-#: apps/document-scanner/src/ui.rs:1268 apps/screenshot/src/ui.rs:661
+#: apps/document-scanner/src/ui.rs:1268 apps/screenshot/src/ui.rs:687
 #: apps/text-editor/src/window.rs:142 apps/text-editor/src/window.rs:984
 msgid "_Save"
 msgstr "_Opslaan"
@@ -10390,7 +10390,7 @@ msgstr "onbekende optie -{c}"
 msgid "option --file needs a file name"
 msgstr "optie --file heeft een bestandsnaam nodig"
 
-#: apps/screenshot/src/main.rs:44 apps/screenshot/src/ui.rs:104
+#: apps/screenshot/src/main.rs:45 apps/screenshot/src/ui.rs:104
 msgid "Could not save {path}: {e}"
 msgstr "Kon {path} niet opslaan: {e}"
 
@@ -10451,17 +10451,21 @@ msgstr "De shell meldde een fout ({name})."
 msgid "D-Bus error: {e}"
 msgstr "D-Bus-fout: {e}"
 
-#: apps/screenshot/src/shortcuts.rs:15 apps/screenshot/src/ui.rs:18
-#: apps/screenshot/src/ui.rs:364
+#: apps/screenshot/src/shortcuts.rs:16 apps/screenshot/src/ui.rs:18
+#: apps/screenshot/src/ui.rs:367
 msgid "Screenshot"
 msgstr "Schermafdruk"
 
-#: apps/screenshot/src/shortcuts.rs:17
+#: apps/screenshot/src/shortcuts.rs:18
+msgid "Retake"
+msgstr "Opnieuw maken"
+
+#: apps/screenshot/src/shortcuts.rs:19
 msgid "Copy to Clipboard"
 msgstr "Naar klembord kopiëren"
 
-#: apps/screenshot/src/shortcuts.rs:19 apps/screenshot/src/ui.rs:360
-#: apps/screenshot/src/ui.rs:363
+#: apps/screenshot/src/shortcuts.rs:21 apps/screenshot/src/ui.rs:363
+#: apps/screenshot/src/ui.rs:366
 msgid "New Screenshot"
 msgstr "Nieuwe schermafdruk"
 
@@ -10485,79 +10489,87 @@ msgstr "Schermafdruk van een venster, {width} × {height}"
 msgid "Screenshot of a selected area, {width} × {height}"
 msgstr "Schermafdruk van een geselecteerd gebied, {width} × {height}"
 
-#: apps/screenshot/src/ui.rs:280
+#: apps/screenshot/src/ui.rs:283
 msgid "_About Screenshot"
 msgstr "_Over Schermafdruk"
 
-#: apps/screenshot/src/ui.rs:293
+#: apps/screenshot/src/ui.rs:296
 msgid "_Screen"
 msgstr "_Scherm"
 
-#: apps/screenshot/src/ui.rs:294
+#: apps/screenshot/src/ui.rs:297
 msgid "_Window"
 msgstr "_Venster"
 
-#: apps/screenshot/src/ui.rs:295
+#: apps/screenshot/src/ui.rs:298
 msgid "_Area"
 msgstr "_Gebied"
 
-#: apps/screenshot/src/ui.rs:307 apps/screenshot/src/ui.rs:311
+#: apps/screenshot/src/ui.rs:310 apps/screenshot/src/ui.rs:314
 msgid "Take"
 msgstr "Maken"
 
-#: apps/screenshot/src/ui.rs:315
+#: apps/screenshot/src/ui.rs:318
 msgid "_Delay in Seconds"
 msgstr "_Vertraging in seconden"
 
-#: apps/screenshot/src/ui.rs:319
+#: apps/screenshot/src/ui.rs:322
 msgid "Show _Pointer"
 msgstr "_Aanwijzer tonen"
 
-#: apps/screenshot/src/ui.rs:323
+#: apps/screenshot/src/ui.rs:326
 msgid "Options"
 msgstr "Opties"
 
-#: apps/screenshot/src/ui.rs:329
+#: apps/screenshot/src/ui.rs:332
 msgid "_Take Screenshot"
 msgstr "Schermafdruk _maken"
 
-#: apps/screenshot/src/ui.rs:384
+#: apps/screenshot/src/ui.rs:387
+msgid "_Retake"
+msgstr "Opnieuw _maken"
+
+#: apps/screenshot/src/ui.rs:390
+msgid "Take the screenshot again"
+msgstr "De schermafdruk opnieuw maken"
+
+#: apps/screenshot/src/ui.rs:394
 msgid "_Copy to Clipboard"
 msgstr "Naar klembord _kopiëren"
 
-#: apps/screenshot/src/ui.rs:390
+#: apps/screenshot/src/ui.rs:400
 msgid "_Save…"
 msgstr "_Opslaan…"
 
-#: apps/screenshot/src/ui.rs:597
+#: apps/screenshot/src/ui.rs:614
 msgid "The capture thread failed."
 msgstr "De opnamethread is mislukt."
 
-#: apps/screenshot/src/ui.rs:612
+#: apps/screenshot/src/ui.rs:629
 msgid "Could not load the screenshot: {e}"
 msgstr "Kon de schermafdruk niet laden: {e}"
 
-#: apps/screenshot/src/ui.rs:628
+#: apps/screenshot/src/ui.rs:645
 msgid "Could Not Take Screenshot"
 msgstr "Kon geen schermafdruk maken"
 
-#: apps/screenshot/src/ui.rs:642
+#: apps/screenshot/src/ui.rs:668
 msgid "Screenshot copied to clipboard"
 msgstr "Schermafdruk gekopieerd naar klembord"
 
-#: apps/screenshot/src/ui.rs:651
+#: apps/screenshot/src/ui.rs:677
 msgid "PNG Images"
 msgstr "PNG-afbeeldingen"
 
-#: apps/screenshot/src/ui.rs:656
+#: apps/screenshot/src/ui.rs:682
 msgid "Save Screenshot"
 msgstr "Schermafdruk opslaan"
 
-#: apps/screenshot/src/ui.rs:676
+#: apps/screenshot/src/ui.rs:702
 msgid "Screenshot saved"
 msgstr "Schermafdruk opgeslagen"
 
-#: apps/screenshot/src/ui.rs:680
+#: apps/screenshot/src/ui.rs:706
 msgid "Could Not Save Screenshot"
 msgstr "Kon schermafdruk niet opslaan"
 
@@ -15300,12 +15312,12 @@ msgstr "film"
 msgid "Video Player"
 msgstr "Videospeler"
 
-#: apps/video-player/src/player.rs:97
+#: apps/video-player/src/player.rs:111
 msgctxt "audio or subtitle stream"
 msgid "Track"
 msgstr "Spoor"
 
-#: apps/video-player/src/player.rs:99
+#: apps/video-player/src/player.rs:113
 msgid "Track {}"
 msgstr "Spoor {}"
 
@@ -15379,88 +15391,88 @@ msgstr "Audio en ondertitels"
 msgid "Enter Fullscreen"
 msgstr "Volledig scherm"
 
-#: apps/video-player/src/ui.rs:1040
+#: apps/video-player/src/ui.rs:1053
 msgid "Videos"
 msgstr "Video's"
 
-#: apps/video-player/src/ui.rs:1049
+#: apps/video-player/src/ui.rs:1062
 msgid "Open Video"
 msgstr "Video openen"
 
-#: apps/video-player/src/ui.rs:1070 apps/video-player/src/ui.rs:1752
+#: apps/video-player/src/ui.rs:1083 apps/video-player/src/ui.rs:1816
 msgid "Subtitles"
 msgstr "Ondertitels"
 
-#: apps/video-player/src/ui.rs:1077
+#: apps/video-player/src/ui.rs:1090
 msgid "Load Subtitle File"
 msgstr "Ondertitelbestand laden"
 
-#: apps/video-player/src/ui.rs:1165
+#: apps/video-player/src/ui.rs:1178
 msgid "The required codec is not installed: <b>{codec}</b>"
 msgstr "De vereiste codec is niet geïnstalleerd: <b>{codec}</b>"
 
-#: apps/video-player/src/ui.rs:1178
+#: apps/video-player/src/ui.rs:1191
 msgid "Cannot play file. {detail}"
 msgstr "Kan bestand niet afspelen. {detail}"
 
-#: apps/video-player/src/ui.rs:1180
+#: apps/video-player/src/ui.rs:1193
 msgid "Cannot play file. The required codec is not installed: {}"
 msgstr "Kan bestand niet afspelen. De vereiste codec is niet geïnstalleerd: {}"
 
-#: apps/video-player/src/ui.rs:1320
+#: apps/video-player/src/ui.rs:1384
 msgid "No decodable video stream"
 msgstr "Geen decodeerbare videostroom"
 
-#: apps/video-player/src/ui.rs:1331
+#: apps/video-player/src/ui.rs:1395
 msgid "Missing codec: {m}"
 msgstr "Ontbrekende codec: {m}"
 
-#: apps/video-player/src/ui.rs:1339
+#: apps/video-player/src/ui.rs:1403
 msgid "Resume from {}?"
 msgstr "Hervatten vanaf {}?"
 
-#: apps/video-player/src/ui.rs:1340
+#: apps/video-player/src/ui.rs:1404
 msgid "_Resume"
 msgstr "_Hervatten"
 
-#: apps/video-player/src/ui.rs:1361
+#: apps/video-player/src/ui.rs:1425
 msgid "_Resume from {}"
 msgstr "_Hervatten vanaf {}"
 
-#: apps/video-player/src/ui.rs:1656
+#: apps/video-player/src/ui.rs:1720
 msgid "Playback Speed: {key}×"
 msgstr "Afspeelsnelheid: {key}×"
 
-#: apps/video-player/src/ui.rs:1685
+#: apps/video-player/src/ui.rs:1749
 msgid "Muted"
 msgstr "Gedempt"
 
-#: apps/video-player/src/ui.rs:1710
+#: apps/video-player/src/ui.rs:1774
 msgid "Playing video"
 msgstr "Video wordt afgespeeld"
 
-#: apps/video-player/src/ui.rs:1737
+#: apps/video-player/src/ui.rs:1801
 msgid "Audio"
 msgstr "Audio"
 
-#: apps/video-player/src/ui.rs:1740
+#: apps/video-player/src/ui.rs:1804
 msgctxt "subtitles"
 msgid "None"
 msgstr "Geen"
 
-#: apps/video-player/src/ui.rs:1751
+#: apps/video-player/src/ui.rs:1815
 msgid "Load Subtitle File…"
 msgstr "Ondertitelbestand laden…"
 
-#: apps/video-player/src/ui.rs:1844
+#: apps/video-player/src/ui.rs:1908
 msgid "Screenshot saved as “{}”"
 msgstr "Schermafdruk opgeslagen als ‘{}’"
 
-#: apps/video-player/src/ui.rs:1850
+#: apps/video-player/src/ui.rs:1914
 msgid "Could not save screenshot: {err}"
 msgstr "Kon schermafdruk niet opslaan: {err}"
 
-#: apps/video-player/src/ui.rs:1851
+#: apps/video-player/src/ui.rs:1915
 msgid "Could not save screenshot"
 msgstr "Kon schermafdruk niet opslaan"
 

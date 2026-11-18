@@ -3,6 +3,7 @@
 
 mod args;
 mod naming;
+mod row_or_column;
 mod settings;
 mod shell;
 mod shortcuts;

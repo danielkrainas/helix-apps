@@ -6,6 +6,7 @@ use helix_app_common::shortcuts::{Group, Item::Keys, GENERAL};
 /// Accelerators registered on the application.
 pub const ACCELS: &[(&str, &[&str])] = &[
     ("win.new", &["Escape", "<Alt>Left"]),
+    ("win.retake", &["<Control>r"]),
     ("win.copy", &["<Control>c"]),
     ("win.save", &["<Control>s"]),
 ];
@@ -14,6 +15,7 @@ pub const GROUPS: &[Group] = &[
     (
         n_("Screenshot"),
         &[
+            Keys(n_("Retake"), "<Control>r"),
             Keys(n_("Copy to Clipboard"), "<Control>c"),
             Keys(n_("Save"), "<Control>s"),
             Keys(n_("New Screenshot"), "Escape <Alt>Left"),

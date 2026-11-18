@@ -19,8 +19,8 @@ xfce4-screenshooter cannot do under Helix (area selection in particular).
 
 ## Main windows
 - **Options**: what to capture, delay, pointer, *Take Screenshot*.
-- **Preview**: the captured image with *Save…*, *Copy to Clipboard* and
-  *New Screenshot*.
+- **Preview**: the captured image with *Retake*, *Copy to Clipboard*,
+  *Save…* and *New Screenshot*.
 
 ## Contracts used
 - D-Bus `org.gnome.Shell.Screenshot` (bus `org.gnome.Shell`, object
@@ -126,8 +126,17 @@ xfce4-screenshooter cannot do under Helix (area selection in particular).
   size as the subtitle ("1920 × 1080"). Its alternative text says what was
   captured and the size ("Screenshot of the whole screen, 1920 × 1080";
   "… of a window", "… of a selected area").
-- Bottom: **Copy to Clipboard** (`Ctrl+C`) and **Save…** (suggested,
-  `Ctrl+S`).
+- Bottom: **Retake** (`Ctrl+R`), **Copy to Clipboard** (`Ctrl+C`) and
+  **Save…** (suggested, `Ctrl+S`). In one row, centred, when the window is wide enough
+  for it; otherwise a centred column of equally wide buttons, so long
+  labels never make the window wider (`row_or_column.rs`).
+- **Retake** takes the same screenshot again, with the same options
+  (delay, pointer): the whole screen again; in Window mode the window
+  again (clicked again where the shell offers the window picker); in Area
+  mode a new area is selected. The new image replaces the shown one. If
+  the new selection is cancelled, the image already shown stays; if the
+  capture fails, the options page comes back with the reason, as for
+  *Take Screenshot*.
 - **Save…** opens a `GtkFileDialog` (save mode) in the last folder a
   screenshot was saved to, or the pictures directory, or the home
   directory, with the name
@@ -187,6 +196,7 @@ print the usage to stderr and exit with status 2.
 |---|---|
 | `Enter` | Take Screenshot (options page) |
 | `Ctrl+S` | Save… (preview) |
+| `Ctrl+R` | Retake (preview) |
 | `Ctrl+C` | Copy to Clipboard (preview) |
 | `Escape`, `Alt+Left` | New Screenshot (preview) |
 | `Ctrl+W` | Close window |
