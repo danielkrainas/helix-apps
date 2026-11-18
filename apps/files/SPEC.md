@@ -123,14 +123,13 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
   full date and time.
 - Activation: double-click (or single click when `click-policy` is
   `single`) / Enter opens. Folders and mountables navigate; other files
-  open in the default application and are added to recent files: local
-  files through `GtkFileLauncher`; files on shares and other remote
-  locations (`smb://`, `sftp://`, …, not native) with
-  `g_app_info_launch` on the default application for their content type,
-  which GIO gives the file's GVfs (FUSE) path or its URI, as GNOME Files
-  does (`GtkFileLauncher` asks the OpenURI portal, which looks for a
-  handler of the `smb` scheme rather than an image or document viewer).
-  No default application: the Open With dialog. Items with `standard::target-uri` (recent, network) open
+  open in the default application for their content type and are added
+  to recent files, as in GNOME Files: `g_app_info_launch`, which gives
+  the application the file's path (for a share such as `smb://`, its
+  GVfs FUSE path) or its URI. No default application: the Open With
+  dialog. (Not `GtkFileLauncher`: it goes through the OpenURI portal,
+  which asks for an application for every type until one has been chosen
+  a few times, and sends remote files to a handler of their URI scheme.) Items with `standard::target-uri` (recent, network) open
   their target.
 - Typing while the window has focus starts a search (search bar key
   capture).

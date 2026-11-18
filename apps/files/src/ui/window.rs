@@ -1043,45 +1043,16 @@ impl Window {
         }
     }
 
-    /// Opens `file` (listed as `info`) in its default application.
+    /// Opens `file` (listed as `info`) in the default application for
+    /// its content type, as GNOME Files does: GIO hands the application
+    /// the file's path (for a share, its GVfs FUSE path) or its URI.
+    /// Without a default application, the Open With dialog.
+    ///
+    /// Not `GtkFileLauncher`: it goes through the OpenURI portal, which
+    /// asks which application to use for every type until one has been
+    /// chosen a few times, and for a remote file looks for a handler of
+    /// its URI scheme (`smb`) rather than a viewer, then gives up silently.
     fn launch(self: &Rc<Self>, file: &gio::File, info: &gio::FileInfo) {
-        if !file.is_native() {
-            self.launch_remote(file, info);
-            return;
-        }
-        let launcher = gtk::FileLauncher::new(Some(file));
-        let weak = Rc::downgrade(self);
-        let uri = file.uri();
-        launcher.launch(
-            Some(&self.window),
-            None::<&gio::Cancellable>,
-            move |res| match res {
-                Ok(()) => {
-                    gtk::RecentManager::default().add_item(&uri);
-                }
-                Err(e)
-                    if e.matches(gtk::DialogError::Dismissed)
-                        || e.matches(gtk::DialogError::Cancelled) => {}
-                Err(e) => {
-                    if let Some(w) = weak.upgrade() {
-                        w.toast(&trf!(
-                            "Could not open file: {}",
-                            helix_app_common::errors::glib_detail(&e)
-                        ));
-                    }
-                }
-            },
-        );
-    }
-
-    /// A file on a share or other remote location (smb://, sftp://, …):
-    /// launched with the default application for its content type, which
-    /// GIO hands the file's local GVfs path or its URI, as GNOME Files
-    /// does. (GtkFileLauncher goes through the OpenURI portal, which looks
-    /// for a handler of the URI's scheme, `smb`, instead of an image viewer
-    /// or a document viewer, and gave up without a word.) Without a
-    /// default application, the Open With dialog.
-    fn launch_remote(self: &Rc<Self>, file: &gio::File, info: &gio::FileInfo) {
         let content_type = info
             .content_type()
             .or_else(|| info.attribute_string("standard::fast-content-type"))
