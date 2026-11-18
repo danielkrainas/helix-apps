@@ -103,8 +103,13 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
   `Ctrl+plus` / `Ctrl+minus` / `Ctrl+0` zoom in/out/reset.
 - Thumbnails: existing thumbnails from the freedesktop thumbnail cache
   (`thumbnail::path`) are shown in the grid when allowed by
-  `show-image-thumbnails` (`never`, `local-only`, `always`); loaded
-  asynchronously. Otherwise the themed icon for the content type.
+  `show-image-thumbnails` (`never`, `local-only`, `always`). Otherwise the
+  themed icon for the content type. Thumbnails are read and decoded on
+  worker threads, at most 4 at a time (`ui/thumbs.rs`): the tiles bound
+  most recently first, and a request whose tile shows another file by
+  its turn is dropped; the last 192 decoded thumbnails are kept. (Loading
+  every bound tile's thumbnail at once kept about a thousand files open
+  in a big media folder and ran the app out of file descriptors.)
 - Hidden files (dot-files and backup files `*~`) are shown when
   `show-hidden-files` is true (`Ctrl+H` toggles and saves).
 - Sorting: by name (natural, case-insensitive: `file2` < `file10`), size,

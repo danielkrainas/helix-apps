@@ -669,25 +669,7 @@ impl Tab {
             });
             if let (Some(path), Some(file)) = (thumb, file) {
                 if t.thumbnail_allowed(&file) {
-                    let img = img.clone();
-                    let item = item.clone();
-                    let expected = info.clone();
-                    glib::spawn_future_local(async move {
-                        let Ok((bytes, _)) =
-                            gio::File::for_path(path.as_str()).load_bytes_future().await
-                        else {
-                            return;
-                        };
-                        let still = item
-                            .item()
-                            .is_some_and(|i| i == expected.upcast::<glib::Object>());
-                        if !still {
-                            return;
-                        }
-                        if let Ok(tex) = gdk::Texture::from_bytes(&bytes) {
-                            img.set_paintable(Some(&tex));
-                        }
-                    });
+                    super::thumbs::request(path.as_str(), &img, item, &info);
                 }
             }
         });
