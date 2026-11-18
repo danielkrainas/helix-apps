@@ -1,7 +1,7 @@
 //! Places sidebar: standard places, user dirs, bookmarks, devices, network.
 
 use adw::prelude::*;
-use gtk::{gdk, gio, glib};
+use gtk::{gdk, gio, glib, graphene};
 use std::cell::{Cell, RefCell};
 use std::rc::{Rc, Weak};
 
@@ -187,12 +187,16 @@ impl Sidebar {
             .hscrollbar_policy(gtk::PolicyType::Never)
             .vexpand(true)
             .build();
+        // Parented to the scrolled window, not the list: a GtkListBox's
+        // dispose runs `gtk_list_box_remove_all`, which never returns while
+        // a non-row child (this popover) is left, so closing the window
+        // froze it. The destroy handler below runs only after that.
         let popover = gtk::PopoverMenu::from_model(None::<&gio::MenuModel>);
-        popover.set_parent(&list);
+        popover.set_parent(&widget);
         popover.set_has_arrow(false);
         popover.set_halign(gtk::Align::Start);
         let p = popover.clone();
-        list.connect_destroy(move |_| p.unparent());
+        widget.connect_destroy(move |_| p.unparent());
 
         let sb = Rc::new(Sidebar {
             widget,
@@ -574,8 +578,17 @@ impl Sidebar {
         }
         menu.append_section(None, &sec);
         self.popover.set_menu_model(Some(&menu));
-        self.popover
-            .set_pointing_to(Some(&gdk::Rectangle::new(x as i32, y as i32, 1, 1)));
+        // (x, y) is in list coordinates; the popover hangs off `widget`.
+        let at = self
+            .list
+            .compute_point(&self.widget, &graphene::Point::new(x as f32, y as f32))
+            .unwrap_or(graphene::Point::new(x as f32, y as f32));
+        self.popover.set_pointing_to(Some(&gdk::Rectangle::new(
+            at.x() as i32,
+            at.y() as i32,
+            1,
+            1,
+        )));
         self.popover.popup();
     }
 
