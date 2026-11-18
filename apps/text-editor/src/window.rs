@@ -598,9 +598,7 @@ impl Window {
     }
 
     fn rebuild_recent(&self) {
-        while let Some(row) = self.recent_list.row_at_index(0) {
-            self.recent_list.remove(&row);
-        }
+        self.recent_list.remove_all();
         for uri in self.app().recent.borrow().iter() {
             let file = gio::File::for_uri(uri);
             let name = file

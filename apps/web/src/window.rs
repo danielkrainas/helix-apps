@@ -1782,9 +1782,7 @@ impl Window {
     fn update_suggestions(&self) {
         let Some(app) = self.app() else { return };
         let text = self.entry.text().to_string();
-        while let Some(row) = self.suggest_list.row_at_index(0) {
-            self.suggest_list.remove(&row);
-        }
+        self.suggest_list.remove_all();
         let mut urls: Vec<String> = Vec::new();
         let query = text.trim();
         if query.is_empty() {
@@ -2052,9 +2050,7 @@ impl Window {
 
     fn fill_bookmarks_list(&self) {
         let Some(app) = self.app() else { return };
-        while let Some(row) = self.bm_list.row_at_index(0) {
-            self.bm_list.remove(&row);
-        }
+        self.bm_list.remove_all();
         let query = self.bm_search.text();
         let items = app.bookmarks.borrow().search(&query);
         if items.is_empty() {

@@ -561,9 +561,7 @@ impl App {
             let Ok(locs) = gio::spawn_blocking(move || mounts::locations(&home)).await else {
                 return;
             };
-            while let Some(row) = a.locations_list.row_at_index(0) {
-                a.locations_list.remove(&row);
-            }
+            a.locations_list.remove_all();
             for loc in &locs {
                 a.locations_list.append(&location_row(loc));
             }
@@ -1841,9 +1839,7 @@ impl App {
 
 /// (Re)fills the excluded-locations list in the preferences dialog.
 fn fill_excluded(a: &Rc<App>, list: &gtk::ListBox) {
-    while let Some(row) = list.row_at_index(0) {
-        list.remove(&row);
-    }
+    list.remove_all();
     let uris = a.excluded_uris();
     if uris.is_empty() {
         list.append(

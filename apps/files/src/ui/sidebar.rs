@@ -48,6 +48,9 @@ pub struct Sidebar {
     popover: gtk::PopoverMenu,
     menu_target: Cell<Option<usize>>,
     trash_full: Cell<bool>,
+    /// The window closed: late volume, mount and trash updates are
+    /// ignored.
+    closed: Cell<bool>,
 }
 
 fn themed(name: &str) -> gio::Icon {
@@ -202,6 +205,7 @@ impl Sidebar {
             popover,
             menu_target: Cell::new(None),
             trash_full: Cell::new(false),
+            closed: Cell::new(false),
         });
         sb.list.set_header_func(|row, before| {
             let section = |r: &gtk::ListBoxRow| r.widget_name().to_string();
@@ -385,6 +389,7 @@ impl Sidebar {
 
     /// Disconnects global signal handlers (window closing).
     pub fn shutdown(&self) {
+        self.closed.set(true);
         for h in self.handlers.borrow_mut().drain(..) {
             self.monitor.disconnect(h);
         }
@@ -444,6 +449,9 @@ impl Sidebar {
     }
 
     pub fn rebuild(self: &Rc<Self>) {
+        if self.closed.get() {
+            return;
+        }
         // Keyboard focus stays on the same place (or moves to a neighbour
         // when it was removed) across the rebuild.
         let list = self.list.clone();
@@ -452,9 +460,10 @@ impl Sidebar {
 
     fn rebuild_rows(self: &Rc<Self>) {
         let places = self.collect();
-        while let Some(row) = self.list.row_at_index(0) {
-            self.list.remove(&row);
-        }
+        // (Not "remove row 0 until there is none": on a list being torn
+        // down that removal fails and the loop never ended, hanging the
+        // window as it closed.)
+        self.list.remove_all();
         for (i, p) in places.iter().enumerate() {
             let (row, b) = place_row(p);
             if let Kind::Mount(m) = &p.kind {

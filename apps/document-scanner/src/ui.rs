@@ -955,9 +955,7 @@ impl Win {
             let mut st = self.state.borrow_mut();
             st.textures = st.doc.pages().iter().map(texture).collect();
         }
-        while let Some(row) = self.page_list.row_at_index(0) {
-            self.page_list.remove(&row);
-        }
+        self.page_list.remove_all();
         let st = self.state.borrow();
         for (i, tex) in st.textures.iter().enumerate() {
             self.page_list.append(&page_row(i, tex));

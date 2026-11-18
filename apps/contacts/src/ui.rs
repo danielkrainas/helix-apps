@@ -955,9 +955,7 @@ impl Ui {
                 loaded,
             )
         };
-        while let Some(row) = self.list.row_at_index(0) {
-            self.list.remove(&row);
-        }
+        self.list.remove_all();
         self.checks.borrow_mut().clear();
         let mut select_row = None;
         for ind in &shown {
