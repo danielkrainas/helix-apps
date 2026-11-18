@@ -275,6 +275,27 @@ pub fn install_standard_actions(
     app.set_accels_for_action("window.close", &["<Control>w"]);
 }
 
+/// Removes every row of `list`, each once.
+///
+/// Not `gtk_list_box_remove_all`: it removes the first child widget until
+/// there is none, and a list with a popover parented to it (a context
+/// menu) has a child that is not a row, which it cannot remove, so it
+/// never returns. Nor "remove row 0 until there is none": on a list
+/// being torn down that removal fails and that loop never ends either.
+pub fn clear_list_box(list: &gtk::ListBox) {
+    let mut rows = Vec::new();
+    while let Some(row) = list.row_at_index(rows.len() as i32) {
+        rows.push(row);
+    }
+    for row in rows {
+        if gtk::prelude::WidgetExt::parent(&row).as_ref()
+            == Some(gtk::prelude::Cast::upcast_ref::<gtk::Widget>(list))
+        {
+            list.remove(&row);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

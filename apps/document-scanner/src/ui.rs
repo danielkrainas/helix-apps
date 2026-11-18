@@ -955,7 +955,7 @@ impl Win {
             let mut st = self.state.borrow_mut();
             st.textures = st.doc.pages().iter().map(texture).collect();
         }
-        self.page_list.remove_all();
+        helix_app_common::clear_list_box(&self.page_list);
         let st = self.state.borrow();
         for (i, tex) in st.textures.iter().enumerate() {
             self.page_list.append(&page_row(i, tex));

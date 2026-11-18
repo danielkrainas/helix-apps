@@ -955,7 +955,7 @@ impl Ui {
                 loaded,
             )
         };
-        self.list.remove_all();
+        helix_app_common::clear_list_box(&self.list);
         self.checks.borrow_mut().clear();
         let mut select_row = None;
         for ind in &shown {

@@ -598,7 +598,7 @@ impl Window {
     }
 
     fn rebuild_recent(&self) {
-        self.recent_list.remove_all();
+        helix_app_common::clear_list_box(&self.recent_list);
         for uri in self.app().recent.borrow().iter() {
             let file = gio::File::for_uri(uri);
             let name = file

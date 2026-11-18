@@ -1782,7 +1782,7 @@ impl Window {
     fn update_suggestions(&self) {
         let Some(app) = self.app() else { return };
         let text = self.entry.text().to_string();
-        self.suggest_list.remove_all();
+        helix_app_common::clear_list_box(&self.suggest_list);
         let mut urls: Vec<String> = Vec::new();
         let query = text.trim();
         if query.is_empty() {
@@ -2050,7 +2050,7 @@ impl Window {
 
     fn fill_bookmarks_list(&self) {
         let Some(app) = self.app() else { return };
-        self.bm_list.remove_all();
+        helix_app_common::clear_list_box(&self.bm_list);
         let query = self.bm_search.text();
         let items = app.bookmarks.borrow().search(&query);
         if items.is_empty() {

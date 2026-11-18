@@ -460,10 +460,7 @@ impl Sidebar {
 
     fn rebuild_rows(self: &Rc<Self>) {
         let places = self.collect();
-        // (Not "remove row 0 until there is none": on a list being torn
-        // down that removal fails and the loop never ended, hanging the
-        // window as it closed.)
-        self.list.remove_all();
+        helix_app_common::clear_list_box(&self.list);
         for (i, p) in places.iter().enumerate() {
             let (row, b) = place_row(p);
             if let Kind::Mount(m) = &p.kind {
