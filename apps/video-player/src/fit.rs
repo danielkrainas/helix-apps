@@ -43,6 +43,45 @@ pub fn fit_contain(content_w: f64, content_h: f64, view_w: f64, view_h: f64) -> 
     }
 }
 
+/// Window size (logical px) that shows a `video` (display w, h) with no
+/// bars, outside fullscreen: the video's aspect at about the area of the
+/// `current` window, so sizes stay steady from one video to the next; made
+/// to fit `bound` (the room on the monitor), then at least `min` (the
+/// window's smallest size), keeping the aspect while both allow it. Past
+/// both limits (a very tall or wide video on a small screen) `bound` wins
+/// and the video is letterboxed there.
+pub fn window_size(
+    video: (f64, f64),
+    current: (i32, i32),
+    bound: (i32, i32),
+    min: (i32, i32),
+) -> Option<(i32, i32)> {
+    let (vw, vh) = video;
+    let (cw, ch) = (f64::from(current.0.max(1)), f64::from(current.1.max(1)));
+    if vw <= 0.0 || vh <= 0.0 {
+        return None;
+    }
+    let aspect = vw / vh;
+    let area = cw * ch;
+    let (mut w, mut h) = ((area * aspect).sqrt(), (area / aspect).sqrt());
+    let (bw, bh) = (f64::from(bound.0), f64::from(bound.1));
+    if bw > 0.0 && bh > 0.0 {
+        let down = (bw / w).min(bh / h).min(1.0);
+        w *= down;
+        h *= down;
+    }
+    let (mw, mh) = (f64::from(min.0), f64::from(min.1));
+    let up = (mw / w).max(mh / h).max(1.0);
+    w *= up;
+    h *= up;
+    let (mut w, mut h) = (w.round() as i32, h.round() as i32);
+    if bw > 0.0 && bh > 0.0 {
+        w = w.min(bound.0.max(min.0));
+        h = h.min(bound.1.max(min.1));
+    }
+    Some((w.max(min.0), h.max(min.1)))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -105,6 +144,39 @@ mod tests {
         ));
         let r = fit_contain(10.0, 10.0, 0.0, 50.0);
         assert_eq!(r.width, 0.0);
+    }
+
+    /// The window takes the video's aspect at about the same area: no
+    /// bars for wide or tall videos, within the monitor and the window's
+    /// smallest size.
+    #[test]
+    fn window_fits_the_video() {
+        let bound = (1728, 918);
+        let min = (360, 294);
+        let aspect = |(w, h): (i32, i32)| f64::from(w) / f64::from(h);
+        // 16:9 in the default 960×600: about the same area.
+        let (w, h) = window_size((1920.0, 1080.0), (960, 600), bound, min).unwrap();
+        assert!((aspect((w, h)) - 16.0 / 9.0).abs() < 0.01, "{w}×{h}");
+        assert!((f64::from(w * h) / 576_000.0 - 1.0).abs() < 0.01, "{w}×{h}");
+        // A phone's vertical video: tall and narrow, no side bars.
+        let (w, h) = window_size((1080.0, 1920.0), (960, 600), bound, min).unwrap();
+        assert!((aspect((w, h)) - 9.0 / 16.0).abs() < 0.01, "{w}×{h}");
+        assert!(h <= 918);
+        // Too tall for the monitor: scaled down to fit it, aspect kept.
+        let (w, h) = window_size((1080.0, 1920.0), (1600, 1000), (1600, 800), min).unwrap();
+        assert_eq!(h, 800);
+        assert!((aspect((w, h)) - 9.0 / 16.0).abs() < 0.01, "{w}×{h}");
+        // Tiny window: grown to the smallest size, aspect kept.
+        let (w, h) = window_size((1920.0, 1080.0), (100, 100), bound, min).unwrap();
+        assert!(w >= 360 && h >= 294, "{w}×{h}");
+        assert!((aspect((w, h)) - 16.0 / 9.0).abs() < 0.01, "{w}×{h}");
+        // The same video again keeps the window as it is.
+        assert_eq!(
+            window_size((1920.0, 1080.0), (w, h), bound, min),
+            Some((w, h))
+        );
+        // No video size yet: nothing to do.
+        assert_eq!(window_size((0.0, 0.0), (960, 600), bound, min), None);
     }
 
     #[test]

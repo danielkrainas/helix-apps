@@ -88,6 +88,17 @@ Play video files.
   letter/pillar-boxed and centred in whatever area it gets (aspect-fit math
   in `fit.rs`). It is shown in a `GtkPicture` (`content-fit=contain`) on a
   black background.
+- **The window fits the video.** Outside fullscreen, when a video's display
+  size becomes known (its first frame, or a change of resolution), the
+  window takes the video's aspect ratio so there are no black bars (a
+  phone's vertical video gets a tall, narrow window): about the same area
+  as the window had, made to fit 90 % × 85 % of the monitor, and at least
+  the window's smallest size (360×294), keeping the aspect while both
+  allow it (`fit::window_size`). It is resized with
+  `gtk_window_set_default_size`. A maximized or tiled window is left
+  alone; on leaving fullscreen or maximized the window fits the video
+  again. Resizing the window by hand afterwards is not undone (bars may
+  show until the next video).
 
 ### Controls
 - Bottom bar (OSD style): play/pause, elapsed time, seek bar, remaining time

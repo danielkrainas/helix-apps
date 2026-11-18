@@ -105,17 +105,26 @@ pub fn texture_for(frame: &Frame) -> Option<gdk::Texture> {
 }
 
 impl VideoPaintable {
-    pub fn set_frame(&self, frame: &Frame) {
+    /// Shows `frame`; true when the video's display size changed (a new
+    /// video, or a new resolution).
+    pub fn set_frame(&self, frame: &Frame) -> bool {
         let Some(texture) = texture_for(frame) else {
-            return;
+            return false;
         };
         let imp = self.imp();
         let display = fit::display_size(frame.width, frame.height, frame.par.0, frame.par.1);
         imp.texture.replace(Some(texture));
-        if imp.display.replace(display) != display {
+        let changed = imp.display.replace(display) != display;
+        if changed {
             self.invalidate_size();
         }
         self.invalidate_contents();
+        changed
+    }
+
+    /// The video's display size (0×0 before the first frame).
+    pub fn display_size(&self) -> (f64, f64) {
+        self.imp().display.get()
     }
 
     pub fn clear(&self) {

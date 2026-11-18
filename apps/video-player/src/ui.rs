@@ -6,7 +6,7 @@ use crate::player::{self, Player};
 use crate::resume::{self, ResumeStore};
 use crate::settings::Settings;
 use crate::sink::Frame;
-use crate::{screenshot, subtitles, timefmt};
+use crate::{fit, screenshot, subtitles, timefmt};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use helix_app_common::i18n::{n_, tr};
@@ -854,6 +854,19 @@ impl Ui {
                 ui.mpris.update(|s| s.fullscreen = fs);
                 ui.mpris.changed(&[Prop::Fullscreen]);
                 ui.show_controls();
+                // Back from fullscreen: the video may have changed there.
+                if !fs {
+                    ui.refit_soon();
+                }
+            }
+        ));
+        self.window.connect_maximized_notify(glib::clone!(
+            #[weak(rename_to = ui)]
+            self,
+            move |w| {
+                if !w.is_maximized() {
+                    ui.refit_soon();
+                }
             }
         ));
 
@@ -1205,7 +1218,9 @@ impl Ui {
         let Some(frame) = Frame::from_sample(&sample) else {
             return;
         };
-        self.paintable.set_frame(&frame);
+        if self.paintable.set_frame(&frame) {
+            self.fit_window_to_video();
+        }
         let first = {
             let mut st = self.st.borrow_mut();
             st.frame_duration = frame.frame_duration();
@@ -1215,6 +1230,55 @@ impl Ui {
             self.spinner.set_spinning(false);
             self.spinner.set_visible(false);
             self.update_action_states();
+        }
+    }
+
+    /// Fit the window to the video once the window has its restored size
+    /// (after leaving fullscreen or maximized).
+    fn refit_soon(self: &Rc<Self>) {
+        glib::idle_add_local_once(glib::clone!(
+            #[weak(rename_to = ui)]
+            self,
+            move || ui.fit_window_to_video()
+        ));
+    }
+
+    /// Outside fullscreen, size the window to the video so it shows no
+    /// black bars (a vertical video gets a tall, narrow window). Left alone
+    /// while maximized or tiled, where the window's size is not its own.
+    fn fit_window_to_video(&self) {
+        let window = &self.window;
+        if window.is_fullscreen() || window.is_maximized() {
+            return;
+        }
+        let surface = window.surface();
+        let tiled = surface
+            .as_ref()
+            .and_then(|s| s.downcast_ref::<gdk::Toplevel>())
+            .is_some_and(|t| t.state().contains(gdk::ToplevelState::TILED));
+        if tiled {
+            return;
+        }
+        // Before its first allocation (the first frame can come first) the
+        // window's size is the one it is about to get.
+        let current = match (window.width(), window.height()) {
+            (w, h) if w > 0 && h > 0 => (w, h),
+            _ => window.default_size(),
+        };
+        // The room on the monitor, less some for the panel and margins.
+        let bound = surface
+            .as_ref()
+            .and_then(|s| s.display().monitor_at_surface(s))
+            .map(|m| {
+                let g = m.geometry();
+                (g.width() * 9 / 10, g.height() * 85 / 100)
+            })
+            .unwrap_or((0, 0));
+        let min = (window.width_request(), window.height_request());
+        if let Some(size) = fit::window_size(self.paintable.display_size(), current, bound, min) {
+            if size != current {
+                window.set_default_size(size.0, size.1);
+            }
         }
     }
 
