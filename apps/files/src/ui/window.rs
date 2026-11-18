@@ -1021,7 +1021,7 @@ impl Window {
             if info_is_dir(info) {
                 dirs.push(target);
             } else {
-                files.push(target);
+                files.push((target, info));
             }
         }
         match (mode, dirs.len()) {
@@ -1038,12 +1038,17 @@ impl Window {
                 }
             }
         }
-        for f in files {
-            self.launch(&f);
+        for (f, info) in files {
+            self.launch(&f, info);
         }
     }
 
-    fn launch(self: &Rc<Self>, file: &gio::File) {
+    /// Opens `file` (listed as `info`) in its default application.
+    fn launch(self: &Rc<Self>, file: &gio::File, info: &gio::FileInfo) {
+        if !file.is_native() {
+            self.launch_remote(file, info);
+            return;
+        }
         let launcher = gtk::FileLauncher::new(Some(file));
         let weak = Rc::downgrade(self);
         let uri = file.uri();
@@ -1067,6 +1072,35 @@ impl Window {
                 }
             },
         );
+    }
+
+    /// A file on a share or other remote location (smb://, sftp://, …):
+    /// launched with the default application for its content type, which
+    /// GIO hands the file's local GVfs path or its URI, as GNOME Files
+    /// does. (GtkFileLauncher goes through the OpenURI portal, which looks
+    /// for a handler of the URI's scheme, `smb`, instead of an image viewer
+    /// or a document viewer, and gave up without a word.) Without a
+    /// default application, the Open With dialog.
+    fn launch_remote(self: &Rc<Self>, file: &gio::File, info: &gio::FileInfo) {
+        let content_type = info
+            .content_type()
+            .or_else(|| info.attribute_string("standard::fast-content-type"))
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| "application/octet-stream".into());
+        let Some(app) = gio::AppInfo::default_for_type(&content_type, false) else {
+            super::dialogs::open_with(self, vec![info.clone()]);
+            return;
+        };
+        let ctx = WidgetExt::display(&self.window).app_launch_context();
+        match app.launch(std::slice::from_ref(file), Some(&ctx)) {
+            Ok(()) => {
+                gtk::RecentManager::default().add_item(&file.uri());
+            }
+            Err(e) => self.toast(&trf!(
+                "Could not open file: {}",
+                helix_app_common::errors::glib_detail(&e)
+            )),
+        }
     }
 
     pub fn mount_volume(self: &Rc<Self>, vol: &gio::Volume, new_tab: bool) {
