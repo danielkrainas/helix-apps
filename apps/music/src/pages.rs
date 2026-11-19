@@ -2,14 +2,17 @@
 //! artist / playlist pages, Now Playing and preferences.
 
 use adw::prelude::*;
-use gtk::{gio, glib};
+use gtk::{gdk, gio, glib};
 use helix_app_common::Labelled;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use crate::model::{self, format_duration, format_total};
 use crate::playlist::{self, EntryInfo, Playlist, Smart};
-use crate::ui::{music_dir, set_heart_icon, sync_heart, toast, App, Live, RowHandle};
+use crate::rows::{Place, RowCtx};
+use crate::ui::{
+    cover_widget, music_dir, resize_cover, set_heart_icon, toast, App, Live, RowHandle,
+};
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 use helix_app_common::trnf;
@@ -21,15 +24,7 @@ pub enum PlRef {
     User(PathBuf),
 }
 
-/// Where a track row lives (decides its menu and activation).
-#[derive(Clone)]
-pub enum RowCtx {
-    Plain,
-    Playlist(PathBuf),
-    Queue,
-}
-
-fn label(text: &str, classes: &[&str]) -> gtk::Label {
+pub fn label(text: &str, classes: &[&str]) -> gtk::Label {
     gtk::Label::builder()
         .label(text)
         .xalign(0.0)
@@ -38,7 +33,7 @@ fn label(text: &str, classes: &[&str]) -> gtk::Label {
         .build()
 }
 
-fn scrolled(child: &impl IsA<gtk::Widget>, max: i32) -> gtk::ScrolledWindow {
+pub fn scrolled(child: &impl IsA<gtk::Widget>, max: i32) -> gtk::ScrolledWindow {
     let clamp = adw::Clamp::builder()
         .maximum_size(max)
         .child(child)
@@ -74,19 +69,34 @@ pub fn layout_header(header: &gtk::Box, narrow: bool) {
     } else {
         gtk::Orientation::Horizontal
     });
-    if let Some(img) = header.first_child().and_downcast::<gtk::Image>() {
-        img.set_pixel_size(if narrow { 128 } else { 160 });
-        img.set_halign(if narrow {
+    if let Some(cover) = header.first_child() {
+        let size = if narrow { 128 } else { 160 };
+        if let Some(c) = cover.downcast_ref::<gtk::Overlay>() {
+            resize_cover(c, size);
+        } else if let Some(a) = cover.downcast_ref::<adw::Avatar>() {
+            a.set_size(size);
+        }
+        cover.set_halign(if narrow {
             gtk::Align::Start
         } else {
-            gtk::Align::Fill
+            gtk::Align::Center
         });
     }
 }
 
 fn page(title: &str, tag: Option<&str>, content: &impl IsA<gtk::Widget>) -> adw::NavigationPage {
+    page_with_header(title, tag, content).0
+}
+
+/// A pushed page and its header bar (for page-specific buttons).
+pub fn page_with_header(
+    title: &str,
+    tag: Option<&str>,
+    content: &impl IsA<gtk::Widget>,
+) -> (adw::NavigationPage, adw::HeaderBar) {
     let tv = adw::ToolbarView::new();
-    tv.add_top_bar(&adw::HeaderBar::new());
+    let header = adw::HeaderBar::new();
+    tv.add_top_bar(&header);
     tv.set_content(Some(content));
     let p = adw::NavigationPage::builder()
         .title(title)
@@ -95,7 +105,7 @@ fn page(title: &str, tag: Option<&str>, content: &impl IsA<gtk::Widget>) -> adw:
     if let Some(t) = tag {
         p.set_tag(Some(t));
     }
-    p
+    (p, header)
 }
 
 fn pill(label: &str, icon: &str, suggested: bool) -> gtk::Button {
@@ -132,6 +142,171 @@ fn live_cell(app: &std::rc::Weak<App>, item: &gtk::ListItem, live: Live) {
     });
 }
 
+/// A search section's heading with its number of matches, and a Show
+/// All button when only some are listed (it disappears once used).
+fn section_header(title: &str, total: usize, show_all: Option<Box<dyn Fn()>>) -> gtk::Box {
+    let header = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    header.append(&label(title, &["heading"]));
+    let count = label(&total.to_string(), &["dim-label", "numeric"]);
+    count.set_hexpand(true);
+    header.append(&count);
+    if let Some(f) = show_all {
+        let b = gtk::Button::builder()
+            .label(tr("Show All"))
+            .css_classes(["flat"])
+            .build();
+        b.connect_clicked(move |b| {
+            f();
+            b.set_visible(false);
+        });
+        header.append(&b);
+    }
+    header
+}
+
+/// The menu button of the Songs row that `focus` is in (or is).
+fn row_menu_button(focus: &gtk::Widget) -> Option<gtk::MenuButton> {
+    fn find(w: &gtk::Widget) -> Option<gtk::MenuButton> {
+        if w.widget_name() == "hm-song-menu" {
+            return w.clone().downcast().ok();
+        }
+        let mut c = w.first_child();
+        while let Some(child) = c {
+            if let Some(found) = find(&child) {
+                return Some(found);
+            }
+            c = child.next_sibling();
+        }
+        None
+    }
+    let mut w = Some(focus.clone());
+    while let Some(cur) = w {
+        if cur.css_name() == "row" {
+            return find(&cur);
+        }
+        w = cur.parent();
+    }
+    None
+}
+
+/// A context-menu popover for children of `host`, removed with it.
+pub fn context_menu_host(host: &impl IsA<gtk::Widget>) -> gtk::PopoverMenu {
+    let pop = gtk::PopoverMenu::from_model(None::<&gio::MenuModel>);
+    pop.set_has_arrow(false);
+    pop.set_halign(gtk::Align::Start);
+    pop.set_parent(host);
+    let p = pop.clone();
+    host.as_ref().connect_destroy(move |_| p.unparent());
+    pop
+}
+
+/// Shows `menu` from `pop` pointing at (`x`, `y`) in `widget`.
+pub fn popup_at(
+    pop: &gtk::PopoverMenu,
+    widget: &impl IsA<gtk::Widget>,
+    x: f64,
+    y: f64,
+    menu: &gio::Menu,
+) {
+    let Some(host) = pop.parent() else { return };
+    let Some(p) = widget
+        .as_ref()
+        .compute_point(&host, &gtk::graphene::Point::new(x as f32, y as f32))
+    else {
+        return;
+    };
+    pop.set_menu_model(Some(menu));
+    pop.set_pointing_to(Some(&gdk::Rectangle::new(p.x() as i32, p.y() as i32, 1, 1)));
+    pop.popup();
+}
+
+/// Calls `f` with the position of a right-click or a touch long-press on
+/// `widget`.
+pub fn on_context_click<W: IsA<gtk::Widget>>(
+    widget: &W,
+    f: impl Fn(&W, f64, f64) + Clone + 'static,
+) {
+    let click = gtk::GestureClick::builder()
+        .button(gdk::BUTTON_SECONDARY)
+        .build();
+    let (w, f1) = (widget.downgrade(), f.clone());
+    click.connect_pressed(move |g, _, x, y| {
+        g.set_state(gtk::EventSequenceState::Claimed);
+        if let Some(w) = w.upgrade() {
+            f1(&w, x, y);
+        }
+    });
+    widget.add_controller(click);
+    let long = gtk::GestureLongPress::builder().touch_only(true).build();
+    let w = widget.downgrade();
+    long.connect_pressed(move |g, x, y| {
+        g.set_state(gtk::EventSequenceState::Claimed);
+        if let Some(w) = w.upgrade() {
+            f(&w, x, y);
+        }
+    });
+    widget.add_controller(long);
+}
+
+/// An artist's initials in a coloured circle (decorative: the row says
+/// the name).
+fn artist_avatar(name: &str, size: i32) -> adw::Avatar {
+    adw::Avatar::builder()
+        .text(name)
+        .show_initials(true)
+        .size(size)
+        .accessible_role(gtk::AccessibleRole::Presentation)
+        .build()
+}
+
+/// What a page header shows next to its title.
+pub enum Art<'a> {
+    Cover(Option<&'a str>),
+    /// An artist: their initials.
+    Avatar(&'a str),
+    /// A placeholder tile with this icon.
+    Icon(&'static str),
+}
+
+/// Play Next / Add to Queue / Add to Playlist… for several tracks.
+pub fn tracks_menu(tracks: &[usize]) -> gio::Menu {
+    let target: Vec<u32> = tracks.iter().map(|&t| t as u32).collect();
+    let target = target.to_variant();
+    let menu = gio::Menu::new();
+    for (label, action) in [
+        (tr("Play Next"), "win.tracks-play-next"),
+        (tr("Add to Queue"), "win.tracks-queue"),
+        (tr("Add to Playlist…"), "win.tracks-add-to-playlist"),
+    ] {
+        let it = gio::MenuItem::new(Some(label), None);
+        it.set_action_and_target_value(Some(action), Some(&target));
+        menu.append_item(&it);
+    }
+    menu
+}
+
+/// An album tile: cover, then title and artist, all on the cover's left
+/// edge and no wider than the cover.
+fn album_tile() -> gtk::Box {
+    const SIZE: i32 = 160;
+    let tile = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(4)
+        .halign(gtk::Align::Center)
+        .valign(gtk::Align::Start)
+        .build();
+    tile.append(&cover_widget(SIZE));
+    for classes in [&["heading"][..], &["dim-label"][..]] {
+        let l = label("", classes);
+        // Ellipsized at the cover's width rather than widening the tile.
+        l.set_width_request(SIZE);
+        l.set_max_width_chars(1);
+        l.set_margin_top(if classes[0] == "heading" { 6 } else { 0 });
+        tile.append(&l);
+    }
+    tile
+}
+
 fn boxed(i: usize) -> glib::BoxedAnyObject {
     glib::BoxedAnyObject::new(i)
 }
@@ -143,53 +318,62 @@ fn unboxed(o: &glib::Object) -> usize {
 }
 
 impl App {
+    /// Shows album `ai` in a tile from [`album_tile`].
+    pub fn bind_album_tile(&self, tile: &gtk::Box, ai: usize) {
+        let lib = self.lib();
+        let Some(album) = lib.albums.get(ai) else {
+            return;
+        };
+        let Some(cover) = tile.first_child().and_downcast::<gtk::Overlay>() else {
+            return;
+        };
+        self.set_cover(&cover, album.cover.as_deref());
+        let title = cover.next_sibling().and_downcast::<gtk::Label>();
+        let artist = title
+            .as_ref()
+            .and_then(|t| t.next_sibling())
+            .and_downcast::<gtk::Label>();
+        if let (Some(title), Some(artist)) = (title, artist) {
+            title.set_label(&album.title);
+            artist.set_label(&album.artist);
+        }
+        tile.set_tooltip_text(Some(&format!("{} — {}", album.title, album.artist)));
+    }
+
     pub fn build_views(self: &Rc<Self>) {
         // Albums grid.
+        let grid = gtk::GridView::builder()
+            .model(&gtk::NoSelection::new(Some(self.albums_model.clone())))
+            .single_click_activate(true)
+            .max_columns(12)
+            .min_columns(1)
+            .css_classes(["hm-albums"])
+            .build();
+        let menu = context_menu_host(&grid);
         let factory = gtk::SignalListItemFactory::new();
-        factory.connect_setup(|_, item| {
+        let w = Rc::downgrade(self);
+        factory.connect_setup(move |_, item| {
             let item = item.downcast_ref::<gtk::ListItem>().unwrap();
-            let img = gtk::Image::builder()
-                .pixel_size(160)
-                .css_classes(["hm-cover"])
-                // Decorative: the album or track title next to it names it.
-                .accessible_role(gtk::AccessibleRole::Presentation)
-                .build();
-            let title = label("", &["heading"]);
-            let artist = label("", &["dim-label"]);
-            title.set_max_width_chars(18);
-            artist.set_max_width_chars(18);
-            let b = gtk::Box::new(gtk::Orientation::Vertical, 4);
-            b.add_css_class("hm-tile");
-            b.append(&img);
-            b.append(&title);
-            b.append(&artist);
-            item.set_child(Some(&b));
+            let tile = album_tile();
+            let (w, m, it) = (w.clone(), menu.clone(), item.downgrade());
+            on_context_click(&tile, move |tile, x, y| {
+                let (Some(app), Some(obj)) = (w.upgrade(), it.upgrade().and_then(|i| i.item()))
+                else {
+                    return;
+                };
+                popup_at(&m, tile, x, y, &app.album_menu(unboxed(&obj)));
+            });
+            item.set_child(Some(&tile));
         });
         let w = Rc::downgrade(self);
         factory.connect_bind(move |_, item| {
             let Some(app) = w.upgrade() else { return };
             let item = item.downcast_ref::<gtk::ListItem>().unwrap();
-            let ai = unboxed(&item.item().unwrap());
-            let lib = app.lib();
-            let Some(album) = lib.albums.get(ai) else {
-                return;
-            };
-            let b = item.child().and_downcast::<gtk::Box>().unwrap();
-            let img = b.first_child().and_downcast::<gtk::Image>().unwrap();
-            let title = img.next_sibling().and_downcast::<gtk::Label>().unwrap();
-            let artist = title.next_sibling().and_downcast::<gtk::Label>().unwrap();
-            app.set_cover(&img, album.cover.as_deref());
-            title.set_label(&album.title);
-            artist.set_label(&album.artist);
-            b.set_tooltip_text(Some(&format!("{} — {}", album.title, album.artist)));
+            if let (Some(obj), Some(tile)) = (item.item(), item.child().and_downcast()) {
+                app.bind_album_tile(&tile, unboxed(&obj));
+            }
         });
-        let grid = gtk::GridView::builder()
-            .model(&gtk::NoSelection::new(Some(self.albums_model.clone())))
-            .factory(&factory)
-            .single_click_activate(true)
-            .max_columns(12)
-            .min_columns(1)
-            .build();
+        grid.set_factory(Some(&factory));
         let w = Rc::downgrade(self);
         grid.connect_activate(move |g, pos| {
             if let (Some(app), Some(obj)) = (w.upgrade(), g.model().and_then(|m| m.item(pos))) {
@@ -211,11 +395,40 @@ impl App {
         let w = Rc::downgrade(self);
         self.artists_list.connect_row_activated(move |_, row| {
             if let Some(app) = w.upgrade() {
-                app.show_artist(row.index() as usize);
+                let ar = app.artist_order.borrow().get(row.index() as usize).copied();
+                if let Some(ar) = ar {
+                    app.show_artist(ar);
+                }
             }
         });
+        // Narrow windows have no room for a fifth view in the bottom bar:
+        // Genres is then a row above the artists.
+        let genres_entry = gtk::ListBox::builder()
+            .selection_mode(gtk::SelectionMode::None)
+            .css_classes(["boxed-list"])
+            .visible(false)
+            .build();
+        let row = adw::ActionRow::builder()
+            .title(tr("Genres"))
+            .activatable(true)
+            .build();
+        row.add_prefix(&gtk::Image::from_icon_name("emoji-symbols-symbolic"));
+        row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+        genres_entry.append(&row);
+        let w = Rc::downgrade(self);
+        genres_entry.connect_row_activated(move |_, _| {
+            if let Some(app) = w.upgrade() {
+                app.show_genres_page();
+            }
+        });
+        self.narrow
+            .add_setter(&genres_entry, "visible", Some(&true.to_value()));
+        let artists_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        artists_box.set_valign(gtk::Align::Start);
+        artists_box.append(&genres_entry);
+        artists_box.append(&self.artists_list);
         self.stack.add_titled_with_icon(
-            &scrolled(&self.artists_list, 700),
+            &scrolled(&artists_box, 700),
             Some("artists"),
             tr("Artists"),
             "system-users-symbolic",
@@ -231,14 +444,8 @@ impl App {
         );
 
         // Playlists.
+        // New Playlist is a header button while this view is shown.
         let pl_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
-        let new_btn = gtk::Button::builder()
-            .label(tr("New Playlist…"))
-            .action_name("win.new-playlist")
-            .halign(gtk::Align::End)
-            .css_classes(["pill"])
-            .build();
-        pl_box.append(&new_btn);
         pl_box.append(&self.playlists_list);
         let w = Rc::downgrade(self);
         self.playlists_list.connect_row_activated(move |_, row| {
@@ -261,6 +468,23 @@ impl App {
             "view-list-symbolic",
         );
 
+        // Genres.
+        let w = Rc::downgrade(self);
+        self.genres_list.connect_row_activated(move |_, row| {
+            if let Some(app) = w.upgrade() {
+                app.show_genre(row.index() as usize);
+            }
+        });
+        let genres = self.stack.add_titled_with_icon(
+            &scrolled(&self.genres_list, 700),
+            Some("genres"),
+            tr("Genres"),
+            // Shapes for kinds of music (the note is Songs').
+            "emoji-symbols-symbolic",
+        );
+        self.narrow
+            .add_setter(&genres, "visible", Some(&false.to_value()));
+
         let empty_btn = gtk::Button::builder()
             .label(tr("Add Folder…"))
             .action_name("win.add-folder")
@@ -268,6 +492,47 @@ impl App {
             .css_classes(["pill", "suggested-action"])
             .build();
         self.empty_page.set_child(Some(&empty_btn));
+
+        // User playlist actions (target: the playlist file).
+        let playlist_action = |name: &str, f: fn(&Rc<App>, &Path)| {
+            let a = gio::SimpleAction::new(name, Some(glib::VariantTy::STRING));
+            let w = Rc::downgrade(self);
+            a.connect_activate(move |_, v| {
+                if let (Some(app), Some(file)) = (w.upgrade(), v.and_then(|v| v.get::<String>())) {
+                    f(&app, Path::new(&file));
+                }
+            });
+            self.window.add_action(&a);
+        };
+        playlist_action("playlist-rename", |app, f| {
+            app.new_playlist_dialog(Some(f.to_path_buf()))
+        });
+        playlist_action("playlist-export", |app, f| app.export_playlist_dialog(f));
+        playlist_action("playlist-delete", |app, f| app.delete_playlist_dialog(f));
+
+        let a = gio::SimpleAction::new(
+            "playlist-move",
+            Some(&<(String, u32, u32)>::static_variant_type()),
+        );
+        let w = Rc::downgrade(self);
+        a.connect_activate(move |_, v| {
+            if let (Some(app), Some((file, from, to))) =
+                (w.upgrade(), v.and_then(|v| v.get::<(String, u32, u32)>()))
+            {
+                app.move_in_playlist(Path::new(&file), from as usize, to as usize);
+            }
+        });
+        self.window.add_action(&a);
+        let a = gio::SimpleAction::new("queue-move", Some(&<(u32, u32)>::static_variant_type()));
+        let w = Rc::downgrade(self);
+        a.connect_activate(move |_, v| {
+            if let (Some(app), Some((from, to))) =
+                (w.upgrade(), v.and_then(|v| v.get::<(u32, u32)>()))
+            {
+                app.move_in_queue(from as usize, to as usize);
+            }
+        });
+        self.window.add_action(&a);
 
         let a = gio::SimpleAction::new("queue-remove", Some(glib::VariantTy::UINT32));
         let w = Rc::downgrade(self);
@@ -289,18 +554,38 @@ impl App {
         self.window.add_action(&a);
     }
 
-    fn build_songs_view(self: &Rc<Self>) -> gtk::ScrolledWindow {
+    fn build_songs_view(self: &Rc<Self>) -> gtk::Box {
         let cv = gtk::ColumnView::builder()
             .single_click_activate(true)
             .show_row_separators(false)
             .css_classes(["data-table"])
             .build();
         let w = Rc::downgrade(self);
+        // Right-click or long-press on a row: its menu, at the pointer.
+        let host = context_menu_host(&cv);
+        let with_menu = {
+            let w = w.clone();
+            move |widget: &gtk::Widget, item: &gtk::ListItem| {
+                let (w, host, it) = (w.clone(), host.clone(), item.downgrade());
+                on_context_click(widget, move |widget, x, y| {
+                    let (Some(app), Some(obj)) = (w.upgrade(), it.upgrade().and_then(|i| i.item()))
+                    else {
+                        return;
+                    };
+                    if let Some(menu) = app.song_menu(unboxed(&obj)) {
+                        popup_at(&host, widget, x, y, &menu);
+                    }
+                });
+            }
+        };
         let text_col = |title: &str, expand: bool, get: fn(&model::Track, &App) -> String| {
             let f = gtk::SignalListItemFactory::new();
-            f.connect_setup(|_, item| {
+            let with_menu = with_menu.clone();
+            f.connect_setup(move |_, item| {
                 let item = item.downcast_ref::<gtk::ListItem>().unwrap();
-                item.set_child(Some(&label("", &[])));
+                let l = label("", &[]);
+                with_menu(l.upcast_ref(), item);
+                item.set_child(Some(&l));
             });
             let w = w.clone();
             f.connect_bind(move |_, item| {
@@ -338,10 +623,11 @@ impl App {
 
         // Playing indicator: registered so it follows the playing track.
         let f = gtk::SignalListItemFactory::new();
-        let wi = w.clone();
+        let (wi, wm) = (w.clone(), with_menu.clone());
         f.connect_setup(move |_, item| {
             let item = item.downcast_ref::<gtk::ListItem>().unwrap();
             let img = gtk::Image::new();
+            wm(img.upcast_ref(), item);
             item.set_child(Some(&img));
             live_cell(&wi, item, Live::PlayingIcon(img.downgrade()));
         });
@@ -368,10 +654,11 @@ impl App {
         length.set_sorter(Some(&sorter(|t, _| SortKey::Num(t.duration_ms))));
         // Play counts change while the table is shown.
         let f = gtk::SignalListItemFactory::new();
-        let wp = w.clone();
+        let (wp, wm) = (w.clone(), with_menu.clone());
         f.connect_setup(move |_, item| {
             let item = item.downcast_ref::<gtk::ListItem>().unwrap();
             let l = label("", &["numeric"]);
+            wm(l.upcast_ref(), item);
             item.set_child(Some(&l));
             live_cell(&wp, item, Live::Plays(l.downgrade()));
         });
@@ -383,11 +670,22 @@ impl App {
         plays.set_sorter(Some(&sorter(|t, app| {
             SortKey::Num(app.stats.borrow().plays(&t.path) as u64)
         })));
-        for c in [&title, &artist, &album, &length, &plays] {
+        let genre = text_col(tr("Genre"), true, |t, _| {
+            t.genre.clone().unwrap_or_default()
+        });
+        genre.set_sorter(Some(&sorter(|t, _| {
+            // Songs without a genre sort last.
+            SortKey::Text(
+                t.genre
+                    .as_deref()
+                    .map_or_else(|| "\u{10ffff}".into(), model::sort_key),
+            )
+        })));
+        for c in [&title, &artist, &album, &genre, &length, &plays] {
             cv.append_column(c);
         }
         // Narrow windows show title, artist and length only.
-        for c in [&album, &plays] {
+        for c in [&album, &genre, &plays] {
             self.narrow
                 .add_setter(c, "visible", Some(&false.to_value()));
         }
@@ -425,7 +723,50 @@ impl App {
                 .build(),
         );
 
+        // The row menu, also for the keyboard (Tab to it, or Menu).
+        let f = gtk::SignalListItemFactory::new();
+        let wm = w.clone();
+        f.connect_setup(move |_, item| {
+            let item = item.downcast_ref::<gtk::ListItem>().unwrap();
+            let more = gtk::MenuButton::builder()
+                .icon_name("view-more-symbolic")
+                .valign(gtk::Align::Center)
+                .css_classes(["flat"])
+                .tooltip_text(tr("More"))
+                .name("hm-song-menu")
+                .build()
+                .labelled(tr("More"));
+            let (w, it) = (wm.clone(), item.downgrade());
+            more.set_create_popup_func(move |mb| {
+                let (Some(app), Some(obj)) = (w.upgrade(), it.upgrade().and_then(|i| i.item()))
+                else {
+                    return;
+                };
+                mb.set_menu_model(app.song_menu(unboxed(&obj)).as_ref());
+            });
+            item.set_child(Some(&more));
+        });
+        cv.append_column(&gtk::ColumnViewColumn::builder().factory(&f).build());
+        let keys = gtk::EventControllerKey::new();
+        let wk = w.clone();
+        keys.connect_key_pressed(move |_, key, _, mods| {
+            let menu_key = key == gdk::Key::Menu
+                || (key == gdk::Key::F10 && mods.contains(gdk::ModifierType::SHIFT_MASK));
+            let Some(app) = wk.upgrade().filter(|_| menu_key) else {
+                return glib::Propagation::Proceed;
+            };
+            match gtk::prelude::GtkWindowExt::focus(&app.window).and_then(|f| row_menu_button(&f)) {
+                Some(mb) => {
+                    mb.popup();
+                    glib::Propagation::Stop
+                }
+                None => glib::Propagation::Proceed,
+            }
+        });
+        cv.add_controller(keys);
+
         self.songs_sorted.set_sorter(cv.sorter().as_ref());
+        self.songs_selection.set_model(Some(&self.songs_sorted));
         cv.set_model(Some(&gtk::NoSelection::new(Some(
             self.songs_sorted.clone(),
         ))));
@@ -440,36 +781,145 @@ impl App {
             app.play_tracks(&order, pos as usize, None);
         });
         // Columns never make the window wider than it is.
-        gtk::ScrolledWindow::builder()
+        let scroll = gtk::ScrolledWindow::builder()
             .child(&cv)
             .hscrollbar_policy(gtk::PolicyType::Automatic)
             .vexpand(true)
-            .build()
+            .build();
+
+        // Selection mode (the header's Select button): click, Ctrl- and
+        // Shift-click select; the action bar acts on the selected songs.
+        // Everything here can shrink: a hidden action bar still asks for
+        // its width, and narrow windows are 360 px wide.
+        let count = gtk::Label::builder()
+            .ellipsize(gtk::pango::EllipsizeMode::End)
+            .width_chars(4)
+            .build();
+        let bar = gtk::ActionBar::builder().revealed(false).build();
+        bar.set_center_widget(Some(&count));
+        let buttons: Vec<gtk::Button> = [
+            (tr("Play"), "media-playback-start-symbolic", "play"),
+            (tr("Add to Queue"), "list-add-symbolic", "queue"),
+            (tr("Add to Playlist…"), "view-list-symbolic", "playlist"),
+        ]
+        .into_iter()
+        .map(|(text, icon, what)| {
+            let b = gtk::Button::builder()
+                .child(
+                    &adw::ButtonContent::builder()
+                        .label(text)
+                        .icon_name(icon)
+                        .can_shrink(true)
+                        .build(),
+                )
+                .tooltip_text(text)
+                .build();
+            let w = Rc::downgrade(self);
+            b.connect_clicked(move |_| {
+                if let Some(app) = w.upgrade() {
+                    app.act_on_selection(what);
+                }
+            });
+            b
+        })
+        .collect();
+        buttons[0].add_css_class("suggested-action");
+        bar.pack_start(&buttons[0]);
+        bar.pack_end(&buttons[2]);
+        bar.pack_end(&buttons[1]);
+        let (wc, cl) = (count.downgrade(), buttons.clone());
+        let update = move |sel: &gtk::MultiSelection| {
+            let n = sel.selection().size() as usize;
+            if let Some(c) = wc.upgrade() {
+                c.set_label(&if n == 0 {
+                    tr("No Songs Selected").to_string()
+                } else {
+                    trnf!("{n} song selected", "{n} songs selected", n)
+                });
+            }
+            for b in &cl {
+                b.set_sensitive(n > 0);
+            }
+        };
+        update(&self.songs_selection);
+        self.songs_selection
+            .connect_selection_changed(move |sel, _, _| update(sel));
+        let (w, cvw, barw) = (Rc::downgrade(self), cv.downgrade(), bar.downgrade());
+        self.songs_select.connect_toggled(move |b| {
+            let (Some(app), Some(cv)) = (w.upgrade(), cvw.upgrade()) else {
+                return;
+            };
+            let on = b.is_active();
+            app.songs_selection.unselect_all();
+            if on {
+                cv.set_model(Some(&app.songs_selection));
+            } else {
+                cv.set_model(Some(&gtk::NoSelection::new(Some(app.songs_sorted.clone()))));
+            }
+            cv.set_single_click_activate(!on);
+            if let Some(bar) = barw.upgrade() {
+                bar.set_revealed(on);
+            }
+        });
+        let page = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        page.append(&scroll);
+        page.append(&bar);
+        page
+    }
+
+    /// The Songs menu for track `idx`.
+    fn song_menu(&self, idx: usize) -> Option<gio::Menu> {
+        let lib = self.lib();
+        let artist = lib.artist_index(lib.tracks.get(idx)?.artist_name());
+        Some(crate::rows::track_menu(
+            idx,
+            &RowCtx::Plain,
+            Place::default(),
+            artist,
+        ))
+    }
+
+    /// The selected songs, in the table's order.
+    pub fn selected_songs(&self) -> Vec<usize> {
+        let sel = self.songs_selection.selection();
+        let mut out = Vec::new();
+        if let Some((mut it, first)) = gtk::BitsetIter::init_first(&sel) {
+            let mut push = |pos: u32| {
+                if let Some(o) = self.songs_sorted.item(pos) {
+                    out.push(unboxed(&o));
+                }
+            };
+            push(first);
+            for pos in &mut it {
+                push(pos);
+            }
+        }
+        out
+    }
+
+    fn act_on_selection(self: &Rc<Self>, what: &str) {
+        let tracks = self.selected_songs();
+        if tracks.is_empty() {
+            return;
+        }
+        self.songs_select.set_active(false);
+        match what {
+            "play" => self.play_tracks(&tracks, 0, Some(false)),
+            "queue" => self.queue_tracks(&tracks, false),
+            _ => self.add_to_playlist_dialog(tracks),
+        }
     }
 
     /// Rebuilds all library views from the current library.
     pub fn refresh_library_views(self: &Rc<Self>) {
         let lib = self.lib();
-        let albums: Vec<glib::BoxedAnyObject> = (0..lib.albums.len()).map(boxed).collect();
-        self.albums_model
-            .splice(0, self.albums_model.n_items(), &albums);
+        self.sort_albums();
         let songs: Vec<glib::BoxedAnyObject> =
             lib.all_tracks_by_album().into_iter().map(boxed).collect();
         self.songs_model
             .splice(0, self.songs_model.n_items(), &songs);
-
-        self.artists_list.remove_all();
-        for a in &lib.artists {
-            let n = a.albums.len();
-            let row = adw::ActionRow::builder()
-                .title(glib::markup_escape_text(&a.name))
-                .subtitle(trnf!("{n} album", "{n} albums", n))
-                .activatable(true)
-                .build();
-            row.add_prefix(&gtk::Image::from_icon_name("avatar-default-symbolic"));
-            row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
-            self.artists_list.append(&row);
-        }
+        self.sort_artists();
+        self.fill_genres(&self.genres_list);
         self.refresh_playlists_list();
         self.update_main_stack();
         if self.search_bar.is_search_mode() {
@@ -480,6 +930,44 @@ impl App {
             self.nav.pop_to_tag("root");
         }
         self.update_now_playing();
+    }
+
+    /// Fills the Albums grid in the chosen order.
+    pub fn sort_albums(&self) {
+        let lib = self.lib();
+        let sort = model::AlbumSort::from_nick(&self.state.borrow().album_sort).unwrap_or_default();
+        let order = {
+            let stats = self.stats.borrow();
+            lib.album_order(sort, |p| stats.plays(p))
+        };
+        let albums: Vec<glib::BoxedAnyObject> = order.into_iter().map(boxed).collect();
+        self.albums_model
+            .splice(0, self.albums_model.n_items(), &albums);
+    }
+
+    /// Fills the Artists list in the chosen order.
+    pub fn sort_artists(&self) {
+        let lib = self.lib();
+        let sort =
+            model::ArtistSort::from_nick(&self.state.borrow().artist_sort).unwrap_or_default();
+        let order = {
+            let stats = self.stats.borrow();
+            lib.artist_order(sort, |p| stats.plays(p))
+        };
+        self.artists_list.remove_all();
+        for &ar in &order {
+            let a = &lib.artists[ar];
+            let n = a.albums.len();
+            let row = adw::ActionRow::builder()
+                .title(glib::markup_escape_text(&a.name))
+                .subtitle(trnf!("{n} album", "{n} albums", n))
+                .activatable(true)
+                .build();
+            row.add_prefix(&artist_avatar(&a.name, 40));
+            row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+            self.artists_list.append(&row);
+        }
+        *self.artist_order.borrow_mut() = order;
     }
 
     pub fn refresh_playlists_list(&self) {
@@ -495,6 +983,10 @@ impl App {
                 .build();
             row.add_prefix(&gtk::Image::from_icon_name(s.icon()));
             row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+            if n == 0 {
+                // Still listed (its page says how it fills up), but quiet.
+                row.add_css_class("dim-label");
+            }
             self.playlists_list.append(&row);
         }
         for p in self.playlists.borrow().iter() {
@@ -511,145 +1003,75 @@ impl App {
 
     // ----- track rows ------------------------------------------------------
 
-    pub fn track_row(
-        self: &Rc<Self>,
-        idx: usize,
-        number: &str,
-        show_artist: bool,
-        ctx: &RowCtx,
-        pos: usize,
-    ) -> gtk::ListBoxRow {
-        let lib = self.lib();
-        let t = &lib.tracks[idx];
-        let num = gtk::Label::builder()
-            .label(number)
-            .css_classes(["dim-label", "numeric", "hm-num"])
-            .build();
-        let indicator = gtk::Stack::new();
-        indicator.add_named(&num, Some("number"));
-        // The row's description also says it is playing.
-        indicator.add_named(
-            &gtk::Image::builder()
-                .icon_name("media-playback-start-symbolic")
-                .accessible_role(gtk::AccessibleRole::Presentation)
-                .build(),
-            Some("playing"),
-        );
-        let text = gtk::Box::new(gtk::Orientation::Vertical, 2);
-        text.set_hexpand(true);
-        text.set_valign(gtk::Align::Center);
-        text.append(&label(&t.title, &[]));
-        if show_artist {
-            text.append(&label(t.artist_name(), &["dim-label", "caption"]));
-        }
-        let dur = gtk::Label::builder()
-            .label(format_duration(t.duration_ms))
-            .css_classes(["dim-label", "numeric"])
-            .build();
-        let heart = gtk::ToggleButton::builder()
-            .valign(gtk::Align::Center)
-            .css_classes(["flat"])
-            .build();
-        sync_heart(&heart, self.stats.borrow().is_favorite(&t.path));
-        let path = t.path.clone();
-        let w = Rc::downgrade(self);
-        heart.connect_toggled(move |h| {
-            set_heart_icon(h);
-            if let Some(app) = w.upgrade() {
-                app.set_favorite(&path, h.is_active());
-            }
-        });
-
-        let menu = gio::Menu::new();
-        let item = |label: &str, action: &str, target: glib::Variant| {
-            let it = gio::MenuItem::new(Some(label), None);
-            it.set_action_and_target_value(Some(action), Some(&target));
-            it
-        };
-        let ti = (idx as u32).to_variant();
-        let s1 = gio::Menu::new();
-        if !matches!(ctx, RowCtx::Queue) {
-            s1.append_item(&item(tr("Play Next"), "win.play-next", ti.clone()));
-            s1.append_item(&item(tr("Add to Queue"), "win.queue-add", ti.clone()));
-        }
-        s1.append_item(&item(
-            tr("Add to Playlist…"),
-            "win.add-to-playlist",
-            ti.clone(),
-        ));
-        s1.append_item(&item(tr("Go to Album"), "win.go-album", ti));
-        menu.append_section(None, &s1);
-        match ctx {
-            RowCtx::Playlist(file) => {
-                let target = (file.to_string_lossy().into_owned(), pos as u32).to_variant();
-                menu.append_item(&item(
-                    tr("Remove from Playlist"),
-                    "win.playlist-remove",
-                    target,
-                ));
-            }
-            RowCtx::Queue => menu.append_item(&item(
-                tr("Remove from Queue"),
-                "win.queue-remove",
-                (pos as u32).to_variant(),
-            )),
-            RowCtx::Plain => {}
-        }
-        let more = gtk::MenuButton::builder()
-            .icon_name("view-more-symbolic")
-            .valign(gtk::Align::Center)
-            .css_classes(["flat"])
-            .tooltip_text(tr("More"))
-            .build()
-            .labelled(tr("More"));
-        more.set_create_popup_func(move |mb| {
-            if mb.menu_model().is_none() {
-                mb.set_menu_model(Some(&menu));
-            }
-        });
-
-        let b = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-        b.set_margin_top(6);
-        b.set_margin_bottom(6);
-        b.set_margin_start(12);
-        b.set_margin_end(6);
-        b.append(&indicator);
-        b.append(&text);
-        b.append(&dur);
-        b.append(&heart);
-        b.append(&more);
-        let row = gtk::ListBoxRow::builder()
-            .child(&b)
-            .activatable(true)
-            .build();
-        self.register_row(RowHandle::new(
-            Some(t.path.clone()),
-            Live::Indicator(indicator.downgrade()),
-        ));
-        self.register_row(RowHandle::new(
-            Some(t.path.clone()),
-            Live::Heart(heart.downgrade()),
-        ));
-        row
-    }
-
     /// A boxed list of track rows; activating one plays `tracks` from there.
+    /// Long lists get their first rows at once and the rest while idle.
+    /// Playlist rows can be dragged to reorder the playlist.
     pub fn track_list(
         self: &Rc<Self>,
         tracks: &[usize],
-        numbers: impl Fn(usize, usize) -> String,
+        numbers: impl Fn(usize, usize) -> String + 'static,
         show_artist: bool,
         ctx: RowCtx,
         positions: Option<&[usize]>,
         play_from: Option<(Vec<usize>, usize)>,
     ) -> gtk::ListBox {
+        const FIRST: usize = 100;
+        const BATCH: usize = 200;
         let list = gtk::ListBox::builder()
             .selection_mode(gtk::SelectionMode::None)
             .css_classes(["boxed-list"])
             .build();
-        for (n, &t) in tracks.iter().enumerate() {
-            let pos = positions.map_or(n, |p| p[n]);
-            list.append(&self.track_row(t, &numbers(n, t), show_artist, &ctx, pos));
+        let rows: Rc<Vec<(usize, Place)>> = Rc::new(
+            tracks
+                .iter()
+                .enumerate()
+                .map(|(n, &t)| (t, Place::in_list(n, tracks.len(), positions)))
+                .collect(),
+        );
+        let add = {
+            let (w, l, rows, ctx) = (Rc::downgrade(self), list.downgrade(), rows.clone(), ctx);
+            move |range: std::ops::Range<usize>| {
+                let (Some(app), Some(list)) = (w.upgrade(), l.upgrade()) else {
+                    return;
+                };
+                for n in range {
+                    let (t, place) = rows[n];
+                    let row = app.track_row(t, &numbers(n, t), show_artist, &ctx, place);
+                    if let RowCtx::Playlist(file) = &ctx {
+                        let (w, f) = (Rc::downgrade(&app), file.clone());
+                        crate::rows::reorderable(
+                            &row,
+                            move || Some(place.from),
+                            move |from, to| {
+                                if let Some(app) = w.upgrade() {
+                                    app.move_in_playlist(&f, from, to);
+                                }
+                            },
+                        );
+                    }
+                    list.append(&row);
+                }
+            }
+        };
+        add(0..rows.len().min(FIRST));
+        if rows.len() > FIRST {
+            let next = std::cell::Cell::new(FIRST);
+            let total = rows.len();
+            let l = list.downgrade();
+            glib::idle_add_local(move || {
+                if l.upgrade().is_none() {
+                    return glib::ControlFlow::Break;
+                }
+                let start = next.get();
+                let end = (start + BATCH).min(total);
+                add(start..end);
+                next.set(end);
+                if end < total {
+                    glib::ControlFlow::Continue
+                } else {
+                    glib::ControlFlow::Break
+                }
+            });
         }
         let (tracks, offset) = play_from.unwrap_or_else(|| (tracks.to_vec(), 0));
         let w = Rc::downgrade(self);
@@ -661,29 +1083,54 @@ impl App {
         list
     }
 
+    /// The header of an album, artist, genre or playlist page: art, title,
+    /// subtitle (a link to the artist when `artist` is given), details,
+    /// Play and Shuffle, and a menu to queue or add all of `tracks`.
     fn header_block(
         self: &Rc<Self>,
-        cover: Option<&str>,
+        art: Art,
         title: &str,
         subtitle: &str,
+        artist: Option<usize>,
         detail: &str,
         tracks: Vec<usize>,
-    ) -> (gtk::Widget, gtk::FlowBox) {
-        let img = gtk::Image::builder()
-            .pixel_size(160)
-            .css_classes(["hm-cover"])
-            // Decorative: the album or track title next to it names it.
-            .accessible_role(gtk::AccessibleRole::Presentation)
-            .build();
-        self.set_cover(&img, cover);
+    ) -> gtk::Widget {
+        let art: gtk::Widget = match art {
+            Art::Cover(key) => {
+                let c = cover_widget(160);
+                self.set_cover(&c, key);
+                c.upcast()
+            }
+            Art::Avatar(name) => adw::Avatar::builder()
+                .text(name)
+                .show_initials(true)
+                .size(160)
+                .halign(gtk::Align::Center)
+                .valign(gtk::Align::Center)
+                .accessible_role(gtk::AccessibleRole::Presentation)
+                .build()
+                .upcast(),
+            Art::Icon(icon) => {
+                let c = cover_widget(160);
+                self.set_cover(&c, None);
+                if let Some(img) = c.child().and_downcast::<gtk::Image>() {
+                    img.set_icon_name(Some(icon));
+                }
+                c.upcast()
+            }
+        };
         let info = gtk::Box::new(gtk::Orientation::Vertical, 6);
         info.set_valign(gtk::Align::Center);
         let t = label(title, &["title-1"]);
         t.set_wrap(true);
         t.set_ellipsize(gtk::pango::EllipsizeMode::None);
         info.append(&t);
-        if !subtitle.is_empty() {
-            info.append(&label(subtitle, &["title-4"]));
+        match artist {
+            Some(ar) if !subtitle.is_empty() => {
+                info.append(&self.artist_link(subtitle, ar, &["title-4"]));
+            }
+            _ if !subtitle.is_empty() => info.append(&label(subtitle, &["title-4"])),
+            _ => {}
         }
         info.append(&label(detail, &["dim-label"]));
         // Wraps onto a second line when the window is narrow.
@@ -706,23 +1153,57 @@ impl App {
                 app.play_tracks(&t1, 0, Some(false));
             }
         });
-        let w = Rc::downgrade(self);
+        let (w, t2) = (Rc::downgrade(self), tracks.clone());
         shuffle.connect_clicked(move |_| {
             if let Some(app) = w.upgrade() {
-                app.play_tracks(&tracks, 0, Some(true));
+                app.play_tracks(&t2, 0, Some(true));
             }
         });
         add_header_button(&buttons, &play);
         add_header_button(&buttons, &shuffle);
+        if !tracks.is_empty() {
+            let more = gtk::MenuButton::builder()
+                .icon_name("view-more-symbolic")
+                .menu_model(&tracks_menu(&tracks))
+                .valign(gtk::Align::Center)
+                .css_classes(["circular"])
+                .tooltip_text(tr("More"))
+                .build()
+                .labelled(tr("More"));
+            add_header_button(&buttons, &more);
+        }
         info.append(&buttons);
         let header = gtk::Box::new(gtk::Orientation::Horizontal, 18);
-        header.append(&img);
+        header.append(&art);
         header.append(&info);
         // Narrow windows put the cover above the text (see
         // `App::layout_headers`).
         self.headers.borrow_mut().push(header.downgrade());
         layout_header(&header, self.is_narrow());
-        (header.upcast(), buttons)
+        header.upcast()
+    }
+
+    /// An artist's name as a link to their page.
+    pub fn artist_link(
+        self: &Rc<Self>,
+        name: &str,
+        artist: usize,
+        classes: &[&str],
+    ) -> gtk::Button {
+        let l = label(name, classes);
+        let b = gtk::Button::builder()
+            .child(&l)
+            .halign(gtk::Align::Start)
+            .tooltip_text(tr("Go to Artist"))
+            .css_classes(["flat", "hm-link"])
+            .build();
+        let w = Rc::downgrade(self);
+        b.connect_clicked(move |_| {
+            if let Some(app) = w.upgrade() {
+                app.show_artist(artist);
+            }
+        });
+        b
     }
 
     // ----- pages -------------------------------------------------------------
@@ -739,10 +1220,14 @@ impl App {
         detail.push(songs_count(album.tracks.len()));
         detail.push(format_total(album.duration_ms));
         let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
-        let (header, _) = self.header_block(
-            album.cover.as_deref(),
+        let artist = (!album.various)
+            .then(|| lib.artist_index(&album.artist))
+            .flatten();
+        let header = self.header_block(
+            Art::Cover(album.cover.as_deref()),
             &album.title,
             &album.artist,
+            artist,
             &detail.join(" · "),
             album.tracks.clone(),
         );
@@ -808,14 +1293,13 @@ impl App {
             .flat_map(|&a| lib.artist_tracks_in_album(&artist.name, a))
             .collect();
         let total: u64 = all.iter().map(|&t| lib.tracks[t].duration_ms).sum();
-        let first_cover = artist
-            .albums
-            .iter()
-            .find_map(|&a| lib.albums[a].cover.clone());
-        let (header, _) = self.header_block(
-            first_cover.as_deref(),
+        // Initials rather than one album's cover, which is not a picture of
+        // the artist.
+        let header = self.header_block(
+            Art::Avatar(&artist.name),
             &artist.name,
             "",
+            None,
             &format!(
                 "{} · {} · {}",
                 trnf!("{n} album", "{n} albums", artist.albums.len()),
@@ -825,30 +1309,21 @@ impl App {
             all,
         );
         content.append(&header);
+        content.append(&label(tr("Albums"), &["heading", "hm-disc"]));
+        content.append(&self.album_tiles(&artist.albums));
         for &ai in &artist.albums {
             let album = &lib.albums[ai];
             let tracks = lib.artist_tracks_in_album(&artist.name, ai);
-            let img = gtk::Image::builder()
-                .pixel_size(48)
-                .css_classes(["hm-cover"])
-                // Decorative: the album or track title next to it names it.
-                .accessible_role(gtk::AccessibleRole::Presentation)
-                .build();
-            self.set_cover(&img, album.cover.as_deref());
-            let text = gtk::Box::new(gtk::Orientation::Vertical, 2);
-            text.set_valign(gtk::Align::Center);
+            let text = gtk::Box::new(gtk::Orientation::Horizontal, 12);
             text.append(&label(&album.title, &["heading"]));
-            text.append(&label(
-                &album.year.map(|y| y.to_string()).unwrap_or_default(),
-                &["dim-label", "caption"],
-            ));
-            let hb = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-            hb.append(&img);
-            hb.append(&text);
+            if let Some(y) = album.year {
+                text.append(&label(&y.to_string(), &["dim-label"]));
+            }
             let btn = gtk::Button::builder()
-                .child(&hb)
-                .css_classes(["flat"])
+                .child(&text)
+                .css_classes(["flat", "hm-link"])
                 .halign(gtk::Align::Start)
+                .tooltip_text(tr("Go to Album"))
                 .margin_top(12)
                 .build();
             let w = Rc::downgrade(self);
@@ -876,6 +1351,151 @@ impl App {
             .push(&page(&artist.name, None, &scrolled(&content, 800)));
     }
 
+    /// The genres as a page of their own (narrow windows, and Alt+5 there).
+    pub fn show_genres_page(self: &Rc<Self>) {
+        let list = gtk::ListBox::builder()
+            .selection_mode(gtk::SelectionMode::None)
+            .css_classes(["boxed-list"])
+            .valign(gtk::Align::Start)
+            .build();
+        self.fill_genres(&list);
+        let w = Rc::downgrade(self);
+        list.connect_row_activated(move |_, row| {
+            if let Some(app) = w.upgrade() {
+                app.show_genre(row.index() as usize);
+            }
+        });
+        self.nav
+            .push(&page(tr("Genres"), None, &scrolled(&list, 700)));
+    }
+
+    /// One row per genre: name, album and song counts.
+    fn fill_genres(&self, list: &gtk::ListBox) {
+        list.remove_all();
+        for g in &self.lib().genres {
+            let row = adw::ActionRow::builder()
+                .title(glib::markup_escape_text(&g.name))
+                .subtitle(format!(
+                    "{} · {}",
+                    trnf!("{n} album", "{n} albums", g.albums.len()),
+                    songs_count(g.tracks.len())
+                ))
+                .activatable(true)
+                .build();
+            row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+            list.append(&row);
+        }
+    }
+
+    pub fn show_genre(self: &Rc<Self>, gi: usize) {
+        let lib = self.lib();
+        let Some(genre) = lib.genres.get(gi) else {
+            return;
+        };
+        let total: u64 = genre
+            .tracks
+            .iter()
+            .map(|&t| lib.tracks[t].duration_ms)
+            .sum();
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        content.append(&self.header_block(
+            Art::Icon("emoji-symbols-symbolic"),
+            &genre.name,
+            "",
+            None,
+            &format!(
+                "{} · {} · {}",
+                trnf!("{n} album", "{n} albums", genre.albums.len()),
+                songs_count(genre.tracks.len()),
+                format_total(total)
+            ),
+            genre.tracks.clone(),
+        ));
+        content.append(&label(tr("Albums"), &["heading", "hm-disc"]));
+        content.append(&self.album_tiles(&genre.albums));
+        content.append(&label(tr("Songs"), &["heading", "hm-disc"]));
+        content.append(&self.track_list(
+            &genre.tracks,
+            |_, _| String::new(),
+            true,
+            RowCtx::Plain,
+            None,
+            None,
+        ));
+        self.nav
+            .push(&page(&genre.name, None, &scrolled(&content, 800)));
+    }
+
+    /// A wrapping grid of album tiles (artist and genre pages); a tile
+    /// opens its album, right-click or long-press shows its menu.
+    pub fn album_tiles(self: &Rc<Self>, albums: &[usize]) -> gtk::FlowBox {
+        let flow = gtk::FlowBox::builder()
+            .selection_mode(gtk::SelectionMode::None)
+            .homogeneous(true)
+            .column_spacing(6)
+            .row_spacing(6)
+            .max_children_per_line(8)
+            .min_children_per_line(1)
+            .css_classes(["hm-album-tiles"])
+            .build();
+        let menu = context_menu_host(&flow);
+        for &ai in albums {
+            let tile = album_tile();
+            self.bind_album_tile(&tile, ai);
+            flow.append(&tile);
+            let (w, m) = (Rc::downgrade(self), menu.clone());
+            on_context_click(&tile, move |tile, x, y| {
+                if let Some(app) = w.upgrade() {
+                    popup_at(&m, tile, x, y, &app.album_menu(ai));
+                }
+            });
+        }
+        let (w, albums) = (Rc::downgrade(self), albums.to_vec());
+        flow.connect_child_activated(move |_, child| {
+            if let (Some(app), Some(&ai)) = (w.upgrade(), albums.get(child.index() as usize)) {
+                app.show_album(ai);
+            }
+        });
+        flow
+    }
+
+    /// An album's context menu: play it, queue it, add it to a playlist,
+    /// go to its artist.
+    pub fn album_menu(&self, ai: usize) -> gio::Menu {
+        let lib = self.lib();
+        let menu = gio::Menu::new();
+        let Some(album) = lib.albums.get(ai) else {
+            return menu;
+        };
+        let target: Vec<u32> = album.tracks.iter().map(|&t| t as u32).collect();
+        let target = target.to_variant();
+        let play = gio::Menu::new();
+        for (label, action) in [
+            (tr("Play"), "win.play-tracks"),
+            (tr("Shuffle"), "win.shuffle-tracks"),
+        ] {
+            let it = gio::MenuItem::new(Some(label), None);
+            it.set_action_and_target_value(Some(action), Some(&target));
+            play.append_item(&it);
+        }
+        menu.append_section(None, &play);
+        menu.append_section(None, &tracks_menu(&album.tracks));
+        if let Some(ar) = (!album.various)
+            .then(|| lib.artist_index(&album.artist))
+            .flatten()
+        {
+            let go = gio::Menu::new();
+            let it = gio::MenuItem::new(Some(tr("Go to Artist")), None);
+            it.set_action_and_target_value(
+                Some("win.show-artist"),
+                Some(&(ar as u32).to_variant()),
+            );
+            go.append_item(&it);
+            menu.append_section(None, &go);
+        }
+        menu
+    }
+
     pub fn show_playlist(self: &Rc<Self>, r: PlRef) {
         let title = match &r {
             PlRef::Smart(s) => s.title().to_string(),
@@ -890,7 +1510,32 @@ impl App {
         let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
         *self.playlist_view.borrow_mut() = Some((content.downgrade(), r.clone()));
         self.fill_playlist(&content, &r);
-        let p = page(&title, Some("playlist"), &scrolled(&content, 800));
+        let (p, header) = page_with_header(&title, Some("playlist"), &scrolled(&content, 800));
+        if let PlRef::User(file) = &r {
+            // Secondary and destructive actions stay out of the Play row.
+            let target = file.to_string_lossy().into_owned().to_variant();
+            let menu = gio::Menu::new();
+            let item = |label: &str, action: &str| {
+                let it = gio::MenuItem::new(Some(label), None);
+                it.set_action_and_target_value(Some(action), Some(&target));
+                it
+            };
+            let edit = gio::Menu::new();
+            edit.append_item(&item(tr("_Rename…"), "win.playlist-rename"));
+            edit.append_item(&item(tr("_Export…"), "win.playlist-export"));
+            menu.append_section(None, &edit);
+            let danger = gio::Menu::new();
+            danger.append_item(&item(tr("_Delete…"), "win.playlist-delete"));
+            menu.append_section(None, &danger);
+            header.pack_end(
+                &gtk::MenuButton::builder()
+                    .icon_name("view-more-symbolic")
+                    .menu_model(&menu)
+                    .tooltip_text(tr("Playlist Menu"))
+                    .build()
+                    .labelled(tr("Playlist Menu")),
+            );
+        }
         self.nav.push(&p);
     }
 
@@ -933,54 +1578,14 @@ impl App {
         };
         let total: u64 = tracks.iter().map(|&t| lib.tracks[t].duration_ms).sum();
         let cover = tracks.iter().find_map(|&t| lib.tracks[t].cover.clone());
-        let (header, buttons) = self.header_block(
-            cover.as_deref(),
+        let header = self.header_block(
+            Art::Cover(cover.as_deref()),
             &name,
             "",
+            None,
             &format!("{} · {}", songs_count(tracks.len()), format_total(total)),
             tracks.clone(),
         );
-        if let PlRef::User(file) = r {
-            let rename = gtk::Button::builder()
-                .icon_name("document-edit-symbolic")
-                .tooltip_text(tr("Rename Playlist"))
-                .css_classes(["circular"])
-                .build()
-                .labelled(tr("Rename Playlist"));
-            let delete = gtk::Button::builder()
-                .icon_name("user-trash-symbolic")
-                .tooltip_text(tr("Delete Playlist"))
-                .css_classes(["circular", "destructive-action"])
-                .build()
-                .labelled(tr("Delete Playlist"));
-            let (w, f) = (Rc::downgrade(self), file.clone());
-            rename.connect_clicked(move |_| {
-                if let Some(app) = w.upgrade() {
-                    app.new_playlist_dialog(Some(f.clone()));
-                }
-            });
-            let (w, f) = (Rc::downgrade(self), file.clone());
-            delete.connect_clicked(move |_| {
-                if let Some(app) = w.upgrade() {
-                    app.delete_playlist_dialog(&f);
-                }
-            });
-            let export = gtk::Button::builder()
-                .icon_name("document-save-as-symbolic")
-                .tooltip_text(tr("Export Playlist…"))
-                .css_classes(["circular"])
-                .build()
-                .labelled(tr("Export Playlist…"));
-            let (w, f) = (Rc::downgrade(self), file.clone());
-            export.connect_clicked(move |_| {
-                if let Some(app) = w.upgrade() {
-                    app.export_playlist_dialog(&f);
-                }
-            });
-            add_header_button(&buttons, &rename);
-            add_header_button(&buttons, &export);
-            add_header_button(&buttons, &delete);
-        }
         content.append(&header);
         if tracks.is_empty() {
             let empty = adw::StatusPage::builder()
@@ -1024,122 +1629,6 @@ impl App {
         self.refresh_playlists_list();
     }
 
-    pub fn show_now_playing(self: &Rc<Self>) {
-        if self.nav.visible_page().and_then(|p| p.tag()).as_deref() == Some("now-playing") {
-            return;
-        }
-        if self.nav.find_page("now-playing").is_some() {
-            self.nav.pop_to_tag("now-playing");
-            return;
-        }
-        let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
-        let img = gtk::Image::builder()
-            .pixel_size(256)
-            .css_classes(["hm-cover"])
-            // Decorative: the album or track title next to it names it.
-            .accessible_role(gtk::AccessibleRole::Presentation)
-            .halign(gtk::Align::Center)
-            .build();
-        let title = gtk::Label::builder()
-            .css_classes(["title-2"])
-            .wrap(true)
-            .justify(gtk::Justification::Center)
-            .build();
-        let sub = gtk::Label::builder()
-            .css_classes(["dim-label"])
-            .wrap(true)
-            .justify(gtk::Justification::Center)
-            .build();
-        content.append(&img);
-        content.append(&title);
-        content.append(&sub);
-        content.append(&label(tr("Queue"), &["heading", "hm-disc"]));
-        let list = gtk::ListBox::builder()
-            .selection_mode(gtk::SelectionMode::None)
-            .css_classes(["boxed-list"])
-            .build();
-        content.append(&list);
-        let w = Rc::downgrade(self);
-        list.connect_row_activated(move |_, row| {
-            let Some(app) = w.upgrade() else { return };
-            let idx = row.widget_name().parse::<usize>().ok();
-            if let Some(i) = idx {
-                app.queue.borrow_mut().jump(i);
-                app.start_current(true);
-            }
-        });
-        // The header labels live in the list's parent; refresh_queue_view
-        // reaches them through these widget names.
-        img.set_widget_name("np-cover");
-        title.set_widget_name("np-title");
-        sub.set_widget_name("np-sub");
-        *self.queue_view.borrow_mut() = Some(list.downgrade());
-        self.nav.push(&page(
-            tr("Now Playing"),
-            Some("now-playing"),
-            &scrolled(&content, 700),
-        ));
-        self.refresh_queue_view();
-    }
-
-    pub fn refresh_queue_view(self: &Rc<Self>) {
-        let Some(list) = self.queue_view.borrow().as_ref().and_then(|w| w.upgrade()) else {
-            return;
-        };
-        let Some(content) = list.parent().and_downcast::<gtk::Box>() else {
-            return;
-        };
-        let track = self.current_track();
-        let mut child = content.first_child();
-        while let Some(c) = child {
-            match c.widget_name().as_str() {
-                "np-cover" => {
-                    if let Some(img) = c.downcast_ref::<gtk::Image>() {
-                        self.set_cover(img, track.as_ref().and_then(|t| t.cover.as_deref()));
-                    }
-                }
-                "np-title" => {
-                    if let Some(l) = c.downcast_ref::<gtk::Label>() {
-                        l.set_label(
-                            track
-                                .as_ref()
-                                .map_or(tr("Nothing Playing"), |t| t.title.as_str()),
-                        );
-                    }
-                }
-                "np-sub" => {
-                    if let Some(l) = c.downcast_ref::<gtk::Label>() {
-                        l.set_label(
-                            &track
-                                .as_ref()
-                                .map(|t| format!("{} — {}", t.artist_name(), t.album_name()))
-                                .unwrap_or_default(),
-                        );
-                    }
-                }
-                _ => {}
-            }
-            child = c.next_sibling();
-        }
-        list.remove_all();
-        let lib = self.lib();
-        let order: Vec<(usize, PathBuf)> = self
-            .queue
-            .borrow()
-            .in_play_order()
-            .into_iter()
-            .map(|(i, p)| (i, p.clone()))
-            .collect();
-        for (n, (item_idx, path)) in order.iter().enumerate().take(500) {
-            let Some(t) = lib.index_of(path) else {
-                continue;
-            };
-            let row = self.track_row(t, &(n + 1).to_string(), true, &RowCtx::Queue, *item_idx);
-            row.set_widget_name(&item_idx.to_string());
-            list.append(&row);
-        }
-    }
-
     pub fn show_search(self: &Rc<Self>, query: &str) {
         let b = &self.search_box;
         while let Some(c) = b.first_child() {
@@ -1160,29 +1649,44 @@ impl App {
             b.append(&s);
             return;
         }
+        // Long sections show their first matches; Show All adds the rest
+        // (songs open a page that lists them all).
+        const ALBUMS: usize = 50;
+        const ARTISTS: usize = 50;
+        const SONGS: usize = 200;
         if !r.albums.is_empty() {
-            b.append(&label(tr("Albums"), &["heading"]));
             let list = gtk::ListBox::builder()
                 .selection_mode(gtk::SelectionMode::None)
                 .css_classes(["boxed-list"])
                 .build();
-            for &ai in r.albums.iter().take(50) {
-                let a = &lib.albums[ai];
-                let row = adw::ActionRow::builder()
-                    .title(glib::markup_escape_text(&a.title))
-                    .subtitle(glib::markup_escape_text(&a.artist))
-                    .activatable(true)
-                    .build();
-                let img = gtk::Image::builder()
-                    .pixel_size(40)
-                    .css_classes(["hm-cover"])
-                    // Decorative: the album or track title next to it names it.
-                    .accessible_role(gtk::AccessibleRole::Presentation)
-                    .build();
-                self.set_cover(&img, a.cover.as_deref());
-                row.add_prefix(&img);
-                list.append(&row);
-            }
+            let add = {
+                let (w, l, albums) = (Rc::downgrade(self), list.downgrade(), r.albums.clone());
+                move |range: std::ops::Range<usize>| {
+                    let (Some(app), Some(list)) = (w.upgrade(), l.upgrade()) else {
+                        return;
+                    };
+                    let lib = app.lib();
+                    for &ai in &albums[range] {
+                        let a = &lib.albums[ai];
+                        let row = adw::ActionRow::builder()
+                            .title(glib::markup_escape_text(&a.title))
+                            .subtitle(glib::markup_escape_text(&a.artist))
+                            .activatable(true)
+                            .build();
+                        let img = cover_widget(40);
+                        app.set_cover(&img, a.cover.as_deref());
+                        row.add_prefix(&img);
+                        list.append(&row);
+                    }
+                }
+            };
+            add(0..r.albums.len().min(ALBUMS));
+            let n = r.albums.len();
+            b.append(&section_header(
+                tr("Albums"),
+                n,
+                (n > ALBUMS).then(|| Box::new(move || add(ALBUMS..n)) as Box<dyn Fn()>),
+            ));
             let (w, albums) = (Rc::downgrade(self), r.albums.clone());
             list.connect_row_activated(move |_, row| {
                 if let Some(app) = w.upgrade() {
@@ -1192,19 +1696,34 @@ impl App {
             b.append(&list);
         }
         if !r.artists.is_empty() {
-            b.append(&label(tr("Artists"), &["heading"]));
             let list = gtk::ListBox::builder()
                 .selection_mode(gtk::SelectionMode::None)
                 .css_classes(["boxed-list"])
                 .build();
-            for &ar in r.artists.iter().take(50) {
-                let row = adw::ActionRow::builder()
-                    .title(glib::markup_escape_text(&lib.artists[ar].name))
-                    .activatable(true)
-                    .build();
-                row.add_prefix(&gtk::Image::from_icon_name("avatar-default-symbolic"));
-                list.append(&row);
-            }
+            let add = {
+                let (w, l, artists) = (Rc::downgrade(self), list.downgrade(), r.artists.clone());
+                move |range: std::ops::Range<usize>| {
+                    let (Some(app), Some(list)) = (w.upgrade(), l.upgrade()) else {
+                        return;
+                    };
+                    let lib = app.lib();
+                    for &ar in &artists[range] {
+                        let row = adw::ActionRow::builder()
+                            .title(glib::markup_escape_text(&lib.artists[ar].name))
+                            .activatable(true)
+                            .build();
+                        row.add_prefix(&artist_avatar(&lib.artists[ar].name, 32));
+                        list.append(&row);
+                    }
+                }
+            };
+            add(0..r.artists.len().min(ARTISTS));
+            let n = r.artists.len();
+            b.append(&section_header(
+                tr("Artists"),
+                n,
+                (n > ARTISTS).then(|| Box::new(move || add(ARTISTS..n)) as Box<dyn Fn()>),
+            ));
             let (w, artists) = (Rc::downgrade(self), r.artists.clone());
             list.connect_row_activated(move |_, row| {
                 if let Some(app) = w.upgrade() {
@@ -1214,17 +1733,62 @@ impl App {
             b.append(&list);
         }
         if !r.tracks.is_empty() {
-            b.append(&label(tr("Songs"), &["heading"]));
-            let tracks: Vec<usize> = r.tracks.iter().copied().take(200).collect();
+            let n = r.tracks.len();
+            let show_all = (n > SONGS).then(|| {
+                let (w, all, q) = (
+                    Rc::downgrade(self),
+                    r.tracks.clone(),
+                    query.trim().to_string(),
+                );
+                Box::new(move || {
+                    if let Some(app) = w.upgrade() {
+                        app.show_all_songs(&q, all.clone());
+                    }
+                }) as Box<dyn Fn()>
+            });
+            b.append(&section_header(tr("Songs"), n, show_all));
+            let first: Vec<usize> = r.tracks.iter().copied().take(SONGS).collect();
+            // Playing one plays from all the matches, not just those shown.
             b.append(&self.track_list(
-                &tracks,
+                &first,
                 |_, _| String::new(),
                 true,
                 RowCtx::Plain,
                 None,
-                None,
+                Some((r.tracks.clone(), 0)),
             ));
         }
+    }
+
+    /// Every song matching a search, in a list that only builds the rows
+    /// on screen.
+    fn show_all_songs(self: &Rc<Self>, query: &str, tracks: Vec<usize>) {
+        let model = gio::ListStore::new::<glib::BoxedAnyObject>();
+        let objs: Vec<glib::BoxedAnyObject> = tracks.iter().copied().map(boxed).collect();
+        model.extend_from_slice(&objs);
+        let list = self.track_list_view(
+            &model,
+            true,
+            RowCtx::Plain,
+            |obj, _| Some((unboxed(obj), String::new(), Place::default())),
+            None,
+        );
+        list.add_css_class("hm-all-songs");
+        let w = Rc::downgrade(self);
+        list.connect_activate(move |_, pos| {
+            if let Some(app) = w.upgrade() {
+                app.play_tracks(&tracks, pos as usize, None);
+            }
+        });
+        let clamp = adw::Clamp::builder().maximum_size(900).child(&list).build();
+        let sw = gtk::ScrolledWindow::builder()
+            .child(&clamp)
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vexpand(true)
+            .build();
+        // Translators: the title of a page with every song matching a search.
+        let title = trf!("Songs Matching “{query}”", query = query);
+        self.nav.push(&page(&title, None, &sw));
     }
 
     // ----- playlist editing ----------------------------------------------------
@@ -1586,6 +2150,11 @@ impl App {
         entry.grab_focus();
     }
 
+    /// Asks for a name and saves `tracks` as a new playlist.
+    pub fn save_as_playlist_dialog(self: &Rc<Self>, tracks: Vec<usize>) {
+        self.playlist_name_dialog(None, tracks);
+    }
+
     pub fn add_to_playlist_dialog(self: &Rc<Self>, tracks: Vec<usize>) {
         let dialog = adw::AlertDialog::new(Some(tr("Add to Playlist")), None);
         let list = gtk::ListBox::builder()
@@ -1649,6 +2218,29 @@ impl App {
             }
         });
         dialog.present(Some(&self.window));
+    }
+
+    /// Moves entry `from` of a user playlist to position `to`.
+    pub fn move_in_playlist(self: &Rc<Self>, file: &Path, from: usize, to: usize) {
+        let found = self
+            .playlists
+            .borrow()
+            .iter()
+            .find(|p| p.file == file)
+            .cloned();
+        if let Some(mut pl) = found {
+            if playlist::move_entry(&mut pl.entries, from, to) {
+                self.save_playlist(&pl);
+                self.reload_playlists();
+            }
+        }
+    }
+
+    /// Moves the song at play-order position `from` of the queue to `to`.
+    pub fn move_in_queue(self: &Rc<Self>, from: usize, to: usize) {
+        self.queue.borrow_mut().move_item(from, to);
+        self.update_next_uri();
+        self.update_now_playing();
     }
 
     pub fn remove_from_playlist(self: &Rc<Self>, file: &Path, pos: usize) {
@@ -1815,6 +2407,19 @@ impl App {
             }
         });
         playback.add(&notify);
+        let background = adw::SwitchRow::builder()
+            .title(tr("Background Playback"))
+            .subtitle(tr("Keep playing when the window is closed"))
+            .active(self.state.borrow().background_playback)
+            .build();
+        let w = Rc::downgrade(self);
+        background.connect_active_notify(move |r| {
+            if let Some(app) = w.upgrade() {
+                app.state.borrow_mut().background_playback = r.is_active();
+                app.save_state();
+            }
+        });
+        playback.add(&background);
         page.add(&playback);
         dialog.add(&page);
         dialog.present(Some(&self.window));

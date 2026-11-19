@@ -196,7 +196,7 @@ msgstr "{pct}%"
 msgid "Play audio files"
 msgstr "Reproduza arquivos de áudio"
 
-#: apps/audio-player/src/ui.rs:170 apps/music/src/pages.rs:1761
+#: apps/audio-player/src/ui.rs:170 apps/music/src/pages.rs:2356
 #: apps/music/src/shortcuts.rs:8 apps/video-player/src/ui.rs:148
 msgid "Playback"
 msgstr "Reprodução"
@@ -228,7 +228,7 @@ msgstr "Silenciar ou reativar som"
 #: apps/document-scanner/src/shortcuts.rs:48 apps/files/src/ui/dialogs.rs:563
 #: apps/files/src/ui/dialogs.rs:617 apps/files/src/ui/shortcuts.rs:78
 #: apps/help/src/shortcuts.rs:49 apps/maps/src/shortcuts.rs:11
-#: apps/maps/src/ui.rs:1863 apps/music/src/shortcuts.rs:29
+#: apps/maps/src/ui.rs:1863 apps/music/src/shortcuts.rs:37
 #: apps/settings/src/ui/access.rs:62 apps/settings/src/ui/extensions.rs:99
 #: apps/settings/src/ui/input.rs:64 apps/settings/src/ui/multitasking.rs:26
 #: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:154
@@ -250,7 +250,7 @@ msgstr "Abrir arquivo"
 #: apps/disk-usage/src/shortcuts.rs:50
 #: apps/document-scanner/src/shortcuts.rs:51 apps/files/src/ui/shortcuts.rs:81
 #: apps/help/src/shortcuts.rs:52 apps/maps/src/shortcuts.rs:14
-#: apps/music/src/shortcuts.rs:33 apps/settings/src/ui/shortcuts.rs:18
+#: apps/music/src/shortcuts.rs:41 apps/settings/src/ui/shortcuts.rs:18
 #: apps/system-monitor/src/shortcuts.rs:33 apps/terminal/src/shortcuts.rs:63
 #: apps/text-editor/src/shortcuts.rs:71 apps/video-player/src/ui.rs:177
 #: apps/weather/src/ui.rs:1758 apps/web/src/shortcuts.rs:77
@@ -261,7 +261,7 @@ msgstr "Atalhos de teclado"
 #: apps/audio-player/src/ui.rs:183 apps/clocks/src/shortcuts.rs:26
 #: apps/contacts/src/shortcuts.rs:27 apps/disk-usage/src/shortcuts.rs:51
 #: apps/document-scanner/src/shortcuts.rs:52 apps/help/src/shortcuts.rs:53
-#: apps/maps/src/shortcuts.rs:15 apps/music/src/shortcuts.rs:34
+#: apps/maps/src/shortcuts.rs:15 apps/music/src/shortcuts.rs:42
 #: apps/settings/src/ui/shortcuts.rs:20 apps/system-monitor/src/shortcuts.rs:34
 #: apps/terminal/src/shortcuts.rs:16 apps/text-editor/src/shortcuts.rs:19
 #: apps/video-player/src/ui.rs:178 apps/weather/src/ui.rs:1759
@@ -274,7 +274,7 @@ msgstr "Fechar janela"
 #: apps/contacts/src/shortcuts.rs:28 apps/disk-usage/src/shortcuts.rs:52
 #: apps/document-scanner/src/shortcuts.rs:53 apps/files/src/ui/shortcuts.rs:16
 #: apps/help/src/shortcuts.rs:54 apps/maps/src/shortcuts.rs:16
-#: apps/music/src/shortcuts.rs:35 apps/settings/src/ui/shortcuts.rs:21
+#: apps/music/src/shortcuts.rs:43 apps/settings/src/ui/shortcuts.rs:21
 #: apps/system-monitor/src/shortcuts.rs:35 apps/text-editor/src/shortcuts.rs:20
 #: apps/video-player/src/ui.rs:179 apps/weather/src/ui.rs:1760
 #: apps/web/src/shortcuts.rs:24 crates/helix-app-common/src/shortcuts.rs:44
@@ -321,7 +321,7 @@ msgstr "_Sobre o Reprodutor de áudio"
 #: apps/help/src/ui.rs:362 apps/image-viewer/src/ui.rs:337
 #: apps/image-viewer/src/ui.rs:339 apps/logs/src/ui.rs:308
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
-#: apps/music/src/ui.rs:317 apps/music/src/ui.rs:319
+#: apps/music/src/ui.rs:477 apps/music/src/ui.rs:479
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
 #: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
@@ -351,7 +351,7 @@ msgid "Unable to Play File"
 msgstr "Não foi possível reproduzir o arquivo"
 
 #: apps/audio-player/src/ui.rs:297 apps/audio-player/src/ui.rs:304
-#: apps/music/src/ui.rs:1778 apps/music/src/ui.rs:1779
+#: apps/music/src/ui.rs:2579 apps/music/src/ui.rs:2580
 #: apps/video-player/src/ui.rs:464
 msgid "Position"
 msgstr "Posição"
@@ -365,27 +365,29 @@ msgid "Playback Speed (pitch not preserved)"
 msgstr "Velocidade de reprodução (tom não preservado)"
 
 #: apps/audio-player/src/ui.rs:348 apps/audio-player/src/ui.rs:351
-#: apps/audio-player/src/ui.rs:1283 apps/music/src/pages.rs:694
-#: apps/music/src/ui.rs:968 apps/music/src/ui.rs:1754 apps/music/src/ui.rs:1758
-#: apps/video-player/src/ui.rs:443 apps/video-player/src/ui.rs:1460
+#: apps/audio-player/src/ui.rs:1283 apps/music/src/pages.rs:801
+#: apps/music/src/pages.rs:1146 apps/music/src/pages.rs:1474
+#: apps/music/src/ui.rs:1347 apps/music/src/ui.rs:2555
+#: apps/music/src/ui.rs:2559 apps/video-player/src/ui.rs:443
+#: apps/video-player/src/ui.rs:1460
 msgid "Play"
 msgstr "Reproduzir"
 
 #: apps/audio-player/src/ui.rs:368 apps/audio-player/src/ui.rs:371
 #: apps/calendar/src/editor.rs:551 apps/clocks/src/ui.rs:1422
-#: apps/music/src/ui.rs:1799
+#: apps/music/src/ui.rs:2602 apps/music/src/ui.rs:2606
 msgid "Repeat"
 msgstr "Repetir"
 
 #: apps/audio-player/src/ui.rs:378 apps/audio-player/src/ui.rs:380
-#: apps/settings/src/ui/sound.rs:116 apps/video-player/src/ui.rs:482
-#: apps/video-player/src/ui.rs:484
+#: apps/music/src/shortcuts.rs:19 apps/settings/src/ui/sound.rs:116
+#: apps/video-player/src/ui.rs:482 apps/video-player/src/ui.rs:484
 msgid "Mute"
 msgstr "Mudo"
 
 #: apps/audio-player/src/ui.rs:386 apps/audio-player/src/ui.rs:394
-#: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:1804
-#: apps/music/src/ui.rs:1811 apps/music/src/ui.rs:1816
+#: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:2611
+#: apps/music/src/ui.rs:2618 apps/music/src/ui.rs:2623
 #: apps/settings/src/ui/sound.rs:163 apps/video-player/src/ui.rs:158
 #: apps/video-player/src/ui.rs:491 apps/video-player/src/ui.rs:497
 #: apps/video-player/src/ui.rs:503
@@ -420,13 +422,13 @@ msgstr "O arquivo não contém fluxo de áudio"
 
 #. Translators: the position in a track, "1:23 of 4:56".
 #. Translators: the seek bar's value, "1:23 of 45:00".
-#: apps/audio-player/src/ui.rs:1260 apps/music/src/model.rs:393
+#: apps/audio-player/src/ui.rs:1260 apps/music/src/model.rs:578
 #: apps/video-player/src/timefmt.rs:45
 msgid "{position} of {duration}"
 msgstr "{position} de {duration}"
 
 #: apps/audio-player/src/ui.rs:1281 apps/clocks/src/ui.rs:1758
-#: apps/clocks/src/ui.rs:2241 apps/music/src/ui.rs:968
+#: apps/clocks/src/ui.rs:2241 apps/music/src/ui.rs:1347
 #: apps/video-player/src/ui.rs:1460
 msgid "Pause"
 msgstr "Pausar"
@@ -1032,7 +1034,7 @@ msgstr "Modo de programação"
 #: apps/disk-usage/src/shortcuts.rs:49 apps/disk-usage/src/ui.rs:1773
 #: apps/document-scanner/src/shortcuts.rs:50 apps/files/src/ui/shortcuts.rs:80
 #: apps/maps/src/shortcuts.rs:13 apps/maps/src/ui.rs:1804
-#: apps/music/src/shortcuts.rs:32 apps/system-monitor/src/shortcuts.rs:32
+#: apps/music/src/shortcuts.rs:40 apps/system-monitor/src/shortcuts.rs:32
 #: apps/system-monitor/src/ui.rs:472 apps/terminal/src/prefs_dialog.rs:15
 #: apps/terminal/src/shortcuts.rs:62 apps/text-editor/src/prefs.rs:54
 #: apps/text-editor/src/shortcuts.rs:70 apps/web/src/dialogs.rs:40
@@ -1067,7 +1069,7 @@ msgstr "_Limpar histórico"
 #: apps/calculator/src/ui.rs:699 apps/disk-usage/src/ui.rs:186
 #: apps/document-scanner/src/ui.rs:174 apps/document-scanner/src/ui.rs:190
 #: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:485
-#: apps/music/src/ui.rs:304 apps/system-monitor/src/ui.rs:247
+#: apps/music/src/ui.rs:464 apps/system-monitor/src/ui.rs:247
 #: apps/terminal/src/window.rs:290 apps/text-editor/src/window.rs:63
 #: apps/web/src/window.rs:263
 msgid "_Preferences"
@@ -1134,8 +1136,8 @@ msgstr "C_alcular"
 #: apps/document-scanner/src/ui.rs:1417 apps/document-viewer/src/dialogs.rs:169
 #: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
-#: apps/music/src/pages.rs:1522 apps/music/src/pages.rs:1620
-#: apps/music/src/pages.rs:1682 apps/settings/src/ui/apps.rs:553
+#: apps/music/src/pages.rs:2089 apps/music/src/pages.rs:2192
+#: apps/music/src/pages.rs:2277 apps/settings/src/ui/apps.rs:553
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
 #: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
 #: apps/system-monitor/src/dialogs.rs:142
@@ -1404,7 +1406,7 @@ msgid "Close"
 msgstr "Fechar"
 
 #: apps/calendar/src/editor.rs:484 apps/document-viewer/src/dialogs.rs:97
-#: apps/music/src/pages.rs:350
+#: apps/music/src/details.rs:110 apps/music/src/pages.rs:641
 msgid "Title"
 msgstr "Título"
 
@@ -1777,8 +1779,8 @@ msgstr[1] "{n} dias"
 
 #: apps/calendar/src/recur.rs:170 apps/clocks/src/timer.rs:133
 #: apps/clocks/src/tz.rs:347 apps/clocks/src/tz.rs:356
-#: apps/disks/src/format.rs:73 apps/music/src/model.rs:411
-#: apps/music/src/model.rs:414 apps/settings/src/values.rs:23
+#: apps/disks/src/format.rs:73 apps/music/src/model.rs:596
+#: apps/music/src/model.rs:599 apps/settings/src/values.rs:23
 msgid "{n} hour"
 msgid_plural "{n} hours"
 msgstr[0] "{n} hora"
@@ -1787,7 +1789,7 @@ msgstr[1] "{n} horas"
 #: apps/calendar/src/recur.rs:172 apps/clocks/src/timer.rs:134
 #: apps/clocks/src/tz.rs:346 apps/clocks/src/tz.rs:357
 #: apps/clocks/src/ui.rs:1466 apps/disks/src/format.rs:74
-#: apps/music/src/model.rs:410 apps/music/src/model.rs:415
+#: apps/music/src/model.rs:595 apps/music/src/model.rs:600
 #: apps/settings/src/values.rs:24
 msgid "{n} minute"
 msgid_plural "{n} minutes"
@@ -1828,8 +1830,8 @@ msgstr "Importar"
 #: apps/help/src/ui.rs:334 apps/help/src/ui.rs:336
 #: apps/logs/src/shortcuts.rs:17 apps/logs/src/ui.rs:276
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
-#: apps/music/src/shortcuts.rs:24 apps/music/src/ui.rs:290
-#: apps/music/src/ui.rs:292 apps/settings/src/ui/apps.rs:439
+#: apps/music/src/shortcuts.rs:32 apps/music/src/ui.rs:449
+#: apps/music/src/ui.rs:451 apps/settings/src/ui/apps.rs:439
 #: apps/settings/src/ui/mod.rs:189 apps/settings/src/ui/mod.rs:191
 #: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
 #: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
@@ -1839,7 +1841,7 @@ msgstr "Pesquisar"
 
 #: apps/calendar/src/shortcuts.rs:16 apps/document-viewer/src/shortcuts.rs:30
 #: apps/files/src/ui/shortcuts.rs:20 apps/help/src/shortcuts.rs:27
-#: apps/image-viewer/src/shortcuts.rs:30 apps/music/src/shortcuts.rs:18
+#: apps/image-viewer/src/shortcuts.rs:30 apps/music/src/shortcuts.rs:24
 #: apps/web/src/shortcuts.rs:28
 msgid "Navigation"
 msgstr "Navegação"
@@ -1954,13 +1956,13 @@ msgstr "Hoje"
 
 #: apps/calendar/src/ui.rs:257 apps/calendar/src/ui.rs:259
 #: apps/calendar/src/ui.rs:511 apps/calendar/src/ui.rs:513
-#: apps/music/src/ui.rs:1751 apps/tour/src/ui.rs:283 apps/tour/src/ui.rs:289
+#: apps/music/src/ui.rs:2552 apps/tour/src/ui.rs:283 apps/tour/src/ui.rs:289
 msgid "Previous"
 msgstr "Anterior"
 
 #: apps/calendar/src/ui.rs:263 apps/calendar/src/ui.rs:265
 #: apps/calendar/src/ui.rs:517 apps/calendar/src/ui.rs:519
-#: apps/music/src/ui.rs:809 apps/music/src/ui.rs:1759 apps/tour/src/ui.rs:292
+#: apps/music/src/ui.rs:1155 apps/music/src/ui.rs:2560 apps/tour/src/ui.rs:292
 #: apps/tour/src/ui.rs:298
 msgid "Next"
 msgstr "Próximo"
@@ -2010,7 +2012,7 @@ msgstr "Nenhum resultado encontrado"
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:228
+#: apps/music/src/pages.rs:1647 apps/settings/src/ui/mod.rs:228
 #: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:740
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
@@ -2633,7 +2635,7 @@ msgstr "Os caracteres que você copiar aparecerão aqui"
 
 #: apps/characters/src/ui.rs:455 apps/clocks/src/ui.rs:1053
 #: apps/contacts/src/ui.rs:245 apps/logs/src/ui.rs:711
-#: apps/music/src/pages.rs:1152
+#: apps/music/src/pages.rs:1646
 msgid "No Results"
 msgstr "Nenhum resultado"
 
@@ -2878,7 +2880,7 @@ msgstr[1] "{n} segundos"
 
 #. Translators: a duration, "1 hour 30 minutes".
 #: apps/clocks/src/timer.rs:140 apps/clocks/src/tz.rs:354
-#: apps/music/src/model.rs:412 apps/settings/src/values.rs:30
+#: apps/music/src/model.rs:597 apps/settings/src/values.rs:30
 msgid "{hours} {minutes}"
 msgstr "{hours} e {minutes}"
 
@@ -3401,7 +3403,7 @@ msgstr "Dia de {title}"
 msgid "{title} Month"
 msgstr "Mês de {title}"
 
-#: apps/contacts/src/datefield.rs:113
+#: apps/contacts/src/datefield.rs:113 apps/music/src/details.rs:117
 msgid "Year"
 msgstr "Ano"
 
@@ -3775,6 +3777,7 @@ msgid "_Unlink"
 msgstr "_Desvincular"
 
 #: apps/contacts/src/ui.rs:1211 apps/logs/src/ui.rs:282
+#: apps/music/src/pages.rs:1525
 msgid "_Export…"
 msgstr "_Exportar…"
 
@@ -4192,7 +4195,7 @@ msgstr[1] "{n} itens"
 #: apps/disk-usage/src/ui.rs:1006 apps/disks/src/ui.rs:358
 #: apps/disks/src/ui.rs:453 apps/files/src/sorting.rs:44
 #: apps/files/src/ui/properties.rs:138 apps/files/src/ui/tab.rs:216
-#: apps/fonts/src/fontinfo.rs:287
+#: apps/fonts/src/fontinfo.rs:287 apps/music/src/details.rs:137
 msgid "Size"
 msgstr "Tamanho"
 
@@ -5399,7 +5402,7 @@ msgid "Delete Partition?"
 msgstr "Excluir partição?"
 
 #: apps/disks/src/ui.rs:1594 apps/document-scanner/src/ui.rs:228
-#: apps/files/src/ui/window.rs:1393 apps/music/src/pages.rs:1683
+#: apps/files/src/ui/window.rs:1393 apps/music/src/pages.rs:2278
 msgid "_Delete"
 msgstr "_Excluir"
 
@@ -7617,7 +7620,7 @@ msgid "Rename Bookmark"
 msgstr "Renomear marcador"
 
 #: apps/files/src/ui/sidebar.rs:677 apps/files/src/ui/window.rs:1465
-#: apps/music/src/pages.rs:1524
+#: apps/music/src/pages.rs:2091
 msgid "_Rename"
 msgstr "_Renomear"
 
@@ -7705,6 +7708,7 @@ msgid "_Reversed Order"
 msgstr "Ordem _inversa"
 
 #: apps/files/src/ui/window.rs:252 apps/logs/src/ui.rs:294
+#: apps/music/src/ui.rs:507 apps/music/src/ui.rs:510
 msgid "Sort"
 msgstr "Ordenar"
 
@@ -7845,7 +7849,7 @@ msgstr "Renomear arquivo"
 msgid "Could not rename: {}"
 msgstr "Não foi possível renomear: {}"
 
-#: apps/files/src/ui/window.rs:1506 apps/music/src/pages.rs:1526
+#: apps/files/src/ui/window.rs:1506 apps/music/src/pages.rs:2093
 msgid "_Create"
 msgstr "_Criar"
 
@@ -8050,11 +8054,11 @@ msgid "Glyphs"
 msgstr "Glifos"
 
 #: apps/fonts/src/fontinfo.rs:276 apps/fonts/src/fontinfo.rs:282
-#: apps/image-viewer/src/ui.rs:581
+#: apps/image-viewer/src/ui.rs:581 apps/music/src/details.rs:128
 msgid "Format"
 msgstr "Formato"
 
-#: apps/fonts/src/fontinfo.rs:285
+#: apps/fonts/src/fontinfo.rs:285 apps/music/src/details.rs:156
 msgid "File"
 msgstr "Arquivo"
 
@@ -9544,13 +9548,13 @@ msgstr[1] "{n} lugares encontrados"
 msgid "Selected place: {}"
 msgstr "Lugar selecionado: {}"
 
-#: apps/maps/src/ui.rs:1365 apps/music/src/ui.rs:1644
+#: apps/maps/src/ui.rs:1365 apps/music/src/ui.rs:2340
 msgid "Remove from Favorites"
 msgstr "Remover dos favoritos"
 
 #: apps/maps/src/ui.rs:1367 apps/maps/src/ui.rs:2266
-#: apps/music/src/pages.rs:388 apps/music/src/ui.rs:1646
-#: apps/music/src/ui.rs:1791
+#: apps/music/src/pages.rs:702 apps/music/src/ui.rs:2342
+#: apps/music/src/ui.rs:2592
 msgid "Add to Favorites"
 msgstr "Adicionar aos favoritos"
 
@@ -9764,7 +9768,7 @@ msgstr "Lugar sem nome"
 msgid "Looking up address"
 msgstr "Procurando endereço"
 
-#: apps/maps/src/ui.rs:2267 apps/music/src/pages.rs:420
+#: apps/maps/src/ui.rs:2267 apps/music/src/pages.rs:721
 msgid "Favorite"
 msgstr "Favorito"
 
@@ -9839,6 +9843,117 @@ msgstr "lista de reprodução"
 msgid "song"
 msgstr "canção"
 
+#. Translators: an audio bit rate.
+#: apps/music/src/details.rs:69
+msgid "{n} kbit/s"
+msgstr "{n} kbit/s"
+
+#. Translators: an audio sample rate.
+#: apps/music/src/details.rs:80
+msgid "{rate} kHz"
+msgstr "{rate} kHz"
+
+#: apps/music/src/details.rs:86 apps/settings/src/sound.rs:721
+msgid "Mono"
+msgstr "Mono"
+
+#: apps/music/src/details.rs:87
+msgid "Stereo"
+msgstr "Estéreo"
+
+#: apps/music/src/details.rs:88
+msgid "{n} channel"
+msgid_plural "{n} channels"
+msgstr[0] "{n} canal"
+msgstr[1] "{n} canais"
+
+#. Translators: the bit depth of audio samples.
+#: apps/music/src/details.rs:95
+msgid "{n}-bit"
+msgstr "{n} bits"
+
+#: apps/music/src/details.rs:113 apps/music/src/pages.rs:645
+msgid "Artist"
+msgstr "Artista"
+
+#: apps/music/src/details.rs:114
+msgid "Album Artist"
+msgstr "Artista do álbum"
+
+#: apps/music/src/details.rs:115 apps/music/src/pages.rs:649
+msgid "Album"
+msgstr "Álbum"
+
+#: apps/music/src/details.rs:116 apps/music/src/pages.rs:673
+msgid "Genre"
+msgstr "Gênero"
+
+#: apps/music/src/details.rs:118
+msgid "Track"
+msgstr "Faixa"
+
+#: apps/music/src/details.rs:119
+msgid "Disc"
+msgstr "Disco"
+
+#: apps/music/src/details.rs:125 apps/music/src/pages.rs:653
+#: apps/settings/src/ui/access.rs:517
+msgid "Length"
+msgstr "Duração"
+
+#: apps/music/src/details.rs:129
+msgid "Bit Rate"
+msgstr "Taxa de bits"
+
+#: apps/music/src/details.rs:131
+msgid "Sample Rate"
+msgstr "Taxa de amostragem"
+
+#: apps/music/src/details.rs:134
+msgid "Bit Depth"
+msgstr "Profundidade de bits"
+
+#: apps/music/src/details.rs:135
+msgid "Channels"
+msgstr "Canais"
+
+#: apps/music/src/details.rs:145
+msgid "File Location"
+msgstr "Local do arquivo"
+
+#: apps/music/src/details.rs:147 apps/music/src/pages.rs:666
+msgid "Plays"
+msgstr "Reproduções"
+
+#: apps/music/src/details.rs:149
+msgid "Last Played"
+msgstr "Última reprodução"
+
+#: apps/music/src/details.rs:152
+msgid "Date Added"
+msgstr "Data de adição"
+
+#: apps/music/src/details.rs:155
+msgid "Song"
+msgstr "Música"
+
+#: apps/music/src/details.rs:157
+msgid "Listening"
+msgstr "Audição"
+
+#: apps/music/src/details.rs:201 apps/music/src/details.rs:205
+#: apps/music/src/rows.rs:100
+msgid "Show in Files"
+msgstr "Mostrar em Arquivos"
+
+#: apps/music/src/details.rs:222 apps/music/src/rows.rs:99
+msgid "Song Details"
+msgstr "Detalhes da música"
+
+#: apps/music/src/details.rs:242
+msgid "Cannot open the folder: {e}"
+msgstr "Não é possível abrir a pasta: {e}"
+
 #: apps/music/src/gnome_import.rs:141 apps/music/src/playlist.rs:312
 msgid "Playlist"
 msgstr "Lista de reprodução"
@@ -9891,6 +10006,34 @@ msgstr "Álbum desconhecido"
 msgid "Various Artists"
 msgstr "Vários artistas"
 
+#: apps/music/src/model.rs:449
+msgid "_Title"
+msgstr "_Título"
+
+#: apps/music/src/model.rs:450
+msgid "_Artist"
+msgstr "_Artista"
+
+#: apps/music/src/model.rs:451
+msgid "_Year"
+msgstr "A_no"
+
+#: apps/music/src/model.rs:452
+msgid "Date _Added"
+msgstr "Data de a_dição"
+
+#: apps/music/src/model.rs:453 apps/music/src/model.rs:488
+msgid "_Most Played"
+msgstr "_Mais reproduzidas"
+
+#: apps/music/src/model.rs:486 apps/web/src/window.rs:683
+msgid "_Name"
+msgstr "_Nome"
+
+#: apps/music/src/model.rs:487
+msgid "Most _Albums"
+msgstr "Mais á_lbuns"
+
 #: apps/music/src/mpris.rs:147 apps/music/src/ui.rs:26
 #: apps/settings/src/defaults.rs:32
 msgid "Music"
@@ -9900,236 +10043,273 @@ msgstr "Música"
 msgid "OpenUri is not supported"
 msgstr "OpenUri não é suportado"
 
-#: apps/music/src/pages.rs:185 apps/music/src/pages.rs:1159
-#: apps/music/src/shortcuts.rs:20
-msgid "Albums"
-msgstr "Álbuns"
+#: apps/music/src/nowplaying.rs:68 apps/music/src/pages.rs:1197
+#: apps/music/src/pages.rs:1488 apps/music/src/rows.rs:95
+msgid "Go to Artist"
+msgstr "Ir para o artista"
 
-#: apps/music/src/pages.rs:199 apps/music/src/pages.rs:1190
-#: apps/music/src/shortcuts.rs:21
-msgid "Artists"
-msgstr "Artistas"
+#: apps/music/src/nowplaying.rs:70 apps/music/src/pages.rs:1326
+#: apps/music/src/rows.rs:93
+msgid "Go to Album"
+msgstr "Ir para o álbum"
 
-#: apps/music/src/pages.rs:208 apps/music/src/pages.rs:1212
-#: apps/music/src/shortcuts.rs:22
-msgid "Songs"
-msgstr "Músicas"
+#: apps/music/src/nowplaying.rs:119 apps/music/src/nowplaying.rs:206
+#: apps/music/src/nowplaying.rs:208
+msgid "Queue"
+msgstr "Fila"
 
-#: apps/music/src/pages.rs:215 apps/music/src/pages.rs:1593
-msgid "New Playlist…"
-msgstr "Nova lista de reprodução…"
+#: apps/music/src/nowplaying.rs:123 apps/music/src/nowplaying.rs:128
+msgid "Save as Playlist…"
+msgstr "Salvar como lista de reprodução…"
 
-#: apps/music/src/pages.rs:239 apps/music/src/pages.rs:1253
-#: apps/music/src/shortcuts.rs:23
-msgid "Playlists"
-msgstr "Listas de reprodução"
+#: apps/music/src/nowplaying.rs:131 apps/music/src/nowplaying.rs:136
+msgid "Clear Queue"
+msgstr "Limpar a fila"
 
-#: apps/music/src/pages.rs:244 apps/music/src/pages.rs:1717
-#: apps/music/src/pages.rs:1721
-msgid "Add Folder…"
-msgstr "Adicionar pasta…"
-
-#: apps/music/src/pages.rs:337 apps/music/src/pages.rs:1073
-#: apps/music/src/ui.rs:1830 apps/music/src/ui.rs:1835
+#: apps/music/src/nowplaying.rs:203 apps/music/src/shortcuts.rs:31
+#: apps/music/src/ui.rs:2319 apps/music/src/ui.rs:2637
+#: apps/music/src/ui.rs:2642
 msgid "Now Playing"
 msgstr "Reproduzindo agora"
 
-#: apps/music/src/pages.rs:345
+#: apps/music/src/nowplaying.rs:217 apps/music/src/nowplaying.rs:221
+msgid "Lyrics"
+msgstr "Letra"
+
+#: apps/music/src/nowplaying.rs:302
+msgid "Nothing Playing"
+msgstr "Nada tocando"
+
+#: apps/music/src/nowplaying.rs:332 apps/music/src/pages.rs:2436
+msgid "{n} song"
+msgid_plural "{n} songs"
+msgstr[0] "{n} música"
+msgstr[1] "{n} músicas"
+
+#: apps/music/src/pages.rs:155
+msgid "Show All"
+msgstr "Mostrar tudo"
+
+#: apps/music/src/pages.rs:277 apps/music/src/rows.rs:83
+msgid "Play Next"
+msgstr "Reproduzir em seguida"
+
+#: apps/music/src/pages.rs:278 apps/music/src/pages.rs:802
+#: apps/music/src/rows.rs:84
+msgid "Add to Queue"
+msgstr "Adicionar à fila"
+
+#: apps/music/src/pages.rs:279 apps/music/src/pages.rs:803
+#: apps/music/src/rows.rs:87
+msgid "Add to Playlist…"
+msgstr "Adicionar à lista de reprodução…"
+
+#: apps/music/src/pages.rs:390 apps/music/src/pages.rs:1312
+#: apps/music/src/pages.rs:1414 apps/music/src/pages.rs:1686
+#: apps/music/src/shortcuts.rs:26
+msgid "Albums"
+msgstr "Álbuns"
+
+#: apps/music/src/pages.rs:412 apps/music/src/pages.rs:481
+#: apps/music/src/pages.rs:1369 apps/music/src/shortcuts.rs:30
+msgid "Genres"
+msgstr "Gêneros"
+
+#: apps/music/src/pages.rs:433 apps/music/src/pages.rs:1723
+#: apps/music/src/shortcuts.rs:27
+msgid "Artists"
+msgstr "Artistas"
+
+#: apps/music/src/pages.rs:442 apps/music/src/pages.rs:1416
+#: apps/music/src/pages.rs:1749 apps/music/src/shortcuts.rs:28
+msgid "Songs"
+msgstr "Músicas"
+
+#: apps/music/src/pages.rs:467 apps/music/src/pages.rs:1822
+#: apps/music/src/shortcuts.rs:29
+msgid "Playlists"
+msgstr "Listas de reprodução"
+
+#: apps/music/src/pages.rs:489 apps/music/src/pages.rs:2312
+#: apps/music/src/pages.rs:2316
+msgid "Add Folder…"
+msgstr "Adicionar pasta…"
+
+#: apps/music/src/pages.rs:636
 msgid "Playing"
 msgstr "Reproduzindo"
 
-#: apps/music/src/pages.rs:354
-msgid "Artist"
-msgstr "Artista"
+#: apps/music/src/pages.rs:735 apps/music/src/pages.rs:738
+#: apps/music/src/pages.rs:1170 apps/music/src/pages.rs:1172
+#: apps/music/src/rows.rs:179 apps/music/src/rows.rs:181
+msgid "More"
+msgstr "Mais"
 
-#: apps/music/src/pages.rs:358
-msgid "Album"
-msgstr "Álbum"
+#: apps/music/src/pages.rs:835
+msgid "No Songs Selected"
+msgstr "Nenhuma música selecionada"
 
-#: apps/music/src/pages.rs:362 apps/settings/src/ui/access.rs:517
-msgid "Length"
-msgstr "Duração"
+#: apps/music/src/pages.rs:837
+msgid "{n} song selected"
+msgid_plural "{n} songs selected"
+msgstr[0] "{n} música selecionada"
+msgstr[1] "{n} músicas selecionadas"
 
-#: apps/music/src/pages.rs:364
-msgid "Plays"
-msgstr "Reproduções"
-
-#: apps/music/src/pages.rs:463 apps/music/src/pages.rs:816
+#: apps/music/src/pages.rs:963 apps/music/src/pages.rs:1305
+#: apps/music/src/pages.rs:1380 apps/music/src/pages.rs:1408
 msgid "{n} album"
 msgid_plural "{n} albums"
 msgstr[0] "{n} álbum"
 msgstr[1] "{n} álbuns"
 
-#: apps/music/src/pages.rs:569
-msgid "Play Next"
-msgstr "Reproduzir em seguida"
-
-#: apps/music/src/pages.rs:570
-msgid "Add to Queue"
-msgstr "Adicionar à fila"
-
-#: apps/music/src/pages.rs:573
-msgid "Add to Playlist…"
-msgstr "Adicionar à lista de reprodução…"
-
-#: apps/music/src/pages.rs:577
-msgid "Go to Album"
-msgstr "Ir para o álbum"
-
-#: apps/music/src/pages.rs:583
-msgid "Remove from Playlist"
-msgstr "Remover da lista de reprodução"
-
-#: apps/music/src/pages.rs:589
-msgid "Remove from Queue"
-msgstr "Remover da fila"
-
-#: apps/music/src/pages.rs:599 apps/music/src/pages.rs:601
-msgid "More"
-msgstr "Mais"
-
-#: apps/music/src/pages.rs:695 apps/music/src/shortcuts.rs:14
-#: apps/music/src/ui.rs:1794 apps/music/src/ui.rs:1798
+#: apps/music/src/pages.rs:1147 apps/music/src/pages.rs:1475
+#: apps/music/src/shortcuts.rs:14 apps/music/src/ui.rs:2595
+#: apps/music/src/ui.rs:2599
 msgid "Shuffle"
 msgstr "Aleatório"
 
-#: apps/music/src/pages.rs:765
+#: apps/music/src/pages.rs:1255
 msgid "Disc {disc}"
 msgstr "Disco {disc}"
 
-#: apps/music/src/pages.rs:941 apps/music/src/pages.rs:944
-#: apps/music/src/pages.rs:1509
-msgid "Rename Playlist"
-msgstr "Renomear lista de reprodução"
+#: apps/music/src/pages.rs:1524
+msgid "_Rename…"
+msgstr "_Renomear…"
 
-#: apps/music/src/pages.rs:947 apps/music/src/pages.rs:950
-msgid "Delete Playlist"
-msgstr "Excluir lista de reprodução"
+#: apps/music/src/pages.rs:1528
+msgid "_Delete…"
+msgstr "_Excluir…"
 
-#: apps/music/src/pages.rs:965 apps/music/src/pages.rs:968
-msgid "Export Playlist…"
-msgstr "Exportar lista de reprodução…"
+#: apps/music/src/pages.rs:1534 apps/music/src/pages.rs:1536
+msgid "Playlist Menu"
+msgstr "Menu da lista de reprodução"
 
-#: apps/music/src/pages.rs:983
+#: apps/music/src/pages.rs:1593
 msgid "No Songs"
 msgstr "Nenhuma música"
 
-#: apps/music/src/pages.rs:986
+#: apps/music/src/pages.rs:1596
 msgid "Add songs with “Add to Playlist…” in a song’s menu."
 msgstr ""
 "Adicione músicas com “Adicionar à lista de reprodução…” no menu de uma "
 "música."
 
-#: apps/music/src/pages.rs:988
+#: apps/music/src/pages.rs:1598
 msgid "Mark songs as favorites with the star button."
 msgstr "Marque músicas como favoritas com o botão de estrela."
 
-#: apps/music/src/pages.rs:990
+#: apps/music/src/pages.rs:1600
 msgid "Songs will appear here as you listen."
 msgstr "As músicas aparecerão aqui conforme você as ouvir."
 
-#: apps/music/src/pages.rs:1051
-msgid "Queue"
-msgstr "Fila"
+#. Translators: the title of a page with every song matching a search.
+#: apps/music/src/pages.rs:1790
+msgid "Songs Matching “{query}”"
+msgstr "Músicas correspondentes a “{query}”"
 
-#: apps/music/src/pages.rs:1101
-msgid "Nothing Playing"
-msgstr "Nada tocando"
-
-#: apps/music/src/pages.rs:1241
+#: apps/music/src/pages.rs:1810
 msgid "Cannot save playlist: {e}"
 msgstr "Não foi possível salvar a lista de reprodução: {e}"
 
-#: apps/music/src/pages.rs:1255
+#: apps/music/src/pages.rs:1824
 msgid "M3U Playlist"
 msgstr "Lista de reprodução M3U"
 
-#: apps/music/src/pages.rs:1256
+#: apps/music/src/pages.rs:1825
 msgid "XSPF Playlist"
 msgstr "Lista de reprodução XSPF"
 
-#: apps/music/src/pages.rs:1257
+#: apps/music/src/pages.rs:1826
 msgid "PLS Playlist"
 msgstr "Lista de reprodução PLS"
 
-#: apps/music/src/pages.rs:1287
+#: apps/music/src/pages.rs:1856
 msgid "Import Playlist"
 msgstr "Importar lista de reprodução"
 
-#: apps/music/src/pages.rs:1311
+#: apps/music/src/pages.rs:1880
 msgid "Cannot read playlist: {e}"
 msgstr "Não foi possível ler a lista de reprodução: {e}"
 
-#: apps/music/src/pages.rs:1314
+#: apps/music/src/pages.rs:1883
 msgid "No songs from this playlist are in your library"
 msgstr "Nenhuma música desta lista de reprodução está na sua biblioteca"
 
-#: apps/music/src/pages.rs:1317
+#: apps/music/src/pages.rs:1886
 msgid "Imported “{}”"
 msgstr "“{}” importada"
 
-#: apps/music/src/pages.rs:1332
+#: apps/music/src/pages.rs:1901
 msgid "the LocalSearch index is not available"
 msgstr "o índice do LocalSearch não está disponível"
 
-#: apps/music/src/pages.rs:1344
+#: apps/music/src/pages.rs:1913
 msgid "Cannot import: {e}"
 msgstr "Não foi possível importar: {e}"
 
-#: apps/music/src/pages.rs:1369
+#: apps/music/src/pages.rs:1938
 msgid "No new playlists with songs from your library were found"
 msgstr ""
 "Nenhuma nova lista de reprodução com músicas da sua biblioteca foi encontrada"
 
-#: apps/music/src/pages.rs:1370
+#: apps/music/src/pages.rs:1939
 msgid "Imported {n} playlist"
 msgid_plural "Imported {n} playlists"
 msgstr[0] "{n} lista de reprodução importada"
 msgstr[1] "{n} listas de reprodução importadas"
 
-#: apps/music/src/pages.rs:1471
+#: apps/music/src/pages.rs:2038
 msgid "Export Playlist"
 msgstr "Exportar lista de reprodução"
 
-#: apps/music/src/pages.rs:1486
+#: apps/music/src/pages.rs:2053
 msgid "Playlist exported"
 msgstr "Lista de reprodução exportada"
 
-#: apps/music/src/pages.rs:1489
+#: apps/music/src/pages.rs:2056
 msgid "Cannot export playlist: {e}"
 msgstr "Não foi possível exportar a lista de reprodução: {e}"
 
-#: apps/music/src/pages.rs:1511
+#: apps/music/src/pages.rs:2076
+msgid "Rename Playlist"
+msgstr "Renomear lista de reprodução"
+
+#: apps/music/src/pages.rs:2078
 msgid "New Playlist"
 msgstr "Nova lista de reprodução"
 
-#: apps/music/src/pages.rs:1516 apps/music/src/pages.rs:1520
+#: apps/music/src/pages.rs:2083 apps/music/src/pages.rs:2087
 msgid "Playlist Name"
 msgstr "Nome da lista de reprodução"
 
-#: apps/music/src/pages.rs:1577 apps/music/src/pages.rs:1644
+#: apps/music/src/pages.rs:2144 apps/music/src/pages.rs:2216
 msgid "Added to “{}”"
 msgstr "Adicionado a “{}”"
 
-#: apps/music/src/pages.rs:1587
+#: apps/music/src/pages.rs:2159
 msgid "Add to Playlist"
 msgstr "Adicionar à lista de reprodução"
 
-#: apps/music/src/pages.rs:1676
+#: apps/music/src/pages.rs:2165 apps/music/src/ui.rs:484
+#: apps/music/src/ui.rs:488
+msgid "New Playlist…"
+msgstr "Nova lista de reprodução…"
+
+#: apps/music/src/pages.rs:2271
 msgid "Delete Playlist?"
 msgstr "Excluir lista de reprodução?"
 
-#: apps/music/src/pages.rs:1677
+#: apps/music/src/pages.rs:2272
 msgid "“{name}” will be permanently deleted. The songs stay in your library."
 msgstr ""
 "“{name}” será excluída permanentemente. As músicas permanecem na sua "
 "biblioteca."
 
-#: apps/music/src/pages.rs:1691
+#: apps/music/src/pages.rs:2286
 msgid "Cannot delete playlist: {e}"
 msgstr "Não foi possível excluir a lista de reprodução: {e}"
 
-#: apps/music/src/pages.rs:1707
+#: apps/music/src/pages.rs:2302
 msgid ""
 "Music in these folders appears in your library. Folders indexed by "
 "LocalSearch are read from its index."
@@ -10137,53 +10317,55 @@ msgstr ""
 "As músicas nestas pastas aparecem na sua biblioteca. Pastas indexadas pelo "
 "LocalSearch são lidas do seu índice."
 
-#: apps/music/src/pages.rs:1709
+#: apps/music/src/pages.rs:2304
 msgid "Music in these folders appears in your library"
 msgstr "As músicas nestas pastas aparecem na sua biblioteca"
 
-#: apps/music/src/pages.rs:1712
+#: apps/music/src/pages.rs:2307
 msgid "Library Folders"
 msgstr "Pastas da biblioteca"
 
-#: apps/music/src/pages.rs:1725
+#: apps/music/src/pages.rs:2320
 msgid "Music folder"
 msgstr "Pasta de músicas"
 
-#: apps/music/src/pages.rs:1736 apps/music/src/pages.rs:1740
+#: apps/music/src/pages.rs:2331 apps/music/src/pages.rs:2335
 msgid "Remove Folder"
 msgstr "Remover pasta"
 
-#: apps/music/src/pages.rs:1764
+#: apps/music/src/pages.rs:2359
 msgid "Inhibit Suspend"
 msgstr "Inibir suspensão"
 
-#: apps/music/src/pages.rs:1765
+#: apps/music/src/pages.rs:2360
 msgid "Keep the computer awake while music plays"
 msgstr "Manter o computador ativo enquanto a música toca"
 
-#: apps/music/src/pages.rs:1780
+#: apps/music/src/pages.rs:2375
 msgid "ReplayGain"
 msgstr "ReplayGain"
 
-#: apps/music/src/pages.rs:1781
+#: apps/music/src/pages.rs:2376
 msgid "Even out loudness using the volume tags of songs or albums"
 msgstr "Equalizar o volume usando as etiquetas de volume das músicas ou álbuns"
 
-#: apps/music/src/pages.rs:1801 apps/settings/src/panels.rs:156
+#: apps/music/src/pages.rs:2396 apps/settings/src/panels.rs:156
 #: apps/settings/src/permissions.rs:38 apps/settings/src/ui/apps.rs:419
 #: apps/web/src/permissions.rs:25
 msgid "Notifications"
 msgstr "Notificações"
 
-#: apps/music/src/pages.rs:1802
+#: apps/music/src/pages.rs:2397
 msgid "Announce new songs while the window is in the background"
 msgstr "Anunciar novas músicas enquanto a janela está em segundo plano"
 
-#: apps/music/src/pages.rs:1828
-msgid "{n} song"
-msgid_plural "{n} songs"
-msgstr[0] "{n} música"
-msgstr[1] "{n} músicas"
+#: apps/music/src/pages.rs:2411
+msgid "Background Playback"
+msgstr "Reprodução em segundo plano"
+
+#: apps/music/src/pages.rs:2412
+msgid "Keep playing when the window is closed"
+msgstr "Continuar reproduzindo quando a janela for fechada"
 
 #: apps/music/src/player.rs:55
 msgctxt "ReplayGain mode"
@@ -10195,21 +10377,39 @@ msgctxt "ReplayGain mode"
 msgid "Album"
 msgstr "Álbum"
 
-#: apps/music/src/playlist.rs:451
+#: apps/music/src/playlist.rs:462
 msgid "Favorite Songs"
 msgstr "Músicas favoritas"
 
-#: apps/music/src/playlist.rs:452
+#: apps/music/src/playlist.rs:463
 msgid "Most Played"
 msgstr "Mais tocadas"
 
-#: apps/music/src/playlist.rs:453
+#: apps/music/src/playlist.rs:464
 msgid "Recently Played"
 msgstr "Tocadas recentemente"
 
-#: apps/music/src/playlist.rs:454
+#: apps/music/src/playlist.rs:465
 msgid "Recently Added"
 msgstr "Adicionadas recentemente"
+
+#: apps/music/src/rows.rs:106 apps/music/src/rows.rs:120
+#: apps/settings/src/ui/input.rs:343
+msgid "Move Down"
+msgstr "Mover para baixo"
+
+#: apps/music/src/rows.rs:106 apps/music/src/rows.rs:120
+#: apps/settings/src/ui/input.rs:342
+msgid "Move Up"
+msgstr "Mover para cima"
+
+#: apps/music/src/rows.rs:114
+msgid "Remove from Playlist"
+msgstr "Remover da lista de reprodução"
+
+#: apps/music/src/rows.rs:127
+msgid "Remove from Queue"
+msgstr "Remover da fila"
 
 #: apps/music/src/shortcuts.rs:11
 msgid "Previous Song"
@@ -10223,11 +10423,31 @@ msgstr "Próxima música"
 msgid "Cycle Repeat Mode"
 msgstr "Alternar modo de repetição"
 
-#: apps/music/src/shortcuts.rs:25
+#: apps/music/src/shortcuts.rs:15
+msgid "Seek Backward"
+msgstr "Retroceder"
+
+#: apps/music/src/shortcuts.rs:16
+msgid "Seek Forward"
+msgstr "Avançar"
+
+#: apps/music/src/shortcuts.rs:17 apps/video-player/src/ui.rs:160
+msgid "Volume Up"
+msgstr "Aumentar volume"
+
+#: apps/music/src/shortcuts.rs:18 apps/video-player/src/ui.rs:161
+msgid "Volume Down"
+msgstr "Diminuir volume"
+
+#: apps/music/src/shortcuts.rs:20
+msgid "Favorite Song"
+msgstr "Marcar música como favorita"
+
+#: apps/music/src/shortcuts.rs:33
 msgid "Go Back"
 msgstr "Voltar"
 
-#: apps/music/src/shortcuts.rs:31
+#: apps/music/src/shortcuts.rs:39
 msgid "Rescan Library"
 msgstr "Analisar biblioteca novamente"
 
@@ -10239,96 +10459,118 @@ msgstr "número de colunas inválido {n}"
 msgid "Play and organize your music collection"
 msgstr "Reproduza e organize sua coleção de músicas"
 
-#: apps/music/src/ui.rs:296
+#: apps/music/src/ui.rs:275 apps/music/src/ui.rs:2308
+msgid "Now playing"
+msgstr "Reproduzindo agora"
+
+#: apps/music/src/ui.rs:455
+msgid "_New Playlist…"
+msgstr "_Nova lista de reprodução…"
+
+#: apps/music/src/ui.rs:456
 msgid "_Rescan Library"
 msgstr "_Analisar biblioteca novamente"
 
-#: apps/music/src/ui.rs:297
+#: apps/music/src/ui.rs:457
 msgid "_Import Playlist…"
 msgstr "_Importar lista de reprodução…"
 
-#: apps/music/src/ui.rs:299
+#: apps/music/src/ui.rs:459
 msgid "Import Playlists from _Search Index"
 msgstr "Importar listas de reprodução do índice de _pesquisa"
 
-#: apps/music/src/ui.rs:311
+#: apps/music/src/ui.rs:471
 msgid "_About Music"
 msgstr "_Sobre o Música"
 
-#: apps/music/src/ui.rs:323
+#: apps/music/src/ui.rs:492 apps/music/src/ui.rs:495
+msgid "Select"
+msgstr "Selecionar"
+
+#: apps/music/src/ui.rs:536
 msgid "Search songs, albums and artists"
 msgstr "Pesquisar músicas, álbuns e artistas"
 
-#: apps/music/src/ui.rs:351
+#: apps/music/src/ui.rs:571
 msgid "No Music Found"
 msgstr "Nenhuma música encontrada"
 
-#: apps/music/src/ui.rs:354
+#: apps/music/src/ui.rs:574 apps/music/src/ui.rs:585 apps/music/src/ui.rs:587
 msgid "Scanning Library…"
 msgstr "Analisando a biblioteca…"
 
-#: apps/music/src/ui.rs:491
+#: apps/music/src/ui.rs:733
 msgid "Playback is unavailable (GStreamer could not be initialised)"
 msgstr ""
 "A reprodução não está disponível (o GStreamer não pôde ser inicializado)"
 
-#: apps/music/src/ui.rs:645
+#: apps/music/src/ui.rs:932
+msgid "{n} song found"
+msgid_plural "{n} songs found"
+msgstr[0] "{n} música encontrada"
+msgstr[1] "{n} músicas encontradas"
+
+#: apps/music/src/ui.rs:954
 msgid "Library updated: {n} song"
 msgid_plural "Library updated: {n} songs"
 msgstr[0] "Biblioteca atualizada: {n} música"
 msgstr[1] "Biblioteca atualizada: {n} músicas"
 
-#: apps/music/src/ui.rs:939
-msgid "Cannot play “{name}”"
-msgstr "Não foi possível reproduzir “{name}”"
+#: apps/music/src/ui.rs:965
+msgid "No changes found"
+msgstr "Nenhuma alteração encontrada"
 
-#: apps/music/src/ui.rs:1003
-msgid "Playing music"
-msgstr "Reproduzindo música"
-
-#: apps/music/src/ui.rs:1076
-msgid "Now playing: {}"
-msgstr "Reproduzindo agora: {}"
-
-#: apps/music/src/ui.rs:1078
-msgid "Now playing: {title} by {artist}"
-msgstr "Reproduzindo agora: {title} de {artist}"
-
-#: apps/music/src/ui.rs:1161
-msgid "Repeat: Off"
-msgstr "Repetir: desligado"
-
-#: apps/music/src/ui.rs:1162
-msgid "Repeat: All"
-msgstr "Repetir: todas"
-
-#: apps/music/src/ui.rs:1163
-msgid "Repeat: Song"
-msgstr "Repetir: música"
-
-#: apps/music/src/ui.rs:1412
-msgid "Added to queue"
-msgstr "Adicionado à fila"
-
-#: apps/music/src/ui.rs:1423
+#: apps/music/src/ui.rs:1111
 msgid "Will play next"
 msgstr "Será reproduzida em seguida"
 
-#: apps/music/src/ui.rs:1538
+#: apps/music/src/ui.rs:1113
+msgid "Added to queue"
+msgstr "Adicionado à fila"
+
+#: apps/music/src/ui.rs:1311
+msgid "Cannot play “{name}”"
+msgstr "Não foi possível reproduzir “{name}”"
+
+#: apps/music/src/ui.rs:1396
+msgid "Playing music"
+msgstr "Reproduzindo música"
+
+#: apps/music/src/ui.rs:1482
+msgid "Now playing: {}"
+msgstr "Reproduzindo agora: {}"
+
+#: apps/music/src/ui.rs:1484
+msgid "Now playing: {title} by {artist}"
+msgstr "Reproduzindo agora: {title} de {artist}"
+
+#: apps/music/src/ui.rs:1565
+msgid "Repeat: Off"
+msgstr "Repetir: desligado"
+
+#: apps/music/src/ui.rs:1566
+msgid "Repeat: All"
+msgstr "Repetir: todas"
+
+#: apps/music/src/ui.rs:1567
+msgid "Repeat: Song"
+msgstr "Repetir: música"
+
+#: apps/music/src/ui.rs:2180
 msgid "Music files in {} will appear here."
 msgstr "Os arquivos de música em {} aparecerão aqui."
 
-#: apps/music/src/ui.rs:1587
+#: apps/music/src/ui.rs:2273
 msgid "Add Music Folder"
 msgstr "Adicionar pasta de músicas"
 
-#: apps/music/src/ui.rs:1622
-msgid "Now playing"
-msgstr "Reproduzindo agora"
-
-#: apps/music/src/ui.rs:1746 apps/music/src/ui.rs:1749
+#: apps/music/src/ui.rs:2547 apps/music/src/ui.rs:2550
 msgid "Show Now Playing"
 msgstr "Mostrar o que está tocando"
+
+#: apps/music/src/ui.rs:2656 apps/music/src/ui.rs:2662
+msgid "More Controls"
+msgstr "Mais controles"
 
 #: apps/screenshot/data/org.helixdesktop.Screenshot.desktop
 msgid "snapshot;capture;print;screenshot;area;window;"
@@ -11121,10 +11363,6 @@ msgstr "Lateral direito"
 #: apps/settings/src/sound.rs:720
 msgid "Subwoofer"
 msgstr "Subwoofer"
-
-#: apps/settings/src/sound.rs:721
-msgid "Mono"
-msgstr "Mono"
 
 #. Translators: the OS type in About, "64-bit".
 #: apps/settings/src/ui/about.rs:40
@@ -12477,14 +12715,6 @@ msgstr "Nenhuma fonte de entrada"
 #: apps/settings/src/ui/input.rs:326
 msgid "The keyboard uses the system default layout"
 msgstr "O teclado usa o layout padrão do sistema"
-
-#: apps/settings/src/ui/input.rs:342
-msgid "Move Up"
-msgstr "Mover para cima"
-
-#: apps/settings/src/ui/input.rs:343
-msgid "Move Down"
-msgstr "Mover para baixo"
 
 #: apps/settings/src/ui/input.rs:392
 msgid "Input Sources"
@@ -15364,14 +15594,6 @@ msgstr "Quadro anterior (pausado)"
 msgid "Next Frame (paused)"
 msgstr "Próximo quadro (pausado)"
 
-#: apps/video-player/src/ui.rs:160
-msgid "Volume Up"
-msgstr "Aumentar volume"
-
-#: apps/video-player/src/ui.rs:161
-msgid "Volume Down"
-msgstr "Diminuir volume"
-
 #: apps/video-player/src/ui.rs:176
 msgid "Take Screenshot"
 msgstr "Capturar tela"
@@ -16923,10 +17145,6 @@ msgstr "Localizar na página"
 #: apps/web/src/window.rs:656
 msgid "Suggestions"
 msgstr "Sugestões"
-
-#: apps/web/src/window.rs:683
-msgid "_Name"
-msgstr "_Nome"
 
 #: apps/web/src/window.rs:687
 msgid "_Tags (comma separated)"

@@ -92,6 +92,62 @@ impl Rng {
     }
 }
 
+/// A queue as saved between runs (`queue.json`).
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct Saved<T> {
+    pub items: Vec<T>,
+    /// Play order: a permutation of the item indices.
+    pub order: Vec<usize>,
+    /// Position of the current item in `order`.
+    pub cursor: Option<usize>,
+}
+
+impl<T> Saved<T> {
+    /// Keeps the items `keep` accepts (songs still in the library). When
+    /// the current item goes, the next remaining one (else the last)
+    /// becomes current; returns whether the current item stayed.
+    pub fn retain(&mut self, keep: impl Fn(&T) -> bool) -> bool {
+        let kept: Vec<bool> = self.items.iter().map(&keep).collect();
+        let mut new_index = vec![usize::MAX; kept.len()];
+        let mut n = 0;
+        for (i, k) in kept.iter().enumerate() {
+            if *k {
+                new_index[i] = n;
+                n += 1;
+            }
+        }
+        let old_items = std::mem::take(&mut self.items);
+        self.items = old_items
+            .into_iter()
+            .zip(&kept)
+            .filter_map(|(t, k)| k.then_some(t))
+            .collect();
+        let alive = |i: &usize| kept.get(*i).copied().unwrap_or(false);
+        let current_kept = self
+            .cursor
+            .and_then(|c| self.order.get(c))
+            .is_some_and(alive);
+        let before = self.cursor.map_or(0, |c| {
+            self.order[..c.min(self.order.len())]
+                .iter()
+                .filter(|i| alive(i))
+                .count()
+        });
+        self.order = self
+            .order
+            .iter()
+            .filter(|i| alive(i))
+            .map(|&i| new_index[i])
+            .collect();
+        self.cursor = match self.cursor {
+            _ if self.order.is_empty() => None,
+            None => None,
+            Some(_) => Some(before.min(self.order.len() - 1)),
+        };
+        current_kept
+    }
+}
+
 /// The play queue. `items` keep their insertion order (what the user queued);
 /// `order` is the play order (a permutation of item indices when shuffling).
 #[derive(Clone, Debug)]
@@ -333,17 +389,97 @@ impl<T: Clone + PartialEq> Queue<T> {
         }
     }
 
-    /// Inserts `item` to play right after the current one.
-    pub fn play_next(&mut self, item: T) {
+    pub fn save(&self) -> Saved<T> {
+        Saved {
+            items: self.items.clone(),
+            order: self.order.clone(),
+            cursor: self.cursor,
+        }
+    }
+
+    /// Restores a saved queue (keeping the shuffle and repeat modes);
+    /// false, and nothing changes, when it is not consistent.
+    pub fn restore(&mut self, saved: Saved<T>) -> bool {
+        let n = saved.items.len();
+        let mut seen = vec![false; n];
+        let permutation = saved.order.len() == n
+            && saved
+                .order
+                .iter()
+                .all(|&i| i < n && !std::mem::replace(&mut seen[i], true));
+        let cursor_ok = match saved.cursor {
+            Some(c) => c < n,
+            None => n == 0,
+        };
+        if !permutation || !cursor_ok {
+            return false;
+        }
+        self.items = saved.items;
+        self.order = saved.order;
+        self.cursor = saved.cursor;
         self.pending_cycle = None;
-        self.items.push(item);
-        let i = self.items.len() - 1;
+        if !self.shuffle {
+            // Without shuffle the play order is the item order.
+            let cur = self.current_index();
+            self.order = (0..n).collect();
+            self.cursor = cur;
+        }
+        true
+    }
+
+    /// Moves the item at play-order position `from` to position `to`
+    /// (both in [`Queue::in_play_order`]); the current item stays current.
+    /// Without shuffle the items themselves are reordered, so the order
+    /// survives turning shuffle on and off; with shuffle only the play
+    /// order changes.
+    pub fn move_item(&mut self, from: usize, to: usize) {
+        let n = self.order.len();
+        if from >= n || to >= n || from == to {
+            return;
+        }
+        self.pending_cycle = None;
+        if self.shuffle {
+            let i = self.order.remove(from);
+            self.order.insert(to, i);
+        } else {
+            let item = self.items.remove(from);
+            self.items.insert(to, item);
+        }
+        if let Some(c) = self.cursor {
+            self.cursor = Some(if c == from {
+                to
+            } else if from < c && to >= c {
+                c - 1
+            } else if from > c && to <= c {
+                c + 1
+            } else {
+                c
+            });
+        }
+    }
+
+    /// Empties the queue.
+    pub fn clear(&mut self) {
+        self.set(Vec::new(), 0);
+    }
+
+    /// Inserts `new` (in this order) to play right after the current item.
+    pub fn play_next_all(&mut self, new: Vec<T>) {
+        self.pending_cycle = None;
+        let start = self.items.len();
+        self.items.extend(new);
+        let added = start..self.items.len();
         match self.cursor {
-            Some(c) => self.order.insert(c + 1, i),
-            None => {
-                self.order.push(i);
-                self.cursor = Some(self.order.len() - 1);
+            Some(c) => {
+                let tail = self.order.split_off(c + 1);
+                self.order.extend(added);
+                self.order.extend(tail);
             }
+            None if !self.items.is_empty() => {
+                self.cursor = Some(self.order.len());
+                self.order.extend(added);
+            }
+            None => {}
         }
     }
 }
@@ -476,9 +612,133 @@ mod tests {
         let mut q: Queue<&str> = Queue::new(Rng::new(1));
         q.append(vec!["a", "b"]);
         assert_eq!(q.current(), Some(&"a"));
-        q.play_next("z");
+        q.play_next_all(vec!["z"]);
         assert_eq!(q.advance(false), Some(&"z"));
         assert_eq!(q.advance(false), Some(&"b"));
+    }
+
+    fn play_order<T: Clone + PartialEq>(q: &Queue<T>) -> Vec<T> {
+        q.in_play_order()
+            .into_iter()
+            .map(|(_, t)| t.clone())
+            .collect()
+    }
+
+    #[test]
+    fn move_item_keeps_the_current_track() {
+        let mut q = q(5);
+        q.jump(2);
+        q.move_item(0, 4);
+        assert_eq!(play_order(&q), [1, 2, 3, 4, 0]);
+        assert_eq!(q.current(), Some(&2));
+        q.move_item(1, 0); // the current one itself
+        assert_eq!(play_order(&q), [2, 1, 3, 4, 0]);
+        assert_eq!(q.current(), Some(&2));
+        assert_eq!(q.advance(false), Some(&1));
+        q.move_item(4, 0); // from after the cursor to before it
+        assert_eq!(play_order(&q), [0, 2, 1, 3, 4]);
+        assert_eq!(q.current(), Some(&1));
+        q.move_item(9, 0); // out of range: nothing happens
+        assert_eq!(play_order(&q), [0, 2, 1, 3, 4]);
+        // Not shuffled: the order is kept when shuffle goes on and off.
+        q.set_shuffle(true);
+        q.set_shuffle(false);
+        assert_eq!(play_order(&q), [0, 2, 1, 3, 4]);
+    }
+
+    #[test]
+    fn move_item_while_shuffled() {
+        let mut q = Queue::new(Rng::new(9));
+        q.set_shuffle(true);
+        q.set((0..6).collect(), 3);
+        let before = play_order(&q);
+        q.move_item(5, 1);
+        let mut expected = before.clone();
+        let x = expected.remove(5);
+        expected.insert(1, x);
+        assert_eq!(play_order(&q), expected);
+        assert_eq!(q.current(), Some(&3));
+        assert_eq!(q.advance(false), Some(&expected[1]));
+    }
+
+    #[test]
+    fn save_and_restore() {
+        let mut q = Queue::new(Rng::new(4));
+        q.set_shuffle(true);
+        q.set((0..5).collect(), 2);
+        q.advance(false);
+        let saved = q.save();
+        let mut r = Queue::new(Rng::new(1));
+        r.set_shuffle(true);
+        assert!(r.restore(saved.clone()));
+        assert_eq!(play_order(&r), play_order(&q));
+        assert_eq!(r.current(), q.current());
+        // Inconsistent files are refused.
+        let mut bad = saved.clone();
+        bad.order[0] = bad.order[1];
+        assert!(!r.restore(bad));
+        let mut bad = saved;
+        bad.cursor = Some(9);
+        assert!(!r.restore(bad));
+        assert!(r.restore(Saved::default()));
+        assert!(r.is_empty());
+    }
+
+    #[test]
+    fn saved_queue_drops_missing_songs() {
+        let mut s = Saved {
+            items: vec!["a", "b", "c", "d"],
+            order: vec![3, 1, 0, 2],
+            cursor: Some(2), // "a"
+        };
+        assert!(s.retain(|x| *x != "b"));
+        assert_eq!(s.items, ["a", "c", "d"]);
+        assert_eq!(s.order, [2, 0, 1]);
+        assert_eq!(s.cursor, Some(1));
+        // The current song is gone: the next one in play order is current.
+        assert!(!s.retain(|x| *x != "a"));
+        assert_eq!(s.items, ["c", "d"]);
+        assert_eq!(s.order, [1, 0]);
+        assert_eq!(s.cursor, Some(1));
+        assert_eq!(s.items[s.order[1]], "c");
+        // Gone at the end: the last one left.
+        let mut s = Saved {
+            items: vec!["a", "b"],
+            order: vec![0, 1],
+            cursor: Some(1),
+        };
+        assert!(!s.retain(|x| *x == "a"));
+        assert_eq!(s.cursor, Some(0));
+        assert!(!s.retain(|_| false));
+        assert_eq!(s.cursor, None);
+        assert!(s.items.is_empty());
+    }
+
+    #[test]
+    fn clear_empties() {
+        let mut q = q(3);
+        q.clear();
+        assert!(q.is_empty());
+        assert_eq!(q.current(), None);
+    }
+
+    #[test]
+    fn play_next_all_keeps_order() {
+        let mut q: Queue<&str> = Queue::new(Rng::new(1));
+        q.play_next_all(vec!["a", "b"]);
+        assert_eq!(q.current(), Some(&"a"), "an empty queue starts with them");
+        q.append(vec!["z"]);
+        q.play_next_all(vec!["x", "y"]);
+        let order: Vec<&str> = q.in_play_order().into_iter().map(|(_, s)| *s).collect();
+        assert_eq!(order, ["a", "x", "y", "b", "z"]);
+        assert_eq!(q.advance(false), Some(&"x"));
+        // Shuffled queues play them next too, in order.
+        let mut s: Queue<usize> = Queue::new(Rng::new(5));
+        s.set_shuffle(true);
+        s.set((0..6).collect(), 2);
+        s.play_next_all(vec![10, 11]);
+        assert_eq!(s.advance(false), Some(&10));
+        assert_eq!(s.advance(false), Some(&11));
     }
 
     #[test]

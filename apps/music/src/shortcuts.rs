@@ -12,6 +12,12 @@ pub const GROUPS: &[Group] = &[
             Keys(n_("Next Song"), "<Control>n"),
             Keys(n_("Cycle Repeat Mode"), "<Control>r"),
             Keys(n_("Shuffle"), "<Control>s"),
+            Keys(n_("Seek Backward"), "<Control>Left"),
+            Keys(n_("Seek Forward"), "<Control>Right"),
+            Keys(n_("Volume Up"), "<Control>Up"),
+            Keys(n_("Volume Down"), "<Control>Down"),
+            Keys(n_("Mute"), "<Control>m"),
+            Keys(n_("Favorite Song"), "<Control>d"),
         ],
     ),
     (
@@ -21,6 +27,8 @@ pub const GROUPS: &[Group] = &[
             Keys(n_("Artists"), "<Alt>2"),
             Keys(n_("Songs"), "<Alt>3"),
             Keys(n_("Playlists"), "<Alt>4"),
+            Keys(n_("Genres"), "<Alt>5"),
+            Keys(n_("Now Playing"), "<Control>l"),
             Keys(n_("Search"), "<Control>f"),
             Keys(n_("Go Back"), "Escape <Alt>Left"),
         ],
@@ -42,5 +50,6 @@ mod tests {
     #[test]
     fn every_accelerator_is_listed() {
         helix_app_common::shortcuts::assert_all_listed(super::GROUPS, crate::ui::ACCELS);
+        helix_app_common::shortcuts::assert_all_listed(super::GROUPS, crate::ui::BUBBLE_ACCELS);
     }
 }

@@ -11,7 +11,9 @@ use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
 const INDEX_VERSION: u32 = 1;
-const COVER_SIZE: i32 = 256;
+/// Longest side of a cached cover: sharp at 256 logical pixels (Now
+/// Playing) on a scale-2 screen; smaller sizes are scaled from it.
+pub const COVER_SIZE: i32 = 512;
 
 pub const AUDIO_EXTENSIONS: &[&str] = &[
     "mp3", "flac", "ogg", "oga", "opus", "m4a", "mp4", "aac", "wav", "wv", "ape", "aif", "aiff",
@@ -151,6 +153,19 @@ pub fn scan_hybrid(
     covers: Option<&Path>,
     now: i64,
 ) -> (Vec<Track>, ScanReport) {
+    scan_with_progress(roots, tracker, previous, covers, now, &mut |_| {})
+}
+
+/// [`scan_hybrid`], calling `progress` with the number of songs handled
+/// so far after each one (the caller throttles what it shows).
+pub fn scan_with_progress(
+    roots: &[PathBuf],
+    tracker: Option<crate::tracker::TrackerLibrary>,
+    previous: Vec<Track>,
+    covers: Option<&Path>,
+    now: i64,
+    progress: &mut dyn FnMut(usize),
+) -> (Vec<Track>, ScanReport) {
     let mut files = Vec::new();
     let mut report = ScanReport::default();
     let mut roots: Vec<&PathBuf> = roots.iter().collect();
@@ -214,6 +229,7 @@ pub fn scan_hybrid(
         report.from_tracker += 1;
         t.from_tracker = true;
         out.push(t);
+        progress(out.len());
     }
     for f in files {
         let prev = old.remove(&f.path);
@@ -225,6 +241,7 @@ pub fn scan_hybrid(
             if p.mtime == f.mtime && p.size == f.size && cover_ok && !p.from_tracker {
                 report.unchanged += 1;
                 out.push(prev.unwrap());
+                progress(out.len());
                 continue;
             }
         }
@@ -242,6 +259,7 @@ pub fn scan_hybrid(
             }
         }
         out.push(t);
+        progress(out.len());
     }
     report.removed = old.len();
     (out, report)
@@ -363,9 +381,15 @@ fn pick_picture(pics: &[Picture]) -> Option<&Picture> {
         .or_else(|| pics.first())
 }
 
-/// Path of a cached cover.
+/// Path of a cached cover: JPEG for opaque images, PNG for ones with
+/// transparency.
 pub fn cover_path(dir: &Path, key: &str) -> PathBuf {
-    dir.join(format!("{key}.png"))
+    let jpg = dir.join(format!("{key}.jpg"));
+    if jpg.exists() {
+        jpg
+    } else {
+        dir.join(format!("{key}.png"))
+    }
 }
 
 /// FNV-1a: stable across runs and Rust versions.
@@ -404,8 +428,7 @@ fn folder_cover(folder: &Path, dir: &Path) -> Option<String> {
 /// Scales image bytes to a cover thumbnail in the cache; returns its key.
 pub fn store_cover(dir: &Path, data: &[u8]) -> Option<String> {
     let key = format!("{:016x}", fnv1a(data));
-    let out = cover_path(dir, &key);
-    if out.exists() {
+    if cover_path(dir, &key).exists() {
         return Some(key);
     }
     use gtk::gdk_pixbuf::prelude::*;
@@ -429,7 +452,13 @@ pub fn store_cover(dir: &Path, data: &[u8]) -> Option<String> {
     };
     std::fs::create_dir_all(dir).ok()?;
     let tmp = dir.join(format!("{key}.tmp"));
-    scaled.savev(&tmp, "png", &[]).ok()?;
+    let out = if scaled.has_alpha() {
+        scaled.savev(&tmp, "png", &[]).ok()?;
+        dir.join(format!("{key}.png"))
+    } else {
+        scaled.savev(&tmp, "jpeg", &[("quality", "90")]).ok()?;
+        dir.join(format!("{key}.jpg"))
+    };
     std::fs::rename(&tmp, &out).ok()?;
     Some(key)
 }
@@ -564,6 +593,52 @@ mod tests {
         assert_eq!(u.artist, None);
         let key = u.cover.as_ref().expect("folder cover");
         assert_ne!(Some(key), t.cover.as_ref());
+    }
+
+    #[test]
+    fn covers_are_cached_at_cover_size() {
+        use gtk::gdk_pixbuf::{Colorspace, Pixbuf};
+        let covers = tempfile::tempdir().unwrap();
+        let encode = |w, h, alpha| {
+            let pb = Pixbuf::new(Colorspace::Rgb, alpha, 8, w, h).unwrap();
+            pb.fill(0x3366_99ff);
+            pb.save_to_bufferv("png", &[]).unwrap()
+        };
+        // Large opaque art: scaled to COVER_SIZE, stored as JPEG.
+        let key = store_cover(covers.path(), &encode(1600, 1000, false)).unwrap();
+        let path = cover_path(covers.path(), &key);
+        assert_eq!(path.extension().unwrap(), "jpg");
+        let pb = Pixbuf::from_file(&path).unwrap();
+        assert_eq!((pb.width(), pb.height()), (COVER_SIZE, 320));
+        // Small art with transparency: kept as is, as PNG.
+        let key = store_cover(covers.path(), &encode(100, 100, true)).unwrap();
+        let path = cover_path(covers.path(), &key);
+        assert_eq!(path.extension().unwrap(), "png");
+        assert_eq!(Pixbuf::from_file(&path).unwrap().width(), 100);
+        // The same image again: the cached file is reused.
+        assert_eq!(
+            store_cover(covers.path(), &encode(100, 100, true)),
+            Some(key)
+        );
+    }
+
+    #[test]
+    fn scan_reports_progress() {
+        let root = tempfile::tempdir().unwrap();
+        for i in 0..3 {
+            write_wav(&root.path().join(format!("{i}.wav")), 100);
+        }
+        let mut seen = Vec::new();
+        let (tracks, _) = scan_with_progress(
+            &[root.path().to_path_buf()],
+            None,
+            Vec::new(),
+            None,
+            1,
+            &mut |n| seen.push(n),
+        );
+        assert_eq!(tracks.len(), 3);
+        assert_eq!(seen, [1, 2, 3]);
     }
 
     #[test]

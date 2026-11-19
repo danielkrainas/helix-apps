@@ -120,12 +120,15 @@ apps/maps/src/settings.rs
 apps/maps/src/shortcuts.rs
 apps/maps/src/tiles.rs
 apps/maps/src/ui.rs
+apps/music/src/details.rs
 apps/music/src/gnome_import.rs
 apps/music/src/model.rs
 apps/music/src/mpris.rs
+apps/music/src/nowplaying.rs
 apps/music/src/pages.rs
 apps/music/src/player.rs
 apps/music/src/playlist.rs
+apps/music/src/rows.rs
 apps/music/src/shortcuts.rs
 apps/music/src/tracker.rs
 apps/music/src/ui.rs

@@ -191,7 +191,7 @@ msgstr "{pct}%"
 msgid "Play audio files"
 msgstr "오디오 파일 재생"
 
-#: apps/audio-player/src/ui.rs:170 apps/music/src/pages.rs:1761
+#: apps/audio-player/src/ui.rs:170 apps/music/src/pages.rs:2356
 #: apps/music/src/shortcuts.rs:8 apps/video-player/src/ui.rs:148
 msgid "Playback"
 msgstr "재생"
@@ -223,7 +223,7 @@ msgstr "음소거 또는 음소거 해제"
 #: apps/document-scanner/src/shortcuts.rs:48 apps/files/src/ui/dialogs.rs:563
 #: apps/files/src/ui/dialogs.rs:617 apps/files/src/ui/shortcuts.rs:78
 #: apps/help/src/shortcuts.rs:49 apps/maps/src/shortcuts.rs:11
-#: apps/maps/src/ui.rs:1863 apps/music/src/shortcuts.rs:29
+#: apps/maps/src/ui.rs:1863 apps/music/src/shortcuts.rs:37
 #: apps/settings/src/ui/access.rs:62 apps/settings/src/ui/extensions.rs:99
 #: apps/settings/src/ui/input.rs:64 apps/settings/src/ui/multitasking.rs:26
 #: apps/settings/src/ui/netedit.rs:232 apps/settings/src/ui/power.rs:154
@@ -245,7 +245,7 @@ msgstr "파일 열기"
 #: apps/disk-usage/src/shortcuts.rs:50
 #: apps/document-scanner/src/shortcuts.rs:51 apps/files/src/ui/shortcuts.rs:81
 #: apps/help/src/shortcuts.rs:52 apps/maps/src/shortcuts.rs:14
-#: apps/music/src/shortcuts.rs:33 apps/settings/src/ui/shortcuts.rs:18
+#: apps/music/src/shortcuts.rs:41 apps/settings/src/ui/shortcuts.rs:18
 #: apps/system-monitor/src/shortcuts.rs:33 apps/terminal/src/shortcuts.rs:63
 #: apps/text-editor/src/shortcuts.rs:71 apps/video-player/src/ui.rs:177
 #: apps/weather/src/ui.rs:1758 apps/web/src/shortcuts.rs:77
@@ -256,7 +256,7 @@ msgstr "키보드 바로 가기"
 #: apps/audio-player/src/ui.rs:183 apps/clocks/src/shortcuts.rs:26
 #: apps/contacts/src/shortcuts.rs:27 apps/disk-usage/src/shortcuts.rs:51
 #: apps/document-scanner/src/shortcuts.rs:52 apps/help/src/shortcuts.rs:53
-#: apps/maps/src/shortcuts.rs:15 apps/music/src/shortcuts.rs:34
+#: apps/maps/src/shortcuts.rs:15 apps/music/src/shortcuts.rs:42
 #: apps/settings/src/ui/shortcuts.rs:20 apps/system-monitor/src/shortcuts.rs:34
 #: apps/terminal/src/shortcuts.rs:16 apps/text-editor/src/shortcuts.rs:19
 #: apps/video-player/src/ui.rs:178 apps/weather/src/ui.rs:1759
@@ -269,7 +269,7 @@ msgstr "창 닫기"
 #: apps/contacts/src/shortcuts.rs:28 apps/disk-usage/src/shortcuts.rs:52
 #: apps/document-scanner/src/shortcuts.rs:53 apps/files/src/ui/shortcuts.rs:16
 #: apps/help/src/shortcuts.rs:54 apps/maps/src/shortcuts.rs:16
-#: apps/music/src/shortcuts.rs:35 apps/settings/src/ui/shortcuts.rs:21
+#: apps/music/src/shortcuts.rs:43 apps/settings/src/ui/shortcuts.rs:21
 #: apps/system-monitor/src/shortcuts.rs:35 apps/text-editor/src/shortcuts.rs:20
 #: apps/video-player/src/ui.rs:179 apps/weather/src/ui.rs:1760
 #: apps/web/src/shortcuts.rs:24 crates/helix-app-common/src/shortcuts.rs:44
@@ -316,7 +316,7 @@ msgstr "오디오 플레이어 정보(_A)"
 #: apps/help/src/ui.rs:362 apps/image-viewer/src/ui.rs:337
 #: apps/image-viewer/src/ui.rs:339 apps/logs/src/ui.rs:308
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
-#: apps/music/src/ui.rs:317 apps/music/src/ui.rs:319
+#: apps/music/src/ui.rs:477 apps/music/src/ui.rs:479
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
 #: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
@@ -346,7 +346,7 @@ msgid "Unable to Play File"
 msgstr "파일을 재생할 수 없습니다"
 
 #: apps/audio-player/src/ui.rs:297 apps/audio-player/src/ui.rs:304
-#: apps/music/src/ui.rs:1778 apps/music/src/ui.rs:1779
+#: apps/music/src/ui.rs:2579 apps/music/src/ui.rs:2580
 #: apps/video-player/src/ui.rs:464
 msgid "Position"
 msgstr "위치"
@@ -360,27 +360,29 @@ msgid "Playback Speed (pitch not preserved)"
 msgstr "재생 속도(음높이 유지 안 함)"
 
 #: apps/audio-player/src/ui.rs:348 apps/audio-player/src/ui.rs:351
-#: apps/audio-player/src/ui.rs:1283 apps/music/src/pages.rs:694
-#: apps/music/src/ui.rs:968 apps/music/src/ui.rs:1754 apps/music/src/ui.rs:1758
-#: apps/video-player/src/ui.rs:443 apps/video-player/src/ui.rs:1460
+#: apps/audio-player/src/ui.rs:1283 apps/music/src/pages.rs:801
+#: apps/music/src/pages.rs:1146 apps/music/src/pages.rs:1474
+#: apps/music/src/ui.rs:1347 apps/music/src/ui.rs:2555
+#: apps/music/src/ui.rs:2559 apps/video-player/src/ui.rs:443
+#: apps/video-player/src/ui.rs:1460
 msgid "Play"
 msgstr "재생"
 
 #: apps/audio-player/src/ui.rs:368 apps/audio-player/src/ui.rs:371
 #: apps/calendar/src/editor.rs:551 apps/clocks/src/ui.rs:1422
-#: apps/music/src/ui.rs:1799
+#: apps/music/src/ui.rs:2602 apps/music/src/ui.rs:2606
 msgid "Repeat"
 msgstr "반복"
 
 #: apps/audio-player/src/ui.rs:378 apps/audio-player/src/ui.rs:380
-#: apps/settings/src/ui/sound.rs:116 apps/video-player/src/ui.rs:482
-#: apps/video-player/src/ui.rs:484
+#: apps/music/src/shortcuts.rs:19 apps/settings/src/ui/sound.rs:116
+#: apps/video-player/src/ui.rs:482 apps/video-player/src/ui.rs:484
 msgid "Mute"
 msgstr "음소거"
 
 #: apps/audio-player/src/ui.rs:386 apps/audio-player/src/ui.rs:394
-#: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:1804
-#: apps/music/src/ui.rs:1811 apps/music/src/ui.rs:1816
+#: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:2611
+#: apps/music/src/ui.rs:2618 apps/music/src/ui.rs:2623
 #: apps/settings/src/ui/sound.rs:163 apps/video-player/src/ui.rs:158
 #: apps/video-player/src/ui.rs:491 apps/video-player/src/ui.rs:497
 #: apps/video-player/src/ui.rs:503
@@ -415,13 +417,13 @@ msgstr "파일에 오디오 스트림이 없습니다"
 
 #. Translators: the position in a track, "1:23 of 4:56".
 #. Translators: the seek bar's value, "1:23 of 45:00".
-#: apps/audio-player/src/ui.rs:1260 apps/music/src/model.rs:393
+#: apps/audio-player/src/ui.rs:1260 apps/music/src/model.rs:578
 #: apps/video-player/src/timefmt.rs:45
 msgid "{position} of {duration}"
 msgstr "{position} / {duration}"
 
 #: apps/audio-player/src/ui.rs:1281 apps/clocks/src/ui.rs:1758
-#: apps/clocks/src/ui.rs:2241 apps/music/src/ui.rs:968
+#: apps/clocks/src/ui.rs:2241 apps/music/src/ui.rs:1347
 #: apps/video-player/src/ui.rs:1460
 msgid "Pause"
 msgstr "일시 정지"
@@ -1026,7 +1028,7 @@ msgstr "프로그래밍 모드"
 #: apps/disk-usage/src/shortcuts.rs:49 apps/disk-usage/src/ui.rs:1773
 #: apps/document-scanner/src/shortcuts.rs:50 apps/files/src/ui/shortcuts.rs:80
 #: apps/maps/src/shortcuts.rs:13 apps/maps/src/ui.rs:1804
-#: apps/music/src/shortcuts.rs:32 apps/system-monitor/src/shortcuts.rs:32
+#: apps/music/src/shortcuts.rs:40 apps/system-monitor/src/shortcuts.rs:32
 #: apps/system-monitor/src/ui.rs:472 apps/terminal/src/prefs_dialog.rs:15
 #: apps/terminal/src/shortcuts.rs:62 apps/text-editor/src/prefs.rs:54
 #: apps/text-editor/src/shortcuts.rs:70 apps/web/src/dialogs.rs:40
@@ -1061,7 +1063,7 @@ msgstr "기록 지우기(_C)"
 #: apps/calculator/src/ui.rs:699 apps/disk-usage/src/ui.rs:186
 #: apps/document-scanner/src/ui.rs:174 apps/document-scanner/src/ui.rs:190
 #: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:485
-#: apps/music/src/ui.rs:304 apps/system-monitor/src/ui.rs:247
+#: apps/music/src/ui.rs:464 apps/system-monitor/src/ui.rs:247
 #: apps/terminal/src/window.rs:290 apps/text-editor/src/window.rs:63
 #: apps/web/src/window.rs:263
 msgid "_Preferences"
@@ -1128,8 +1130,8 @@ msgstr "계산(_A)"
 #: apps/document-scanner/src/ui.rs:1417 apps/document-viewer/src/dialogs.rs:169
 #: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
-#: apps/music/src/pages.rs:1522 apps/music/src/pages.rs:1620
-#: apps/music/src/pages.rs:1682 apps/settings/src/ui/apps.rs:553
+#: apps/music/src/pages.rs:2089 apps/music/src/pages.rs:2192
+#: apps/music/src/pages.rs:2277 apps/settings/src/ui/apps.rs:553
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
 #: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
 #: apps/system-monitor/src/dialogs.rs:142
@@ -1397,7 +1399,7 @@ msgid "Close"
 msgstr "닫기"
 
 #: apps/calendar/src/editor.rs:484 apps/document-viewer/src/dialogs.rs:97
-#: apps/music/src/pages.rs:350
+#: apps/music/src/details.rs:110 apps/music/src/pages.rs:641
 msgid "Title"
 msgstr "제목"
 
@@ -1764,8 +1766,8 @@ msgstr[0] "{n}일"
 
 #: apps/calendar/src/recur.rs:170 apps/clocks/src/timer.rs:133
 #: apps/clocks/src/tz.rs:347 apps/clocks/src/tz.rs:356
-#: apps/disks/src/format.rs:73 apps/music/src/model.rs:411
-#: apps/music/src/model.rs:414 apps/settings/src/values.rs:23
+#: apps/disks/src/format.rs:73 apps/music/src/model.rs:596
+#: apps/music/src/model.rs:599 apps/settings/src/values.rs:23
 msgid "{n} hour"
 msgid_plural "{n} hours"
 msgstr[0] "{n}시간"
@@ -1773,7 +1775,7 @@ msgstr[0] "{n}시간"
 #: apps/calendar/src/recur.rs:172 apps/clocks/src/timer.rs:134
 #: apps/clocks/src/tz.rs:346 apps/clocks/src/tz.rs:357
 #: apps/clocks/src/ui.rs:1466 apps/disks/src/format.rs:74
-#: apps/music/src/model.rs:410 apps/music/src/model.rs:415
+#: apps/music/src/model.rs:595 apps/music/src/model.rs:600
 #: apps/settings/src/values.rs:24
 msgid "{n} minute"
 msgid_plural "{n} minutes"
@@ -1813,8 +1815,8 @@ msgstr "가져오기"
 #: apps/help/src/ui.rs:334 apps/help/src/ui.rs:336
 #: apps/logs/src/shortcuts.rs:17 apps/logs/src/ui.rs:276
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
-#: apps/music/src/shortcuts.rs:24 apps/music/src/ui.rs:290
-#: apps/music/src/ui.rs:292 apps/settings/src/ui/apps.rs:439
+#: apps/music/src/shortcuts.rs:32 apps/music/src/ui.rs:449
+#: apps/music/src/ui.rs:451 apps/settings/src/ui/apps.rs:439
 #: apps/settings/src/ui/mod.rs:189 apps/settings/src/ui/mod.rs:191
 #: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
 #: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
@@ -1824,7 +1826,7 @@ msgstr "검색"
 
 #: apps/calendar/src/shortcuts.rs:16 apps/document-viewer/src/shortcuts.rs:30
 #: apps/files/src/ui/shortcuts.rs:20 apps/help/src/shortcuts.rs:27
-#: apps/image-viewer/src/shortcuts.rs:30 apps/music/src/shortcuts.rs:18
+#: apps/image-viewer/src/shortcuts.rs:30 apps/music/src/shortcuts.rs:24
 #: apps/web/src/shortcuts.rs:28
 msgid "Navigation"
 msgstr "탐색"
@@ -1939,13 +1941,13 @@ msgstr "오늘"
 
 #: apps/calendar/src/ui.rs:257 apps/calendar/src/ui.rs:259
 #: apps/calendar/src/ui.rs:511 apps/calendar/src/ui.rs:513
-#: apps/music/src/ui.rs:1751 apps/tour/src/ui.rs:283 apps/tour/src/ui.rs:289
+#: apps/music/src/ui.rs:2552 apps/tour/src/ui.rs:283 apps/tour/src/ui.rs:289
 msgid "Previous"
 msgstr "이전"
 
 #: apps/calendar/src/ui.rs:263 apps/calendar/src/ui.rs:265
 #: apps/calendar/src/ui.rs:517 apps/calendar/src/ui.rs:519
-#: apps/music/src/ui.rs:809 apps/music/src/ui.rs:1759 apps/tour/src/ui.rs:292
+#: apps/music/src/ui.rs:1155 apps/music/src/ui.rs:2560 apps/tour/src/ui.rs:292
 #: apps/tour/src/ui.rs:298
 msgid "Next"
 msgstr "다음"
@@ -1995,7 +1997,7 @@ msgstr "결과 없음"
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:228
+#: apps/music/src/pages.rs:1647 apps/settings/src/ui/mod.rs:228
 #: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:740
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
@@ -2612,7 +2614,7 @@ msgstr "복사한 문자가 여기에 나타납니다"
 
 #: apps/characters/src/ui.rs:455 apps/clocks/src/ui.rs:1053
 #: apps/contacts/src/ui.rs:245 apps/logs/src/ui.rs:711
-#: apps/music/src/pages.rs:1152
+#: apps/music/src/pages.rs:1646
 msgid "No Results"
 msgstr "결과 없음"
 
@@ -2854,7 +2856,7 @@ msgstr[0] "{n}초"
 
 #. Translators: a duration, "1 hour 30 minutes".
 #: apps/clocks/src/timer.rs:140 apps/clocks/src/tz.rs:354
-#: apps/music/src/model.rs:412 apps/settings/src/values.rs:30
+#: apps/music/src/model.rs:597 apps/settings/src/values.rs:30
 msgid "{hours} {minutes}"
 msgstr "{hours} {minutes}"
 
@@ -3369,7 +3371,7 @@ msgstr "{title} 일"
 msgid "{title} Month"
 msgstr "{title} 월"
 
-#: apps/contacts/src/datefield.rs:113
+#: apps/contacts/src/datefield.rs:113 apps/music/src/details.rs:117
 msgid "Year"
 msgstr "연도"
 
@@ -3739,6 +3741,7 @@ msgid "_Unlink"
 msgstr "연결 해제(_U)"
 
 #: apps/contacts/src/ui.rs:1211 apps/logs/src/ui.rs:282
+#: apps/music/src/pages.rs:1525
 msgid "_Export…"
 msgstr "내보내기(_E)…"
 
@@ -4149,7 +4152,7 @@ msgstr[0] "항목 {n}개"
 #: apps/disk-usage/src/ui.rs:1006 apps/disks/src/ui.rs:358
 #: apps/disks/src/ui.rs:453 apps/files/src/sorting.rs:44
 #: apps/files/src/ui/properties.rs:138 apps/files/src/ui/tab.rs:216
-#: apps/fonts/src/fontinfo.rs:287
+#: apps/fonts/src/fontinfo.rs:287 apps/music/src/details.rs:137
 msgid "Size"
 msgstr "크기"
 
@@ -5346,7 +5349,7 @@ msgid "Delete Partition?"
 msgstr "파티션을 삭제하시겠습니까?"
 
 #: apps/disks/src/ui.rs:1594 apps/document-scanner/src/ui.rs:228
-#: apps/files/src/ui/window.rs:1393 apps/music/src/pages.rs:1683
+#: apps/files/src/ui/window.rs:1393 apps/music/src/pages.rs:2278
 msgid "_Delete"
 msgstr "삭제(_D)"
 
@@ -7539,7 +7542,7 @@ msgid "Rename Bookmark"
 msgstr "책갈피 이름 바꾸기"
 
 #: apps/files/src/ui/sidebar.rs:677 apps/files/src/ui/window.rs:1465
-#: apps/music/src/pages.rs:1524
+#: apps/music/src/pages.rs:2091
 msgid "_Rename"
 msgstr "이름 바꾸기(_R)"
 
@@ -7626,6 +7629,7 @@ msgid "_Reversed Order"
 msgstr "역순(_R)"
 
 #: apps/files/src/ui/window.rs:252 apps/logs/src/ui.rs:294
+#: apps/music/src/ui.rs:507 apps/music/src/ui.rs:510
 msgid "Sort"
 msgstr "정렬"
 
@@ -7762,7 +7766,7 @@ msgstr "파일 이름 바꾸기"
 msgid "Could not rename: {}"
 msgstr "이름을 바꿀 수 없습니다: {}"
 
-#: apps/files/src/ui/window.rs:1506 apps/music/src/pages.rs:1526
+#: apps/files/src/ui/window.rs:1506 apps/music/src/pages.rs:2093
 msgid "_Create"
 msgstr "만들기(_C)"
 
@@ -7964,11 +7968,11 @@ msgid "Glyphs"
 msgstr "글리프"
 
 #: apps/fonts/src/fontinfo.rs:276 apps/fonts/src/fontinfo.rs:282
-#: apps/image-viewer/src/ui.rs:581
+#: apps/image-viewer/src/ui.rs:581 apps/music/src/details.rs:128
 msgid "Format"
 msgstr "형식"
 
-#: apps/fonts/src/fontinfo.rs:285
+#: apps/fonts/src/fontinfo.rs:285 apps/music/src/details.rs:156
 msgid "File"
 msgstr "파일"
 
@@ -9453,13 +9457,13 @@ msgstr[0] "장소 {n}곳을 찾았습니다"
 msgid "Selected place: {}"
 msgstr "선택한 장소: {}"
 
-#: apps/maps/src/ui.rs:1365 apps/music/src/ui.rs:1644
+#: apps/maps/src/ui.rs:1365 apps/music/src/ui.rs:2340
 msgid "Remove from Favorites"
 msgstr "즐겨찾기에서 제거"
 
 #: apps/maps/src/ui.rs:1367 apps/maps/src/ui.rs:2266
-#: apps/music/src/pages.rs:388 apps/music/src/ui.rs:1646
-#: apps/music/src/ui.rs:1791
+#: apps/music/src/pages.rs:702 apps/music/src/ui.rs:2342
+#: apps/music/src/ui.rs:2592
 msgid "Add to Favorites"
 msgstr "즐겨찾기에 추가"
 
@@ -9671,7 +9675,7 @@ msgstr "이름 없는 장소"
 msgid "Looking up address"
 msgstr "주소를 찾는 중"
 
-#: apps/maps/src/ui.rs:2267 apps/music/src/pages.rs:420
+#: apps/maps/src/ui.rs:2267 apps/music/src/pages.rs:721
 msgid "Favorite"
 msgstr "즐겨찾기"
 
@@ -9745,6 +9749,116 @@ msgstr "재생 목록"
 msgid "song"
 msgstr "노래"
 
+#. Translators: an audio bit rate.
+#: apps/music/src/details.rs:69
+msgid "{n} kbit/s"
+msgstr "{n}kbit/s"
+
+#. Translators: an audio sample rate.
+#: apps/music/src/details.rs:80
+msgid "{rate} kHz"
+msgstr "{rate}kHz"
+
+#: apps/music/src/details.rs:86 apps/settings/src/sound.rs:721
+msgid "Mono"
+msgstr "모노"
+
+#: apps/music/src/details.rs:87
+msgid "Stereo"
+msgstr "스테레오"
+
+#: apps/music/src/details.rs:88
+msgid "{n} channel"
+msgid_plural "{n} channels"
+msgstr[0] "{n}채널"
+
+#. Translators: the bit depth of audio samples.
+#: apps/music/src/details.rs:95
+msgid "{n}-bit"
+msgstr "{n}비트"
+
+#: apps/music/src/details.rs:113 apps/music/src/pages.rs:645
+msgid "Artist"
+msgstr "아티스트"
+
+#: apps/music/src/details.rs:114
+msgid "Album Artist"
+msgstr "앨범 아티스트"
+
+#: apps/music/src/details.rs:115 apps/music/src/pages.rs:649
+msgid "Album"
+msgstr "앨범"
+
+#: apps/music/src/details.rs:116 apps/music/src/pages.rs:673
+msgid "Genre"
+msgstr "장르"
+
+#: apps/music/src/details.rs:118
+msgid "Track"
+msgstr "트랙"
+
+#: apps/music/src/details.rs:119
+msgid "Disc"
+msgstr "디스크"
+
+#: apps/music/src/details.rs:125 apps/music/src/pages.rs:653
+#: apps/settings/src/ui/access.rs:517
+msgid "Length"
+msgstr "길이"
+
+#: apps/music/src/details.rs:129
+msgid "Bit Rate"
+msgstr "비트레이트"
+
+#: apps/music/src/details.rs:131
+msgid "Sample Rate"
+msgstr "샘플 레이트"
+
+#: apps/music/src/details.rs:134
+msgid "Bit Depth"
+msgstr "비트 심도"
+
+#: apps/music/src/details.rs:135
+msgid "Channels"
+msgstr "채널"
+
+#: apps/music/src/details.rs:145
+msgid "File Location"
+msgstr "파일 위치"
+
+#: apps/music/src/details.rs:147 apps/music/src/pages.rs:666
+msgid "Plays"
+msgstr "재생 횟수"
+
+#: apps/music/src/details.rs:149
+msgid "Last Played"
+msgstr "마지막 재생"
+
+#: apps/music/src/details.rs:152
+msgid "Date Added"
+msgstr "추가한 날짜"
+
+#: apps/music/src/details.rs:155
+msgid "Song"
+msgstr "노래"
+
+#: apps/music/src/details.rs:157
+msgid "Listening"
+msgstr "감상"
+
+#: apps/music/src/details.rs:201 apps/music/src/details.rs:205
+#: apps/music/src/rows.rs:100
+msgid "Show in Files"
+msgstr "파일에서 보기"
+
+#: apps/music/src/details.rs:222 apps/music/src/rows.rs:99
+msgid "Song Details"
+msgstr "노래 세부 정보"
+
+#: apps/music/src/details.rs:242
+msgid "Cannot open the folder: {e}"
+msgstr "폴더를 열 수 없습니다: {e}"
+
 #: apps/music/src/gnome_import.rs:141 apps/music/src/playlist.rs:312
 msgid "Playlist"
 msgstr "재생 목록"
@@ -9795,6 +9909,34 @@ msgstr "알 수 없는 앨범"
 msgid "Various Artists"
 msgstr "여러 아티스트"
 
+#: apps/music/src/model.rs:449
+msgid "_Title"
+msgstr "제목(_T)"
+
+#: apps/music/src/model.rs:450
+msgid "_Artist"
+msgstr "아티스트(_A)"
+
+#: apps/music/src/model.rs:451
+msgid "_Year"
+msgstr "연도(_Y)"
+
+#: apps/music/src/model.rs:452
+msgid "Date _Added"
+msgstr "추가한 날짜(_A)"
+
+#: apps/music/src/model.rs:453 apps/music/src/model.rs:488
+msgid "_Most Played"
+msgstr "가장 많이 재생(_M)"
+
+#: apps/music/src/model.rs:486 apps/web/src/window.rs:683
+msgid "_Name"
+msgstr "이름(_N)"
+
+#: apps/music/src/model.rs:487
+msgid "Most _Albums"
+msgstr "앨범 수(_A)"
+
 #: apps/music/src/mpris.rs:147 apps/music/src/ui.rs:26
 #: apps/settings/src/defaults.rs:32
 msgid "Music"
@@ -9804,229 +9946,264 @@ msgstr "음악"
 msgid "OpenUri is not supported"
 msgstr "OpenUri를 지원하지 않습니다"
 
-#: apps/music/src/pages.rs:185 apps/music/src/pages.rs:1159
-#: apps/music/src/shortcuts.rs:20
-msgid "Albums"
-msgstr "앨범"
+#: apps/music/src/nowplaying.rs:68 apps/music/src/pages.rs:1197
+#: apps/music/src/pages.rs:1488 apps/music/src/rows.rs:95
+msgid "Go to Artist"
+msgstr "아티스트로 이동"
 
-#: apps/music/src/pages.rs:199 apps/music/src/pages.rs:1190
-#: apps/music/src/shortcuts.rs:21
-msgid "Artists"
-msgstr "아티스트"
+#: apps/music/src/nowplaying.rs:70 apps/music/src/pages.rs:1326
+#: apps/music/src/rows.rs:93
+msgid "Go to Album"
+msgstr "앨범으로 이동"
 
-#: apps/music/src/pages.rs:208 apps/music/src/pages.rs:1212
-#: apps/music/src/shortcuts.rs:22
-msgid "Songs"
-msgstr "노래"
+#: apps/music/src/nowplaying.rs:119 apps/music/src/nowplaying.rs:206
+#: apps/music/src/nowplaying.rs:208
+msgid "Queue"
+msgstr "대기열"
 
-#: apps/music/src/pages.rs:215 apps/music/src/pages.rs:1593
-msgid "New Playlist…"
-msgstr "새 재생 목록…"
+#: apps/music/src/nowplaying.rs:123 apps/music/src/nowplaying.rs:128
+msgid "Save as Playlist…"
+msgstr "재생 목록으로 저장…"
 
-#: apps/music/src/pages.rs:239 apps/music/src/pages.rs:1253
-#: apps/music/src/shortcuts.rs:23
-msgid "Playlists"
-msgstr "재생 목록"
+#: apps/music/src/nowplaying.rs:131 apps/music/src/nowplaying.rs:136
+msgid "Clear Queue"
+msgstr "대기열 비우기"
 
-#: apps/music/src/pages.rs:244 apps/music/src/pages.rs:1717
-#: apps/music/src/pages.rs:1721
-msgid "Add Folder…"
-msgstr "폴더 추가…"
-
-#: apps/music/src/pages.rs:337 apps/music/src/pages.rs:1073
-#: apps/music/src/ui.rs:1830 apps/music/src/ui.rs:1835
+#: apps/music/src/nowplaying.rs:203 apps/music/src/shortcuts.rs:31
+#: apps/music/src/ui.rs:2319 apps/music/src/ui.rs:2637
+#: apps/music/src/ui.rs:2642
 msgid "Now Playing"
 msgstr "지금 재생 중"
 
-#: apps/music/src/pages.rs:345
+#: apps/music/src/nowplaying.rs:217 apps/music/src/nowplaying.rs:221
+msgid "Lyrics"
+msgstr "가사"
+
+#: apps/music/src/nowplaying.rs:302
+msgid "Nothing Playing"
+msgstr "재생 중인 항목 없음"
+
+#: apps/music/src/nowplaying.rs:332 apps/music/src/pages.rs:2436
+msgid "{n} song"
+msgid_plural "{n} songs"
+msgstr[0] "노래 {n}곡"
+
+#: apps/music/src/pages.rs:155
+msgid "Show All"
+msgstr "모두 보기"
+
+#: apps/music/src/pages.rs:277 apps/music/src/rows.rs:83
+msgid "Play Next"
+msgstr "다음에 재생"
+
+#: apps/music/src/pages.rs:278 apps/music/src/pages.rs:802
+#: apps/music/src/rows.rs:84
+msgid "Add to Queue"
+msgstr "대기열에 추가"
+
+#: apps/music/src/pages.rs:279 apps/music/src/pages.rs:803
+#: apps/music/src/rows.rs:87
+msgid "Add to Playlist…"
+msgstr "재생 목록에 추가…"
+
+#: apps/music/src/pages.rs:390 apps/music/src/pages.rs:1312
+#: apps/music/src/pages.rs:1414 apps/music/src/pages.rs:1686
+#: apps/music/src/shortcuts.rs:26
+msgid "Albums"
+msgstr "앨범"
+
+#: apps/music/src/pages.rs:412 apps/music/src/pages.rs:481
+#: apps/music/src/pages.rs:1369 apps/music/src/shortcuts.rs:30
+msgid "Genres"
+msgstr "장르"
+
+#: apps/music/src/pages.rs:433 apps/music/src/pages.rs:1723
+#: apps/music/src/shortcuts.rs:27
+msgid "Artists"
+msgstr "아티스트"
+
+#: apps/music/src/pages.rs:442 apps/music/src/pages.rs:1416
+#: apps/music/src/pages.rs:1749 apps/music/src/shortcuts.rs:28
+msgid "Songs"
+msgstr "노래"
+
+#: apps/music/src/pages.rs:467 apps/music/src/pages.rs:1822
+#: apps/music/src/shortcuts.rs:29
+msgid "Playlists"
+msgstr "재생 목록"
+
+#: apps/music/src/pages.rs:489 apps/music/src/pages.rs:2312
+#: apps/music/src/pages.rs:2316
+msgid "Add Folder…"
+msgstr "폴더 추가…"
+
+#: apps/music/src/pages.rs:636
 msgid "Playing"
 msgstr "재생 중"
 
-#: apps/music/src/pages.rs:354
-msgid "Artist"
-msgstr "아티스트"
+#: apps/music/src/pages.rs:735 apps/music/src/pages.rs:738
+#: apps/music/src/pages.rs:1170 apps/music/src/pages.rs:1172
+#: apps/music/src/rows.rs:179 apps/music/src/rows.rs:181
+msgid "More"
+msgstr "더 보기"
 
-#: apps/music/src/pages.rs:358
-msgid "Album"
-msgstr "앨범"
+#: apps/music/src/pages.rs:835
+msgid "No Songs Selected"
+msgstr "선택한 노래 없음"
 
-#: apps/music/src/pages.rs:362 apps/settings/src/ui/access.rs:517
-msgid "Length"
-msgstr "길이"
+#: apps/music/src/pages.rs:837
+msgid "{n} song selected"
+msgid_plural "{n} songs selected"
+msgstr[0] "노래 {n}곡 선택됨"
 
-#: apps/music/src/pages.rs:364
-msgid "Plays"
-msgstr "재생 횟수"
-
-#: apps/music/src/pages.rs:463 apps/music/src/pages.rs:816
+#: apps/music/src/pages.rs:963 apps/music/src/pages.rs:1305
+#: apps/music/src/pages.rs:1380 apps/music/src/pages.rs:1408
 msgid "{n} album"
 msgid_plural "{n} albums"
 msgstr[0] "앨범 {n}개"
 
-#: apps/music/src/pages.rs:569
-msgid "Play Next"
-msgstr "다음에 재생"
-
-#: apps/music/src/pages.rs:570
-msgid "Add to Queue"
-msgstr "대기열에 추가"
-
-#: apps/music/src/pages.rs:573
-msgid "Add to Playlist…"
-msgstr "재생 목록에 추가…"
-
-#: apps/music/src/pages.rs:577
-msgid "Go to Album"
-msgstr "앨범으로 이동"
-
-#: apps/music/src/pages.rs:583
-msgid "Remove from Playlist"
-msgstr "재생 목록에서 제거"
-
-#: apps/music/src/pages.rs:589
-msgid "Remove from Queue"
-msgstr "대기열에서 제거"
-
-#: apps/music/src/pages.rs:599 apps/music/src/pages.rs:601
-msgid "More"
-msgstr "더 보기"
-
-#: apps/music/src/pages.rs:695 apps/music/src/shortcuts.rs:14
-#: apps/music/src/ui.rs:1794 apps/music/src/ui.rs:1798
+#: apps/music/src/pages.rs:1147 apps/music/src/pages.rs:1475
+#: apps/music/src/shortcuts.rs:14 apps/music/src/ui.rs:2595
+#: apps/music/src/ui.rs:2599
 msgid "Shuffle"
 msgstr "무작위 재생"
 
-#: apps/music/src/pages.rs:765
+#: apps/music/src/pages.rs:1255
 msgid "Disc {disc}"
 msgstr "디스크 {disc}"
 
-#: apps/music/src/pages.rs:941 apps/music/src/pages.rs:944
-#: apps/music/src/pages.rs:1509
-msgid "Rename Playlist"
-msgstr "재생 목록 이름 바꾸기"
+#: apps/music/src/pages.rs:1524
+msgid "_Rename…"
+msgstr "이름 바꾸기(_R)…"
 
-#: apps/music/src/pages.rs:947 apps/music/src/pages.rs:950
-msgid "Delete Playlist"
-msgstr "재생 목록 삭제"
+#: apps/music/src/pages.rs:1528
+msgid "_Delete…"
+msgstr "삭제(_D)…"
 
-#: apps/music/src/pages.rs:965 apps/music/src/pages.rs:968
-msgid "Export Playlist…"
-msgstr "재생 목록 내보내기…"
+#: apps/music/src/pages.rs:1534 apps/music/src/pages.rs:1536
+msgid "Playlist Menu"
+msgstr "재생 목록 메뉴"
 
-#: apps/music/src/pages.rs:983
+#: apps/music/src/pages.rs:1593
 msgid "No Songs"
 msgstr "노래 없음"
 
-#: apps/music/src/pages.rs:986
+#: apps/music/src/pages.rs:1596
 msgid "Add songs with “Add to Playlist…” in a song’s menu."
 msgstr "노래 메뉴의 “재생 목록에 추가…”로 노래를 추가하십시오."
 
-#: apps/music/src/pages.rs:988
+#: apps/music/src/pages.rs:1598
 msgid "Mark songs as favorites with the star button."
 msgstr "별표 단추로 노래를 즐겨찾기로 표시하십시오."
 
-#: apps/music/src/pages.rs:990
+#: apps/music/src/pages.rs:1600
 msgid "Songs will appear here as you listen."
 msgstr "들은 노래가 여기에 나타납니다."
 
-#: apps/music/src/pages.rs:1051
-msgid "Queue"
-msgstr "대기열"
+#. Translators: the title of a page with every song matching a search.
+#: apps/music/src/pages.rs:1790
+msgid "Songs Matching “{query}”"
+msgstr "“{query}”와(과) 일치하는 노래"
 
-#: apps/music/src/pages.rs:1101
-msgid "Nothing Playing"
-msgstr "재생 중인 항목 없음"
-
-#: apps/music/src/pages.rs:1241
+#: apps/music/src/pages.rs:1810
 msgid "Cannot save playlist: {e}"
 msgstr "재생 목록을 저장할 수 없습니다: {e}"
 
-#: apps/music/src/pages.rs:1255
+#: apps/music/src/pages.rs:1824
 msgid "M3U Playlist"
 msgstr "M3U 재생 목록"
 
-#: apps/music/src/pages.rs:1256
+#: apps/music/src/pages.rs:1825
 msgid "XSPF Playlist"
 msgstr "XSPF 재생 목록"
 
-#: apps/music/src/pages.rs:1257
+#: apps/music/src/pages.rs:1826
 msgid "PLS Playlist"
 msgstr "PLS 재생 목록"
 
-#: apps/music/src/pages.rs:1287
+#: apps/music/src/pages.rs:1856
 msgid "Import Playlist"
 msgstr "재생 목록 가져오기"
 
-#: apps/music/src/pages.rs:1311
+#: apps/music/src/pages.rs:1880
 msgid "Cannot read playlist: {e}"
 msgstr "재생 목록을 읽을 수 없습니다: {e}"
 
-#: apps/music/src/pages.rs:1314
+#: apps/music/src/pages.rs:1883
 msgid "No songs from this playlist are in your library"
 msgstr "이 재생 목록의 노래 중 보관함에 있는 노래가 없습니다"
 
-#: apps/music/src/pages.rs:1317
+#: apps/music/src/pages.rs:1886
 msgid "Imported “{}”"
 msgstr "“{}”을(를) 가져왔습니다"
 
-#: apps/music/src/pages.rs:1332
+#: apps/music/src/pages.rs:1901
 msgid "the LocalSearch index is not available"
 msgstr "LocalSearch 색인을 사용할 수 없습니다"
 
-#: apps/music/src/pages.rs:1344
+#: apps/music/src/pages.rs:1913
 msgid "Cannot import: {e}"
 msgstr "가져올 수 없습니다: {e}"
 
-#: apps/music/src/pages.rs:1369
+#: apps/music/src/pages.rs:1938
 msgid "No new playlists with songs from your library were found"
 msgstr "보관함의 노래가 들어 있는 새 재생 목록을 찾지 못했습니다"
 
-#: apps/music/src/pages.rs:1370
+#: apps/music/src/pages.rs:1939
 msgid "Imported {n} playlist"
 msgid_plural "Imported {n} playlists"
 msgstr[0] "재생 목록 {n}개를 가져왔습니다"
 
-#: apps/music/src/pages.rs:1471
+#: apps/music/src/pages.rs:2038
 msgid "Export Playlist"
 msgstr "재생 목록 내보내기"
 
-#: apps/music/src/pages.rs:1486
+#: apps/music/src/pages.rs:2053
 msgid "Playlist exported"
 msgstr "재생 목록을 내보냈습니다"
 
-#: apps/music/src/pages.rs:1489
+#: apps/music/src/pages.rs:2056
 msgid "Cannot export playlist: {e}"
 msgstr "재생 목록을 내보낼 수 없습니다: {e}"
 
-#: apps/music/src/pages.rs:1511
+#: apps/music/src/pages.rs:2076
+msgid "Rename Playlist"
+msgstr "재생 목록 이름 바꾸기"
+
+#: apps/music/src/pages.rs:2078
 msgid "New Playlist"
 msgstr "새 재생 목록"
 
-#: apps/music/src/pages.rs:1516 apps/music/src/pages.rs:1520
+#: apps/music/src/pages.rs:2083 apps/music/src/pages.rs:2087
 msgid "Playlist Name"
 msgstr "재생 목록 이름"
 
-#: apps/music/src/pages.rs:1577 apps/music/src/pages.rs:1644
+#: apps/music/src/pages.rs:2144 apps/music/src/pages.rs:2216
 msgid "Added to “{}”"
 msgstr "“{}”에 추가했습니다"
 
-#: apps/music/src/pages.rs:1587
+#: apps/music/src/pages.rs:2159
 msgid "Add to Playlist"
 msgstr "재생 목록에 추가"
 
-#: apps/music/src/pages.rs:1676
+#: apps/music/src/pages.rs:2165 apps/music/src/ui.rs:484
+#: apps/music/src/ui.rs:488
+msgid "New Playlist…"
+msgstr "새 재생 목록…"
+
+#: apps/music/src/pages.rs:2271
 msgid "Delete Playlist?"
 msgstr "재생 목록을 삭제하시겠습니까?"
 
-#: apps/music/src/pages.rs:1677
+#: apps/music/src/pages.rs:2272
 msgid "“{name}” will be permanently deleted. The songs stay in your library."
 msgstr "“{name}”을(를) 완전히 삭제합니다. 노래는 보관함에 남아 있습니다."
 
-#: apps/music/src/pages.rs:1691
+#: apps/music/src/pages.rs:2286
 msgid "Cannot delete playlist: {e}"
 msgstr "재생 목록을 삭제할 수 없습니다: {e}"
 
-#: apps/music/src/pages.rs:1707
+#: apps/music/src/pages.rs:2302
 msgid ""
 "Music in these folders appears in your library. Folders indexed by "
 "LocalSearch are read from its index."
@@ -10034,52 +10211,55 @@ msgstr ""
 "이 폴더의 음악이 보관함에 나타납니다. LocalSearch가 색인한 폴더는 색인에서 읽"
 "습니다."
 
-#: apps/music/src/pages.rs:1709
+#: apps/music/src/pages.rs:2304
 msgid "Music in these folders appears in your library"
 msgstr "이 폴더의 음악이 보관함에 나타납니다"
 
-#: apps/music/src/pages.rs:1712
+#: apps/music/src/pages.rs:2307
 msgid "Library Folders"
 msgstr "보관함 폴더"
 
-#: apps/music/src/pages.rs:1725
+#: apps/music/src/pages.rs:2320
 msgid "Music folder"
 msgstr "음악 폴더"
 
-#: apps/music/src/pages.rs:1736 apps/music/src/pages.rs:1740
+#: apps/music/src/pages.rs:2331 apps/music/src/pages.rs:2335
 msgid "Remove Folder"
 msgstr "폴더 제거"
 
-#: apps/music/src/pages.rs:1764
+#: apps/music/src/pages.rs:2359
 msgid "Inhibit Suspend"
 msgstr "절전 방지"
 
-#: apps/music/src/pages.rs:1765
+#: apps/music/src/pages.rs:2360
 msgid "Keep the computer awake while music plays"
 msgstr "음악을 재생하는 동안 컴퓨터를 깨어 있게 합니다"
 
-#: apps/music/src/pages.rs:1780
+#: apps/music/src/pages.rs:2375
 msgid "ReplayGain"
 msgstr "ReplayGain"
 
-#: apps/music/src/pages.rs:1781
+#: apps/music/src/pages.rs:2376
 msgid "Even out loudness using the volume tags of songs or albums"
 msgstr "노래나 앨범의 음량 태그를 사용하여 소리 크기를 고르게 합니다"
 
-#: apps/music/src/pages.rs:1801 apps/settings/src/panels.rs:156
+#: apps/music/src/pages.rs:2396 apps/settings/src/panels.rs:156
 #: apps/settings/src/permissions.rs:38 apps/settings/src/ui/apps.rs:419
 #: apps/web/src/permissions.rs:25
 msgid "Notifications"
 msgstr "알림"
 
-#: apps/music/src/pages.rs:1802
+#: apps/music/src/pages.rs:2397
 msgid "Announce new songs while the window is in the background"
 msgstr "창이 백그라운드에 있을 때 새 노래를 알립니다"
 
-#: apps/music/src/pages.rs:1828
-msgid "{n} song"
-msgid_plural "{n} songs"
-msgstr[0] "노래 {n}곡"
+#: apps/music/src/pages.rs:2411
+msgid "Background Playback"
+msgstr "백그라운드 재생"
+
+#: apps/music/src/pages.rs:2412
+msgid "Keep playing when the window is closed"
+msgstr "창을 닫아도 계속 재생합니다"
 
 #: apps/music/src/player.rs:55
 msgctxt "ReplayGain mode"
@@ -10091,21 +10271,39 @@ msgctxt "ReplayGain mode"
 msgid "Album"
 msgstr "앨범"
 
-#: apps/music/src/playlist.rs:451
+#: apps/music/src/playlist.rs:462
 msgid "Favorite Songs"
 msgstr "즐겨찾는 노래"
 
-#: apps/music/src/playlist.rs:452
+#: apps/music/src/playlist.rs:463
 msgid "Most Played"
 msgstr "가장 많이 재생한 곡"
 
-#: apps/music/src/playlist.rs:453
+#: apps/music/src/playlist.rs:464
 msgid "Recently Played"
 msgstr "최근 재생한 곡"
 
-#: apps/music/src/playlist.rs:454
+#: apps/music/src/playlist.rs:465
 msgid "Recently Added"
 msgstr "최근 추가한 곡"
+
+#: apps/music/src/rows.rs:106 apps/music/src/rows.rs:120
+#: apps/settings/src/ui/input.rs:343
+msgid "Move Down"
+msgstr "아래로 이동"
+
+#: apps/music/src/rows.rs:106 apps/music/src/rows.rs:120
+#: apps/settings/src/ui/input.rs:342
+msgid "Move Up"
+msgstr "위로 이동"
+
+#: apps/music/src/rows.rs:114
+msgid "Remove from Playlist"
+msgstr "재생 목록에서 제거"
+
+#: apps/music/src/rows.rs:127
+msgid "Remove from Queue"
+msgstr "대기열에서 제거"
 
 #: apps/music/src/shortcuts.rs:11
 msgid "Previous Song"
@@ -10119,11 +10317,31 @@ msgstr "다음 노래"
 msgid "Cycle Repeat Mode"
 msgstr "반복 모드 전환"
 
-#: apps/music/src/shortcuts.rs:25
+#: apps/music/src/shortcuts.rs:15
+msgid "Seek Backward"
+msgstr "뒤로 이동"
+
+#: apps/music/src/shortcuts.rs:16
+msgid "Seek Forward"
+msgstr "앞으로 이동"
+
+#: apps/music/src/shortcuts.rs:17 apps/video-player/src/ui.rs:160
+msgid "Volume Up"
+msgstr "음량 크게"
+
+#: apps/music/src/shortcuts.rs:18 apps/video-player/src/ui.rs:161
+msgid "Volume Down"
+msgstr "음량 작게"
+
+#: apps/music/src/shortcuts.rs:20
+msgid "Favorite Song"
+msgstr "노래 즐겨찾기"
+
+#: apps/music/src/shortcuts.rs:33
 msgid "Go Back"
 msgstr "뒤로 가기"
 
-#: apps/music/src/shortcuts.rs:31
+#: apps/music/src/shortcuts.rs:39
 msgid "Rescan Library"
 msgstr "보관함 다시 검사"
 
@@ -10135,94 +10353,115 @@ msgstr "잘못된 열 개수 {n}"
 msgid "Play and organize your music collection"
 msgstr "음악 모음을 재생하고 정리합니다"
 
-#: apps/music/src/ui.rs:296
+#: apps/music/src/ui.rs:275 apps/music/src/ui.rs:2308
+msgid "Now playing"
+msgstr "지금 재생 중"
+
+#: apps/music/src/ui.rs:455
+msgid "_New Playlist…"
+msgstr "새 재생 목록(_N)…"
+
+#: apps/music/src/ui.rs:456
 msgid "_Rescan Library"
 msgstr "보관함 다시 검사(_R)"
 
-#: apps/music/src/ui.rs:297
+#: apps/music/src/ui.rs:457
 msgid "_Import Playlist…"
 msgstr "재생 목록 가져오기(_I)…"
 
-#: apps/music/src/ui.rs:299
+#: apps/music/src/ui.rs:459
 msgid "Import Playlists from _Search Index"
 msgstr "검색 색인에서 재생 목록 가져오기(_S)"
 
-#: apps/music/src/ui.rs:311
+#: apps/music/src/ui.rs:471
 msgid "_About Music"
 msgstr "음악 정보(_A)"
 
-#: apps/music/src/ui.rs:323
+#: apps/music/src/ui.rs:492 apps/music/src/ui.rs:495
+msgid "Select"
+msgstr "선택"
+
+#: apps/music/src/ui.rs:536
 msgid "Search songs, albums and artists"
 msgstr "노래, 앨범, 아티스트 검색"
 
-#: apps/music/src/ui.rs:351
+#: apps/music/src/ui.rs:571
 msgid "No Music Found"
 msgstr "음악을 찾을 수 없습니다"
 
-#: apps/music/src/ui.rs:354
+#: apps/music/src/ui.rs:574 apps/music/src/ui.rs:585 apps/music/src/ui.rs:587
 msgid "Scanning Library…"
 msgstr "보관함 검사 중…"
 
-#: apps/music/src/ui.rs:491
+#: apps/music/src/ui.rs:733
 msgid "Playback is unavailable (GStreamer could not be initialised)"
 msgstr "재생할 수 없습니다(GStreamer를 초기화할 수 없습니다)"
 
-#: apps/music/src/ui.rs:645
+#: apps/music/src/ui.rs:932
+msgid "{n} song found"
+msgid_plural "{n} songs found"
+msgstr[0] "노래 {n}곡 찾음"
+
+#: apps/music/src/ui.rs:954
 msgid "Library updated: {n} song"
 msgid_plural "Library updated: {n} songs"
 msgstr[0] "라이브러리 업데이트됨: {n}곡"
 
-#: apps/music/src/ui.rs:939
-msgid "Cannot play “{name}”"
-msgstr "“{name}”을(를) 재생할 수 없습니다"
+#: apps/music/src/ui.rs:965
+msgid "No changes found"
+msgstr "변경 사항 없음"
 
-#: apps/music/src/ui.rs:1003
-msgid "Playing music"
-msgstr "음악 재생 중"
-
-#: apps/music/src/ui.rs:1076
-msgid "Now playing: {}"
-msgstr "지금 재생 중: {}"
-
-#: apps/music/src/ui.rs:1078
-msgid "Now playing: {title} by {artist}"
-msgstr "지금 재생 중: {artist}의 {title}"
-
-#: apps/music/src/ui.rs:1161
-msgid "Repeat: Off"
-msgstr "반복: 끔"
-
-#: apps/music/src/ui.rs:1162
-msgid "Repeat: All"
-msgstr "반복: 전체"
-
-#: apps/music/src/ui.rs:1163
-msgid "Repeat: Song"
-msgstr "반복: 한 곡"
-
-#: apps/music/src/ui.rs:1412
-msgid "Added to queue"
-msgstr "대기열에 추가했습니다"
-
-#: apps/music/src/ui.rs:1423
+#: apps/music/src/ui.rs:1111
 msgid "Will play next"
 msgstr "다음에 재생합니다"
 
-#: apps/music/src/ui.rs:1538
+#: apps/music/src/ui.rs:1113
+msgid "Added to queue"
+msgstr "대기열에 추가했습니다"
+
+#: apps/music/src/ui.rs:1311
+msgid "Cannot play “{name}”"
+msgstr "“{name}”을(를) 재생할 수 없습니다"
+
+#: apps/music/src/ui.rs:1396
+msgid "Playing music"
+msgstr "음악 재생 중"
+
+#: apps/music/src/ui.rs:1482
+msgid "Now playing: {}"
+msgstr "지금 재생 중: {}"
+
+#: apps/music/src/ui.rs:1484
+msgid "Now playing: {title} by {artist}"
+msgstr "지금 재생 중: {artist}의 {title}"
+
+#: apps/music/src/ui.rs:1565
+msgid "Repeat: Off"
+msgstr "반복: 끔"
+
+#: apps/music/src/ui.rs:1566
+msgid "Repeat: All"
+msgstr "반복: 전체"
+
+#: apps/music/src/ui.rs:1567
+msgid "Repeat: Song"
+msgstr "반복: 한 곡"
+
+#: apps/music/src/ui.rs:2180
 msgid "Music files in {} will appear here."
 msgstr "{}의 음악 파일이 여기에 나타납니다."
 
-#: apps/music/src/ui.rs:1587
+#: apps/music/src/ui.rs:2273
 msgid "Add Music Folder"
 msgstr "음악 폴더 추가"
 
-#: apps/music/src/ui.rs:1622
-msgid "Now playing"
-msgstr "지금 재생 중"
-
-#: apps/music/src/ui.rs:1746 apps/music/src/ui.rs:1749
+#: apps/music/src/ui.rs:2547 apps/music/src/ui.rs:2550
 msgid "Show Now Playing"
 msgstr "지금 재생 중 표시"
+
+#: apps/music/src/ui.rs:2656 apps/music/src/ui.rs:2662
+msgid "More Controls"
+msgstr "추가 컨트롤"
 
 #: apps/screenshot/data/org.helixdesktop.Screenshot.desktop
 msgid "snapshot;capture;print;screenshot;area;window;"
@@ -11021,10 +11260,6 @@ msgstr "옆 오른쪽"
 #: apps/settings/src/sound.rs:720
 msgid "Subwoofer"
 msgstr "서브우퍼"
-
-#: apps/settings/src/sound.rs:721
-msgid "Mono"
-msgstr "모노"
 
 #. Translators: the OS type in About, "64-bit".
 #: apps/settings/src/ui/about.rs:40
@@ -12364,14 +12599,6 @@ msgstr "입력 소스 없음"
 #: apps/settings/src/ui/input.rs:326
 msgid "The keyboard uses the system default layout"
 msgstr "키보드에 시스템 기본 배치를 사용합니다"
-
-#: apps/settings/src/ui/input.rs:342
-msgid "Move Up"
-msgstr "위로 이동"
-
-#: apps/settings/src/ui/input.rs:343
-msgid "Move Down"
-msgstr "아래로 이동"
 
 #: apps/settings/src/ui/input.rs:392
 msgid "Input Sources"
@@ -15231,14 +15458,6 @@ msgstr "이전 프레임(일시 정지 시)"
 msgid "Next Frame (paused)"
 msgstr "다음 프레임(일시 정지 시)"
 
-#: apps/video-player/src/ui.rs:160
-msgid "Volume Up"
-msgstr "음량 크게"
-
-#: apps/video-player/src/ui.rs:161
-msgid "Volume Down"
-msgstr "음량 작게"
-
 #: apps/video-player/src/ui.rs:176
 msgid "Take Screenshot"
 msgstr "스크린샷 찍기"
@@ -16769,10 +16988,6 @@ msgstr "페이지에서 찾기"
 #: apps/web/src/window.rs:656
 msgid "Suggestions"
 msgstr "제안"
-
-#: apps/web/src/window.rs:683
-msgid "_Name"
-msgstr "이름(_N)"
 
 #: apps/web/src/window.rs:687
 msgid "_Tags (comma separated)"

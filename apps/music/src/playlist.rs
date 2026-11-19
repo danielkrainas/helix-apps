@@ -355,6 +355,17 @@ pub fn save(pl: &Playlist, info: impl Fn(&Path) -> Option<EntryInfo>) -> std::io
     export(pl, &pl.file, info)
 }
 
+/// Moves entry `from` to position `to` (positions in the list before
+/// the move); false when either is out of range.
+pub fn move_entry<T>(entries: &mut Vec<T>, from: usize, to: usize) -> bool {
+    if from >= entries.len() || to >= entries.len() {
+        return false;
+    }
+    let e = entries.remove(from);
+    entries.insert(to, e);
+    true
+}
+
 pub fn write_atomic(path: &Path, data: &[u8]) -> std::io::Result<()> {
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir)?;
@@ -509,6 +520,17 @@ impl Smart {
 mod tests {
     use super::*;
     use crate::model::{track, Library};
+
+    #[test]
+    fn moving_entries() {
+        let mut v = vec!["a", "b", "c", "d"];
+        assert!(move_entry(&mut v, 0, 2));
+        assert_eq!(v, ["b", "c", "a", "d"]);
+        assert!(move_entry(&mut v, 3, 0));
+        assert_eq!(v, ["d", "b", "c", "a"]);
+        assert!(!move_entry(&mut v, 4, 0));
+        assert_eq!(v, ["d", "b", "c", "a"]);
+    }
 
     #[test]
     fn m3u_round_trip() {

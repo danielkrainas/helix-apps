@@ -1,13 +1,17 @@
 //! Helix Music.
 
+mod details;
 mod gnome_import;
 mod index;
+mod lyrics;
 mod model;
 mod mpris;
+mod nowplaying;
 mod pages;
 mod player;
 mod playlist;
 mod queue;
+mod rows;
 mod shortcuts;
 mod tracker;
 mod ui;

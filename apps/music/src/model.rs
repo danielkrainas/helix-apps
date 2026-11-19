@@ -90,12 +90,30 @@ pub struct Artist {
     pub albums: Vec<usize>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Genre {
+    pub name: String,
+    /// Track indices in album order.
+    pub tracks: Vec<usize>,
+    /// Albums with at least one of those tracks, in library order.
+    pub albums: Vec<usize>,
+}
+
+/// The genres a genre tag names: several may be separated by `;`.
+pub fn split_genres(tag: &str) -> impl Iterator<Item = &str> {
+    tag.split([';', '\0'])
+        .map(str::trim)
+        .filter(|g| !g.is_empty())
+}
+
 /// The whole library grouped for display.
 #[derive(Default)]
 pub struct Library {
     pub tracks: Vec<Track>,
     pub albums: Vec<Album>,
     pub artists: Vec<Artist>,
+    /// Sorted by name.
+    pub genres: Vec<Genre>,
     by_path: HashMap<PathBuf, usize>,
     track_album: Vec<usize>,
     folded: Vec<String>,
@@ -257,6 +275,31 @@ impl Library {
             .collect();
         artists.sort_by_key(|a| sort_key(&a.name));
 
+        // Genres, grouped case- and accent-insensitively; the first
+        // spelling met is shown.
+        let mut genre_map: BTreeMap<String, Genre> = BTreeMap::new();
+        for (ai, a) in albums.iter().enumerate() {
+            for &t in &a.tracks {
+                let Some(tag) = tracks[t].genre.as_deref() else {
+                    continue;
+                };
+                for name in split_genres(tag) {
+                    let g = genre_map.entry(sort_key(name)).or_insert_with(|| Genre {
+                        name: name.to_string(),
+                        tracks: Vec::new(),
+                        albums: Vec::new(),
+                    });
+                    if g.tracks.last() != Some(&t) {
+                        g.tracks.push(t);
+                    }
+                    if g.albums.last() != Some(&ai) {
+                        g.albums.push(ai);
+                    }
+                }
+            }
+        }
+        let genres: Vec<Genre> = genre_map.into_values().collect();
+
         let by_path = tracks
             .iter()
             .enumerate()
@@ -286,6 +329,7 @@ impl Library {
             tracks,
             albums,
             artists,
+            genres,
             by_path,
             track_album,
             folded,
@@ -307,7 +351,6 @@ impl Library {
             .filter(|_| !self.albums.is_empty())
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
     pub fn artist_index(&self, name: &str) -> Option<usize> {
         let f = fold(name);
         self.artists.iter().position(|a| fold(&a.name) == f)
@@ -361,6 +404,148 @@ impl Library {
             artists,
             tracks,
         }
+    }
+}
+
+/// How the Albums view is sorted.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum AlbumSort {
+    #[default]
+    Title,
+    Artist,
+    /// Newest first; undated albums last.
+    Year,
+    /// Most recently added first.
+    Added,
+    /// Most played first.
+    Plays,
+}
+
+impl AlbumSort {
+    pub const ALL: [AlbumSort; 5] = [
+        AlbumSort::Title,
+        AlbumSort::Artist,
+        AlbumSort::Year,
+        AlbumSort::Added,
+        AlbumSort::Plays,
+    ];
+
+    pub fn nick(self) -> &'static str {
+        match self {
+            AlbumSort::Title => "title",
+            AlbumSort::Artist => "artist",
+            AlbumSort::Year => "year",
+            AlbumSort::Added => "added",
+            AlbumSort::Plays => "plays",
+        }
+    }
+
+    pub fn from_nick(s: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|a| a.nick() == s)
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            AlbumSort::Title => tr("_Title"),
+            AlbumSort::Artist => tr("_Artist"),
+            AlbumSort::Year => tr("_Year"),
+            AlbumSort::Added => tr("Date _Added"),
+            AlbumSort::Plays => tr("_Most Played"),
+        }
+    }
+}
+
+/// How the Artists view is sorted.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ArtistSort {
+    #[default]
+    Name,
+    /// Most albums first.
+    Albums,
+    /// Most played first.
+    Plays,
+}
+
+impl ArtistSort {
+    pub const ALL: [ArtistSort; 3] = [ArtistSort::Name, ArtistSort::Albums, ArtistSort::Plays];
+
+    pub fn nick(self) -> &'static str {
+        match self {
+            ArtistSort::Name => "name",
+            ArtistSort::Albums => "albums",
+            ArtistSort::Plays => "plays",
+        }
+    }
+
+    pub fn from_nick(s: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|a| a.nick() == s)
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            ArtistSort::Name => tr("_Name"),
+            ArtistSort::Albums => tr("Most _Albums"),
+            ArtistSort::Plays => tr("_Most Played"),
+        }
+    }
+}
+
+impl Library {
+    /// Album indices in `sort` order; `plays` gives a song's play count.
+    /// Ties keep the library order (title, then artist).
+    pub fn album_order(&self, sort: AlbumSort, plays: impl Fn(&Path) -> u32) -> Vec<usize> {
+        let mut order: Vec<usize> = (0..self.albums.len()).collect();
+        let sum_plays = |a: &Album| -> u64 {
+            a.tracks
+                .iter()
+                .map(|&t| plays(&self.tracks[t].path) as u64)
+                .sum()
+        };
+        match sort {
+            AlbumSort::Title => {}
+            AlbumSort::Artist => order.sort_by_cached_key(|&a| {
+                let al = &self.albums[a];
+                (sort_key(&al.artist), al.year.unwrap_or(u32::MAX))
+            }),
+            AlbumSort::Year => order.sort_by_key(|&a| {
+                std::cmp::Reverse(self.albums[a].year.map_or(0, |y| y as i64 + 1))
+            }),
+            AlbumSort::Added => order.sort_by_key(|&a| {
+                let added = self.albums[a].tracks.iter().map(|&t| self.tracks[t].added);
+                std::cmp::Reverse(added.max().unwrap_or(0))
+            }),
+            AlbumSort::Plays => {
+                let p: Vec<u64> = self.albums.iter().map(sum_plays).collect();
+                order.sort_by_key(|&a| std::cmp::Reverse(p[a]));
+            }
+        }
+        order
+    }
+
+    /// Artist indices in `sort` order (ties: by name).
+    pub fn artist_order(&self, sort: ArtistSort, plays: impl Fn(&Path) -> u32) -> Vec<usize> {
+        let mut order: Vec<usize> = (0..self.artists.len()).collect();
+        match sort {
+            ArtistSort::Name => {}
+            ArtistSort::Albums => {
+                order.sort_by_key(|&a| std::cmp::Reverse(self.artists[a].albums.len()))
+            }
+            ArtistSort::Plays => {
+                let p: Vec<u64> = self
+                    .artists
+                    .iter()
+                    .map(|ar| {
+                        ar.albums
+                            .iter()
+                            .flat_map(|&al| self.artist_tracks_in_album(&ar.name, al))
+                            .map(|t| plays(&self.tracks[t].path) as u64)
+                            .sum()
+                    })
+                    .collect();
+                order.sort_by_key(|&a| std::cmp::Reverse(p[a]));
+            }
+        }
+        order
     }
 }
 
@@ -569,6 +754,100 @@ mod tests {
         assert!(r.albums.is_empty());
         assert_eq!(lib.search("electronic").tracks.len(), 1);
         assert!(lib.search("  ").is_empty());
+    }
+
+    #[test]
+    fn genres_group_and_split() {
+        let g = |p: &str, album: &str, genre: Option<&str>| {
+            with(track(p, p, Some("A"), Some(album)), |t| {
+                t.genre = genre.map(Into::into)
+            })
+        };
+        let lib = Library::new(vec![
+            g("/m/x/1", "X", Some("Rock")),
+            g("/m/x/2", "X", Some("rock; Pop")),
+            g("/m/y/1", "Y", Some("Électro")),
+            g("/m/y/2", "Y", Some("electro")),
+            g("/m/z/1", "Z", None),
+        ]);
+        let names: Vec<&str> = lib.genres.iter().map(|g| g.name.as_str()).collect();
+        assert_eq!(names, ["Électro", "Pop", "Rock"]);
+        let rock = &lib.genres[2];
+        assert_eq!(rock.tracks.len(), 2);
+        assert_eq!(rock.albums.len(), 1);
+        assert_eq!(lib.genres[0].tracks.len(), 2);
+        assert_eq!(split_genres(" a ;; b ").collect::<Vec<_>>(), ["a", "b"]);
+    }
+
+    #[test]
+    fn album_and_artist_sorting() {
+        let mk = |p: &str, artist: &str, album: &str, year: Option<u32>, added: i64| {
+            with(track(p, p, Some(artist), Some(album)), |t| {
+                t.year = year;
+                t.added = added;
+            })
+        };
+        let lib = Library::new(vec![
+            mk("/m/a/1", "Zed", "Alpha", Some(1990), 10),
+            mk("/m/b/1", "Amy", "Beta", None, 30),
+            mk("/m/c/1", "Amy", "Gamma", Some(2005), 20),
+            mk("/m/c/2", "Amy", "Gamma", Some(2005), 5),
+        ]);
+        let titles = |order: Vec<usize>| -> Vec<String> {
+            order
+                .into_iter()
+                .map(|a| lib.albums[a].title.clone())
+                .collect()
+        };
+        let none = |_: &Path| 0;
+        assert_eq!(
+            titles(lib.album_order(AlbumSort::Title, none)),
+            ["Alpha", "Beta", "Gamma"]
+        );
+        // By artist, then year (undated last).
+        assert_eq!(
+            titles(lib.album_order(AlbumSort::Artist, none)),
+            ["Gamma", "Beta", "Alpha"]
+        );
+        assert_eq!(
+            titles(lib.album_order(AlbumSort::Year, none)),
+            ["Gamma", "Alpha", "Beta"]
+        );
+        // Newest song decides an album's date added.
+        assert_eq!(
+            titles(lib.album_order(AlbumSort::Added, none)),
+            ["Beta", "Gamma", "Alpha"]
+        );
+        let plays = |p: &Path| if p.starts_with("/m/a") { 5 } else { 1 };
+        assert_eq!(
+            titles(lib.album_order(AlbumSort::Plays, plays)),
+            ["Alpha", "Gamma", "Beta"]
+        );
+
+        let names = |order: Vec<usize>| -> Vec<String> {
+            order
+                .into_iter()
+                .map(|a| lib.artists[a].name.clone())
+                .collect()
+        };
+        assert_eq!(
+            names(lib.artist_order(ArtistSort::Name, none)),
+            ["Amy", "Zed"]
+        );
+        assert_eq!(
+            names(lib.artist_order(ArtistSort::Albums, none)),
+            ["Amy", "Zed"]
+        );
+        assert_eq!(
+            names(lib.artist_order(ArtistSort::Plays, plays)),
+            ["Zed", "Amy"]
+        );
+        for s in AlbumSort::ALL {
+            assert_eq!(AlbumSort::from_nick(s.nick()), Some(s));
+        }
+        for s in ArtistSort::ALL {
+            assert_eq!(ArtistSort::from_nick(s.nick()), Some(s));
+        }
     }
 
     #[test]

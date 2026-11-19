@@ -70,15 +70,46 @@ pub(crate) const ACCELS: &[(&str, &[&str])] = &[
     ("win.view::artists", &["<Alt>2"]),
     ("win.view::songs", &["<Alt>3"]),
     ("win.view::playlists", &["<Alt>4"]),
+    ("win.view::genres", &["<Alt>5"]),
+    ("win.toggle-favorite", &["<Control>d"]),
+    ("win.mute", &["<Control>m"]),
+    ("win.now-playing", &["<Control>l"]),
     ("win.rescan", &["F5"]),
     ("win.preferences", &["<Control>comma"]),
     ("win.show-help-overlay", &["<Control>question"]),
 ];
 
+/// Shortcuts that run only when the focused widget does not use the key
+/// (Ctrl+arrows move by words in the search entry).
+pub(crate) const BUBBLE_ACCELS: &[(&str, &[&str])] = &[
+    ("win.seek-backward", &["<Control>Left"]),
+    ("win.seek-forward", &["<Control>Right"]),
+    ("win.volume-up", &["<Control>Up"]),
+    ("win.volume-down", &["<Control>Down"]),
+];
+
+/// Ctrl+Left / Ctrl+Right seek by this much.
+const SEEK_STEP_MS: i64 = 10_000;
+const VOLUME_STEP: f64 = 0.05;
+
 fn load_css() {
     helix_app_common::style::add_css(
-        ".hm-cover { border-radius: 8px; }
-         .hm-tile { padding: 6px; }
+        ".hm-cover { border-radius: 8px; box-shadow: 0 1px 4px alpha(black, 0.18); }
+         .hm-cover.hm-cover-small { border-radius: 6px; box-shadow: none; }
+         .hm-cover-empty { background-color: alpha(@window_fg_color, 0.07);
+             color: alpha(@window_fg_color, 0.4); }
+         gridview.hm-albums { padding: 12px 6px 24px; }
+         flowbox.hm-album-tiles > flowboxchild { padding: 6px; border-radius: 12px; }
+         button.hm-link { padding: 2px 6px; margin-left: -6px; min-height: 0; }
+         .hm-drop-target { background-color: alpha(@accent_bg_color, 0.2); }
+         .hm-queue-bar { padding: 6px 6px 6px 12px; }
+         listview.hm-track-list { background: none; }
+         button.hm-np-link { padding: 2px 8px; min-height: 0; }
+         button.hm-np-link:disabled { color: inherit; opacity: 1; }
+         .hm-np-artist { font-weight: bold; }
+         .hm-lyrics { margin: 12px 0; }
+         .hm-lyric-current { color: @accent_color; }
+         gridview.hm-albums > child { padding: 12px 6px; border-radius: 12px; }
          .hm-playerbar { padding: 6px 12px; border-top: 1px solid alpha(currentColor, 0.15); }
          .hm-num { min-width: 2.5em; }
          .hm-disc { margin-top: 12px; }
@@ -118,6 +149,13 @@ pub struct AppState {
     pub notifications: bool,
     /// GNOME Music's favourites and playlists were imported (done once).
     pub gnome_music_imported: bool,
+    /// Keep playing with the window closed (Helix only; off like GNOME
+    /// Music).
+    pub background_playback: bool,
+    /// Albums view order (`model::AlbumSort` nick).
+    pub album_sort: String,
+    /// Artists view order (`model::ArtistSort` nick).
+    pub artist_sort: String,
 }
 
 impl Default for AppState {
@@ -129,11 +167,23 @@ impl Default for AppState {
             replaygain_mode: "album".into(),
             notifications: true,
             gnome_music_imported: false,
+            background_playback: false,
+            album_sort: "title".into(),
+            artist_sort: "name".into(),
         }
     }
 }
 
 const NOTIFICATION_ID: &str = "now-playing";
+
+/// `queue.json`: the queue and where the current song was.
+#[derive(Serialize, Deserialize, Default)]
+struct QueueFile {
+    #[serde(flatten)]
+    queue: crate::queue::Saved<PathBuf>,
+    #[serde(default)]
+    position_ms: u64,
+}
 
 /// "Artist — Album" for notifications.
 pub fn notification_body(t: &Track) -> String {
@@ -166,6 +216,8 @@ pub enum Live {
     Heart(glib::WeakRef<gtk::ToggleButton>),
     /// Play count.
     Plays(glib::WeakRef<gtk::Label>),
+    /// A list view row: "Now playing" as its description while it plays.
+    ItemDescription(glib::WeakRef<gtk::ListItem>),
 }
 
 /// A registered track widget, updated when the playing track, a favourite
@@ -190,6 +242,7 @@ impl RowHandle {
             Live::PlayingIcon(w) => w.upgrade().is_some(),
             Live::Heart(w) => w.upgrade().is_some(),
             Live::Plays(w) => w.upgrade().is_some(),
+            Live::ItemDescription(w) => w.upgrade().is_some(),
         }
     }
 
@@ -217,6 +270,12 @@ impl RowHandle {
                 }
                 None => return false,
             },
+            Live::ItemDescription(w) => match w.upgrade() {
+                Some(item) => {
+                    item.set_accessible_description(if playing { tr("Now playing") } else { "" })
+                }
+                None => return false,
+            },
         }
         true
     }
@@ -229,7 +288,7 @@ pub struct PlayerBar {
     info_box: gtk::Box,
     seek_box: gtk::Box,
     side_box: gtk::Box,
-    pub cover: gtk::Image,
+    pub cover: gtk::Overlay,
     pub title: gtk::Label,
     pub artist: gtk::Label,
     pub play: gtk::Button,
@@ -240,7 +299,9 @@ pub struct PlayerBar {
     pub scale: gtk::Scale,
     pub heart: gtk::ToggleButton,
     pub shuffle: gtk::ToggleButton,
-    pub repeat: gtk::Button,
+    pub repeat: gtk::ToggleButton,
+    /// Narrow windows: opens the controls that do not fit (`side_box`).
+    more: gtk::MenuButton,
     pub volume: gtk::Scale,
 }
 
@@ -257,14 +318,26 @@ pub struct App {
     pub stack: adw::ViewStack,
     pub main_stack: gtk::Stack,
     pub empty_page: adw::StatusPage,
+    /// Shown during the first scan, with a running count.
+    pub scanning_page: adw::StatusPage,
+    /// In the header while a later scan runs.
+    pub scan_spinner: adw::Spinner,
     pub search_bar: gtk::SearchBar,
     pub search_entry: gtk::SearchEntry,
     pub search_box: gtk::Box,
+    /// Header buttons for one view (by view name), shown while it is.
+    pub view_buttons: Vec<(&'static str, gtk::Widget)>,
     pub albums_model: gio::ListStore,
     pub songs_model: gio::ListStore,
     pub songs_sorted: gtk::SortListModel,
+    /// Songs selection mode: the header's Select button and the selection.
+    pub songs_select: gtk::ToggleButton,
+    pub songs_selection: gtk::MultiSelection,
     pub artists_list: gtk::ListBox,
+    /// Artist index of each Artists row.
+    pub artist_order: RefCell<Vec<usize>>,
     pub playlists_list: gtk::ListBox,
+    pub genres_list: gtk::ListBox,
     pub bar: PlayerBar,
 
     pub lib: RefCell<Rc<Library>>,
@@ -274,15 +347,20 @@ pub struct App {
     pub player: Option<Player>,
     pub mpris: Option<Mpris>,
     pub state: RefCell<AppState>,
-    pub textures: RefCell<HashMap<String, Option<gdk::Texture>>>,
+    pub textures: RefCell<HashMap<(String, i32), Option<gdk::Texture>>>,
     pub rows: RefCell<Vec<Rc<RowHandle>>>,
-    pub queue_view: RefCell<Option<glib::WeakRef<gtk::ListBox>>>,
+    /// The open Now Playing page's widgets.
+    pub now_playing: RefCell<Option<Rc<crate::nowplaying::NowPlaying>>>,
+    /// The queue in play order: `BoxedAnyObject`s of (item index, path).
+    pub queue_model: gio::ListStore,
     pub playlist_view: RefCell<Option<(glib::WeakRef<gtk::Box>, crate::pages::PlRef)>>,
 
     pub playing: Cell<bool>,
     pub scanning: Cell<bool>,
     pub scan_again: Cell<bool>,
     pub scanned_once: Cell<bool>,
+    /// The running scan was asked for with Rescan Library (toast when done).
+    pub user_rescan: Cell<bool>,
     pub monitors: RefCell<Vec<gio::FileMonitor>>,
     pub rescan_timer: RefCell<Option<glib::SourceId>>,
     pub inhibit_cookie: Cell<u32>,
@@ -294,6 +372,20 @@ pub struct App {
     pub counted: Cell<bool>,
     pub last_tick: Cell<Option<Instant>>,
     pub seeking: Cell<bool>,
+    /// Restored from the last run: the position to continue the current
+    /// song from when it is first played (shown meanwhile, "Paused").
+    pub resume_ms: Cell<Option<u64>>,
+    /// Seek here once the song just loaded has started.
+    pub pending_seek: Cell<Option<u64>>,
+    pub queue_save_timer: RefCell<Option<glib::SourceId>>,
+    /// Hidden window keeping the app alive for background playback.
+    pub background_hold: RefCell<Option<gio::ApplicationHoldGuard>>,
+    /// The window is closing for real (Quit), even with background playback.
+    pub quitting: Cell<bool>,
+    /// The volume before Mute (Ctrl+M), restored by the next Mute.
+    pub unmuted_volume: Cell<f64>,
+    /// Now Playing shows the lyrics (when the song has some).
+    pub show_lyrics: Cell<bool>,
     pub suppress_ui: Cell<bool>,
 }
 
@@ -302,8 +394,11 @@ impl App {
         helix_app_common::data_dir(DATA)
     }
 
+    /// Cached covers (see `index::COVER_SIZE`). Covers used to be cached
+    /// at 256 px in `covers/`; tracks whose cover is missing here are read
+    /// again on the next scan, and the old folder is then removed.
     pub fn covers_dir() -> PathBuf {
-        glib::user_cache_dir().join(DATA).join("covers")
+        glib::user_cache_dir().join(DATA).join("covers-512")
     }
 
     fn playlists_dir() -> PathBuf {
@@ -357,6 +452,7 @@ impl App {
         header.pack_start(&search_btn);
         let menu = gio::Menu::new();
         let s1 = gio::Menu::new();
+        s1.append(Some(tr("_New Playlist…")), Some("win.new-playlist"));
         s1.append(Some(tr("_Rescan Library")), Some("win.rescan"));
         s1.append(Some(tr("_Import Playlist…")), Some("win.import-playlist"));
         s1.append(
@@ -382,6 +478,59 @@ impl App {
             .build()
             .labelled(tr("Main Menu"));
         header.pack_end(&menu_btn);
+        // Buttons for one view, shown while it is visible.
+        let new_playlist_btn = gtk::Button::builder()
+            .icon_name("list-add-symbolic")
+            .tooltip_text(tr("New Playlist…"))
+            .action_name("win.new-playlist")
+            .visible(false)
+            .build()
+            .labelled(tr("New Playlist…"));
+        header.pack_end(&new_playlist_btn);
+        let songs_select = gtk::ToggleButton::builder()
+            .icon_name("selection-mode-symbolic")
+            .tooltip_text(tr("Select"))
+            .visible(false)
+            .build()
+            .labelled(tr("Select"));
+        header.pack_end(&songs_select);
+        let sort_button = |action: &str, items: Vec<(&str, &str)>| {
+            let menu = gio::Menu::new();
+            for (label, nick) in items {
+                let it = gio::MenuItem::new(Some(label), None);
+                it.set_action_and_target_value(Some(action), Some(&nick.to_variant()));
+                menu.append_item(&it);
+            }
+            let b = gtk::MenuButton::builder()
+                .icon_name("view-sort-descending-symbolic")
+                .menu_model(&menu)
+                .tooltip_text(tr("Sort"))
+                .visible(false)
+                .build()
+                .labelled(tr("Sort"));
+            header.pack_end(&b);
+            b.upcast::<gtk::Widget>()
+        };
+        let album_sort = sort_button(
+            "win.album-sort",
+            model::AlbumSort::ALL
+                .iter()
+                .map(|s| (s.label(), s.nick()))
+                .collect(),
+        );
+        let artist_sort = sort_button(
+            "win.artist-sort",
+            model::ArtistSort::ALL
+                .iter()
+                .map(|s| (s.label(), s.nick()))
+                .collect(),
+        );
+        let view_buttons: Vec<(&'static str, gtk::Widget)> = vec![
+            ("playlists", new_playlist_btn.upcast()),
+            ("songs", songs_select.clone().upcast()),
+            ("albums", album_sort),
+            ("artists", artist_sort),
+        ];
 
         let search_entry = gtk::SearchEntry::builder()
             .placeholder_text(tr("Search songs, albums and artists"))
@@ -407,6 +556,11 @@ impl App {
             .css_classes(["boxed-list"])
             .valign(gtk::Align::Start)
             .build();
+        let genres_list = gtk::ListBox::builder()
+            .selection_mode(gtk::SelectionMode::None)
+            .css_classes(["boxed-list"])
+            .valign(gtk::Align::Start)
+            .build();
         let playlists_list = gtk::ListBox::builder()
             .selection_mode(gtk::SelectionMode::None)
             .css_classes(["boxed-list"])
@@ -419,13 +573,19 @@ impl App {
         let scanning_page = adw::StatusPage::builder()
             .title(tr("Scanning Library…"))
             .build();
-        let spinner = gtk::Spinner::builder()
-            .spinning(true)
+        let spinner = adw::Spinner::builder()
             .width_request(32)
             .height_request(32)
             .halign(gtk::Align::Center)
             .build();
         scanning_page.set_child(Some(&spinner));
+        // Later scans run in the background: a spinner in the header.
+        let scan_spinner = adw::Spinner::builder()
+            .visible(false)
+            .tooltip_text(tr("Scanning Library…"))
+            .build()
+            .labelled(tr("Scanning Library…"));
+        header.pack_end(&scan_spinner);
         let search_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
         let main_stack = gtk::Stack::new();
         main_stack.add_named(&stack, Some("library"));
@@ -517,14 +677,21 @@ impl App {
                 stack,
                 main_stack,
                 empty_page,
+                scanning_page,
+                scan_spinner,
                 search_bar,
                 search_entry,
                 search_box,
+                view_buttons,
                 albums_model,
                 songs_model,
                 songs_sorted,
+                songs_select,
+                songs_selection: gtk::MultiSelection::new(None::<gio::ListModel>),
                 artists_list,
+                artist_order: RefCell::default(),
                 playlists_list,
+                genres_list,
                 bar,
                 lib: RefCell::new(Rc::new(Library::new(tracks))),
                 stats: RefCell::new(stats),
@@ -535,12 +702,14 @@ impl App {
                 state: RefCell::new(state),
                 textures: RefCell::default(),
                 rows: RefCell::default(),
-                queue_view: RefCell::default(),
+                now_playing: RefCell::default(),
+                queue_model: gio::ListStore::new::<glib::BoxedAnyObject>(),
                 playlist_view: RefCell::default(),
                 playing: Cell::new(false),
                 scanning: Cell::new(false),
                 scan_again: Cell::new(false),
                 scanned_once: Cell::new(false),
+                user_rescan: Cell::new(false),
                 monitors: RefCell::default(),
                 rescan_timer: RefCell::default(),
                 inhibit_cookie: Cell::new(0),
@@ -550,6 +719,13 @@ impl App {
                 counted: Cell::new(false),
                 last_tick: Cell::new(None),
                 seeking: Cell::new(false),
+                resume_ms: Cell::new(None),
+                pending_seek: Cell::new(None),
+                queue_save_timer: RefCell::default(),
+                background_hold: RefCell::default(),
+                quitting: Cell::new(false),
+                unmuted_volume: Cell::new(1.0),
+                show_lyrics: Cell::new(false),
                 suppress_ui: Cell::new(false),
             }
         });
@@ -564,6 +740,8 @@ impl App {
             let relayout = move |_: &adw::Breakpoint| {
                 if let Some(app) = w.upgrade() {
                     app.layout_headers(applied);
+                    app.bar.set_narrow(applied);
+                    app.layout_now_playing(applied);
                 }
             };
             if applied {
@@ -572,19 +750,34 @@ impl App {
                 app.narrow.connect_unapply(relayout);
             }
         }
+        // Covers are loaded for the scale they are shown at.
+        let w = Rc::downgrade(&app);
+        app.window.connect_scale_factor_notify(move |_| {
+            if let Some(app) = w.upgrade() {
+                app.textures.borrow_mut().clear();
+            }
+        });
         app.build_views();
         app.connect_player_bar();
         app.install_actions();
         app.install_keys();
         app.connect_search();
+        let w = Rc::downgrade(&app);
+        app.stack.connect_visible_child_name_notify(move |_| {
+            if let Some(app) = w.upgrade() {
+                app.update_view_buttons();
+            }
+        });
         app.connect_close();
         app.connect_notifications();
         let volume = app.state.borrow().volume;
         app.bar.volume.set_value(volume);
         app.apply_volume(volume);
         app.update_mode_buttons();
+        app.restore_queue();
         app.refresh_library_views();
         app.update_now_playing();
+        app.set_playing(false);
 
         let w = Rc::downgrade(&app);
         glib::spawn_future_local(async move {
@@ -630,23 +823,40 @@ impl App {
         roots
     }
 
-    /// Cover texture for a cover key (cached).
-    pub fn texture(&self, key: Option<&str>) -> Option<gdk::Texture> {
+    /// Cover texture for a cover key, at least `px` device pixels wide
+    /// (cached per size step, so small covers do not hold large images).
+    pub fn texture(&self, key: Option<&str>, px: i32) -> Option<gdk::Texture> {
         let key = key?;
-        if let Some(t) = self.textures.borrow().get(key) {
+        let step = cover_step(px);
+        let id = (key.to_string(), step);
+        if let Some(t) = self.textures.borrow().get(&id) {
             return t.clone();
         }
-        let tex = gdk::Texture::from_filename(index::cover_path(&Self::covers_dir(), key)).ok();
-        self.textures
-            .borrow_mut()
-            .insert(key.to_string(), tex.clone());
+        let tex = load_texture(&index::cover_path(&Self::covers_dir(), key), step);
+        self.textures.borrow_mut().insert(id, tex.clone());
         tex
     }
 
-    pub fn set_cover(&self, image: &gtk::Image, key: Option<&str>) {
-        match self.texture(key) {
-            Some(t) => image.set_paintable(Some(&t)),
-            None => image.set_icon_name(Some("audio-x-generic-symbolic")),
+    /// Shows a cover (from [`cover_widget`]): the art, sharp at the
+    /// window's scale, or a placeholder tile with a small note icon.
+    pub fn set_cover(&self, cover: &gtk::Overlay, key: Option<&str>) {
+        let size = cover.width_request().max(1);
+        let tex = self.texture(key, size * self.window.scale_factor().max(1));
+        let mut child = cover.first_child();
+        while let Some(c) = child {
+            if let Some(p) = c.downcast_ref::<gtk::Picture>() {
+                p.set_paintable(tex.as_ref());
+                p.set_visible(tex.is_some());
+            } else if let Some(img) = c.downcast_ref::<gtk::Image>() {
+                img.set_pixel_size((size * 2 / 5).clamp(16, 64));
+                img.set_icon_name(tex.is_none().then_some("audio-x-generic-symbolic"));
+            }
+            child = c.next_sibling();
+        }
+        if tex.is_some() {
+            cover.remove_css_class("hm-cover-empty");
+        } else {
+            cover.add_css_class("hm-cover-empty");
         }
     }
 
@@ -662,6 +872,10 @@ impl App {
         let watching = self.tracker_watching.get();
         type ScanResult = (Vec<Track>, ScanReport, Option<tracker::Endpoint>);
         let (tx, rx) = async_channel::bounded::<ScanResult>(1);
+        let (ptx, prx) = async_channel::unbounded::<usize>();
+        if self.scanned_once.get() {
+            self.scan_spinner.set_visible(true);
+        }
         std::thread::Builder::new()
             .name("music-scan".into())
             .spawn(move || {
@@ -681,12 +895,31 @@ impl App {
                         }
                     });
                 let used = indexed.is_some();
-                let (tracks, report) =
-                    index::scan_hybrid(&roots, indexed, previous, Some(&covers), now_secs());
+                // A running count for the first scan's status page.
+                let mut last = Instant::now();
+                let mut progress = |n: usize| {
+                    if last.elapsed() >= Duration::from_millis(200) {
+                        last = Instant::now();
+                        let _ = ptx.try_send(n);
+                    }
+                };
+                let (tracks, report) = index::scan_with_progress(
+                    &roots,
+                    indexed,
+                    previous,
+                    Some(&covers),
+                    now_secs(),
+                    &mut progress,
+                );
+                drop(ptx);
                 if report.changed() || !App::data_dir().join("library.json").exists() {
                     if let Err(e) = index::save(&App::data_dir().join("library.json"), &tracks) {
                         eprintln!("helix-music: cannot save index: {e}");
                     }
+                }
+                let old_covers = glib::user_cache_dir().join(DATA).join("covers");
+                if old_covers.is_dir() {
+                    let _ = std::fs::remove_dir_all(old_covers);
                 }
                 let ep = ep.filter(|_| used && !watching);
                 let _ = tx.send_blocking((tracks, report, ep));
@@ -694,25 +927,46 @@ impl App {
             .expect("spawn scanner");
         let w = Rc::downgrade(self);
         glib::spawn_future_local(async move {
+            while let Ok(n) = prx.recv().await {
+                let Some(app) = w.upgrade() else { return };
+                app.scanning_page.set_description(Some(&trnf!(
+                    "{n} song found",
+                    "{n} songs found",
+                    n
+                )));
+            }
+        });
+        let w = Rc::downgrade(self);
+        glib::spawn_future_local(async move {
             let Ok((tracks, report, ep)) = rx.recv().await else {
                 return;
             };
             let Some(app) = w.upgrade() else { return };
             app.scanning.set(false);
+            app.scan_spinner.set_visible(false);
+            let asked = app.user_rescan.replace(false);
             app.using_tracker
                 .set(report.from_tracker > 0 || ep.is_some());
             if let Some(ep) = ep {
                 app.watch_tracker(ep);
             }
             let first = !app.scanned_once.replace(true);
-            if report.changed() && !first {
+            let text = trnf!(
+                "Library updated: {n} song",
+                "Library updated: {n} songs",
+                tracks.len()
+            );
+            if asked {
+                // Rescan Library: say what it found (the toast is also
+                // spoken by libadwaita).
+                app.toasts.add_toast(toast(if report.changed() {
+                    &text
+                } else {
+                    tr("No changes found")
+                }));
+            } else if report.changed() && !first {
                 // A rescan found changes while the user may be listening
                 // or browsing; say so without moving focus.
-                let text = trnf!(
-                    "Library updated: {n} song",
-                    "Library updated: {n} songs",
-                    tracks.len()
-                );
                 helix_app_common::announce(
                     &app.main_stack,
                     &text,
@@ -837,6 +1091,30 @@ impl App {
         self.start_current(true);
     }
 
+    /// Adds tracks to the end of the queue, or (`next`) right after the
+    /// current one; starts playing when the queue was empty.
+    pub fn queue_tracks(self: &Rc<Self>, tracks: &[usize], next: bool) {
+        let lib = self.lib();
+        let paths: Vec<PathBuf> = tracks.iter().map(|&i| lib.tracks[i].path.clone()).collect();
+        let was_empty = self.queue.borrow().is_empty();
+        if next {
+            self.queue.borrow_mut().play_next_all(paths);
+        } else {
+            self.queue.borrow_mut().append(paths);
+        }
+        if was_empty {
+            self.start_current(true);
+        } else {
+            self.update_next_uri();
+            self.update_now_playing();
+            self.toasts.add_toast(toast(if next {
+                tr("Will play next")
+            } else {
+                tr("Added to queue")
+            }));
+        }
+    }
+
     /// Loads the queue's current track.
     pub fn start_current(self: &Rc<Self>, play: bool) {
         let Some(path) = self.queue.borrow().current().cloned() else {
@@ -845,6 +1123,8 @@ impl App {
         };
         self.played_ms.set(0);
         self.counted.set(false);
+        self.resume_ms.set(None);
+        self.pending_seek.set(None);
         if let Some(p) = &self.player {
             p.load(&model::path_to_uri(&path), play);
         }
@@ -898,7 +1178,13 @@ impl App {
         match p.state() {
             player::State::Playing => p.pause(),
             player::State::Paused => p.play(),
-            player::State::Stopped => self.start_current(true),
+            player::State::Stopped => {
+                // A queue restored from the last run continues where it
+                // stopped.
+                let resume = self.resume_ms.take();
+                self.start_current(true);
+                self.pending_seek.set(resume);
+            }
         }
     }
 
@@ -955,6 +1241,26 @@ impl App {
         if moved {
             self.start_current(true);
         }
+    }
+
+    /// Seeks by `delta_ms` from the current position (to the next song
+    /// past the end).
+    pub fn seek_by(self: &Rc<Self>, delta_ms: i64) {
+        let Some(p) = &self.player else { return };
+        if p.state() == player::State::Stopped {
+            return;
+        }
+        let target = (self.position_ms() as i64 + delta_ms).max(0) as u64;
+        match p.duration_ms() {
+            Some(d) if target >= d => self.next(),
+            _ => self.seek_ms(target),
+        }
+    }
+
+    /// Changes the volume slider (and so the volume) by `delta`.
+    pub fn change_volume(&self, delta: f64) {
+        let v = (self.bar.volume.value() + delta).clamp(0.0, 1.0);
+        self.bar.volume.set_value(v);
     }
 
     pub fn seek_ms(&self, ms: u64) {
@@ -1018,7 +1324,14 @@ impl App {
                     self.stop();
                 }
             }
-            Event::State(s) => self.set_playing(s == player::State::Playing),
+            Event::State(s) => {
+                if s != player::State::Stopped {
+                    if let (Some(ms), Some(p)) = (self.pending_seek.take(), &self.player) {
+                        p.seek(ms);
+                    }
+                }
+                self.set_playing(s == player::State::Playing);
+            }
         }
     }
 
@@ -1043,17 +1356,31 @@ impl App {
         if changed {
             self.update_inhibit();
         }
-        let status = if playing {
-            "Playing"
-        } else if self
+        let paused = self
             .player
             .as_ref()
-            .is_some_and(|p| p.state() == player::State::Paused)
-        {
+            .is_some_and(|p| p.state() == player::State::Paused);
+        let status = if playing {
+            "Playing"
+        } else if paused || self.resume_ms.get().is_some() {
             "Paused"
         } else {
             "Stopped"
         };
+        if paused {
+            // Remember where (a stopped player has no position to save).
+            self.save_queue();
+        }
+        if !playing
+            && !paused
+            && !self.quitting.get()
+            && !self.window.is_visible()
+            && self.background_hold.borrow().is_some()
+        {
+            // Background playback ended: quit for real.
+            self.quitting.set(true);
+            self.window.close();
+        }
         if let Some(m) = &self.mpris {
             m.update(|s| s.status = status);
         }
@@ -1108,7 +1435,10 @@ impl App {
             return;
         }
         let p = self.player.as_ref();
-        let pos = pos.or_else(|| p.and_then(|p| p.position_ms())).unwrap_or(0);
+        let pos = pos
+            .or(self.resume_ms.get())
+            .or_else(|| p.and_then(|p| p.position_ms()))
+            .unwrap_or(0);
         let dur = p
             .and_then(|p| p.duration_ms())
             .or_else(|| self.current_track().map(|t| t.duration_ms))
@@ -1129,6 +1459,15 @@ impl App {
         if let Some(m) = &self.mpris {
             m.update(|s| s.position_us = pos as i64 * 1000);
         }
+        self.update_lyrics_position(pos);
+    }
+
+    /// The playing position (0 when nothing plays).
+    pub fn position_ms(&self) -> u64 {
+        self.player
+            .as_ref()
+            .and_then(|p| p.position_ms())
+            .unwrap_or(0)
     }
 
     /// Tells screen readers about a new track once it plays (track changes
@@ -1175,9 +1514,7 @@ impl App {
             None => {
                 self.bar.title.set_label("");
                 self.bar.artist.set_label("");
-                self.bar
-                    .cover
-                    .set_icon_name(Some("audio-x-generic-symbolic"));
+                self.set_cover(&self.bar.cover, None);
                 self.bar.heart.set_sensitive(false);
                 self.window.set_title(Some(tr(APP_NAME)));
             }
@@ -1191,6 +1528,7 @@ impl App {
         self.update_position(None);
         self.refresh_rows();
         self.refresh_queue_view();
+        self.schedule_queue_save();
         if let Some(m) = &self.mpris {
             let meta = track.as_ref().map(|t| mpris::Metadata {
                 track_id: mpris::track_id(&t.path),
@@ -1222,11 +1560,15 @@ impl App {
         self.suppress_ui.set(true);
         self.bar.shuffle.set_active(shuffle);
         self.suppress_ui.set(false);
+        // Off looks inactive; All and One are checked, like shuffle.
         let (icon, tip) = match repeat {
-            Repeat::None => ("media-playlist-consecutive-symbolic", tr("Repeat: Off")),
+            Repeat::None => ("media-playlist-repeat-symbolic", tr("Repeat: Off")),
             Repeat::All => ("media-playlist-repeat-symbolic", tr("Repeat: All")),
             Repeat::One => ("media-playlist-repeat-song-symbolic", tr("Repeat: Song")),
         };
+        self.suppress_ui.set(true);
+        self.bar.repeat.set_active(repeat != Repeat::None);
+        self.suppress_ui.set(false);
         self.bar.repeat.set_icon_name(icon);
         self.bar.repeat.set_tooltip_text(Some(tip));
         helix_app_common::set_accessible_label(&self.bar.repeat, tip);
@@ -1272,7 +1614,10 @@ impl App {
     fn on_mpris(self: &Rc<Self>, cmd: Command) {
         match cmd {
             Command::Raise => self.window.present(),
-            Command::Quit => self.window.close(),
+            Command::Quit => {
+                self.quitting.set(true);
+                self.window.close();
+            }
             Command::Play => self.play(),
             Command::Pause => self.pause(),
             Command::PlayPause => self.play_pause(),
@@ -1365,17 +1710,99 @@ impl App {
 
     fn connect_close(self: &Rc<Self>) {
         let w = Rc::downgrade(self);
-        self.window.connect_close_request(move |_| {
+        self.window.connect_close_request(move |win| {
             if let Some(app) = w.upgrade() {
                 app.state.borrow_mut().volume = app.bar.volume.value();
                 app.save_state();
+                app.save_queue();
+                if app.state.borrow().background_playback
+                    && app.playing.get()
+                    && !app.quitting.get()
+                {
+                    // Keep playing: hide the window, keep the app (and MPRIS)
+                    // running until playback stops, Quit, or it is shown.
+                    win.set_visible(false);
+                    app.background_hold.replace(Some(app.app.hold()));
+                    return glib::Propagation::Stop;
+                }
+                // Closing for real: shutdown must not save again (the
+                // player is stopped by then).
+                app.quitting.set(true);
                 app.stop();
                 if app.inhibit_cookie.get() != 0 {
                     app.app.uninhibit(app.inhibit_cookie.replace(0));
                 }
+                app.background_hold.borrow_mut().take();
             }
             glib::Propagation::Proceed
         });
+        // Shown again (activation, MPRIS Raise): no longer held.
+        let w = Rc::downgrade(self);
+        self.window.connect_visible_notify(move |win| {
+            if let (true, Some(app)) = (win.is_visible(), w.upgrade()) {
+                app.background_hold.borrow_mut().take();
+            }
+        });
+        // Ctrl+Q quits without closing the window first.
+        let w = Rc::downgrade(self);
+        self.app.connect_shutdown(move |_| {
+            if let Some(app) = w.upgrade().filter(|a| !a.quitting.get()) {
+                app.state.borrow_mut().volume = app.bar.volume.value();
+                app.save_state();
+                app.save_queue();
+            }
+        });
+    }
+
+    fn queue_file() -> PathBuf {
+        Self::data_dir().join("queue.json")
+    }
+
+    /// Saves the queue and the position in the current song.
+    pub fn save_queue(&self) {
+        if let Some(id) = self.queue_save_timer.borrow_mut().take() {
+            id.remove();
+        }
+        let file = QueueFile {
+            queue: self.queue.borrow().save(),
+            position_ms: self.resume_ms.get().unwrap_or_else(|| self.position_ms()),
+        };
+        if let Ok(data) = serde_json::to_vec(&file) {
+            if let Err(e) = playlist::write_atomic(&Self::queue_file(), &data) {
+                eprintln!("helix-music: cannot save the queue: {e}");
+            }
+        }
+    }
+
+    /// Saves the queue a moment after it changed (changes come in bursts).
+    fn schedule_queue_save(self: &Rc<Self>) {
+        if let Some(id) = self.queue_save_timer.borrow_mut().take() {
+            id.remove();
+        }
+        let w = Rc::downgrade(self);
+        let id = glib::timeout_add_local_once(Duration::from_secs(1), move || {
+            if let Some(app) = w.upgrade() {
+                app.queue_save_timer.borrow_mut().take();
+                app.save_queue();
+            }
+        });
+        *self.queue_save_timer.borrow_mut() = Some(id);
+    }
+
+    /// Restores the last run's queue, paused at the saved position; songs
+    /// no longer in the library are dropped.
+    fn restore_queue(&self) {
+        let Some(mut file) = std::fs::read(Self::queue_file())
+            .ok()
+            .and_then(|d| serde_json::from_slice::<QueueFile>(&d).ok())
+        else {
+            return;
+        };
+        let lib = self.lib();
+        let kept = file.queue.retain(|p| lib.index_of(p).is_some());
+        if self.queue.borrow_mut().restore(file.queue) && kept && file.position_ms > 0 {
+            self.resume_ms.set(Some(file.position_ms));
+        }
     }
 
     fn connect_notifications(self: &Rc<Self>) {
@@ -1441,13 +1868,94 @@ impl App {
             a.search_bar.set_search_mode(true);
             a.search_entry.grab_focus();
         });
-        add("rescan", |a| a.start_scan());
+        add("seek-backward", |a| a.seek_by(-SEEK_STEP_MS));
+        add("seek-forward", |a| a.seek_by(SEEK_STEP_MS));
+        add("volume-up", |a| a.change_volume(VOLUME_STEP));
+        add("volume-down", |a| a.change_volume(-VOLUME_STEP));
+        add("mute", |a| {
+            let v = a.bar.volume.value();
+            if v > 0.0 {
+                a.unmuted_volume.set(v);
+                a.bar.volume.set_value(0.0);
+            } else {
+                a.bar
+                    .volume
+                    .set_value(a.unmuted_volume.get().max(VOLUME_STEP));
+            }
+        });
+        add("toggle-favorite", |a| {
+            if let Some(t) = a.current_track() {
+                let on = !a.stats.borrow().is_favorite(&t.path);
+                a.set_favorite(&t.path, on);
+            }
+        });
+        add("rescan", |a| {
+            a.user_rescan.set(true);
+            a.start_scan();
+        });
         add("preferences", |a| a.show_preferences());
         add("now-playing", |a| a.show_now_playing());
         add("new-playlist", |a| a.new_playlist_dialog(None));
+        add("queue-clear", |a| {
+            a.queue.borrow_mut().clear();
+            a.stop();
+            a.update_next_uri();
+            a.update_now_playing();
+        });
+        add("queue-save", |a| {
+            let lib = a.lib();
+            let tracks: Vec<usize> = a
+                .queue
+                .borrow()
+                .in_play_order()
+                .into_iter()
+                .filter_map(|(_, p)| lib.index_of(p))
+                .collect();
+            if !tracks.is_empty() {
+                a.save_as_playlist_dialog(tracks);
+            }
+        });
         add("add-folder", |a| a.add_folder_dialog());
         add("import-playlist", |a| a.import_playlist_dialog());
         add("import-index-playlists", |a| a.import_index_playlists());
+
+        // Sort orders, remembered in the state file.
+        for (name, current) in [
+            ("album-sort", self.state.borrow().album_sort.clone()),
+            ("artist-sort", self.state.borrow().artist_sort.clone()),
+        ] {
+            let a = gio::SimpleAction::new_stateful(
+                name,
+                Some(glib::VariantTy::STRING),
+                &current.to_variant(),
+            );
+            let w = Rc::downgrade(self);
+            let albums = name == "album-sort";
+            a.connect_change_state(move |a, v| {
+                let (Some(app), Some(nick)) = (w.upgrade(), v.and_then(|v| v.get::<String>()))
+                else {
+                    return;
+                };
+                let valid = if albums {
+                    model::AlbumSort::from_nick(&nick).is_some()
+                } else {
+                    model::ArtistSort::from_nick(&nick).is_some()
+                };
+                if !valid {
+                    return;
+                }
+                a.set_state(&nick.to_variant());
+                if albums {
+                    app.state.borrow_mut().album_sort = nick;
+                    app.sort_albums();
+                } else {
+                    app.state.borrow_mut().artist_sort = nick;
+                    app.sort_artists();
+                }
+                app.save_state();
+            });
+            win.add_action(&a);
+        }
 
         let view = gio::SimpleAction::new("view", Some(glib::VariantTy::STRING));
         let w = Rc::downgrade(self);
@@ -1455,7 +1963,13 @@ impl App {
             if let (Some(app), Some(name)) = (w.upgrade(), v.and_then(|v| v.get::<String>())) {
                 app.search_bar.set_search_mode(false);
                 app.nav.pop_to_tag("root");
-                app.stack.set_visible_child_name(&name);
+                if name == "genres" && app.is_narrow() {
+                    // No Genres view in the narrow bottom bar: its page.
+                    app.stack.set_visible_child_name("artists");
+                    app.show_genres_page();
+                } else {
+                    app.stack.set_visible_child_name(&name);
+                }
             }
         });
         win.add_action(&view);
@@ -1473,30 +1987,8 @@ impl App {
             });
             win.add_action(&a);
         };
-        track_action("queue-add", |app, i| {
-            let path = app.lib().tracks[i].path.clone();
-            let was_empty = app.queue.borrow().is_empty();
-            app.queue.borrow_mut().append(vec![path]);
-            if was_empty {
-                app.start_current(true);
-            } else {
-                app.update_next_uri();
-                app.update_now_playing();
-            }
-            app.toasts.add_toast(toast(tr("Added to queue")));
-        });
-        track_action("play-next", |app, i| {
-            let path = app.lib().tracks[i].path.clone();
-            let was_empty = app.queue.borrow().is_empty();
-            app.queue.borrow_mut().play_next(path);
-            if was_empty {
-                app.start_current(true);
-            } else {
-                app.update_next_uri();
-                app.update_now_playing();
-                app.toasts.add_toast(toast(tr("Will play next")));
-            }
-        });
+        track_action("queue-add", |app, i| app.queue_tracks(&[i], false));
+        track_action("play-next", |app, i| app.queue_tracks(&[i], true));
         track_action("add-to-playlist", |app, i| {
             app.add_to_playlist_dialog(vec![i])
         });
@@ -1504,6 +1996,59 @@ impl App {
             if let Some(a) = app.lib().album_of(i) {
                 app.show_album(a);
             }
+        });
+        track_action("song-details", |app, i| app.show_song_details(i));
+        track_action("show-in-files", |app, i| {
+            let path = app.lib().tracks[i].path.clone();
+            app.show_in_files(&path);
+        });
+        track_action("go-artist", |app, i| {
+            let lib = app.lib();
+            if let Some(ar) = lib.artist_index(lib.tracks[i].artist_name()) {
+                app.show_artist(ar);
+            }
+        });
+        let a = gio::SimpleAction::new("show-artist", Some(glib::VariantTy::UINT32));
+        let w = Rc::downgrade(self);
+        a.connect_activate(move |_, v| {
+            if let (Some(app), Some(i)) = (w.upgrade(), v.and_then(|v| v.get::<u32>())) {
+                if (i as usize) < app.lib().artists.len() {
+                    app.show_artist(i as usize);
+                }
+            }
+        });
+        win.add_action(&a);
+
+        // Actions on several tracks (target: library indices), from album,
+        // artist and playlist menus and the Songs selection.
+        let tracks_action = |name: &str, f: fn(&Rc<App>, Vec<usize>)| {
+            let a = gio::SimpleAction::new(name, Some(&<Vec<u32>>::static_variant_type()));
+            let w = Rc::downgrade(self);
+            a.connect_activate(move |_, v| {
+                let (Some(app), Some(t)) = (w.upgrade(), v.and_then(|v| v.get::<Vec<u32>>()))
+                else {
+                    return;
+                };
+                let n = app.lib().tracks.len();
+                let t: Vec<usize> = t
+                    .into_iter()
+                    .map(|i| i as usize)
+                    .filter(|&i| i < n)
+                    .collect();
+                if !t.is_empty() {
+                    f(&app, t);
+                }
+            });
+            win.add_action(&a);
+        };
+        tracks_action("tracks-play-next", |app, t| app.queue_tracks(&t, true));
+        tracks_action("tracks-queue", |app, t| app.queue_tracks(&t, false));
+        tracks_action("tracks-add-to-playlist", |app, t| {
+            app.add_to_playlist_dialog(t)
+        });
+        tracks_action("play-tracks", |app, t| app.play_tracks(&t, 0, Some(false)));
+        tracks_action("shuffle-tracks", |app, t| {
+            app.play_tracks(&t, 0, Some(true))
         });
 
         let remove = gio::SimpleAction::new(
@@ -1540,6 +2085,10 @@ impl App {
                 return glib::Propagation::Proceed;
             }
             if key == gdk::Key::Escape {
+                if app.songs_select.is_active() {
+                    app.songs_select.set_active(false);
+                    return glib::Propagation::Stop;
+                }
                 if app.search_bar.is_search_mode() {
                     app.search_bar.set_search_mode(false);
                     return glib::Propagation::Stop;
@@ -1575,6 +2124,11 @@ impl App {
             glib::Propagation::Proceed
         });
         self.window.add_controller(keys);
+        let bubble: Vec<(&str, &str)> = BUBBLE_ACCELS
+            .iter()
+            .flat_map(|(action, keys)| keys.iter().map(move |k| (*k, *action)))
+            .collect();
+        helix_app_common::add_bubble_shortcuts(&self.window, &bubble);
     }
 
     fn connect_search(self: &Rc<Self>) {
@@ -1596,6 +2150,19 @@ impl App {
             });
     }
 
+    /// Shows the header buttons of the visible view (none while searching
+    /// or before the library is shown).
+    pub fn update_view_buttons(&self) {
+        let library = self.main_stack.visible_child_name().as_deref() == Some("library");
+        let view = self.stack.visible_child_name();
+        for (name, button) in &self.view_buttons {
+            button.set_visible(library && view.as_deref() == Some(*name));
+        }
+        if !(library && view.as_deref() == Some("songs")) {
+            self.songs_select.set_active(false);
+        }
+    }
+
     pub fn update_main_stack(&self) {
         let searching =
             self.search_bar.is_search_mode() && !self.search_entry.text().trim().is_empty();
@@ -1609,6 +2176,7 @@ impl App {
             "scanning"
         };
         self.main_stack.set_visible_child_name(name);
+        self.update_view_buttons();
         self.empty_page.set_description(Some(&trf!(
             "Music files in {} will appear here.",
             glib::markup_escape_text(&friendly_folder_name(&music_dir(), &glib::home_dir()))
@@ -1776,6 +2344,97 @@ pub fn set_heart_icon(btn: &gtk::ToggleButton) {
     helix_app_common::set_accessible_label(btn, &btn.tooltip_text().unwrap_or_default());
 }
 
+/// A square cover `size` logical pixels wide, with rounded corners:
+/// the art fills it (cropped to the square), or a tinted tile with a
+/// small note icon stands in for missing art. Decorative: the album or
+/// track title next to it names it. Fill it with [`App::set_cover`].
+pub fn cover_widget(size: i32) -> gtk::Overlay {
+    // The tile: an image draws its icon centred in whatever size it has.
+    let tile = gtk::Image::builder()
+        .icon_name("audio-x-generic-symbolic")
+        .width_request(size)
+        .height_request(size)
+        .accessible_role(gtk::AccessibleRole::Presentation)
+        .build();
+    let picture = gtk::Picture::builder()
+        .content_fit(gtk::ContentFit::Cover)
+        .can_shrink(true)
+        .visible(false)
+        .accessible_role(gtk::AccessibleRole::Presentation)
+        .build();
+    let cover = gtk::Overlay::builder()
+        .child(&tile)
+        .width_request(size)
+        .height_request(size)
+        .halign(gtk::Align::Center)
+        .valign(gtk::Align::Center)
+        .overflow(gtk::Overflow::Hidden)
+        .css_classes(["hm-cover", "hm-cover-empty"])
+        .accessible_role(gtk::AccessibleRole::Presentation)
+        .build();
+    if size < 96 {
+        cover.add_css_class("hm-cover-small");
+    }
+    // Overlay children do not count for its size: the tile sets it.
+    cover.add_overlay(&picture);
+    cover
+}
+
+/// Resizes a cover made by [`cover_widget`] (the caller shows it again).
+pub fn resize_cover(cover: &gtk::Overlay, size: i32) {
+    cover.set_size_request(size, size);
+    if let Some(tile) = cover.child() {
+        tile.set_size_request(size, size);
+    }
+    if size < 96 {
+        cover.add_css_class("hm-cover-small");
+    } else {
+        cover.remove_css_class("hm-cover-small");
+    }
+}
+
+/// The size a cover texture is loaded at for `px` device pixels.
+pub fn cover_step(px: i32) -> i32 {
+    match px {
+        ..=64 => 64,
+        65..=128 => 128,
+        129..=256 => 256,
+        _ => index::COVER_SIZE,
+    }
+}
+
+/// Loads a cached cover scaled down to at most `size` pixels.
+fn load_texture(path: &Path, size: i32) -> Option<gdk::Texture> {
+    use gtk::gdk_pixbuf::{InterpType, Pixbuf};
+    let pb = Pixbuf::from_file(path).ok()?;
+    let (w, h) = (pb.width(), pb.height());
+    let scale = (size as f64 / w.max(h).max(1) as f64).min(1.0);
+    let pb = if scale < 1.0 {
+        pb.scale_simple(
+            ((w as f64 * scale).round() as i32).max(1),
+            ((h as f64 * scale).round() as i32).max(1),
+            InterpType::Bilinear,
+        )?
+    } else {
+        pb
+    };
+    let format = if pb.has_alpha() {
+        gdk::MemoryFormat::R8g8b8a8
+    } else {
+        gdk::MemoryFormat::R8g8b8
+    };
+    Some(
+        gdk::MemoryTexture::new(
+            pb.width(),
+            pb.height(),
+            format,
+            &pb.read_pixel_bytes(),
+            pb.rowstride() as usize,
+        )
+        .upcast(),
+    )
+}
+
 fn search_box_scroller(content: &gtk::Box) -> gtk::ScrolledWindow {
     let clamp = adw::Clamp::builder()
         .maximum_size(900)
@@ -1826,27 +2485,41 @@ impl App {
 
 impl PlayerBar {
     /// Narrow layout: cover, title and Previous / Play / Next on the first
-    /// row; position and the other controls on the second.
+    /// row; a full-width seek slider on the second. Favourite, shuffle,
+    /// repeat, volume and queue move into a "More Controls" popover.
     fn add_narrow_setters(&self, bp: &adw::Breakpoint) {
         bp.add_setter(&self.info_box, "width-request", Some(&(-1).to_value()));
-        let Some(layout) = self.grid.layout_manager() else {
-            return;
-        };
-        for (widget, column, row) in [(&self.seek_box, 0, 1), (&self.side_box, 1, 1)] {
-            let child = layout.layout_child(widget);
-            bp.add_setter(&child, "column", Some(&column.to_value()));
-            bp.add_setter(&child, "row", Some(&row.to_value()));
+        bp.add_setter(&self.more, "visible", Some(&true.to_value()));
+    }
+
+    fn set_narrow(&self, narrow: bool) {
+        let pop = self.more.popover();
+        if self.seek_box.parent().is_some() {
+            self.grid.remove(&self.seek_box);
+        }
+        if narrow {
+            if self.side_box.parent().as_ref() == Some(self.grid.upcast_ref()) {
+                self.grid.remove(&self.side_box);
+            }
+            self.grid.attach(&self.seek_box, 0, 1, 2, 1);
+            if let Some(pop) = pop {
+                pop.set_child(Some(&self.side_box));
+            }
+        } else {
+            if let Some(pop) = pop {
+                pop.popdown();
+                pop.set_child(None::<&gtk::Widget>);
+            }
+            self.grid.attach(&self.seek_box, 2, 0, 1, 1);
+            if self.side_box.parent().is_none() {
+                self.grid.attach(&self.side_box, 3, 0, 1, 1);
+            }
         }
     }
 }
 
 fn build_player_bar() -> PlayerBar {
-    let cover = gtk::Image::builder()
-        .pixel_size(48)
-        .css_classes(["hm-cover"])
-        // Decorative: the album or track title next to it names it.
-        .accessible_role(gtk::AccessibleRole::Presentation)
-        .build();
+    let cover = cover_widget(48);
     let title = gtk::Label::builder()
         .xalign(0.0)
         .ellipsize(gtk::pango::EllipsizeMode::End)
@@ -1924,7 +2597,13 @@ fn build_player_bar() -> PlayerBar {
         .css_classes(["flat"])
         .build()
         .labelled(tr("Shuffle"));
-    let repeat = flat_button("media-playlist-consecutive-symbolic", tr("Repeat"));
+    let repeat = gtk::ToggleButton::builder()
+        .icon_name("media-playlist-repeat-symbolic")
+        .tooltip_text(tr("Repeat"))
+        .valign(gtk::Align::Center)
+        .css_classes(["flat"])
+        .build()
+        .labelled(tr("Repeat"));
     let volume = gtk::Scale::with_range(gtk::Orientation::Vertical, 0.0, 1.0, 0.05);
     volume.set_inverted(true);
     volume.set_size_request(-1, 140);
@@ -1972,6 +2651,16 @@ fn build_player_bar() -> PlayerBar {
         right.append(w);
     }
 
+    let more = gtk::MenuButton::builder()
+        .icon_name("view-more-symbolic")
+        .tooltip_text(tr("More Controls"))
+        .popover(&gtk::Popover::new())
+        .valign(gtk::Align::Center)
+        .visible(false)
+        .css_classes(["flat"])
+        .build()
+        .labelled(tr("More Controls"));
+    controls.append(&more);
     controls.set_halign(gtk::Align::End);
     right.set_halign(gtk::Align::End);
     let grid = gtk::Grid::builder()
@@ -2006,6 +2695,7 @@ fn build_player_bar() -> PlayerBar {
         heart,
         shuffle,
         repeat,
+        more,
         volume,
     }
 }
