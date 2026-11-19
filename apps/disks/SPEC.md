@@ -137,7 +137,7 @@ response is *Cancel*.
 | Edit filesystem label | `Filesystem.SetLabel` | no |
 | Check filesystem | `Filesystem.Check` (must be unmounted; result shown) | no |
 | Repair filesystem | `Filesystem.Repair` | **yes** |
-| Create disk/partition image | `Block.OpenForBackup` → copy the fd to the chosen file with a progress dialog (bytes copied, rate, cancel). File chosen with `gtk::FileDialog` (FileChooser portal) defaulting to `<name>.img` in `image-dir-uri` | no (refuses to overwrite an existing file without a confirm) |
+| Create disk/partition image | `Block.OpenForBackup` → copy the fd to the chosen file with a progress dialog (bytes copied, rate, cancel). File chosen with `gtk::FileDialog` (FileChooser portal) defaulting to `<name>.img` in `image-dir-uri`. The image is created with mode 0600 (a replaced file is made 0600 too): it holds data only root could read on the disk | no (refuses to overwrite an existing file without a confirm) |
 | Restore disk/partition image | file chosen; image size must not exceed the target; `Block.OpenForRestore` → copy file to the fd with progress | **yes** |
 | Format whole disk | `Block.Format("gpt" \| "dos" \| "empty", {erase})` on the whole-disk block | **yes** |
 | Power off | unmount/lock everything on the drive, then `Drive.PowerOff` | no |

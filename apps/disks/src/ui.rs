@@ -2370,7 +2370,7 @@ fn copy_thread(
     match dir {
         CopyDir::Backup => {
             let mut src = udisks::open_for_backup(&conn, block)?;
-            let mut dst = std::fs::File::create(path).map_err(|e| e.to_string())?;
+            let mut dst = udisks::create_image_file(path).map_err(|e| e.to_string())?;
             let res = udisks::copy_with_progress(&mut src, &mut dst, total, cancel, &mut report)
                 .and_then(|n| dst.sync_all().map(|_| n));
             if res.is_err() {

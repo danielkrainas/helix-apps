@@ -422,6 +422,22 @@ pub fn open_for_restore(conn: &Connection, block: &str) -> Result<File, String> 
 /// Copies up to `total` bytes from `src` to `dst`, calling `progress` with
 /// the running byte count. Stops with `ErrorKind::Interrupted` when
 /// `cancel` becomes true.
+/// Creates (or truncates) the disk image file at `path`, readable and
+/// writable by its owner only: an image of a system or home partition
+/// holds what only root could read on the disk. An existing file chosen
+/// to be replaced gets the same permissions.
+pub fn create_image_file(path: &std::path::Path) -> std::io::Result<std::fs::File> {
+    use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
+    let file = std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .mode(0o600)
+        .open(path)?;
+    file.set_permissions(std::fs::Permissions::from_mode(0o600))?;
+    Ok(file)
+}
+
 pub fn copy_with_progress<R: Read, W: Write>(
     src: &mut R,
     dst: &mut W,
@@ -456,6 +472,26 @@ pub fn copy_with_progress<R: Read, W: Write>(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn disk_images_are_private() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = std::env::temp_dir().join(format!("helix-disks-image-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let mode = |p: &std::path::Path| std::fs::metadata(p).unwrap().permissions().mode() & 0o777;
+        let new = dir.join("new.img");
+        create_image_file(&new).unwrap();
+        assert_eq!(mode(&new), 0o600);
+        // Replacing a readable file makes it private too, and empties it.
+        let old = dir.join("old.img");
+        std::fs::write(&old, b"old contents").unwrap();
+        std::fs::set_permissions(&old, std::fs::Permissions::from_mode(0o644)).unwrap();
+        create_image_file(&old).unwrap();
+        assert_eq!(mode(&old), 0o600);
+        assert_eq!(std::fs::metadata(&old).unwrap().len(), 0);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
     use zbus::zvariant::{Array, ObjectPath};
 
     #[test]
