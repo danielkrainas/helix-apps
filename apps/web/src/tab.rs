@@ -96,6 +96,11 @@ pub struct Tab {
     entering_reader: Cell<bool>,
     /// Rows of the prompt bars (message beside or above the buttons).
     bar_rows: [gtk::Box; 3],
+    /// Which downloads from the current page start without asking.
+    pub download_gate: Cell<crate::downloads::Gate>,
+    /// The next navigation is one the app started for the user (a typed
+    /// address, a bookmark, …).
+    app_load: Cell<bool>,
 }
 
 /// Display form of a URI for the address bar and tab titles.
@@ -253,6 +258,8 @@ impl Tab {
             reader_active: Cell::new(false),
             entering_reader: Cell::new(false),
             bar_rows: [perm_layout, tls_layout, pw_layout],
+            download_gate: Cell::default(),
+            app_load: Cell::new(false),
         });
 
         let weak = Rc::downgrade(&tab);
@@ -362,6 +369,7 @@ impl Tab {
 
     pub fn load(&self, uri: &str) {
         self.pending_uri.replace(None);
+        self.app_load.set(true);
         if uri == "about:overview" || uri == "about:newtab" || uri == "about:home" {
             self.view.load_uri(START_URI);
         } else {
@@ -597,6 +605,15 @@ impl Tab {
             }
         }));
 
+        // The menu's download items start downloads the user asked for,
+        // which must not be confirmed again.
+        view.connect_context_menu(with_tab!(w, move |_, menu, hit| {
+            if let Some(t) = w() {
+                t.own_download_items(menu, hit);
+            }
+            false
+        }));
+
         view.connect_decide_policy(with_tab!(w, move |_, decision, kind| {
             let Some(t) = w() else { return false };
             t.decide_policy(decision, kind)
@@ -681,6 +698,34 @@ impl Tab {
         }
     }
 
+    /// Replaces WebKit's download items in a context menu with ones that
+    /// mark their download as the user's.
+    fn own_download_items(&self, menu: &webkit6::ContextMenu, hit: &webkit6::HitTestResult) {
+        use webkit6::ContextMenuAction as A;
+        for (pos, item) in menu.items().into_iter().enumerate() {
+            let (uri, label) = match item.stock_action() {
+                A::DownloadLinkToDisk => (hit.link_uri(), tr("Download Linked File")),
+                A::DownloadImageToDisk => (hit.image_uri(), tr("Download Image")),
+                A::DownloadVideoToDisk => (hit.media_uri(), tr("Download Video")),
+                A::DownloadAudioToDisk => (hit.media_uri(), tr("Download Audio")),
+                _ => continue,
+            };
+            let Some(uri) = uri else { continue };
+            let action = gio::SimpleAction::new("helix-download", None);
+            let app = self.app.clone();
+            let view = self.view.downgrade();
+            let uri = uri.to_string();
+            action.connect_activate(move |_, _| {
+                if let (Some(app), Some(view)) = (app.upgrade(), view.upgrade()) {
+                    app.download_for_user(&view, &uri);
+                }
+            });
+            menu.remove(&item);
+            let mine = webkit6::ContextMenuItem::from_gaction(&action, label, None);
+            menu.insert(&mine, pos as i32);
+        }
+    }
+
     fn decide_policy(
         &self,
         decision: &webkit6::PolicyDecision,
@@ -695,6 +740,17 @@ impl Tab {
                 let Some(mut action) = nav.navigation_action() else {
                     return false;
                 };
+                if kind == webkit6::PolicyDecisionType::NavigationAction {
+                    let by_user = self.app_load.take()
+                        || action.is_user_gesture()
+                        || matches!(
+                            action.navigation_type(),
+                            webkit6::NavigationType::BackForward | webkit6::NavigationType::Reload
+                        );
+                    let mut gate = self.download_gate.get();
+                    gate.navigation(by_user, action.is_redirect());
+                    self.download_gate.set(gate);
+                }
                 // Web apps open other sites (not their own or an extra
                 // allowed site) in the regular browser.
                 if let Some(app) = self.app.upgrade() {
@@ -803,6 +859,7 @@ impl Tab {
     pub fn toggle_reader(&self) {
         if self.reader_active.get() {
             let uri = self.uri();
+            self.app_load.set(true);
             self.view.load_uri(&uri);
             return;
         }
@@ -1086,6 +1143,7 @@ impl Tab {
             session.allow_tls_certificate_for_host(&cert, &host);
         }
         self.tls_revealer.set_reveal_child(false);
+        self.app_load.set(true);
         self.view.load_uri(&uri);
     }
 

@@ -196,9 +196,15 @@ View PDF and other documents.
 - Clicking: internal destinations (explicit or named, resolved on the
   render thread) scroll to the target page and, if the destination has a
   top coordinate, to that position; named actions NextPage / PrevPage /
-  FirstPage / LastPage / GoBack / GoForward are honoured; URIs open through
-  `gtk::UriLauncher` (OpenURI portal); remote-file links (`GoToR`) open the
-  referenced file relative to the current document in a new window.
+  FirstPage / LastPage / GoBack / GoForward are honoured; `http`, `https`
+  and `mailto` URIs open through `gtk::UriLauncher` (OpenURI portal), any
+  other scheme only after *Open This Link?*, which shows the full URI (a
+  PDF link can look like anything; `helix_app_common::links`).
+  Remote-file links (`GoToR`) open the referenced file in a new window
+  when it is a relative name (resolved next to the current document), an
+  absolute path or a local `file:` URI; a target on another host or
+  share (`smb://`, `http://`, …) is never fetched through GIO, only
+  offered to its own application after the same confirmation.
   Launch / JavaScript / other actions are ignored.
 - **Keyboard**: every link on the visible pages has an invisible focusable
   stand-in over it, in reading order (top to bottom, then left to right).

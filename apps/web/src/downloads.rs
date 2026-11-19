@@ -1,4 +1,5 @@
-//! Download destination naming.
+//! Download destination naming, and which downloads start without
+//! asking.
 
 use std::path::{Path, PathBuf};
 
@@ -14,7 +15,13 @@ pub fn sanitize(name: &str) -> String {
     let cleaned: String = base
         .chars()
         .map(|c| {
-            if c.is_control() || matches!(c, '/' | '\\' | '\0') {
+            // Control and formatting characters (with a right-to-left
+            // override, "invoice<RLO>fdp.desktop" looks like it ends in
+            // ".pdf").
+            if c.is_control()
+                || helix_app_common::links::is_format_char(c)
+                || matches!(c, '/' | '\\' | '\0')
+            {
                 '_'
             } else {
                 c
@@ -34,6 +41,35 @@ pub fn sanitize(name: &str) -> String {
         "download".into()
     } else {
         out
+    }
+}
+
+/// Whether a page's downloads may start without asking: the first one
+/// after a navigation the user started (a click, a typed address, back or
+/// reload). Anything a page starts on its own, and every download after
+/// the first, is confirmed.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct Gate {
+    user_started: bool,
+    admitted: u32,
+}
+
+impl Gate {
+    /// A navigation began; redirects continue the one before.
+    pub fn navigation(&mut self, by_user: bool, redirect: bool) {
+        if !redirect {
+            self.user_started = by_user;
+            self.admitted = 0;
+        }
+    }
+
+    /// Whether a download may start without asking (counting it if so).
+    pub fn admit(&mut self) -> bool {
+        let ok = self.user_started && self.admitted == 0;
+        if ok {
+            self.admitted += 1;
+        }
+        ok
     }
 }
 
@@ -106,6 +142,35 @@ fn percent_decode(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn formatting_characters_are_replaced() {
+        assert_eq!(
+            sanitize("invoice\u{202E}fdp.desktop"),
+            "invoice_fdp.desktop"
+        );
+        assert_eq!(sanitize("a\u{2066}b\u{200B}c.txt"), "a_b_c.txt");
+        assert_eq!(sanitize("café.pdf"), "café.pdf");
+    }
+
+    #[test]
+    fn only_the_first_user_started_download_is_automatic() {
+        let mut g = Gate::default();
+        // Nothing the user started yet.
+        assert!(!g.admit());
+        g.navigation(true, false);
+        assert!(g.admit());
+        assert!(!g.admit(), "a second download from the page asks");
+        // A redirect continues the user's navigation, without a new allowance.
+        g.navigation(false, true);
+        assert!(!g.admit());
+        g.navigation(true, false);
+        g.navigation(false, true);
+        assert!(g.admit());
+        // A page navigating by itself asks.
+        g.navigation(false, false);
+        assert!(!g.admit());
+    }
 
     #[test]
     fn sanitizes() {

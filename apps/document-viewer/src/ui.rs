@@ -1022,18 +1022,19 @@ impl Win {
     fn follow(self: &Rc<Self>, t: Target) {
         match t {
             Target::Page { page, top, left } => self.jump(page, top, left),
-            Target::Uri(uri) => {
-                gtk::UriLauncher::new(&uri).launch(
-                    Some(&self.window),
-                    None::<&gio::Cancellable>,
-                    |_| {},
-                );
-            }
+            // Web and mail links open; anything else is confirmed first,
+            // showing the full target (the link's look says nothing).
+            Target::Uri(uri) => helix_app_common::links::launch(&self.window, &uri),
             Target::Remote { file, page } => {
                 let base = self.uri.borrow().clone().map(|u| gio::File::for_uri(&u));
-                let f = match base.and_then(|b| b.parent()) {
-                    Some(dir) if !file.contains("://") => dir.resolve_relative_path(&file),
-                    _ => gio::File::for_commandline_arg(&file),
+                let dir = base.and_then(|b| b.parent());
+                let Some(f) = crate::links::remote_document(dir.as_ref(), &file) else {
+                    // A document elsewhere (a share, a server): only
+                    // after the user confirms, in its own application.
+                    if helix_app_common::links::scheme(&file).is_some() {
+                        helix_app_common::links::confirm(&self.window, &file);
+                    }
+                    return;
                 };
                 let w = Win::new(&self.app);
                 w.open_uri(&f.uri(), page.map(Start::Index), false);

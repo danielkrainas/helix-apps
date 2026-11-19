@@ -236,9 +236,55 @@ impl DocCtx<'_> {
     }
 }
 
+/// The document a "go to another file" link opens. A relative name is
+/// resolved next to the current document (`base_dir`, its folder, which
+/// the user already opened from); a name with a scheme only when it is a
+/// local `file:` URI, so a link cannot make GIO mount a share or fetch
+/// from a server.
+pub fn remote_document(base_dir: Option<&gtk::gio::File>, file: &str) -> Option<gtk::gio::File> {
+    use gtk::gio::prelude::*;
+    if file.contains("://") || helix_app_common::links::scheme(file).is_some() {
+        return helix_app_common::links::local_path(file).map(gtk::gio::File::for_path);
+    }
+    match base_dir {
+        Some(dir) => Some(dir.resolve_relative_path(file)),
+        None if std::path::Path::new(file).is_absolute() => Some(gtk::gio::File::for_path(file)),
+        None => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn remote_documents_stay_local() {
+        use gtk::gio::prelude::*;
+        let dir = gtk::gio::File::for_path("/docs/manual");
+        let path = |f: Option<gtk::gio::File>| f.and_then(|f| f.path());
+        assert_eq!(
+            path(remote_document(Some(&dir), "part2.pdf")),
+            Some("/docs/manual/part2.pdf".into())
+        );
+        assert_eq!(
+            path(remote_document(None, "file:///docs/b.pdf")),
+            Some("/docs/b.pdf".into())
+        );
+        assert_eq!(
+            path(remote_document(None, "/docs/c.pdf")),
+            Some("/docs/c.pdf".into())
+        );
+        for bad in [
+            "smb://host/share/x.pdf",
+            "http://example.org/x.pdf",
+            "sftp://h/x.pdf",
+            "smb:host/x.pdf",
+            "file://otherhost/x.pdf",
+        ] {
+            assert!(remote_document(Some(&dir), bad).is_none(), "{bad}");
+        }
+        assert!(remote_document(None, "relative.pdf").is_none());
+    }
 
     #[test]
     fn named_actions() {

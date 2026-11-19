@@ -197,11 +197,21 @@ Web browser.
   same URL/title/tag set.
 
 ### Downloads
-- Navigation responses the engine cannot display are downloaded; context
-  menu "Download …" also works.
+- Navigation responses the engine cannot display are downloaded; the
+  context menu's *Download Linked File*, *Download Image*, *Download
+  Video* and *Download Audio* (replacing WebKit's items) also work.
+- Confirmation: a download starts without asking only if the user asked
+  for it (a context-menu item) or it is the first one after a navigation
+  the user started (a click with a user gesture, a typed address, back,
+  forward or reload; redirects continue the navigation). Anything else —
+  a page navigating to a file by itself, a second or later download from
+  the same page — asks *Download File?* ("{site} wants to save “{name}”
+  to your Downloads folder.", *Cancel* / *Download*); cancelling cancels
+  the download.
 - Destination: XDG Download directory (fallback `~/Downloads`) with the
-  server-suggested name sanitised (no path separators, control chars or
-  leading dots; empty → `download`) and uniqued as `name (1).ext`,
+  server-suggested name sanitised (no path separators, control chars,
+  Unicode formatting characters such as bidirectional overrides, which can
+  disguise an extension, or leading dots; empty → `download`) and uniqued as `name (1).ext`,
   `name (2).ext` … (keeping compound extensions such as `.tar.gz`); names
   of in-flight downloads are reserved too. Existing files are never
   overwritten.

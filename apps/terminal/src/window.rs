@@ -16,6 +16,7 @@ use crate::paths;
 use crate::process::{self, Tint};
 use crate::search;
 use helix_app_common::i18n::tr;
+use helix_app_common::links;
 use helix_app_common::nc_;
 use helix_app_common::trf;
 
@@ -33,6 +34,9 @@ pub struct Tab {
     is_command: bool,
     /// Link under the pointer at the last button press.
     link: RefCell<Option<String>>,
+    /// Whether `link` is an OSC 8 hyperlink: a target written by the
+    /// program, not the text on screen.
+    link_is_hyperlink: Cell<bool>,
     /// The window currently showing this tab.
     window: RefCell<Weak<Window>>,
 }
@@ -52,6 +56,7 @@ impl Tab {
             None
         };
         *self.link.borrow_mut() = link;
+        self.link_is_hyperlink.set(false);
         if let Some(w) = self.window() {
             w.update_link_actions();
         }
@@ -420,6 +425,12 @@ impl Window {
             let tag = term.match_add_regex(&re, 0);
             term.match_set_cursor_name(tag, "pointer");
         }
+        // Show where an OSC 8 hyperlink really points, as GNOME Terminal
+        // does: its text can be anything.
+        term.connect_hyperlink_hover_uri_notify(|t| {
+            let tip = t.hyperlink_hover_uri().map(|u| links::display_form(&u));
+            t.set_tooltip_text(tip.as_deref());
+        });
 
         let scrolled = gtk::ScrolledWindow::builder()
             .child(&term)
@@ -490,6 +501,7 @@ impl Window {
             child_pid: Cell::new(None),
             is_command: !launch.command.is_empty(),
             link: RefCell::default(),
+            link_is_hyperlink: Cell::new(false),
             window: RefCell::new(self.this.clone()),
         });
         self.tabs.borrow_mut().push(tab.clone());
@@ -669,17 +681,16 @@ impl Window {
         click.connect_pressed(move |g, _, x, y| {
             let Some(tab) = tk.upgrade() else { return };
             let Some(w) = tab.window() else { return };
-            let link = tab
-                .term
-                .check_hyperlink_at(x, y)
-                .map(|s| s.to_string())
-                .or_else(|| {
-                    tab.term
-                        .check_match_at(x, y)
-                        .0
-                        .map(|s| search::normalize_url(&s))
-                });
+            let hyperlink = tab.term.check_hyperlink_at(x, y).map(|s| s.to_string());
+            let is_hyperlink = hyperlink.is_some();
+            let link = hyperlink.or_else(|| {
+                tab.term
+                    .check_match_at(x, y)
+                    .0
+                    .map(|s| search::normalize_url(&s))
+            });
             *tab.link.borrow_mut() = link.clone();
+            tab.link_is_hyperlink.set(is_hyperlink);
             w.update_link_actions();
             let ctrl = g
                 .current_event_state()
@@ -687,7 +698,7 @@ impl Window {
             if g.current_button() == 1 && ctrl {
                 if let Some(uri) = link {
                     g.set_state(gtk::EventSequenceState::Claimed);
-                    w.open_uri(&uri);
+                    w.open_uri(&uri, is_hyperlink);
                 }
             }
         });
@@ -867,12 +878,16 @@ impl Window {
         }
     }
 
-    fn open_uri(&self, uri: &str) {
-        gtk::UriLauncher::new(uri).launch(Some(&self.win), None::<&gio::Cancellable>, |res| {
-            if let Err(e) = res {
-                glib::g_warning!("helix-terminal", "Could not open link: {}", e.message());
-            }
-        });
+    /// Opens a link. URLs matched in the text are shown as they are and
+    /// were already limited to known schemes; an OSC 8 hyperlink's target
+    /// is not on screen, so anything but a web or mail link is confirmed
+    /// first, showing the target.
+    fn open_uri(&self, uri: &str, is_hyperlink: bool) {
+        if is_hyperlink {
+            links::launch(&self.win, uri);
+        } else {
+            links::launch_now(&self.win, uri);
+        }
     }
 
     fn update_link_actions(&self) {
@@ -1233,8 +1248,11 @@ impl Window {
         add(
             "open-link",
             Box::new(|w| {
-                if let Some(uri) = w.current_tab().and_then(|t| t.link.borrow().clone()) {
-                    w.open_uri(&uri);
+                if let Some(t) = w.current_tab() {
+                    let uri = t.link.borrow().clone();
+                    if let Some(uri) = uri {
+                        w.open_uri(&uri, t.link_is_hyperlink.get());
+                    }
                 }
             }),
         );

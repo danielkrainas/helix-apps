@@ -62,8 +62,12 @@ Manage contacts.
   postal addresses, websites, birthday / anniversary, notes, and the
   address book(s) the contact comes from. Each row shows the value with its
   type ("Work", "Mobile", …).
-  - Email rows open `mailto:`; phone rows open `tel:`; addresses open
-    `geo:0,0?q=<address>` (maps); websites open the URL — all through
+  - Email rows open `mailto:` (only when the value is one plain address,
+    `local@domain`; the address is percent-encoded so a value cannot add
+    `?attach=`, `&body=` or other fields); phone rows open `tel:`;
+    addresses open `geo:0,0?q=<address>` (maps); websites open the URL
+    (`http`/`https` only, a bare host name gets `https://`; a `file:`,
+    `smb:` or other value is shown as text without a button) — all through
     `gtk::UriLauncher` (OpenURI portal when sandboxed). Each such row
     shows a labelled button for it (*Send Email*, *Call*, *Show on Map*,
     *Open Website*; also the row's accessible description), and

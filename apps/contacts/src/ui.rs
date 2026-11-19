@@ -1261,7 +1261,7 @@ impl Ui {
                 g.add(&self.value_row(
                     &e.value,
                     tr(vcard::generic_label(&e.types)),
-                    Some((RowAction::Email, format!("mailto:{}", e.value))),
+                    mailto_uri(&e.value).map(|uri| (RowAction::Email, uri)),
                 ));
             }
             page.append(&g);
@@ -1297,15 +1297,10 @@ impl Ui {
         if !c.urls.is_empty() {
             let g = group(tr("Website"));
             for u in &c.urls {
-                let uri = if u.value.contains("://") {
-                    u.value.clone()
-                } else {
-                    format!("https://{}", u.value)
-                };
                 g.add(&self.value_row(
                     &u.value,
                     tr(vcard::generic_label(&u.types)),
-                    Some((RowAction::Website, uri)),
+                    website_uri(&u.value).map(|uri| (RowAction::Website, uri)),
                 ));
             }
             page.append(&g);
@@ -1955,8 +1950,110 @@ fn copy_name(value: &str) -> String {
     trf!("Copy {}", one_line.join(", "))
 }
 
+/// The `mailto:` link for an EMAIL value, `None` unless it is one plain
+/// address (`local@domain`, no display name, spaces or list). The address
+/// is percent-encoded, so a value cannot add `?subject=`, `&attach=` or
+/// other header fields.
+fn mailto_uri(value: &str) -> Option<String> {
+    let addr = value.trim();
+    let (local, domain) = addr.rsplit_once('@')?;
+    let bad = |c: char| c.is_whitespace() || c.is_control() || "<>\"(),;:[]\\".contains(c);
+    if local.is_empty() || local.chars().any(|c| c == '@' || bad(c)) {
+        return None;
+    }
+    let label_ok = |l: &str| {
+        !l.is_empty()
+            && !l.starts_with('-')
+            && !l.ends_with('-')
+            && l.chars().all(|c| c.is_alphanumeric() || c == '-')
+    };
+    if !domain.split('.').all(label_ok) {
+        return None;
+    }
+    Some(format!(
+        "mailto:{}@{}",
+        glib::Uri::escape_string(local, None, false),
+        glib::Uri::escape_string(domain, None, true)
+    ))
+}
+
+/// The link for a URL value: `http:` and `https:` only (a bare host name
+/// gets `https://`); anything else (`file:`, `smb:`, a custom scheme) is
+/// shown as text, not opened.
+fn website_uri(value: &str) -> Option<String> {
+    let value = value.trim();
+    if value.is_empty() || value.chars().any(|c| c.is_whitespace() || c.is_control()) {
+        return None;
+    }
+    let uri = if value.contains("://") {
+        value.to_string()
+    } else {
+        format!("https://{value}")
+    };
+    if !helix_app_common::links::is_web(&uri) {
+        return None;
+    }
+    let parsed = glib::Uri::parse(&uri, glib::UriFlags::NONE).ok()?;
+    parsed.host().is_some_and(|h| !h.is_empty()).then_some(uri)
+}
+
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn email_links_are_one_address() {
+        use super::mailto_uri;
+        assert_eq!(
+            mailto_uri(" jane.doe+tag@example.org ").as_deref(),
+            Some("mailto:jane.doe%2Btag@example.org")
+        );
+        assert_eq!(
+            mailto_uri("j@bücher.example").as_deref(),
+            Some("mailto:j@bücher.example")
+        );
+        assert_eq!(
+            mailto_uri("a?attach=/etc/passwd@x.org").as_deref(),
+            Some("mailto:a%3Fattach%3D%2Fetc%2Fpasswd@x.org")
+        );
+        for bad in [
+            "jane@example.org?attach=/home/u/.ssh/id_rsa",
+            "jane@example.org&body=hi",
+            "Jane <jane@example.org>",
+            "a@b.org, c@d.org",
+            "no-at-sign",
+            "@example.org",
+            "jane@",
+            "jane@exa mple.org",
+            "jane@-x.org",
+            "jane@x..org",
+        ] {
+            assert_eq!(mailto_uri(bad), None, "{bad}");
+        }
+    }
+
+    #[test]
+    fn website_links_are_web_only() {
+        use super::website_uri;
+        assert_eq!(
+            website_uri("example.org/about").as_deref(),
+            Some("https://example.org/about")
+        );
+        assert_eq!(
+            website_uri("http://example.org").as_deref(),
+            Some("http://example.org")
+        );
+        for bad in [
+            "file:///home/u/x.desktop",
+            "smb://host/share",
+            "javascript:alert(1)",
+            "x-handler://run",
+            "https://",
+            "exa mple.org",
+            "",
+        ] {
+            assert_eq!(website_uri(bad), None, "{bad}");
+        }
+    }
+
     #[test]
     fn copy_names_its_value() {
         assert_eq!(

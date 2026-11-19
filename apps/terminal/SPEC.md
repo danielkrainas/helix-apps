@@ -79,7 +79,13 @@ VTE for GTK 4 (`vte-2.91-gtk4` 0.76, Rust `vte4` 0.8).
   for assistive technology; the search entry is named "Find".
 - Clickable URLs: `http(s)`, `ftp`, `file`, `mailto` and `www.` URLs are
   highlighted (VTE match regex); Ctrl+click opens them with
-  `GtkUriLauncher` (OpenURI portal when sandboxed); OSC 8 hyperlinks too.
+  `GtkUriLauncher` (OpenURI portal when sandboxed). OSC 8 hyperlinks too,
+  but their target is not the text on screen: hovering one shows the
+  target in a tooltip (as GNOME Terminal does, control and bidirectional
+  formatting characters shown as `\u{…}`), and only `http`, `https` and
+  `mailto` targets open directly; any other scheme (`file:`, `smb:`,
+  `sftp:`, a custom handler, …) first asks *Open This Link?* showing the
+  full target (`helix_app_common::links`).
 - The context menu's *Open Link* / *Copy Link* act on one link, decided
   when the menu opens and disabled when there is none: for the secondary
   button, the hyperlink or URL under the pointer; from the keyboard (Menu

@@ -319,7 +319,7 @@ msgstr "关于音频播放器(_A)"
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
 #: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
-#: apps/terminal/src/window.rs:296 apps/terminal/src/window.rs:300
+#: apps/terminal/src/window.rs:301 apps/terminal/src/window.rs:305
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
 #: apps/tour/src/ui.rs:330 apps/tour/src/ui.rs:332
 #: apps/video-player/src/ui.rs:321 apps/video-player/src/ui.rs:325
@@ -393,7 +393,7 @@ msgid "Audio Files"
 msgstr "音频文件"
 
 #: apps/audio-player/src/ui.rs:755 apps/disks/src/ui.rs:1988
-#: apps/document-viewer/src/ui.rs:1483 apps/files/src/ui/dialogs.rs:662
+#: apps/document-viewer/src/ui.rs:1484 apps/files/src/ui/dialogs.rs:662
 #: apps/video-player/src/ui.rs:1056
 msgid "All Files"
 msgstr "所有文件"
@@ -1059,7 +1059,7 @@ msgstr "清除历史记录(_C)"
 #: apps/document-scanner/src/ui.rs:174 apps/document-scanner/src/ui.rs:190
 #: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:485
 #: apps/music/src/ui.rs:467 apps/system-monitor/src/ui.rs:247
-#: apps/terminal/src/window.rs:290 apps/text-editor/src/window.rs:63
+#: apps/terminal/src/window.rs:295 apps/text-editor/src/window.rs:63
 #: apps/web/src/window.rs:263
 msgid "_Preferences"
 msgstr "首选项(_P)"
@@ -1130,11 +1130,12 @@ msgstr "计算(_A)"
 #: apps/settings/src/ui/apps.rs:553 apps/settings/src/ui/bluetooth.rs:647
 #: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
 #: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
-#: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1288
-#: apps/text-editor/src/window.rs:973 apps/web/src/dialogs.rs:413
-#: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
-#: apps/web/src/dialogs.rs:928 apps/web/src/dialogs.rs:1130
-#: apps/web/src/tab.rs:1105 apps/web/src/tab.rs:1118
+#: apps/system-monitor/src/dialogs.rs:290 apps/terminal/src/window.rs:1306
+#: apps/text-editor/src/window.rs:973 apps/web/src/app.rs:953
+#: apps/web/src/dialogs.rs:413 apps/web/src/dialogs.rs:451
+#: apps/web/src/dialogs.rs:707 apps/web/src/dialogs.rs:928
+#: apps/web/src/dialogs.rs:1130 apps/web/src/tab.rs:1163
+#: apps/web/src/tab.rs:1176 crates/helix-app-common/src/links.rs:138
 msgid "_Cancel"
 msgstr "取消(_C)"
 
@@ -1382,7 +1383,7 @@ msgstr "取消"
 #: apps/document-scanner/src/ui.rs:323 apps/screenshot/src/shortcuts.rs:20
 #: apps/text-editor/src/shortcuts.rs:16 apps/text-editor/src/window.rs:144
 #: apps/text-editor/src/window.rs:181 apps/text-editor/src/window.rs:183
-#: apps/web/src/tab.rs:191
+#: apps/web/src/tab.rs:196
 msgid "Save"
 msgstr "保存"
 
@@ -1474,7 +1475,7 @@ msgstr "添加提醒"
 
 #: apps/calendar/src/editor.rs:608 apps/calendar/src/editor.rs:617
 #: apps/contacts/src/editor.rs:391 apps/contacts/src/editor.rs:400
-#: apps/contacts/src/ui.rs:1334
+#: apps/contacts/src/ui.rs:1329
 msgid "Notes"
 msgstr "备注"
 
@@ -1895,7 +1896,7 @@ msgstr "在时间光标处新建事件"
 #: apps/document-viewer/src/ui.rs:354 apps/files/src/ui/shortcuts.rs:44
 #: apps/image-viewer/src/shortcuts.rs:42 apps/image-viewer/src/ui.rs:443
 #: apps/maps/src/shortcuts.rs:24 apps/terminal/src/shortcuts.rs:51
-#: apps/terminal/src/window.rs:190 apps/text-editor/src/shortcuts.rs:59
+#: apps/terminal/src/window.rs:195 apps/text-editor/src/shortcuts.rs:59
 #: apps/text-editor/src/window.rs:161 apps/web/src/shortcuts.rs:62
 #: apps/web/src/window.rs:417
 msgid "Zoom In"
@@ -1905,14 +1906,14 @@ msgstr "放大"
 #: apps/document-viewer/src/ui.rs:353 apps/files/src/ui/shortcuts.rs:47
 #: apps/image-viewer/src/shortcuts.rs:45 apps/image-viewer/src/ui.rs:425
 #: apps/maps/src/shortcuts.rs:28 apps/terminal/src/shortcuts.rs:54
-#: apps/terminal/src/window.rs:188 apps/text-editor/src/shortcuts.rs:62
+#: apps/terminal/src/window.rs:193 apps/text-editor/src/shortcuts.rs:62
 #: apps/text-editor/src/window.rs:152 apps/web/src/shortcuts.rs:66
 #: apps/web/src/window.rs:416
 msgid "Zoom Out"
 msgstr "缩小"
 
 #: apps/calendar/src/shortcuts.rs:47 apps/terminal/src/shortcuts.rs:55
-#: apps/terminal/src/window.rs:304 apps/text-editor/src/shortcuts.rs:63
+#: apps/terminal/src/window.rs:309 apps/text-editor/src/shortcuts.rs:63
 #: apps/text-editor/src/window.rs:157 apps/web/src/shortcuts.rs:69
 #: apps/web/src/window.rs:421 apps/web/src/window.rs:423
 msgid "Reset Zoom"
@@ -1963,7 +1964,7 @@ msgstr "导入(_I)…"
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:232 apps/maps/src/ui.rs:486
-#: apps/settings/src/ui/mod.rs:198 apps/terminal/src/window.rs:291
+#: apps/settings/src/ui/mod.rs:198 apps/terminal/src/window.rs:296
 #: apps/text-editor/src/window.rs:65 apps/web/src/window.rs:222
 #: apps/web/src/window.rs:265 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -2033,8 +2034,8 @@ msgstr "事件已删除"
 msgid "“{}” deleted"
 msgstr "已删除“{}”"
 
-#: apps/calendar/src/ui.rs:1043 apps/contacts/src/ui.rs:1602
-#: apps/contacts/src/ui.rs:1644 apps/files/src/ui/shortcuts.rs:74
+#: apps/calendar/src/ui.rs:1043 apps/contacts/src/ui.rs:1597
+#: apps/contacts/src/ui.rs:1639 apps/files/src/ui/shortcuts.rs:74
 #: apps/text-editor/src/shortcuts.rs:36
 msgid "Undo"
 msgstr "撤销"
@@ -2108,7 +2109,7 @@ msgstr "日历文件"
 msgid "Import Events"
 msgstr "导入事件"
 
-#: apps/calendar/src/ui.rs:2416 apps/contacts/src/ui.rs:1723
+#: apps/calendar/src/ui.rs:2416 apps/contacts/src/ui.rs:1718
 msgid "Could not read {path}: {e}"
 msgstr "无法读取 {path}：{e}"
 
@@ -2309,7 +2310,7 @@ msgid "_About Camera"
 msgstr "关于相机(_A)"
 
 #: apps/camera/src/ui.rs:274 apps/camera/src/ui.rs:278
-#: apps/contacts/src/ui.rs:1428 apps/files/src/ui/shortcuts.rs:72
+#: apps/contacts/src/ui.rs:1423 apps/files/src/ui/shortcuts.rs:72
 #: apps/image-viewer/src/shortcuts.rs:17 apps/terminal/src/shortcuts.rs:29
 msgid "Copy"
 msgstr "复制"
@@ -2340,7 +2341,7 @@ msgstr "视频"
 msgid "QR code detected: {text}"
 msgstr "检测到二维码：{text}"
 
-#: apps/camera/src/ui.rs:585 apps/contacts/src/ui.rs:1438
+#: apps/camera/src/ui.rs:585 apps/contacts/src/ui.rs:1433
 #: apps/logs/src/ui.rs:838
 msgid "Copied to clipboard"
 msgstr "已复制到剪贴板"
@@ -2544,7 +2545,7 @@ msgstr "未知字符"
 #: apps/characters/src/shortcuts.rs:11 apps/characters/src/ui.rs:54
 #: apps/characters/src/ui.rs:295 apps/characters/src/ui.rs:352
 #: apps/characters/src/ui.rs:357 apps/characters/src/ui.rs:434
-#: apps/characters/src/ui.rs:482 apps/fonts/src/fontinfo.rs:269
+#: apps/characters/src/ui.rs:482 apps/fonts/src/fontinfo.rs:296
 #: apps/fonts/src/ui.rs:969
 msgid "Characters"
 msgstr "字符"
@@ -3002,7 +3003,7 @@ msgid "Add Timer"
 msgstr "添加计时器"
 
 #: apps/clocks/src/ui.rs:810 apps/maps/src/ui.rs:29
-#: apps/weather/src/autoloc.rs:20
+#: apps/weather/src/autoloc.rs:25
 msgid "Current Location"
 msgstr "当前位置"
 
@@ -3099,7 +3100,7 @@ msgid "_Add"
 msgstr "添加(_A)"
 
 #: apps/clocks/src/ui.rs:1353 apps/clocks/src/ui.rs:1908
-#: apps/contacts/src/ui.rs:1816
+#: apps/contacts/src/ui.rs:1811
 msgid "_Done"
 msgstr "完成(_D)"
 
@@ -3469,7 +3470,7 @@ msgstr "昵称"
 msgid "Organization"
 msgstr "组织"
 
-#: apps/contacts/src/editor.rs:325 apps/contacts/src/ui.rs:1321
+#: apps/contacts/src/editor.rs:325 apps/contacts/src/ui.rs:1316
 msgid "Department"
 msgstr "部门"
 
@@ -3514,11 +3515,11 @@ msgctxt "contact details"
 msgid "Other"
 msgstr "其他"
 
-#: apps/contacts/src/editor.rs:385 apps/contacts/src/ui.rs:1315
+#: apps/contacts/src/editor.rs:385 apps/contacts/src/ui.rs:1310
 msgid "Birthday"
 msgstr "生日"
 
-#: apps/contacts/src/editor.rs:386 apps/contacts/src/ui.rs:1318
+#: apps/contacts/src/editor.rs:386 apps/contacts/src/ui.rs:1313
 msgid "Anniversary"
 msgstr "纪念日"
 
@@ -3571,7 +3572,7 @@ msgid "Contacts"
 msgstr "联系人"
 
 #: apps/contacts/src/shortcuts.rs:10 apps/contacts/src/ui.rs:186
-#: apps/contacts/src/ui.rs:188 apps/contacts/src/ui.rs:1463
+#: apps/contacts/src/ui.rs:188 apps/contacts/src/ui.rs:1458
 msgid "New Contact"
 msgstr "新建联系人"
 
@@ -3755,151 +3756,151 @@ msgstr "地址"
 msgid "Website"
 msgstr "网站"
 
-#: apps/contacts/src/ui.rs:1324
+#: apps/contacts/src/ui.rs:1319
 msgid "Groups"
 msgstr "群组"
 
-#: apps/contacts/src/ui.rs:1327
+#: apps/contacts/src/ui.rs:1322
 msgid "Personal"
 msgstr "个人"
 
-#: apps/contacts/src/ui.rs:1350
+#: apps/contacts/src/ui.rs:1345
 msgid "Address Books"
 msgstr "通讯录"
 
-#: apps/contacts/src/ui.rs:1361
+#: apps/contacts/src/ui.rs:1356
 msgid "Read-only"
 msgstr "只读"
 
-#: apps/contacts/src/ui.rs:1450
+#: apps/contacts/src/ui.rs:1445
 msgid "No writable address book is available"
 msgstr "没有可写入的通讯录"
 
-#: apps/contacts/src/ui.rs:1510
+#: apps/contacts/src/ui.rs:1505
 msgid "Discard Changes?"
 msgstr "放弃更改？"
 
-#: apps/contacts/src/ui.rs:1511
+#: apps/contacts/src/ui.rs:1506
 msgid "Changes to this contact have not been saved."
 msgstr "对此联系人的更改尚未保存。"
 
-#: apps/contacts/src/ui.rs:1516 apps/document-scanner/src/ui.rs:1265
+#: apps/contacts/src/ui.rs:1511 apps/document-scanner/src/ui.rs:1265
 #: apps/document-scanner/src/ui.rs:1379 apps/text-editor/src/window.rs:979
 msgid "_Discard"
 msgstr "放弃(_D)"
 
-#: apps/contacts/src/ui.rs:1516
+#: apps/contacts/src/ui.rs:1511
 msgid "_Keep Editing"
 msgstr "继续编辑(_K)"
 
-#: apps/contacts/src/ui.rs:1581
+#: apps/contacts/src/ui.rs:1576
 msgid "Could not save links: {e}"
 msgstr "无法保存关联：{e}"
 
-#: apps/contacts/src/ui.rs:1601
+#: apps/contacts/src/ui.rs:1596
 msgid "Contacts linked"
 msgstr "已关联联系人"
 
-#: apps/contacts/src/ui.rs:1622
+#: apps/contacts/src/ui.rs:1617
 msgid "These contacts are read-only"
 msgstr "这些联系人为只读"
 
-#: apps/contacts/src/ui.rs:1640
+#: apps/contacts/src/ui.rs:1635
 msgid "Contact deleted"
 msgstr "联系人已删除"
 
-#: apps/contacts/src/ui.rs:1642
+#: apps/contacts/src/ui.rs:1637
 msgid "{n} contact deleted"
 msgid_plural "{n} contacts deleted"
 msgstr[0] "已删除 {n} 个联系人"
 
-#: apps/contacts/src/ui.rs:1699
+#: apps/contacts/src/ui.rs:1694
 msgid "vCard files"
 msgstr "vCard 文件"
 
-#: apps/contacts/src/ui.rs:1706
+#: apps/contacts/src/ui.rs:1701
 msgid "Import Contacts"
 msgstr "导入联系人"
 
-#: apps/contacts/src/ui.rs:1736
+#: apps/contacts/src/ui.rs:1731
 msgid "No contacts found in the file"
 msgstr "文件中未找到联系人"
 
-#: apps/contacts/src/ui.rs:1755
+#: apps/contacts/src/ui.rs:1750
 msgid "Export Contacts"
 msgstr "导出联系人"
 
-#: apps/contacts/src/ui.rs:1779
+#: apps/contacts/src/ui.rs:1774
 msgid "Exported {n} contact"
 msgid_plural "Exported {n} contacts"
 msgstr[0] "已导出 {n} 个联系人"
 
-#: apps/contacts/src/ui.rs:1784 apps/logs/src/ui.rs:809
+#: apps/contacts/src/ui.rs:1779 apps/logs/src/ui.rs:809
 msgid "Export failed: {e}"
 msgstr "导出失败：{e}"
 
-#: apps/contacts/src/ui.rs:1807
+#: apps/contacts/src/ui.rs:1802
 msgid "Choose an Address Book"
 msgstr "选择通讯录"
 
-#: apps/contacts/src/ui.rs:1808
+#: apps/contacts/src/ui.rs:1803
 msgid ""
 "New contacts will be saved in this address book. You can change it later "
 "from the main menu."
 msgstr "新联系人将保存到此通讯录中。您以后可以在主菜单中更改。"
 
-#: apps/contacts/src/ui.rs:1812
+#: apps/contacts/src/ui.rs:1807
 msgid "Address Book for New Contacts"
 msgstr "新联系人所用的通讯录"
 
-#: apps/contacts/src/ui.rs:1859
+#: apps/contacts/src/ui.rs:1854
 msgid "Contact not found"
 msgstr "未找到联系人"
 
 #. Translators: a birthday or anniversary, "17" "May" "1990".
-#: apps/contacts/src/ui.rs:1901
+#: apps/contacts/src/ui.rs:1896
 msgid "{day} {month} {year}"
 msgstr "{year}年{month}{day}日"
 
 #. Translators: a birthday or anniversary without a year, "17" "May".
-#: apps/contacts/src/ui.rs:1903
+#: apps/contacts/src/ui.rs:1898
 msgid "{day} {month}"
 msgstr "{month}{day}日"
 
-#: apps/contacts/src/ui.rs:1920
+#: apps/contacts/src/ui.rs:1915
 msgid "Send Email"
 msgstr "发送电子邮件"
 
-#: apps/contacts/src/ui.rs:1921
+#: apps/contacts/src/ui.rs:1916
 msgid "Call"
 msgstr "呼叫"
 
-#: apps/contacts/src/ui.rs:1922 apps/image-viewer/src/ui.rs:607
+#: apps/contacts/src/ui.rs:1917 apps/image-viewer/src/ui.rs:607
 #: apps/image-viewer/src/ui.rs:609
 msgid "Show on Map"
 msgstr "在地图上显示"
 
-#: apps/contacts/src/ui.rs:1923 apps/maps/src/ui.rs:250
+#: apps/contacts/src/ui.rs:1918 apps/maps/src/ui.rs:250
 msgid "Open Website"
 msgstr "打开网站"
 
-#: apps/contacts/src/ui.rs:1939
+#: apps/contacts/src/ui.rs:1934
 msgid "No app available to send email"
 msgstr "没有可用于发送电子邮件的应用"
 
-#: apps/contacts/src/ui.rs:1940
+#: apps/contacts/src/ui.rs:1935
 msgid "No app available to make calls"
 msgstr "没有可用于拨打电话的应用"
 
-#: apps/contacts/src/ui.rs:1941
+#: apps/contacts/src/ui.rs:1936
 msgid "No app available to show maps"
 msgstr "没有可用于显示地图的应用"
 
-#: apps/contacts/src/ui.rs:1942
+#: apps/contacts/src/ui.rs:1937
 msgid "No app available to open websites"
 msgstr "没有可用于打开网站的应用"
 
-#: apps/contacts/src/ui.rs:1955
+#: apps/contacts/src/ui.rs:1950
 msgid "Copy {}"
 msgstr "复制{}"
 
@@ -4136,7 +4137,7 @@ msgstr[0] "{n} 个项目"
 #: apps/disk-usage/src/ui.rs:1006 apps/disks/src/ui.rs:358
 #: apps/disks/src/ui.rs:453 apps/files/src/sorting.rs:44
 #: apps/files/src/ui/properties.rs:138 apps/files/src/ui/tab.rs:216
-#: apps/fonts/src/fontinfo.rs:287 apps/music/src/details.rs:137
+#: apps/fonts/src/fontinfo.rs:314 apps/music/src/details.rs:137
 msgid "Size"
 msgstr "大小"
 
@@ -4331,7 +4332,7 @@ msgstr "TB"
 msgid "kB"
 msgstr "kB"
 
-#: apps/disks/src/format.rs:15 apps/fonts/src/fontinfo.rs:296
+#: apps/disks/src/format.rs:15 apps/fonts/src/fontinfo.rs:323
 #: apps/system-monitor/src/format.rs:38
 msgid "{n} byte"
 msgid_plural "{n} bytes"
@@ -4980,7 +4981,7 @@ msgstr[0] "{count} 个扇区"
 msgid "Authentication was dismissed."
 msgstr "身份验证已被取消。"
 
-#: apps/disks/src/udisks.rs:438
+#: apps/disks/src/udisks.rs:454
 msgid "Operation was cancelled"
 msgstr "操作已取消"
 
@@ -5209,7 +5210,7 @@ msgstr "解锁…"
 #: apps/disks/src/ui.rs:1211 apps/document-scanner/src/ui.rs:895
 #: apps/document-scanner/src/ui.rs:1564 apps/files/src/ui/jobs.rs:260
 #: apps/screenshot/src/ui.rs:646 apps/screenshot/src/ui.rs:707
-#: apps/terminal/src/window.rs:475 crates/helix-app-common/src/errors.rs:353
+#: apps/terminal/src/window.rs:486 crates/helix-app-common/src/errors.rs:353
 msgid "_Close"
 msgstr "关闭(_C)"
 
@@ -5762,7 +5763,7 @@ msgid "Unable to start scan: {e}"
 msgstr "无法开始扫描：{e}"
 
 #: apps/document-scanner/src/scanner.rs:473
-#: apps/document-scanner/src/scanner.rs:493
+#: apps/document-scanner/src/scanner.rs:489
 msgid "Error communicating with scanner: {e}"
 msgstr "与扫描仪通信时出错：{e}"
 
@@ -5953,11 +5954,11 @@ msgstr "裁剪(_C)"
 
 #: apps/document-scanner/src/ui.rs:227 apps/document-viewer/src/ui.rs:920
 #: apps/files/src/ui/window.rs:1587 apps/image-viewer/src/ui.rs:305
-#: apps/image-viewer/src/ui.rs:784 apps/terminal/src/window.rs:727
+#: apps/image-viewer/src/ui.rs:784 apps/terminal/src/window.rs:738
 msgid "_Copy"
 msgstr "复制(_C)"
 
-#: apps/document-scanner/src/ui.rs:256 apps/document-viewer/src/ui.rs:1169
+#: apps/document-scanner/src/ui.rs:256 apps/document-viewer/src/ui.rs:1170
 msgid "Page {}"
 msgstr "第 {} 页"
 
@@ -6470,8 +6471,8 @@ msgid "Find and Select"
 msgstr "查找和选择"
 
 #: apps/document-viewer/src/shortcuts.rs:20 apps/terminal/src/shortcuts.rs:37
-#: apps/terminal/src/shortcuts.rs:39 apps/terminal/src/window.rs:320
-#: apps/terminal/src/window.rs:432 apps/terminal/src/window.rs:435
+#: apps/terminal/src/shortcuts.rs:39 apps/terminal/src/window.rs:325
+#: apps/terminal/src/window.rs:443 apps/terminal/src/window.rs:446
 #: apps/text-editor/src/doc.rs:164 apps/text-editor/src/doc.rs:168
 #: apps/text-editor/src/shortcuts.rs:46 apps/web/src/shortcuts.rs:48
 msgid "Find"
@@ -6668,7 +6669,7 @@ msgid "Caret navigation off"
 msgstr "光标浏览已关闭"
 
 #: apps/document-viewer/src/ui.rs:921 apps/files/src/ui/window.rs:1614
-#: apps/files/src/ui/window.rs:1623 apps/terminal/src/window.rs:729
+#: apps/files/src/ui/window.rs:1623 apps/terminal/src/window.rs:740
 msgid "Select _All"
 msgstr "全选(_A)"
 
@@ -6682,44 +6683,44 @@ msgstr "（第 {page} 页，共 {n} 页）"
 msgid "of {n}"
 msgstr "/ {n}"
 
-#: apps/document-viewer/src/ui.rs:1307 apps/maps/src/ui.rs:1227
+#: apps/document-viewer/src/ui.rs:1308 apps/maps/src/ui.rs:1227
 #: apps/weather/src/ui.rs:927
 msgid "Searching…"
 msgstr "正在搜索…"
 
-#: apps/document-viewer/src/ui.rs:1479
+#: apps/document-viewer/src/ui.rs:1480
 msgid "PDF Documents"
 msgstr "PDF 文档"
 
-#: apps/document-viewer/src/ui.rs:1489
+#: apps/document-viewer/src/ui.rs:1490
 msgid "Open Document"
 msgstr "打开文档"
 
-#: apps/document-viewer/src/ui.rs:1552
+#: apps/document-viewer/src/ui.rs:1553
 msgid "Unable to open “{uri}”: {message}"
 msgstr "无法打开“{uri}”：{message}"
 
-#: apps/document-viewer/src/ui.rs:1618
+#: apps/document-viewer/src/ui.rs:1619
 msgid "Searching… {total} found"
 msgstr "正在搜索… 已找到 {total} 个"
 
-#: apps/document-viewer/src/ui.rs:1633
+#: apps/document-viewer/src/ui.rs:1634
 msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr "正在搜索第 {page} 页，共 {n_pages} 页… 已找到 {total} 个"
 
-#: apps/document-viewer/src/ui.rs:1643 apps/maps/src/ui.rs:1260
+#: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1260
 #: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:425
 #: apps/settings/src/ui/picker.rs:34
 msgid "No results found"
 msgstr "未找到结果"
 
-#: apps/document-viewer/src/ui.rs:1644 apps/settings/src/ui/picker.rs:35
+#: apps/document-viewer/src/ui.rs:1645 apps/settings/src/ui/picker.rs:35
 #: apps/text-editor/src/doc.rs:869 apps/web/src/window.rs:2386
 msgid "{n} result"
 msgid_plural "{n} results"
 msgstr[0] "{n} 个结果"
 
-#: apps/document-viewer/src/ui.rs:1824
+#: apps/document-viewer/src/ui.rs:1825
 msgid "Printing failed: {msg}"
 msgstr "打印失败：{msg}"
 
@@ -7221,23 +7222,23 @@ msgstr "…以及另外 {} 个"
 msgid "Some Items Could Not Be Processed"
 msgstr "部分项目无法处理"
 
-#: apps/files/src/ui/mod.rs:346
+#: apps/files/src/ui/mod.rs:357
 msgid "Always open a new window"
 msgstr "总是打开新窗口"
 
-#: apps/files/src/ui/mod.rs:354
+#: apps/files/src/ui/mod.rs:365
 msgid "Select the given items in their parent folders"
 msgstr "在各自的上级文件夹中选中给定的项目"
 
-#: apps/files/src/ui/mod.rs:362
+#: apps/files/src/ui/mod.rs:373
 msgid "Quit the running instance"
 msgstr "退出正在运行的实例"
 
-#: apps/files/src/ui/mod.rs:365
+#: apps/files/src/ui/mod.rs:376
 msgid "Access and organize files"
 msgstr "访问和整理文件"
 
-#: apps/files/src/ui/mod.rs:365 apps/files/src/ui/window.rs:156
+#: apps/files/src/ui/mod.rs:376 apps/files/src/ui/window.rs:156
 #: apps/files/src/ui/window.rs:456
 msgid "Files"
 msgstr "文件"
@@ -7361,10 +7362,10 @@ msgid "Windows and Tabs"
 msgstr "窗口和标签页"
 
 #: apps/files/src/ui/shortcuts.rs:14 apps/terminal/src/shortcuts.rs:13
-#: apps/terminal/src/window.rs:270 apps/terminal/src/window.rs:273
+#: apps/terminal/src/window.rs:275 apps/terminal/src/window.rs:278
 #: apps/text-editor/src/shortcuts.rs:13 apps/text-editor/src/window.rs:141
 #: apps/web/src/overview.rs:91 apps/web/src/shortcuts.rs:10
-#: apps/web/src/tab.rs:352
+#: apps/web/src/tab.rs:359
 msgid "New Tab"
 msgstr "新建标签页"
 
@@ -7581,7 +7582,7 @@ msgstr "服务器地址"
 msgid "Enter a location"
 msgstr "输入位置"
 
-#: apps/files/src/ui/window.rs:225 apps/terminal/src/window.rs:733
+#: apps/files/src/ui/window.rs:225 apps/terminal/src/window.rs:744
 #: apps/text-editor/src/window.rs:47
 msgid "New _Tab"
 msgstr "新建标签页(_T)"
@@ -7794,7 +7795,7 @@ msgstr "复制位置"
 msgid "New _Folder…"
 msgstr "新建文件夹(_F)…"
 
-#: apps/files/src/ui/window.rs:1622 apps/terminal/src/window.rs:728
+#: apps/files/src/ui/window.rs:1622 apps/terminal/src/window.rs:739
 msgid "_Paste"
 msgstr "粘贴(_P)"
 
@@ -7827,7 +7828,7 @@ msgstr "字型"
 msgid "typography"
 msgstr "排版"
 
-#: apps/fonts/src/fclist.rs:92 apps/fonts/src/fontinfo.rs:81
+#: apps/fonts/src/fclist.rs:92 apps/fonts/src/fontinfo.rs:87
 msgid "Regular"
 msgstr "常规"
 
@@ -7860,85 +7861,85 @@ msgstr "fc-list 未找到字体"
 msgid "Not a supported font file"
 msgstr "不是受支持的字体文件"
 
-#: apps/fonts/src/fontinfo.rs:103
+#: apps/fonts/src/fontinfo.rs:109
 msgid "OpenType (CFF2)"
 msgstr "OpenType（CFF2）"
 
-#: apps/fonts/src/fontinfo.rs:105
+#: apps/fonts/src/fontinfo.rs:111
 msgid "OpenType (CFF)"
 msgstr "OpenType（CFF）"
 
-#: apps/fonts/src/fontinfo.rs:109
+#: apps/fonts/src/fontinfo.rs:115
 msgid "OpenType (bitmap)"
 msgstr "OpenType（位图）"
 
 #. Translators: a variable font's format: "Variable TrueType".
-#: apps/fonts/src/fontinfo.rs:113
+#: apps/fonts/src/fontinfo.rs:119
 msgid "Variable {format}"
 msgstr "可变 {format}"
 
 #. Translators: a font collection's format: "TrueType Collection".
-#: apps/fonts/src/fontinfo.rs:119
+#: apps/fonts/src/fontinfo.rs:125
 msgid "{format} Collection"
 msgstr "{format} 字体集"
 
-#: apps/fonts/src/fontinfo.rs:201
+#: apps/fonts/src/fontinfo.rs:228
 msgid "The quick brown fox jumps over the lazy dog."
 msgstr "我能吞下玻璃而不伤身体。The quick brown fox jumps over the lazy dog."
 
-#: apps/fonts/src/fontinfo.rs:257 apps/fonts/src/fontinfo.rs:280
+#: apps/fonts/src/fontinfo.rs:284 apps/fonts/src/fontinfo.rs:307
 msgid "Family"
 msgstr "字族"
 
-#: apps/fonts/src/fontinfo.rs:258 apps/fonts/src/fontinfo.rs:281
+#: apps/fonts/src/fontinfo.rs:285 apps/fonts/src/fontinfo.rs:308
 #: apps/fonts/src/ui.rs:656 apps/fonts/src/ui.rs:657
 #: apps/settings/src/ui/appearance.rs:106 apps/terminal/src/prefs_dialog.rs:27
-#: apps/terminal/src/window.rs:182 apps/text-editor/src/prefs.rs:61
+#: apps/terminal/src/window.rs:187 apps/text-editor/src/prefs.rs:61
 msgid "Style"
 msgstr "样式"
 
-#: apps/fonts/src/fontinfo.rs:259
+#: apps/fonts/src/fontinfo.rs:286
 msgid "Full name"
 msgstr "全名"
 
-#: apps/fonts/src/fontinfo.rs:260
+#: apps/fonts/src/fontinfo.rs:287
 msgid "Version"
 msgstr "版本"
 
-#: apps/fonts/src/fontinfo.rs:261
+#: apps/fonts/src/fontinfo.rs:288
 msgid "Copyright"
 msgstr "版权"
 
-#: apps/fonts/src/fontinfo.rs:262
+#: apps/fonts/src/fontinfo.rs:289
 msgid "Designer"
 msgstr "设计者"
 
-#: apps/fonts/src/fontinfo.rs:263
+#: apps/fonts/src/fontinfo.rs:290
 msgid "Manufacturer"
 msgstr "制造商"
 
-#: apps/fonts/src/fontinfo.rs:264
+#: apps/fonts/src/fontinfo.rs:291
 msgid "Description"
 msgstr "描述"
 
-#: apps/fonts/src/fontinfo.rs:265
+#: apps/fonts/src/fontinfo.rs:292
 msgid "License"
 msgstr "许可证"
 
-#: apps/fonts/src/fontinfo.rs:266
+#: apps/fonts/src/fontinfo.rs:293
 msgid "License URL"
 msgstr "许可证 URL"
 
-#: apps/fonts/src/fontinfo.rs:267
+#: apps/fonts/src/fontinfo.rs:294
 msgid "Glyphs"
 msgstr "字形"
 
-#: apps/fonts/src/fontinfo.rs:276 apps/fonts/src/fontinfo.rs:282
+#: apps/fonts/src/fontinfo.rs:303 apps/fonts/src/fontinfo.rs:309
 #: apps/image-viewer/src/ui.rs:581 apps/music/src/details.rs:128
 msgid "Format"
 msgstr "格式"
 
-#: apps/fonts/src/fontinfo.rs:285 apps/music/src/details.rs:156
+#: apps/fonts/src/fontinfo.rs:312 apps/music/src/details.rs:156
 msgid "File"
 msgstr "文件"
 
@@ -8087,7 +8088,7 @@ msgid "{n} character"
 msgid_plural "{n} characters"
 msgstr[0] "{n} 个字符"
 
-#: apps/fonts/src/ui.rs:1148 apps/terminal/src/window.rs:448
+#: apps/fonts/src/ui.rs:1148 apps/terminal/src/window.rs:459
 msgid "Aa"
 msgstr "Aa"
 
@@ -8346,7 +8347,7 @@ msgid "This help page wants to open “{uri}” in another application."
 msgstr "此帮助页面想要在另一个应用程序中打开“{uri}”。"
 
 #: apps/help/src/ui.rs:317 apps/text-editor/src/doc.rs:149
-#: apps/web/src/tab.rs:199 apps/web/src/window.rs:2404
+#: apps/web/src/tab.rs:204 apps/web/src/window.rs:2404
 msgid "_Reload"
 msgstr "重新加载(_R)"
 
@@ -8484,11 +8485,11 @@ msgstr "退出全屏"
 msgid "Slideshow"
 msgstr "幻灯片放映"
 
-#: apps/image-viewer/src/trash.rs:127
+#: apps/image-viewer/src/trash.rs:177
 msgid "A file with the same name already exists"
 msgstr "已存在同名文件"
 
-#: apps/image-viewer/src/trash.rs:130
+#: apps/image-viewer/src/trash.rs:180
 msgid "The file was not found in the trash"
 msgstr "在回收站中未找到该文件"
 
@@ -8504,7 +8505,7 @@ msgstr "查看图像"
 msgid "Open Images"
 msgstr "打开图像"
 
-#: apps/image-viewer/src/ui.rs:302 apps/terminal/src/window.rs:286
+#: apps/image-viewer/src/ui.rs:302 apps/terminal/src/window.rs:291
 msgid "_New Window"
 msgstr "新建窗口(_N)"
 
@@ -10777,8 +10778,8 @@ msgstr "媒体播放器"
 msgid "Other Device"
 msgstr "其他设备"
 
-#: apps/settings/src/defaults.rs:15 apps/web/src/app.rs:126
-#: apps/web/src/app.rs:150 apps/web/src/app.rs:904 apps/web/src/window.rs:320
+#: apps/settings/src/defaults.rs:15 apps/web/src/app.rs:128
+#: apps/web/src/app.rs:152 apps/web/src/app.rs:979 apps/web/src/window.rs:320
 #: apps/web/src/window.rs:1574
 msgid "Web"
 msgstr "网页"
@@ -11675,7 +11676,7 @@ msgid "Cursor Size"
 msgstr "光标大小"
 
 #: apps/settings/src/ui/appearance.rs:108 apps/terminal/src/prefs_dialog.rs:31
-#: apps/terminal/src/window.rs:171 apps/text-editor/src/prefs.rs:65
+#: apps/terminal/src/window.rs:176 apps/text-editor/src/prefs.rs:65
 #: apps/web/src/dialogs.rs:128
 msgid "Dark"
 msgstr "深色"
@@ -13951,8 +13952,8 @@ msgstr "进程"
 msgid "task"
 msgstr "任务"
 
-#: apps/system-monitor/src/bin/helper.rs:69
-#: apps/system-monitor/src/bin/helper.rs:82
+#: apps/system-monitor/src/bin/helper.rs:65
+#: apps/system-monitor/src/bin/helper.rs:80
 msgid "no process with ID {pid}"
 msgstr "没有 ID 为 {pid} 的进程"
 
@@ -13968,25 +13969,25 @@ msgstr "您不是此进程的所有者"
 msgid "Permission denied"
 msgstr "权限被拒绝"
 
-#: apps/system-monitor/src/control.rs:149
+#: apps/system-monitor/src/control.rs:142
 msgid "Authorization was denied or cancelled"
 msgstr "授权被拒绝或已取消"
 
-#: apps/system-monitor/src/control.rs:152
+#: apps/system-monitor/src/control.rs:145
 msgid "Not authorized to control this process"
 msgstr "无权控制此进程"
 
-#: apps/system-monitor/src/control.rs:160
+#: apps/system-monitor/src/control.rs:153
 #: apps/system-monitor/src/dialogs.rs:117
 msgid "The privileged helper failed"
 msgstr "特权辅助程序失败"
 
-#: apps/system-monitor/src/control.rs:175
+#: apps/system-monitor/src/control.rs:168
 msgid ""
 "Administrator privileges are required, but the helper {} is not installed"
 msgstr "需要管理员权限，但未安装辅助程序 {}"
 
-#: apps/system-monitor/src/control.rs:185
+#: apps/system-monitor/src/control.rs:178
 msgid "Cannot run pkexec: {e}"
 msgstr "无法运行 pkexec：{e}"
 
@@ -14079,45 +14080,45 @@ msgstr "更改优先级(_P)"
 msgid "Nice Value"
 msgstr "Nice 值"
 
-#: apps/system-monitor/src/dialogs.rs:226
+#: apps/system-monitor/src/dialogs.rs:227
 msgid "Cannot change priority of “{name}”: {e}"
 msgstr "无法更改“{name}”的优先级：{e}"
 
-#: apps/system-monitor/src/dialogs.rs:259
+#: apps/system-monitor/src/dialogs.rs:261
 msgid "Cannot stop “{name}”: {e}"
 msgstr "无法停止“{name}”：{e}"
 
-#: apps/system-monitor/src/dialogs.rs:261
+#: apps/system-monitor/src/dialogs.rs:263
 msgid "Cannot continue “{name}”: {e}"
 msgstr "无法继续“{name}”：{e}"
 
-#: apps/system-monitor/src/dialogs.rs:263
+#: apps/system-monitor/src/dialogs.rs:265
 msgid "Cannot end “{name}”: {e}"
 msgstr "无法结束“{name}”：{e}"
 
-#: apps/system-monitor/src/dialogs.rs:264
+#: apps/system-monitor/src/dialogs.rs:266
 msgid "Cannot kill “{name}”: {e}"
 msgstr "无法强制结束“{name}”：{e}"
 
-#: apps/system-monitor/src/dialogs.rs:274
+#: apps/system-monitor/src/dialogs.rs:276
 msgid "Kill “{}”?"
 msgstr "强制结束“{}”？"
 
-#: apps/system-monitor/src/dialogs.rs:275
+#: apps/system-monitor/src/dialogs.rs:277
 msgid ""
 "Killing a process stops it immediately without letting it save its work. "
 "Unsaved data may be lost."
 msgstr "强制结束进程会立即停止它，而不让它保存工作。未保存的数据可能会丢失。"
 
-#: apps/system-monitor/src/dialogs.rs:276
+#: apps/system-monitor/src/dialogs.rs:278
 msgid "_Kill Process"
 msgstr "强制结束进程(_K)"
 
-#: apps/system-monitor/src/dialogs.rs:279
+#: apps/system-monitor/src/dialogs.rs:281
 msgid "End “{}”?"
 msgstr "结束“{}”？"
 
-#: apps/system-monitor/src/dialogs.rs:280
+#: apps/system-monitor/src/dialogs.rs:282
 msgid ""
 "Ending a process asks it to quit. Unsaved data may be lost, and ending "
 "system processes can make the session unstable."
@@ -14125,7 +14126,7 @@ msgstr ""
 "结束进程会请求其退出。未保存的数据可能会丢失，结束系统进程可能导致会话不稳"
 "定。"
 
-#: apps/system-monitor/src/dialogs.rs:281
+#: apps/system-monitor/src/dialogs.rs:283
 msgid "_End Process"
 msgstr "结束进程(_E)"
 
@@ -14258,19 +14259,19 @@ msgstr "可用"
 msgid "Used"
 msgstr "已用"
 
-#: apps/system-monitor/src/helper_args.rs:93
+#: apps/system-monitor/src/helper_args.rs:119
 msgid "send SIG{name} to process {pid}"
 msgstr "向进程 {pid} 发送 SIG{name}"
 
-#: apps/system-monitor/src/helper_args.rs:99
+#: apps/system-monitor/src/helper_args.rs:125
 msgid "set nice value of process {pid} to {nice}"
 msgstr "将进程 {pid} 的 Nice 值设为 {nice}"
 
-#: apps/system-monitor/src/helper_args.rs:112
+#: apps/system-monitor/src/helper_args.rs:138
 msgid "cannot send SIG{name} to process {pid}: {error}"
 msgstr "无法向进程 {pid} 发送 SIG{name}：{error}"
 
-#: apps/system-monitor/src/helper_args.rs:118
+#: apps/system-monitor/src/helper_args.rs:144
 msgid "cannot set nice value of process {pid} to {nice}: {error}"
 msgstr "无法将进程 {pid} 的 Nice 值设为 {nice}：{error}"
 
@@ -14499,9 +14500,9 @@ msgid "terminal"
 msgstr "终端"
 
 #: apps/terminal/src/app.rs:229 apps/terminal/src/paths.rs:70
-#: apps/terminal/src/shortcuts.rs:27 apps/terminal/src/window.rs:243
-#: apps/terminal/src/window.rs:256 apps/terminal/src/window.rs:499
-#: apps/terminal/src/window.rs:909
+#: apps/terminal/src/shortcuts.rs:27 apps/terminal/src/window.rs:248
+#: apps/terminal/src/window.rs:261 apps/terminal/src/window.rs:511
+#: apps/terminal/src/window.rs:924
 msgid "Terminal"
 msgstr "终端"
 
@@ -14541,7 +14542,7 @@ msgstr "Helix 高对比度深色"
 msgid "Follow System"
 msgstr "跟随系统"
 
-#: apps/terminal/src/prefs_dialog.rs:30 apps/terminal/src/window.rs:170
+#: apps/terminal/src/prefs_dialog.rs:30 apps/terminal/src/window.rs:175
 #: apps/text-editor/src/prefs.rs:64 apps/web/src/dialogs.rs:128
 msgid "Light"
 msgstr "浅色"
@@ -14659,121 +14660,121 @@ msgstr "关闭查找栏"
 msgid "Ctrl + scroll"
 msgstr "Ctrl + 滚动"
 
-#: apps/terminal/src/window.rs:81
+#: apps/terminal/src/window.rs:86
 msgid "A process"
 msgstr "某个进程"
 
-#: apps/terminal/src/window.rs:125 apps/text-editor/src/doc.rs:823
+#: apps/terminal/src/window.rs:130 apps/text-editor/src/doc.rs:823
 msgid "Invalid regular expression"
 msgstr "无效的正则表达式"
 
-#: apps/terminal/src/window.rs:141
+#: apps/terminal/src/window.rs:146
 msgid "No matches"
 msgstr "无匹配项"
 
-#: apps/terminal/src/window.rs:166
+#: apps/terminal/src/window.rs:171
 msgctxt "style"
 msgid "System"
 msgstr "系统"
 
-#: apps/terminal/src/window.rs:167
+#: apps/terminal/src/window.rs:172
 msgid "Follow System Style"
 msgstr "跟随系统样式"
 
-#: apps/terminal/src/window.rs:170
+#: apps/terminal/src/window.rs:175
 msgid "Light Style"
 msgstr "浅色样式"
 
-#: apps/terminal/src/window.rs:171
+#: apps/terminal/src/window.rs:176
 msgid "Dark Style"
 msgstr "深色样式"
 
-#: apps/terminal/src/window.rs:236
+#: apps/terminal/src/window.rs:241
 msgid "Reset Zoom, now {text}"
 msgstr "重置缩放，当前为 {text}"
 
-#: apps/terminal/src/window.rs:287
+#: apps/terminal/src/window.rs:292
 msgid "_Show All Tabs"
 msgstr "显示所有标签页(_S)"
 
-#: apps/terminal/src/window.rs:292
+#: apps/terminal/src/window.rs:297
 msgid "_About Terminal"
 msgstr "关于终端(_A)"
 
-#: apps/terminal/src/window.rs:438 apps/terminal/src/window.rs:440
+#: apps/terminal/src/window.rs:449 apps/terminal/src/window.rs:451
 msgid "Previous Match (older output)"
 msgstr "上一个匹配项（较早的输出）"
 
-#: apps/terminal/src/window.rs:443 apps/terminal/src/window.rs:445
+#: apps/terminal/src/window.rs:454 apps/terminal/src/window.rs:456
 msgid "Next Match (newer output)"
 msgstr "下一个匹配项（较新的输出）"
 
-#: apps/terminal/src/window.rs:449 apps/terminal/src/window.rs:451
+#: apps/terminal/src/window.rs:460 apps/terminal/src/window.rs:462
 msgid "Match Case"
 msgstr "区分大小写"
 
-#: apps/terminal/src/window.rs:454 apps/terminal/src/window.rs:456
+#: apps/terminal/src/window.rs:465 apps/terminal/src/window.rs:467
 msgid "Regular Expression"
 msgstr "正则表达式"
 
-#: apps/terminal/src/window.rs:547
+#: apps/terminal/src/window.rs:559
 msgid "Failed to start “{what}”: {error}"
 msgstr "无法启动“{what}”：{error}"
 
-#: apps/terminal/src/window.rs:555
+#: apps/terminal/src/window.rs:567
 msgid "Could not start “{what}”"
 msgstr "无法启动“{what}”"
 
-#: apps/terminal/src/window.rs:579
+#: apps/terminal/src/window.rs:591
 msgid "Process exited with status {code}"
 msgstr "进程已退出，状态码为 {code}"
 
-#: apps/terminal/src/window.rs:723
+#: apps/terminal/src/window.rs:734 crates/helix-app-common/src/links.rs:138
 msgid "_Open Link"
 msgstr "打开链接(_O)"
 
-#: apps/terminal/src/window.rs:724
+#: apps/terminal/src/window.rs:735
 msgid "Copy _Link"
 msgstr "复制链接(_L)"
 
-#: apps/terminal/src/window.rs:732 apps/text-editor/src/window.rs:52
+#: apps/terminal/src/window.rs:743 apps/text-editor/src/window.rs:52
 #: apps/web/src/window.rs:207 apps/web/src/window.rs:248
 msgid "_Find…"
 msgstr "查找(_F)…"
 
-#: apps/terminal/src/window.rs:935
+#: apps/terminal/src/window.rs:950
 msgid "Running as root"
 msgstr "正以 root 身份运行"
 
-#: apps/terminal/src/window.rs:939
+#: apps/terminal/src/window.rs:954
 msgid "Connected to a remote host"
 msgstr "已连接到远程主机"
 
-#: apps/terminal/src/window.rs:940
+#: apps/terminal/src/window.rs:955
 msgid "Connected to {host}"
 msgstr "已连接到 {host}"
 
-#: apps/terminal/src/window.rs:961
+#: apps/terminal/src/window.rs:976
 msgid "No longer running as root"
 msgstr "不再以 root 身份运行"
 
-#: apps/terminal/src/window.rs:962
+#: apps/terminal/src/window.rs:977
 msgid "Remote session ended"
 msgstr "远程会话已结束"
 
-#: apps/terminal/src/window.rs:1274
+#: apps/terminal/src/window.rs:1292
 msgid "Close Window?"
 msgstr "关闭窗口？"
 
-#: apps/terminal/src/window.rs:1276
+#: apps/terminal/src/window.rs:1294
 msgid "Close Tab?"
 msgstr "关闭标签页？"
 
-#: apps/terminal/src/window.rs:1279
+#: apps/terminal/src/window.rs:1297
 msgid "“{}” is still running. Closing will stop it."
 msgstr "“{}”仍在运行。关闭将停止它。"
 
-#: apps/terminal/src/window.rs:1282
+#: apps/terminal/src/window.rs:1300
 msgid ""
 "Some programs are still running:\n"
 "{list}\n"
@@ -14783,7 +14784,7 @@ msgstr ""
 "{list}\n"
 "关闭将停止它们。"
 
-#: apps/terminal/src/window.rs:1288
+#: apps/terminal/src/window.rs:1306
 msgid "C_lose"
 msgstr "关闭(_L)"
 
@@ -15566,15 +15567,15 @@ msgstr "无法读取响应：{e}"
 msgid "The weather service returned HTTP {code}"
 msgstr "天气服务返回了 HTTP {code}"
 
-#: apps/weather/src/api.rs:270 apps/weather/src/ui.rs:1629
+#: apps/weather/src/api.rs:269 apps/weather/src/ui.rs:1629
 msgid "Could not connect to the weather service: {t}"
 msgstr "无法连接到天气服务：{t}"
 
-#: apps/weather/src/autoloc.rs:60 apps/weather/src/ui.rs:1642
+#: apps/weather/src/autoloc.rs:75 apps/weather/src/ui.rs:1642
 msgid "Unexpected reverse geocoding data: {e}"
 msgstr "意外的反向地理编码数据：{e}"
 
-#: apps/weather/src/autoloc.rs:78
+#: apps/weather/src/autoloc.rs:93
 msgid "No place name at this position"
 msgstr "此位置没有地名"
 
@@ -16077,13 +16078,29 @@ msgstr "互联网"
 msgid "web"
 msgstr "网页"
 
-#: apps/web/src/app.rs:150 apps/web/src/app.rs:904
+#: apps/web/src/app.rs:152 apps/web/src/app.rs:979
 msgid "Browse the web"
 msgstr "浏览网页"
 
-#: apps/web/src/app.rs:798
+#: apps/web/src/app.rs:801
 msgid "No website data store"
 msgstr "没有网站数据存储"
+
+#: apps/web/src/app.rs:943 apps/web/src/tab.rs:1154
+msgid "This page"
+msgstr "此页面"
+
+#: apps/web/src/app.rs:946
+msgid "Download File?"
+msgstr "下载文件吗?"
+
+#: apps/web/src/app.rs:947
+msgid "{site} wants to save “{name}” to your Downloads folder."
+msgstr "{site} 想要将“{name}”保存到您的下载文件夹。"
+
+#: apps/web/src/app.rs:953
+msgid "_Download"
+msgstr "下载(_D)"
 
 #: apps/web/src/dialogs.rs:49
 msgid "Browsing"
@@ -16654,86 +16671,98 @@ msgstr "将页面添加为书签"
 msgid "Site Information"
 msgstr "网站信息"
 
-#: apps/web/src/tab.rs:119
+#: apps/web/src/tab.rs:124
 msgid "{text}{stop} Press F6 to answer."
 msgstr "{text}{stop}按 F6 键进行回应。"
 
-#: apps/web/src/tab.rs:175
+#: apps/web/src/tab.rs:180
 msgid "Deny"
 msgstr "拒绝"
 
-#: apps/web/src/tab.rs:176
+#: apps/web/src/tab.rs:181
 msgid "Allow"
 msgstr "允许"
 
-#: apps/web/src/tab.rs:183
+#: apps/web/src/tab.rs:188
 msgid "Accept Risk and Continue"
 msgstr "接受风险并继续"
 
-#: apps/web/src/tab.rs:189
+#: apps/web/src/tab.rs:194
 msgid "Never for This Site"
 msgstr "对此网站从不"
 
-#: apps/web/src/tab.rs:190
+#: apps/web/src/tab.rs:195
 msgid "Not Now"
 msgstr "暂不"
 
-#: apps/web/src/tab.rs:477
+#: apps/web/src/tab.rs:485
 msgid "Permission request denied: the page changed"
 msgstr "权限请求被拒绝：页面已更改"
 
-#: apps/web/src/tab.rs:525
+#: apps/web/src/tab.rs:533
 msgid ""
 "The identity of {host} could not be verified. Its security certificate is "
 "not trusted."
 msgstr "无法验证 {host} 的身份。其安全证书不受信任。"
 
 #. Translators: announced when a page crashes: the heading, then the explanation.
-#: apps/web/src/tab.rs:550
+#: apps/web/src/tab.rs:558
 msgid "{title}. {description}"
 msgstr "{title}。{description}"
 
-#: apps/web/src/tab.rs:569
+#: apps/web/src/tab.rs:577
 msgid "Could not load the page: {}"
 msgstr "无法加载页面：{}"
 
-#: apps/web/src/tab.rs:953
+#: apps/web/src/tab.rs:707
+msgid "Download Linked File"
+msgstr "下载链接的文件"
+
+#: apps/web/src/tab.rs:708
+msgid "Download Image"
+msgstr "下载图片"
+
+#: apps/web/src/tab.rs:709
+msgid "Download Video"
+msgstr "下载视频"
+
+#: apps/web/src/tab.rs:710
+msgid "Download Audio"
+msgstr "下载音频"
+
+#: apps/web/src/tab.rs:1010
 msgid "Password saved"
 msgstr "密码已保存"
 
-#: apps/web/src/tab.rs:954
+#: apps/web/src/tab.rs:1011
 msgid "Could not save the password: {e}"
 msgstr "无法保存密码：{e}"
 
-#: apps/web/src/tab.rs:955
+#: apps/web/src/tab.rs:1012
 msgid "Could not save the password"
 msgstr "无法保存密码"
 
-#: apps/web/src/tab.rs:1096
-msgid "This page"
-msgstr "此页面"
-
-#: apps/web/src/tab.rs:1097
+#: apps/web/src/tab.rs:1155
 msgid "{host} says"
 msgstr "{host} 显示"
 
-#: apps/web/src/tab.rs:1115
+#: apps/web/src/tab.rs:1173
 msgid "Answer"
 msgstr "回应"
 
-#: apps/web/src/tab.rs:1122
+#: apps/web/src/tab.rs:1180
 msgid "Leave Page?"
 msgstr "离开页面？"
 
-#: apps/web/src/tab.rs:1123
+#: apps/web/src/tab.rs:1181
 msgid "Changes you made may not be saved."
 msgstr "您所做的更改可能不会被保存。"
 
-#: apps/web/src/tab.rs:1124
+#: apps/web/src/tab.rs:1182
 msgid "_Leave"
 msgstr "离开(_L)"
 
-#: apps/web/src/tab.rs:1124
+#: apps/web/src/tab.rs:1182
 msgid "_Stay"
 msgstr "留下(_S)"
 
@@ -17200,6 +17229,18 @@ msgstr "此处不支持此操作。"
 #: crates/helix-app-common/src/errors.rs:65
 msgid "The network or server cannot be reached."
 msgstr "无法连接到网络或服务器。"
+
+#: crates/helix-app-common/src/links.rs:123
+msgid "Open This Link?"
+msgstr "打开此链接吗?"
+
+#: crates/helix-app-common/src/links.rs:124
+msgid ""
+"The link points to the location below, which is not a web page. Opening it "
+"may access files or network shares, or start another application."
+msgstr ""
+"此链接指向下方的位置,它不是网页。打开它可能会访问文件或网络共享,或启动其他应"
+"用程序。"
 
 #: crates/helix-eds/src/client.rs:58
 msgid "“{name}” is read-only"

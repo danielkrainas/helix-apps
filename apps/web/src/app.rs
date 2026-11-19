@@ -98,6 +98,8 @@ pub struct App {
     data_dir: PathBuf,
     /// Download destinations currently in flight.
     reserved: RefCell<HashSet<PathBuf>>,
+    /// Downloads the user asked for (context menu), not confirmed again.
+    requested: RefCell<Vec<glib::WeakRef<webkit6::Download>>>,
     pending_saves: RefCell<HashSet<Saved>>,
     save_scheduled: Cell<bool>,
     started: Cell<bool>,
@@ -256,6 +258,7 @@ impl App {
             tabs: RefCell::default(),
             data_dir,
             reserved: RefCell::default(),
+            requested: RefCell::default(),
             pending_saves: RefCell::default(),
             save_scheduled: Cell::new(false),
             started: Cell::new(false),
@@ -849,14 +852,29 @@ impl App {
             .unwrap_or_else(|| glib::home_dir().join("Downloads"))
     }
 
+    /// Starts downloading `uri` for the user (a context menu item).
+    pub fn download_for_user(&self, view: &webkit6::WebView, uri: &str) {
+        if let Some(d) = view.download_uri(uri) {
+            let mut requested = self.requested.borrow_mut();
+            requested.retain(|w| w.upgrade().is_some());
+            requested.push(d.downgrade());
+        }
+    }
+
+    /// Whether `d` is one the user asked for (forgetting it).
+    fn take_requested(&self, d: &webkit6::Download) -> bool {
+        let mut requested = self.requested.borrow_mut();
+        let before = requested.len();
+        requested.retain(|w| w.upgrade().is_some_and(|x| &x != d));
+        requested.len() != before
+    }
+
     fn handle_download(&self, download: &webkit6::Download) {
         let weak = self.this.clone();
         download.connect_decide_destination(move |d, suggested| {
             let Some(app) = weak.upgrade() else {
                 return false;
             };
-            let dir = App::download_dir();
-            let _ = std::fs::create_dir_all(&dir);
             let name = if suggested.trim().is_empty() {
                 d.request()
                     .and_then(|r| r.uri())
@@ -865,16 +883,20 @@ impl App {
             } else {
                 suggested.to_string()
             };
-            let path = {
-                let reserved = app.reserved.borrow();
-                crate::downloads::unique_path(&dir, &name, |p| p.exists() || reserved.contains(p))
-            };
-            app.reserved.borrow_mut().insert(path.clone());
-            d.set_allow_overwrite(false);
-            d.set_destination(&path.to_string_lossy());
-            if let Some(w) = app.window_for_download(d) {
-                w.add_download(d, &path);
+            let tab = d.web_view().and_then(|v| app.tab_of_view(&v));
+            let admitted = app.take_requested(d)
+                || tab.as_ref().is_some_and(|t| {
+                    let mut gate = t.download_gate.get();
+                    let ok = gate.admit();
+                    t.download_gate.set(gate);
+                    ok
+                });
+            if admitted {
+                app.start_download(d, &name);
+            } else {
+                app.confirm_download(d, &name);
             }
+            // Decided now or once the user answers.
             true
         });
         let weak = self.this.clone();
@@ -886,6 +908,59 @@ impl App {
         let r2 = release.clone();
         download.connect_finished(move |d| release(d));
         download.connect_failed(move |d, _| r2(d));
+    }
+
+    /// Saves `d` as `name` (made safe and unique) in the Downloads folder.
+    fn start_download(&self, d: &webkit6::Download, name: &str) {
+        let dir = App::download_dir();
+        let _ = std::fs::create_dir_all(&dir);
+        let path = {
+            let reserved = self.reserved.borrow();
+            crate::downloads::unique_path(&dir, name, |p| p.exists() || reserved.contains(p))
+        };
+        self.reserved.borrow_mut().insert(path.clone());
+        d.set_allow_overwrite(false);
+        d.set_destination(&path.to_string_lossy());
+        if let Some(w) = self.window_for_download(d) {
+            w.add_download(d, &path);
+        }
+    }
+
+    /// Asks whether to save a download the page started by itself (or
+    /// a further one from the same page), as GNOME Web asks before
+    /// saving a file: the site and the file name are shown.
+    fn confirm_download(&self, d: &webkit6::Download, name: &str) {
+        let Some(w) = self.window_for_download(d) else {
+            d.cancel();
+            return;
+        };
+        let page = d.web_view().and_then(|v| v.uri());
+        let request = d.request().and_then(|r| r.uri());
+        let site = [page, request]
+            .into_iter()
+            .flatten()
+            .find_map(|u| urlinput::host_of(&u))
+            .unwrap_or_else(|| tr("This page").to_string());
+        let shown = crate::downloads::sanitize(name);
+        let dialog = adw::AlertDialog::new(
+            Some(tr("Download File?")),
+            Some(&helix_app_common::trf!(
+                "{site} wants to save “{name}” to your Downloads folder.",
+                site = site,
+                name = shown
+            )),
+        );
+        dialog.add_responses(&[("cancel", tr("_Cancel")), ("download", tr("_Download"))]);
+        dialog.set_default_response(Some("cancel"));
+        dialog.set_close_response("cancel");
+        let weak = self.this.clone();
+        let d = d.clone();
+        let name = name.to_string();
+        dialog.connect_response(None, move |_, response| match weak.upgrade() {
+            Some(app) if response == "download" => app.start_download(&d, &name),
+            _ => d.cancel(),
+        });
+        dialog.present(Some(&w.win));
     }
 
     fn window_for_download(&self, d: &webkit6::Download) -> Option<Rc<Window>> {

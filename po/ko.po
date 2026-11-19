@@ -320,7 +320,7 @@ msgstr "오디오 플레이어 정보(_A)"
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
 #: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
-#: apps/terminal/src/window.rs:296 apps/terminal/src/window.rs:300
+#: apps/terminal/src/window.rs:301 apps/terminal/src/window.rs:305
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
 #: apps/tour/src/ui.rs:330 apps/tour/src/ui.rs:332
 #: apps/video-player/src/ui.rs:321 apps/video-player/src/ui.rs:325
@@ -394,7 +394,7 @@ msgid "Audio Files"
 msgstr "오디오 파일"
 
 #: apps/audio-player/src/ui.rs:755 apps/disks/src/ui.rs:1988
-#: apps/document-viewer/src/ui.rs:1483 apps/files/src/ui/dialogs.rs:662
+#: apps/document-viewer/src/ui.rs:1484 apps/files/src/ui/dialogs.rs:662
 #: apps/video-player/src/ui.rs:1056
 msgid "All Files"
 msgstr "모든 파일"
@@ -1064,7 +1064,7 @@ msgstr "기록 지우기(_C)"
 #: apps/document-scanner/src/ui.rs:174 apps/document-scanner/src/ui.rs:190
 #: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:485
 #: apps/music/src/ui.rs:467 apps/system-monitor/src/ui.rs:247
-#: apps/terminal/src/window.rs:290 apps/text-editor/src/window.rs:63
+#: apps/terminal/src/window.rs:295 apps/text-editor/src/window.rs:63
 #: apps/web/src/window.rs:263
 msgid "_Preferences"
 msgstr "기본 설정(_P)"
@@ -1135,11 +1135,12 @@ msgstr "계산(_A)"
 #: apps/settings/src/ui/apps.rs:553 apps/settings/src/ui/bluetooth.rs:647
 #: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
 #: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
-#: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1288
-#: apps/text-editor/src/window.rs:973 apps/web/src/dialogs.rs:413
-#: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
-#: apps/web/src/dialogs.rs:928 apps/web/src/dialogs.rs:1130
-#: apps/web/src/tab.rs:1105 apps/web/src/tab.rs:1118
+#: apps/system-monitor/src/dialogs.rs:290 apps/terminal/src/window.rs:1306
+#: apps/text-editor/src/window.rs:973 apps/web/src/app.rs:953
+#: apps/web/src/dialogs.rs:413 apps/web/src/dialogs.rs:451
+#: apps/web/src/dialogs.rs:707 apps/web/src/dialogs.rs:928
+#: apps/web/src/dialogs.rs:1130 apps/web/src/tab.rs:1163
+#: apps/web/src/tab.rs:1176 crates/helix-app-common/src/links.rs:138
 msgid "_Cancel"
 msgstr "취소(_C)"
 
@@ -1388,7 +1389,7 @@ msgstr "취소"
 #: apps/document-scanner/src/ui.rs:323 apps/screenshot/src/shortcuts.rs:20
 #: apps/text-editor/src/shortcuts.rs:16 apps/text-editor/src/window.rs:144
 #: apps/text-editor/src/window.rs:181 apps/text-editor/src/window.rs:183
-#: apps/web/src/tab.rs:191
+#: apps/web/src/tab.rs:196
 msgid "Save"
 msgstr "저장"
 
@@ -1480,7 +1481,7 @@ msgstr "알림 추가"
 
 #: apps/calendar/src/editor.rs:608 apps/calendar/src/editor.rs:617
 #: apps/contacts/src/editor.rs:391 apps/contacts/src/editor.rs:400
-#: apps/contacts/src/ui.rs:1334
+#: apps/contacts/src/ui.rs:1329
 msgid "Notes"
 msgstr "메모"
 
@@ -1902,7 +1903,7 @@ msgstr "시간 커서 위치에 새 일정"
 #: apps/document-viewer/src/ui.rs:354 apps/files/src/ui/shortcuts.rs:44
 #: apps/image-viewer/src/shortcuts.rs:42 apps/image-viewer/src/ui.rs:443
 #: apps/maps/src/shortcuts.rs:24 apps/terminal/src/shortcuts.rs:51
-#: apps/terminal/src/window.rs:190 apps/text-editor/src/shortcuts.rs:59
+#: apps/terminal/src/window.rs:195 apps/text-editor/src/shortcuts.rs:59
 #: apps/text-editor/src/window.rs:161 apps/web/src/shortcuts.rs:62
 #: apps/web/src/window.rs:417
 msgid "Zoom In"
@@ -1912,14 +1913,14 @@ msgstr "확대"
 #: apps/document-viewer/src/ui.rs:353 apps/files/src/ui/shortcuts.rs:47
 #: apps/image-viewer/src/shortcuts.rs:45 apps/image-viewer/src/ui.rs:425
 #: apps/maps/src/shortcuts.rs:28 apps/terminal/src/shortcuts.rs:54
-#: apps/terminal/src/window.rs:188 apps/text-editor/src/shortcuts.rs:62
+#: apps/terminal/src/window.rs:193 apps/text-editor/src/shortcuts.rs:62
 #: apps/text-editor/src/window.rs:152 apps/web/src/shortcuts.rs:66
 #: apps/web/src/window.rs:416
 msgid "Zoom Out"
 msgstr "축소"
 
 #: apps/calendar/src/shortcuts.rs:47 apps/terminal/src/shortcuts.rs:55
-#: apps/terminal/src/window.rs:304 apps/text-editor/src/shortcuts.rs:63
+#: apps/terminal/src/window.rs:309 apps/text-editor/src/shortcuts.rs:63
 #: apps/text-editor/src/window.rs:157 apps/web/src/shortcuts.rs:69
 #: apps/web/src/window.rs:421 apps/web/src/window.rs:423
 msgid "Reset Zoom"
@@ -1970,7 +1971,7 @@ msgstr "가져오기(_I)…"
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:232 apps/maps/src/ui.rs:486
-#: apps/settings/src/ui/mod.rs:198 apps/terminal/src/window.rs:291
+#: apps/settings/src/ui/mod.rs:198 apps/terminal/src/window.rs:296
 #: apps/text-editor/src/window.rs:65 apps/web/src/window.rs:222
 #: apps/web/src/window.rs:265 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -2040,8 +2041,8 @@ msgstr "일정을 삭제했습니다"
 msgid "“{}” deleted"
 msgstr "“{}”을(를) 삭제했습니다"
 
-#: apps/calendar/src/ui.rs:1043 apps/contacts/src/ui.rs:1602
-#: apps/contacts/src/ui.rs:1644 apps/files/src/ui/shortcuts.rs:74
+#: apps/calendar/src/ui.rs:1043 apps/contacts/src/ui.rs:1597
+#: apps/contacts/src/ui.rs:1639 apps/files/src/ui/shortcuts.rs:74
 #: apps/text-editor/src/shortcuts.rs:36
 msgid "Undo"
 msgstr "실행 취소"
@@ -2115,7 +2116,7 @@ msgstr "캘린더 파일"
 msgid "Import Events"
 msgstr "일정 가져오기"
 
-#: apps/calendar/src/ui.rs:2416 apps/contacts/src/ui.rs:1723
+#: apps/calendar/src/ui.rs:2416 apps/contacts/src/ui.rs:1718
 msgid "Could not read {path}: {e}"
 msgstr "{path}을(를) 읽을 수 없습니다: {e}"
 
@@ -2317,7 +2318,7 @@ msgid "_About Camera"
 msgstr "카메라 정보(_A)"
 
 #: apps/camera/src/ui.rs:274 apps/camera/src/ui.rs:278
-#: apps/contacts/src/ui.rs:1428 apps/files/src/ui/shortcuts.rs:72
+#: apps/contacts/src/ui.rs:1423 apps/files/src/ui/shortcuts.rs:72
 #: apps/image-viewer/src/shortcuts.rs:17 apps/terminal/src/shortcuts.rs:29
 msgid "Copy"
 msgstr "복사"
@@ -2348,7 +2349,7 @@ msgstr "동영상"
 msgid "QR code detected: {text}"
 msgstr "QR 코드 감지: {text}"
 
-#: apps/camera/src/ui.rs:585 apps/contacts/src/ui.rs:1438
+#: apps/camera/src/ui.rs:585 apps/contacts/src/ui.rs:1433
 #: apps/logs/src/ui.rs:838
 msgid "Copied to clipboard"
 msgstr "클립보드에 복사했습니다"
@@ -2556,7 +2557,7 @@ msgstr "알 수 없는 문자"
 #: apps/characters/src/shortcuts.rs:11 apps/characters/src/ui.rs:54
 #: apps/characters/src/ui.rs:295 apps/characters/src/ui.rs:352
 #: apps/characters/src/ui.rs:357 apps/characters/src/ui.rs:434
-#: apps/characters/src/ui.rs:482 apps/fonts/src/fontinfo.rs:269
+#: apps/characters/src/ui.rs:482 apps/fonts/src/fontinfo.rs:296
 #: apps/fonts/src/ui.rs:969
 msgid "Characters"
 msgstr "문자"
@@ -3016,7 +3017,7 @@ msgid "Add Timer"
 msgstr "타이머 추가"
 
 #: apps/clocks/src/ui.rs:810 apps/maps/src/ui.rs:29
-#: apps/weather/src/autoloc.rs:20
+#: apps/weather/src/autoloc.rs:25
 msgid "Current Location"
 msgstr "현재 위치"
 
@@ -3113,7 +3114,7 @@ msgid "_Add"
 msgstr "추가(_A)"
 
 #: apps/clocks/src/ui.rs:1353 apps/clocks/src/ui.rs:1908
-#: apps/contacts/src/ui.rs:1816
+#: apps/contacts/src/ui.rs:1811
 msgid "_Done"
 msgstr "완료(_D)"
 
@@ -3483,7 +3484,7 @@ msgstr "별명"
 msgid "Organization"
 msgstr "조직"
 
-#: apps/contacts/src/editor.rs:325 apps/contacts/src/ui.rs:1321
+#: apps/contacts/src/editor.rs:325 apps/contacts/src/ui.rs:1316
 msgid "Department"
 msgstr "부서"
 
@@ -3528,11 +3529,11 @@ msgctxt "contact details"
 msgid "Other"
 msgstr "기타"
 
-#: apps/contacts/src/editor.rs:385 apps/contacts/src/ui.rs:1315
+#: apps/contacts/src/editor.rs:385 apps/contacts/src/ui.rs:1310
 msgid "Birthday"
 msgstr "생일"
 
-#: apps/contacts/src/editor.rs:386 apps/contacts/src/ui.rs:1318
+#: apps/contacts/src/editor.rs:386 apps/contacts/src/ui.rs:1313
 msgid "Anniversary"
 msgstr "기념일"
 
@@ -3585,7 +3586,7 @@ msgid "Contacts"
 msgstr "연락처"
 
 #: apps/contacts/src/shortcuts.rs:10 apps/contacts/src/ui.rs:186
-#: apps/contacts/src/ui.rs:188 apps/contacts/src/ui.rs:1463
+#: apps/contacts/src/ui.rs:188 apps/contacts/src/ui.rs:1458
 msgid "New Contact"
 msgstr "새 연락처"
 
@@ -3769,152 +3770,152 @@ msgstr "주소"
 msgid "Website"
 msgstr "웹사이트"
 
-#: apps/contacts/src/ui.rs:1324
+#: apps/contacts/src/ui.rs:1319
 msgid "Groups"
 msgstr "그룹"
 
-#: apps/contacts/src/ui.rs:1327
+#: apps/contacts/src/ui.rs:1322
 msgid "Personal"
 msgstr "개인"
 
-#: apps/contacts/src/ui.rs:1350
+#: apps/contacts/src/ui.rs:1345
 msgid "Address Books"
 msgstr "주소록"
 
-#: apps/contacts/src/ui.rs:1361
+#: apps/contacts/src/ui.rs:1356
 msgid "Read-only"
 msgstr "읽기 전용"
 
-#: apps/contacts/src/ui.rs:1450
+#: apps/contacts/src/ui.rs:1445
 msgid "No writable address book is available"
 msgstr "쓰기 가능한 주소록이 없습니다"
 
-#: apps/contacts/src/ui.rs:1510
+#: apps/contacts/src/ui.rs:1505
 msgid "Discard Changes?"
 msgstr "바뀐 사항을 버리시겠습니까?"
 
-#: apps/contacts/src/ui.rs:1511
+#: apps/contacts/src/ui.rs:1506
 msgid "Changes to this contact have not been saved."
 msgstr "이 연락처의 바뀐 사항을 저장하지 않았습니다."
 
-#: apps/contacts/src/ui.rs:1516 apps/document-scanner/src/ui.rs:1265
+#: apps/contacts/src/ui.rs:1511 apps/document-scanner/src/ui.rs:1265
 #: apps/document-scanner/src/ui.rs:1379 apps/text-editor/src/window.rs:979
 msgid "_Discard"
 msgstr "버리기(_D)"
 
-#: apps/contacts/src/ui.rs:1516
+#: apps/contacts/src/ui.rs:1511
 msgid "_Keep Editing"
 msgstr "계속 편집(_K)"
 
-#: apps/contacts/src/ui.rs:1581
+#: apps/contacts/src/ui.rs:1576
 msgid "Could not save links: {e}"
 msgstr "연결을 저장할 수 없습니다: {e}"
 
-#: apps/contacts/src/ui.rs:1601
+#: apps/contacts/src/ui.rs:1596
 msgid "Contacts linked"
 msgstr "연락처를 연결했습니다"
 
-#: apps/contacts/src/ui.rs:1622
+#: apps/contacts/src/ui.rs:1617
 msgid "These contacts are read-only"
 msgstr "이 연락처는 읽기 전용입니다"
 
-#: apps/contacts/src/ui.rs:1640
+#: apps/contacts/src/ui.rs:1635
 msgid "Contact deleted"
 msgstr "연락처를 삭제했습니다"
 
-#: apps/contacts/src/ui.rs:1642
+#: apps/contacts/src/ui.rs:1637
 msgid "{n} contact deleted"
 msgid_plural "{n} contacts deleted"
 msgstr[0] "연락처 {n}개를 삭제했습니다"
 
-#: apps/contacts/src/ui.rs:1699
+#: apps/contacts/src/ui.rs:1694
 msgid "vCard files"
 msgstr "vCard 파일"
 
-#: apps/contacts/src/ui.rs:1706
+#: apps/contacts/src/ui.rs:1701
 msgid "Import Contacts"
 msgstr "연락처 가져오기"
 
-#: apps/contacts/src/ui.rs:1736
+#: apps/contacts/src/ui.rs:1731
 msgid "No contacts found in the file"
 msgstr "파일에 연락처가 없습니다"
 
-#: apps/contacts/src/ui.rs:1755
+#: apps/contacts/src/ui.rs:1750
 msgid "Export Contacts"
 msgstr "연락처 내보내기"
 
-#: apps/contacts/src/ui.rs:1779
+#: apps/contacts/src/ui.rs:1774
 msgid "Exported {n} contact"
 msgid_plural "Exported {n} contacts"
 msgstr[0] "연락처 {n}개를 내보냈습니다"
 
-#: apps/contacts/src/ui.rs:1784 apps/logs/src/ui.rs:809
+#: apps/contacts/src/ui.rs:1779 apps/logs/src/ui.rs:809
 msgid "Export failed: {e}"
 msgstr "내보내기 실패: {e}"
 
-#: apps/contacts/src/ui.rs:1807
+#: apps/contacts/src/ui.rs:1802
 msgid "Choose an Address Book"
 msgstr "주소록 선택"
 
-#: apps/contacts/src/ui.rs:1808
+#: apps/contacts/src/ui.rs:1803
 msgid ""
 "New contacts will be saved in this address book. You can change it later "
 "from the main menu."
 msgstr ""
 "새 연락처는 이 주소록에 저장됩니다. 나중에 주 메뉴에서 바꿀 수 있습니다."
 
-#: apps/contacts/src/ui.rs:1812
+#: apps/contacts/src/ui.rs:1807
 msgid "Address Book for New Contacts"
 msgstr "새 연락처를 저장할 주소록"
 
-#: apps/contacts/src/ui.rs:1859
+#: apps/contacts/src/ui.rs:1854
 msgid "Contact not found"
 msgstr "연락처를 찾을 수 없습니다"
 
 #. Translators: a birthday or anniversary, "17" "May" "1990".
-#: apps/contacts/src/ui.rs:1901
+#: apps/contacts/src/ui.rs:1896
 msgid "{day} {month} {year}"
 msgstr "{year}년 {month} {day}일"
 
 #. Translators: a birthday or anniversary without a year, "17" "May".
-#: apps/contacts/src/ui.rs:1903
+#: apps/contacts/src/ui.rs:1898
 msgid "{day} {month}"
 msgstr "{month} {day}일"
 
-#: apps/contacts/src/ui.rs:1920
+#: apps/contacts/src/ui.rs:1915
 msgid "Send Email"
 msgstr "이메일 보내기"
 
-#: apps/contacts/src/ui.rs:1921
+#: apps/contacts/src/ui.rs:1916
 msgid "Call"
 msgstr "전화 걸기"
 
-#: apps/contacts/src/ui.rs:1922 apps/image-viewer/src/ui.rs:607
+#: apps/contacts/src/ui.rs:1917 apps/image-viewer/src/ui.rs:607
 #: apps/image-viewer/src/ui.rs:609
 msgid "Show on Map"
 msgstr "지도에 표시"
 
-#: apps/contacts/src/ui.rs:1923 apps/maps/src/ui.rs:250
+#: apps/contacts/src/ui.rs:1918 apps/maps/src/ui.rs:250
 msgid "Open Website"
 msgstr "웹사이트 열기"
 
-#: apps/contacts/src/ui.rs:1939
+#: apps/contacts/src/ui.rs:1934
 msgid "No app available to send email"
 msgstr "이메일을 보낼 수 있는 앱이 없습니다"
 
-#: apps/contacts/src/ui.rs:1940
+#: apps/contacts/src/ui.rs:1935
 msgid "No app available to make calls"
 msgstr "전화를 걸 수 있는 앱이 없습니다"
 
-#: apps/contacts/src/ui.rs:1941
+#: apps/contacts/src/ui.rs:1936
 msgid "No app available to show maps"
 msgstr "지도를 표시할 수 있는 앱이 없습니다"
 
-#: apps/contacts/src/ui.rs:1942
+#: apps/contacts/src/ui.rs:1937
 msgid "No app available to open websites"
 msgstr "웹사이트를 열 수 있는 앱이 없습니다"
 
-#: apps/contacts/src/ui.rs:1955
+#: apps/contacts/src/ui.rs:1950
 msgid "Copy {}"
 msgstr "{} 복사"
 
@@ -4152,7 +4153,7 @@ msgstr[0] "항목 {n}개"
 #: apps/disk-usage/src/ui.rs:1006 apps/disks/src/ui.rs:358
 #: apps/disks/src/ui.rs:453 apps/files/src/sorting.rs:44
 #: apps/files/src/ui/properties.rs:138 apps/files/src/ui/tab.rs:216
-#: apps/fonts/src/fontinfo.rs:287 apps/music/src/details.rs:137
+#: apps/fonts/src/fontinfo.rs:314 apps/music/src/details.rs:137
 msgid "Size"
 msgstr "크기"
 
@@ -4350,7 +4351,7 @@ msgstr "TB"
 msgid "kB"
 msgstr "kB"
 
-#: apps/disks/src/format.rs:15 apps/fonts/src/fontinfo.rs:296
+#: apps/disks/src/format.rs:15 apps/fonts/src/fontinfo.rs:323
 #: apps/system-monitor/src/format.rs:38
 msgid "{n} byte"
 msgid_plural "{n} bytes"
@@ -4999,7 +5000,7 @@ msgstr[0] "{count}섹터"
 msgid "Authentication was dismissed."
 msgstr "인증을 취소했습니다."
 
-#: apps/disks/src/udisks.rs:438
+#: apps/disks/src/udisks.rs:454
 msgid "Operation was cancelled"
 msgstr "작업을 취소했습니다"
 
@@ -5228,7 +5229,7 @@ msgstr "잠금 해제…"
 #: apps/disks/src/ui.rs:1211 apps/document-scanner/src/ui.rs:895
 #: apps/document-scanner/src/ui.rs:1564 apps/files/src/ui/jobs.rs:260
 #: apps/screenshot/src/ui.rs:646 apps/screenshot/src/ui.rs:707
-#: apps/terminal/src/window.rs:475 crates/helix-app-common/src/errors.rs:353
+#: apps/terminal/src/window.rs:486 crates/helix-app-common/src/errors.rs:353
 msgid "_Close"
 msgstr "닫기(_C)"
 
@@ -5788,7 +5789,7 @@ msgid "Unable to start scan: {e}"
 msgstr "스캔을 시작할 수 없습니다: {e}"
 
 #: apps/document-scanner/src/scanner.rs:473
-#: apps/document-scanner/src/scanner.rs:493
+#: apps/document-scanner/src/scanner.rs:489
 msgid "Error communicating with scanner: {e}"
 msgstr "스캐너와 통신하는 중 오류: {e}"
 
@@ -5979,11 +5980,11 @@ msgstr "자르기(_C)"
 
 #: apps/document-scanner/src/ui.rs:227 apps/document-viewer/src/ui.rs:920
 #: apps/files/src/ui/window.rs:1587 apps/image-viewer/src/ui.rs:305
-#: apps/image-viewer/src/ui.rs:784 apps/terminal/src/window.rs:727
+#: apps/image-viewer/src/ui.rs:784 apps/terminal/src/window.rs:738
 msgid "_Copy"
 msgstr "복사(_C)"
 
-#: apps/document-scanner/src/ui.rs:256 apps/document-viewer/src/ui.rs:1169
+#: apps/document-scanner/src/ui.rs:256 apps/document-viewer/src/ui.rs:1170
 msgid "Page {}"
 msgstr "{} 페이지"
 
@@ -6500,8 +6501,8 @@ msgid "Find and Select"
 msgstr "찾기 및 선택"
 
 #: apps/document-viewer/src/shortcuts.rs:20 apps/terminal/src/shortcuts.rs:37
-#: apps/terminal/src/shortcuts.rs:39 apps/terminal/src/window.rs:320
-#: apps/terminal/src/window.rs:432 apps/terminal/src/window.rs:435
+#: apps/terminal/src/shortcuts.rs:39 apps/terminal/src/window.rs:325
+#: apps/terminal/src/window.rs:443 apps/terminal/src/window.rs:446
 #: apps/text-editor/src/doc.rs:164 apps/text-editor/src/doc.rs:168
 #: apps/text-editor/src/shortcuts.rs:46 apps/web/src/shortcuts.rs:48
 msgid "Find"
@@ -6698,7 +6699,7 @@ msgid "Caret navigation off"
 msgstr "커서 탐색 끔"
 
 #: apps/document-viewer/src/ui.rs:921 apps/files/src/ui/window.rs:1614
-#: apps/files/src/ui/window.rs:1623 apps/terminal/src/window.rs:729
+#: apps/files/src/ui/window.rs:1623 apps/terminal/src/window.rs:740
 msgid "Select _All"
 msgstr "모두 선택(_A)"
 
@@ -6712,44 +6713,44 @@ msgstr "({n} 중 {page})"
 msgid "of {n}"
 msgstr "/ {n}"
 
-#: apps/document-viewer/src/ui.rs:1307 apps/maps/src/ui.rs:1227
+#: apps/document-viewer/src/ui.rs:1308 apps/maps/src/ui.rs:1227
 #: apps/weather/src/ui.rs:927
 msgid "Searching…"
 msgstr "검색 중…"
 
-#: apps/document-viewer/src/ui.rs:1479
+#: apps/document-viewer/src/ui.rs:1480
 msgid "PDF Documents"
 msgstr "PDF 문서"
 
-#: apps/document-viewer/src/ui.rs:1489
+#: apps/document-viewer/src/ui.rs:1490
 msgid "Open Document"
 msgstr "문서 열기"
 
-#: apps/document-viewer/src/ui.rs:1552
+#: apps/document-viewer/src/ui.rs:1553
 msgid "Unable to open “{uri}”: {message}"
 msgstr "“{uri}”을(를) 열 수 없습니다: {message}"
 
-#: apps/document-viewer/src/ui.rs:1618
+#: apps/document-viewer/src/ui.rs:1619
 msgid "Searching… {total} found"
 msgstr "검색 중… {total}개 찾음"
 
-#: apps/document-viewer/src/ui.rs:1633
+#: apps/document-viewer/src/ui.rs:1634
 msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr "{n_pages}페이지 중 {page}페이지 검색 중… {total}개 찾음"
 
-#: apps/document-viewer/src/ui.rs:1643 apps/maps/src/ui.rs:1260
+#: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1260
 #: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:425
 #: apps/settings/src/ui/picker.rs:34
 msgid "No results found"
 msgstr "결과 없음"
 
-#: apps/document-viewer/src/ui.rs:1644 apps/settings/src/ui/picker.rs:35
+#: apps/document-viewer/src/ui.rs:1645 apps/settings/src/ui/picker.rs:35
 #: apps/text-editor/src/doc.rs:869 apps/web/src/window.rs:2386
 msgid "{n} result"
 msgid_plural "{n} results"
 msgstr[0] "결과 {n}개"
 
-#: apps/document-viewer/src/ui.rs:1824
+#: apps/document-viewer/src/ui.rs:1825
 msgid "Printing failed: {msg}"
 msgstr "인쇄 실패: {msg}"
 
@@ -7255,23 +7256,23 @@ msgstr "…외 {}개"
 msgid "Some Items Could Not Be Processed"
 msgstr "일부 항목을 처리할 수 없습니다"
 
-#: apps/files/src/ui/mod.rs:346
+#: apps/files/src/ui/mod.rs:357
 msgid "Always open a new window"
 msgstr "항상 새 창 열기"
 
-#: apps/files/src/ui/mod.rs:354
+#: apps/files/src/ui/mod.rs:365
 msgid "Select the given items in their parent folders"
 msgstr "지정한 항목을 상위 폴더에서 선택"
 
-#: apps/files/src/ui/mod.rs:362
+#: apps/files/src/ui/mod.rs:373
 msgid "Quit the running instance"
 msgstr "실행 중인 인스턴스 끝내기"
 
-#: apps/files/src/ui/mod.rs:365
+#: apps/files/src/ui/mod.rs:376
 msgid "Access and organize files"
 msgstr "파일에 접근하고 정리합니다"
 
-#: apps/files/src/ui/mod.rs:365 apps/files/src/ui/window.rs:156
+#: apps/files/src/ui/mod.rs:376 apps/files/src/ui/window.rs:156
 #: apps/files/src/ui/window.rs:456
 msgid "Files"
 msgstr "파일"
@@ -7395,10 +7396,10 @@ msgid "Windows and Tabs"
 msgstr "창 및 탭"
 
 #: apps/files/src/ui/shortcuts.rs:14 apps/terminal/src/shortcuts.rs:13
-#: apps/terminal/src/window.rs:270 apps/terminal/src/window.rs:273
+#: apps/terminal/src/window.rs:275 apps/terminal/src/window.rs:278
 #: apps/text-editor/src/shortcuts.rs:13 apps/text-editor/src/window.rs:141
 #: apps/web/src/overview.rs:91 apps/web/src/shortcuts.rs:10
-#: apps/web/src/tab.rs:352
+#: apps/web/src/tab.rs:359
 msgid "New Tab"
 msgstr "새 탭"
 
@@ -7615,7 +7616,7 @@ msgstr "서버 주소"
 msgid "Enter a location"
 msgstr "위치를 입력하십시오"
 
-#: apps/files/src/ui/window.rs:225 apps/terminal/src/window.rs:733
+#: apps/files/src/ui/window.rs:225 apps/terminal/src/window.rs:744
 #: apps/text-editor/src/window.rs:47
 msgid "New _Tab"
 msgstr "새 탭(_T)"
@@ -7828,7 +7829,7 @@ msgstr "위치 복사"
 msgid "New _Folder…"
 msgstr "새 폴더(_F)…"
 
-#: apps/files/src/ui/window.rs:1622 apps/terminal/src/window.rs:728
+#: apps/files/src/ui/window.rs:1622 apps/terminal/src/window.rs:739
 msgid "_Paste"
 msgstr "붙여넣기(_P)"
 
@@ -7861,7 +7862,7 @@ msgstr "서체"
 msgid "typography"
 msgstr "타이포그래피"
 
-#: apps/fonts/src/fclist.rs:92 apps/fonts/src/fontinfo.rs:81
+#: apps/fonts/src/fclist.rs:92 apps/fonts/src/fontinfo.rs:87
 msgid "Regular"
 msgstr "보통"
 
@@ -7894,85 +7895,85 @@ msgstr "fc-list가 글꼴을 찾지 못했습니다"
 msgid "Not a supported font file"
 msgstr "지원하는 글꼴 파일이 아닙니다"
 
-#: apps/fonts/src/fontinfo.rs:103
+#: apps/fonts/src/fontinfo.rs:109
 msgid "OpenType (CFF2)"
 msgstr "OpenType(CFF2)"
 
-#: apps/fonts/src/fontinfo.rs:105
+#: apps/fonts/src/fontinfo.rs:111
 msgid "OpenType (CFF)"
 msgstr "OpenType(CFF)"
 
-#: apps/fonts/src/fontinfo.rs:109
+#: apps/fonts/src/fontinfo.rs:115
 msgid "OpenType (bitmap)"
 msgstr "OpenType(비트맵)"
 
 #. Translators: a variable font's format: "Variable TrueType".
-#: apps/fonts/src/fontinfo.rs:113
+#: apps/fonts/src/fontinfo.rs:119
 msgid "Variable {format}"
 msgstr "가변 {format}"
 
 #. Translators: a font collection's format: "TrueType Collection".
-#: apps/fonts/src/fontinfo.rs:119
+#: apps/fonts/src/fontinfo.rs:125
 msgid "{format} Collection"
 msgstr "{format} 컬렉션"
 
-#: apps/fonts/src/fontinfo.rs:201
+#: apps/fonts/src/fontinfo.rs:228
 msgid "The quick brown fox jumps over the lazy dog."
 msgstr "다람쥐 헌 쳇바퀴에 타고파."
 
-#: apps/fonts/src/fontinfo.rs:257 apps/fonts/src/fontinfo.rs:280
+#: apps/fonts/src/fontinfo.rs:284 apps/fonts/src/fontinfo.rs:307
 msgid "Family"
 msgstr "글꼴 패밀리"
 
-#: apps/fonts/src/fontinfo.rs:258 apps/fonts/src/fontinfo.rs:281
+#: apps/fonts/src/fontinfo.rs:285 apps/fonts/src/fontinfo.rs:308
 #: apps/fonts/src/ui.rs:656 apps/fonts/src/ui.rs:657
 #: apps/settings/src/ui/appearance.rs:106 apps/terminal/src/prefs_dialog.rs:27
-#: apps/terminal/src/window.rs:182 apps/text-editor/src/prefs.rs:61
+#: apps/terminal/src/window.rs:187 apps/text-editor/src/prefs.rs:61
 msgid "Style"
 msgstr "스타일"
 
-#: apps/fonts/src/fontinfo.rs:259
+#: apps/fonts/src/fontinfo.rs:286
 msgid "Full name"
 msgstr "전체 이름"
 
-#: apps/fonts/src/fontinfo.rs:260
+#: apps/fonts/src/fontinfo.rs:287
 msgid "Version"
 msgstr "버전"
 
-#: apps/fonts/src/fontinfo.rs:261
+#: apps/fonts/src/fontinfo.rs:288
 msgid "Copyright"
 msgstr "저작권"
 
-#: apps/fonts/src/fontinfo.rs:262
+#: apps/fonts/src/fontinfo.rs:289
 msgid "Designer"
 msgstr "디자이너"
 
-#: apps/fonts/src/fontinfo.rs:263
+#: apps/fonts/src/fontinfo.rs:290
 msgid "Manufacturer"
 msgstr "제작사"
 
-#: apps/fonts/src/fontinfo.rs:264
+#: apps/fonts/src/fontinfo.rs:291
 msgid "Description"
 msgstr "설명"
 
-#: apps/fonts/src/fontinfo.rs:265
+#: apps/fonts/src/fontinfo.rs:292
 msgid "License"
 msgstr "라이선스"
 
-#: apps/fonts/src/fontinfo.rs:266
+#: apps/fonts/src/fontinfo.rs:293
 msgid "License URL"
 msgstr "라이선스 URL"
 
-#: apps/fonts/src/fontinfo.rs:267
+#: apps/fonts/src/fontinfo.rs:294
 msgid "Glyphs"
 msgstr "글리프"
 
-#: apps/fonts/src/fontinfo.rs:276 apps/fonts/src/fontinfo.rs:282
+#: apps/fonts/src/fontinfo.rs:303 apps/fonts/src/fontinfo.rs:309
 #: apps/image-viewer/src/ui.rs:581 apps/music/src/details.rs:128
 msgid "Format"
 msgstr "형식"
 
-#: apps/fonts/src/fontinfo.rs:285 apps/music/src/details.rs:156
+#: apps/fonts/src/fontinfo.rs:312 apps/music/src/details.rs:156
 msgid "File"
 msgstr "파일"
 
@@ -8121,7 +8122,7 @@ msgid "{n} character"
 msgid_plural "{n} characters"
 msgstr[0] "문자 {n}개"
 
-#: apps/fonts/src/ui.rs:1148 apps/terminal/src/window.rs:448
+#: apps/fonts/src/ui.rs:1148 apps/terminal/src/window.rs:459
 msgid "Aa"
 msgstr "Aa"
 
@@ -8382,7 +8383,7 @@ msgid "This help page wants to open “{uri}” in another application."
 msgstr "이 도움말 페이지가 “{uri}”을(를) 다른 애플리케이션에서 열려고 합니다."
 
 #: apps/help/src/ui.rs:317 apps/text-editor/src/doc.rs:149
-#: apps/web/src/tab.rs:199 apps/web/src/window.rs:2404
+#: apps/web/src/tab.rs:204 apps/web/src/window.rs:2404
 msgid "_Reload"
 msgstr "다시 읽기(_R)"
 
@@ -8522,11 +8523,11 @@ msgstr "전체 화면 나가기"
 msgid "Slideshow"
 msgstr "슬라이드 쇼"
 
-#: apps/image-viewer/src/trash.rs:127
+#: apps/image-viewer/src/trash.rs:177
 msgid "A file with the same name already exists"
 msgstr "같은 이름의 파일이 이미 있습니다"
 
-#: apps/image-viewer/src/trash.rs:130
+#: apps/image-viewer/src/trash.rs:180
 msgid "The file was not found in the trash"
 msgstr "휴지통에서 파일을 찾지 못했습니다"
 
@@ -8542,7 +8543,7 @@ msgstr "이미지를 봅니다"
 msgid "Open Images"
 msgstr "이미지 열기"
 
-#: apps/image-viewer/src/ui.rs:302 apps/terminal/src/window.rs:286
+#: apps/image-viewer/src/ui.rs:302 apps/terminal/src/window.rs:291
 msgid "_New Window"
 msgstr "새 창(_N)"
 
@@ -10832,8 +10833,8 @@ msgstr "미디어 플레이어"
 msgid "Other Device"
 msgstr "기타 장치"
 
-#: apps/settings/src/defaults.rs:15 apps/web/src/app.rs:126
-#: apps/web/src/app.rs:150 apps/web/src/app.rs:904 apps/web/src/window.rs:320
+#: apps/settings/src/defaults.rs:15 apps/web/src/app.rs:128
+#: apps/web/src/app.rs:152 apps/web/src/app.rs:979 apps/web/src/window.rs:320
 #: apps/web/src/window.rs:1574
 msgid "Web"
 msgstr "웹"
@@ -11764,7 +11765,7 @@ msgid "Cursor Size"
 msgstr "커서 크기"
 
 #: apps/settings/src/ui/appearance.rs:108 apps/terminal/src/prefs_dialog.rs:31
-#: apps/terminal/src/window.rs:171 apps/text-editor/src/prefs.rs:65
+#: apps/terminal/src/window.rs:176 apps/text-editor/src/prefs.rs:65
 #: apps/web/src/dialogs.rs:128
 msgid "Dark"
 msgstr "어둡게"
@@ -14055,8 +14056,8 @@ msgstr "프로세스"
 msgid "task"
 msgstr "작업"
 
-#: apps/system-monitor/src/bin/helper.rs:69
-#: apps/system-monitor/src/bin/helper.rs:82
+#: apps/system-monitor/src/bin/helper.rs:65
+#: apps/system-monitor/src/bin/helper.rs:80
 msgid "no process with ID {pid}"
 msgstr "ID가 {pid}인 프로세스가 없습니다"
 
@@ -14072,25 +14073,25 @@ msgstr "이 프로세스의 소유자가 아닙니다"
 msgid "Permission denied"
 msgstr "권한이 거부되었습니다"
 
-#: apps/system-monitor/src/control.rs:149
+#: apps/system-monitor/src/control.rs:142
 msgid "Authorization was denied or cancelled"
 msgstr "인증이 거부되었거나 취소되었습니다"
 
-#: apps/system-monitor/src/control.rs:152
+#: apps/system-monitor/src/control.rs:145
 msgid "Not authorized to control this process"
 msgstr "이 프로세스를 제어할 권한이 없습니다"
 
-#: apps/system-monitor/src/control.rs:160
+#: apps/system-monitor/src/control.rs:153
 #: apps/system-monitor/src/dialogs.rs:117
 msgid "The privileged helper failed"
 msgstr "특권 도우미가 실패했습니다"
 
-#: apps/system-monitor/src/control.rs:175
+#: apps/system-monitor/src/control.rs:168
 msgid ""
 "Administrator privileges are required, but the helper {} is not installed"
 msgstr "관리자 권한이 필요하지만 {} 도우미가 설치되어 있지 않습니다"
 
-#: apps/system-monitor/src/control.rs:185
+#: apps/system-monitor/src/control.rs:178
 msgid "Cannot run pkexec: {e}"
 msgstr "pkexec을 실행할 수 없습니다: {e}"
 
@@ -14185,31 +14186,31 @@ msgstr "우선순위 바꾸기(_P)"
 msgid "Nice Value"
 msgstr "Nice 값"
 
-#: apps/system-monitor/src/dialogs.rs:226
+#: apps/system-monitor/src/dialogs.rs:227
 msgid "Cannot change priority of “{name}”: {e}"
 msgstr "“{name}”의 우선순위를 바꿀 수 없습니다: {e}"
 
-#: apps/system-monitor/src/dialogs.rs:259
+#: apps/system-monitor/src/dialogs.rs:261
 msgid "Cannot stop “{name}”: {e}"
 msgstr "“{name}”을(를) 중지할 수 없습니다: {e}"
 
-#: apps/system-monitor/src/dialogs.rs:261
+#: apps/system-monitor/src/dialogs.rs:263
 msgid "Cannot continue “{name}”: {e}"
 msgstr "“{name}”을(를) 계속할 수 없습니다: {e}"
 
-#: apps/system-monitor/src/dialogs.rs:263
+#: apps/system-monitor/src/dialogs.rs:265
 msgid "Cannot end “{name}”: {e}"
 msgstr "“{name}”을(를) 종료할 수 없습니다: {e}"
 
-#: apps/system-monitor/src/dialogs.rs:264
+#: apps/system-monitor/src/dialogs.rs:266
 msgid "Cannot kill “{name}”: {e}"
 msgstr "“{name}”을(를) 강제 종료할 수 없습니다: {e}"
 
-#: apps/system-monitor/src/dialogs.rs:274
+#: apps/system-monitor/src/dialogs.rs:276
 msgid "Kill “{}”?"
 msgstr "“{}”을(를) 강제 종료하시겠습니까?"
 
-#: apps/system-monitor/src/dialogs.rs:275
+#: apps/system-monitor/src/dialogs.rs:277
 msgid ""
 "Killing a process stops it immediately without letting it save its work. "
 "Unsaved data may be lost."
@@ -14217,15 +14218,15 @@ msgstr ""
 "프로세스를 강제 종료하면 작업을 저장할 기회 없이 즉시 멈춥니다. 저장하지 않"
 "은 데이터를 잃을 수 있습니다."
 
-#: apps/system-monitor/src/dialogs.rs:276
+#: apps/system-monitor/src/dialogs.rs:278
 msgid "_Kill Process"
 msgstr "프로세스 강제 종료(_K)"
 
-#: apps/system-monitor/src/dialogs.rs:279
+#: apps/system-monitor/src/dialogs.rs:281
 msgid "End “{}”?"
 msgstr "“{}”을(를) 종료하시겠습니까?"
 
-#: apps/system-monitor/src/dialogs.rs:280
+#: apps/system-monitor/src/dialogs.rs:282
 msgid ""
 "Ending a process asks it to quit. Unsaved data may be lost, and ending "
 "system processes can make the session unstable."
@@ -14233,7 +14234,7 @@ msgstr ""
 "프로세스를 종료하면 프로세스에 끝내도록 요청합니다. 저장하지 않은 데이터를 잃"
 "을 수 있으며, 시스템 프로세스를 종료하면 세션이 불안정해질 수 있습니다."
 
-#: apps/system-monitor/src/dialogs.rs:281
+#: apps/system-monitor/src/dialogs.rs:283
 msgid "_End Process"
 msgstr "프로세스 종료(_E)"
 
@@ -14366,19 +14367,19 @@ msgstr "사용 가능"
 msgid "Used"
 msgstr "사용함"
 
-#: apps/system-monitor/src/helper_args.rs:93
+#: apps/system-monitor/src/helper_args.rs:119
 msgid "send SIG{name} to process {pid}"
 msgstr "프로세스 {pid}에 SIG{name} 보내기"
 
-#: apps/system-monitor/src/helper_args.rs:99
+#: apps/system-monitor/src/helper_args.rs:125
 msgid "set nice value of process {pid} to {nice}"
 msgstr "프로세스 {pid}의 nice 값을 {nice}(으)로 설정"
 
-#: apps/system-monitor/src/helper_args.rs:112
+#: apps/system-monitor/src/helper_args.rs:138
 msgid "cannot send SIG{name} to process {pid}: {error}"
 msgstr "프로세스 {pid}에 SIG{name}을(를) 보낼 수 없습니다: {error}"
 
-#: apps/system-monitor/src/helper_args.rs:118
+#: apps/system-monitor/src/helper_args.rs:144
 msgid "cannot set nice value of process {pid} to {nice}: {error}"
 msgstr "프로세스 {pid}의 nice 값을 {nice}(으)로 설정할 수 없습니다: {error}"
 
@@ -14609,9 +14610,9 @@ msgid "terminal"
 msgstr "터미널"
 
 #: apps/terminal/src/app.rs:229 apps/terminal/src/paths.rs:70
-#: apps/terminal/src/shortcuts.rs:27 apps/terminal/src/window.rs:243
-#: apps/terminal/src/window.rs:256 apps/terminal/src/window.rs:499
-#: apps/terminal/src/window.rs:909
+#: apps/terminal/src/shortcuts.rs:27 apps/terminal/src/window.rs:248
+#: apps/terminal/src/window.rs:261 apps/terminal/src/window.rs:511
+#: apps/terminal/src/window.rs:924
 msgid "Terminal"
 msgstr "터미널"
 
@@ -14651,7 +14652,7 @@ msgstr "Helix 고대비 어둡게"
 msgid "Follow System"
 msgstr "시스템 따르기"
 
-#: apps/terminal/src/prefs_dialog.rs:30 apps/terminal/src/window.rs:170
+#: apps/terminal/src/prefs_dialog.rs:30 apps/terminal/src/window.rs:175
 #: apps/text-editor/src/prefs.rs:64 apps/web/src/dialogs.rs:128
 msgid "Light"
 msgstr "밝게"
@@ -14769,121 +14770,121 @@ msgstr "찾기 표시줄 닫기"
 msgid "Ctrl + scroll"
 msgstr "Ctrl + 스크롤"
 
-#: apps/terminal/src/window.rs:81
+#: apps/terminal/src/window.rs:86
 msgid "A process"
 msgstr "프로세스"
 
-#: apps/terminal/src/window.rs:125 apps/text-editor/src/doc.rs:823
+#: apps/terminal/src/window.rs:130 apps/text-editor/src/doc.rs:823
 msgid "Invalid regular expression"
 msgstr "잘못된 정규식"
 
-#: apps/terminal/src/window.rs:141
+#: apps/terminal/src/window.rs:146
 msgid "No matches"
 msgstr "일치 항목 없음"
 
-#: apps/terminal/src/window.rs:166
+#: apps/terminal/src/window.rs:171
 msgctxt "style"
 msgid "System"
 msgstr "시스템"
 
-#: apps/terminal/src/window.rs:167
+#: apps/terminal/src/window.rs:172
 msgid "Follow System Style"
 msgstr "시스템 스타일 따르기"
 
-#: apps/terminal/src/window.rs:170
+#: apps/terminal/src/window.rs:175
 msgid "Light Style"
 msgstr "밝은 스타일"
 
-#: apps/terminal/src/window.rs:171
+#: apps/terminal/src/window.rs:176
 msgid "Dark Style"
 msgstr "어두운 스타일"
 
-#: apps/terminal/src/window.rs:236
+#: apps/terminal/src/window.rs:241
 msgid "Reset Zoom, now {text}"
 msgstr "확대/축소 초기화, 현재 {text}"
 
-#: apps/terminal/src/window.rs:287
+#: apps/terminal/src/window.rs:292
 msgid "_Show All Tabs"
 msgstr "모든 탭 보기(_S)"
 
-#: apps/terminal/src/window.rs:292
+#: apps/terminal/src/window.rs:297
 msgid "_About Terminal"
 msgstr "터미널 정보(_A)"
 
-#: apps/terminal/src/window.rs:438 apps/terminal/src/window.rs:440
+#: apps/terminal/src/window.rs:449 apps/terminal/src/window.rs:451
 msgid "Previous Match (older output)"
 msgstr "이전 일치 항목(이전 출력)"
 
-#: apps/terminal/src/window.rs:443 apps/terminal/src/window.rs:445
+#: apps/terminal/src/window.rs:454 apps/terminal/src/window.rs:456
 msgid "Next Match (newer output)"
 msgstr "다음 일치 항목(최근 출력)"
 
-#: apps/terminal/src/window.rs:449 apps/terminal/src/window.rs:451
+#: apps/terminal/src/window.rs:460 apps/terminal/src/window.rs:462
 msgid "Match Case"
 msgstr "대소문자 구분"
 
-#: apps/terminal/src/window.rs:454 apps/terminal/src/window.rs:456
+#: apps/terminal/src/window.rs:465 apps/terminal/src/window.rs:467
 msgid "Regular Expression"
 msgstr "정규식"
 
-#: apps/terminal/src/window.rs:547
+#: apps/terminal/src/window.rs:559
 msgid "Failed to start “{what}”: {error}"
 msgstr "“{what}”을(를) 시작하지 못했습니다: {error}"
 
-#: apps/terminal/src/window.rs:555
+#: apps/terminal/src/window.rs:567
 msgid "Could not start “{what}”"
 msgstr "“{what}”을(를) 시작할 수 없습니다"
 
-#: apps/terminal/src/window.rs:579
+#: apps/terminal/src/window.rs:591
 msgid "Process exited with status {code}"
 msgstr "프로세스가 상태 {code}(으)로 끝났습니다"
 
-#: apps/terminal/src/window.rs:723
+#: apps/terminal/src/window.rs:734 crates/helix-app-common/src/links.rs:138
 msgid "_Open Link"
 msgstr "링크 열기(_O)"
 
-#: apps/terminal/src/window.rs:724
+#: apps/terminal/src/window.rs:735
 msgid "Copy _Link"
 msgstr "링크 복사(_L)"
 
-#: apps/terminal/src/window.rs:732 apps/text-editor/src/window.rs:52
+#: apps/terminal/src/window.rs:743 apps/text-editor/src/window.rs:52
 #: apps/web/src/window.rs:207 apps/web/src/window.rs:248
 msgid "_Find…"
 msgstr "찾기(_F)…"
 
-#: apps/terminal/src/window.rs:935
+#: apps/terminal/src/window.rs:950
 msgid "Running as root"
 msgstr "root로 실행 중"
 
-#: apps/terminal/src/window.rs:939
+#: apps/terminal/src/window.rs:954
 msgid "Connected to a remote host"
 msgstr "원격 호스트에 연결됨"
 
-#: apps/terminal/src/window.rs:940
+#: apps/terminal/src/window.rs:955
 msgid "Connected to {host}"
 msgstr "{host}에 연결됨"
 
-#: apps/terminal/src/window.rs:961
+#: apps/terminal/src/window.rs:976
 msgid "No longer running as root"
 msgstr "더 이상 root로 실행하지 않음"
 
-#: apps/terminal/src/window.rs:962
+#: apps/terminal/src/window.rs:977
 msgid "Remote session ended"
 msgstr "원격 세션이 끝났습니다"
 
-#: apps/terminal/src/window.rs:1274
+#: apps/terminal/src/window.rs:1292
 msgid "Close Window?"
 msgstr "창을 닫으시겠습니까?"
 
-#: apps/terminal/src/window.rs:1276
+#: apps/terminal/src/window.rs:1294
 msgid "Close Tab?"
 msgstr "탭을 닫으시겠습니까?"
 
-#: apps/terminal/src/window.rs:1279
+#: apps/terminal/src/window.rs:1297
 msgid "“{}” is still running. Closing will stop it."
 msgstr "“{}”이(가) 아직 실행 중입니다. 닫으면 중지됩니다."
 
-#: apps/terminal/src/window.rs:1282
+#: apps/terminal/src/window.rs:1300
 msgid ""
 "Some programs are still running:\n"
 "{list}\n"
@@ -14893,7 +14894,7 @@ msgstr ""
 "{list}\n"
 "닫으면 중지됩니다."
 
-#: apps/terminal/src/window.rs:1288
+#: apps/terminal/src/window.rs:1306
 msgid "C_lose"
 msgstr "닫기(_L)"
 
@@ -15693,15 +15694,15 @@ msgstr "응답을 읽을 수 없습니다: {e}"
 msgid "The weather service returned HTTP {code}"
 msgstr "날씨 서비스가 HTTP {code}을(를) 반환했습니다"
 
-#: apps/weather/src/api.rs:270 apps/weather/src/ui.rs:1629
+#: apps/weather/src/api.rs:269 apps/weather/src/ui.rs:1629
 msgid "Could not connect to the weather service: {t}"
 msgstr "날씨 서비스에 연결할 수 없습니다: {t}"
 
-#: apps/weather/src/autoloc.rs:60 apps/weather/src/ui.rs:1642
+#: apps/weather/src/autoloc.rs:75 apps/weather/src/ui.rs:1642
 msgid "Unexpected reverse geocoding data: {e}"
 msgstr "예상하지 못한 역 지오코딩 데이터: {e}"
 
-#: apps/weather/src/autoloc.rs:78
+#: apps/weather/src/autoloc.rs:93
 msgid "No place name at this position"
 msgstr "이 위치에 장소 이름이 없습니다"
 
@@ -16207,13 +16208,29 @@ msgstr "인터넷"
 msgid "web"
 msgstr "웹"
 
-#: apps/web/src/app.rs:150 apps/web/src/app.rs:904
+#: apps/web/src/app.rs:152 apps/web/src/app.rs:979
 msgid "Browse the web"
 msgstr "웹을 탐색합니다"
 
-#: apps/web/src/app.rs:798
+#: apps/web/src/app.rs:801
 msgid "No website data store"
 msgstr "웹사이트 데이터 저장소가 없습니다"
+
+#: apps/web/src/app.rs:943 apps/web/src/tab.rs:1154
+msgid "This page"
+msgstr "이 페이지"
+
+#: apps/web/src/app.rs:946
+msgid "Download File?"
+msgstr "파일을 다운로드하시겠습니까?"
+
+#: apps/web/src/app.rs:947
+msgid "{site} wants to save “{name}” to your Downloads folder."
+msgstr "{site}에서 “{name}”을(를) 다운로드 폴더에 저장하려고 합니다."
+
+#: apps/web/src/app.rs:953
+msgid "_Download"
+msgstr "다운로드(_D)"
 
 #: apps/web/src/dialogs.rs:49
 msgid "Browsing"
@@ -16789,86 +16806,98 @@ msgstr "페이지 책갈피에 추가"
 msgid "Site Information"
 msgstr "사이트 정보"
 
-#: apps/web/src/tab.rs:119
+#: apps/web/src/tab.rs:124
 msgid "{text}{stop} Press F6 to answer."
 msgstr "{text}{stop} 응답하려면 F6을 누르십시오."
 
-#: apps/web/src/tab.rs:175
+#: apps/web/src/tab.rs:180
 msgid "Deny"
 msgstr "거부"
 
-#: apps/web/src/tab.rs:176
+#: apps/web/src/tab.rs:181
 msgid "Allow"
 msgstr "허용"
 
-#: apps/web/src/tab.rs:183
+#: apps/web/src/tab.rs:188
 msgid "Accept Risk and Continue"
 msgstr "위험을 감수하고 계속"
 
-#: apps/web/src/tab.rs:189
+#: apps/web/src/tab.rs:194
 msgid "Never for This Site"
 msgstr "이 사이트에서는 안 함"
 
-#: apps/web/src/tab.rs:190
+#: apps/web/src/tab.rs:195
 msgid "Not Now"
 msgstr "나중에"
 
-#: apps/web/src/tab.rs:477
+#: apps/web/src/tab.rs:485
 msgid "Permission request denied: the page changed"
 msgstr "권한 요청 거부됨: 페이지가 바뀌었습니다"
 
-#: apps/web/src/tab.rs:525
+#: apps/web/src/tab.rs:533
 msgid ""
 "The identity of {host} could not be verified. Its security certificate is "
 "not trusted."
 msgstr "{host}의 신원을 확인할 수 없습니다. 보안 인증서를 신뢰할 수 없습니다."
 
 #. Translators: announced when a page crashes: the heading, then the explanation.
-#: apps/web/src/tab.rs:550
+#: apps/web/src/tab.rs:558
 msgid "{title}. {description}"
 msgstr "{title}. {description}"
 
-#: apps/web/src/tab.rs:569
+#: apps/web/src/tab.rs:577
 msgid "Could not load the page: {}"
 msgstr "페이지를 불러올 수 없습니다: {}"
 
-#: apps/web/src/tab.rs:953
+#: apps/web/src/tab.rs:707
+msgid "Download Linked File"
+msgstr "링크된 파일 다운로드"
+
+#: apps/web/src/tab.rs:708
+msgid "Download Image"
+msgstr "이미지 다운로드"
+
+#: apps/web/src/tab.rs:709
+msgid "Download Video"
+msgstr "동영상 다운로드"
+
+#: apps/web/src/tab.rs:710
+msgid "Download Audio"
+msgstr "오디오 다운로드"
+
+#: apps/web/src/tab.rs:1010
 msgid "Password saved"
 msgstr "암호를 저장했습니다"
 
-#: apps/web/src/tab.rs:954
+#: apps/web/src/tab.rs:1011
 msgid "Could not save the password: {e}"
 msgstr "암호를 저장할 수 없습니다: {e}"
 
-#: apps/web/src/tab.rs:955
+#: apps/web/src/tab.rs:1012
 msgid "Could not save the password"
 msgstr "암호를 저장할 수 없습니다"
 
-#: apps/web/src/tab.rs:1096
-msgid "This page"
-msgstr "이 페이지"
-
-#: apps/web/src/tab.rs:1097
+#: apps/web/src/tab.rs:1155
 msgid "{host} says"
 msgstr "{host} 메시지"
 
-#: apps/web/src/tab.rs:1115
+#: apps/web/src/tab.rs:1173
 msgid "Answer"
 msgstr "응답"
 
-#: apps/web/src/tab.rs:1122
+#: apps/web/src/tab.rs:1180
 msgid "Leave Page?"
 msgstr "페이지를 나가시겠습니까?"
 
-#: apps/web/src/tab.rs:1123
+#: apps/web/src/tab.rs:1181
 msgid "Changes you made may not be saved."
 msgstr "변경한 내용이 저장되지 않을 수 있습니다."
 
-#: apps/web/src/tab.rs:1124
+#: apps/web/src/tab.rs:1182
 msgid "_Leave"
 msgstr "나가기(_L)"
 
-#: apps/web/src/tab.rs:1124
+#: apps/web/src/tab.rs:1182
 msgid "_Stay"
 msgstr "머무르기(_S)"
 
@@ -17338,6 +17367,18 @@ msgstr "여기서는 지원되지 않습니다."
 #: crates/helix-app-common/src/errors.rs:65
 msgid "The network or server cannot be reached."
 msgstr "네트워크 또는 서버에 연결할 수 없습니다."
+
+#: crates/helix-app-common/src/links.rs:123
+msgid "Open This Link?"
+msgstr "이 링크를 여시겠습니까?"
+
+#: crates/helix-app-common/src/links.rs:124
+msgid ""
+"The link points to the location below, which is not a web page. Opening it "
+"may access files or network shares, or start another application."
+msgstr ""
+"이 링크는 웹 페이지가 아닌 아래 위치를 가리킵니다. 열면 파일이나 네트워크 공"
+"유에 접근하거나 다른 응용 프로그램이 실행될 수 있습니다."
 
 #: crates/helix-eds/src/client.rs:58
 msgid "“{name}” is read-only"
