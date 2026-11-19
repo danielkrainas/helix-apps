@@ -202,7 +202,7 @@ View images.
 | Open With… | Ctrl+Shift+O | `gtk::FileLauncher` with *always ask* (OpenURI portal) |
 | Copy | Ctrl+C | Current (oriented, unrotated) frame to the clipboard as a texture |
 | Set as Background… | — | XDG Wallpaper portal `SetWallpaperURI(parent, uri, {show-preview: true, set-on: "background"})` over zbus on a worker thread; waits for the `Request::Response` signal and toasts the result |
-| Move to Trash | Delete | `gio::File::trash`, image removed from list, toast “Image moved to trash” with **Undo** which restores the file from the freedesktop trash (`$XDG_DATA_HOME/Trash`, or `$topdir/.Trash-$uid` / `$topdir/.Trash/$uid`, matching the `.trashinfo` `Path` with the latest `DeletionDate`) |
+| Move to Trash | Delete | `gio::File::trash`, image removed from list, toast “Image moved to trash” with **Undo** which restores the file from the freedesktop trash (`$XDG_DATA_HOME/Trash`, or `$topdir/.Trash-$uid` / `$topdir/.Trash/$uid`, matching the `.trashinfo` `Path` with the latest `DeletionDate`). Only trash folders GIO would use count: the home trash and the trash at the top of the file's mount (not every folder above it), each a real folder (no symbolic link) owned by the user and not writable by others, with private `files`/`info`, and a shared `.Trash` only with its sticky bit; a planted entry elsewhere is ignored |
 | Previous / Next | Left / Right, Page Up / Page Down | Navigate list (prev/next overlay buttons too) |
 | First / Last | Home / End | |
 | Zoom in / out | Ctrl+= / Ctrl++ / Ctrl+KP_Add, Ctrl+- / Ctrl+KP_Subtract, mouse wheel, Ctrl+scroll, pinch | |
