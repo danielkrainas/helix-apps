@@ -286,7 +286,7 @@ msgstr "Sair"
 #: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:11
 #: apps/settings/src/ui/apps.rs:600 apps/settings/src/ui/bluetooth.rs:129
 #: apps/settings/src/ui/users.rs:575 apps/text-editor/src/shortcuts.rs:15
-#: apps/web/src/window.rs:2232
+#: apps/web/src/window.rs:2228
 msgid "Open"
 msgstr "Abrir"
 
@@ -296,7 +296,7 @@ msgstr "Abrir um arquivo"
 
 #: apps/audio-player/src/ui.rs:223 apps/audio-player/src/ui.rs:244
 #: apps/document-viewer/src/ui.rs:282 apps/document-viewer/src/ui.rs:388
-#: apps/fonts/src/ui.rs:110 apps/image-viewer/src/ui.rs:287
+#: apps/fonts/src/ui.rs:110 apps/image-viewer/src/ui.rs:300
 #: apps/video-player/src/ui.rs:291 apps/video-player/src/ui.rs:372
 msgid "_Open…"
 msgstr "_Abrir…"
@@ -318,8 +318,8 @@ msgstr "_Sobre o Reprodutor de áudio"
 #: apps/document-viewer/src/ui.rs:312 apps/document-viewer/src/ui.rs:315
 #: apps/files/src/ui/window.rs:238 apps/files/src/ui/window.rs:241
 #: apps/fonts/src/ui.rs:123 apps/fonts/src/ui.rs:126 apps/help/src/ui.rs:360
-#: apps/help/src/ui.rs:362 apps/image-viewer/src/ui.rs:323
-#: apps/image-viewer/src/ui.rs:325 apps/logs/src/ui.rs:308
+#: apps/help/src/ui.rs:362 apps/image-viewer/src/ui.rs:337
+#: apps/image-viewer/src/ui.rs:339 apps/logs/src/ui.rs:308
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
 #: apps/music/src/ui.rs:317 apps/music/src/ui.rs:319
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
@@ -729,7 +729,7 @@ msgid "{} is undefined for these values"
 msgstr "{} é indefinido para estes valores"
 
 #: apps/calculator/src/format.rs:33 apps/document-scanner/src/settings.rs:29
-#: apps/document-scanner/src/ui.rs:1730 apps/document-scanner/src/ui.rs:1797
+#: apps/document-scanner/src/ui.rs:1728 apps/document-scanner/src/ui.rs:1795
 #: apps/settings/src/ui/netedit.rs:32 apps/settings/src/ui/network.rs:28
 msgid "Automatic"
 msgstr "Automático"
@@ -1029,7 +1029,7 @@ msgid "Programming mode"
 msgstr "Modo de programação"
 
 #: apps/calculator/src/ui.rs:506 apps/calculator/src/ui.rs:1587
-#: apps/disk-usage/src/shortcuts.rs:49 apps/disk-usage/src/ui.rs:1775
+#: apps/disk-usage/src/shortcuts.rs:49 apps/disk-usage/src/ui.rs:1773
 #: apps/document-scanner/src/shortcuts.rs:50 apps/files/src/ui/shortcuts.rs:80
 #: apps/maps/src/shortcuts.rs:13 apps/maps/src/ui.rs:1804
 #: apps/music/src/shortcuts.rs:32 apps/system-monitor/src/shortcuts.rs:32
@@ -1125,22 +1125,22 @@ msgstr "C_alcular"
 #: apps/calendar/src/manage.rs:374 apps/calendar/src/ui.rs:2470
 #: apps/clocks/src/ui.rs:410 apps/clocks/src/ui.rs:1352
 #: apps/clocks/src/ui.rs:1907 apps/disk-usage/src/ui.rs:320
-#: apps/disk-usage/src/ui.rs:1687 apps/disks/src/ui.rs:1225
+#: apps/disk-usage/src/ui.rs:1685 apps/disks/src/ui.rs:1225
 #: apps/disks/src/ui.rs:1325 apps/disks/src/ui.rs:1442
 #: apps/disks/src/ui.rs:1517 apps/disks/src/ui.rs:1652
 #: apps/disks/src/ui.rs:1709 apps/disks/src/ui.rs:1797
 #: apps/disks/src/ui.rs:2022 apps/disks/src/ui.rs:2230
-#: apps/document-scanner/src/ui.rs:1266 apps/document-scanner/src/ui.rs:1381
-#: apps/document-scanner/src/ui.rs:1419 apps/document-viewer/src/dialogs.rs:169
+#: apps/document-scanner/src/ui.rs:1264 apps/document-scanner/src/ui.rs:1379
+#: apps/document-scanner/src/ui.rs:1417 apps/document-viewer/src/dialogs.rs:169
 #: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
-#: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:656
+#: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:675
 #: apps/music/src/pages.rs:1522 apps/music/src/pages.rs:1620
 #: apps/music/src/pages.rs:1682 apps/settings/src/ui/apps.rs:553
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
 #: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
 #: apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1288
-#: apps/text-editor/src/window.rs:975 apps/web/src/dialogs.rs:413
+#: apps/text-editor/src/window.rs:973 apps/web/src/dialogs.rs:413
 #: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
 #: apps/web/src/dialogs.rs:928 apps/web/src/dialogs.rs:1130
 #: apps/web/src/tab.rs:1105 apps/web/src/tab.rs:1118
@@ -1385,7 +1385,7 @@ msgid "New Event"
 msgstr "Novo evento"
 
 #: apps/calendar/src/editor.rs:464 apps/contacts/src/ui.rs:340
-#: apps/files/src/ui/jobs.rs:157 apps/web/src/window.rs:2226
+#: apps/files/src/ui/jobs.rs:157 apps/web/src/window.rs:2222
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -1414,7 +1414,7 @@ msgid "Calendar"
 msgstr "Agenda"
 
 #: apps/calendar/src/editor.rs:504 apps/document-viewer/src/dialogs.rs:112
-#: apps/files/src/ui/window.rs:211 apps/image-viewer/src/ui.rs:567
+#: apps/files/src/ui/window.rs:211 apps/image-viewer/src/ui.rs:592
 #: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:128
 #: apps/web/src/permissions.rs:24
 msgid "Location"
@@ -1485,7 +1485,7 @@ msgstr "Adicionar lembrete"
 
 #: apps/calendar/src/editor.rs:608 apps/calendar/src/editor.rs:617
 #: apps/contacts/src/editor.rs:391 apps/contacts/src/editor.rs:400
-#: apps/contacts/src/ui.rs:1336
+#: apps/contacts/src/ui.rs:1334
 msgid "Notes"
 msgstr "Notas"
 
@@ -1651,7 +1651,7 @@ msgid "Show {display}"
 msgstr "Mostrar {display}"
 
 #: apps/calendar/src/manage.rs:297 apps/clocks/src/ui.rs:1460
-#: apps/contacts/src/editor.rs:302 apps/disk-usage/src/ui.rs:1007
+#: apps/contacts/src/editor.rs:302 apps/disk-usage/src/ui.rs:1005
 #: apps/disks/src/ui.rs:1640 apps/files/src/sorting.rs:43
 #: apps/files/src/ui/tab.rs:190 apps/settings/src/ui/netedit.rs:235
 #: apps/settings/src/ui/users.rs:81
@@ -1913,7 +1913,7 @@ msgstr "Novo evento no cursor de horário"
 
 #: apps/calendar/src/shortcuts.rs:45 apps/document-viewer/src/shortcuts.rs:41
 #: apps/document-viewer/src/ui.rs:354 apps/files/src/ui/shortcuts.rs:44
-#: apps/image-viewer/src/shortcuts.rs:32 apps/image-viewer/src/ui.rs:429
+#: apps/image-viewer/src/shortcuts.rs:32 apps/image-viewer/src/ui.rs:443
 #: apps/maps/src/shortcuts.rs:24 apps/terminal/src/shortcuts.rs:51
 #: apps/terminal/src/window.rs:190 apps/text-editor/src/shortcuts.rs:59
 #: apps/text-editor/src/window.rs:161 apps/web/src/shortcuts.rs:62
@@ -1923,7 +1923,7 @@ msgstr "Ampliar"
 
 #: apps/calendar/src/shortcuts.rs:46 apps/document-viewer/src/shortcuts.rs:44
 #: apps/document-viewer/src/ui.rs:353 apps/files/src/ui/shortcuts.rs:47
-#: apps/image-viewer/src/shortcuts.rs:35 apps/image-viewer/src/ui.rs:411
+#: apps/image-viewer/src/shortcuts.rs:35 apps/image-viewer/src/ui.rs:425
 #: apps/maps/src/shortcuts.rs:28 apps/terminal/src/shortcuts.rs:54
 #: apps/terminal/src/window.rs:188 apps/text-editor/src/shortcuts.rs:62
 #: apps/text-editor/src/window.rs:152 apps/web/src/shortcuts.rs:66
@@ -2002,9 +2002,9 @@ msgid "Search Events"
 msgstr "Pesquisar eventos"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:968 apps/settings/src/ui/mod.rs:227
+#: apps/files/src/ui/tab.rs:950 apps/settings/src/ui/mod.rs:227
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:739
-#: apps/web/src/window.rs:2382
+#: apps/web/src/window.rs:2378
 msgid "No Results Found"
 msgstr "Nenhum resultado encontrado"
 
@@ -2012,7 +2012,7 @@ msgstr "Nenhum resultado encontrado"
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
 #: apps/music/src/pages.rs:1153 apps/settings/src/ui/mod.rs:228
 #: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:740
-#: apps/web/src/window.rs:2383
+#: apps/web/src/window.rs:2379
 msgid "Try a different search"
 msgstr "Tente uma pesquisa diferente"
 
@@ -2053,8 +2053,8 @@ msgstr "Evento excluído"
 msgid "“{}” deleted"
 msgstr "“{}” excluído"
 
-#: apps/calendar/src/ui.rs:1043 apps/contacts/src/ui.rs:1604
-#: apps/contacts/src/ui.rs:1646 apps/files/src/ui/shortcuts.rs:74
+#: apps/calendar/src/ui.rs:1043 apps/contacts/src/ui.rs:1602
+#: apps/contacts/src/ui.rs:1644 apps/files/src/ui/shortcuts.rs:74
 #: apps/text-editor/src/shortcuts.rs:36
 msgid "Undo"
 msgstr "Desfazer"
@@ -2131,7 +2131,7 @@ msgstr "Arquivos de agenda"
 msgid "Import Events"
 msgstr "Importar eventos"
 
-#: apps/calendar/src/ui.rs:2416 apps/contacts/src/ui.rs:1725
+#: apps/calendar/src/ui.rs:2416 apps/contacts/src/ui.rs:1723
 msgid "Could not read {path}: {e}"
 msgstr "Não foi possível ler {path}: {e}"
 
@@ -2296,7 +2296,7 @@ msgid "Open the Last Capture"
 msgstr "Abrir a última captura"
 
 #: apps/camera/src/ui.rs:110 apps/camera/src/ui.rs:200
-#: apps/image-viewer/src/ui.rs:551 apps/image-viewer/src/ui.rs:562
+#: apps/image-viewer/src/ui.rs:576 apps/image-viewer/src/ui.rs:587
 #: apps/settings/src/bluez.rs:230 apps/settings/src/permissions.rs:52
 #: apps/settings/src/ui/privacy.rs:145 apps/web/src/permissions.rs:27
 msgid "Camera"
@@ -2336,7 +2336,7 @@ msgid "_About Camera"
 msgstr "_Sobre a Câmera"
 
 #: apps/camera/src/ui.rs:274 apps/camera/src/ui.rs:278
-#: apps/contacts/src/ui.rs:1430 apps/files/src/ui/shortcuts.rs:72
+#: apps/contacts/src/ui.rs:1428 apps/files/src/ui/shortcuts.rs:72
 #: apps/image-viewer/src/shortcuts.rs:13 apps/terminal/src/shortcuts.rs:29
 msgid "Copy"
 msgstr "Copiar"
@@ -2367,7 +2367,7 @@ msgstr "Vídeo"
 msgid "QR code detected: {text}"
 msgstr "Código QR detectado: {text}"
 
-#: apps/camera/src/ui.rs:585 apps/contacts/src/ui.rs:1440
+#: apps/camera/src/ui.rs:585 apps/contacts/src/ui.rs:1438
 #: apps/logs/src/ui.rs:838
 msgid "Copied to clipboard"
 msgstr "Copiado para a área de transferência"
@@ -2389,7 +2389,7 @@ msgid "Countdown cancelled"
 msgstr "Contagem regressiva cancelada"
 
 #: apps/camera/src/ui.rs:859 apps/files/src/ui/dialogs.rs:455
-#: apps/files/src/ui/sidebar.rs:545 apps/files/src/ui/window.rs:1569
+#: apps/files/src/ui/sidebar.rs:555 apps/files/src/ui/window.rs:1574
 #: apps/text-editor/src/window.rs:131
 msgid "_Open"
 msgstr "_Abrir"
@@ -2591,8 +2591,8 @@ msgstr "Copiar o caractere (nos detalhes)"
 msgid "Character map and emoji picker"
 msgstr "Mapa de caracteres e seletor de emojis"
 
-#: apps/characters/src/ui.rs:199 apps/contacts/src/ui.rs:1104
-#: apps/files/src/ui/tab.rs:1199 apps/logs/src/ui.rs:719
+#: apps/characters/src/ui.rs:199 apps/contacts/src/ui.rs:1102
+#: apps/files/src/ui/tab.rs:1181 apps/logs/src/ui.rs:719
 #: apps/text-editor/src/doc.rs:866
 msgid "No results"
 msgstr "Nenhum resultado"
@@ -2849,7 +2849,7 @@ msgstr "Volta"
 #: apps/clocks/src/shortcuts.rs:35 apps/clocks/src/ui.rs:1759
 #: apps/clocks/src/ui.rs:2086 apps/maps/src/ui.rs:1887
 #: apps/settings/src/ui/apps.rs:490 apps/settings/src/ui/apps.rs:620
-#: apps/web/src/window.rs:1955
+#: apps/web/src/window.rs:1953
 msgid "Reset"
 msgstr "Redefinir"
 
@@ -2982,7 +2982,7 @@ msgid "Night"
 msgstr "Noite"
 
 #: apps/clocks/src/ui.rs:310 apps/clocks/src/ui.rs:311
-#: apps/document-scanner/src/ui.rs:1782
+#: apps/document-scanner/src/ui.rs:1780
 #: apps/document-viewer/src/shortcuts.rs:33 apps/files/src/ui/shortcuts.rs:22
 #: apps/files/src/ui/window.rs:185 apps/files/src/ui/window.rs:188
 #: apps/files/src/ui/window.rs:379 apps/help/src/shortcuts.rs:29
@@ -3045,8 +3045,8 @@ msgstr "Adicionar temporizador"
 msgid "Current Location"
 msgstr "Localização atual"
 
-#: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1866
-#: apps/disk-usage/src/ui.rs:1870 apps/settings/src/ui/input.rs:367
+#: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
+#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/input.rs:367
 #: apps/weather/src/ui.rs:876 apps/web/src/dialogs.rs:198
 #: apps/web/src/dialogs.rs:643 apps/web/src/dialogs.rs:1030
 #: apps/web/src/dialogs.rs:1185
@@ -3138,7 +3138,7 @@ msgid "_Add"
 msgstr "_Adicionar"
 
 #: apps/clocks/src/ui.rs:1353 apps/clocks/src/ui.rs:1908
-#: apps/contacts/src/ui.rs:1816
+#: apps/contacts/src/ui.rs:1814
 msgid "_Done"
 msgstr "_Concluído"
 
@@ -3226,7 +3226,7 @@ msgid "{label} deleted"
 msgstr "{label} excluído"
 
 #: apps/clocks/src/ui.rs:1871 apps/files/src/ui/window.rs:228
-#: apps/files/src/ui/window.rs:1303 apps/image-viewer/src/ui.rs:1507
+#: apps/files/src/ui/window.rs:1308 apps/image-viewer/src/ui.rs:1579
 msgid "_Undo"
 msgstr "_Desfazer"
 
@@ -3251,7 +3251,7 @@ msgid "Reset {timer_label}"
 msgstr "Redefinir {timer_label}"
 
 #: apps/clocks/src/ui.rs:2094 apps/contacts/src/ui.rs:302
-#: apps/disk-usage/src/ui.rs:1576
+#: apps/disk-usage/src/ui.rs:1574
 msgid "Delete"
 msgstr "Excluir"
 
@@ -3513,7 +3513,7 @@ msgstr "Apelido"
 msgid "Organization"
 msgstr "Organização"
 
-#: apps/contacts/src/editor.rs:325 apps/contacts/src/ui.rs:1323
+#: apps/contacts/src/editor.rs:325 apps/contacts/src/ui.rs:1321
 msgid "Department"
 msgstr "Departamento"
 
@@ -3558,11 +3558,11 @@ msgctxt "contact details"
 msgid "Other"
 msgstr "Outro"
 
-#: apps/contacts/src/editor.rs:385 apps/contacts/src/ui.rs:1317
+#: apps/contacts/src/editor.rs:385 apps/contacts/src/ui.rs:1315
 msgid "Birthday"
 msgstr "Aniversário"
 
-#: apps/contacts/src/editor.rs:386 apps/contacts/src/ui.rs:1320
+#: apps/contacts/src/editor.rs:386 apps/contacts/src/ui.rs:1318
 msgid "Anniversary"
 msgstr "Aniversário de casamento"
 
@@ -3615,7 +3615,7 @@ msgid "Contacts"
 msgstr "Contatos"
 
 #: apps/contacts/src/shortcuts.rs:10 apps/contacts/src/ui.rs:186
-#: apps/contacts/src/ui.rs:188 apps/contacts/src/ui.rs:1465
+#: apps/contacts/src/ui.rs:188 apps/contacts/src/ui.rs:1463
 msgid "New Contact"
 msgstr "Novo contato"
 
@@ -3692,7 +3692,7 @@ msgid "Import…"
 msgstr "Importar…"
 
 #: apps/contacts/src/ui.rs:275 apps/contacts/src/ui.rs:449
-#: apps/contacts/src/ui.rs:1083
+#: apps/contacts/src/ui.rs:1081
 msgid "Loading contacts"
 msgstr "Carregando contatos"
 
@@ -3716,7 +3716,7 @@ msgstr "Concluído"
 msgid "Contact Menu"
 msgstr "Menu do contato"
 
-#: apps/contacts/src/ui.rs:358 apps/contacts/src/ui.rs:1201
+#: apps/contacts/src/ui.rs:358 apps/contacts/src/ui.rs:1199
 msgid "Contact"
 msgstr "Contato"
 
@@ -3738,160 +3738,160 @@ msgid_plural "Imported {n} contacts"
 msgstr[0] "{n} contato importado"
 msgstr[1] "{n} contatos importados"
 
-#: apps/contacts/src/ui.rs:979
+#: apps/contacts/src/ui.rs:977
 msgid "Select {name}"
 msgstr "Selecionar {name}"
 
-#: apps/contacts/src/ui.rs:1013
+#: apps/contacts/src/ui.rs:1011
 msgid "Me"
 msgstr "Eu"
 
-#: apps/contacts/src/ui.rs:1021 apps/contacts/src/ui.rs:1024
+#: apps/contacts/src/ui.rs:1019 apps/contacts/src/ui.rs:1022
 msgid "Linked contact"
 msgstr "Contato vinculado"
 
-#: apps/contacts/src/ui.rs:1088
+#: apps/contacts/src/ui.rs:1086
 msgid "No contacts"
 msgstr "Nenhum contato"
 
-#: apps/contacts/src/ui.rs:1095
+#: apps/contacts/src/ui.rs:1093
 msgid "{n} contact loaded"
 msgid_plural "{n} contacts loaded"
 msgstr[0] "{n} contato carregado"
 msgstr[1] "{n} contatos carregados"
 
-#: apps/contacts/src/ui.rs:1105
+#: apps/contacts/src/ui.rs:1103
 msgid "{n} contact found"
 msgid_plural "{n} contacts found"
 msgstr[0] "{n} contato encontrado"
 msgstr[1] "{n} contatos encontrados"
 
-#: apps/contacts/src/ui.rs:1195
+#: apps/contacts/src/ui.rs:1193
 msgid "Select a Contact"
 msgstr "Selecione um contato"
 
-#: apps/contacts/src/ui.rs:1211
+#: apps/contacts/src/ui.rs:1209
 msgid "_Unlink"
 msgstr "_Desvincular"
 
-#: apps/contacts/src/ui.rs:1213 apps/logs/src/ui.rs:282
+#: apps/contacts/src/ui.rs:1211 apps/logs/src/ui.rs:282
 msgid "_Export…"
 msgstr "_Exportar…"
 
-#: apps/contacts/src/ui.rs:1221
+#: apps/contacts/src/ui.rs:1219
 msgid "_Delete Contact"
 msgstr "_Excluir contato"
 
-#: apps/contacts/src/ui.rs:1261 apps/document-scanner/src/shortcuts.rs:24
+#: apps/contacts/src/ui.rs:1259 apps/document-scanner/src/shortcuts.rs:24
 msgid "Email"
 msgstr "E-mail"
 
-#: apps/contacts/src/ui.rs:1272 apps/maps/src/nominatim.rs:153
+#: apps/contacts/src/ui.rs:1270 apps/maps/src/nominatim.rs:153
 #: apps/maps/src/nominatim.rs:154 apps/maps/src/ui.rs:292
 #: apps/settings/src/bluez.rs:228
 msgid "Phone"
 msgstr "Telefone"
 
-#: apps/contacts/src/ui.rs:1288 apps/maps/src/nominatim.rs:248
+#: apps/contacts/src/ui.rs:1286 apps/maps/src/nominatim.rs:248
 #: apps/settings/src/ui/bluetooth.rs:515 apps/web/src/window.rs:49
 msgid "Address"
 msgstr "Endereço"
 
-#: apps/contacts/src/ui.rs:1300 apps/maps/src/nominatim.rs:155
+#: apps/contacts/src/ui.rs:1298 apps/maps/src/nominatim.rs:155
 #: apps/maps/src/nominatim.rs:156 apps/maps/src/ui.rs:284
 msgid "Website"
 msgstr "Site"
 
-#: apps/contacts/src/ui.rs:1326
+#: apps/contacts/src/ui.rs:1324
 msgid "Groups"
 msgstr "Grupos"
 
-#: apps/contacts/src/ui.rs:1329
+#: apps/contacts/src/ui.rs:1327
 msgid "Personal"
 msgstr "Pessoal"
 
-#: apps/contacts/src/ui.rs:1352
+#: apps/contacts/src/ui.rs:1350
 msgid "Address Books"
 msgstr "Catálogos de endereços"
 
-#: apps/contacts/src/ui.rs:1363
+#: apps/contacts/src/ui.rs:1361
 msgid "Read-only"
 msgstr "Somente leitura"
 
-#: apps/contacts/src/ui.rs:1452
+#: apps/contacts/src/ui.rs:1450
 msgid "No writable address book is available"
 msgstr "Nenhum catálogo de endereços gravável está disponível"
 
-#: apps/contacts/src/ui.rs:1512
+#: apps/contacts/src/ui.rs:1510
 msgid "Discard Changes?"
 msgstr "Descartar alterações?"
 
-#: apps/contacts/src/ui.rs:1513
+#: apps/contacts/src/ui.rs:1511
 msgid "Changes to this contact have not been saved."
 msgstr "As alterações neste contato não foram salvas."
 
-#: apps/contacts/src/ui.rs:1518 apps/document-scanner/src/ui.rs:1267
-#: apps/document-scanner/src/ui.rs:1381 apps/text-editor/src/window.rs:981
+#: apps/contacts/src/ui.rs:1516 apps/document-scanner/src/ui.rs:1265
+#: apps/document-scanner/src/ui.rs:1379 apps/text-editor/src/window.rs:979
 msgid "_Discard"
 msgstr "_Descartar"
 
-#: apps/contacts/src/ui.rs:1518
+#: apps/contacts/src/ui.rs:1516
 msgid "_Keep Editing"
 msgstr "_Continuar editando"
 
-#: apps/contacts/src/ui.rs:1583
+#: apps/contacts/src/ui.rs:1581
 msgid "Could not save links: {e}"
 msgstr "Não foi possível salvar os vínculos: {e}"
 
-#: apps/contacts/src/ui.rs:1603
+#: apps/contacts/src/ui.rs:1601
 msgid "Contacts linked"
 msgstr "Contatos vinculados"
 
-#: apps/contacts/src/ui.rs:1624
+#: apps/contacts/src/ui.rs:1622
 msgid "These contacts are read-only"
 msgstr "Estes contatos são somente leitura"
 
-#: apps/contacts/src/ui.rs:1642
+#: apps/contacts/src/ui.rs:1640
 msgid "Contact deleted"
 msgstr "Contato excluído"
 
-#: apps/contacts/src/ui.rs:1644
+#: apps/contacts/src/ui.rs:1642
 msgid "{n} contact deleted"
 msgid_plural "{n} contacts deleted"
 msgstr[0] "{n} contato excluído"
 msgstr[1] "{n} contatos excluídos"
 
-#: apps/contacts/src/ui.rs:1701
+#: apps/contacts/src/ui.rs:1699
 msgid "vCard files"
 msgstr "Arquivos vCard"
 
-#: apps/contacts/src/ui.rs:1708
+#: apps/contacts/src/ui.rs:1706
 msgid "Import Contacts"
 msgstr "Importar contatos"
 
-#: apps/contacts/src/ui.rs:1738
+#: apps/contacts/src/ui.rs:1736
 msgid "No contacts found in the file"
 msgstr "Nenhum contato encontrado no arquivo"
 
-#: apps/contacts/src/ui.rs:1757
+#: apps/contacts/src/ui.rs:1755
 msgid "Export Contacts"
 msgstr "Exportar contatos"
 
-#: apps/contacts/src/ui.rs:1779
+#: apps/contacts/src/ui.rs:1777
 msgid "Exported {n} contact"
 msgid_plural "Exported {n} contacts"
 msgstr[0] "{n} contato exportado"
 msgstr[1] "{n} contatos exportados"
 
-#: apps/contacts/src/ui.rs:1784 apps/logs/src/ui.rs:809
+#: apps/contacts/src/ui.rs:1782 apps/logs/src/ui.rs:809
 msgid "Export failed: {e}"
 msgstr "Falha na exportação: {e}"
 
-#: apps/contacts/src/ui.rs:1807
+#: apps/contacts/src/ui.rs:1805
 msgid "Choose an Address Book"
 msgstr "Escolha um catálogo de endereços"
 
-#: apps/contacts/src/ui.rs:1808
+#: apps/contacts/src/ui.rs:1806
 msgid ""
 "New contacts will be saved in this address book. You can change it later "
 "from the main menu."
@@ -3899,58 +3899,58 @@ msgstr ""
 "Novos contatos serão salvos neste catálogo de endereços. Você pode alterá-lo "
 "depois no menu principal."
 
-#: apps/contacts/src/ui.rs:1812
+#: apps/contacts/src/ui.rs:1810
 msgid "Address Book for New Contacts"
 msgstr "Catálogo de endereços para novos contatos"
 
-#: apps/contacts/src/ui.rs:1859
+#: apps/contacts/src/ui.rs:1857
 msgid "Contact not found"
 msgstr "Contato não encontrado"
 
 #. Translators: a birthday or anniversary, "17" "May" "1990".
-#: apps/contacts/src/ui.rs:1901
+#: apps/contacts/src/ui.rs:1899
 msgid "{day} {month} {year}"
 msgstr "{day} de {month} de {year}"
 
 #. Translators: a birthday or anniversary without a year, "17" "May".
-#: apps/contacts/src/ui.rs:1903
+#: apps/contacts/src/ui.rs:1901
 msgid "{day} {month}"
 msgstr "{day} de {month}"
 
-#: apps/contacts/src/ui.rs:1920
+#: apps/contacts/src/ui.rs:1918
 msgid "Send Email"
 msgstr "Enviar e-mail"
 
-#: apps/contacts/src/ui.rs:1921
+#: apps/contacts/src/ui.rs:1919
 msgid "Call"
 msgstr "Ligar"
 
-#: apps/contacts/src/ui.rs:1922 apps/image-viewer/src/ui.rs:582
-#: apps/image-viewer/src/ui.rs:584
+#: apps/contacts/src/ui.rs:1920 apps/image-viewer/src/ui.rs:607
+#: apps/image-viewer/src/ui.rs:609
 msgid "Show on Map"
 msgstr "Mostrar no mapa"
 
-#: apps/contacts/src/ui.rs:1923 apps/maps/src/ui.rs:250
+#: apps/contacts/src/ui.rs:1921 apps/maps/src/ui.rs:250
 msgid "Open Website"
 msgstr "Abrir site"
 
-#: apps/contacts/src/ui.rs:1939
+#: apps/contacts/src/ui.rs:1937
 msgid "No app available to send email"
 msgstr "Nenhum aplicativo disponível para enviar e-mail"
 
-#: apps/contacts/src/ui.rs:1940
+#: apps/contacts/src/ui.rs:1938
 msgid "No app available to make calls"
 msgstr "Nenhum aplicativo disponível para fazer chamadas"
 
-#: apps/contacts/src/ui.rs:1941
+#: apps/contacts/src/ui.rs:1939
 msgid "No app available to show maps"
 msgstr "Nenhum aplicativo disponível para mostrar mapas"
 
-#: apps/contacts/src/ui.rs:1942
+#: apps/contacts/src/ui.rs:1940
 msgid "No app available to open websites"
 msgstr "Nenhum aplicativo disponível para abrir sites"
 
-#: apps/contacts/src/ui.rs:1955
+#: apps/contacts/src/ui.rs:1953
 msgid "Copy {}"
 msgstr "Copiar {}"
 
@@ -3990,7 +3990,7 @@ msgid "storage"
 msgstr "armazenamento"
 
 #: apps/disk-usage/src/mounts.rs:155 apps/files/src/pathbar.rs:25
-#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1253
+#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1235
 #: apps/files/src/ui/window.rs:139 apps/settings/src/bluez.rs:229
 msgid "Computer"
 msgstr "Computador"
@@ -4007,9 +4007,9 @@ msgstr "Análise cancelada"
 msgid "Not a folder"
 msgstr "Não é uma pasta"
 
-#: apps/disk-usage/src/shortcuts.rs:20 apps/disk-usage/src/ui.rs:1778
+#: apps/disk-usage/src/shortcuts.rs:20 apps/disk-usage/src/ui.rs:1776
 #: apps/document-scanner/src/shortcuts.rs:8 apps/document-scanner/src/ui.rs:436
-#: apps/document-scanner/src/ui.rs:1696
+#: apps/document-scanner/src/ui.rs:1694
 msgid "Scanning"
 msgstr "Varredura"
 
@@ -4148,189 +4148,189 @@ msgstr "Gráfico de mapa em árvore"
 msgid "Usage chart"
 msgstr "Gráfico de uso"
 
-#: apps/disk-usage/src/ui.rs:629
+#: apps/disk-usage/src/ui.rs:627
 msgid "Could not start scan: {e}"
 msgstr "Não foi possível iniciar a análise: {e}"
 
-#: apps/disk-usage/src/ui.rs:644
+#: apps/disk-usage/src/ui.rs:642
 msgid "{n} item, {size}"
 msgid_plural "{n} items, {size}"
 msgstr[0] "{n} item, {size}"
 msgstr[1] "{n} itens, {size}"
 
-#: apps/disk-usage/src/ui.rs:674
+#: apps/disk-usage/src/ui.rs:672
 msgid "Could not scan “{path}”: {e}"
 msgstr "Não foi possível analisar “{path}”: {e}"
 
-#: apps/disk-usage/src/ui.rs:737
+#: apps/disk-usage/src/ui.rs:735
 msgid "{size} on disk · {apparent} apparent · {n} item"
 msgid_plural "{size} on disk · {apparent} apparent · {n} items"
 msgstr[0] "{size} no disco · {apparent} aparentes · {n} item"
 msgstr[1] "{size} no disco · {apparent} aparentes · {n} itens"
 
-#: apps/disk-usage/src/ui.rs:745
+#: apps/disk-usage/src/ui.rs:743
 msgid " · {n} folder could not be read"
 msgid_plural " · {n} folders could not be read"
 msgstr[0] " · Não foi possível ler {n} pasta"
 msgstr[1] " · Não foi possível ler {n} pastas"
 
-#: apps/disk-usage/src/ui.rs:789
+#: apps/disk-usage/src/ui.rs:787
 msgid "This folder could not be fully read"
 msgstr "Esta pasta não pôde ser lida completamente"
 
-#: apps/disk-usage/src/ui.rs:809
+#: apps/disk-usage/src/ui.rs:807
 msgid "{} on disk, {} apparent"
 msgstr "{} em disco, {} aparente"
 
-#: apps/disk-usage/src/ui.rs:818 apps/disk-usage/src/ui.rs:1152
+#: apps/disk-usage/src/ui.rs:816 apps/disk-usage/src/ui.rs:1150
 #: apps/files/src/fmt.rs:12
 msgid "{n} item"
 msgid_plural "{n} items"
 msgstr[0] "{n} item"
 msgstr[1] "{n} itens"
 
-#: apps/disk-usage/src/ui.rs:1008 apps/disks/src/ui.rs:358
+#: apps/disk-usage/src/ui.rs:1006 apps/disks/src/ui.rs:358
 #: apps/disks/src/ui.rs:453 apps/files/src/sorting.rs:44
 #: apps/files/src/ui/properties.rs:138 apps/files/src/ui/tab.rs:191
 #: apps/fonts/src/fontinfo.rs:287
 msgid "Size"
 msgstr "Tamanho"
 
-#: apps/disk-usage/src/ui.rs:1009 apps/disks/src/ui.rs:457
+#: apps/disk-usage/src/ui.rs:1007 apps/disks/src/ui.rs:457
 #: apps/files/src/ui/properties.rs:132 apps/files/src/ui/properties.rs:241
 #: apps/help/src/docbook.rs:326 apps/help/src/ui.rs:400
 msgid "Contents"
 msgstr "Conteúdo"
 
-#: apps/disk-usage/src/ui.rs:1010 apps/document-viewer/src/dialogs.rs:104
+#: apps/disk-usage/src/ui.rs:1008 apps/document-viewer/src/dialogs.rs:104
 #: apps/files/src/sorting.rs:46 apps/files/src/ui/properties.rs:187
-#: apps/files/src/ui/tab.rs:193 apps/image-viewer/src/ui.rs:560
+#: apps/files/src/ui/tab.rs:193 apps/image-viewer/src/ui.rs:585
 msgid "Modified"
 msgstr "Modificado"
 
-#: apps/disk-usage/src/ui.rs:1144
+#: apps/disk-usage/src/ui.rs:1142
 msgid "{size} on disk ({apparent} apparent)"
 msgstr "{size} em disco ({apparent} aparente)"
 
-#: apps/disk-usage/src/ui.rs:1156
+#: apps/disk-usage/src/ui.rs:1154
 msgid "Click to go up"
 msgstr "Clique para subir"
 
-#: apps/disk-usage/src/ui.rs:1344
+#: apps/disk-usage/src/ui.rs:1342
 msgid ", press Enter to go up"
 msgstr ", pressione Enter para subir"
 
-#: apps/disk-usage/src/ui.rs:1348
+#: apps/disk-usage/src/ui.rs:1346
 msgid "{name}, {size} in total{up}"
 msgstr "{name}, {size} no total{up}"
 
-#: apps/disk-usage/src/ui.rs:1357
+#: apps/disk-usage/src/ui.rs:1355
 msgid "folder, press Enter to open"
 msgstr "pasta, pressione Enter para abrir"
 
-#: apps/disk-usage/src/ui.rs:1358
+#: apps/disk-usage/src/ui.rs:1356
 msgid "empty folder"
 msgstr "pasta vazia"
 
-#: apps/disk-usage/src/ui.rs:1359
+#: apps/disk-usage/src/ui.rs:1357
 msgid "file"
 msgstr "arquivo"
 
 #. Translators: spoken for an item of the chart: name, size, share of its parent folder, then "folder" or "file".
-#: apps/disk-usage/src/ui.rs:1364
+#: apps/disk-usage/src/ui.rs:1362
 msgid "{name}, {size}, {percent} % of {parent}, {kind}"
 msgstr "{name}, {size}, {percent} por cento de {parent}, {kind}"
 
-#: apps/disk-usage/src/ui.rs:1372
+#: apps/disk-usage/src/ui.rs:1370
 msgid "{name}, {size}, {kind}"
 msgstr "{name}, {size}, {kind}"
 
-#: apps/disk-usage/src/ui.rs:1438
+#: apps/disk-usage/src/ui.rs:1436
 msgid "Usage of {}"
 msgstr "Uso de {}"
 
 #. Translators: one of the largest items in the chart's description.
-#: apps/disk-usage/src/ui.rs:1452
+#: apps/disk-usage/src/ui.rs:1450
 msgid "{name} {size}, {percent} %"
 msgstr "{name} {size}, {percent} %"
 
-#: apps/disk-usage/src/ui.rs:1461
+#: apps/disk-usage/src/ui.rs:1459
 msgid "{size} in total; no items"
 msgstr "{size} no total; nenhum item"
 
-#: apps/disk-usage/src/ui.rs:1463
+#: apps/disk-usage/src/ui.rs:1461
 msgid "{} in total. Largest: {}. Use the arrow keys to explore."
 msgstr "{} no total. Maiores: {}. Use as teclas de seta para explorar."
 
-#: apps/disk-usage/src/ui.rs:1618
+#: apps/disk-usage/src/ui.rs:1616
 msgid "Select Folder to Scan"
 msgstr "Selecione a pasta a analisar"
 
-#: apps/disk-usage/src/ui.rs:1627
+#: apps/disk-usage/src/ui.rs:1625
 msgid "Only local folders can be scanned"
 msgstr "Somente pastas locais podem ser analisadas"
 
-#: apps/disk-usage/src/ui.rs:1644 apps/image-viewer/src/ui.rs:865
+#: apps/disk-usage/src/ui.rs:1642 apps/image-viewer/src/ui.rs:936
 msgid "Could not open folder: {}"
 msgstr "Não foi possível abrir a pasta: {}"
 
-#: apps/disk-usage/src/ui.rs:1658
+#: apps/disk-usage/src/ui.rs:1656
 msgid "Path copied"
 msgstr "Caminho copiado"
 
-#: apps/disk-usage/src/ui.rs:1677
+#: apps/disk-usage/src/ui.rs:1675
 msgid "Move “{name}” to the Trash?"
 msgstr "Mover “{name}” para a lixeira?"
 
-#: apps/disk-usage/src/ui.rs:1681
+#: apps/disk-usage/src/ui.rs:1679
 msgid "This frees up to {size} once the trash is emptied."
 msgstr "Isso libera até {size} quando a lixeira for esvaziada."
 
-#: apps/disk-usage/src/ui.rs:1687
+#: apps/disk-usage/src/ui.rs:1685
 msgid "_Move to Trash"
 msgstr "_Mover para a lixeira"
 
-#: apps/disk-usage/src/ui.rs:1703
+#: apps/disk-usage/src/ui.rs:1701
 msgid "Could not move “{name}” to the trash: {error}"
 msgstr "Não foi possível mover “{name}” para a lixeira: {error}"
 
-#: apps/disk-usage/src/ui.rs:1768
+#: apps/disk-usage/src/ui.rs:1766
 msgid "Moved to the trash"
 msgstr "Movido para a lixeira"
 
-#: apps/disk-usage/src/ui.rs:1781
+#: apps/disk-usage/src/ui.rs:1779
 msgid "Cross File System Boundaries"
 msgstr "Atravessar limites de sistemas de arquivos"
 
-#: apps/disk-usage/src/ui.rs:1782
+#: apps/disk-usage/src/ui.rs:1780
 msgid "Also scan folders that are on other disks or partitions"
 msgstr "Também analisar pastas que estão em outros discos ou partições"
 
-#: apps/disk-usage/src/ui.rs:1797
+#: apps/disk-usage/src/ui.rs:1795
 msgid "Excluded Locations"
 msgstr "Locais excluídos"
 
-#: apps/disk-usage/src/ui.rs:1798
+#: apps/disk-usage/src/ui.rs:1796
 msgid "These locations are skipped when scanning"
 msgstr "Estes locais são ignorados durante a análise"
 
-#: apps/disk-usage/src/ui.rs:1802 apps/disk-usage/src/ui.rs:1805
+#: apps/disk-usage/src/ui.rs:1800 apps/disk-usage/src/ui.rs:1803
 msgid "Add Location…"
 msgstr "Adicionar local…"
 
-#: apps/disk-usage/src/ui.rs:1818
+#: apps/disk-usage/src/ui.rs:1816
 msgid "Exclude Location"
 msgstr "Excluir local"
 
-#: apps/disk-usage/src/ui.rs:1851
+#: apps/disk-usage/src/ui.rs:1847
 msgid "No excluded locations"
 msgstr "Nenhum local excluído"
 
-#: apps/disk-usage/src/ui.rs:1917
+#: apps/disk-usage/src/ui.rs:1913
 msgid "{} used of {} ({} available)"
 msgstr "{} usados de {} ({} disponíveis)"
 
-#: apps/disk-usage/src/ui.rs:1942
+#: apps/disk-usage/src/ui.rs:1938
 msgid "Scan {}"
 msgstr "Analisar {}"
 
@@ -5134,7 +5134,7 @@ msgstr "Desanexar dispositivo de loop"
 msgid "Drive Options"
 msgstr "Opções da unidade"
 
-#: apps/disks/src/ui.rs:338 apps/files/src/ui/sidebar.rs:463
+#: apps/disks/src/ui.rs:338 apps/files/src/ui/sidebar.rs:473
 msgid "Eject"
 msgstr "Ejetar"
 
@@ -5259,7 +5259,7 @@ msgstr "Desativar swap"
 msgid "Activate Swap"
 msgstr "Ativar swap"
 
-#: apps/disks/src/ui.rs:1033 apps/files/src/ui/sidebar.rs:465
+#: apps/disks/src/ui.rs:1033 apps/files/src/ui/sidebar.rs:475
 msgid "Unmount"
 msgstr "Desmontar"
 
@@ -5272,7 +5272,7 @@ msgid "Unlock…"
 msgstr "Desbloquear…"
 
 #: apps/disks/src/ui.rs:1211 apps/document-scanner/src/ui.rs:895
-#: apps/document-scanner/src/ui.rs:1566 apps/files/src/ui/jobs.rs:260
+#: apps/document-scanner/src/ui.rs:1564 apps/files/src/ui/jobs.rs:260
 #: apps/screenshot/src/ui.rs:646 apps/screenshot/src/ui.rs:707
 #: apps/terminal/src/window.rs:475 crates/helix-app-common/src/errors.rs:353
 msgid "_Close"
@@ -5399,7 +5399,7 @@ msgid "Delete Partition?"
 msgstr "Excluir partição?"
 
 #: apps/disks/src/ui.rs:1594 apps/document-scanner/src/ui.rs:228
-#: apps/files/src/ui/window.rs:1388 apps/music/src/pages.rs:1683
+#: apps/files/src/ui/window.rs:1393 apps/music/src/pages.rs:1683
 msgid "_Delete"
 msgstr "_Excluir"
 
@@ -5666,7 +5666,7 @@ msgstr "_Restaurar"
 msgid "Restoring image to {desc}"
 msgstr "Restaurando imagem em {desc}"
 
-#: apps/disks/src/ui.rs:2213 apps/web/src/window.rs:2214
+#: apps/disks/src/ui.rs:2213 apps/web/src/window.rs:2210
 msgid "Starting…"
 msgstr "Iniciando…"
 
@@ -5746,7 +5746,7 @@ msgstr "Ofício (EUA)"
 msgid "Crop area {} × {} mm at {}, {} mm"
 msgstr "Área de recorte {} × {} mm em {}, {} mm"
 
-#: apps/document-scanner/src/email.rs:25 apps/document-scanner/src/ui.rs:1455
+#: apps/document-scanner/src/email.rs:25 apps/document-scanner/src/ui.rs:1453
 msgid "Scanned Document"
 msgstr "Documento digitalizado"
 
@@ -6007,12 +6007,12 @@ msgid "_Rotate Crop"
 msgstr "_Girar recorte"
 
 #: apps/document-scanner/src/ui.rs:220 apps/document-viewer/src/ui.rs:289
-#: apps/image-viewer/src/ui.rs:304
+#: apps/image-viewer/src/ui.rs:317
 msgid "Rotate _Left"
 msgstr "Girar à _esquerda"
 
 #: apps/document-scanner/src/ui.rs:221 apps/document-viewer/src/ui.rs:290
-#: apps/image-viewer/src/ui.rs:305
+#: apps/image-viewer/src/ui.rs:318
 msgid "Rotate _Right"
 msgstr "Girar à _direita"
 
@@ -6029,7 +6029,7 @@ msgid "_Crop"
 msgstr "_Recortar"
 
 #: apps/document-scanner/src/ui.rs:227 apps/document-viewer/src/ui.rs:920
-#: apps/files/src/ui/window.rs:1582 apps/image-viewer/src/ui.rs:292
+#: apps/files/src/ui/window.rs:1587 apps/image-viewer/src/ui.rs:305
 #: apps/terminal/src/window.rs:727
 msgid "_Copy"
 msgstr "_Copiar"
@@ -6067,7 +6067,7 @@ msgstr "Nenhum scanner detectado"
 msgid "Please check your scanner is connected and powered on."
 msgstr "Verifique se o seu scanner está conectado e ligado."
 
-#: apps/document-scanner/src/ui.rs:362 apps/document-scanner/src/ui.rs:1714
+#: apps/document-scanner/src/ui.rs:362 apps/document-scanner/src/ui.rs:1712
 #: apps/settings/src/bluez.rs:233
 msgid "Scanner"
 msgstr "Scanner"
@@ -6085,12 +6085,12 @@ msgstr ""
 "Ctrl aumenta os passos"
 
 #: apps/document-scanner/src/ui.rs:447 apps/document-viewer/src/shortcuts.rs:46
-#: apps/image-viewer/src/shortcuts.rs:41 apps/image-viewer/src/ui.rs:390
+#: apps/image-viewer/src/shortcuts.rs:41 apps/image-viewer/src/ui.rs:404
 msgid "Rotate Left"
 msgstr "Girar à esquerda"
 
 #: apps/document-scanner/src/ui.rs:452 apps/document-viewer/src/shortcuts.rs:47
-#: apps/image-viewer/src/shortcuts.rs:40 apps/image-viewer/src/ui.rs:396
+#: apps/image-viewer/src/shortcuts.rs:40 apps/image-viewer/src/ui.rs:410
 msgid "Rotate Right"
 msgstr "Girar à direita"
 
@@ -6126,182 +6126,182 @@ msgstr "Falha ao digitalizar"
 msgid "No scanner selected"
 msgstr "Nenhum scanner selecionado"
 
-#: apps/document-scanner/src/ui.rs:1262
+#: apps/document-scanner/src/ui.rs:1260
 msgid "Save current document?"
 msgstr "Salvar o documento atual?"
 
-#: apps/document-scanner/src/ui.rs:1263
+#: apps/document-scanner/src/ui.rs:1261
 msgid "Documents that are not saved will be permanently lost."
 msgstr "Documentos que não forem salvos serão perdidos permanentemente."
 
-#: apps/document-scanner/src/ui.rs:1268 apps/screenshot/src/ui.rs:687
-#: apps/text-editor/src/window.rs:142 apps/text-editor/src/window.rs:984
+#: apps/document-scanner/src/ui.rs:1266 apps/screenshot/src/ui.rs:687
+#: apps/text-editor/src/window.rs:142 apps/text-editor/src/window.rs:982
 msgid "_Save"
 msgstr "_Salvar"
 
-#: apps/document-scanner/src/ui.rs:1323
+#: apps/document-scanner/src/ui.rs:1321
 msgid "Scanning page {}…"
 msgstr "Digitalizando página {}…"
 
-#: apps/document-scanner/src/ui.rs:1328
+#: apps/document-scanner/src/ui.rs:1326
 msgid "Scanning is unavailable: {e}"
 msgstr "A digitalização não está disponível: {e}"
 
-#: apps/document-scanner/src/ui.rs:1376
+#: apps/document-scanner/src/ui.rs:1374
 msgid "Discard Scanned Pages?"
 msgstr "Descartar páginas digitalizadas?"
 
-#: apps/document-scanner/src/ui.rs:1377
+#: apps/document-scanner/src/ui.rs:1375
 msgid ""
 "The current document has not been saved. Its pages will be permanently lost."
 msgstr ""
 "O documento atual não foi salvo. Suas páginas serão perdidas permanentemente."
 
-#: apps/document-scanner/src/ui.rs:1409
+#: apps/document-scanner/src/ui.rs:1407
 msgid "Reorder Pages"
 msgstr "Reordenar páginas"
 
-#: apps/document-scanner/src/ui.rs:1410
+#: apps/document-scanner/src/ui.rs:1408
 msgid "Combine sides interleaves fronts (first half) with backs (second half)."
 msgstr ""
 "Combinar lados intercala as frentes (primeira metade) com os versos (segunda "
 "metade)."
 
-#: apps/document-scanner/src/ui.rs:1415
+#: apps/document-scanner/src/ui.rs:1413
 msgid "Combine Sides"
 msgstr "Combinar lados"
 
-#: apps/document-scanner/src/ui.rs:1416
+#: apps/document-scanner/src/ui.rs:1414
 msgid "Combine Sides (Reverse)"
 msgstr "Combinar lados (invertido)"
 
-#: apps/document-scanner/src/ui.rs:1417
+#: apps/document-scanner/src/ui.rs:1415
 msgid "Reverse"
 msgstr "Inverter"
 
-#: apps/document-scanner/src/ui.rs:1418
+#: apps/document-scanner/src/ui.rs:1416
 msgid "Flip Odd Pages Upside-Down"
 msgstr "Virar páginas ímpares de cabeça para baixo"
 
-#: apps/document-scanner/src/ui.rs:1444
+#: apps/document-scanner/src/ui.rs:1442
 msgid "Page copied"
 msgstr "Página copiada"
 
-#: apps/document-scanner/src/ui.rs:1469
+#: apps/document-scanner/src/ui.rs:1467
 msgid "Failed to print: {e}"
 msgstr "Falha ao imprimir: {e}"
 
-#: apps/document-scanner/src/ui.rs:1511
+#: apps/document-scanner/src/ui.rs:1509
 msgid "Save As…"
 msgstr "Salvar como…"
 
-#: apps/document-scanner/src/ui.rs:1513
+#: apps/document-scanner/src/ui.rs:1511
 msgid "Scanned Document.{}"
 msgstr "Documento digitalizado.{}"
 
-#: apps/document-scanner/src/ui.rs:1541
+#: apps/document-scanner/src/ui.rs:1539
 msgid "Saving failed"
 msgstr "Falha ao salvar"
 
-#: apps/document-scanner/src/ui.rs:1555
+#: apps/document-scanner/src/ui.rs:1553
 msgid "Saved “{n}”"
 msgstr "“{n}” salvo"
 
-#: apps/document-scanner/src/ui.rs:1556
+#: apps/document-scanner/src/ui.rs:1554
 msgid "Saved {n} file"
 msgid_plural "Saved {n} files"
 msgstr[0] "{n} arquivo salvo"
 msgstr[1] "{n} arquivos salvos"
 
-#: apps/document-scanner/src/ui.rs:1565
+#: apps/document-scanner/src/ui.rs:1563
 msgid "Failed to Save File"
 msgstr "Falha ao salvar o arquivo"
 
-#: apps/document-scanner/src/ui.rs:1593
+#: apps/document-scanner/src/ui.rs:1591
 msgid "The post-processing script crashed"
 msgstr "O script de pós-processamento travou"
 
-#: apps/document-scanner/src/ui.rs:1620
+#: apps/document-scanner/src/ui.rs:1618
 msgid "Sending failed"
 msgstr "Falha no envio"
 
-#: apps/document-scanner/src/ui.rs:1622
+#: apps/document-scanner/src/ui.rs:1620
 msgid "Could not open the mail client: {e}"
 msgstr "Não foi possível abrir o cliente de e-mail: {e}"
 
-#: apps/document-scanner/src/ui.rs:1647
+#: apps/document-scanner/src/ui.rs:1645
 msgid "{d} dpi"
 msgstr "{d} dpi"
 
-#: apps/document-scanner/src/ui.rs:1738
+#: apps/document-scanner/src/ui.rs:1736
 msgid "Source"
 msgstr "Origem"
 
-#: apps/document-scanner/src/ui.rs:1760
+#: apps/document-scanner/src/ui.rs:1758
 msgid "Color Mode"
 msgstr "Modo de cor"
 
-#: apps/document-scanner/src/ui.rs:1761
+#: apps/document-scanner/src/ui.rs:1759
 msgid "Automatic uses grayscale for text and color for images"
 msgstr "Automático usa tons de cinza para texto e cor para imagens"
 
-#: apps/document-scanner/src/ui.rs:1778
+#: apps/document-scanner/src/ui.rs:1776
 msgid "Scan Sides"
 msgstr "Lados a digitalizar"
 
-#: apps/document-scanner/src/ui.rs:1779
+#: apps/document-scanner/src/ui.rs:1777
 msgid "For the document feeder"
 msgstr "Para o alimentador de documentos"
 
-#: apps/document-scanner/src/ui.rs:1781 apps/settings/src/ui/sound.rs:247
+#: apps/document-scanner/src/ui.rs:1779 apps/settings/src/ui/sound.rs:247
 msgid "Front"
 msgstr "Frente"
 
-#: apps/document-scanner/src/ui.rs:1783
+#: apps/document-scanner/src/ui.rs:1781
 msgid "Both"
 msgstr "Ambos"
 
-#: apps/document-scanner/src/ui.rs:1800 apps/document-viewer/src/dialogs.rs:107
+#: apps/document-scanner/src/ui.rs:1798 apps/document-viewer/src/dialogs.rs:107
 msgid "Page Size"
 msgstr "Tamanho da página"
 
-#: apps/document-scanner/src/ui.rs:1820
+#: apps/document-scanner/src/ui.rs:1818
 msgid "Text Resolution"
 msgstr "Resolução de texto"
 
-#: apps/document-scanner/src/ui.rs:1821
+#: apps/document-scanner/src/ui.rs:1819
 msgid "Image Resolution"
 msgstr "Resolução de imagem"
 
-#: apps/document-scanner/src/ui.rs:1822 apps/settings/src/ui/access.rs:535
+#: apps/document-scanner/src/ui.rs:1820 apps/settings/src/ui/access.rs:535
 msgid "Brightness"
 msgstr "Brilho"
 
-#: apps/document-scanner/src/ui.rs:1823 apps/settings/src/ui/access.rs:541
+#: apps/document-scanner/src/ui.rs:1821 apps/settings/src/ui/access.rs:541
 msgid "Contrast"
 msgstr "Contraste"
 
-#: apps/document-scanner/src/ui.rs:1826
+#: apps/document-scanner/src/ui.rs:1824
 msgid "Delay Between Pages"
 msgstr "Intervalo entre páginas"
 
-#: apps/document-scanner/src/ui.rs:1827
+#: apps/document-scanner/src/ui.rs:1825
 msgid "Seconds, when scanning multiple pages from the flatbed"
 msgstr "Segundos, ao digitalizar várias páginas da mesa"
 
-#: apps/document-scanner/src/ui.rs:1840
+#: apps/document-scanner/src/ui.rs:1838
 msgid "Saving"
 msgstr "Salvamento"
 
-#: apps/document-scanner/src/ui.rs:1841
+#: apps/document-scanner/src/ui.rs:1839
 msgid "JPEG Quality"
 msgstr "Qualidade JPEG"
 
-#: apps/document-scanner/src/ui.rs:1852
+#: apps/document-scanner/src/ui.rs:1850
 msgid "Post-processing"
 msgstr "Pós-processamento"
 
-#: apps/document-scanner/src/ui.rs:1853
+#: apps/document-scanner/src/ui.rs:1851
 msgid ""
 "After saving, run SCRIPT MIME-TYPE KEEP-ORIGINAL FILE [ARGUMENTS…] (no "
 "shell; arguments are split like shell words but not expanded)"
@@ -6310,31 +6310,31 @@ msgstr ""
 "shell; os argumentos são divididos como palavras do shell, mas não "
 "expandidos)"
 
-#: apps/document-scanner/src/ui.rs:1860
+#: apps/document-scanner/src/ui.rs:1858
 msgid "Enable Post-processing"
 msgstr "Ativar pós-processamento"
 
-#: apps/document-scanner/src/ui.rs:1872
+#: apps/document-scanner/src/ui.rs:1870
 msgid "Script"
 msgstr "Script"
 
-#: apps/document-scanner/src/ui.rs:1878 apps/document-scanner/src/ui.rs:1882
+#: apps/document-scanner/src/ui.rs:1876 apps/document-scanner/src/ui.rs:1880
 msgid "Choose Script…"
 msgstr "Escolher script…"
 
-#: apps/document-scanner/src/ui.rs:1895
+#: apps/document-scanner/src/ui.rs:1893
 msgid "Choose Script"
 msgstr "Escolher script"
 
-#: apps/document-scanner/src/ui.rs:1915
+#: apps/document-scanner/src/ui.rs:1913
 msgid "Script Arguments"
 msgstr "Argumentos do script"
 
-#: apps/document-scanner/src/ui.rs:1944
+#: apps/document-scanner/src/ui.rs:1942
 msgid "Keep Original File"
 msgstr "Manter arquivo original"
 
-#: apps/document-scanner/src/ui.rs:1945
+#: apps/document-scanner/src/ui.rs:1943
 msgid "Saves an unprocessed copy with “_orig” before the extension"
 msgstr "Salva uma cópia não processada com “_orig” antes da extensão"
 
@@ -6424,11 +6424,11 @@ msgid "Creator"
 msgstr "Criador"
 
 #: apps/document-viewer/src/dialogs.rs:103 apps/files/src/ui/properties.rs:189
-#: apps/image-viewer/src/ui.rs:559
+#: apps/image-viewer/src/ui.rs:584
 msgid "Created"
 msgstr "Criado"
 
-#: apps/document-viewer/src/dialogs.rs:110 apps/image-viewer/src/ui.rs:557
+#: apps/document-viewer/src/dialogs.rs:110 apps/image-viewer/src/ui.rs:582
 msgid "File Size"
 msgstr "Tamanho do arquivo"
 
@@ -6457,7 +6457,7 @@ msgstr "Sim"
 #: apps/document-viewer/src/dialogs.rs:135
 #: apps/document-viewer/src/shortcuts.rs:13 apps/files/src/ui/properties.rs:266
 #: apps/files/src/ui/shortcuts.rs:62 apps/image-viewer/src/shortcuts.rs:16
-#: apps/image-viewer/src/ui.rs:590 apps/system-monitor/src/proc_view.rs:438
+#: apps/image-viewer/src/ui.rs:615 apps/system-monitor/src/proc_view.rs:438
 #: apps/system-monitor/src/proc_view.rs:441
 #: apps/system-monitor/src/shortcuts.rs:41
 msgid "Properties"
@@ -6620,7 +6620,7 @@ msgid "Night Mode"
 msgstr "Modo noturno"
 
 #: apps/document-viewer/src/shortcuts.rs:50
-#: apps/image-viewer/src/shortcuts.rs:42 apps/image-viewer/src/ui.rs:436
+#: apps/image-viewer/src/shortcuts.rs:42 apps/image-viewer/src/ui.rs:450
 #: apps/terminal/src/shortcuts.rs:23 apps/video-player/src/ui.rs:168
 #: apps/web/src/shortcuts.rs:70
 msgid "Fullscreen"
@@ -6635,7 +6635,7 @@ msgid "View PDF documents"
 msgstr "Veja documentos PDF"
 
 #: apps/document-viewer/src/ui.rs:250 apps/document-viewer/src/ui.rs:253
-#: apps/image-viewer/src/ui.rs:280 apps/video-player/src/ui.rs:314
+#: apps/image-viewer/src/ui.rs:293 apps/video-player/src/ui.rs:314
 #: apps/video-player/src/ui.rs:317
 msgid "Open…"
 msgstr "Abrir…"
@@ -6673,7 +6673,7 @@ msgstr "Navegação por _cursor"
 msgid "_Presentation"
 msgstr "_Apresentação"
 
-#: apps/document-viewer/src/ui.rs:294 apps/image-viewer/src/ui.rs:307
+#: apps/document-viewer/src/ui.rs:294 apps/image-viewer/src/ui.rs:320
 #: apps/web/src/window.rs:209 apps/web/src/window.rs:250
 msgid "_Fullscreen"
 msgstr "_Tela cheia"
@@ -6702,7 +6702,7 @@ msgstr "_Automático"
 msgid "Zoom (%)"
 msgstr "Zoom (%)"
 
-#: apps/document-viewer/src/ui.rs:352 apps/image-viewer/src/ui.rs:422
+#: apps/document-viewer/src/ui.rs:352 apps/image-viewer/src/ui.rs:436
 msgid "Zoom Level"
 msgstr "Nível de zoom"
 
@@ -6754,8 +6754,8 @@ msgstr ""
 msgid "Caret navigation off"
 msgstr "Navegação por cursor desativada"
 
-#: apps/document-viewer/src/ui.rs:921 apps/files/src/ui/window.rs:1609
-#: apps/files/src/ui/window.rs:1618 apps/terminal/src/window.rs:729
+#: apps/document-viewer/src/ui.rs:921 apps/files/src/ui/window.rs:1614
+#: apps/files/src/ui/window.rs:1623 apps/terminal/src/window.rs:729
 msgid "Select _All"
 msgstr "Selecionar _tudo"
 
@@ -6801,7 +6801,7 @@ msgid "No results found"
 msgstr "Nenhum resultado encontrado"
 
 #: apps/document-viewer/src/ui.rs:1644 apps/settings/src/ui/picker.rs:35
-#: apps/text-editor/src/doc.rs:869 apps/web/src/window.rs:2390
+#: apps/text-editor/src/doc.rs:869 apps/web/src/window.rs:2386
 msgid "{n} result"
 msgid_plural "{n} results"
 msgstr[0] "{n} resultado"
@@ -6954,7 +6954,7 @@ msgid "Trash emptied"
 msgstr "Lixeira esvaziada"
 
 #: apps/files/src/ops.rs:119 apps/files/src/pathbar.rs:108
-#: apps/files/src/ui/sidebar.rs:84 apps/files/src/ui/window.rs:340
+#: apps/files/src/ui/sidebar.rs:87 apps/files/src/ui/window.rs:340
 msgid "Trash"
 msgstr "Lixeira"
 
@@ -6999,7 +6999,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr "Não foi possível processar “{file}”: {error}"
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/web/src/window.rs:2345
+#: apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "Cancelado"
 
@@ -7029,12 +7029,12 @@ msgid_plural "{n} items could not be found in the Trash"
 msgstr[0] "{n} item não pôde ser encontrado na lixeira"
 msgstr[1] "{n} itens não puderam ser encontrados na lixeira"
 
-#: apps/files/src/pathbar.rs:109 apps/files/src/ui/sidebar.rs:78
+#: apps/files/src/pathbar.rs:109 apps/files/src/ui/sidebar.rs:81
 msgid "Recent"
 msgstr "Recentes"
 
-#: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:113
-#: apps/files/src/ui/tab.rs:1263 apps/settings/src/bluez.rs:235
+#: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:116
+#: apps/files/src/ui/tab.rs:1245 apps/settings/src/bluez.rs:235
 #: apps/settings/src/panels.rs:60 apps/system-monitor/src/res_view.rs:385
 msgid "Network"
 msgstr "Rede"
@@ -7043,7 +7043,7 @@ msgstr "Rede"
 msgid "Starred"
 msgstr "Com estrela"
 
-#: apps/files/src/pathbar.rs:113 apps/files/src/ui/sidebar.rs:119
+#: apps/files/src/pathbar.rs:113 apps/files/src/ui/sidebar.rs:122
 #: apps/files/src/ui/window.rs:132
 msgid "Other Locations"
 msgstr "Outros locais"
@@ -7197,7 +7197,7 @@ msgid_plural "{n} applications"
 msgstr[0] "{n} aplicativo"
 msgstr[1] "{n} aplicativos"
 
-#: apps/files/src/ui/dialogs.rs:514 apps/image-viewer/src/ui.rs:1453
+#: apps/files/src/ui/dialogs.rs:514 apps/image-viewer/src/ui.rs:1525
 msgid "Could not open: {}"
 msgstr "Não foi possível abrir: {}"
 
@@ -7245,7 +7245,8 @@ msgstr "Grade"
 msgid "List"
 msgstr "Lista"
 
-#: apps/files/src/ui/dialogs.rs:658
+#: apps/files/src/ui/dialogs.rs:658 apps/image-viewer/src/shortcuts.rs:45
+#: apps/image-viewer/src/ui.rs:457
 msgid "Show Thumbnails"
 msgstr "Mostrar miniaturas"
 
@@ -7328,23 +7329,23 @@ msgstr "…e mais {}"
 msgid "Some Items Could Not Be Processed"
 msgstr "Alguns itens não puderam ser processados"
 
-#: apps/files/src/ui/mod.rs:340
+#: apps/files/src/ui/mod.rs:341
 msgid "Always open a new window"
 msgstr "Sempre abrir uma nova janela"
 
-#: apps/files/src/ui/mod.rs:348
+#: apps/files/src/ui/mod.rs:349
 msgid "Select the given items in their parent folders"
 msgstr "Selecionar os itens fornecidos em suas pastas superiores"
 
-#: apps/files/src/ui/mod.rs:356
+#: apps/files/src/ui/mod.rs:357
 msgid "Quit the running instance"
 msgstr "Sair da instância em execução"
 
-#: apps/files/src/ui/mod.rs:359
+#: apps/files/src/ui/mod.rs:360
 msgid "Access and organize files"
 msgstr "Acesse e organize arquivos"
 
-#: apps/files/src/ui/mod.rs:359 apps/files/src/ui/window.rs:156
+#: apps/files/src/ui/mod.rs:360 apps/files/src/ui/window.rs:156
 #: apps/files/src/ui/window.rs:456
 msgid "Files"
 msgstr "Arquivos"
@@ -7393,7 +7394,7 @@ msgstr[0] "{n} item selecionado"
 msgstr[1] "{n} itens selecionados"
 
 #: apps/files/src/ui/properties.rs:281 apps/settings/src/ui/apps.rs:404
-#: apps/web/src/window.rs:1938
+#: apps/web/src/window.rs:1936
 msgid "Permissions"
 msgstr "Permissões"
 
@@ -7526,7 +7527,7 @@ msgstr "Arquivos e pastas"
 msgid "Open in New Tab"
 msgstr "Abrir em nova aba"
 
-#: apps/files/src/ui/shortcuts.rs:58 apps/files/src/ui/window.rs:1500
+#: apps/files/src/ui/shortcuts.rs:58 apps/files/src/ui/window.rs:1505
 msgid "New Folder"
 msgstr "Nova pasta"
 
@@ -7554,73 +7555,73 @@ msgstr "Recortar"
 msgid "Paste"
 msgstr "Colar"
 
-#: apps/files/src/ui/sidebar.rs:72 apps/files/src/ui/window.rs:136
+#: apps/files/src/ui/sidebar.rs:75 apps/files/src/ui/window.rs:136
 #: apps/files/src/ui/window.rs:813
 msgctxt "home folder"
 msgid "Home"
 msgstr "Pasta pessoal"
 
-#: apps/files/src/ui/sidebar.rs:463
+#: apps/files/src/ui/sidebar.rs:473
 msgid "Eject {name}"
 msgstr "Ejetar {name}"
 
-#: apps/files/src/ui/sidebar.rs:465
+#: apps/files/src/ui/sidebar.rs:475
 msgid "Unmount {name}"
 msgstr "Desmontar {name}"
 
-#: apps/files/src/ui/sidebar.rs:546 apps/files/src/ui/window.rs:1571
+#: apps/files/src/ui/sidebar.rs:556 apps/files/src/ui/window.rs:1576
 msgid "Open in New _Tab"
 msgstr "Abrir em nova _aba"
 
-#: apps/files/src/ui/sidebar.rs:547 apps/files/src/ui/window.rs:1572
+#: apps/files/src/ui/sidebar.rs:557 apps/files/src/ui/window.rs:1577
 msgid "Open in New _Window"
 msgstr "Abrir em nova _janela"
 
-#: apps/files/src/ui/sidebar.rs:552 apps/files/src/ui/window.rs:1588
+#: apps/files/src/ui/sidebar.rs:562 apps/files/src/ui/window.rs:1593
 msgid "Rena_me…"
 msgstr "Reno_mear…"
 
-#: apps/files/src/ui/sidebar.rs:553
+#: apps/files/src/ui/sidebar.rs:563
 msgid "_Remove from Bookmarks"
 msgstr "_Remover dos marcadores"
 
-#: apps/files/src/ui/sidebar.rs:556
+#: apps/files/src/ui/sidebar.rs:566
 msgid "_Eject"
 msgstr "_Ejetar"
 
-#: apps/files/src/ui/sidebar.rs:559
+#: apps/files/src/ui/sidebar.rs:569
 msgid "_Unmount"
 msgstr "_Desmontar"
 
-#: apps/files/src/ui/sidebar.rs:562 apps/files/src/ui/window.rs:1608
+#: apps/files/src/ui/sidebar.rs:572 apps/files/src/ui/window.rs:1613
 msgid "_Empty Trash…"
 msgstr "_Esvaziar lixeira…"
 
-#: apps/files/src/ui/sidebar.rs:567 apps/files/src/ui/window.rs:1564
-#: apps/files/src/ui/window.rs:1599 apps/files/src/ui/window.rs:1623
+#: apps/files/src/ui/sidebar.rs:577 apps/files/src/ui/window.rs:1569
+#: apps/files/src/ui/window.rs:1604 apps/files/src/ui/window.rs:1628
 #: apps/system-monitor/src/proc_view.rs:156
 msgid "_Properties"
 msgstr "_Propriedades"
 
-#: apps/files/src/ui/sidebar.rs:622 apps/files/src/ui/sidebar.rs:667
-#: apps/files/src/ui/window.rs:1539
+#: apps/files/src/ui/sidebar.rs:641 apps/files/src/ui/sidebar.rs:686
+#: apps/files/src/ui/window.rs:1544
 msgid "Could not save bookmarks: {e}"
 msgstr "Não foi possível salvar os marcadores: {e}"
 
-#: apps/files/src/ui/sidebar.rs:640
+#: apps/files/src/ui/sidebar.rs:659
 msgid "Bookmark _Name"
 msgstr "_Nome do marcador"
 
-#: apps/files/src/ui/sidebar.rs:651
+#: apps/files/src/ui/sidebar.rs:670
 msgid "Rename Bookmark"
 msgstr "Renomear marcador"
 
-#: apps/files/src/ui/sidebar.rs:656 apps/files/src/ui/window.rs:1460
+#: apps/files/src/ui/sidebar.rs:675 apps/files/src/ui/window.rs:1465
 #: apps/music/src/pages.rs:1524
 msgid "_Rename"
 msgstr "_Renomear"
 
-#: apps/files/src/ui/tab.rs:52 apps/image-viewer/src/ui.rs:558
+#: apps/files/src/ui/tab.rs:52 apps/image-viewer/src/ui.rs:583
 msgid "Folder"
 msgstr "Pasta"
 
@@ -7632,57 +7633,57 @@ msgstr "_Tentar novamente"
 msgid "Loading folder"
 msgstr "Carregando pasta"
 
-#: apps/files/src/ui/tab.rs:912
+#: apps/files/src/ui/tab.rs:894
 msgid "Unable to access location: {}"
 msgstr "Não foi possível acessar o local: {}"
 
-#: apps/files/src/ui/tab.rs:945
+#: apps/files/src/ui/tab.rs:927
 msgid "Unable to Open Folder"
 msgstr "Não foi possível abrir a pasta"
 
-#: apps/files/src/ui/tab.rs:953
+#: apps/files/src/ui/tab.rs:935
 msgid "Unable to open folder: {}"
 msgstr "Não foi possível abrir a pasta: {}"
 
-#: apps/files/src/ui/tab.rs:970
+#: apps/files/src/ui/tab.rs:952
 msgid "Try a different search."
 msgstr "Tente uma pesquisa diferente."
 
-#: apps/files/src/ui/tab.rs:973
+#: apps/files/src/ui/tab.rs:955
 msgid "Trash is Empty"
 msgstr "A lixeira está vazia"
 
-#: apps/files/src/ui/tab.rs:977
+#: apps/files/src/ui/tab.rs:959
 msgid "Folder is Empty"
 msgstr "A pasta está vazia"
 
-#: apps/files/src/ui/tab.rs:1201
+#: apps/files/src/ui/tab.rs:1183
 msgid "Search finished: {n} item found"
 msgid_plural "Search finished: {n} items found"
 msgstr[0] "Pesquisa concluída: {n} item encontrado"
 msgstr[1] "Pesquisa concluída: {n} itens encontrados"
 
-#: apps/files/src/ui/tab.rs:1227
+#: apps/files/src/ui/tab.rs:1209
 msgid "On This Computer"
 msgstr "Neste computador"
 
-#: apps/files/src/ui/tab.rs:1259
+#: apps/files/src/ui/tab.rs:1241
 msgid "Networks"
 msgstr "Redes"
 
-#: apps/files/src/ui/tab.rs:1264
+#: apps/files/src/ui/tab.rs:1246
 msgid "Browse the local network"
 msgstr "Navegue pela rede local"
 
-#: apps/files/src/ui/tab.rs:1292
+#: apps/files/src/ui/tab.rs:1274
 msgid "Not mounted"
 msgstr "Não montado"
 
-#: apps/files/src/ui/tab.rs:1305
+#: apps/files/src/ui/tab.rs:1287
 msgid "Connect to Server"
 msgstr "Conectar a servidor"
 
-#: apps/files/src/ui/tab.rs:1309
+#: apps/files/src/ui/tab.rs:1291
 msgid "Server Address"
 msgstr "Endereço do servidor"
 
@@ -7707,7 +7708,7 @@ msgstr "Ordem _inversa"
 msgid "Sort"
 msgstr "Ordenar"
 
-#: apps/files/src/ui/window.rs:254 apps/image-viewer/src/ui.rs:297
+#: apps/files/src/ui/window.rs:254 apps/image-viewer/src/ui.rs:310
 msgid "Zoom _In"
 msgstr "_Ampliar"
 
@@ -7719,7 +7720,7 @@ msgstr "_Reduzir"
 msgid "_Reset Size"
 msgstr "Redefinir _tamanho"
 
-#: apps/files/src/ui/window.rs:259 apps/files/src/ui/window.rs:1622
+#: apps/files/src/ui/window.rs:259 apps/files/src/ui/window.rs:1627
 msgid "Show _Hidden Files"
 msgstr "Mostrar arquivos _ocultos"
 
@@ -7772,144 +7773,144 @@ msgid_plural "{n} items selected ({bytes})"
 msgstr[0] "{n} item selecionado ({bytes})"
 msgstr[1] "{n} itens selecionados ({bytes})"
 
-#: apps/files/src/ui/window.rs:1062
+#: apps/files/src/ui/window.rs:1070
 msgid "Could not open file: {}"
 msgstr "Não foi possível abrir o arquivo: {}"
 
-#: apps/files/src/ui/window.rs:1093
+#: apps/files/src/ui/window.rs:1098
 msgid "Unable to mount “{}”: {}"
 msgstr "Não foi possível montar “{}”: {}"
 
-#: apps/files/src/ui/window.rs:1118
+#: apps/files/src/ui/window.rs:1123
 msgid "Unable to eject “{name}”: {error}"
 msgstr "Não foi possível ejetar “{name}”: {error}"
 
-#: apps/files/src/ui/window.rs:1233
+#: apps/files/src/ui/window.rs:1238
 msgid "Nothing to paste"
 msgstr "Nada para colar"
 
-#: apps/files/src/ui/window.rs:1290
+#: apps/files/src/ui/window.rs:1295
 msgid "“{}” moved to Trash"
 msgstr "“{}” movido para a lixeira"
 
-#: apps/files/src/ui/window.rs:1295
+#: apps/files/src/ui/window.rs:1300
 msgid "{n} item moved to Trash"
 msgid_plural "{n} items moved to Trash"
 msgstr[0] "{n} item movido para a lixeira"
 msgstr[1] "{n} itens movidos para a lixeira"
 
-#: apps/files/src/ui/window.rs:1373
+#: apps/files/src/ui/window.rs:1378
 msgid "Permanently Delete “{}”?"
 msgstr "Excluir “{}” permanentemente?"
 
-#: apps/files/src/ui/window.rs:1378
+#: apps/files/src/ui/window.rs:1383
 msgid "Permanently Delete {n} Item?"
 msgid_plural "Permanently Delete {n} Items?"
 msgstr[0] "Excluir {n} item permanentemente?"
 msgstr[1] "Excluir {n} itens permanentemente?"
 
-#: apps/files/src/ui/window.rs:1387
+#: apps/files/src/ui/window.rs:1392
 msgid "If you delete an item, it will be permanently lost."
 msgstr "Se você excluir um item, ele será perdido permanentemente."
 
-#: apps/files/src/ui/window.rs:1401
+#: apps/files/src/ui/window.rs:1406
 msgid "Empty Trash?"
 msgstr "Esvaziar a lixeira?"
 
-#: apps/files/src/ui/window.rs:1402
+#: apps/files/src/ui/window.rs:1407
 msgid "All items in the Trash will be permanently deleted."
 msgstr "Todos os itens da lixeira serão excluídos permanentemente."
 
-#: apps/files/src/ui/window.rs:1403
+#: apps/files/src/ui/window.rs:1408
 msgid "_Empty Trash"
 msgstr "_Esvaziar lixeira"
 
-#: apps/files/src/ui/window.rs:1414
+#: apps/files/src/ui/window.rs:1419
 msgid "Nothing to undo"
 msgstr "Nada para desfazer"
 
-#: apps/files/src/ui/window.rs:1429
+#: apps/files/src/ui/window.rs:1434
 msgid "Could not undo rename: {}"
 msgstr "Não foi possível desfazer a renomeação: {}"
 
-#: apps/files/src/ui/window.rs:1456
+#: apps/files/src/ui/window.rs:1461
 msgid "Rename Folder"
 msgstr "Renomear pasta"
 
-#: apps/files/src/ui/window.rs:1458
+#: apps/files/src/ui/window.rs:1463
 msgid "Rename File"
 msgstr "Renomear arquivo"
 
-#: apps/files/src/ui/window.rs:1481
+#: apps/files/src/ui/window.rs:1486
 msgid "Could not rename: {}"
 msgstr "Não foi possível renomear: {}"
 
-#: apps/files/src/ui/window.rs:1501 apps/music/src/pages.rs:1526
+#: apps/files/src/ui/window.rs:1506 apps/music/src/pages.rs:1526
 msgid "_Create"
 msgstr "_Criar"
 
-#: apps/files/src/ui/window.rs:1512
+#: apps/files/src/ui/window.rs:1517
 msgid "Could not create folder: {}"
 msgstr "Não foi possível criar a pasta: {}"
 
-#: apps/files/src/ui/window.rs:1533
+#: apps/files/src/ui/window.rs:1538
 msgid "Location is already bookmarked"
 msgstr "O local já está nos marcadores"
 
-#: apps/files/src/ui/window.rs:1538
+#: apps/files/src/ui/window.rs:1543
 msgid "“{}” added to bookmarks"
 msgstr "“{}” adicionado aos marcadores"
 
-#: apps/files/src/ui/window.rs:1560
+#: apps/files/src/ui/window.rs:1565
 msgid "_Restore From Trash"
 msgstr "_Restaurar da lixeira"
 
-#: apps/files/src/ui/window.rs:1561
+#: apps/files/src/ui/window.rs:1566
 msgid "_Delete From Trash…"
 msgstr "_Excluir da lixeira…"
 
-#: apps/files/src/ui/window.rs:1574 apps/image-viewer/src/ui.rs:288
+#: apps/files/src/ui/window.rs:1579 apps/image-viewer/src/ui.rs:301
 msgid "Open _With…"
 msgstr "Abrir _com…"
 
-#: apps/files/src/ui/window.rs:1577
+#: apps/files/src/ui/window.rs:1582
 msgid "Open Item _Location"
 msgstr "Abrir _local do item"
 
-#: apps/files/src/ui/window.rs:1581
+#: apps/files/src/ui/window.rs:1586
 msgid "Cu_t"
 msgstr "Recor_tar"
 
-#: apps/files/src/ui/window.rs:1584
+#: apps/files/src/ui/window.rs:1589
 msgid "Paste Into Folder"
 msgstr "Colar na pasta"
 
-#: apps/files/src/ui/window.rs:1590
+#: apps/files/src/ui/window.rs:1595
 msgid "Create _Link"
 msgstr "Criar _link"
 
-#: apps/files/src/ui/window.rs:1592
+#: apps/files/src/ui/window.rs:1597
 msgid "Mo_ve to Trash"
 msgstr "Mo_ver para a lixeira"
 
-#: apps/files/src/ui/window.rs:1594
+#: apps/files/src/ui/window.rs:1599
 msgid "_Delete Permanently…"
 msgstr "_Excluir permanentemente…"
 
-#: apps/files/src/ui/window.rs:1598 apps/maps/src/ui.rs:440
+#: apps/files/src/ui/window.rs:1603 apps/maps/src/ui.rs:440
 #: apps/maps/src/ui.rs:2271
 msgid "Copy Location"
 msgstr "Copiar local"
 
-#: apps/files/src/ui/window.rs:1614
+#: apps/files/src/ui/window.rs:1619
 msgid "New _Folder…"
 msgstr "Nova _pasta…"
 
-#: apps/files/src/ui/window.rs:1617 apps/terminal/src/window.rs:728
+#: apps/files/src/ui/window.rs:1622 apps/terminal/src/window.rs:728
 msgid "_Paste"
 msgstr "C_olar"
 
-#: apps/files/src/ui/window.rs:1621
+#: apps/files/src/ui/window.rs:1626
 msgid "Add to _Bookmarks"
 msgstr "Adicionar aos _marcadores"
 
@@ -8048,7 +8049,7 @@ msgid "Glyphs"
 msgstr "Glifos"
 
 #: apps/fonts/src/fontinfo.rs:276 apps/fonts/src/fontinfo.rs:282
-#: apps/image-viewer/src/ui.rs:556
+#: apps/image-viewer/src/ui.rs:581
 msgid "Format"
 msgstr "Formato"
 
@@ -8458,7 +8459,7 @@ msgid "help page rendering failed"
 msgstr "falha ao renderizar a página de ajuda"
 
 #: apps/help/src/ui.rs:274 apps/text-editor/src/doc.rs:149
-#: apps/web/src/tab.rs:199 apps/web/src/window.rs:2408
+#: apps/web/src/tab.rs:199 apps/web/src/window.rs:2404
 msgid "_Reload"
 msgstr "_Recarregar"
 
@@ -8542,15 +8543,15 @@ msgstr "Nenhuma pasta superior"
 msgid "No file name"
 msgstr "Nenhum nome de arquivo"
 
-#: apps/image-viewer/src/shortcuts.rs:15 apps/image-viewer/src/ui.rs:402
+#: apps/image-viewer/src/shortcuts.rs:15 apps/image-viewer/src/ui.rs:416
 msgid "Save Rotation"
 msgstr "Salvar rotação"
 
-#: apps/image-viewer/src/shortcuts.rs:22 apps/image-viewer/src/ui.rs:362
+#: apps/image-viewer/src/shortcuts.rs:22 apps/image-viewer/src/ui.rs:376
 msgid "Previous Image"
 msgstr "Imagem anterior"
 
-#: apps/image-viewer/src/shortcuts.rs:23 apps/image-viewer/src/ui.rs:368
+#: apps/image-viewer/src/shortcuts.rs:23 apps/image-viewer/src/ui.rs:382
 msgid "Next Image"
 msgstr "Próxima imagem"
 
@@ -8562,7 +8563,7 @@ msgstr "Primeira imagem"
 msgid "Last Image"
 msgstr "Última imagem"
 
-#: apps/image-viewer/src/shortcuts.rs:36 apps/image-viewer/src/ui.rs:415
+#: apps/image-viewer/src/shortcuts.rs:36 apps/image-viewer/src/ui.rs:429
 msgid "Best Fit"
 msgstr "Melhor ajuste"
 
@@ -8603,170 +8604,174 @@ msgstr "Visualizador de imagens"
 msgid "View images"
 msgstr "Veja imagens"
 
-#: apps/image-viewer/src/ui.rs:282 apps/image-viewer/src/ui.rs:931
+#: apps/image-viewer/src/ui.rs:295 apps/image-viewer/src/ui.rs:1002
 msgid "Open Images"
 msgstr "Abrir imagens"
 
-#: apps/image-viewer/src/ui.rs:289 apps/terminal/src/window.rs:286
+#: apps/image-viewer/src/ui.rs:302 apps/terminal/src/window.rs:286
 msgid "_New Window"
 msgstr "_Nova janela"
 
-#: apps/image-viewer/src/ui.rs:293
+#: apps/image-viewer/src/ui.rs:306
 msgid "Set as _Background…"
 msgstr "Definir como _plano de fundo…"
 
-#: apps/image-viewer/src/ui.rs:294
+#: apps/image-viewer/src/ui.rs:307
 msgid "Move to _Trash"
 msgstr "Mover para a _lixeira"
 
-#: apps/image-viewer/src/ui.rs:298
+#: apps/image-viewer/src/ui.rs:311
 msgid "Zoom O_ut"
 msgstr "_Reduzir"
 
-#: apps/image-viewer/src/ui.rs:299
+#: apps/image-viewer/src/ui.rs:312
 msgid "_Best Fit"
 msgstr "_Melhor ajuste"
 
-#: apps/image-viewer/src/ui.rs:306
+#: apps/image-viewer/src/ui.rs:319
 msgid "_Save Rotation"
 msgstr "_Salvar rotação"
 
-#: apps/image-viewer/src/ui.rs:308
+#: apps/image-viewer/src/ui.rs:321
 msgid "_Slideshow"
 msgstr "_Apresentação de slides"
 
-#: apps/image-viewer/src/ui.rs:317
+#: apps/image-viewer/src/ui.rs:322
+msgid "Show _Thumbnails"
+msgstr "Mostrar _miniaturas"
+
+#: apps/image-viewer/src/ui.rs:331
 msgid "_About Image Viewer"
 msgstr "_Sobre o Visualizador de imagens"
 
-#: apps/image-viewer/src/ui.rs:330
+#: apps/image-viewer/src/ui.rs:344
 msgid "Image Properties"
 msgstr "Propriedades da imagem"
 
-#: apps/image-viewer/src/ui.rs:451
+#: apps/image-viewer/src/ui.rs:472
 msgid "View Images"
 msgstr "Ver imagens"
 
-#: apps/image-viewer/src/ui.rs:452
+#: apps/image-viewer/src/ui.rs:473
 msgid "Drag and drop images here"
 msgstr "Arraste e solte imagens aqui"
 
-#: apps/image-viewer/src/ui.rs:455
+#: apps/image-viewer/src/ui.rs:476
 msgid "_Open Files…"
 msgstr "_Abrir arquivos…"
 
-#: apps/image-viewer/src/ui.rs:472
+#: apps/image-viewer/src/ui.rs:493
 msgid "Could Not Load Image"
 msgstr "Não foi possível carregar a imagem"
 
-#: apps/image-viewer/src/ui.rs:498
+#: apps/image-viewer/src/ui.rs:523
 msgid "Images in Folder"
 msgstr "Imagens na pasta"
 
-#: apps/image-viewer/src/ui.rs:550
+#: apps/image-viewer/src/ui.rs:575
 msgid "Image"
 msgstr "Imagem"
 
-#: apps/image-viewer/src/ui.rs:555
+#: apps/image-viewer/src/ui.rs:580
 msgid "Dimensions"
 msgstr "Dimensões"
 
-#: apps/image-viewer/src/ui.rs:561
+#: apps/image-viewer/src/ui.rs:586
 msgid "Date Taken"
 msgstr "Data da foto"
 
-#: apps/image-viewer/src/ui.rs:563
+#: apps/image-viewer/src/ui.rs:588
 msgid "Exposure"
 msgstr "Exposição"
 
-#: apps/image-viewer/src/ui.rs:564
+#: apps/image-viewer/src/ui.rs:589
 msgid "Aperture"
 msgstr "Abertura"
 
-#: apps/image-viewer/src/ui.rs:566
+#: apps/image-viewer/src/ui.rs:591
 msgid "Focal Length"
 msgstr "Distância focal"
 
-#: apps/image-viewer/src/ui.rs:574 apps/image-viewer/src/ui.rs:576
-#: apps/settings/src/ui/apps.rs:222 apps/web/src/window.rs:2239
+#: apps/image-viewer/src/ui.rs:599 apps/image-viewer/src/ui.rs:601
+#: apps/settings/src/ui/apps.rs:222 apps/web/src/window.rs:2235
 msgid "Open Folder"
 msgstr "Abrir pasta"
 
-#: apps/image-viewer/src/ui.rs:878
+#: apps/image-viewer/src/ui.rs:949
 msgid "Could not open map: {}"
 msgstr "Não foi possível abrir o mapa: {}"
 
-#: apps/image-viewer/src/ui.rs:921
+#: apps/image-viewer/src/ui.rs:992
 msgid "Supported Images"
 msgstr "Imagens suportadas"
 
-#: apps/image-viewer/src/ui.rs:1008
+#: apps/image-viewer/src/ui.rs:1079
 msgid "The decoder crashed"
 msgstr "O decodificador travou"
 
 #. Translators: an image that could not be shown: its file name, then why.
-#: apps/image-viewer/src/ui.rs:1076
+#: apps/image-viewer/src/ui.rs:1148
 msgid "{name}: {error}"
 msgstr "{name}: {error}"
 
-#: apps/image-viewer/src/ui.rs:1178
+#: apps/image-viewer/src/ui.rs:1250
 msgid "No Image"
 msgstr "Nenhuma imagem"
 
 #. Translators: window title: file name, then the app name.
-#: apps/image-viewer/src/ui.rs:1202
+#: apps/image-viewer/src/ui.rs:1274
 msgid "{name} — {app}"
 msgstr "{name} — {app}"
 
-#: apps/image-viewer/src/ui.rs:1398
+#: apps/image-viewer/src/ui.rs:1470
 msgid "{} (animated)"
 msgstr "{} (animado)"
 
-#: apps/image-viewer/src/ui.rs:1465
+#: apps/image-viewer/src/ui.rs:1537
 msgid "Image copied to clipboard"
 msgstr "Imagem copiada para a área de transferência"
 
-#: apps/image-viewer/src/ui.rs:1476
+#: apps/image-viewer/src/ui.rs:1548
 msgid "Background set"
 msgstr "Plano de fundo definido"
 
-#: apps/image-viewer/src/ui.rs:1479 apps/image-viewer/src/ui.rs:1482
+#: apps/image-viewer/src/ui.rs:1551 apps/image-viewer/src/ui.rs:1554
 msgid "Could not set the background"
 msgstr "Não foi possível definir o plano de fundo"
 
-#: apps/image-viewer/src/ui.rs:1481
+#: apps/image-viewer/src/ui.rs:1553
 msgid "Could not set the background: {e}"
 msgstr "Não foi possível definir o plano de fundo: {e}"
 
-#: apps/image-viewer/src/ui.rs:1506
+#: apps/image-viewer/src/ui.rs:1578
 msgid "Image moved to trash"
 msgstr "Imagem movida para a lixeira"
 
-#: apps/image-viewer/src/ui.rs:1518
+#: apps/image-viewer/src/ui.rs:1590
 msgid "Could not move to trash: {e}"
 msgstr "Não foi possível mover para a lixeira: {e}"
 
-#: apps/image-viewer/src/ui.rs:1519
+#: apps/image-viewer/src/ui.rs:1591
 msgid "Could not move to trash"
 msgstr "Não foi possível mover para a lixeira"
 
-#: apps/image-viewer/src/ui.rs:1543
+#: apps/image-viewer/src/ui.rs:1615
 msgid "Could not restore: {e}"
 msgstr "Não foi possível restaurar: {e}"
 
-#: apps/image-viewer/src/ui.rs:1544
+#: apps/image-viewer/src/ui.rs:1616
 msgid "Could not restore"
 msgstr "Não foi possível restaurar"
 
-#: apps/image-viewer/src/ui.rs:1568
+#: apps/image-viewer/src/ui.rs:1640
 msgid "Image saved"
 msgstr "Imagem salva"
 
-#: apps/image-viewer/src/ui.rs:1577
+#: apps/image-viewer/src/ui.rs:1649
 msgid "Could not save image: {e}"
 msgstr "Não foi possível salvar a imagem: {e}"
 
-#: apps/image-viewer/src/ui.rs:1581
+#: apps/image-viewer/src/ui.rs:1653
 msgid "Could not save image"
 msgstr "Não foi possível salvar a imagem"
 
@@ -14773,8 +14778,8 @@ msgid "text"
 msgstr "texto"
 
 #: apps/text-editor/src/app.rs:202 apps/text-editor/src/window.rs:89
-#: apps/text-editor/src/window.rs:174 apps/text-editor/src/window.rs:846
-#: apps/text-editor/src/window.rs:848
+#: apps/text-editor/src/window.rs:174 apps/text-editor/src/window.rs:844
+#: apps/text-editor/src/window.rs:846
 msgid "Text Editor"
 msgstr "Editor de texto"
 
@@ -14942,7 +14947,7 @@ msgstr ""
 "O esquema de configurações org.gnome.TextEditor não está instalado; as "
 "alterações duram até o editor ser fechado."
 
-#: apps/text-editor/src/shortcuts.rs:17 apps/text-editor/src/window.rs:753
+#: apps/text-editor/src/shortcuts.rs:17 apps/text-editor/src/window.rs:751
 msgid "Save As"
 msgstr "Salvar como"
 
@@ -15035,15 +15040,15 @@ msgstr "Lin 1, Col 1"
 msgid "Encoding and Line Ending"
 msgstr "Codificação e fim de linha"
 
-#: apps/text-editor/src/window.rs:699
+#: apps/text-editor/src/window.rs:697
 msgid "Could not open “{name}”: {error}"
 msgstr "Não foi possível abrir “{name}”: {error}"
 
-#: apps/text-editor/src/window.rs:729
+#: apps/text-editor/src/window.rs:727
 msgid "Open Files"
 msgstr "Abrir arquivos"
 
-#: apps/text-editor/src/window.rs:782
+#: apps/text-editor/src/window.rs:780
 msgid ""
 "The document could not be saved in its original encoding and was saved as "
 "UTF-8"
@@ -15051,51 +15056,51 @@ msgstr ""
 "O documento não pôde ser salvo em sua codificação original e foi salvo como "
 "UTF-8"
 
-#: apps/text-editor/src/window.rs:789
+#: apps/text-editor/src/window.rs:787
 msgid "Could not save “{}”: {}"
 msgstr "Não foi possível salvar “{}”: {}"
 
-#: apps/text-editor/src/window.rs:834
+#: apps/text-editor/src/window.rs:832
 msgid "{} ({}) — Text Editor"
 msgstr "{} ({}) — Editor de texto"
 
-#: apps/text-editor/src/window.rs:842
+#: apps/text-editor/src/window.rs:840
 msgid "{} — Text Editor"
 msgstr "{} — Editor de texto"
 
-#: apps/text-editor/src/window.rs:857
+#: apps/text-editor/src/window.rs:855
 msgid "Spaces: {}"
 msgstr "Espaços: {}"
 
-#: apps/text-editor/src/window.rs:859
+#: apps/text-editor/src/window.rs:857
 msgid "Tab Width: {}"
 msgstr "Largura da tabulação: {}"
 
-#: apps/text-editor/src/window.rs:866
+#: apps/text-editor/src/window.rs:864
 msgid "Reset Zoom, now {zoom}"
 msgstr "Redefinir zoom, atualmente {zoom}"
 
-#: apps/text-editor/src/window.rs:871
+#: apps/text-editor/src/window.rs:869
 msgid "Ln {l}, Col {c}"
 msgstr "Lin {l}, Col {c}"
 
-#: apps/text-editor/src/window.rs:873
+#: apps/text-editor/src/window.rs:871
 msgid " (BOM)"
 msgstr " (BOM)"
 
-#: apps/text-editor/src/window.rs:959
+#: apps/text-editor/src/window.rs:957
 msgid "Save Changes to “{}”?"
 msgstr "Salvar alterações em “{}”?"
 
-#: apps/text-editor/src/window.rs:960
+#: apps/text-editor/src/window.rs:958
 msgid "Unsaved changes will be permanently lost."
 msgstr "As alterações não salvas serão perdidas permanentemente."
 
-#: apps/text-editor/src/window.rs:965
+#: apps/text-editor/src/window.rs:963
 msgid "Save Changes?"
 msgstr "Salvar alterações?"
 
-#: apps/text-editor/src/window.rs:966
+#: apps/text-editor/src/window.rs:964
 msgid ""
 "These documents have unsaved changes:\n"
 "{documents}\n"
@@ -15105,11 +15110,11 @@ msgstr ""
 "{documents}\n"
 "As alterações não salvas serão perdidas permanentemente."
 
-#: apps/text-editor/src/window.rs:979
+#: apps/text-editor/src/window.rs:977
 msgid "_Discard All"
 msgstr "_Descartar tudo"
 
-#: apps/text-editor/src/window.rs:984
+#: apps/text-editor/src/window.rs:982
 msgid "_Save All"
 msgstr "_Salvar tudo"
 
@@ -16922,7 +16927,7 @@ msgstr "_Nome"
 msgid "_Tags (comma separated)"
 msgstr "_Etiquetas (separadas por vírgula)"
 
-#: apps/web/src/window.rs:697 apps/web/src/window.rs:2089
+#: apps/web/src/window.rs:697 apps/web/src/window.rs:2085
 msgid "Remove Bookmark"
 msgstr "Remover marcador"
 
@@ -16959,23 +16964,23 @@ msgstr "Zoom atual {level}"
 msgid "Edit Bookmark"
 msgstr "Editar marcador"
 
-#: apps/web/src/window.rs:1800
+#: apps/web/src/window.rs:1798
 msgid "Search {} for “{}”"
 msgstr "Pesquisar no {} por “{}”"
 
-#: apps/web/src/window.rs:1884
+#: apps/web/src/window.rs:1882
 msgid "Start Page"
 msgstr "Página de início"
 
-#: apps/web/src/window.rs:1896
+#: apps/web/src/window.rs:1894
 msgid "This is a page built into Web."
 msgstr "Esta é uma página embutida no Web."
 
-#: apps/web/src/window.rs:1897
+#: apps/web/src/window.rs:1895
 msgid "Your connection to this site is secure."
 msgstr "Sua conexão com este site é segura."
 
-#: apps/web/src/window.rs:1898
+#: apps/web/src/window.rs:1896
 msgid ""
 "Your connection to this site is not encrypted. Do not enter passwords or "
 "other sensitive information."
@@ -16983,7 +16988,7 @@ msgstr ""
 "Sua conexão com este site não é criptografada. Não digite senhas nem outras "
 "informações sensíveis."
 
-#: apps/web/src/window.rs:1899
+#: apps/web/src/window.rs:1897
 msgid ""
 "This site's security certificate has problems. The connection may not be "
 "private."
@@ -16991,167 +16996,167 @@ msgstr ""
 "O certificado de segurança deste site tem problemas. A conexão pode não ser "
 "privada."
 
-#: apps/web/src/window.rs:1900
+#: apps/web/src/window.rs:1898
 msgid "This page is stored on your computer."
 msgstr "Esta página está armazenada no seu computador."
 
-#: apps/web/src/window.rs:1913
+#: apps/web/src/window.rs:1911
 msgid "Issued to: {s}"
 msgstr "Emitido para: {s}"
 
-#: apps/web/src/window.rs:1916
+#: apps/web/src/window.rs:1914
 msgid "Issued by: {s}"
 msgstr "Emitido por: {s}"
 
-#: apps/web/src/window.rs:1919
+#: apps/web/src/window.rs:1917
 msgid "Expires: {d}"
 msgstr "Expira em: {d}"
 
-#: apps/web/src/window.rs:1922
+#: apps/web/src/window.rs:1920
 msgid "Problems: {list}"
 msgstr "Problemas: {list}"
 
-#: apps/web/src/window.rs:1950
+#: apps/web/src/window.rs:1948
 msgid "Allowed"
 msgstr "Permitido"
 
-#: apps/web/src/window.rs:1950
+#: apps/web/src/window.rs:1948
 msgid "Denied"
 msgstr "Negado"
 
-#: apps/web/src/window.rs:1956
+#: apps/web/src/window.rs:1954
 msgid "Reset {} Permission"
 msgstr "Redefinir permissão de {}"
 
-#: apps/web/src/window.rs:1983
+#: apps/web/src/window.rs:1981
 msgid "{} permission reset"
 msgstr "Permissão de {} redefinida"
 
 #. Translators: announced when the site information opens: the site's host name, then its security status sentence.
-#: apps/web/src/window.rs:2006
+#: apps/web/src/window.rs:2004
 msgid "{host}. {status}"
 msgstr "{host}. {status}"
 
-#: apps/web/src/window.rs:2092
+#: apps/web/src/window.rs:2088
 msgid "Remove Bookmark {title}"
 msgstr "Remover marcador {title}"
 
-#: apps/web/src/window.rs:2160
+#: apps/web/src/window.rs:2156
 msgid "Not found"
 msgstr "Não encontrado"
 
-#: apps/web/src/window.rs:2161
+#: apps/web/src/window.rs:2157
 msgid "{n} match"
 msgid_plural "{n} matches"
 msgstr[0] "{n} correspondência"
 msgstr[1] "{n} correspondências"
 
-#: apps/web/src/window.rs:2229
+#: apps/web/src/window.rs:2225
 msgid "Cancel {name}"
 msgstr "Cancelar {name}"
 
-#: apps/web/src/window.rs:2236
+#: apps/web/src/window.rs:2232
 msgid "Open {name}"
 msgstr "Abrir {name}"
 
-#: apps/web/src/window.rs:2243
+#: apps/web/src/window.rs:2239
 msgid "Open Folder of {name}"
 msgstr "Abrir pasta de {name}"
 
-#: apps/web/src/window.rs:2256
+#: apps/web/src/window.rs:2252
 msgid "New downloads"
 msgstr "Novos downloads"
 
-#: apps/web/src/window.rs:2260
+#: apps/web/src/window.rs:2256
 msgid "Downloading {name}"
 msgstr "Baixando {name}"
 
-#: apps/web/src/window.rs:2278
+#: apps/web/src/window.rs:2274
 msgid "Could not open the download: {}"
 msgstr "Não foi possível abrir o download: {}"
 
-#: apps/web/src/window.rs:2294
+#: apps/web/src/window.rs:2290
 msgid "Could not open the folder: {}"
 msgstr "Não foi possível abrir a pasta: {}"
 
-#: apps/web/src/window.rs:2330
+#: apps/web/src/window.rs:2326
 msgid "Finished"
 msgstr "Concluído"
 
-#: apps/web/src/window.rs:2333
+#: apps/web/src/window.rs:2329
 msgid "Download finished: {name}"
 msgstr "Download concluído: {name}"
 
-#: apps/web/src/window.rs:2347
+#: apps/web/src/window.rs:2343
 msgid "Failed: {}"
 msgstr "Falhou: {}"
 
-#: apps/web/src/window.rs:2350
+#: apps/web/src/window.rs:2346
 msgid "Download failed: {}"
 msgstr "Falha no download: {}"
 
-#: apps/web/src/window.rs:2376
+#: apps/web/src/window.rs:2372
 msgid "No Bookmarks"
 msgstr "Nenhum marcador"
 
-#: apps/web/src/window.rs:2377
+#: apps/web/src/window.rs:2373
 msgid "Bookmark pages with the star in the address bar or Ctrl+D"
 msgstr ""
 "Adicione páginas aos marcadores com a estrela na barra de endereço ou Ctrl+D"
 
-#: apps/web/src/window.rs:2409
+#: apps/web/src/window.rs:2405
 msgid "_Duplicate"
 msgstr "_Duplicar"
 
-#: apps/web/src/window.rs:2414
+#: apps/web/src/window.rs:2410
 msgid "Un_pin Tab"
 msgstr "_Desafixar aba"
 
-#: apps/web/src/window.rs:2416
+#: apps/web/src/window.rs:2412
 msgid "_Pin Tab"
 msgstr "_Fixar aba"
 
-#: apps/web/src/window.rs:2422
+#: apps/web/src/window.rs:2418
 msgid "Un_mute Tab"
 msgstr "_Reativar som da aba"
 
-#: apps/web/src/window.rs:2424
+#: apps/web/src/window.rs:2420
 msgid "_Mute Tab"
 msgstr "_Silenciar aba"
 
-#: apps/web/src/window.rs:2428
+#: apps/web/src/window.rs:2424
 msgid "Move to New _Window"
 msgstr "Mover para nova _janela"
 
-#: apps/web/src/window.rs:2431
+#: apps/web/src/window.rs:2427
 msgid "Close _Other Tabs"
 msgstr "Fechar _outras abas"
 
-#: apps/web/src/window.rs:2432
+#: apps/web/src/window.rs:2428
 msgid "Close Tabs to the _Right"
 msgstr "Fechar abas à _direita"
 
-#: apps/web/src/window.rs:2433
+#: apps/web/src/window.rs:2429
 msgid "_Close Tab"
 msgstr "_Fechar aba"
 
-#: apps/web/src/window.rs:2473
+#: apps/web/src/window.rs:2469
 msgid "Start page"
 msgstr "Página de início"
 
-#: apps/web/src/window.rs:2474
+#: apps/web/src/window.rs:2470
 msgid "Secure connection"
 msgstr "Conexão segura"
 
-#: apps/web/src/window.rs:2475
+#: apps/web/src/window.rs:2471
 msgid "Connection is not secure"
 msgstr "A conexão não é segura"
 
-#: apps/web/src/window.rs:2476
+#: apps/web/src/window.rs:2472
 msgid "Certificate problems"
 msgstr "Problemas no certificado"
 
-#: apps/web/src/window.rs:2477
+#: apps/web/src/window.rs:2473
 msgid "Local page"
 msgstr "Página local"
 

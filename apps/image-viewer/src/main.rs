@@ -2,6 +2,7 @@
 
 mod canvas;
 mod decode;
+mod fit;
 mod folder;
 mod metadata;
 mod natsort;

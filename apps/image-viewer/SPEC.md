@@ -33,10 +33,29 @@ View images.
 - Header bar: *Open* button (start), a window title showing the file name
   with `n / total` position in the folder as subtitle, and (end) the primary
   menu and a *Properties* toggle button.
+- **Window size**: outside fullscreen, and unless maximized or tiled, the
+  window takes the size of the image so no bars show around it: each newly
+  shown image (and each rotation) sets the image area to the image's own
+  size (1 image px = 1 logical px), scaled down keeping its aspect to fit
+  90 % × 85 % of the monitor less the window's own parts (header bar,
+  strip when shown, properties sidebar when beside the image: its width
+  computed as `AdwOverlaySplitView` does, a fraction of the whole width
+  between its minimum and maximum). Showing or hiding the strip or the
+  sidebar, un-maximizing and leaving fullscreen refit the window, so the
+  image area keeps its size. The window is never smaller than 100 × 100 px
+  nor than what its header bar needs; a small window sheds parts the menu
+  and shortcuts still offer: below 300 px wide the *Open* button and the
+  on-image controls (also below 220 px tall), below 200 px the title and
+  the *Properties* button, and the previous / next buttons (also below
+  150 px tall). The hidden properties sidebar is left out of the window's
+  minimum size below 300 px until it is shown; its minimum width shrinks
+  with the window (to half its usual 260 px).
 - **Thumbnail strip**: a bottom bar (horizontal `gtk::ListView` in a
-  scrolled window) with one 64 px square thumbnail per image of the list,
-  shown when the list has more than one image and hidden in fullscreen /
-  slideshow. The current image is selected and scrolled into view; clicking
+  scrolled window) with one 64 px square thumbnail per image of the list.
+  Hidden by default; *Show Thumbnails* (`win.show-thumbnails`, a stateful
+  toggle in the primary menu and the on-image controls, Ctrl+F9) shows it
+  for that window (not remembered). Shown only when wanted, the list has
+  more than one image, and not in fullscreen / slideshow. The current image is selected and scrolled into view; clicking
   a thumbnail shows that image. Thumbnails (longest side 128 px) are
   produced by two worker threads per window: a valid freedesktop thumbnail
   (`$XDG_CACHE_HOME/thumbnails/{normal,large}/<md5(uri)>.png` whose
@@ -183,6 +202,7 @@ View images.
 | Properties | F9, Alt+Return | Toggle sidebar |
 | Fullscreen | F11 | Toggle; Esc leaves |
 | Slideshow | F5 | Toggle |
+| Show Thumbnails | Ctrl+F9 | Toggle the thumbnail strip (off by default) |
 | Close window / Quit | Ctrl+W / Ctrl+Q | |
 
 ### GSettings
@@ -206,5 +226,7 @@ copies, since it rewrites the opened image.
 - Save rotation: an explicit *Save Rotation* action re-encodes the rotated
   image into its file through the pixbuf pipeline, keeping metadata where
   practical.
-- Thumbnails: kept as a bottom thumbnail strip.
+- Thumbnails: kept as a bottom thumbnail strip, hidden until asked for.
+- Window size follows the image (no bars), like the video player follows
+  the video.
 - GSettings: the real `org.gnome.Loupe` key `show-properties` is used.

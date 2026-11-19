@@ -99,6 +99,7 @@ pub(crate) const ACCELS: &[(&str, &[&str])] = &[
     ("win.fullscreen", &["F11"]),
     ("win.leave-fullscreen", &["Escape"]),
     ("win.slideshow", &["F5"]),
+    ("win.show-thumbnails", &["<Control>F9"]),
 ];
 
 fn load_css() {
@@ -235,11 +236,17 @@ fn thumb_texture(t: &RawThumb) -> gdk::Texture {
     gdk::MemoryTexture::new(t.width, t.height, fmt, &t.bytes, t.stride).upcast()
 }
 
+/// The properties sidebar's usual minimum width.
+const MIN_SIDEBAR: i32 = 260;
+
 pub struct Viewer {
     window: adw::ApplicationWindow,
     toasts: adw::ToastOverlay,
     split: adw::OverlaySplitView,
     toolbar: adw::ToolbarView,
+    header: adw::HeaderBar,
+    open_btn: gtk::Button,
+    props_btn: gtk::ToggleButton,
     title: adw::WindowTitle,
     stack: gtk::Stack,
     error_page: adw::StatusPage,
@@ -255,6 +262,10 @@ pub struct Viewer {
     state: RefCell<State>,
     self_ref: RefCell<Weak<Viewer>>,
     fullscreen: Cell<bool>,
+    /// The user wants the thumbnail strip (off by default).
+    show_thumbs: Cell<bool>,
+    /// The strip is on screen (wanted, more than one image, not fullscreen).
+    strip_shown: Cell<bool>,
 }
 
 impl Viewer {
@@ -264,8 +275,10 @@ impl Viewer {
             .title(tr(APP_NAME))
             .default_width(1000)
             .default_height(700)
-            .width_request(360)
-            .height_request(294)
+            // The window takes the image's size (see `fit_window_to_image`),
+            // so it may get as small as a tiny image.
+            .width_request(crate::fit::MIN_WINDOW.0)
+            .height_request(crate::fit::MIN_WINDOW.1)
             .build();
         helix_app_common::window_state::persist(
             &window,
@@ -306,6 +319,7 @@ impl Viewer {
         s3.append(Some(tr("_Save Rotation")), Some("win.save"));
         s3.append(Some(tr("_Fullscreen")), Some("win.fullscreen"));
         s3.append(Some(tr("_Slideshow")), Some("win.slideshow"));
+        s3.append(Some(tr("Show _Thumbnails")), Some("win.show-thumbnails"));
         menu.append_section(None, &s3);
         let s4 = gio::Menu::new();
         s4.append(
@@ -436,6 +450,13 @@ impl Viewer {
             tr("Fullscreen"),
             "F11",
         ));
+        let thumbs_btn = gtk::ToggleButton::builder()
+            .icon_name("view-grid-symbolic")
+            .action_name("win.show-thumbnails")
+            .build()
+            .with_shortcut(tr("Show Thumbnails"), "<Control>F9");
+        thumbs_btn.add_css_class("flat");
+        controls.append(&thumbs_btn);
         let controls_rev = gtk::Revealer::builder()
             .transition_type(gtk::RevealerTransitionType::Crossfade)
             .halign(gtk::Align::Center)
@@ -471,8 +492,12 @@ impl Viewer {
             .icon_name("dialog-error-symbolic")
             .title(tr("Could Not Load Image"))
             .build();
+        // Not homogeneous: the status pages must not hold the window wider
+        // or taller than a small image needs.
         let stack = gtk::Stack::builder()
             .transition_type(gtk::StackTransitionType::Crossfade)
+            .hhomogeneous(false)
+            .vhomogeneous(false)
             .build();
         stack.add_named(&empty, Some("empty"));
         stack.add_named(&spinner, Some("loading"));
@@ -597,7 +622,7 @@ impl Viewer {
             .show_sidebar(false)
             .sidebar(&sidebar_toolbar)
             .content(&toolbar)
-            .min_sidebar_width(260.0)
+            .min_sidebar_width(f64::from(MIN_SIDEBAR))
             .max_sidebar_width(340.0)
             .build();
         props_btn
@@ -630,6 +655,9 @@ impl Viewer {
             toasts,
             split,
             toolbar,
+            header,
+            open_btn,
+            props_btn,
             title,
             stack,
             error_page,
@@ -660,12 +688,15 @@ impl Viewer {
             }),
             self_ref: RefCell::default(),
             fullscreen: Cell::new(false),
+            show_thumbs: Cell::new(false),
+            strip_shown: Cell::new(false),
         });
         viewer.self_ref.replace(Rc::downgrade(&viewer));
         viewer.setup_actions();
         viewer.setup_signals(&overlay, &controls, &folder_btn, &gps_btn);
         viewer.setup_strip(&factory, res_rx);
         viewer.update_ui();
+        viewer.update_compact();
         // The window owns the viewer until it is closed.
         let keep = RefCell::new(Some(viewer.clone()));
         viewer.window.connect_close_request(move |_| {
@@ -713,10 +744,12 @@ impl Viewer {
         self.add_action("rotate-right", |v| {
             v.canvas.update_view(|s| s.rotate(90));
             v.update_ui();
+            v.refit_soon();
         });
         self.add_action("rotate-left", |v| {
             v.canvas.update_view(|s| s.rotate(-90));
             v.update_ui();
+            v.refit_soon();
         });
         self.add_action("save", |v| v.save_rotation());
         self.add_action("properties", |v| {
@@ -730,6 +763,17 @@ impl Viewer {
             v.window.set_fullscreened(false);
         });
         self.add_action("slideshow", |v| v.toggle_slideshow());
+        let thumbs = gio::SimpleAction::new_stateful("show-thumbnails", None, &false.to_variant());
+        let weak = self.weak();
+        thumbs.connect_change_state(move |a, value| {
+            let (Some(v), Some(on)) = (weak.upgrade(), value.and_then(|x| x.get::<bool>())) else {
+                return;
+            };
+            a.set_state(&on.to_variant());
+            v.show_thumbs.set(on);
+            v.sync_strip();
+        });
+        self.window.add_action(&thumbs);
     }
 
     fn setup_signals(
@@ -831,6 +875,33 @@ impl Viewer {
                 }
                 v.update_ui();
                 v.show_controls();
+                if !fs {
+                    v.refit_soon();
+                }
+            }
+        });
+        let weak = self.weak();
+        self.window.connect_maximized_notify(move |w| {
+            if let Some(v) = weak.upgrade() {
+                v.update_compact();
+                if !w.is_maximized() {
+                    v.refit_soon();
+                }
+            }
+        });
+        for prop in ["default-width", "default-height", "fullscreened"] {
+            let weak = self.weak();
+            self.window.connect_notify_local(Some(prop), move |_, _| {
+                if let Some(v) = weak.upgrade() {
+                    v.update_compact();
+                }
+            });
+        }
+        let weak = self.weak();
+        self.split.connect_show_sidebar_notify(move |_| {
+            if let Some(v) = weak.upgrade() {
+                v.update_compact();
+                v.refit_soon();
             }
         });
 
@@ -1025,6 +1096,7 @@ impl Viewer {
             .collect();
         let delays: Vec<u32> = decoded.frames.iter().map(|f| f.delay_ms).collect();
         self.canvas.set_texture(textures.first(), true);
+        self.refit_soon();
         {
             let mut st = self.state.borrow_mut();
             st.textures = textures;
@@ -1715,6 +1787,140 @@ impl Viewer {
         }
     }
 
+    // ---- Window size --------------------------------------------------------
+
+    fn refit_soon(&self) {
+        let weak = self.weak();
+        glib::idle_add_local_once(move || {
+            if let Some(v) = weak.upgrade() {
+                v.fit_window_to_image();
+            }
+        });
+    }
+
+    /// Outside fullscreen, sizes the window to the image so it shows no
+    /// bars: a small image at its own size, a large one scaled down to fit
+    /// the monitor, never below [`crate::fit::MIN_WINDOW`]. Left alone
+    /// while maximized or tiled, where the window's size is not its own.
+    fn fit_window_to_image(&self) {
+        let window = &self.window;
+        if window.is_fullscreen() || window.is_maximized() {
+            return;
+        }
+        if self.state.borrow().textures.is_empty() {
+            return;
+        }
+        let surface = window.surface();
+        let tiled = surface
+            .as_ref()
+            .and_then(|s| s.downcast_ref::<gdk::Toplevel>())
+            .is_some_and(|t| t.state().contains(gdk::ToplevelState::TILED));
+        if tiled {
+            return;
+        }
+        // The room on the monitor, less some for the panel and margins.
+        let display = WidgetExt::display(window);
+        let monitor = surface
+            .as_ref()
+            .and_then(|s| display.monitor_at_surface(s))
+            .or_else(|| {
+                display
+                    .monitors()
+                    .item(0)
+                    .and_then(|m| m.downcast::<gdk::Monitor>().ok())
+            });
+        let Some(monitor) = monitor else { return };
+        let g = monitor.geometry();
+        let bound = (g.width() * 9 / 10, g.height() * 85 / 100);
+        // What the window adds around the image: the header bar, the strip
+        // when shown, and the properties sidebar when it sits beside the
+        // image (below the collapse width it overlays the image instead).
+        let natural = |w: &gtk::Widget| w.measure(gtk::Orientation::Vertical, -1).1;
+        let mut chrome_h = natural(self.header.upcast_ref());
+        if self.strip_shown.get() {
+            chrome_h += natural(self.strip.bar.upcast_ref());
+        }
+        let image = self.canvas.view().rotated_image();
+        let shows_sidebar = self.split.shows_sidebar();
+        let sidebar_for = |area_w: i32| {
+            crate::fit::sidebar_width(
+                area_w,
+                self.split.sidebar_width_fraction(),
+                self.split.min_sidebar_width(),
+                self.split.max_sidebar_width(),
+            )
+        };
+        let room_w = if shows_sidebar {
+            bound.0 - sidebar_for(bound.0 * 3 / 4)
+        } else {
+            bound.0
+        };
+        let room = (room_w, bound.1 - chrome_h);
+        let Some(area) = crate::fit::image_area(image, room) else {
+            return;
+        };
+        let sidebar_w = if shows_sidebar {
+            sidebar_for(area.0)
+        } else {
+            0
+        };
+        // AdwOverlaySplitView collapses below 640 sp (see `new`).
+        let chrome_w = if sidebar_w > 0 && area.0 + sidebar_w > 640 {
+            sidebar_w
+        } else {
+            0
+        };
+        let mut size = crate::fit::window_size(area, (chrome_w, chrome_h));
+        // Never smaller than what is left of the header bar needs.
+        self.compact_for(size.0, size.1);
+        let content = self.toasts.upcast_ref::<gtk::Widget>();
+        size.0 = size
+            .0
+            .max(content.measure(gtk::Orientation::Horizontal, -1).0);
+        size.1 = size
+            .1
+            .max(content.measure(gtk::Orientation::Vertical, size.0).0);
+        if size != window.default_size() || size != (window.width(), window.height()) {
+            window.set_default_size(size.0, size.1);
+        }
+    }
+
+    /// A small window (a small image) sheds what does not fit and is still
+    /// in the menu or on a shortcut: the *Open* button, then the
+    /// properties button and the title; the on-image controls and the
+    /// previous / next buttons when they would cover the image.
+    fn update_compact(&self) {
+        let w = &self.window;
+        let (width, height) = if w.is_maximized() || w.is_fullscreen() {
+            (i32::MAX, i32::MAX)
+        } else {
+            w.default_size()
+        };
+        self.compact_for(width, height);
+    }
+
+    fn compact_for(&self, width: i32, height: i32) {
+        // The hidden properties sidebar still counts towards the window's
+        // smallest size (its header bar has window buttons too): leave it
+        // out of a small window until it is asked for.
+        if let Some(sidebar) = self.split.sidebar() {
+            sidebar.set_visible(width >= 300 || self.split.shows_sidebar());
+        }
+        // The properties sidebar (an overlay below 640 sp) still asks for
+        // its minimum width; in a small window it makes do with less.
+        self.split
+            .set_min_sidebar_width(f64::from(width.clamp(MIN_SIDEBAR / 2, MIN_SIDEBAR)));
+        self.open_btn.set_visible(width >= 300);
+        self.props_btn.set_visible(width >= 200);
+        self.title.set_visible(width >= 200);
+        let [prev, next, controls] = &self.revealers[..] else {
+            return;
+        };
+        controls.set_visible(width >= 300 && height >= 220);
+        prev.set_visible(width >= 200 && height >= 150);
+        next.set_visible(width >= 200 && height >= 150);
+    }
+
     /// Mirrors the playlist into the strip and selects the current image.
     fn sync_strip(&self) {
         let (files, index) = {
@@ -1739,8 +1945,13 @@ impl Viewer {
             strip.selection.set_selected(pos);
         }
         strip.syncing.set(false);
-        let show = files.len() > 1 && !self.fullscreen.get();
+        let show = self.show_thumbs.get() && files.len() > 1 && !self.fullscreen.get();
         strip.bar.set_visible(show);
+        if self.strip_shown.replace(show) != show && !self.fullscreen.get() {
+            // Keep the image area as it is: the window grows or shrinks by
+            // the strip.
+            self.refit_soon();
+        }
         if let (true, Some(i)) = (show, index) {
             strip
                 .view

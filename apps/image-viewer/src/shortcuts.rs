@@ -42,6 +42,7 @@ pub const GROUPS: &[Group] = &[
             Keys(n_("Fullscreen"), "F11"),
             Keys(n_("Leave Fullscreen"), "Escape"),
             Keys(n_("Slideshow"), "F5"),
+            Keys(n_("Show Thumbnails"), "<Control>F9"),
         ],
     ),
     GENERAL,
