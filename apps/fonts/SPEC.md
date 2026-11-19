@@ -57,7 +57,12 @@ View and install fonts.
     (drawn lines are clipped, Pango-fallback lines end in "…").
   - **Characters**: a grid of every code point mapped in the face's
     `cmap`, each cell drawing the glyph; tooltip shows `U+XXXX`. A count
-    of covered characters is shown above the grid.
+    of covered characters is shown above the grid. The work is bounded
+    whatever the file says: segment subtables (formats 4, 12, 13) are read
+    by looking up each code point up to U+FFFF / U+10FFFF rather than
+    walking their (possibly overlapping, 32-bit) ranges, and at most 8
+    Unicode subtables are read. A collection's face count is capped at
+    what its header can hold and at 256.
   - **Info**: rows for Family, Style, Full name, Version, Copyright,
     Designer, Manufacturer, Description, License, License URL, Glyphs,
     Characters, Format, File, Size. Empty values are omitted.

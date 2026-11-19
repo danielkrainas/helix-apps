@@ -43,7 +43,13 @@ impl std::fmt::Display for Error {
 /// `None` if the data is not a TrueType/OpenType font).
 pub fn face_count(data: &[u8]) -> Option<u32> {
     match ttf_parser::fonts_in_collection(data) {
-        Some(n) if n > 0 => Some(n),
+        // The count is the file's word: no more than its offset table
+        // holds (12-byte header, 4 bytes per face), nor than any real
+        // collection has.
+        Some(n) if n > 0 => {
+            let room = (data.len().saturating_sub(12) / 4).min(MAX_FACES as usize) as u32;
+            (room > 0).then_some(n.min(room))
+        }
         Some(_) => None,
         None => Face::parse(data, 0).ok().map(|_| 1),
     }
@@ -176,21 +182,42 @@ pub fn mac_roman(bytes: &[u8]) -> String {
         .collect()
 }
 
+/// Most faces read from one collection file.
+pub const MAX_FACES: u32 = 256;
+
+/// Most Unicode cmap subtables looked at (fonts have up to four).
+const MAX_SUBTABLES: usize = 8;
+
 /// All Unicode code points mapped by the face's cmap, sorted.
+///
+/// Segment-based subtables (formats 4, 12, 13) may list ranges that
+/// overlap or span far beyond Unicode, which `codepoints` walks one by
+/// one; for those, every code point of the format's range is looked up
+/// instead, which bounds the work whatever the file says.
 pub fn coverage(face: &Face) -> Vec<char> {
+    use ttf_parser::cmap::Format;
     let mut out = Vec::new();
     if let Some(cmap) = face.tables().cmap {
-        for sub in cmap.subtables {
-            if !sub.is_unicode() {
-                continue;
-            }
-            sub.codepoints(|cp| {
+        for sub in cmap
+            .subtables
+            .into_iter()
+            .filter(|s| s.is_unicode())
+            .take(MAX_SUBTABLES)
+        {
+            let mut add = |cp: u32| {
                 if let Some(c) = char::from_u32(cp) {
                     if !c.is_control() && sub.glyph_index(cp).is_some_and(|g| g.0 != 0) {
                         out.push(c);
                     }
                 }
-            });
+            };
+            match sub.format {
+                Format::SegmentMappingToDeltaValues(_) => (0..=0xFFFF).for_each(&mut add),
+                Format::SegmentedCoverage(_) | Format::ManyToOneRangeMappings(_) => {
+                    (0..=char::MAX as u32).for_each(&mut add)
+                }
+                _ => sub.codepoints(&mut add),
+            }
         }
     }
     out.sort_unstable();
@@ -482,5 +509,99 @@ pub(crate) mod tests {
         latin.dedup();
         assert!(covers(&latin, tr(PANGRAM)));
         assert_eq!(sample_text(&latin), tr(PANGRAM));
+    }
+
+    /// A minimal font (head, hhea, maxp) with a format-12 cmap of
+    /// `groups` groups, each claiming every 32-bit code point.
+    fn font_with_wide_cmap(groups: u32) -> Vec<u8> {
+        let be16 = |v: &mut Vec<u8>, x: u16| v.extend_from_slice(&x.to_be_bytes());
+        let be32 = |v: &mut Vec<u8>, x: u32| v.extend_from_slice(&x.to_be_bytes());
+        let mut head = Vec::new();
+        be32(&mut head, 0x0001_0000); // version
+        be32(&mut head, 0); // revision
+        be32(&mut head, 0); // checksum adjustment
+        be32(&mut head, 0x5F0F_3CF5); // magic
+        be16(&mut head, 0); // flags
+        be16(&mut head, 1000); // units per em
+        head.extend_from_slice(&[0; 16]); // created, modified
+        head.extend_from_slice(&[0; 8]); // bounding box
+        head.extend_from_slice(&[0; 6]); // mac style, lowest ppem, direction
+        be16(&mut head, 0); // index to loc format
+        be16(&mut head, 0); // glyph data format
+        let mut hhea = Vec::new();
+        be32(&mut hhea, 0x0001_0000);
+        hhea.extend_from_slice(&[0; 30]);
+        be16(&mut hhea, 1); // number of h metrics
+        let mut maxp = Vec::new();
+        be32(&mut maxp, 0x0000_5000);
+        be16(&mut maxp, 10); // glyphs
+        let mut cmap = Vec::new();
+        be16(&mut cmap, 0);
+        be16(&mut cmap, 1);
+        be16(&mut cmap, 3); // Windows
+        be16(&mut cmap, 10); // UCS-4
+        be32(&mut cmap, 12);
+        be16(&mut cmap, 12); // format
+        be16(&mut cmap, 0);
+        be32(&mut cmap, 16 + 12 * groups);
+        be32(&mut cmap, 0);
+        be32(&mut cmap, groups);
+        for _ in 0..groups {
+            be32(&mut cmap, 0);
+            be32(&mut cmap, u32::MAX);
+            be32(&mut cmap, 1);
+        }
+        let tables = [
+            (b"cmap", cmap),
+            (b"head", head),
+            (b"hhea", hhea),
+            (b"maxp", maxp),
+        ];
+        let mut out = Vec::new();
+        be32(&mut out, 0x0001_0000);
+        be16(&mut out, tables.len() as u16);
+        out.extend_from_slice(&[0; 6]);
+        let mut offset = 12 + 16 * tables.len() as u32;
+        for (tag, data) in &tables {
+            out.extend_from_slice(*tag);
+            be32(&mut out, 0);
+            be32(&mut out, offset);
+            be32(&mut out, data.len() as u32);
+            offset += data.len() as u32;
+        }
+        for (_, data) in &tables {
+            out.extend_from_slice(data);
+        }
+        out
+    }
+
+    /// Overlapping cmap groups spanning all of u32 do not make coverage
+    /// walk them one code point at a time.
+    #[test]
+    fn wide_cmap_groups_are_bounded() {
+        let data = font_with_wide_cmap(64);
+        let face = Face::parse(&data, 0).unwrap();
+        let start = std::time::Instant::now();
+        let cov = coverage(&face);
+        assert!(start.elapsed() < std::time::Duration::from_secs(20));
+        assert!(cov.binary_search(&'A').is_ok());
+        assert!(cov.len() <= 0x11_0000);
+        assert!(cov.windows(2).all(|w| w[0] < w[1]));
+    }
+
+    /// A collection header claiming billions of faces is held to what
+    /// the file can hold.
+    #[test]
+    fn collection_count_is_bounded() {
+        // About 268 million faces (ttf-parser debug-asserts on counts whose
+        // offset table would pass 4 GiB, so not more).
+        let mut ttc = b"ttcf\x00\x01\x00\x00\x0f\xff\xff\xff".to_vec();
+        assert_eq!(face_count(&ttc), None);
+        assert!(read_data(&ttc).is_err());
+        ttc.extend_from_slice(&[0; 8]);
+        assert_eq!(face_count(&ttc), Some(2));
+        assert!(read_data(&ttc).is_err());
+        ttc.resize(12 + 4 * 1000, 0);
+        assert_eq!(face_count(&ttc), Some(MAX_FACES));
     }
 }
