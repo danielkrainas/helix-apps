@@ -116,8 +116,11 @@ struct Inner {
     /// The technical error text, under "Details" on the error page.
     error_details: gtk::Label,
     content: gtk::Box,
+    /// The whole forecast page (what Take Screenshot saves).
+    page_box: gtk::Box,
     updated_label: gtk::Label,
     unit_action: gio::SimpleAction,
+    toasts: adw::ToastOverlay,
 }
 
 #[derive(Clone)]
@@ -281,6 +284,7 @@ fn build(app: &adw::Application) -> Ui {
     menu.append_section(Some(tr("Temperature Unit")), &units_section);
     let misc = gio::Menu::new();
     misc.append(Some(tr("_Refresh")), Some("app.refresh"));
+    misc.append(Some(tr("Take _Screenshot")), Some("app.screenshot"));
     menu.append_section(None, &misc);
     // HIG primary menu: no Quit (Ctrl+Q still works).
     let help = gio::Menu::new();
@@ -442,7 +446,9 @@ fn build(app: &adw::Application) -> Ui {
     let body = gtk::Box::new(gtk::Orientation::Vertical, 0);
     body.append(&banner);
     body.append(&stack);
-    toolbar.set_content(Some(&body));
+    let toasts = adw::ToastOverlay::new();
+    toasts.set_child(Some(&body));
+    toolbar.set_content(Some(&toasts));
     window.set_content(Some(&toolbar));
     window.set_help_overlay(Some(&helix_app_common::shortcuts::window(SHORTCUT_GROUPS)));
 
@@ -489,8 +495,10 @@ fn build(app: &adw::Application) -> Ui {
         error_search,
         error_details,
         content,
+        page_box,
         updated_label,
         unit_action,
+        toasts,
     }));
 
     ui.connect(app, &empty_button, &popover);
@@ -602,6 +610,24 @@ impl Ui {
             }
         });
         app.add_action(&search);
+
+        // Take Screenshot: only while a forecast is shown.
+        let weak = self.weak();
+        let shot = gio::SimpleAction::new("screenshot", None);
+        shot.connect_activate(move |_, _| {
+            if let Some(ui) = Ui::upgrade(&weak) {
+                ui.screenshot();
+            }
+        });
+        let showing = |stack: &gtk::Stack| stack.visible_child_name().as_deref() == Some("weather");
+        shot.set_enabled(showing(&s.stack));
+        let a = shot.downgrade();
+        s.stack.connect_visible_child_name_notify(move |stack| {
+            if let Some(a) = a.upgrade() {
+                a.set_enabled(showing(stack));
+            }
+        });
+        app.add_action(&shot);
         helix_app_common::shortcuts::set_accels(app, ACCELS);
 
         let weak = self.weak();
@@ -1141,6 +1167,70 @@ impl Ui {
         drop(forecast);
         self.update_status_texts();
         s.stack.set_visible_child_name("weather");
+    }
+
+    /// Saves the whole forecast page (not only the part scrolled into
+    /// view, but without the header bar) as a PNG in Pictures, at the
+    /// window's scale, on the window's background.
+    fn screenshot(&self) {
+        let s = &self.0;
+        let page = &s.page_box;
+        let (w, h) = (page.width(), page.height());
+        let Some(renderer) = page.native().and_then(|n| n.renderer()) else {
+            return;
+        };
+        if w <= 0 || h <= 0 || s.stack.visible_child_name().as_deref() != Some("weather") {
+            return;
+        }
+        // The page's margins (outside its allocation) as padding.
+        let (left, top) = (page.margin_start(), page.margin_top());
+        let full_w = f64::from(w + left + page.margin_end());
+        let full_h = f64::from(h + top + page.margin_bottom());
+        let scale = f64::from(page.scale_factor());
+        let snap = gtk::Snapshot::new();
+        snap.scale(scale as f32, scale as f32);
+        snap.append_color(
+            &window_background(&s.window),
+            &gtk::graphene::Rect::new(0.0, 0.0, full_w as f32, full_h as f32),
+        );
+        snap.translate(&gtk::graphene::Point::new(left as f32, top as f32));
+        gtk::WidgetPaintable::new(Some(page)).snapshot(&snap, f64::from(w), f64::from(h));
+        let Some(node) = snap.to_node() else {
+            return;
+        };
+        let bounds =
+            gtk::graphene::Rect::new(0.0, 0.0, (full_w * scale) as f32, (full_h * scale) as f32);
+        let texture = renderer.render_texture(node, Some(&bounds));
+
+        let place = s.title.title().to_string();
+        let stamp = glib::DateTime::now_local()
+            .and_then(|t| t.format("%Y-%m-%d %H-%M-%S"))
+            .map(|t| t.to_string())
+            .unwrap_or_default();
+        let dir = crate::screenshot::target_dir();
+        let path = crate::screenshot::unique_path(
+            &dir,
+            &crate::screenshot::base_name(&place, &stamp),
+            "png",
+            |p| p.exists(),
+        );
+        let handle = gio::spawn_blocking(move || texture.save_to_png(&path).map(|_| path));
+        let toasts = s.toasts.downgrade();
+        glib::spawn_future_local(async move {
+            let msg = match handle.await {
+                Ok(Ok(path)) => trf!(
+                    "Screenshot saved as “{}”",
+                    path.file_name()
+                        .map(|n| n.to_string_lossy().into_owned())
+                        .unwrap_or_default()
+                ),
+                Ok(Err(err)) => trf!("Could not save screenshot: {err}", err = err),
+                Err(_) => tr("Could not save screenshot").to_string(),
+            };
+            if let Some(toasts) = toasts.upgrade() {
+                toasts.add_toast(adw::Toast::new(&msg));
+            }
+        });
     }
 
     fn render_content(&self, f: &Forecast) {
@@ -1740,10 +1830,24 @@ fn remove_place_name(place: &str) -> String {
     trf!("Remove {place}", place = place)
 }
 
+/// The window's background colour (the theme's, light or dark).
+fn window_background(window: &adw::ApplicationWindow) -> gtk::gdk::RGBA {
+    #[allow(deprecated)]
+    let named = window.style_context().lookup_color("window_bg_color");
+    named.unwrap_or_else(|| {
+        if adw::StyleManager::default().is_dark() {
+            gtk::gdk::RGBA::new(0.133, 0.133, 0.149, 1.0)
+        } else {
+            gtk::gdk::RGBA::new(0.98, 0.98, 0.984, 1.0)
+        }
+    })
+}
+
 /// Accelerators registered on the application.
 const ACCELS: &[(&str, &[&str])] = &[
     ("app.refresh", &["F5", "<Control>r"]),
     ("app.search", &["<Control>l", "<Control>f"]),
+    ("app.screenshot", &["<Control><Alt>s"]),
     ("win.show-help-overlay", &["<Control>question"]),
 ];
 
@@ -1755,6 +1859,7 @@ const SHORTCUT_GROUPS: &[helix_app_common::shortcuts::Group] = {
             &[
                 Keys(n_("Search for a Place"), "<Control>l <Control>f"),
                 Keys(n_("Refresh"), "F5 <Control>r"),
+                Keys(n_("Take Screenshot"), "<Control><Alt>s"),
                 Keys(n_("Keyboard Shortcuts"), "<Control>question"),
                 Keys(n_("Close Window"), "<Control>w"),
                 Keys(n_("Quit"), "<Control>q"),

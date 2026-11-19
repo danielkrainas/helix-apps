@@ -6,6 +6,7 @@ mod graph;
 mod gwdb;
 mod import;
 mod location;
+mod screenshot;
 mod store;
 mod timefmt;
 mod ui;

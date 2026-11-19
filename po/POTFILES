@@ -204,6 +204,7 @@ apps/video-player/src/ui.rs
 apps/weather/src/api.rs
 apps/weather/src/autoloc.rs
 apps/weather/src/location.rs
+apps/weather/src/screenshot.rs
 apps/weather/src/timefmt.rs
 apps/weather/src/ui.rs
 apps/weather/src/units.rs

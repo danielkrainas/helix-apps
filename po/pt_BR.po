@@ -196,7 +196,7 @@ msgstr "{pct}%"
 msgid "Play audio files"
 msgstr "Reproduza arquivos de áudio"
 
-#: apps/audio-player/src/ui.rs:170 apps/music/src/pages.rs:2356
+#: apps/audio-player/src/ui.rs:170 apps/music/src/pages.rs:2396
 #: apps/music/src/shortcuts.rs:8 apps/video-player/src/ui.rs:148
 msgid "Playback"
 msgstr "Reprodução"
@@ -235,7 +235,7 @@ msgstr "Silenciar ou reativar som"
 #: apps/settings/src/ui/shortcuts.rs:16 apps/system-monitor/src/shortcuts.rs:25
 #: apps/system-monitor/src/ui.rs:510 apps/terminal/src/prefs_dialog.rs:18
 #: apps/terminal/src/shortcuts.rs:60 apps/text-editor/src/shortcuts.rs:68
-#: apps/video-player/src/ui.rs:173 apps/weather/src/ui.rs:1754
+#: apps/video-player/src/ui.rs:173 apps/weather/src/ui.rs:1858
 #: apps/web/src/dialogs.rs:45 apps/web/src/shortcuts.rs:74
 #: crates/helix-app-common/src/shortcuts.rs:40
 msgid "General"
@@ -253,7 +253,7 @@ msgstr "Abrir arquivo"
 #: apps/music/src/shortcuts.rs:41 apps/settings/src/ui/shortcuts.rs:18
 #: apps/system-monitor/src/shortcuts.rs:33 apps/terminal/src/shortcuts.rs:63
 #: apps/text-editor/src/shortcuts.rs:71 apps/video-player/src/ui.rs:177
-#: apps/weather/src/ui.rs:1758 apps/web/src/shortcuts.rs:77
+#: apps/weather/src/ui.rs:1863 apps/web/src/shortcuts.rs:77
 #: crates/helix-app-common/src/shortcuts.rs:42
 msgid "Keyboard Shortcuts"
 msgstr "Atalhos de teclado"
@@ -264,7 +264,7 @@ msgstr "Atalhos de teclado"
 #: apps/maps/src/shortcuts.rs:15 apps/music/src/shortcuts.rs:42
 #: apps/settings/src/ui/shortcuts.rs:20 apps/system-monitor/src/shortcuts.rs:34
 #: apps/terminal/src/shortcuts.rs:16 apps/text-editor/src/shortcuts.rs:19
-#: apps/video-player/src/ui.rs:178 apps/weather/src/ui.rs:1759
+#: apps/video-player/src/ui.rs:178 apps/weather/src/ui.rs:1864
 #: apps/web/src/shortcuts.rs:17 crates/helix-app-common/src/shortcuts.rs:43
 msgid "Close Window"
 msgstr "Fechar janela"
@@ -276,7 +276,7 @@ msgstr "Fechar janela"
 #: apps/help/src/shortcuts.rs:54 apps/maps/src/shortcuts.rs:16
 #: apps/music/src/shortcuts.rs:43 apps/settings/src/ui/shortcuts.rs:21
 #: apps/system-monitor/src/shortcuts.rs:35 apps/text-editor/src/shortcuts.rs:20
-#: apps/video-player/src/ui.rs:179 apps/weather/src/ui.rs:1760
+#: apps/video-player/src/ui.rs:179 apps/weather/src/ui.rs:1865
 #: apps/web/src/shortcuts.rs:24 crates/helix-app-common/src/shortcuts.rs:44
 msgid "Quit"
 msgstr "Sair"
@@ -321,7 +321,7 @@ msgstr "_Sobre o Reprodutor de áudio"
 #: apps/help/src/ui.rs:362 apps/image-viewer/src/ui.rs:337
 #: apps/image-viewer/src/ui.rs:339 apps/logs/src/ui.rs:308
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
-#: apps/music/src/ui.rs:477 apps/music/src/ui.rs:479
+#: apps/music/src/ui.rs:480 apps/music/src/ui.rs:482
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
 #: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
@@ -329,7 +329,7 @@ msgstr "_Sobre o Reprodutor de áudio"
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
 #: apps/tour/src/ui.rs:330 apps/tour/src/ui.rs:332
 #: apps/video-player/src/ui.rs:321 apps/video-player/src/ui.rs:325
-#: apps/weather/src/ui.rs:298 apps/weather/src/ui.rs:300
+#: apps/weather/src/ui.rs:302 apps/weather/src/ui.rs:304
 #: apps/web/src/window.rs:435 apps/web/src/window.rs:439
 msgid "Main Menu"
 msgstr "Menu principal"
@@ -351,7 +351,7 @@ msgid "Unable to Play File"
 msgstr "Não foi possível reproduzir o arquivo"
 
 #: apps/audio-player/src/ui.rs:297 apps/audio-player/src/ui.rs:304
-#: apps/music/src/ui.rs:2579 apps/music/src/ui.rs:2580
+#: apps/music/src/ui.rs:2583 apps/music/src/ui.rs:2584
 #: apps/video-player/src/ui.rs:464
 msgid "Position"
 msgstr "Posição"
@@ -365,17 +365,17 @@ msgid "Playback Speed (pitch not preserved)"
 msgstr "Velocidade de reprodução (tom não preservado)"
 
 #: apps/audio-player/src/ui.rs:348 apps/audio-player/src/ui.rs:351
-#: apps/audio-player/src/ui.rs:1283 apps/music/src/pages.rs:801
-#: apps/music/src/pages.rs:1146 apps/music/src/pages.rs:1474
-#: apps/music/src/ui.rs:1347 apps/music/src/ui.rs:2555
-#: apps/music/src/ui.rs:2559 apps/video-player/src/ui.rs:443
+#: apps/audio-player/src/ui.rs:1283 apps/music/src/pages.rs:825
+#: apps/music/src/pages.rs:1175 apps/music/src/pages.rs:1503
+#: apps/music/src/ui.rs:1351 apps/music/src/ui.rs:2559
+#: apps/music/src/ui.rs:2563 apps/video-player/src/ui.rs:443
 #: apps/video-player/src/ui.rs:1460
 msgid "Play"
 msgstr "Reproduzir"
 
 #: apps/audio-player/src/ui.rs:368 apps/audio-player/src/ui.rs:371
 #: apps/calendar/src/editor.rs:551 apps/clocks/src/ui.rs:1422
-#: apps/music/src/ui.rs:2602 apps/music/src/ui.rs:2606
+#: apps/music/src/ui.rs:2606 apps/music/src/ui.rs:2610
 msgid "Repeat"
 msgstr "Repetir"
 
@@ -386,8 +386,8 @@ msgid "Mute"
 msgstr "Mudo"
 
 #: apps/audio-player/src/ui.rs:386 apps/audio-player/src/ui.rs:394
-#: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:2611
-#: apps/music/src/ui.rs:2618 apps/music/src/ui.rs:2623
+#: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:2615
+#: apps/music/src/ui.rs:2622 apps/music/src/ui.rs:2627
 #: apps/settings/src/ui/sound.rs:163 apps/video-player/src/ui.rs:158
 #: apps/video-player/src/ui.rs:491 apps/video-player/src/ui.rs:497
 #: apps/video-player/src/ui.rs:503
@@ -428,7 +428,7 @@ msgid "{position} of {duration}"
 msgstr "{position} de {duration}"
 
 #: apps/audio-player/src/ui.rs:1281 apps/clocks/src/ui.rs:1758
-#: apps/clocks/src/ui.rs:2241 apps/music/src/ui.rs:1347
+#: apps/clocks/src/ui.rs:2241 apps/music/src/ui.rs:1351
 #: apps/video-player/src/ui.rs:1460
 msgid "Pause"
 msgstr "Pausar"
@@ -1069,7 +1069,7 @@ msgstr "_Limpar histórico"
 #: apps/calculator/src/ui.rs:699 apps/disk-usage/src/ui.rs:186
 #: apps/document-scanner/src/ui.rs:174 apps/document-scanner/src/ui.rs:190
 #: apps/files/src/ui/window.rs:231 apps/maps/src/ui.rs:485
-#: apps/music/src/ui.rs:464 apps/system-monitor/src/ui.rs:247
+#: apps/music/src/ui.rs:467 apps/system-monitor/src/ui.rs:247
 #: apps/terminal/src/window.rs:290 apps/text-editor/src/window.rs:63
 #: apps/web/src/window.rs:263
 msgid "_Preferences"
@@ -1136,8 +1136,8 @@ msgstr "C_alcular"
 #: apps/document-scanner/src/ui.rs:1417 apps/document-viewer/src/dialogs.rs:169
 #: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
-#: apps/music/src/pages.rs:2089 apps/music/src/pages.rs:2192
-#: apps/music/src/pages.rs:2277 apps/settings/src/ui/apps.rs:553
+#: apps/music/src/pages.rs:2129 apps/music/src/pages.rs:2232
+#: apps/music/src/pages.rs:2317 apps/settings/src/ui/apps.rs:553
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
 #: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
 #: apps/system-monitor/src/dialogs.rs:142
@@ -1406,7 +1406,7 @@ msgid "Close"
 msgstr "Fechar"
 
 #: apps/calendar/src/editor.rs:484 apps/document-viewer/src/dialogs.rs:97
-#: apps/music/src/details.rs:110 apps/music/src/pages.rs:641
+#: apps/music/src/details.rs:110 apps/music/src/pages.rs:665
 msgid "Title"
 msgstr "Título"
 
@@ -1830,8 +1830,8 @@ msgstr "Importar"
 #: apps/help/src/ui.rs:334 apps/help/src/ui.rs:336
 #: apps/logs/src/shortcuts.rs:17 apps/logs/src/ui.rs:276
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
-#: apps/music/src/shortcuts.rs:32 apps/music/src/ui.rs:449
-#: apps/music/src/ui.rs:451 apps/settings/src/ui/apps.rs:439
+#: apps/music/src/shortcuts.rs:32 apps/music/src/ui.rs:452
+#: apps/music/src/ui.rs:454 apps/settings/src/ui/apps.rs:439
 #: apps/settings/src/ui/mod.rs:189 apps/settings/src/ui/mod.rs:191
 #: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
 #: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
@@ -1956,13 +1956,13 @@ msgstr "Hoje"
 
 #: apps/calendar/src/ui.rs:257 apps/calendar/src/ui.rs:259
 #: apps/calendar/src/ui.rs:511 apps/calendar/src/ui.rs:513
-#: apps/music/src/ui.rs:2552 apps/tour/src/ui.rs:283 apps/tour/src/ui.rs:289
+#: apps/music/src/ui.rs:2556 apps/tour/src/ui.rs:283 apps/tour/src/ui.rs:289
 msgid "Previous"
 msgstr "Anterior"
 
 #: apps/calendar/src/ui.rs:263 apps/calendar/src/ui.rs:265
 #: apps/calendar/src/ui.rs:517 apps/calendar/src/ui.rs:519
-#: apps/music/src/ui.rs:1155 apps/music/src/ui.rs:2560 apps/tour/src/ui.rs:292
+#: apps/music/src/ui.rs:1159 apps/music/src/ui.rs:2564 apps/tour/src/ui.rs:292
 #: apps/tour/src/ui.rs:298
 msgid "Next"
 msgstr "Próximo"
@@ -2012,7 +2012,7 @@ msgstr "Nenhum resultado encontrado"
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1647 apps/settings/src/ui/mod.rs:228
+#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:228
 #: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:740
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
@@ -2023,7 +2023,7 @@ msgid "Calendar Service Unavailable"
 msgstr "Serviço de agenda indisponível"
 
 #: apps/calendar/src/ui.rs:463 apps/contacts/src/ui.rs:375
-#: apps/weather/src/ui.rs:357 apps/weather/src/ui.rs:437
+#: apps/weather/src/ui.rs:361 apps/weather/src/ui.rs:441
 msgid "Retry"
 msgstr "Tentar novamente"
 
@@ -2635,7 +2635,7 @@ msgstr "Os caracteres que você copiar aparecerão aqui"
 
 #: apps/characters/src/ui.rs:455 apps/clocks/src/ui.rs:1053
 #: apps/contacts/src/ui.rs:245 apps/logs/src/ui.rs:711
-#: apps/music/src/pages.rs:1646
+#: apps/music/src/pages.rs:1686
 msgid "No Results"
 msgstr "Nenhum resultado"
 
@@ -3049,7 +3049,7 @@ msgstr "Localização atual"
 
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
 #: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/input.rs:367
-#: apps/weather/src/ui.rs:876 apps/web/src/dialogs.rs:198
+#: apps/weather/src/ui.rs:902 apps/web/src/dialogs.rs:198
 #: apps/web/src/dialogs.rs:643 apps/web/src/dialogs.rs:1030
 #: apps/web/src/dialogs.rs:1185
 msgid "Remove"
@@ -3071,11 +3071,11 @@ msgstr "Diferença do UTC"
 msgid "Difference"
 msgstr "Diferença"
 
-#: apps/clocks/src/ui.rs:951 apps/weather/src/ui.rs:1335
+#: apps/clocks/src/ui.rs:951 apps/weather/src/ui.rs:1425
 msgid "Sunrise"
 msgstr "Nascer do sol"
 
-#: apps/clocks/src/ui.rs:952 apps/weather/src/ui.rs:1340
+#: apps/clocks/src/ui.rs:952 apps/weather/src/ui.rs:1430
 msgid "Sunset"
 msgstr "Pôr do sol"
 
@@ -3777,7 +3777,7 @@ msgid "_Unlink"
 msgstr "_Desvincular"
 
 #: apps/contacts/src/ui.rs:1211 apps/logs/src/ui.rs:282
-#: apps/music/src/pages.rs:1525
+#: apps/music/src/pages.rs:1554
 msgid "_Export…"
 msgstr "_Exportar…"
 
@@ -5402,7 +5402,7 @@ msgid "Delete Partition?"
 msgstr "Excluir partição?"
 
 #: apps/disks/src/ui.rs:1594 apps/document-scanner/src/ui.rs:228
-#: apps/files/src/ui/window.rs:1393 apps/music/src/pages.rs:2278
+#: apps/files/src/ui/window.rs:1393 apps/music/src/pages.rs:2318
 msgid "_Delete"
 msgstr "_Excluir"
 
@@ -6058,7 +6058,7 @@ msgid "Searching for Scanners…"
 msgstr "Procurando scanners…"
 
 #: apps/document-scanner/src/ui.rs:343 apps/logs/src/ui.rs:283
-#: apps/system-monitor/src/ui.rs:244 apps/weather/src/ui.rs:283
+#: apps/system-monitor/src/ui.rs:244 apps/weather/src/ui.rs:286
 msgid "_Refresh"
 msgstr "_Atualizar"
 
@@ -6773,7 +6773,7 @@ msgid "of {n}"
 msgstr "de {n}"
 
 #: apps/document-viewer/src/ui.rs:1307 apps/maps/src/ui.rs:1227
-#: apps/weather/src/ui.rs:901
+#: apps/weather/src/ui.rs:927
 msgid "Searching…"
 msgstr "Pesquisando…"
 
@@ -7620,7 +7620,7 @@ msgid "Rename Bookmark"
 msgstr "Renomear marcador"
 
 #: apps/files/src/ui/sidebar.rs:677 apps/files/src/ui/window.rs:1465
-#: apps/music/src/pages.rs:2091
+#: apps/music/src/pages.rs:2131
 msgid "_Rename"
 msgstr "_Renomear"
 
@@ -7708,7 +7708,7 @@ msgid "_Reversed Order"
 msgstr "Ordem _inversa"
 
 #: apps/files/src/ui/window.rs:252 apps/logs/src/ui.rs:294
-#: apps/music/src/ui.rs:507 apps/music/src/ui.rs:510
+#: apps/music/src/ui.rs:510 apps/music/src/ui.rs:513
 msgid "Sort"
 msgstr "Ordenar"
 
@@ -7849,7 +7849,7 @@ msgstr "Renomear arquivo"
 msgid "Could not rename: {}"
 msgstr "Não foi possível renomear: {}"
 
-#: apps/files/src/ui/window.rs:1506 apps/music/src/pages.rs:2093
+#: apps/files/src/ui/window.rs:1506 apps/music/src/pages.rs:2133
 msgid "_Create"
 msgstr "_Criar"
 
@@ -8914,7 +8914,7 @@ msgid "Logs"
 msgstr "Logs"
 
 #: apps/logs/src/shortcuts.rs:18 apps/system-monitor/src/shortcuts.rs:30
-#: apps/weather/src/ui.rs:307 apps/weather/src/ui.rs:1757
+#: apps/weather/src/ui.rs:311 apps/weather/src/ui.rs:1861
 msgid "Refresh"
 msgstr "Atualizar"
 
@@ -9138,7 +9138,7 @@ msgid "Invalid response from the search service"
 msgstr "Resposta inválida do serviço de pesquisa"
 
 #: apps/maps/src/nominatim.rs:233 apps/maps/src/nominatim.rs:235
-#: apps/weather/src/ui.rs:924
+#: apps/weather/src/ui.rs:950
 msgid "Search failed"
 msgstr "Falha na pesquisa"
 
@@ -9548,13 +9548,13 @@ msgstr[1] "{n} lugares encontrados"
 msgid "Selected place: {}"
 msgstr "Lugar selecionado: {}"
 
-#: apps/maps/src/ui.rs:1365 apps/music/src/ui.rs:2340
+#: apps/maps/src/ui.rs:1365 apps/music/src/ui.rs:2344
 msgid "Remove from Favorites"
 msgstr "Remover dos favoritos"
 
 #: apps/maps/src/ui.rs:1367 apps/maps/src/ui.rs:2266
-#: apps/music/src/pages.rs:702 apps/music/src/ui.rs:2342
-#: apps/music/src/ui.rs:2592
+#: apps/music/src/pages.rs:726 apps/music/src/ui.rs:2346
+#: apps/music/src/ui.rs:2596
 msgid "Add to Favorites"
 msgstr "Adicionar aos favoritos"
 
@@ -9768,7 +9768,7 @@ msgstr "Lugar sem nome"
 msgid "Looking up address"
 msgstr "Procurando endereço"
 
-#: apps/maps/src/ui.rs:2267 apps/music/src/pages.rs:721
+#: apps/maps/src/ui.rs:2267 apps/music/src/pages.rs:745
 msgid "Favorite"
 msgstr "Favorito"
 
@@ -9872,7 +9872,7 @@ msgstr[1] "{n} canais"
 msgid "{n}-bit"
 msgstr "{n} bits"
 
-#: apps/music/src/details.rs:113 apps/music/src/pages.rs:645
+#: apps/music/src/details.rs:113 apps/music/src/pages.rs:669
 msgid "Artist"
 msgstr "Artista"
 
@@ -9880,11 +9880,11 @@ msgstr "Artista"
 msgid "Album Artist"
 msgstr "Artista do álbum"
 
-#: apps/music/src/details.rs:115 apps/music/src/pages.rs:649
+#: apps/music/src/details.rs:115 apps/music/src/pages.rs:673
 msgid "Album"
 msgstr "Álbum"
 
-#: apps/music/src/details.rs:116 apps/music/src/pages.rs:673
+#: apps/music/src/details.rs:116 apps/music/src/pages.rs:697
 msgid "Genre"
 msgstr "Gênero"
 
@@ -9896,7 +9896,7 @@ msgstr "Faixa"
 msgid "Disc"
 msgstr "Disco"
 
-#: apps/music/src/details.rs:125 apps/music/src/pages.rs:653
+#: apps/music/src/details.rs:125 apps/music/src/pages.rs:677
 #: apps/settings/src/ui/access.rs:517
 msgid "Length"
 msgstr "Duração"
@@ -9921,7 +9921,7 @@ msgstr "Canais"
 msgid "File Location"
 msgstr "Local do arquivo"
 
-#: apps/music/src/details.rs:147 apps/music/src/pages.rs:666
+#: apps/music/src/details.rs:147 apps/music/src/pages.rs:690
 msgid "Plays"
 msgstr "Reproduções"
 
@@ -10043,12 +10043,12 @@ msgstr "Música"
 msgid "OpenUri is not supported"
 msgstr "OpenUri não é suportado"
 
-#: apps/music/src/nowplaying.rs:68 apps/music/src/pages.rs:1197
-#: apps/music/src/pages.rs:1488 apps/music/src/rows.rs:95
+#: apps/music/src/nowplaying.rs:68 apps/music/src/pages.rs:1226
+#: apps/music/src/pages.rs:1517 apps/music/src/rows.rs:95
 msgid "Go to Artist"
 msgstr "Ir para o artista"
 
-#: apps/music/src/nowplaying.rs:70 apps/music/src/pages.rs:1326
+#: apps/music/src/nowplaying.rs:70 apps/music/src/pages.rs:1355
 #: apps/music/src/rows.rs:93
 msgid "Go to Album"
 msgstr "Ir para o álbum"
@@ -10067,8 +10067,8 @@ msgid "Clear Queue"
 msgstr "Limpar a fila"
 
 #: apps/music/src/nowplaying.rs:203 apps/music/src/shortcuts.rs:31
-#: apps/music/src/ui.rs:2319 apps/music/src/ui.rs:2637
-#: apps/music/src/ui.rs:2642
+#: apps/music/src/ui.rs:2323 apps/music/src/ui.rs:2641
+#: apps/music/src/ui.rs:2646
 msgid "Now Playing"
 msgstr "Reproduzindo agora"
 
@@ -10080,236 +10080,236 @@ msgstr "Letra"
 msgid "Nothing Playing"
 msgstr "Nada tocando"
 
-#: apps/music/src/nowplaying.rs:332 apps/music/src/pages.rs:2436
+#: apps/music/src/nowplaying.rs:332 apps/music/src/pages.rs:2476
 msgid "{n} song"
 msgid_plural "{n} songs"
 msgstr[0] "{n} música"
 msgstr[1] "{n} músicas"
 
-#: apps/music/src/pages.rs:155
+#: apps/music/src/pages.rs:179
 msgid "Show All"
 msgstr "Mostrar tudo"
 
-#: apps/music/src/pages.rs:277 apps/music/src/rows.rs:83
+#: apps/music/src/pages.rs:301 apps/music/src/rows.rs:83
 msgid "Play Next"
 msgstr "Reproduzir em seguida"
 
-#: apps/music/src/pages.rs:278 apps/music/src/pages.rs:802
+#: apps/music/src/pages.rs:302 apps/music/src/pages.rs:826
 #: apps/music/src/rows.rs:84
 msgid "Add to Queue"
 msgstr "Adicionar à fila"
 
-#: apps/music/src/pages.rs:279 apps/music/src/pages.rs:803
+#: apps/music/src/pages.rs:303 apps/music/src/pages.rs:827
 #: apps/music/src/rows.rs:87
 msgid "Add to Playlist…"
 msgstr "Adicionar à lista de reprodução…"
 
-#: apps/music/src/pages.rs:390 apps/music/src/pages.rs:1312
-#: apps/music/src/pages.rs:1414 apps/music/src/pages.rs:1686
+#: apps/music/src/pages.rs:414 apps/music/src/pages.rs:1341
+#: apps/music/src/pages.rs:1443 apps/music/src/pages.rs:1726
 #: apps/music/src/shortcuts.rs:26
 msgid "Albums"
 msgstr "Álbuns"
 
-#: apps/music/src/pages.rs:412 apps/music/src/pages.rs:481
-#: apps/music/src/pages.rs:1369 apps/music/src/shortcuts.rs:30
+#: apps/music/src/pages.rs:436 apps/music/src/pages.rs:505
+#: apps/music/src/pages.rs:1398 apps/music/src/shortcuts.rs:30
 msgid "Genres"
 msgstr "Gêneros"
 
-#: apps/music/src/pages.rs:433 apps/music/src/pages.rs:1723
+#: apps/music/src/pages.rs:457 apps/music/src/pages.rs:1763
 #: apps/music/src/shortcuts.rs:27
 msgid "Artists"
 msgstr "Artistas"
 
-#: apps/music/src/pages.rs:442 apps/music/src/pages.rs:1416
-#: apps/music/src/pages.rs:1749 apps/music/src/shortcuts.rs:28
+#: apps/music/src/pages.rs:466 apps/music/src/pages.rs:1445
+#: apps/music/src/pages.rs:1789 apps/music/src/shortcuts.rs:28
 msgid "Songs"
 msgstr "Músicas"
 
-#: apps/music/src/pages.rs:467 apps/music/src/pages.rs:1822
+#: apps/music/src/pages.rs:491 apps/music/src/pages.rs:1862
 #: apps/music/src/shortcuts.rs:29
 msgid "Playlists"
 msgstr "Listas de reprodução"
 
-#: apps/music/src/pages.rs:489 apps/music/src/pages.rs:2312
-#: apps/music/src/pages.rs:2316
+#: apps/music/src/pages.rs:513 apps/music/src/pages.rs:2352
+#: apps/music/src/pages.rs:2356
 msgid "Add Folder…"
 msgstr "Adicionar pasta…"
 
-#: apps/music/src/pages.rs:636
+#: apps/music/src/pages.rs:660
 msgid "Playing"
 msgstr "Reproduzindo"
 
-#: apps/music/src/pages.rs:735 apps/music/src/pages.rs:738
-#: apps/music/src/pages.rs:1170 apps/music/src/pages.rs:1172
+#: apps/music/src/pages.rs:759 apps/music/src/pages.rs:762
+#: apps/music/src/pages.rs:1199 apps/music/src/pages.rs:1201
 #: apps/music/src/rows.rs:179 apps/music/src/rows.rs:181
 msgid "More"
 msgstr "Mais"
 
-#: apps/music/src/pages.rs:835
+#: apps/music/src/pages.rs:859
 msgid "No Songs Selected"
 msgstr "Nenhuma música selecionada"
 
-#: apps/music/src/pages.rs:837
+#: apps/music/src/pages.rs:861
 msgid "{n} song selected"
 msgid_plural "{n} songs selected"
 msgstr[0] "{n} música selecionada"
 msgstr[1] "{n} músicas selecionadas"
 
-#: apps/music/src/pages.rs:963 apps/music/src/pages.rs:1305
-#: apps/music/src/pages.rs:1380 apps/music/src/pages.rs:1408
+#: apps/music/src/pages.rs:987 apps/music/src/pages.rs:1334
+#: apps/music/src/pages.rs:1409 apps/music/src/pages.rs:1437
 msgid "{n} album"
 msgid_plural "{n} albums"
 msgstr[0] "{n} álbum"
 msgstr[1] "{n} álbuns"
 
-#: apps/music/src/pages.rs:1147 apps/music/src/pages.rs:1475
-#: apps/music/src/shortcuts.rs:14 apps/music/src/ui.rs:2595
-#: apps/music/src/ui.rs:2599
+#: apps/music/src/pages.rs:1176 apps/music/src/pages.rs:1504
+#: apps/music/src/shortcuts.rs:14 apps/music/src/ui.rs:2599
+#: apps/music/src/ui.rs:2603
 msgid "Shuffle"
 msgstr "Aleatório"
 
-#: apps/music/src/pages.rs:1255
+#: apps/music/src/pages.rs:1284
 msgid "Disc {disc}"
 msgstr "Disco {disc}"
 
-#: apps/music/src/pages.rs:1524
+#: apps/music/src/pages.rs:1553
 msgid "_Rename…"
 msgstr "_Renomear…"
 
-#: apps/music/src/pages.rs:1528
+#: apps/music/src/pages.rs:1557
 msgid "_Delete…"
 msgstr "_Excluir…"
 
-#: apps/music/src/pages.rs:1534 apps/music/src/pages.rs:1536
+#: apps/music/src/pages.rs:1563 apps/music/src/pages.rs:1565
 msgid "Playlist Menu"
 msgstr "Menu da lista de reprodução"
 
-#: apps/music/src/pages.rs:1593
+#: apps/music/src/pages.rs:1622
 msgid "No Songs"
 msgstr "Nenhuma música"
 
-#: apps/music/src/pages.rs:1596
+#: apps/music/src/pages.rs:1625
 msgid "Add songs with “Add to Playlist…” in a song’s menu."
 msgstr ""
 "Adicione músicas com “Adicionar à lista de reprodução…” no menu de uma "
 "música."
 
-#: apps/music/src/pages.rs:1598
+#: apps/music/src/pages.rs:1627
 msgid "Mark songs as favorites with the star button."
 msgstr "Marque músicas como favoritas com o botão de estrela."
 
-#: apps/music/src/pages.rs:1600
+#: apps/music/src/pages.rs:1629
 msgid "Songs will appear here as you listen."
 msgstr "As músicas aparecerão aqui conforme você as ouvir."
 
 #. Translators: the title of a page with every song matching a search.
-#: apps/music/src/pages.rs:1790
+#: apps/music/src/pages.rs:1830
 msgid "Songs Matching “{query}”"
 msgstr "Músicas correspondentes a “{query}”"
 
-#: apps/music/src/pages.rs:1810
+#: apps/music/src/pages.rs:1850
 msgid "Cannot save playlist: {e}"
 msgstr "Não foi possível salvar a lista de reprodução: {e}"
 
-#: apps/music/src/pages.rs:1824
+#: apps/music/src/pages.rs:1864
 msgid "M3U Playlist"
 msgstr "Lista de reprodução M3U"
 
-#: apps/music/src/pages.rs:1825
+#: apps/music/src/pages.rs:1865
 msgid "XSPF Playlist"
 msgstr "Lista de reprodução XSPF"
 
-#: apps/music/src/pages.rs:1826
+#: apps/music/src/pages.rs:1866
 msgid "PLS Playlist"
 msgstr "Lista de reprodução PLS"
 
-#: apps/music/src/pages.rs:1856
+#: apps/music/src/pages.rs:1896
 msgid "Import Playlist"
 msgstr "Importar lista de reprodução"
 
-#: apps/music/src/pages.rs:1880
+#: apps/music/src/pages.rs:1920
 msgid "Cannot read playlist: {e}"
 msgstr "Não foi possível ler a lista de reprodução: {e}"
 
-#: apps/music/src/pages.rs:1883
+#: apps/music/src/pages.rs:1923
 msgid "No songs from this playlist are in your library"
 msgstr "Nenhuma música desta lista de reprodução está na sua biblioteca"
 
-#: apps/music/src/pages.rs:1886
+#: apps/music/src/pages.rs:1926
 msgid "Imported “{}”"
 msgstr "“{}” importada"
 
-#: apps/music/src/pages.rs:1901
+#: apps/music/src/pages.rs:1941
 msgid "the LocalSearch index is not available"
 msgstr "o índice do LocalSearch não está disponível"
 
-#: apps/music/src/pages.rs:1913
+#: apps/music/src/pages.rs:1953
 msgid "Cannot import: {e}"
 msgstr "Não foi possível importar: {e}"
 
-#: apps/music/src/pages.rs:1938
+#: apps/music/src/pages.rs:1978
 msgid "No new playlists with songs from your library were found"
 msgstr ""
 "Nenhuma nova lista de reprodução com músicas da sua biblioteca foi encontrada"
 
-#: apps/music/src/pages.rs:1939
+#: apps/music/src/pages.rs:1979
 msgid "Imported {n} playlist"
 msgid_plural "Imported {n} playlists"
 msgstr[0] "{n} lista de reprodução importada"
 msgstr[1] "{n} listas de reprodução importadas"
 
-#: apps/music/src/pages.rs:2038
+#: apps/music/src/pages.rs:2078
 msgid "Export Playlist"
 msgstr "Exportar lista de reprodução"
 
-#: apps/music/src/pages.rs:2053
+#: apps/music/src/pages.rs:2093
 msgid "Playlist exported"
 msgstr "Lista de reprodução exportada"
 
-#: apps/music/src/pages.rs:2056
+#: apps/music/src/pages.rs:2096
 msgid "Cannot export playlist: {e}"
 msgstr "Não foi possível exportar a lista de reprodução: {e}"
 
-#: apps/music/src/pages.rs:2076
+#: apps/music/src/pages.rs:2116
 msgid "Rename Playlist"
 msgstr "Renomear lista de reprodução"
 
-#: apps/music/src/pages.rs:2078
+#: apps/music/src/pages.rs:2118
 msgid "New Playlist"
 msgstr "Nova lista de reprodução"
 
-#: apps/music/src/pages.rs:2083 apps/music/src/pages.rs:2087
+#: apps/music/src/pages.rs:2123 apps/music/src/pages.rs:2127
 msgid "Playlist Name"
 msgstr "Nome da lista de reprodução"
 
-#: apps/music/src/pages.rs:2144 apps/music/src/pages.rs:2216
+#: apps/music/src/pages.rs:2184 apps/music/src/pages.rs:2256
 msgid "Added to “{}”"
 msgstr "Adicionado a “{}”"
 
-#: apps/music/src/pages.rs:2159
+#: apps/music/src/pages.rs:2199
 msgid "Add to Playlist"
 msgstr "Adicionar à lista de reprodução"
 
-#: apps/music/src/pages.rs:2165 apps/music/src/ui.rs:484
-#: apps/music/src/ui.rs:488
+#: apps/music/src/pages.rs:2205 apps/music/src/ui.rs:487
+#: apps/music/src/ui.rs:491
 msgid "New Playlist…"
 msgstr "Nova lista de reprodução…"
 
-#: apps/music/src/pages.rs:2271
+#: apps/music/src/pages.rs:2311
 msgid "Delete Playlist?"
 msgstr "Excluir lista de reprodução?"
 
-#: apps/music/src/pages.rs:2272
+#: apps/music/src/pages.rs:2312
 msgid "“{name}” will be permanently deleted. The songs stay in your library."
 msgstr ""
 "“{name}” será excluída permanentemente. As músicas permanecem na sua "
 "biblioteca."
 
-#: apps/music/src/pages.rs:2286
+#: apps/music/src/pages.rs:2326
 msgid "Cannot delete playlist: {e}"
 msgstr "Não foi possível excluir a lista de reprodução: {e}"
 
-#: apps/music/src/pages.rs:2302
+#: apps/music/src/pages.rs:2342
 msgid ""
 "Music in these folders appears in your library. Folders indexed by "
 "LocalSearch are read from its index."
@@ -10317,53 +10317,53 @@ msgstr ""
 "As músicas nestas pastas aparecem na sua biblioteca. Pastas indexadas pelo "
 "LocalSearch são lidas do seu índice."
 
-#: apps/music/src/pages.rs:2304
+#: apps/music/src/pages.rs:2344
 msgid "Music in these folders appears in your library"
 msgstr "As músicas nestas pastas aparecem na sua biblioteca"
 
-#: apps/music/src/pages.rs:2307
+#: apps/music/src/pages.rs:2347
 msgid "Library Folders"
 msgstr "Pastas da biblioteca"
 
-#: apps/music/src/pages.rs:2320
+#: apps/music/src/pages.rs:2360
 msgid "Music folder"
 msgstr "Pasta de músicas"
 
-#: apps/music/src/pages.rs:2331 apps/music/src/pages.rs:2335
+#: apps/music/src/pages.rs:2371 apps/music/src/pages.rs:2375
 msgid "Remove Folder"
 msgstr "Remover pasta"
 
-#: apps/music/src/pages.rs:2359
+#: apps/music/src/pages.rs:2399
 msgid "Inhibit Suspend"
 msgstr "Inibir suspensão"
 
-#: apps/music/src/pages.rs:2360
+#: apps/music/src/pages.rs:2400
 msgid "Keep the computer awake while music plays"
 msgstr "Manter o computador ativo enquanto a música toca"
 
-#: apps/music/src/pages.rs:2375
+#: apps/music/src/pages.rs:2415
 msgid "ReplayGain"
 msgstr "ReplayGain"
 
-#: apps/music/src/pages.rs:2376
+#: apps/music/src/pages.rs:2416
 msgid "Even out loudness using the volume tags of songs or albums"
 msgstr "Equalizar o volume usando as etiquetas de volume das músicas ou álbuns"
 
-#: apps/music/src/pages.rs:2396 apps/settings/src/panels.rs:156
+#: apps/music/src/pages.rs:2436 apps/settings/src/panels.rs:156
 #: apps/settings/src/permissions.rs:38 apps/settings/src/ui/apps.rs:419
 #: apps/web/src/permissions.rs:25
 msgid "Notifications"
 msgstr "Notificações"
 
-#: apps/music/src/pages.rs:2397
+#: apps/music/src/pages.rs:2437
 msgid "Announce new songs while the window is in the background"
 msgstr "Anunciar novas músicas enquanto a janela está em segundo plano"
 
-#: apps/music/src/pages.rs:2411
+#: apps/music/src/pages.rs:2451
 msgid "Background Playback"
 msgstr "Reprodução em segundo plano"
 
-#: apps/music/src/pages.rs:2412
+#: apps/music/src/pages.rs:2452
 msgid "Keep playing when the window is closed"
 msgstr "Continuar reproduzindo quando a janela for fechada"
 
@@ -10459,116 +10459,116 @@ msgstr "número de colunas inválido {n}"
 msgid "Play and organize your music collection"
 msgstr "Reproduza e organize sua coleção de músicas"
 
-#: apps/music/src/ui.rs:275 apps/music/src/ui.rs:2308
+#: apps/music/src/ui.rs:275 apps/music/src/ui.rs:2312
 msgid "Now playing"
 msgstr "Reproduzindo agora"
 
-#: apps/music/src/ui.rs:455
+#: apps/music/src/ui.rs:458
 msgid "_New Playlist…"
 msgstr "_Nova lista de reprodução…"
 
-#: apps/music/src/ui.rs:456
+#: apps/music/src/ui.rs:459
 msgid "_Rescan Library"
 msgstr "_Analisar biblioteca novamente"
 
-#: apps/music/src/ui.rs:457
+#: apps/music/src/ui.rs:460
 msgid "_Import Playlist…"
 msgstr "_Importar lista de reprodução…"
 
-#: apps/music/src/ui.rs:459
+#: apps/music/src/ui.rs:462
 msgid "Import Playlists from _Search Index"
 msgstr "Importar listas de reprodução do índice de _pesquisa"
 
-#: apps/music/src/ui.rs:471
+#: apps/music/src/ui.rs:474
 msgid "_About Music"
 msgstr "_Sobre o Música"
 
-#: apps/music/src/ui.rs:492 apps/music/src/ui.rs:495
+#: apps/music/src/ui.rs:495 apps/music/src/ui.rs:498
 msgid "Select"
 msgstr "Selecionar"
 
-#: apps/music/src/ui.rs:536
+#: apps/music/src/ui.rs:539
 msgid "Search songs, albums and artists"
 msgstr "Pesquisar músicas, álbuns e artistas"
 
-#: apps/music/src/ui.rs:571
+#: apps/music/src/ui.rs:574
 msgid "No Music Found"
 msgstr "Nenhuma música encontrada"
 
-#: apps/music/src/ui.rs:574 apps/music/src/ui.rs:585 apps/music/src/ui.rs:587
+#: apps/music/src/ui.rs:577 apps/music/src/ui.rs:588 apps/music/src/ui.rs:590
 msgid "Scanning Library…"
 msgstr "Analisando a biblioteca…"
 
-#: apps/music/src/ui.rs:733
+#: apps/music/src/ui.rs:737
 msgid "Playback is unavailable (GStreamer could not be initialised)"
 msgstr ""
 "A reprodução não está disponível (o GStreamer não pôde ser inicializado)"
 
-#: apps/music/src/ui.rs:932
+#: apps/music/src/ui.rs:936
 msgid "{n} song found"
 msgid_plural "{n} songs found"
 msgstr[0] "{n} música encontrada"
 msgstr[1] "{n} músicas encontradas"
 
-#: apps/music/src/ui.rs:954
+#: apps/music/src/ui.rs:958
 msgid "Library updated: {n} song"
 msgid_plural "Library updated: {n} songs"
 msgstr[0] "Biblioteca atualizada: {n} música"
 msgstr[1] "Biblioteca atualizada: {n} músicas"
 
-#: apps/music/src/ui.rs:965
+#: apps/music/src/ui.rs:969
 msgid "No changes found"
 msgstr "Nenhuma alteração encontrada"
 
-#: apps/music/src/ui.rs:1111
+#: apps/music/src/ui.rs:1115
 msgid "Will play next"
 msgstr "Será reproduzida em seguida"
 
-#: apps/music/src/ui.rs:1113
+#: apps/music/src/ui.rs:1117
 msgid "Added to queue"
 msgstr "Adicionado à fila"
 
-#: apps/music/src/ui.rs:1311
+#: apps/music/src/ui.rs:1315
 msgid "Cannot play “{name}”"
 msgstr "Não foi possível reproduzir “{name}”"
 
-#: apps/music/src/ui.rs:1396
+#: apps/music/src/ui.rs:1400
 msgid "Playing music"
 msgstr "Reproduzindo música"
 
-#: apps/music/src/ui.rs:1482
+#: apps/music/src/ui.rs:1486
 msgid "Now playing: {}"
 msgstr "Reproduzindo agora: {}"
 
-#: apps/music/src/ui.rs:1484
+#: apps/music/src/ui.rs:1488
 msgid "Now playing: {title} by {artist}"
 msgstr "Reproduzindo agora: {title} de {artist}"
 
-#: apps/music/src/ui.rs:1565
+#: apps/music/src/ui.rs:1569
 msgid "Repeat: Off"
 msgstr "Repetir: desligado"
 
-#: apps/music/src/ui.rs:1566
+#: apps/music/src/ui.rs:1570
 msgid "Repeat: All"
 msgstr "Repetir: todas"
 
-#: apps/music/src/ui.rs:1567
+#: apps/music/src/ui.rs:1571
 msgid "Repeat: Song"
 msgstr "Repetir: música"
 
-#: apps/music/src/ui.rs:2180
+#: apps/music/src/ui.rs:2184
 msgid "Music files in {} will appear here."
 msgstr "Os arquivos de música em {} aparecerão aqui."
 
-#: apps/music/src/ui.rs:2273
+#: apps/music/src/ui.rs:2277
 msgid "Add Music Folder"
 msgstr "Adicionar pasta de músicas"
 
-#: apps/music/src/ui.rs:2547 apps/music/src/ui.rs:2550
+#: apps/music/src/ui.rs:2551 apps/music/src/ui.rs:2554
 msgid "Show Now Playing"
 msgstr "Mostrar o que está tocando"
 
-#: apps/music/src/ui.rs:2656 apps/music/src/ui.rs:2662
+#: apps/music/src/ui.rs:2660 apps/music/src/ui.rs:2666
 msgid "More Controls"
 msgstr "Mais controles"
 
@@ -12987,7 +12987,7 @@ msgid "Enter routes as destination/prefix and gateway, separated by commas"
 msgstr "Digite as rotas como destino/prefixo e gateway, separadas por vírgulas"
 
 #: apps/settings/src/ui/netedit.rs:222 apps/settings/src/ui/network.rs:197
-#: apps/weather/src/ui.rs:386 crates/helix-app-common/src/errors.rs:336
+#: apps/weather/src/ui.rs:390 crates/helix-app-common/src/errors.rs:336
 msgid "Details"
 msgstr "Detalhes"
 
@@ -15623,11 +15623,11 @@ msgstr "Quadro anterior (pausado)"
 msgid "Next Frame (paused)"
 msgstr "Próximo quadro (pausado)"
 
-#: apps/video-player/src/ui.rs:176
+#: apps/video-player/src/ui.rs:176 apps/weather/src/ui.rs:1862
 msgid "Take Screenshot"
 msgstr "Capturar tela"
 
-#: apps/video-player/src/ui.rs:292
+#: apps/video-player/src/ui.rs:292 apps/weather/src/ui.rs:287
 msgid "Take _Screenshot"
 msgstr "Capturar _tela"
 
@@ -15742,15 +15742,15 @@ msgstr "Nenhuma"
 msgid "Load Subtitle File…"
 msgstr "Carregar arquivo de legendas…"
 
-#: apps/video-player/src/ui.rs:1908
+#: apps/video-player/src/ui.rs:1908 apps/weather/src/ui.rs:1221
 msgid "Screenshot saved as “{}”"
 msgstr "Captura de tela salva como “{}”"
 
-#: apps/video-player/src/ui.rs:1914
+#: apps/video-player/src/ui.rs:1914 apps/weather/src/ui.rs:1227
 msgid "Could not save screenshot: {err}"
 msgstr "Não foi possível salvar a captura de tela: {err}"
 
-#: apps/video-player/src/ui.rs:1915
+#: apps/video-player/src/ui.rs:1915 apps/weather/src/ui.rs:1228
 msgid "Could not save screenshot"
 msgstr "Não foi possível salvar a captura de tela"
 
@@ -15792,7 +15792,7 @@ msgstr "clima"
 msgid "The weather service reported an error"
 msgstr "O serviço meteorológico relatou um erro"
 
-#: apps/weather/src/api.rs:183 apps/weather/src/ui.rs:1550
+#: apps/weather/src/api.rs:183 apps/weather/src/ui.rs:1640
 msgid "Unexpected forecast data: {e}"
 msgstr "Dados de previsão inesperados: {e}"
 
@@ -15804,29 +15804,40 @@ msgstr "Hora inválida nos dados de previsão"
 msgid "Forecast data has no current temperature"
 msgstr "Os dados de previsão não têm temperatura atual"
 
-#: apps/weather/src/api.rs:245 apps/weather/src/ui.rs:1551
+#: apps/weather/src/api.rs:245 apps/weather/src/ui.rs:1641
 msgid "Unexpected search data: {e}"
 msgstr "Dados de pesquisa inesperados: {e}"
 
-#: apps/weather/src/api.rs:262 apps/weather/src/ui.rs:1542
+#: apps/weather/src/api.rs:262 apps/weather/src/ui.rs:1632
 msgid "Could not read response: {e}"
 msgstr "Não foi possível ler a resposta: {e}"
 
-#: apps/weather/src/api.rs:267 apps/weather/src/ui.rs:1545
+#: apps/weather/src/api.rs:267 apps/weather/src/ui.rs:1635
 msgid "The weather service returned HTTP {code}"
 msgstr "O serviço meteorológico retornou HTTP {code}"
 
-#: apps/weather/src/api.rs:270 apps/weather/src/ui.rs:1539
+#: apps/weather/src/api.rs:270 apps/weather/src/ui.rs:1629
 msgid "Could not connect to the weather service: {t}"
 msgstr "Não foi possível conectar ao serviço meteorológico: {t}"
 
-#: apps/weather/src/autoloc.rs:60 apps/weather/src/ui.rs:1552
+#: apps/weather/src/autoloc.rs:60 apps/weather/src/ui.rs:1642
 msgid "Unexpected reverse geocoding data: {e}"
 msgstr "Dados de geocodificação reversa inesperados: {e}"
 
 #: apps/weather/src/autoloc.rs:78
 msgid "No place name at this position"
 msgstr "Nenhum nome de lugar nesta posição"
+
+#: apps/weather/src/screenshot.rs:19 apps/weather/src/ui.rs:133
+#: apps/weather/src/ui.rs:184 apps/weather/src/ui.rs:204
+#: apps/weather/src/ui.rs:1007
+msgid "Weather"
+msgstr "Clima"
+
+#. Translators: a screenshot's file name, e.g. "Weather in Berlin 2026-11-19 14-05-09".
+#: apps/weather/src/screenshot.rs:23
+msgid "Weather in {place} {time}"
+msgstr "Clima em {place} {time}"
 
 #: apps/weather/src/timefmt.rs:166
 msgid "Updated just now"
@@ -15849,12 +15860,7 @@ msgstr[1] "Atualizado há {n} horas"
 msgid "Updated {weekday} {day} {month}, {time}"
 msgstr "Atualizado em {weekday}, {day} de {month}, {time}"
 
-#: apps/weather/src/ui.rs:130 apps/weather/src/ui.rs:181
-#: apps/weather/src/ui.rs:201 apps/weather/src/ui.rs:981
-msgid "Weather"
-msgstr "Clima"
-
-#: apps/weather/src/ui.rs:131
+#: apps/weather/src/ui.rs:134
 msgid ""
 "Show weather conditions and forecast\n"
 "\n"
@@ -15866,159 +15872,159 @@ msgstr ""
 "Dados meteorológicos do Open-Meteo.com (CC BY 4.0, uso não comercial). Os "
 "nomes de lugares podem vir dos © colaboradores do OpenStreetMap (Nominatim)."
 
-#: apps/weather/src/ui.rs:206
+#: apps/weather/src/ui.rs:209
 msgid "Search for a city"
 msgstr "Pesquise uma cidade"
 
-#: apps/weather/src/ui.rs:227
+#: apps/weather/src/ui.rs:230
 msgid "Saved Locations"
 msgstr "Locais salvos"
 
-#: apps/weather/src/ui.rs:248
+#: apps/weather/src/ui.rs:251
 msgid "Automatic Location"
 msgstr "Localização automática"
 
-#: apps/weather/src/ui.rs:249
+#: apps/weather/src/ui.rs:252
 msgid "Show the weather where you are"
 msgstr "Mostrar o tempo onde você está"
 
-#: apps/weather/src/ui.rs:268
+#: apps/weather/src/ui.rs:271
 msgid "Places"
 msgstr "Lugares"
 
-#: apps/weather/src/ui.rs:274
+#: apps/weather/src/ui.rs:277
 msgid "_Celsius"
 msgstr "_Celsius"
 
-#: apps/weather/src/ui.rs:278
+#: apps/weather/src/ui.rs:281
 msgid "_Fahrenheit"
 msgstr "_Fahrenheit"
 
-#: apps/weather/src/ui.rs:281
+#: apps/weather/src/ui.rs:284
 msgid "Temperature Unit"
 msgstr "Unidade de temperatura"
 
-#: apps/weather/src/ui.rs:293
+#: apps/weather/src/ui.rs:297
 msgid "_About Weather"
 msgstr "_Sobre o Clima"
 
-#: apps/weather/src/ui.rs:312
+#: apps/weather/src/ui.rs:316
 msgid "Updating Forecast"
 msgstr "Atualizando a previsão"
 
-#: apps/weather/src/ui.rs:322 apps/weather/src/ui.rs:364
+#: apps/weather/src/ui.rs:326 apps/weather/src/ui.rs:368
 msgid "Search Locations"
 msgstr "Pesquisar locais"
 
-#: apps/weather/src/ui.rs:327
+#: apps/weather/src/ui.rs:331
 msgid "Use Current Location"
 msgstr "Usar a localização atual"
 
-#: apps/weather/src/ui.rs:340
+#: apps/weather/src/ui.rs:344
 msgid "Add a Location"
 msgstr "Adicionar um local"
 
-#: apps/weather/src/ui.rs:341
+#: apps/weather/src/ui.rs:345
 msgid "Search for a city to see its weather."
 msgstr "Pesquise uma cidade para ver o tempo nela."
 
-#: apps/weather/src/ui.rs:353
+#: apps/weather/src/ui.rs:357
 msgid "Loading Forecast"
 msgstr "Carregando a previsão"
 
-#: apps/weather/src/ui.rs:393 apps/weather/src/ui.rs:1073
+#: apps/weather/src/ui.rs:397 apps/weather/src/ui.rs:1099
 msgid "Could Not Load the Forecast"
 msgstr "Não foi possível carregar a previsão"
 
 #. Translators: {provider} is a link to the weather service.
-#: apps/weather/src/ui.rs:418
+#: apps/weather/src/ui.rs:422
 msgid "Weather data by {provider}"
 msgstr "Dados meteorológicos de {provider}"
 
-#: apps/weather/src/ui.rs:770
+#: apps/weather/src/ui.rs:796
 msgid "Location lookup failed"
 msgstr "Falha ao determinar a localização"
 
-#: apps/weather/src/ui.rs:785
+#: apps/weather/src/ui.rs:811
 msgid "Could Not Find Your Location"
 msgstr "Não foi possível encontrar sua localização"
 
-#: apps/weather/src/ui.rs:790
+#: apps/weather/src/ui.rs:816
 msgid "Turn on location services, or search for a place instead."
 msgstr "Ative os serviços de localização ou pesquise um lugar."
 
-#: apps/weather/src/ui.rs:853
+#: apps/weather/src/ui.rs:879
 msgid "Current location"
 msgstr "Localização atual"
 
-#: apps/weather/src/ui.rs:854
+#: apps/weather/src/ui.rs:880
 msgid "Current location • {sub}"
 msgstr "Localização atual • {sub}"
 
-#: apps/weather/src/ui.rs:954 apps/weather/src/ui.rs:956
+#: apps/weather/src/ui.rs:980 apps/weather/src/ui.rs:982
 msgid "No locations found"
 msgstr "Nenhum local encontrado"
 
-#: apps/weather/src/ui.rs:962
+#: apps/weather/src/ui.rs:988
 msgid "{n} location found"
 msgid_plural "{n} locations found"
 msgstr[0] "{n} local encontrado"
 msgstr[1] "{n} locais encontrados"
 
-#: apps/weather/src/ui.rs:1034
+#: apps/weather/src/ui.rs:1060
 msgid "The forecast request failed unexpectedly"
 msgstr "A solicitação de previsão falhou inesperadamente"
 
-#: apps/weather/src/ui.rs:1049
+#: apps/weather/src/ui.rs:1075
 msgid "Back online, forecast updated"
 msgstr "On-line novamente, previsão atualizada"
 
-#: apps/weather/src/ui.rs:1055
+#: apps/weather/src/ui.rs:1081
 msgid "Forecast updated"
 msgstr "Previsão atualizada"
 
-#: apps/weather/src/ui.rs:1068
+#: apps/weather/src/ui.rs:1094
 msgid "Could not update the forecast. {}"
 msgstr "Não foi possível atualizar a previsão. {}"
 
-#: apps/weather/src/ui.rs:1095
+#: apps/weather/src/ui.rs:1121
 msgid "Offline — showing the last forecast ({})"
 msgstr "Off-line — mostrando a última previsão ({})"
 
-#: apps/weather/src/ui.rs:1102
+#: apps/weather/src/ui.rs:1128
 msgid "Offline, showing the last forecast"
 msgstr "Off-line, mostrando a última previsão"
 
-#: apps/weather/src/ui.rs:1164 apps/weather/src/ui.rs:1377
-#: apps/weather/src/ui.rs:1764
+#: apps/weather/src/ui.rs:1254 apps/weather/src/ui.rs:1467
+#: apps/weather/src/ui.rs:1869
 msgid "Hourly Forecast"
 msgstr "Previsão por hora"
 
-#: apps/weather/src/ui.rs:1170
+#: apps/weather/src/ui.rs:1260
 msgid "Daily Forecast"
 msgstr "Previsão diária"
 
-#: apps/weather/src/ui.rs:1288
+#: apps/weather/src/ui.rs:1378
 msgid "Feels like {}"
 msgstr "Sensação térmica de {}"
 
-#: apps/weather/src/ui.rs:1310
+#: apps/weather/src/ui.rs:1400
 msgid "Wind"
 msgstr "Vento"
 
-#: apps/weather/src/ui.rs:1316
+#: apps/weather/src/ui.rs:1406
 msgid "Humidity"
 msgstr "Umidade"
 
-#: apps/weather/src/ui.rs:1325
+#: apps/weather/src/ui.rs:1415
 msgid "Pressure"
 msgstr "Pressão"
 
-#: apps/weather/src/ui.rs:1390
+#: apps/weather/src/ui.rs:1480
 msgid "Now"
 msgstr "Agora"
 
-#: apps/weather/src/ui.rs:1544
+#: apps/weather/src/ui.rs:1634
 msgid ""
 "Could not reach the weather service. Check your internet connection and try "
 "again."
@@ -16026,54 +16032,54 @@ msgstr ""
 "Não foi possível acessar o serviço meteorológico. Verifique sua conexão com "
 "a internet e tente novamente."
 
-#: apps/weather/src/ui.rs:1549
+#: apps/weather/src/ui.rs:1639
 msgid "The weather service is having problems. Try again later."
 msgstr ""
 "O serviço meteorológico está com problemas. Tente novamente mais tarde."
 
-#: apps/weather/src/ui.rs:1554
+#: apps/weather/src/ui.rs:1644
 msgid "The weather service sent data that could not be read. Try again later."
 msgstr ""
 "O serviço meteorológico enviou dados que não puderam ser lidos. Tente "
 "novamente mais tarde."
 
-#: apps/weather/src/ui.rs:1556
+#: apps/weather/src/ui.rs:1646
 msgid "The weather service could not answer this request. Try again later."
 msgstr ""
 "O serviço meteorológico não pôde responder a esta solicitação. Tente "
 "novamente mais tarde."
 
 #. Translators: an hour of the forecast for screen readers, "15:00, 12°, Partly cloudy".
-#: apps/weather/src/ui.rs:1574
+#: apps/weather/src/ui.rs:1664
 msgid "{time}, {temperature}, {sky}"
 msgstr "{time}, {temperature}, {sky}"
 
-#: apps/weather/src/ui.rs:1581 apps/weather/src/ui.rs:1599
+#: apps/weather/src/ui.rs:1671 apps/weather/src/ui.rs:1689
 msgid ", {}% chance of precipitation"
 msgstr ", {}% de chance de precipitação"
 
 #. Translators: a day of the forecast for screen readers, "Tomorrow, Slight rain".
-#: apps/weather/src/ui.rs:1597
+#: apps/weather/src/ui.rs:1687
 msgid "{day}, {sky}"
 msgstr "{day}, {sky}"
 
-#: apps/weather/src/ui.rs:1601
+#: apps/weather/src/ui.rs:1691
 msgid ", low {low}, high {high}"
 msgstr ", mínima {low}, máxima {high}"
 
-#: apps/weather/src/ui.rs:1740
+#: apps/weather/src/ui.rs:1830
 msgid "Remove {place}"
 msgstr "Remover {place}"
 
-#: apps/weather/src/ui.rs:1756
+#: apps/weather/src/ui.rs:1860
 msgid "Search for a Place"
 msgstr "Pesquisar um lugar"
 
-#: apps/weather/src/ui.rs:1766
+#: apps/weather/src/ui.rs:1871
 msgid "Previous or Next Hour"
 msgstr "Hora anterior ou próxima"
 
-#: apps/weather/src/ui.rs:1767
+#: apps/weather/src/ui.rs:1872
 msgid "First or Last Hour"
 msgstr "Primeira ou última hora"
 

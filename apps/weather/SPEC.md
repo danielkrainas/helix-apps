@@ -93,8 +93,15 @@ WMO codes map to a description and a standard symbolic icon
   opening a popover with a search entry, search results and the saved
   locations. End: primary menu and a *Refresh* button (F5 / Ctrl+R).
 - Primary menu (HIG: no *Quit*; Ctrl+Q still quits): *Temperature unit*
-  radio (°C / °F), *Refresh*, *Keyboard Shortcuts* (Ctrl+?, a shortcuts
-  window), *About Weather*.
+  radio (°C / °F), *Refresh*, *Take Screenshot*, *Keyboard Shortcuts*
+  (Ctrl+?, a shortcuts window), *About Weather*.
+- *Take Screenshot* (Ctrl+Alt+S, as in Videos) saves the whole weather
+  page — all of it, not only the part scrolled into view; without the
+  header bar or banner — at the window's scale on the window's background,
+  as PNG to the XDG Pictures directory (falling back to `$HOME`), named
+  `Weather in <place> <YYYY-MM-DD HH-MM-SS>.png` (an existing name gets
+  ` (2)`, ` (3)` …). A toast reports the file name or the error. It is
+  disabled unless a forecast is shown.
 - **Content** is a stack:
   - *Empty*: `AdwStatusPage` "Add a Location" with a button opening the
     search when no location is saved.
@@ -236,7 +243,7 @@ WMO codes map to a description and a standard symbolic icon
 
 ### Keyboard shortcuts
 `Ctrl+L` / `Ctrl+F` open place search, `F5` / `Ctrl+R` refresh,
-`Ctrl+?` keyboard shortcuts, `Ctrl+Q` quit, `Ctrl+W` close window. In the
+`Ctrl+Alt+S` take screenshot, `Ctrl+?` keyboard shortcuts, `Ctrl+Q` quit, `Ctrl+W` close window. In the
 hourly strip: arrow keys, `Home`, `End`.
 
 ### Command line
