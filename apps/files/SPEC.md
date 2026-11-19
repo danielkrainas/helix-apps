@@ -110,6 +110,11 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
   is the file's), not with GIO's `thumbnail::path` while a folder lists:
   that looks for every file and was most of a big folder's loading time
   (50 000 files: 916 ms with it, 345 ms without; `tests/load_bench.rs`).
+  A video's thumbnail (MIME type `video/*`) is shown with a film strip
+  over it (`ui/filmstrip.rs`): a dark band down each side, about a ninth
+  of the picture's shorter side wide, with rounded sprocket holes cleared
+  to transparent so the view's background shows through. It is drawn
+  when shown, never saved into the shared thumbnail cache.
   A regular file (a remote one's GVfs FUSE path is found on the worker
   thread) with no valid cached thumbnail gets one made
   (`ui/thumbnailer.rs`), at most 2 at a time: the installed thumbnailer

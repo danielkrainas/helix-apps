@@ -4,6 +4,7 @@ use helix_app_common::i18n::tr;
 
 mod dbus;
 mod dialogs;
+mod filmstrip;
 mod jobs;
 mod properties;
 mod sandbox;

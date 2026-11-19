@@ -47,6 +47,8 @@ struct Request {
     make: Option<Source>,
     /// Making the thumbnail (else looking it up).
     making: bool,
+    /// A video's: shown with a film strip over it (`filmstrip.rs`).
+    video: bool,
     img: glib::WeakRef<gtk::Image>,
     item: glib::WeakRef<gtk::ListItem>,
     expected: glib::WeakRef<gio::FileInfo>,
@@ -139,6 +141,7 @@ thread_local! {
 pub fn request(
     uri: String,
     mtime: u64,
+    video: bool,
     make: Option<Source>,
     img: &gtk::Image,
     item: &gtk::ListItem,
@@ -149,6 +152,7 @@ pub fn request(
         mtime,
         make,
         making: false,
+        video,
         img: img.downgrade(),
         item: item.downgrade(),
         expected: expected.downgrade(),
@@ -169,6 +173,24 @@ fn enqueue(req: Request) {
         queue.push_back(req);
     });
     pump();
+}
+
+/// `texture` with a film strip drawn over it.
+fn with_film_strip(texture: &gdk::Texture) -> gdk::Texture {
+    let mut down = gdk::TextureDownloader::new(texture);
+    down.set_format(gdk::MemoryFormat::R8g8b8a8);
+    let (bytes, stride) = down.download_bytes();
+    let (w, h) = (texture.width() as usize, texture.height() as usize);
+    let mut pixels = bytes.to_vec();
+    super::filmstrip::draw(&mut pixels, w, h, stride);
+    gdk::MemoryTexture::new(
+        w as i32,
+        h as i32,
+        gdk::MemoryFormat::R8g8b8a8,
+        &glib::Bytes::from_owned(pixels),
+        stride,
+    )
+    .upcast()
 }
 
 /// What a request's work came to.
@@ -215,7 +237,7 @@ fn pump() {
         });
         let Some(req) = next else { return };
         glib::spawn_future_local(async move {
-            let (uri, mtime, making) = (req.uri.clone(), req.mtime, req.making);
+            let (uri, mtime, making, video) = (req.uri.clone(), req.mtime, req.making, req.video);
             let make = req.make.clone();
             let outcome = gio::spawn_blocking(move || {
                 let bytes = if making {
@@ -233,6 +255,7 @@ fn pump() {
                     }
                 };
                 match gdk::Texture::from_bytes(&glib::Bytes::from_owned(bytes)) {
+                    Ok(t) if video => Outcome::Texture(with_film_strip(&t)),
                     Ok(t) => Outcome::Texture(t),
                     Err(_) => Outcome::Failed,
                 }

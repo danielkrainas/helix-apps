@@ -693,9 +693,15 @@ impl Tab {
                         .and_then(|d| u64::try_from(d.to_unix()).ok())
                     {
                         let make = thumbnail_source(&info, &file, mtime);
+                        let video = info
+                            .content_type()
+                            .or_else(|| info.attribute_string("standard::fast-content-type"))
+                            .and_then(|t| gio::content_type_get_mime_type(&t))
+                            .is_some_and(|m| super::filmstrip::is_video(&m));
                         super::thumbs::request(
                             file.uri().to_string(),
                             mtime,
+                            video,
                             make,
                             &img,
                             item,
