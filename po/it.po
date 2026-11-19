@@ -284,7 +284,7 @@ msgstr "Esci"
 
 #: apps/audio-player/src/ui.rs:217 apps/camera/src/ui.rs:280
 #: apps/disk-usage/src/shortcuts.rs:30 apps/document-viewer/src/shortcuts.rs:11
-#: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:11
+#: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:15
 #: apps/settings/src/ui/apps.rs:600 apps/settings/src/ui/bluetooth.rs:129
 #: apps/settings/src/ui/users.rs:575 apps/text-editor/src/shortcuts.rs:15
 #: apps/web/src/window.rs:2228
@@ -1656,7 +1656,7 @@ msgstr "Mostra {display}"
 #: apps/calendar/src/manage.rs:297 apps/clocks/src/ui.rs:1460
 #: apps/contacts/src/editor.rs:302 apps/disk-usage/src/ui.rs:1005
 #: apps/disks/src/ui.rs:1640 apps/files/src/sorting.rs:43
-#: apps/files/src/ui/tab.rs:190 apps/settings/src/ui/netedit.rs:235
+#: apps/files/src/ui/tab.rs:215 apps/settings/src/ui/netedit.rs:235
 #: apps/settings/src/ui/users.rs:81
 msgid "Name"
 msgstr "Nome"
@@ -1842,7 +1842,7 @@ msgstr "Cerca"
 
 #: apps/calendar/src/shortcuts.rs:16 apps/document-viewer/src/shortcuts.rs:30
 #: apps/files/src/ui/shortcuts.rs:20 apps/help/src/shortcuts.rs:27
-#: apps/image-viewer/src/shortcuts.rs:20 apps/music/src/shortcuts.rs:18
+#: apps/image-viewer/src/shortcuts.rs:30 apps/music/src/shortcuts.rs:18
 #: apps/web/src/shortcuts.rs:28
 msgid "Navigation"
 msgstr "Navigazione"
@@ -1916,7 +1916,7 @@ msgstr "Nuovo evento al cursore dell'ora"
 
 #: apps/calendar/src/shortcuts.rs:45 apps/document-viewer/src/shortcuts.rs:41
 #: apps/document-viewer/src/ui.rs:354 apps/files/src/ui/shortcuts.rs:44
-#: apps/image-viewer/src/shortcuts.rs:32 apps/image-viewer/src/ui.rs:443
+#: apps/image-viewer/src/shortcuts.rs:42 apps/image-viewer/src/ui.rs:443
 #: apps/maps/src/shortcuts.rs:24 apps/terminal/src/shortcuts.rs:51
 #: apps/terminal/src/window.rs:190 apps/text-editor/src/shortcuts.rs:59
 #: apps/text-editor/src/window.rs:161 apps/web/src/shortcuts.rs:62
@@ -1926,7 +1926,7 @@ msgstr "Aumenta ingrandimento"
 
 #: apps/calendar/src/shortcuts.rs:46 apps/document-viewer/src/shortcuts.rs:44
 #: apps/document-viewer/src/ui.rs:353 apps/files/src/ui/shortcuts.rs:47
-#: apps/image-viewer/src/shortcuts.rs:35 apps/image-viewer/src/ui.rs:425
+#: apps/image-viewer/src/shortcuts.rs:45 apps/image-viewer/src/ui.rs:425
 #: apps/maps/src/shortcuts.rs:28 apps/terminal/src/shortcuts.rs:54
 #: apps/terminal/src/window.rs:188 apps/text-editor/src/shortcuts.rs:62
 #: apps/text-editor/src/window.rs:152 apps/web/src/shortcuts.rs:66
@@ -2005,7 +2005,7 @@ msgid "Search Events"
 msgstr "Cerca eventi"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:950 apps/settings/src/ui/mod.rs:227
+#: apps/files/src/ui/tab.rs:978 apps/settings/src/ui/mod.rs:227
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:739
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
@@ -2340,7 +2340,7 @@ msgstr "_Informazioni su Fotocamera"
 
 #: apps/camera/src/ui.rs:274 apps/camera/src/ui.rs:278
 #: apps/contacts/src/ui.rs:1428 apps/files/src/ui/shortcuts.rs:72
-#: apps/image-viewer/src/shortcuts.rs:13 apps/terminal/src/shortcuts.rs:29
+#: apps/image-viewer/src/shortcuts.rs:17 apps/terminal/src/shortcuts.rs:29
 msgid "Copy"
 msgstr "Copia"
 
@@ -2595,7 +2595,7 @@ msgid "Character map and emoji picker"
 msgstr "Mappa caratteri e selettore emoji"
 
 #: apps/characters/src/ui.rs:199 apps/contacts/src/ui.rs:1102
-#: apps/files/src/ui/tab.rs:1181 apps/logs/src/ui.rs:719
+#: apps/files/src/ui/tab.rs:1209 apps/logs/src/ui.rs:719
 #: apps/text-editor/src/doc.rs:866
 msgid "No results"
 msgstr "Nessun risultato"
@@ -3229,7 +3229,7 @@ msgid "{label} deleted"
 msgstr "{label} eliminato"
 
 #: apps/clocks/src/ui.rs:1871 apps/files/src/ui/window.rs:228
-#: apps/files/src/ui/window.rs:1308 apps/image-viewer/src/ui.rs:1579
+#: apps/files/src/ui/window.rs:1308 apps/image-viewer/src/ui.rs:1662
 msgid "_Undo"
 msgstr "_Annulla"
 
@@ -3567,7 +3567,7 @@ msgstr "Compleanno"
 msgid "Anniversary"
 msgstr "Anniversario"
 
-#: apps/contacts/src/editor.rs:462 apps/image-viewer/src/shortcuts.rs:8
+#: apps/contacts/src/editor.rs:462 apps/image-viewer/src/shortcuts.rs:12
 #: apps/settings/src/ui/appearance.rs:508 apps/settings/src/ui/users.rs:441
 msgid "Images"
 msgstr "Immagini"
@@ -3992,7 +3992,7 @@ msgid "storage"
 msgstr "archiviazione"
 
 #: apps/disk-usage/src/mounts.rs:155 apps/files/src/pathbar.rs:25
-#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1235
+#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1263
 #: apps/files/src/ui/window.rs:139 apps/settings/src/bluez.rs:229
 msgid "Computer"
 msgstr "Computer"
@@ -4037,7 +4037,7 @@ msgid "Copy Path"
 msgstr "Copia percorso"
 
 #: apps/disk-usage/src/shortcuts.rs:32 apps/files/src/ui/shortcuts.rs:60
-#: apps/image-viewer/src/shortcuts.rs:14
+#: apps/image-viewer/src/shortcuts.rs:18
 msgid "Move to Trash"
 msgstr "Sposta nel cestino"
 
@@ -4194,7 +4194,7 @@ msgstr[1] "{n} elementi"
 
 #: apps/disk-usage/src/ui.rs:1006 apps/disks/src/ui.rs:358
 #: apps/disks/src/ui.rs:453 apps/files/src/sorting.rs:44
-#: apps/files/src/ui/properties.rs:138 apps/files/src/ui/tab.rs:191
+#: apps/files/src/ui/properties.rs:138 apps/files/src/ui/tab.rs:216
 #: apps/fonts/src/fontinfo.rs:287
 msgid "Size"
 msgstr "Dimensione"
@@ -4207,7 +4207,7 @@ msgstr "Contenuto"
 
 #: apps/disk-usage/src/ui.rs:1008 apps/document-viewer/src/dialogs.rs:104
 #: apps/files/src/sorting.rs:46 apps/files/src/ui/properties.rs:187
-#: apps/files/src/ui/tab.rs:193 apps/image-viewer/src/ui.rs:585
+#: apps/files/src/ui/tab.rs:218 apps/image-viewer/src/ui.rs:585
 msgid "Modified"
 msgstr "Modificato"
 
@@ -4273,7 +4273,7 @@ msgstr "Seleziona la cartella da analizzare"
 msgid "Only local folders can be scanned"
 msgstr "È possibile analizzare solo cartelle locali"
 
-#: apps/disk-usage/src/ui.rs:1642 apps/image-viewer/src/ui.rs:936
+#: apps/disk-usage/src/ui.rs:1642 apps/image-viewer/src/ui.rs:1019
 msgid "Could not open folder: {}"
 msgstr "Impossibile aprire la cartella: {}"
 
@@ -4516,7 +4516,7 @@ msgstr "Dispositivo ZFS"
 #: apps/disks/src/model.rs:303 apps/disks/src/parttypes.rs:171
 #: apps/disks/src/parttypes.rs:203 apps/disks/src/smart.rs:104
 #: apps/disks/src/ui.rs:1872 apps/disks/src/ui.rs:1882
-#: apps/files/src/ui/tab.rs:54 apps/settings/src/ui/about.rs:38
+#: apps/files/src/ui/tab.rs:77 apps/settings/src/ui/about.rs:38
 #: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
 #: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
 #: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
@@ -5316,7 +5316,7 @@ msgstr "Nome del volume"
 
 #: apps/disks/src/ui.rs:1365 apps/disks/src/ui.rs:1634
 #: apps/disks/src/ui.rs:1906 apps/files/src/sorting.rs:45
-#: apps/files/src/ui/properties.rs:130 apps/files/src/ui/tab.rs:192
+#: apps/files/src/ui/properties.rs:130 apps/files/src/ui/tab.rs:217
 #: apps/settings/src/ui/bluetooth.rs:513 apps/settings/src/ui/network.rs:529
 #: apps/system-monitor/src/fs_view.rs:25
 msgid "Type"
@@ -6036,7 +6036,7 @@ msgstr "_Ritaglia"
 
 #: apps/document-scanner/src/ui.rs:227 apps/document-viewer/src/ui.rs:920
 #: apps/files/src/ui/window.rs:1587 apps/image-viewer/src/ui.rs:305
-#: apps/terminal/src/window.rs:727
+#: apps/image-viewer/src/ui.rs:784 apps/terminal/src/window.rs:727
 msgid "_Copy"
 msgstr "_Copia"
 
@@ -6091,12 +6091,12 @@ msgstr ""
 "ridimensionano, Ctrl rende i passi più ampi"
 
 #: apps/document-scanner/src/ui.rs:447 apps/document-viewer/src/shortcuts.rs:46
-#: apps/image-viewer/src/shortcuts.rs:41 apps/image-viewer/src/ui.rs:404
+#: apps/image-viewer/src/shortcuts.rs:51 apps/image-viewer/src/ui.rs:404
 msgid "Rotate Left"
 msgstr "Ruota a sinistra"
 
 #: apps/document-scanner/src/ui.rs:452 apps/document-viewer/src/shortcuts.rs:47
-#: apps/image-viewer/src/shortcuts.rs:40 apps/image-viewer/src/ui.rs:410
+#: apps/image-viewer/src/shortcuts.rs:50 apps/image-viewer/src/ui.rs:410
 msgid "Rotate Right"
 msgstr "Ruota a destra"
 
@@ -6464,7 +6464,7 @@ msgstr "Sì"
 
 #: apps/document-viewer/src/dialogs.rs:135
 #: apps/document-viewer/src/shortcuts.rs:13 apps/files/src/ui/properties.rs:266
-#: apps/files/src/ui/shortcuts.rs:62 apps/image-viewer/src/shortcuts.rs:16
+#: apps/files/src/ui/shortcuts.rs:62 apps/image-viewer/src/shortcuts.rs:20
 #: apps/image-viewer/src/ui.rs:615 apps/system-monitor/src/proc_view.rs:438
 #: apps/system-monitor/src/proc_view.rs:441
 #: apps/system-monitor/src/shortcuts.rs:41
@@ -6554,7 +6554,7 @@ msgid "Documents"
 msgstr "Documenti"
 
 #: apps/document-viewer/src/shortcuts.rs:10 apps/files/src/ui/shortcuts.rs:13
-#: apps/image-viewer/src/shortcuts.rs:10 apps/terminal/src/shortcuts.rs:14
+#: apps/image-viewer/src/shortcuts.rs:14 apps/terminal/src/shortcuts.rs:14
 #: apps/text-editor/src/shortcuts.rs:14 apps/web/src/shortcuts.rs:11
 msgid "New Window"
 msgstr "Nuova finestra"
@@ -6614,7 +6614,7 @@ msgid "Forward"
 msgstr "Avanti"
 
 #: apps/document-viewer/src/shortcuts.rs:38 apps/files/src/ui/shortcuts.rs:39
-#: apps/image-viewer/src/shortcuts.rs:29 apps/terminal/src/shortcuts.rs:48
+#: apps/image-viewer/src/shortcuts.rs:39 apps/terminal/src/shortcuts.rs:48
 #: apps/text-editor/src/shortcuts.rs:56 apps/video-player/src/ui.rs:166
 #: apps/web/src/shortcuts.rs:59
 msgid "View"
@@ -6629,7 +6629,7 @@ msgid "Night Mode"
 msgstr "Modalità notte"
 
 #: apps/document-viewer/src/shortcuts.rs:50
-#: apps/image-viewer/src/shortcuts.rs:42 apps/image-viewer/src/ui.rs:450
+#: apps/image-viewer/src/shortcuts.rs:52 apps/image-viewer/src/ui.rs:450
 #: apps/terminal/src/shortcuts.rs:23 apps/video-player/src/ui.rs:168
 #: apps/web/src/shortcuts.rs:70
 msgid "Fullscreen"
@@ -7042,7 +7042,7 @@ msgid "Recent"
 msgstr "Recenti"
 
 #: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:116
-#: apps/files/src/ui/tab.rs:1245 apps/settings/src/bluez.rs:235
+#: apps/files/src/ui/tab.rs:1273 apps/settings/src/bluez.rs:235
 #: apps/settings/src/panels.rs:60 apps/system-monitor/src/res_view.rs:385
 msgid "Network"
 msgstr "Rete"
@@ -7191,7 +7191,7 @@ msgstr "Nessuna applicazione installata può aprire questo file"
 msgid "Always use for “{desc}” files"
 msgstr "Usa sempre per i file «{desc}»"
 
-#: apps/files/src/ui/dialogs.rs:463 apps/image-viewer/src/shortcuts.rs:12
+#: apps/files/src/ui/dialogs.rs:463 apps/image-viewer/src/shortcuts.rs:16
 msgid "Open With"
 msgstr "Apri con"
 
@@ -7205,7 +7205,7 @@ msgid_plural "{n} applications"
 msgstr[0] "{n} applicazione"
 msgstr[1] "{n} applicazioni"
 
-#: apps/files/src/ui/dialogs.rs:514 apps/image-viewer/src/ui.rs:1525
+#: apps/files/src/ui/dialogs.rs:514 apps/image-viewer/src/ui.rs:1608
 msgid "Could not open: {}"
 msgstr "Impossibile aprire: {}"
 
@@ -7253,7 +7253,7 @@ msgstr "Griglia"
 msgid "List"
 msgstr "Elenco"
 
-#: apps/files/src/ui/dialogs.rs:658 apps/image-viewer/src/shortcuts.rs:45
+#: apps/files/src/ui/dialogs.rs:658 apps/image-viewer/src/shortcuts.rs:55
 #: apps/image-viewer/src/ui.rs:457
 msgid "Show Thumbnails"
 msgstr "Mostra miniature"
@@ -7337,23 +7337,23 @@ msgstr "…e altri {}"
 msgid "Some Items Could Not Be Processed"
 msgstr "Non è stato possibile elaborare alcuni elementi"
 
-#: apps/files/src/ui/mod.rs:341
+#: apps/files/src/ui/mod.rs:343
 msgid "Always open a new window"
 msgstr "Apre sempre una nuova finestra"
 
-#: apps/files/src/ui/mod.rs:349
+#: apps/files/src/ui/mod.rs:351
 msgid "Select the given items in their parent folders"
 msgstr "Seleziona gli elementi indicati nelle rispettive cartelle superiori"
 
-#: apps/files/src/ui/mod.rs:357
+#: apps/files/src/ui/mod.rs:359
 msgid "Quit the running instance"
 msgstr "Chiude l'istanza in esecuzione"
 
-#: apps/files/src/ui/mod.rs:360
+#: apps/files/src/ui/mod.rs:362
 msgid "Access and organize files"
 msgstr "Accede ai file e li organizza"
 
-#: apps/files/src/ui/mod.rs:360 apps/files/src/ui/window.rs:156
+#: apps/files/src/ui/mod.rs:362 apps/files/src/ui/window.rs:156
 #: apps/files/src/ui/window.rs:456
 msgid "Files"
 msgstr "File"
@@ -7556,7 +7556,7 @@ msgstr "Modifica"
 msgid "Invert Selection"
 msgstr "Inverti selezione"
 
-#: apps/files/src/ui/shortcuts.rs:71 apps/files/src/ui/tab.rs:102
+#: apps/files/src/ui/shortcuts.rs:71 apps/files/src/ui/tab.rs:125
 msgid "Cut"
 msgstr "Taglia"
 
@@ -7630,69 +7630,69 @@ msgstr "Rinomina segnalibro"
 msgid "_Rename"
 msgstr "_Rinomina"
 
-#: apps/files/src/ui/tab.rs:52 apps/image-viewer/src/ui.rs:583
+#: apps/files/src/ui/tab.rs:75 apps/image-viewer/src/ui.rs:583
 msgid "Folder"
 msgstr "Cartella"
 
-#: apps/files/src/ui/tab.rs:233
+#: apps/files/src/ui/tab.rs:258
 msgid "_Try Again"
 msgstr "_Riprova"
 
-#: apps/files/src/ui/tab.rs:243
+#: apps/files/src/ui/tab.rs:268
 msgid "Loading folder"
 msgstr "Caricamento della cartella"
 
-#: apps/files/src/ui/tab.rs:894
+#: apps/files/src/ui/tab.rs:922
 msgid "Unable to access location: {}"
 msgstr "Impossibile accedere alla posizione: {}"
 
-#: apps/files/src/ui/tab.rs:927
+#: apps/files/src/ui/tab.rs:955
 msgid "Unable to Open Folder"
 msgstr "Impossibile aprire la cartella"
 
-#: apps/files/src/ui/tab.rs:935
+#: apps/files/src/ui/tab.rs:963
 msgid "Unable to open folder: {}"
 msgstr "Impossibile aprire la cartella: {}"
 
-#: apps/files/src/ui/tab.rs:952
+#: apps/files/src/ui/tab.rs:980
 msgid "Try a different search."
 msgstr "Provare una ricerca diversa."
 
-#: apps/files/src/ui/tab.rs:955
+#: apps/files/src/ui/tab.rs:983
 msgid "Trash is Empty"
 msgstr "Il cestino è vuoto"
 
-#: apps/files/src/ui/tab.rs:959
+#: apps/files/src/ui/tab.rs:987
 msgid "Folder is Empty"
 msgstr "La cartella è vuota"
 
-#: apps/files/src/ui/tab.rs:1183
+#: apps/files/src/ui/tab.rs:1211
 msgid "Search finished: {n} item found"
 msgid_plural "Search finished: {n} items found"
 msgstr[0] "Ricerca terminata: {n} elemento trovato"
 msgstr[1] "Ricerca terminata: {n} elementi trovati"
 
-#: apps/files/src/ui/tab.rs:1209
+#: apps/files/src/ui/tab.rs:1237
 msgid "On This Computer"
 msgstr "Su questo computer"
 
-#: apps/files/src/ui/tab.rs:1241
+#: apps/files/src/ui/tab.rs:1269
 msgid "Networks"
 msgstr "Reti"
 
-#: apps/files/src/ui/tab.rs:1246
+#: apps/files/src/ui/tab.rs:1274
 msgid "Browse the local network"
 msgstr "Esplora la rete locale"
 
-#: apps/files/src/ui/tab.rs:1274
+#: apps/files/src/ui/tab.rs:1302
 msgid "Not mounted"
 msgstr "Non montato"
 
-#: apps/files/src/ui/tab.rs:1287
+#: apps/files/src/ui/tab.rs:1315
 msgid "Connect to Server"
 msgstr "Connetti al server"
 
-#: apps/files/src/ui/tab.rs:1291
+#: apps/files/src/ui/tab.rs:1319
 msgid "Server Address"
 msgstr "Indirizzo del server"
 
@@ -7879,6 +7879,7 @@ msgid "_Delete From Trash…"
 msgstr "_Elimina dal cestino…"
 
 #: apps/files/src/ui/window.rs:1579 apps/image-viewer/src/ui.rs:301
+#: apps/image-viewer/src/ui.rs:787
 msgid "Open _With…"
 msgstr "Apri _con…"
 
@@ -8551,48 +8552,56 @@ msgstr "Nessuna cartella superiore"
 msgid "No file name"
 msgstr "Nessun nome di file"
 
-#: apps/image-viewer/src/shortcuts.rs:15 apps/image-viewer/src/ui.rs:416
+#: apps/image-viewer/src/shortcuts.rs:19 apps/image-viewer/src/ui.rs:416
 msgid "Save Rotation"
 msgstr "Salva rotazione"
 
-#: apps/image-viewer/src/shortcuts.rs:22 apps/image-viewer/src/ui.rs:376
+#: apps/image-viewer/src/shortcuts.rs:21 apps/image-viewer/src/shortcuts.rs:23
+msgid "Image Menu"
+msgstr "Menu dell’immagine"
+
+#: apps/image-viewer/src/shortcuts.rs:24 apps/maps/src/shortcuts.rs:40
+msgid "Secondary click or long press"
+msgstr "Clic secondario o pressione prolungata"
+
+#: apps/image-viewer/src/shortcuts.rs:32 apps/image-viewer/src/ui.rs:376
 msgid "Previous Image"
 msgstr "Immagine precedente"
 
-#: apps/image-viewer/src/shortcuts.rs:23 apps/image-viewer/src/ui.rs:382
+#: apps/image-viewer/src/shortcuts.rs:33 apps/image-viewer/src/ui.rs:382
 msgid "Next Image"
 msgstr "Immagine successiva"
 
-#: apps/image-viewer/src/shortcuts.rs:24
+#: apps/image-viewer/src/shortcuts.rs:34
 msgid "First Image"
 msgstr "Prima immagine"
 
-#: apps/image-viewer/src/shortcuts.rs:25
+#: apps/image-viewer/src/shortcuts.rs:35
 msgid "Last Image"
 msgstr "Ultima immagine"
 
-#: apps/image-viewer/src/shortcuts.rs:36 apps/image-viewer/src/ui.rs:429
+#: apps/image-viewer/src/shortcuts.rs:46 apps/image-viewer/src/ui.rs:429
 msgid "Best Fit"
 msgstr "Adatta alla finestra"
 
-#: apps/image-viewer/src/shortcuts.rs:37
+#: apps/image-viewer/src/shortcuts.rs:47
 msgid "Original Size"
 msgstr "Dimensione originale"
 
-#: apps/image-viewer/src/shortcuts.rs:38
+#: apps/image-viewer/src/shortcuts.rs:48
 msgid "Double Size"
 msgstr "Dimensione doppia"
 
-#: apps/image-viewer/src/shortcuts.rs:39
+#: apps/image-viewer/src/shortcuts.rs:49
 msgid "Pan a Zoomed Image"
 msgstr "Sposta un'immagine ingrandita"
 
-#: apps/image-viewer/src/shortcuts.rs:43 apps/video-player/src/ui.rs:169
+#: apps/image-viewer/src/shortcuts.rs:53 apps/video-player/src/ui.rs:169
 #: apps/video-player/src/ui.rs:845
 msgid "Leave Fullscreen"
 msgstr "Esci da schermo intero"
 
-#: apps/image-viewer/src/shortcuts.rs:44
+#: apps/image-viewer/src/shortcuts.rs:54
 msgid "Slideshow"
 msgstr "Presentazione"
 
@@ -8612,7 +8621,7 @@ msgstr "Visualizzatore immagini"
 msgid "View images"
 msgstr "Visualizza immagini"
 
-#: apps/image-viewer/src/ui.rs:295 apps/image-viewer/src/ui.rs:1002
+#: apps/image-viewer/src/ui.rs:295 apps/image-viewer/src/ui.rs:1085
 msgid "Open Images"
 msgstr "Apri immagini"
 
@@ -8620,11 +8629,11 @@ msgstr "Apri immagini"
 msgid "_New Window"
 msgstr "Nuova _finestra"
 
-#: apps/image-viewer/src/ui.rs:306
+#: apps/image-viewer/src/ui.rs:306 apps/image-viewer/src/ui.rs:788
 msgid "Set as _Background…"
 msgstr "Imposta come _sfondo…"
 
-#: apps/image-viewer/src/ui.rs:307
+#: apps/image-viewer/src/ui.rs:307 apps/image-viewer/src/ui.rs:791
 msgid "Move to _Trash"
 msgstr "Sposta nel _cestino"
 
@@ -8705,81 +8714,81 @@ msgstr "Lunghezza focale"
 msgid "Open Folder"
 msgstr "Apri cartella"
 
-#: apps/image-viewer/src/ui.rs:949
+#: apps/image-viewer/src/ui.rs:1032
 msgid "Could not open map: {}"
 msgstr "Impossibile aprire la mappa: {}"
 
-#: apps/image-viewer/src/ui.rs:992
+#: apps/image-viewer/src/ui.rs:1075
 msgid "Supported Images"
 msgstr "Immagini supportate"
 
-#: apps/image-viewer/src/ui.rs:1079
+#: apps/image-viewer/src/ui.rs:1162
 msgid "The decoder crashed"
 msgstr "Il decodificatore si è bloccato"
 
 #. Translators: an image that could not be shown: its file name, then why.
-#: apps/image-viewer/src/ui.rs:1148
+#: apps/image-viewer/src/ui.rs:1231
 msgid "{name}: {error}"
 msgstr "{name}: {error}"
 
-#: apps/image-viewer/src/ui.rs:1250
+#: apps/image-viewer/src/ui.rs:1333
 msgid "No Image"
 msgstr "Nessuna immagine"
 
 #. Translators: window title: file name, then the app name.
-#: apps/image-viewer/src/ui.rs:1274
+#: apps/image-viewer/src/ui.rs:1357
 msgid "{name} — {app}"
 msgstr "{name} — {app}"
 
-#: apps/image-viewer/src/ui.rs:1470
+#: apps/image-viewer/src/ui.rs:1553
 msgid "{} (animated)"
 msgstr "{} (animata)"
 
-#: apps/image-viewer/src/ui.rs:1537
+#: apps/image-viewer/src/ui.rs:1620
 msgid "Image copied to clipboard"
 msgstr "Immagine copiata negli appunti"
 
-#: apps/image-viewer/src/ui.rs:1548
+#: apps/image-viewer/src/ui.rs:1631
 msgid "Background set"
 msgstr "Sfondo impostato"
 
-#: apps/image-viewer/src/ui.rs:1551 apps/image-viewer/src/ui.rs:1554
+#: apps/image-viewer/src/ui.rs:1634 apps/image-viewer/src/ui.rs:1637
 msgid "Could not set the background"
 msgstr "Impossibile impostare lo sfondo"
 
-#: apps/image-viewer/src/ui.rs:1553
+#: apps/image-viewer/src/ui.rs:1636
 msgid "Could not set the background: {e}"
 msgstr "Impossibile impostare lo sfondo: {e}"
 
-#: apps/image-viewer/src/ui.rs:1578
+#: apps/image-viewer/src/ui.rs:1661
 msgid "Image moved to trash"
 msgstr "Immagine spostata nel cestino"
 
-#: apps/image-viewer/src/ui.rs:1590
+#: apps/image-viewer/src/ui.rs:1673
 msgid "Could not move to trash: {e}"
 msgstr "Impossibile spostare nel cestino: {e}"
 
-#: apps/image-viewer/src/ui.rs:1591
+#: apps/image-viewer/src/ui.rs:1674
 msgid "Could not move to trash"
 msgstr "Impossibile spostare nel cestino"
 
-#: apps/image-viewer/src/ui.rs:1615
+#: apps/image-viewer/src/ui.rs:1698
 msgid "Could not restore: {e}"
 msgstr "Impossibile ripristinare: {e}"
 
-#: apps/image-viewer/src/ui.rs:1616
+#: apps/image-viewer/src/ui.rs:1699
 msgid "Could not restore"
 msgstr "Impossibile ripristinare"
 
-#: apps/image-viewer/src/ui.rs:1640
+#: apps/image-viewer/src/ui.rs:1723
 msgid "Image saved"
 msgstr "Immagine salvata"
 
-#: apps/image-viewer/src/ui.rs:1649
+#: apps/image-viewer/src/ui.rs:1732
 msgid "Could not save image: {e}"
 msgstr "Impossibile salvare l'immagine: {e}"
 
-#: apps/image-viewer/src/ui.rs:1653
+#: apps/image-viewer/src/ui.rs:1736
 msgid "Could not save image"
 msgstr "Impossibile salvare l'immagine"
 
@@ -9439,10 +9448,6 @@ msgstr "Trascinare"
 #: apps/maps/src/shortcuts.rs:39
 msgid "Actions for a Point"
 msgstr "Azioni per un punto"
-
-#: apps/maps/src/shortcuts.rs:40
-msgid "Secondary click or long press"
-msgstr "Clic secondario o pressione prolungata"
 
 #: apps/maps/src/shortcuts.rs:46
 msgid "Search and Directions"

@@ -285,7 +285,7 @@ msgstr "Вийти"
 
 #: apps/audio-player/src/ui.rs:217 apps/camera/src/ui.rs:280
 #: apps/disk-usage/src/shortcuts.rs:30 apps/document-viewer/src/shortcuts.rs:11
-#: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:11
+#: apps/files/src/ui/shortcuts.rs:56 apps/image-viewer/src/shortcuts.rs:15
 #: apps/settings/src/ui/apps.rs:600 apps/settings/src/ui/bluetooth.rs:129
 #: apps/settings/src/ui/users.rs:575 apps/text-editor/src/shortcuts.rs:15
 #: apps/web/src/window.rs:2228
@@ -1661,7 +1661,7 @@ msgstr "Показувати {display}"
 #: apps/calendar/src/manage.rs:297 apps/clocks/src/ui.rs:1460
 #: apps/contacts/src/editor.rs:302 apps/disk-usage/src/ui.rs:1005
 #: apps/disks/src/ui.rs:1640 apps/files/src/sorting.rs:43
-#: apps/files/src/ui/tab.rs:190 apps/settings/src/ui/netedit.rs:235
+#: apps/files/src/ui/tab.rs:215 apps/settings/src/ui/netedit.rs:235
 #: apps/settings/src/ui/users.rs:81
 msgid "Name"
 msgstr "Назва"
@@ -1849,7 +1849,7 @@ msgstr "Пошук"
 
 #: apps/calendar/src/shortcuts.rs:16 apps/document-viewer/src/shortcuts.rs:30
 #: apps/files/src/ui/shortcuts.rs:20 apps/help/src/shortcuts.rs:27
-#: apps/image-viewer/src/shortcuts.rs:20 apps/music/src/shortcuts.rs:18
+#: apps/image-viewer/src/shortcuts.rs:30 apps/music/src/shortcuts.rs:18
 #: apps/web/src/shortcuts.rs:28
 msgid "Navigation"
 msgstr "Навігація"
@@ -1923,7 +1923,7 @@ msgstr "Нова подія в позиції курсора часу"
 
 #: apps/calendar/src/shortcuts.rs:45 apps/document-viewer/src/shortcuts.rs:41
 #: apps/document-viewer/src/ui.rs:354 apps/files/src/ui/shortcuts.rs:44
-#: apps/image-viewer/src/shortcuts.rs:32 apps/image-viewer/src/ui.rs:443
+#: apps/image-viewer/src/shortcuts.rs:42 apps/image-viewer/src/ui.rs:443
 #: apps/maps/src/shortcuts.rs:24 apps/terminal/src/shortcuts.rs:51
 #: apps/terminal/src/window.rs:190 apps/text-editor/src/shortcuts.rs:59
 #: apps/text-editor/src/window.rs:161 apps/web/src/shortcuts.rs:62
@@ -1933,7 +1933,7 @@ msgstr "Збільшити"
 
 #: apps/calendar/src/shortcuts.rs:46 apps/document-viewer/src/shortcuts.rs:44
 #: apps/document-viewer/src/ui.rs:353 apps/files/src/ui/shortcuts.rs:47
-#: apps/image-viewer/src/shortcuts.rs:35 apps/image-viewer/src/ui.rs:425
+#: apps/image-viewer/src/shortcuts.rs:45 apps/image-viewer/src/ui.rs:425
 #: apps/maps/src/shortcuts.rs:28 apps/terminal/src/shortcuts.rs:54
 #: apps/terminal/src/window.rs:188 apps/text-editor/src/shortcuts.rs:62
 #: apps/text-editor/src/window.rs:152 apps/web/src/shortcuts.rs:66
@@ -2012,7 +2012,7 @@ msgid "Search Events"
 msgstr "Пошук подій"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:950 apps/settings/src/ui/mod.rs:227
+#: apps/files/src/ui/tab.rs:978 apps/settings/src/ui/mod.rs:227
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:739
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
@@ -2352,7 +2352,7 @@ msgstr "_Про програму"
 
 #: apps/camera/src/ui.rs:274 apps/camera/src/ui.rs:278
 #: apps/contacts/src/ui.rs:1428 apps/files/src/ui/shortcuts.rs:72
-#: apps/image-viewer/src/shortcuts.rs:13 apps/terminal/src/shortcuts.rs:29
+#: apps/image-viewer/src/shortcuts.rs:17 apps/terminal/src/shortcuts.rs:29
 msgid "Copy"
 msgstr "Копіювати"
 
@@ -2607,7 +2607,7 @@ msgid "Character map and emoji picker"
 msgstr "Таблиця символів і вибір емодзі"
 
 #: apps/characters/src/ui.rs:199 apps/contacts/src/ui.rs:1102
-#: apps/files/src/ui/tab.rs:1181 apps/logs/src/ui.rs:719
+#: apps/files/src/ui/tab.rs:1209 apps/logs/src/ui.rs:719
 #: apps/text-editor/src/doc.rs:866
 msgid "No results"
 msgstr "Немає результатів"
@@ -3247,7 +3247,7 @@ msgid "{label} deleted"
 msgstr "{label} вилучено"
 
 #: apps/clocks/src/ui.rs:1871 apps/files/src/ui/window.rs:228
-#: apps/files/src/ui/window.rs:1308 apps/image-viewer/src/ui.rs:1579
+#: apps/files/src/ui/window.rs:1308 apps/image-viewer/src/ui.rs:1662
 msgid "_Undo"
 msgstr "_Скасувати"
 
@@ -3587,7 +3587,7 @@ msgstr "День народження"
 msgid "Anniversary"
 msgstr "Річниця"
 
-#: apps/contacts/src/editor.rs:462 apps/image-viewer/src/shortcuts.rs:8
+#: apps/contacts/src/editor.rs:462 apps/image-viewer/src/shortcuts.rs:12
 #: apps/settings/src/ui/appearance.rs:508 apps/settings/src/ui/users.rs:441
 msgid "Images"
 msgstr "Зображення"
@@ -4017,7 +4017,7 @@ msgid "storage"
 msgstr "сховище"
 
 #: apps/disk-usage/src/mounts.rs:155 apps/files/src/pathbar.rs:25
-#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1235
+#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1263
 #: apps/files/src/ui/window.rs:139 apps/settings/src/bluez.rs:229
 msgid "Computer"
 msgstr "Комп'ютер"
@@ -4062,7 +4062,7 @@ msgid "Copy Path"
 msgstr "Копіювати шлях"
 
 #: apps/disk-usage/src/shortcuts.rs:32 apps/files/src/ui/shortcuts.rs:60
-#: apps/image-viewer/src/shortcuts.rs:14
+#: apps/image-viewer/src/shortcuts.rs:18
 msgid "Move to Trash"
 msgstr "Перемістити до смітника"
 
@@ -4222,7 +4222,7 @@ msgstr[2] "{n} елементів"
 
 #: apps/disk-usage/src/ui.rs:1006 apps/disks/src/ui.rs:358
 #: apps/disks/src/ui.rs:453 apps/files/src/sorting.rs:44
-#: apps/files/src/ui/properties.rs:138 apps/files/src/ui/tab.rs:191
+#: apps/files/src/ui/properties.rs:138 apps/files/src/ui/tab.rs:216
 #: apps/fonts/src/fontinfo.rs:287
 msgid "Size"
 msgstr "Розмір"
@@ -4235,7 +4235,7 @@ msgstr "Вміст"
 
 #: apps/disk-usage/src/ui.rs:1008 apps/document-viewer/src/dialogs.rs:104
 #: apps/files/src/sorting.rs:46 apps/files/src/ui/properties.rs:187
-#: apps/files/src/ui/tab.rs:193 apps/image-viewer/src/ui.rs:585
+#: apps/files/src/ui/tab.rs:218 apps/image-viewer/src/ui.rs:585
 msgid "Modified"
 msgstr "Змінено"
 
@@ -4302,7 +4302,7 @@ msgstr "Виберіть теку для сканування"
 msgid "Only local folders can be scanned"
 msgstr "Сканувати можна лише локальні теки"
 
-#: apps/disk-usage/src/ui.rs:1642 apps/image-viewer/src/ui.rs:936
+#: apps/disk-usage/src/ui.rs:1642 apps/image-viewer/src/ui.rs:1019
 msgid "Could not open folder: {}"
 msgstr "Не вдалося відкрити теку: {}"
 
@@ -4548,7 +4548,7 @@ msgstr "Пристрій ZFS"
 #: apps/disks/src/model.rs:303 apps/disks/src/parttypes.rs:171
 #: apps/disks/src/parttypes.rs:203 apps/disks/src/smart.rs:104
 #: apps/disks/src/ui.rs:1872 apps/disks/src/ui.rs:1882
-#: apps/files/src/ui/tab.rs:54 apps/settings/src/ui/about.rs:38
+#: apps/files/src/ui/tab.rs:77 apps/settings/src/ui/about.rs:38
 #: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
 #: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
 #: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
@@ -5352,7 +5352,7 @@ msgstr "Назва тому"
 
 #: apps/disks/src/ui.rs:1365 apps/disks/src/ui.rs:1634
 #: apps/disks/src/ui.rs:1906 apps/files/src/sorting.rs:45
-#: apps/files/src/ui/properties.rs:130 apps/files/src/ui/tab.rs:192
+#: apps/files/src/ui/properties.rs:130 apps/files/src/ui/tab.rs:217
 #: apps/settings/src/ui/bluetooth.rs:513 apps/settings/src/ui/network.rs:529
 #: apps/system-monitor/src/fs_view.rs:25
 msgid "Type"
@@ -6066,7 +6066,7 @@ msgstr "_Обрізати"
 
 #: apps/document-scanner/src/ui.rs:227 apps/document-viewer/src/ui.rs:920
 #: apps/files/src/ui/window.rs:1587 apps/image-viewer/src/ui.rs:305
-#: apps/terminal/src/window.rs:727
+#: apps/image-viewer/src/ui.rs:784 apps/terminal/src/window.rs:727
 msgid "_Copy"
 msgstr "_Копіювати"
 
@@ -6121,12 +6121,12 @@ msgstr ""
 "її розмір, Control збільшує кроки"
 
 #: apps/document-scanner/src/ui.rs:447 apps/document-viewer/src/shortcuts.rs:46
-#: apps/image-viewer/src/shortcuts.rs:41 apps/image-viewer/src/ui.rs:404
+#: apps/image-viewer/src/shortcuts.rs:51 apps/image-viewer/src/ui.rs:404
 msgid "Rotate Left"
 msgstr "Повернути ліворуч"
 
 #: apps/document-scanner/src/ui.rs:452 apps/document-viewer/src/shortcuts.rs:47
-#: apps/image-viewer/src/shortcuts.rs:40 apps/image-viewer/src/ui.rs:410
+#: apps/image-viewer/src/shortcuts.rs:50 apps/image-viewer/src/ui.rs:410
 msgid "Rotate Right"
 msgstr "Повернути праворуч"
 
@@ -6494,7 +6494,7 @@ msgstr "Так"
 
 #: apps/document-viewer/src/dialogs.rs:135
 #: apps/document-viewer/src/shortcuts.rs:13 apps/files/src/ui/properties.rs:266
-#: apps/files/src/ui/shortcuts.rs:62 apps/image-viewer/src/shortcuts.rs:16
+#: apps/files/src/ui/shortcuts.rs:62 apps/image-viewer/src/shortcuts.rs:20
 #: apps/image-viewer/src/ui.rs:615 apps/system-monitor/src/proc_view.rs:438
 #: apps/system-monitor/src/proc_view.rs:441
 #: apps/system-monitor/src/shortcuts.rs:41
@@ -6584,7 +6584,7 @@ msgid "Documents"
 msgstr "Документи"
 
 #: apps/document-viewer/src/shortcuts.rs:10 apps/files/src/ui/shortcuts.rs:13
-#: apps/image-viewer/src/shortcuts.rs:10 apps/terminal/src/shortcuts.rs:14
+#: apps/image-viewer/src/shortcuts.rs:14 apps/terminal/src/shortcuts.rs:14
 #: apps/text-editor/src/shortcuts.rs:14 apps/web/src/shortcuts.rs:11
 msgid "New Window"
 msgstr "Нове вікно"
@@ -6644,7 +6644,7 @@ msgid "Forward"
 msgstr "Вперед"
 
 #: apps/document-viewer/src/shortcuts.rs:38 apps/files/src/ui/shortcuts.rs:39
-#: apps/image-viewer/src/shortcuts.rs:29 apps/terminal/src/shortcuts.rs:48
+#: apps/image-viewer/src/shortcuts.rs:39 apps/terminal/src/shortcuts.rs:48
 #: apps/text-editor/src/shortcuts.rs:56 apps/video-player/src/ui.rs:166
 #: apps/web/src/shortcuts.rs:59
 msgid "View"
@@ -6659,7 +6659,7 @@ msgid "Night Mode"
 msgstr "Нічний режим"
 
 #: apps/document-viewer/src/shortcuts.rs:50
-#: apps/image-viewer/src/shortcuts.rs:42 apps/image-viewer/src/ui.rs:450
+#: apps/image-viewer/src/shortcuts.rs:52 apps/image-viewer/src/ui.rs:450
 #: apps/terminal/src/shortcuts.rs:23 apps/video-player/src/ui.rs:168
 #: apps/web/src/shortcuts.rs:70
 msgid "Fullscreen"
@@ -7087,7 +7087,7 @@ msgid "Recent"
 msgstr "Нещодавні"
 
 #: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:116
-#: apps/files/src/ui/tab.rs:1245 apps/settings/src/bluez.rs:235
+#: apps/files/src/ui/tab.rs:1273 apps/settings/src/bluez.rs:235
 #: apps/settings/src/panels.rs:60 apps/system-monitor/src/res_view.rs:385
 msgid "Network"
 msgstr "Мережа"
@@ -7236,7 +7236,7 @@ msgstr "Жодна встановлена програма не може від�
 msgid "Always use for “{desc}” files"
 msgstr "Завжди використовувати для файлів «{desc}»"
 
-#: apps/files/src/ui/dialogs.rs:463 apps/image-viewer/src/shortcuts.rs:12
+#: apps/files/src/ui/dialogs.rs:463 apps/image-viewer/src/shortcuts.rs:16
 msgid "Open With"
 msgstr "Відкрити за допомогою"
 
@@ -7251,7 +7251,7 @@ msgstr[0] "{n} програма"
 msgstr[1] "{n} програми"
 msgstr[2] "{n} програм"
 
-#: apps/files/src/ui/dialogs.rs:514 apps/image-viewer/src/ui.rs:1525
+#: apps/files/src/ui/dialogs.rs:514 apps/image-viewer/src/ui.rs:1608
 msgid "Could not open: {}"
 msgstr "Не вдалося відкрити: {}"
 
@@ -7299,7 +7299,7 @@ msgstr "Сітка"
 msgid "List"
 msgstr "Список"
 
-#: apps/files/src/ui/dialogs.rs:658 apps/image-viewer/src/shortcuts.rs:45
+#: apps/files/src/ui/dialogs.rs:658 apps/image-viewer/src/shortcuts.rs:55
 #: apps/image-viewer/src/ui.rs:457
 msgid "Show Thumbnails"
 msgstr "Показувати мініатюри"
@@ -7384,23 +7384,23 @@ msgstr "…і ще {}"
 msgid "Some Items Could Not Be Processed"
 msgstr "Деякі елементи не вдалося обробити"
 
-#: apps/files/src/ui/mod.rs:341
+#: apps/files/src/ui/mod.rs:343
 msgid "Always open a new window"
 msgstr "Завжди відкривати нове вікно"
 
-#: apps/files/src/ui/mod.rs:349
+#: apps/files/src/ui/mod.rs:351
 msgid "Select the given items in their parent folders"
 msgstr "Виділити вказані елементи в їхніх батьківських теках"
 
-#: apps/files/src/ui/mod.rs:357
+#: apps/files/src/ui/mod.rs:359
 msgid "Quit the running instance"
 msgstr "Завершити запущений екземпляр"
 
-#: apps/files/src/ui/mod.rs:360
+#: apps/files/src/ui/mod.rs:362
 msgid "Access and organize files"
 msgstr "Доступ до файлів та їх упорядкування"
 
-#: apps/files/src/ui/mod.rs:360 apps/files/src/ui/window.rs:156
+#: apps/files/src/ui/mod.rs:362 apps/files/src/ui/window.rs:156
 #: apps/files/src/ui/window.rs:456
 msgid "Files"
 msgstr "Файли"
@@ -7603,7 +7603,7 @@ msgstr "Редагування"
 msgid "Invert Selection"
 msgstr "Інвертувати виділення"
 
-#: apps/files/src/ui/shortcuts.rs:71 apps/files/src/ui/tab.rs:102
+#: apps/files/src/ui/shortcuts.rs:71 apps/files/src/ui/tab.rs:125
 msgid "Cut"
 msgstr "Вирізати"
 
@@ -7677,70 +7677,70 @@ msgstr "Перейменувати закладку"
 msgid "_Rename"
 msgstr "_Перейменувати"
 
-#: apps/files/src/ui/tab.rs:52 apps/image-viewer/src/ui.rs:583
+#: apps/files/src/ui/tab.rs:75 apps/image-viewer/src/ui.rs:583
 msgid "Folder"
 msgstr "Тека"
 
-#: apps/files/src/ui/tab.rs:233
+#: apps/files/src/ui/tab.rs:258
 msgid "_Try Again"
 msgstr "_Спробувати ще раз"
 
-#: apps/files/src/ui/tab.rs:243
+#: apps/files/src/ui/tab.rs:268
 msgid "Loading folder"
 msgstr "Завантаження теки"
 
-#: apps/files/src/ui/tab.rs:894
+#: apps/files/src/ui/tab.rs:922
 msgid "Unable to access location: {}"
 msgstr "Не вдалося отримати доступ до місця: {}"
 
-#: apps/files/src/ui/tab.rs:927
+#: apps/files/src/ui/tab.rs:955
 msgid "Unable to Open Folder"
 msgstr "Не вдалося відкрити теку"
 
-#: apps/files/src/ui/tab.rs:935
+#: apps/files/src/ui/tab.rs:963
 msgid "Unable to open folder: {}"
 msgstr "Не вдалося відкрити теку: {}"
 
-#: apps/files/src/ui/tab.rs:952
+#: apps/files/src/ui/tab.rs:980
 msgid "Try a different search."
 msgstr "Спробуйте інший пошуковий запит."
 
-#: apps/files/src/ui/tab.rs:955
+#: apps/files/src/ui/tab.rs:983
 msgid "Trash is Empty"
 msgstr "Смітник порожній"
 
-#: apps/files/src/ui/tab.rs:959
+#: apps/files/src/ui/tab.rs:987
 msgid "Folder is Empty"
 msgstr "Тека порожня"
 
-#: apps/files/src/ui/tab.rs:1183
+#: apps/files/src/ui/tab.rs:1211
 msgid "Search finished: {n} item found"
 msgid_plural "Search finished: {n} items found"
 msgstr[0] "Пошук завершено: знайдено {n} елемент"
 msgstr[1] "Пошук завершено: знайдено {n} елементи"
 msgstr[2] "Пошук завершено: знайдено {n} елементів"
 
-#: apps/files/src/ui/tab.rs:1209
+#: apps/files/src/ui/tab.rs:1237
 msgid "On This Computer"
 msgstr "На цьому комп'ютері"
 
-#: apps/files/src/ui/tab.rs:1241
+#: apps/files/src/ui/tab.rs:1269
 msgid "Networks"
 msgstr "Мережі"
 
-#: apps/files/src/ui/tab.rs:1246
+#: apps/files/src/ui/tab.rs:1274
 msgid "Browse the local network"
 msgstr "Перегляд локальної мережі"
 
-#: apps/files/src/ui/tab.rs:1274
+#: apps/files/src/ui/tab.rs:1302
 msgid "Not mounted"
 msgstr "Не змонтовано"
 
-#: apps/files/src/ui/tab.rs:1287
+#: apps/files/src/ui/tab.rs:1315
 msgid "Connect to Server"
 msgstr "З'єднатися з сервером"
 
-#: apps/files/src/ui/tab.rs:1291
+#: apps/files/src/ui/tab.rs:1319
 msgid "Server Address"
 msgstr "Адреса сервера"
 
@@ -7931,6 +7931,7 @@ msgid "_Delete From Trash…"
 msgstr "_Вилучити зі смітника…"
 
 #: apps/files/src/ui/window.rs:1579 apps/image-viewer/src/ui.rs:301
+#: apps/image-viewer/src/ui.rs:787
 msgid "Open _With…"
 msgstr "Відкрити за _допомогою…"
 
@@ -8604,48 +8605,56 @@ msgstr "Немає батьківської теки"
 msgid "No file name"
 msgstr "Немає назви файлу"
 
-#: apps/image-viewer/src/shortcuts.rs:15 apps/image-viewer/src/ui.rs:416
+#: apps/image-viewer/src/shortcuts.rs:19 apps/image-viewer/src/ui.rs:416
 msgid "Save Rotation"
 msgstr "Зберегти обертання"
 
-#: apps/image-viewer/src/shortcuts.rs:22 apps/image-viewer/src/ui.rs:376
+#: apps/image-viewer/src/shortcuts.rs:21 apps/image-viewer/src/shortcuts.rs:23
+msgid "Image Menu"
+msgstr "Меню зображення"
+
+#: apps/image-viewer/src/shortcuts.rs:24 apps/maps/src/shortcuts.rs:40
+msgid "Secondary click or long press"
+msgstr "Клацання другою кнопкою або довге натискання"
+
+#: apps/image-viewer/src/shortcuts.rs:32 apps/image-viewer/src/ui.rs:376
 msgid "Previous Image"
 msgstr "Попереднє зображення"
 
-#: apps/image-viewer/src/shortcuts.rs:23 apps/image-viewer/src/ui.rs:382
+#: apps/image-viewer/src/shortcuts.rs:33 apps/image-viewer/src/ui.rs:382
 msgid "Next Image"
 msgstr "Наступне зображення"
 
-#: apps/image-viewer/src/shortcuts.rs:24
+#: apps/image-viewer/src/shortcuts.rs:34
 msgid "First Image"
 msgstr "Перше зображення"
 
-#: apps/image-viewer/src/shortcuts.rs:25
+#: apps/image-viewer/src/shortcuts.rs:35
 msgid "Last Image"
 msgstr "Останнє зображення"
 
-#: apps/image-viewer/src/shortcuts.rs:36 apps/image-viewer/src/ui.rs:429
+#: apps/image-viewer/src/shortcuts.rs:46 apps/image-viewer/src/ui.rs:429
 msgid "Best Fit"
 msgstr "Найкраще припасування"
 
-#: apps/image-viewer/src/shortcuts.rs:37
+#: apps/image-viewer/src/shortcuts.rs:47
 msgid "Original Size"
 msgstr "Оригінальний розмір"
 
-#: apps/image-viewer/src/shortcuts.rs:38
+#: apps/image-viewer/src/shortcuts.rs:48
 msgid "Double Size"
 msgstr "Подвійний розмір"
 
-#: apps/image-viewer/src/shortcuts.rs:39
+#: apps/image-viewer/src/shortcuts.rs:49
 msgid "Pan a Zoomed Image"
 msgstr "Прокручування збільшеного зображення"
 
-#: apps/image-viewer/src/shortcuts.rs:43 apps/video-player/src/ui.rs:169
+#: apps/image-viewer/src/shortcuts.rs:53 apps/video-player/src/ui.rs:169
 #: apps/video-player/src/ui.rs:845
 msgid "Leave Fullscreen"
 msgstr "Вийти з повноекранного режиму"
 
-#: apps/image-viewer/src/shortcuts.rs:44
+#: apps/image-viewer/src/shortcuts.rs:54
 msgid "Slideshow"
 msgstr "Слайдшоу"
 
@@ -8665,7 +8674,7 @@ msgstr "Переглядач зображень"
 msgid "View images"
 msgstr "Перегляд зображень"
 
-#: apps/image-viewer/src/ui.rs:295 apps/image-viewer/src/ui.rs:1002
+#: apps/image-viewer/src/ui.rs:295 apps/image-viewer/src/ui.rs:1085
 msgid "Open Images"
 msgstr "Відкрити зображення"
 
@@ -8673,11 +8682,11 @@ msgstr "Відкрити зображення"
 msgid "_New Window"
 msgstr "Нове _вікно"
 
-#: apps/image-viewer/src/ui.rs:306
+#: apps/image-viewer/src/ui.rs:306 apps/image-viewer/src/ui.rs:788
 msgid "Set as _Background…"
 msgstr "Встановити як _тло…"
 
-#: apps/image-viewer/src/ui.rs:307
+#: apps/image-viewer/src/ui.rs:307 apps/image-viewer/src/ui.rs:791
 msgid "Move to _Trash"
 msgstr "Перемістити до _смітника"
 
@@ -8758,81 +8767,81 @@ msgstr "Фокусна відстань"
 msgid "Open Folder"
 msgstr "Відкрити теку"
 
-#: apps/image-viewer/src/ui.rs:949
+#: apps/image-viewer/src/ui.rs:1032
 msgid "Could not open map: {}"
 msgstr "Не вдалося відкрити мапу: {}"
 
-#: apps/image-viewer/src/ui.rs:992
+#: apps/image-viewer/src/ui.rs:1075
 msgid "Supported Images"
 msgstr "Підтримувані зображення"
 
-#: apps/image-viewer/src/ui.rs:1079
+#: apps/image-viewer/src/ui.rs:1162
 msgid "The decoder crashed"
 msgstr "Декодер аварійно завершився"
 
 #. Translators: an image that could not be shown: its file name, then why.
-#: apps/image-viewer/src/ui.rs:1148
+#: apps/image-viewer/src/ui.rs:1231
 msgid "{name}: {error}"
 msgstr "{name}: {error}"
 
-#: apps/image-viewer/src/ui.rs:1250
+#: apps/image-viewer/src/ui.rs:1333
 msgid "No Image"
 msgstr "Немає зображення"
 
 #. Translators: window title: file name, then the app name.
-#: apps/image-viewer/src/ui.rs:1274
+#: apps/image-viewer/src/ui.rs:1357
 msgid "{name} — {app}"
 msgstr "{name} — {app}"
 
-#: apps/image-viewer/src/ui.rs:1470
+#: apps/image-viewer/src/ui.rs:1553
 msgid "{} (animated)"
 msgstr "{} (анімоване)"
 
-#: apps/image-viewer/src/ui.rs:1537
+#: apps/image-viewer/src/ui.rs:1620
 msgid "Image copied to clipboard"
 msgstr "Зображення скопійовано до буфера обміну"
 
-#: apps/image-viewer/src/ui.rs:1548
+#: apps/image-viewer/src/ui.rs:1631
 msgid "Background set"
 msgstr "Тло встановлено"
 
-#: apps/image-viewer/src/ui.rs:1551 apps/image-viewer/src/ui.rs:1554
+#: apps/image-viewer/src/ui.rs:1634 apps/image-viewer/src/ui.rs:1637
 msgid "Could not set the background"
 msgstr "Не вдалося встановити тло"
 
-#: apps/image-viewer/src/ui.rs:1553
+#: apps/image-viewer/src/ui.rs:1636
 msgid "Could not set the background: {e}"
 msgstr "Не вдалося встановити тло: {e}"
 
-#: apps/image-viewer/src/ui.rs:1578
+#: apps/image-viewer/src/ui.rs:1661
 msgid "Image moved to trash"
 msgstr "Зображення переміщено до смітника"
 
-#: apps/image-viewer/src/ui.rs:1590
+#: apps/image-viewer/src/ui.rs:1673
 msgid "Could not move to trash: {e}"
 msgstr "Не вдалося перемістити до смітника: {e}"
 
-#: apps/image-viewer/src/ui.rs:1591
+#: apps/image-viewer/src/ui.rs:1674
 msgid "Could not move to trash"
 msgstr "Не вдалося перемістити до смітника"
 
-#: apps/image-viewer/src/ui.rs:1615
+#: apps/image-viewer/src/ui.rs:1698
 msgid "Could not restore: {e}"
 msgstr "Не вдалося відновити: {e}"
 
-#: apps/image-viewer/src/ui.rs:1616
+#: apps/image-viewer/src/ui.rs:1699
 msgid "Could not restore"
 msgstr "Не вдалося відновити"
 
-#: apps/image-viewer/src/ui.rs:1640
+#: apps/image-viewer/src/ui.rs:1723
 msgid "Image saved"
 msgstr "Зображення збережено"
 
-#: apps/image-viewer/src/ui.rs:1649
+#: apps/image-viewer/src/ui.rs:1732
 msgid "Could not save image: {e}"
 msgstr "Не вдалося зберегти зображення: {e}"
 
-#: apps/image-viewer/src/ui.rs:1653
+#: apps/image-viewer/src/ui.rs:1736
 msgid "Could not save image"
 msgstr "Не вдалося зберегти зображення"
 
@@ -9492,10 +9501,6 @@ msgstr "Перетягування"
 #: apps/maps/src/shortcuts.rs:39
 msgid "Actions for a Point"
 msgstr "Дії для точки"
-
-#: apps/maps/src/shortcuts.rs:40
-msgid "Secondary click or long press"
-msgstr "Клацання другою кнопкою або довге натискання"
 
 #: apps/maps/src/shortcuts.rs:46
 msgid "Search and Directions"

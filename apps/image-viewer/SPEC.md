@@ -200,6 +200,7 @@ View images.
 | Rotate right / left | Ctrl+R / Ctrl+Shift+R | View rotation |
 | Save Rotation | Ctrl+S | Re-encode the rotated image into its file |
 | Properties | F9, Alt+Return | Toggle sidebar |
+| Image menu | Secondary click / long press on the image, Menu, Shift+F10 | Context menu at the pointer (keyboard: the image's centre), only while an image is shown: *Copy*; *Open With…*, *Set as Background…*; *Move to Trash* (the same window actions) |
 | Fullscreen | F11 | Toggle; Esc leaves |
 | Slideshow | F5 | Toggle |
 | Show Thumbnails | Ctrl+F9 | Toggle the thumbnail strip (off by default) |

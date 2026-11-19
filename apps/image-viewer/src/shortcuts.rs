@@ -1,7 +1,11 @@
 //! The Keyboard Shortcuts window (Ctrl+?).
 
 use helix_app_common::i18n::n_;
-use helix_app_common::shortcuts::{Group, Item::Keys, GENERAL};
+use helix_app_common::shortcuts::{
+    Group,
+    Item::{Keys, Pointer},
+    GENERAL,
+};
 
 pub const GROUPS: &[Group] = &[
     (
@@ -14,6 +18,12 @@ pub const GROUPS: &[Group] = &[
             Keys(n_("Move to Trash"), "Delete KP_Delete"),
             Keys(n_("Save Rotation"), "<Control>s"),
             Keys(n_("Properties"), "F9 <Alt>Return"),
+            Keys(n_("Image Menu"), "Menu <Shift>F10"),
+            Pointer(
+                n_("Image Menu"),
+                n_("Secondary click or long press"),
+                "input-mouse-symbolic",
+            ),
         ],
     ),
     (

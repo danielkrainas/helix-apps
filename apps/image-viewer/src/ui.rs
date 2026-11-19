@@ -776,6 +776,87 @@ impl Viewer {
         self.window.add_action(&thumbs);
     }
 
+    /// The image's context menu: secondary click, long press, the Menu key
+    /// or Shift+F10.
+    fn setup_context_menu(&self, overlay: &gtk::Overlay) {
+        let menu = gio::Menu::new();
+        let s1 = gio::Menu::new();
+        s1.append(Some(tr("_Copy")), Some("win.copy"));
+        menu.append_section(None, &s1);
+        let s2 = gio::Menu::new();
+        s2.append(Some(tr("Open _With…")), Some("win.open-with"));
+        s2.append(Some(tr("Set as _Background…")), Some("win.set-background"));
+        menu.append_section(None, &s2);
+        let s3 = gio::Menu::new();
+        s3.append(Some(tr("Move to _Trash")), Some("win.trash"));
+        menu.append_section(None, &s3);
+        let popover = gtk::PopoverMenu::from_model(Some(&menu));
+        popover.set_has_arrow(false);
+        popover.set_halign(gtk::Align::Start);
+        popover.set_parent(overlay);
+        let p = popover.clone();
+        overlay.connect_destroy(move |_| p.unparent());
+
+        // At (x, y) in canvas coordinates, or the canvas's centre.
+        let weak = self.weak();
+        let show = move |at: Option<(f64, f64)>| {
+            let Some(v) = weak.upgrade() else { return };
+            if v.stack.visible_child_name().as_deref() != Some("image") {
+                return;
+            }
+            let canvas = &v.canvas;
+            let (x, y) = at.unwrap_or((
+                f64::from(canvas.width()) / 2.0,
+                f64::from(canvas.height()) / 2.0,
+            ));
+            let Some(parent) = popover.parent() else {
+                return;
+            };
+            let pt = canvas
+                .compute_point(&parent, &gtk::graphene::Point::new(x as f32, y as f32))
+                .unwrap_or(gtk::graphene::Point::new(x as f32, y as f32));
+            popover.set_pointing_to(Some(&gdk::Rectangle::new(
+                pt.x() as i32,
+                pt.y() as i32,
+                1,
+                1,
+            )));
+            popover.popup();
+        };
+        let show = Rc::new(show);
+
+        let click = gtk::GestureClick::new();
+        click.set_button(gdk::BUTTON_SECONDARY);
+        let sh = show.clone();
+        click.connect_pressed(move |g, _, x, y| {
+            g.set_state(gtk::EventSequenceState::Claimed);
+            sh(Some((x, y)));
+        });
+        self.canvas.add_controller(click);
+
+        let long = gtk::GestureLongPress::new();
+        long.set_touch_only(true);
+        let sh = show.clone();
+        long.connect_pressed(move |g, x, y| {
+            g.set_state(gtk::EventSequenceState::Claimed);
+            sh(Some((x, y)));
+        });
+        self.canvas.add_controller(long);
+
+        let keys = gtk::EventControllerKey::new();
+        let sh = show;
+        keys.connect_key_pressed(move |_, key, _, mods| {
+            let menu_key = key == gdk::Key::Menu
+                || (key == gdk::Key::F10 && mods.contains(gdk::ModifierType::SHIFT_MASK));
+            if menu_key {
+                sh(None);
+                return glib::Propagation::Stop;
+            }
+            glib::Propagation::Proceed
+        });
+        self.canvas.add_controller(keys);
+    }
+
     fn setup_signals(
         &self,
         overlay: &gtk::Overlay,
@@ -790,6 +871,8 @@ impl Viewer {
                 v.update_canvas_a11y();
             }
         });
+
+        self.setup_context_menu(overlay);
 
         // Reveal controls on pointer motion.
         let motion = gtk::EventControllerMotion::new();
