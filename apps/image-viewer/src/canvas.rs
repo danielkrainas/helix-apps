@@ -211,7 +211,8 @@ impl ImageCanvas {
         ));
         self.add_controller(click);
 
-        // Ctrl+scroll zooms; plain scroll pans when zoomed in.
+        // A mouse wheel zooms (Shift+wheel pans sideways); touchpad
+        // scrolling pans when zoomed in, and zooms with Ctrl.
         let scroll = gtk::EventControllerScroll::new(gtk::EventControllerScrollFlags::BOTH_AXES);
         scroll.connect_scroll(glib::clone!(
             #[weak(rename_to = canvas)]
@@ -219,28 +220,28 @@ impl ImageCanvas {
             #[upgrade_or]
             glib::Propagation::Proceed,
             move |c, dx, dy| {
-                let ctrl = c
-                    .current_event_state()
-                    .contains(gdk::ModifierType::CONTROL_MASK);
+                let state = c.current_event_state();
                 let wheel = c.unit() == gdk::ScrollUnit::Wheel;
-                if ctrl {
-                    let anchor = canvas.pointer();
-                    let factor = if wheel {
-                        crate::view::ZOOM_STEP.powf(-dy)
-                    } else {
-                        (1.0 - dy / 100.0).max(0.1)
-                    };
-                    canvas.update_view(|v| {
-                        let z = v.zoom() * factor;
-                        v.zoom_to(z, anchor);
-                    });
-                    glib::Propagation::Stop
-                } else if canvas.view().can_pan() {
-                    let k = if wheel { 60.0 } else { 1.0 };
-                    canvas.update_view(|v| v.pan_by(-dx * k, -dy * k));
-                    glib::Propagation::Stop
-                } else {
-                    glib::Propagation::Proceed
+                match scroll_action(
+                    wheel,
+                    state.contains(gdk::ModifierType::CONTROL_MASK),
+                    state.contains(gdk::ModifierType::SHIFT_MASK),
+                    dx,
+                    dy,
+                ) {
+                    ScrollAction::Zoom(factor) => {
+                        let anchor = canvas.pointer();
+                        canvas.update_view(|v| {
+                            let z = v.zoom() * factor;
+                            v.zoom_to(z, anchor);
+                        });
+                        glib::Propagation::Stop
+                    }
+                    ScrollAction::Pan(px, py) if canvas.view().can_pan() => {
+                        canvas.update_view(|v| v.pan_by(px, py));
+                        glib::Propagation::Stop
+                    }
+                    ScrollAction::Pan(..) => glib::Propagation::Proceed,
                 }
             }
         ));
@@ -276,5 +277,80 @@ impl ImageCanvas {
             move |_| canvas.imp().pointer.set(None)
         ));
         self.add_controller(motion);
+    }
+}
+
+/// What a scroll over the image does.
+#[derive(Debug, PartialEq)]
+enum ScrollAction {
+    /// Zoom by this factor around the pointer.
+    Zoom(f64),
+    /// Pan by this many pixels (if the image is larger than the view).
+    Pan(f64, f64),
+}
+
+/// A mouse wheel (`wheel`, deltas in notches) zooms one step per notch;
+/// Shift+wheel and tilting the wheel pan sideways. Touchpad scrolling
+/// (deltas in pixels) pans, and zooms with Ctrl.
+fn scroll_action(wheel: bool, ctrl: bool, shift: bool, dx: f64, dy: f64) -> ScrollAction {
+    /// Pixels panned per wheel notch.
+    const NOTCH: f64 = 60.0;
+    if wheel && shift && !ctrl {
+        let d = if dx != 0.0 { dx } else { dy };
+        ScrollAction::Pan(-d * NOTCH, 0.0)
+    } else if wheel && (ctrl || dy != 0.0) {
+        ScrollAction::Zoom(crate::view::ZOOM_STEP.powf(-dy))
+    } else if ctrl {
+        ScrollAction::Zoom((1.0 - dy / 100.0).max(0.1))
+    } else {
+        let k = if wheel { NOTCH } else { 1.0 };
+        ScrollAction::Pan(-dx * k, -dy * k)
+    }
+}
+
+#[cfg(test)]
+mod scroll_tests {
+    use super::{scroll_action, ScrollAction};
+    use crate::view::ZOOM_STEP;
+
+    fn zoom(a: ScrollAction) -> f64 {
+        match a {
+            ScrollAction::Zoom(f) => f,
+            other => panic!("expected a zoom, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn the_wheel_zooms_without_ctrl() {
+        // Up (dy < 0) zooms in one step, down zooms out.
+        assert!((zoom(scroll_action(true, false, false, 0.0, -1.0)) - ZOOM_STEP).abs() < 1e-9);
+        assert!((zoom(scroll_action(true, false, false, 0.0, 1.0)) - 1.0 / ZOOM_STEP).abs() < 1e-9);
+        // High-resolution wheels: a fraction of a step.
+        let f = zoom(scroll_action(true, false, false, 0.0, -0.5));
+        assert!(f > 1.0 && f < ZOOM_STEP);
+        // With Ctrl too.
+        assert!(zoom(scroll_action(true, true, false, 0.0, -1.0)) > 1.0);
+    }
+
+    #[test]
+    fn shift_wheel_and_tilt_pan_sideways() {
+        assert_eq!(
+            scroll_action(true, false, true, 0.0, 1.0),
+            ScrollAction::Pan(-60.0, 0.0)
+        );
+        assert_eq!(
+            scroll_action(true, false, false, -1.0, 0.0),
+            ScrollAction::Pan(60.0, 0.0)
+        );
+    }
+
+    #[test]
+    fn the_touchpad_pans_and_zooms_with_ctrl() {
+        assert_eq!(
+            scroll_action(false, false, false, 3.0, -4.0),
+            ScrollAction::Pan(-3.0, 4.0)
+        );
+        assert!(zoom(scroll_action(false, true, false, 0.0, -10.0)) > 1.0);
+        assert!(zoom(scroll_action(false, true, false, 0.0, 10.0)) < 1.0);
     }
 }

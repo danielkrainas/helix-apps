@@ -122,11 +122,13 @@ View images.
   scaled up beyond 100 %.
 - Zoom range: from min(best-fit, 100 %) down limit to 2000 %. Zoom steps
   multiply/divide by 1.25 (snapping to 100 % and best fit when crossing them).
-- Zoom in/out keeps the point under the pointer (scroll/pinch) or the view
-  centre (keyboard/buttons) fixed.
+- A **mouse wheel zooms** (one notch = one zoom step; no modifier
+  needed). Touchpad scrolling pans instead, and zooms with Ctrl.
+- Zoom in/out keeps the point under the pointer (wheel/scroll/pinch) or the
+  view centre (keyboard/buttons) fixed.
 - When the scaled image is larger than the view it can be **panned** by
-  dragging (grab cursor), by scrolling without Ctrl, or kept centred
-  otherwise. Pan offsets are clamped so no blank space appears beyond the
+  dragging (grab cursor), by touchpad scrolling, by tilting the wheel or
+  Shift+wheel (left/right), or kept centred otherwise. Pan offsets are clamped so no blank space appears beyond the
   image edges.
 - Double-click toggles between best fit and 100 % around the pointer.
 - **Rotate** left/right (90° steps) changes the view; the file is only
@@ -194,7 +196,7 @@ View images.
 | Move to Trash | Delete | `gio::File::trash`, image removed from list, toast “Image moved to trash” with **Undo** which restores the file from the freedesktop trash (`$XDG_DATA_HOME/Trash`, or `$topdir/.Trash-$uid` / `$topdir/.Trash/$uid`, matching the `.trashinfo` `Path` with the latest `DeletionDate`) |
 | Previous / Next | Left / Right, Page Up / Page Down | Navigate list (prev/next overlay buttons too) |
 | First / Last | Home / End | |
-| Zoom in / out | Ctrl+= / Ctrl++ / Ctrl+KP_Add, Ctrl+- / Ctrl+KP_Subtract, Ctrl+scroll, pinch | |
+| Zoom in / out | Ctrl+= / Ctrl++ / Ctrl+KP_Add, Ctrl+- / Ctrl+KP_Subtract, mouse wheel, Ctrl+scroll, pinch | |
 | Best fit | Ctrl+0 | |
 | 100 % / 200 % | Ctrl+1 / Ctrl+2 | |
 | Rotate right / left | Ctrl+R / Ctrl+Shift+R | View rotation |
