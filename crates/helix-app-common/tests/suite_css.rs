@@ -56,7 +56,9 @@ fn non_test(text: &str) -> &str {
 /// Every app's main window asks for the suite's minimum size,
 /// 360×294. (Whether its content fits at that size is checked at run
 /// time: `HELIX_A11Y_CHECK=size` shrinks each main window and reports
-/// what does not fit.)
+/// what does not fit.) The image viewer is the one exception: its
+/// window takes the image's size, down to `fit::MIN_WINDOW` (and what its
+/// header bar needs), so it asks for that instead.
 #[test]
 fn main_windows_ask_for_the_suite_minimum_size() {
     let mut windows = 0;
@@ -80,14 +82,18 @@ fn main_windows_ask_for_the_suite_minimum_size() {
                 .map_or(after.len(), |(i, _)| i);
             let after = &after[..cut];
             let chain = &rest[..end];
-            let width = [
+            let mut width = vec![
                 "width_request(360)",
                 "width_request(helix_app_common::MIN_WIDTH)",
             ];
-            let height = [
+            let mut height = vec![
                 "height_request(294)",
                 "height_request(helix_app_common::MIN_HEIGHT)",
             ];
+            if rel == "apps/image-viewer/src/ui.rs" {
+                width.push("width_request(crate::fit::MIN_WINDOW.0)");
+                height.push("height_request(crate::fit::MIN_WINDOW.1)");
+            }
             let has = |options: &[&str]| {
                 options
                     .iter()
