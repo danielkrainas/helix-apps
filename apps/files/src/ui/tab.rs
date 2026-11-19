@@ -143,6 +143,7 @@ pub struct Tab {
     search_store: gio::ListStore,
     filter: gtk::CustomFilter,
     filter_model: gtk::FilterListModel,
+    sort_model: gtk::SortListModel,
     sorter: gtk::CustomSorter,
     pub selection: gtk::MultiSelection,
     grid: gtk::GridView,
@@ -200,7 +201,13 @@ impl Tab {
             }
         });
         let sort_model = gtk::SortListModel::new(Some(filter_model.clone()), Some(sorter.clone()));
-        let selection = gtk::MultiSelection::new(Some(sort_model));
+        // Sorted a slice at a time between frames: re-sorting 200 000
+        // files at once held the main loop for about 170 ms (loading:
+        // 45 ms stalls); incrementally the longest stall is about 30 ms.
+        // Items reorder on screen meanwhile; the selection follows them
+        // (`restore_selection`), and files to select wait for the end.
+        sort_model.set_incremental(true);
+        let selection = gtk::MultiSelection::new(Some(sort_model.clone()));
 
         let grid = gtk::GridView::new(Some(selection.clone()), None::<gtk::ListItemFactory>);
         grid.set_enable_rubberband(true);
@@ -295,6 +302,7 @@ impl Tab {
             search_store,
             filter,
             filter_model,
+            sort_model,
             sorter,
             selection,
             grid,
@@ -342,7 +350,12 @@ impl Tab {
     }
 
     pub fn is_loading(&self) -> bool {
-        self.dir_list.is_loading() || self.searching.get()
+        self.dir_list.is_loading() || self.searching.get() || self.is_sorting()
+    }
+
+    /// Items still being sorted (see `set_incremental` in `new`).
+    fn is_sorting(&self) -> bool {
+        self.sort_model.pending() > 0
     }
 
     pub fn is_searching(&self) -> bool {
@@ -356,11 +369,31 @@ impl Tab {
         self.dir_list.connect_loading_notify(move |_| {
             if let Some(t) = weak.upgrade() {
                 t.update_status();
-                if !t.dir_list.is_loading() {
+                if !t.dir_list.is_loading() && !t.is_sorting() {
                     t.select_pending();
                 }
                 t.notify_window();
             }
+        });
+        let weak = Rc::downgrade(self);
+        self.sort_model.connect_pending_notify(move |m| {
+            let Some(t) = weak.upgrade() else { return };
+            if m.pending() == 0 {
+                // Positions are final now. Not from here: this is emitted
+                // in the middle of the model's items-changed, before the
+                // views took the change in, and scrolling a view then
+                // trips a GTK assertion (gtk_list_item_manager_release_items).
+                let weak = Rc::downgrade(&t);
+                glib::idle_add_local_once(move || {
+                    if let Some(t) = weak.upgrade() {
+                        if !t.is_sorting() {
+                            t.select_pending();
+                        }
+                    }
+                });
+            }
+            t.update_status();
+            t.notify_window();
         });
         let weak = Rc::downgrade(self);
         self.dir_list.connect_error_notify(move |dl| {
@@ -379,7 +412,7 @@ impl Tab {
             .connect_items_changed(move |_, pos, _, added| {
                 if let Some(t) = weak.upgrade() {
                     t.restore_selection(pos, added);
-                    if added > 0 && !t.pending_select.borrow().is_empty() {
+                    if added > 0 && !t.pending_select.borrow().is_empty() && !t.is_sorting() {
                         t.select_pending();
                     }
                     t.update_status();

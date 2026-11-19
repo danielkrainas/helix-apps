@@ -152,6 +152,16 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
   `btime`, `starred` fall back to name). Folders first when
   `org.gtk.gtk4.Settings.FileChooser sort-directories-first` is true.
   Ties are broken by name.
+  Sorting is incremental (`GtkSortListModel:incremental`): a big folder
+  is sorted a slice at a time between frames rather than in one go
+  (measured with `tests/sort_bench.rs`, 200 000 files: re-sorting held the
+  main loop up to ~170 ms, incrementally ≤ ~30 ms; loading stalls 45 → 10
+  ms). Items may reorder on screen meanwhile; the selection follows them
+  (re-selected by URI), the spinner and "Loading…" stay until sorting
+  ends, and files waiting to be selected (`--select`, going up a folder)
+  are selected and scrolled to once it has (from an idle callback: the
+  model's `pending` notification comes before the views took the change
+  in, and scrolling then trips a GTK assertion).
 - Dates: `simple` shows "HH:MM" for today, "Yesterday", weekday within a
   week, "D Mon" within the year, else "D Mon YYYY"; `detailed` shows the
   full date and time.
