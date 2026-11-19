@@ -5,12 +5,17 @@
 //! the helper runs as root:
 //!
 //! ```text
-//! helix-system-monitor-helper [--dry-run] signal <STOP|CONT|TERM|KILL> <PID>
-//! helix-system-monitor-helper [--dry-run] renice <NICE> <PID>
+//! helix-system-monitor-helper [--dry-run] signal <STOP|CONT|TERM|KILL> <PID> <START>
+//! helix-system-monitor-helper [--dry-run] renice <NICE> <PID> <START>
 //! ```
 //!
 //! * `PID`: decimal, no sign, no leading zeros, 2 ..= 4194304 (the kernel's
 //!   `PID_MAX_LIMIT`). PID 1 (init) is always refused.
+//! * `START`: the process's start time, field 22 of `/proc/<PID>/stat`
+//!   (clock ticks after boot), decimal, no sign, no leading zeros. The
+//!   helper acts only if the PID still belongs to the process that
+//!   started then (see `pidfd.rs`), not to one that got the PID while
+//!   the user was authenticating.
 //! * `NICE`: decimal, optional leading `-`, no leading zeros, −20 ..= 19.
 //! * Nothing else is accepted: no extra arguments, no `--`, no signal numbers.
 
@@ -63,8 +68,16 @@ impl Signal {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Command {
-    Signal { signal: Signal, pid: i32 },
-    Renice { nice: i32, pid: i32 },
+    Signal {
+        signal: Signal,
+        pid: i32,
+        start: u64,
+    },
+    Renice {
+        nice: i32,
+        pid: i32,
+        start: u64,
+    },
 }
 
 impl Command {
@@ -74,29 +87,42 @@ impl Command {
         }
     }
 
+    /// Start time of the process meant (clock ticks after boot).
+    pub fn start(self) -> u64 {
+        match self {
+            Command::Signal { start, .. } | Command::Renice { start, .. } => start,
+        }
+    }
+
     /// Argument vector (without the program name) for this command.
     pub fn to_args(self) -> Vec<String> {
         match self {
-            Command::Signal { signal, pid } => {
-                vec!["signal".into(), signal.name().into(), pid.to_string()]
-            }
-            Command::Renice { nice, pid } => {
-                vec!["renice".into(), nice.to_string(), pid.to_string()]
-            }
+            Command::Signal { signal, pid, start } => vec![
+                "signal".into(),
+                signal.name().into(),
+                pid.to_string(),
+                start.to_string(),
+            ],
+            Command::Renice { nice, pid, start } => vec![
+                "renice".into(),
+                nice.to_string(),
+                pid.to_string(),
+                start.to_string(),
+            ],
         }
     }
 
     /// Human-readable description, used for dry runs.
     pub fn describe(self) -> String {
         match self {
-            Command::Signal { signal, pid } => {
+            Command::Signal { signal, pid, .. } => {
                 trf!(
                     "send SIG{name} to process {pid}",
                     name = signal.name(),
                     pid = pid
                 )
             }
-            Command::Renice { nice, pid } => trf!(
+            Command::Renice { nice, pid, .. } => trf!(
                 "set nice value of process {pid} to {nice}",
                 pid = pid,
                 nice = nice
@@ -109,13 +135,13 @@ impl Command {
     /// The error message when the command failed with `error`.
     pub fn failure(self, error: &dyn std::fmt::Display) -> String {
         match self {
-            Command::Signal { signal, pid } => trf!(
+            Command::Signal { signal, pid, .. } => trf!(
                 "cannot send SIG{name} to process {pid}: {error}",
                 name = signal.name(),
                 pid = pid,
                 error = error
             ),
-            Command::Renice { nice, pid } => trf!(
+            Command::Renice { nice, pid, .. } => trf!(
                 "cannot set nice value of process {pid} to {nice}: {error}",
                 pid = pid,
                 nice = nice,
@@ -138,6 +164,7 @@ pub enum ArgError {
     BadSignal(String),
     BadPid(String),
     BadNice(String),
+    BadStart(String),
 }
 
 impl fmt::Display for ArgError {
@@ -151,11 +178,12 @@ impl fmt::Display for ArgError {
             ),
             ArgError::BadPid(s) => write!(f, "invalid process ID “{s}”"),
             ArgError::BadNice(s) => write!(f, "invalid nice value “{s}” (expected -20..19)"),
+            ArgError::BadStart(s) => write!(f, "invalid process start time “{s}”"),
         }
     }
 }
 
-pub const USAGE: &str = "Usage: helix-system-monitor-helper [--dry-run] signal <STOP|CONT|TERM|KILL> <PID>\n       helix-system-monitor-helper [--dry-run] renice <NICE> <PID>";
+pub const USAGE: &str = "Usage: helix-system-monitor-helper [--dry-run] signal <STOP|CONT|TERM|KILL> <PID> <START>\n       helix-system-monitor-helper [--dry-run] renice <NICE> <PID> <START>";
 
 /// Strict decimal parser: optional `-` (when `signed`), digits only, no
 /// leading zeros, at most 7 digits (so it never overflows `i32`).
@@ -192,6 +220,15 @@ pub fn parse_nice(s: &str) -> Result<i32, ArgError> {
     }
 }
 
+/// Start time: decimal digits, no sign, no leading zeros, fits `u64`.
+pub fn parse_start(s: &str) -> Result<u64, ArgError> {
+    let ok =
+        !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit()) && (s == "0" || !s.starts_with('0'));
+    ok.then(|| s.parse().ok())
+        .flatten()
+        .ok_or_else(|| ArgError::BadStart(s.to_string()))
+}
+
 /// Parses the helper's arguments (without the program name).
 pub fn parse<S: AsRef<str>>(args: &[S]) -> Result<Invocation, ArgError> {
     let mut args: Vec<&str> = args.iter().map(AsRef::as_ref).collect();
@@ -199,7 +236,7 @@ pub fn parse<S: AsRef<str>>(args: &[S]) -> Result<Invocation, ArgError> {
     if dry_run {
         args.remove(0);
     }
-    let [cmd, value, pid] = args[..] else {
+    let [cmd, value, pid, start] = args[..] else {
         return Err(ArgError::Usage);
     };
     let command = match cmd {
@@ -209,11 +246,13 @@ pub fn parse<S: AsRef<str>>(args: &[S]) -> Result<Invocation, ArgError> {
             Command::Signal {
                 signal,
                 pid: parse_pid(pid)?,
+                start: parse_start(start)?,
             }
         }
         "renice" => Command::Renice {
             nice: parse_nice(value)?,
             pid: parse_pid(pid)?,
+            start: parse_start(start)?,
         },
         other => return Err(ArgError::UnknownCommand(other.to_string())),
     };
@@ -231,11 +270,12 @@ mod tests {
     #[test]
     fn valid_signal_commands() {
         assert_eq!(
-            ok(&["signal", "TERM", "1234"]),
+            ok(&["signal", "TERM", "1234", "5678"]),
             Invocation {
                 command: Command::Signal {
                     signal: Signal::Term,
-                    pid: 1234
+                    pid: 1234,
+                    start: 5678
                 },
                 dry_run: false
             }
@@ -246,33 +286,59 @@ mod tests {
             ("KILL", Signal::Kill),
         ] {
             assert_eq!(
-                ok(&["signal", name, "2"]).command,
+                ok(&["signal", name, "2", "0"]).command,
                 Command::Signal {
                     signal: sig,
-                    pid: 2
+                    pid: 2,
+                    start: 0
                 }
             );
         }
-        assert!(ok(&["--dry-run", "signal", "KILL", "4194304"]).dry_run);
+        assert!(
+            ok(&[
+                "--dry-run",
+                "signal",
+                "KILL",
+                "4194304",
+                "18446744073709551615"
+            ])
+            .dry_run
+        );
     }
 
     #[test]
     fn valid_renice_commands() {
         assert_eq!(
-            ok(&["renice", "-20", "99"]).command,
-            Command::Renice { nice: -20, pid: 99 }
+            ok(&["renice", "-20", "99", "7"]).command,
+            Command::Renice {
+                nice: -20,
+                pid: 99,
+                start: 7
+            }
         );
         assert_eq!(
-            ok(&["renice", "19", "99"]).command,
-            Command::Renice { nice: 19, pid: 99 }
+            ok(&["renice", "19", "99", "7"]).command,
+            Command::Renice {
+                nice: 19,
+                pid: 99,
+                start: 7
+            }
         );
         assert_eq!(
-            ok(&["renice", "0", "99"]).command,
-            Command::Renice { nice: 0, pid: 99 }
+            ok(&["renice", "0", "99", "7"]).command,
+            Command::Renice {
+                nice: 0,
+                pid: 99,
+                start: 7
+            }
         );
         assert_eq!(
-            ok(&["--dry-run", "renice", "-5", "7"]).command,
-            Command::Renice { nice: -5, pid: 7 }
+            ok(&["--dry-run", "renice", "-5", "7", "8"]).command,
+            Command::Renice {
+                nice: -5,
+                pid: 7,
+                start: 8
+            }
         );
     }
 
@@ -280,21 +346,30 @@ mod tests {
     fn rejects_wrong_arity_and_order() {
         assert_eq!(parse::<&str>(&[]), Err(ArgError::Usage));
         assert_eq!(parse(&["signal", "TERM"]), Err(ArgError::Usage));
-        assert_eq!(parse(&["signal", "TERM", "12", "13"]), Err(ArgError::Usage));
+        // The start time is required.
+        assert_eq!(parse(&["signal", "TERM", "12"]), Err(ArgError::Usage));
+        assert_eq!(parse(&["renice", "5", "12"]), Err(ArgError::Usage));
+        assert_eq!(
+            parse(&["signal", "TERM", "12", "13", "14"]),
+            Err(ArgError::Usage)
+        );
         assert_eq!(parse(&["--dry-run"]), Err(ArgError::Usage));
         // --dry-run only as the first argument, only once.
         assert_eq!(
-            parse(&["signal", "TERM", "12", "--dry-run"]),
+            parse(&["signal", "TERM", "12", "1", "--dry-run"]),
             Err(ArgError::Usage)
         );
         assert!(parse(&["--dry-run", "--dry-run", "signal", "TERM"]).is_err());
-        assert_eq!(parse(&["--", "signal", "TERM", "12"]), Err(ArgError::Usage));
         assert_eq!(
-            parse(&["kill", "TERM", "12"]),
+            parse(&["--", "signal", "TERM", "12", "1"]),
+            Err(ArgError::Usage)
+        );
+        assert_eq!(
+            parse(&["kill", "TERM", "12", "1"]),
             Err(ArgError::UnknownCommand("kill".into()))
         );
         assert_eq!(
-            parse(&["SIGNAL", "TERM", "12"]),
+            parse(&["SIGNAL", "TERM", "12", "1"]),
             Err(ArgError::UnknownCommand("SIGNAL".into()))
         );
     }
@@ -305,7 +380,7 @@ mod tests {
             "9", "SIGKILL", "kill", "HUP", "USR1", "", " TERM", "TERM ", "-9",
         ] {
             assert_eq!(
-                parse(&["signal", s, "12"]),
+                parse(&["signal", s, "12", "1"]),
                 Err(ArgError::BadSignal(s.into())),
                 "{s:?}"
             );
@@ -335,12 +410,12 @@ mod tests {
             "12\0",
         ] {
             assert_eq!(
-                parse(&["signal", "TERM", p]),
+                parse(&["signal", "TERM", p, "1"]),
                 Err(ArgError::BadPid(p.into())),
                 "{p:?}"
             );
             assert_eq!(
-                parse(&["renice", "5", p]),
+                parse(&["renice", "5", p, "1"]),
                 Err(ArgError::BadPid(p.into())),
                 "{p:?}"
             );
@@ -353,11 +428,34 @@ mod tests {
             "-21", "20", "100", "+5", "-0", "05", "-05", "", "-", "5.0", " 5", "high", "--5",
         ] {
             assert_eq!(
-                parse(&["renice", n, "12"]),
+                parse(&["renice", n, "12", "1"]),
                 Err(ArgError::BadNice(n.into())),
                 "{n:?}"
             );
         }
+    }
+
+    #[test]
+    fn rejects_bad_start_times() {
+        for st in [
+            "",
+            "-1",
+            "+1",
+            "01",
+            "1.5",
+            " 1",
+            "1 ",
+            "0x10",
+            "18446744073709551616",
+            "١",
+        ] {
+            assert_eq!(
+                parse(&["signal", "KILL", "12", st]),
+                Err(ArgError::BadStart(st.into())),
+                "{st:?}"
+            );
+        }
+        assert_eq!(parse_start("0"), Ok(0));
     }
 
     #[test]
@@ -366,17 +464,28 @@ mod tests {
             Command::Signal {
                 signal: Signal::Stop,
                 pid: 2,
+                start: 0,
             },
             Command::Signal {
                 signal: Signal::Kill,
                 pid: PID_MAX_LIMIT,
+                start: u64::MAX,
             },
             Command::Renice {
                 nice: -20,
                 pid: 300,
+                start: 1,
             },
-            Command::Renice { nice: 19, pid: 301 },
-            Command::Renice { nice: 0, pid: 302 },
+            Command::Renice {
+                nice: 19,
+                pid: 301,
+                start: 12345,
+            },
+            Command::Renice {
+                nice: 0,
+                pid: 302,
+                start: 9,
+            },
         ];
         for c in cmds {
             assert_eq!(
@@ -394,13 +503,19 @@ mod tests {
         assert_eq!(
             Command::Signal {
                 signal: Signal::Term,
-                pid: 5
+                pid: 5,
+                start: 1
             }
             .describe(),
             "send SIGTERM to process 5"
         );
         assert_eq!(
-            Command::Renice { nice: -3, pid: 5 }.describe(),
+            Command::Renice {
+                nice: -3,
+                pid: 5,
+                start: 1
+            }
+            .describe(),
             "set nice value of process 5 to -3"
         );
         assert_eq!(Signal::Kill.number(), libc::SIGKILL);
@@ -408,13 +523,19 @@ mod tests {
         assert_eq!(
             Command::Signal {
                 signal: Signal::Kill,
-                pid: 5
+                pid: 5,
+                start: 1
             }
             .failure(&denied),
             format!("cannot send SIGKILL to process 5: {denied}")
         );
         assert_eq!(
-            Command::Renice { nice: 4, pid: 5 }.failure(&"busy"),
+            Command::Renice {
+                nice: 4,
+                pid: 5,
+                start: 1
+            }
+            .failure(&"busy"),
             "cannot set nice value of process 5 to 4: busy"
         );
     }

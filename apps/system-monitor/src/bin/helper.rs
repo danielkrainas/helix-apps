@@ -2,6 +2,10 @@
 //! (polkit action `org.helixdesktop.SystemMonitor.manage-processes`) to signal or
 //! renice processes the calling user does not own.
 //!
+//! It acts only on the process that started at the given time (see
+//! `pidfd.rs`): if that process has exited, nothing that got its PID since
+//! is touched.
+//!
 //! Exit status: 0 success, 2 invalid arguments, 3 no such process,
 //! 4 operation failed (including "not running as root").
 
@@ -9,6 +13,8 @@ use helix_app_common::trf;
 
 #[path = "../helper_args.rs"]
 mod helper_args;
+#[path = "../pidfd.rs"]
+mod pidfd;
 
 use helper_args::{Command, Invocation};
 use std::process::ExitCode;
@@ -22,25 +28,13 @@ fn fail(code: u8, msg: impl std::fmt::Display) -> ExitCode {
     ExitCode::from(code)
 }
 
-fn process_exists(pid: i32) -> bool {
-    std::path::Path::new(&format!("/proc/{pid}")).is_dir()
-}
-
-fn execute(command: Command) -> Result<(), std::io::Error> {
-    let rc = match command {
-        // SAFETY: plain syscall; the pid was validated to be >= 2, so it never
-        // addresses a process group, every process (-1) or init.
-        Command::Signal { signal, pid } => unsafe { libc::kill(pid, signal.number()) },
-        // SAFETY: plain syscall on a single validated pid with a nice value
-        // validated to be in -20..=19.
-        Command::Renice { nice, pid } => unsafe {
-            libc::setpriority(libc::PRIO_PROCESS, pid as libc::id_t, nice)
-        },
-    };
-    if rc == 0 {
-        Ok(())
-    } else {
-        Err(std::io::Error::last_os_error())
+fn execute(process: &pidfd::Process, command: Command) -> Result<(), std::io::Error> {
+    match command {
+        // The pid was validated to be >= 2 (never init), and the signal
+        // goes through the pidfd to that one process.
+        Command::Signal { signal, .. } => process.signal(signal.number()),
+        // The nice value was validated to be in -20..=19.
+        Command::Renice { nice, .. } => process.renice(nice),
     }
 }
 
@@ -65,9 +59,13 @@ fn main() -> ExitCode {
     if pid == std::process::id() as i32 {
         return fail(EXIT_USAGE, "refusing to act on the helper itself");
     }
-    if !process_exists(pid) {
-        return fail(EXIT_NO_PROCESS, trf!("no process with ID {pid}", pid = pid));
-    }
+    let process = match pidfd::Process::open(pid, command.start()) {
+        Ok(p) => p,
+        Err(e) if e.raw_os_error() == Some(libc::ESRCH) => {
+            return fail(EXIT_NO_PROCESS, trf!("no process with ID {pid}", pid = pid))
+        }
+        Err(e) => return fail(EXIT_FAILED, command.failure(&e)),
+    };
     if dry_run {
         println!("dry run: would {}", command.describe());
         return ExitCode::SUCCESS;
@@ -76,7 +74,7 @@ fn main() -> ExitCode {
     if unsafe { libc::geteuid() } != 0 {
         return fail(EXIT_FAILED, "must be run as root (through pkexec)");
     }
-    match execute(command) {
+    match execute(&process, command) {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) if e.raw_os_error() == Some(libc::ESRCH) => {
             fail(EXIT_NO_PROCESS, trf!("no process with ID {pid}", pid = pid))

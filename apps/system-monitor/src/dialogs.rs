@@ -130,9 +130,9 @@ pub fn change_priority(
     obj: &ProcessObject,
     on_error: Rc<dyn Fn(String)>,
 ) {
-    let (pid, name, nice) = {
+    let (pid, start, name, nice) = {
         let i = obj.info();
-        (i.pid, i.name.clone(), i.nice)
+        (i.pid, i.start_ticks, i.name.clone(), i.nice)
     };
     let dialog = adw::AlertDialog::builder()
         .heading(trf!("Change Priority of “{name}” (PID {pid})", name = name, pid = pid))
@@ -216,10 +216,11 @@ pub fn change_priority(
         let name = name.clone();
         let on_error = on_error.clone();
         escalate_if_needed(
-            control::renice(pid, v),
+            control::renice(pid, start, v),
             Command::Renice {
                 nice: v.clamp(-20, 19),
                 pid,
+                start,
             },
             move |res| {
                 if let Err(e) = res {
@@ -243,9 +244,9 @@ pub fn signal_process(
     confirm: bool,
     on_done: Rc<dyn Fn(Result<(), String>)>,
 ) {
-    let (pid, name) = {
+    let (pid, start, name) = {
         let i = obj.info();
-        (i.pid, i.name.clone())
+        (i.pid, i.start_ticks, i.name.clone())
     };
     let run = move || {
         let name = name.clone();
@@ -253,8 +254,9 @@ pub fn signal_process(
         let command = Command::Signal {
             signal: action.helper_signal(),
             pid,
+            start,
         };
-        escalate_if_needed(control::send(pid, action), command, move |res| {
+        escalate_if_needed(control::send(pid, start, action), command, move |res| {
             on_done(res.map_err(|e| match action {
                 Action::Stop => trf!("Cannot stop “{name}”: {e}", name = name, e = e),
                 Action::Continue => {

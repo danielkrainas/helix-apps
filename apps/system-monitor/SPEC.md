@@ -130,8 +130,16 @@ View processes, resources, and file systems.
   development the app honours `HELIX_SYSTEM_MONITOR_HELPER=<path>` (pkexec
   still needs a policy whose exec.path matches). Grammar (strict, parsed in
   `src/helper_args.rs`, unit-tested):
-  - `helix-system-monitor-helper [--dry-run] signal <STOP|CONT|TERM|KILL> <PID>`
-  - `helix-system-monitor-helper [--dry-run] renice <NICE> <PID>`
+  - `helix-system-monitor-helper [--dry-run] signal <STOP|CONT|TERM|KILL> <PID> <START>`
+  - `helix-system-monitor-helper [--dry-run] renice <NICE> <PID> <START>`
+  - START: the process's start time (field 22 of `/proc/<PID>/stat`, clock
+    ticks after boot) as the app saw it when the user picked the process,
+    decimal, no sign or leading zeros; required. The helper opens a pidfd
+    for PID, checks the start time and signals through the pidfd
+    (`pidfd_send_signal`); renice uses the PID and then checks the pidfd's
+    process is still running. If the process exited (for instance while
+    the user was authenticating), nothing that got its PID since is
+    touched: exit 3. The app does the same for its own processes.
   - PID: decimal digits only, no sign/leading zeros, 2…4194304 (PID 1 and
     the helper's own PID are refused; ≤ 0 would address process groups).
     NICE: optional `-`, no leading zeros, −20…19. Any other argument,
@@ -139,7 +147,8 @@ View processes, resources, and file systems.
 - Exit codes: 0 success, 2 invalid arguments, 3 no such process,
   4 failure (including not running as root). pkexec's own 126/127
   (dismissed / not authorised) are mapped to messages by the app.
-- `--dry-run` validates the arguments and that the process exists, prints
+- `--dry-run` validates the arguments and that the process exists (with
+  that start time), prints
   `dry run: would …` and changes nothing; it does not need root. Tests
   (`tests/helper.rs`) cover only validation and the dry-run path; pkexec is
   never invoked by tests.

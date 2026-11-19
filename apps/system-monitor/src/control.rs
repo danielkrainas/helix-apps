@@ -59,8 +59,7 @@ impl fmt::Display for Error {
     }
 }
 
-fn last_error() -> Error {
-    let e = std::io::Error::last_os_error();
+fn error_from(e: std::io::Error) -> Error {
     match e.raw_os_error() {
         Some(libc::ESRCH) => Error::NoSuchProcess,
         Some(libc::EPERM) | Some(libc::EACCES) => Error::PermissionDenied,
@@ -86,27 +85,21 @@ pub fn check_owner(pid: i32) -> Result<(), Error> {
     }
 }
 
-pub fn send(pid: i32, action: Action) -> Result<(), Error> {
+/// Sends `action` to the process `pid` that started at `start` (clock
+/// ticks after boot, see `pidfd.rs`); a process that has exited since is
+/// reported gone, and one that got its PID is not touched.
+pub fn send(pid: i32, start: u64, action: Action) -> Result<(), Error> {
     check_owner(pid)?;
-    // SAFETY: plain syscall; pid > 0 is checked so no process group is hit.
-    if unsafe { libc::kill(pid, action.signal()) } == 0 {
-        Ok(())
-    } else {
-        Err(last_error())
-    }
+    let process = crate::pidfd::Process::open(pid, start).map_err(error_from)?;
+    process.signal(action.signal()).map_err(error_from)
 }
 
 /// Sets the nice value. Lowering it below the current value needs
 /// privileges the app does not request, so the kernel refuses with EPERM/EACCES.
-pub fn renice(pid: i32, nice: i32) -> Result<(), Error> {
+pub fn renice(pid: i32, start: u64, nice: i32) -> Result<(), Error> {
     check_owner(pid)?;
-    let nice = nice.clamp(-20, 19);
-    // SAFETY: plain syscall on a single, checked pid.
-    if unsafe { libc::setpriority(libc::PRIO_PROCESS, pid as libc::id_t, nice) } == 0 {
-        Ok(())
-    } else {
-        Err(last_error())
-    }
+    let process = crate::pidfd::Process::open(pid, start).map_err(error_from)?;
+    process.renice(nice.clamp(-20, 19)).map_err(error_from)
 }
 
 /// Installed location of the helper; must match the
@@ -230,13 +223,16 @@ mod tests {
         let mut child = spawn_sleep();
         let pid = child.0.id() as i32;
         assert_eq!(check_owner(pid), Ok(()));
+        let start = crate::pidfd::start_time(pid).unwrap();
 
-        send(pid, Action::Stop).unwrap();
+        send(pid, start, Action::Stop).unwrap();
         assert!(wait_state(pid, |c| c == 'T'), "child should be stopped");
-        send(pid, Action::Continue).unwrap();
+        send(pid, start, Action::Continue).unwrap();
         assert!(wait_state(pid, |c| c != 'T'), "child should be continued");
 
-        send(pid, Action::End).unwrap();
+        // Another start time: the process the user picked is gone.
+        assert_eq!(send(pid, start + 1, Action::End), Err(Error::NoSuchProcess));
+        send(pid, start, Action::End).unwrap();
         let status = child.0.wait().unwrap();
         use std::os::unix::process::ExitStatusExt;
         assert_eq!(status.signal(), Some(libc::SIGTERM));
@@ -246,7 +242,8 @@ mod tests {
     fn kill_own_child() {
         let mut child = spawn_sleep();
         let pid = child.0.id() as i32;
-        send(pid, Action::Kill).unwrap();
+        let start = crate::pidfd::start_time(pid).unwrap();
+        send(pid, start, Action::Kill).unwrap();
         use std::os::unix::process::ExitStatusExt;
         assert_eq!(child.0.wait().unwrap().signal(), Some(libc::SIGKILL));
     }
@@ -255,7 +252,9 @@ mod tests {
     fn renice_own_child() {
         let child = spawn_sleep();
         let pid = child.0.id() as i32;
-        renice(pid, 10).unwrap();
+        let start = crate::pidfd::start_time(pid).unwrap();
+        assert_eq!(renice(pid, start + 1, 5), Err(Error::NoSuchProcess));
+        renice(pid, start, 10).unwrap();
         let text = std::fs::read_to_string(format!("/proc/{pid}/stat")).unwrap();
         assert_eq!(crate::procfs::parse_pid_stat(&text).unwrap().nice, 10);
     }
@@ -284,10 +283,14 @@ mod tests {
         );
         let argv = pkexec_argv(
             std::path::Path::new(HELPER_PATH),
-            Command::Renice { nice: -5, pid: 42 },
+            Command::Renice {
+                nice: -5,
+                pid: 42,
+                start: 9,
+            },
         );
         let argv: Vec<_> = argv.iter().map(|s| s.to_str().unwrap()).collect();
-        assert_eq!(argv, ["pkexec", HELPER_PATH, "renice", "-5", "42"]);
+        assert_eq!(argv, ["pkexec", HELPER_PATH, "renice", "-5", "42", "9"]);
         assert_eq!(interpret_exit(Some(0), ""), Ok(()));
         assert_eq!(interpret_exit(Some(3), ""), Err(Error::NoSuchProcess));
         assert!(matches!(

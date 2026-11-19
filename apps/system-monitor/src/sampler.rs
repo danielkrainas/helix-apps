@@ -30,6 +30,9 @@ pub struct ProcessInfo {
     pub threads: i64,
     /// Seconds since the epoch.
     pub start_time: u64,
+    /// Start time in clock ticks after boot, which with the PID names
+    /// this process and no later one (see `pidfd.rs`).
+    pub start_ticks: u64,
     pub cmdline: String,
 }
 
@@ -125,6 +128,7 @@ pub fn read_process(
         state: stat.state,
         threads: stat.num_threads,
         start_time: btime + stat.starttime / hz.max(1),
+        start_ticks: stat.starttime,
         cmdline: args.join(" "),
     })
 }

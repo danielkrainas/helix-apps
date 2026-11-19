@@ -8,6 +8,7 @@ mod fs_view;
 mod helper_args;
 mod history;
 mod model;
+mod pidfd;
 mod proc_view;
 mod procfs;
 mod res_view;
