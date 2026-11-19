@@ -6,6 +6,7 @@ mod dbus;
 mod dialogs;
 mod jobs;
 mod properties;
+mod sandbox;
 mod shortcuts;
 mod sidebar;
 mod tab;

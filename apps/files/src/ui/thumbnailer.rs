@@ -11,10 +11,15 @@
 //! long, say on a slow share) is retried the next time Files runs, or
 //! when the file changes. Within a run, `thumbs.rs` remembers failures.
 //!
+//! Thumbnailers run in a bubblewrap sandbox (`sandbox.rs`), never
+//! outside one.
+//!
 //! Everything here runs on a worker thread.
 
+use super::sandbox;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::glib;
+use std::os::fd::AsRawFd;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::OnceLock;
@@ -25,6 +30,8 @@ pub const SIZE: i32 = 256;
 /// How long a thumbnailer may run (a large video on a network share can
 /// take a while).
 const TIMEOUT: Duration = Duration::from_secs(30);
+/// Largest thumbnail file a thumbnailer may hand back.
+const MAX_OUTPUT: u64 = 32 << 20;
 
 /// What a thumbnail is made from.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -153,13 +160,10 @@ fn command(exec: &str, src: &Source, out: &Path) -> Option<Vec<String>> {
     (!args.is_empty()).then_some(args)
 }
 
-/// Runs `args`, killing it after [`TIMEOUT`]; true if it exited fine.
-fn run(args: &[String]) -> bool {
-    let Some((program, rest)) = args.split_first() else {
-        return false;
-    };
-    let Ok(mut child) = std::process::Command::new(program)
-        .args(rest)
+/// Runs `cmd` (the sandboxed thumbnailer `program`), killing it after
+/// [`TIMEOUT`]; true if it exited fine.
+fn run_command(mut cmd: std::process::Command, program: &str) -> bool {
+    let Ok(mut child) = cmd
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
@@ -181,6 +185,64 @@ fn run(args: &[String]) -> bool {
             Err(_) => return false,
         }
     }
+}
+
+/// Runs thumbnailer command line `exec` for `src` in the [`sandbox`]: the
+/// file appears there as `/tmp/file-to-thumbnail.<ext>` (the extension
+/// kept, some thumbnailers go by it) and the thumbnail is written to
+/// `/tmp/thumbnail.png`, in a private temporary folder outside. Nothing
+/// runs where bubblewrap cannot make a sandbox.
+fn run_sandboxed(exec: &str, src: &Source) -> Option<Pixbuf> {
+    let bwrap = sandbox::bwrap()?;
+    let ext: String = src
+        .path
+        .extension()
+        .map(|e| e.to_string_lossy().into_owned())
+        .unwrap_or_default()
+        .chars()
+        .filter(char::is_ascii_alphanumeric)
+        .take(16)
+        .collect();
+    let name = if ext.is_empty() {
+        "file-to-thumbnail".to_owned()
+    } else {
+        format!("file-to-thumbnail.{ext}")
+    };
+    let inside_input = format!("{}/{name}", sandbox::TMP);
+    let inside_output = format!("{}/thumbnail.png", sandbox::TMP);
+    let inside = Source {
+        path: PathBuf::from(&inside_input),
+        uri: format!("file://{inside_input}"),
+        mime: src.mime.clone(),
+        mtime: src.mtime,
+    };
+    let args = command(exec, &inside, Path::new(&inside_output))?;
+    let outdir = sandbox::tempdir().ok()?;
+    let seccomp = sandbox::filter_fd();
+    let gst = sandbox::gst_cache_dir();
+    let mut cmd = std::process::Command::new(bwrap);
+    cmd.args(sandbox::bwrap_args(
+        &outdir,
+        &src.path,
+        &inside_input,
+        seccomp.as_ref().map(|f| f.as_raw_fd()),
+        gst.as_deref(),
+    ));
+    if let Some(fd) = &seccomp {
+        sandbox::inherit(&mut cmd, fd.as_raw_fd());
+    }
+    cmd.args(&args);
+    let ok = run_command(cmd, &args[0]);
+    let pixbuf = if ok {
+        sandbox::read_output(&outdir.join("thumbnail.png"), MAX_OUTPUT).and_then(|bytes| {
+            let stream = gtk::gio::MemoryInputStream::from_bytes(&glib::Bytes::from_owned(bytes));
+            Pixbuf::from_stream(&stream, gtk::gio::Cancellable::NONE).ok()
+        })
+    } else {
+        None
+    };
+    sandbox::remove_tempdir(&outdir);
+    pixbuf
 }
 
 /// A picture no larger than [`SIZE`] on its longer side.
@@ -226,18 +288,8 @@ fn make_in(cache: &Path, src: &Source) -> Option<PathBuf> {
         use std::os::unix::fs::PermissionsExt;
         let _ = std::fs::set_permissions(dir, std::fs::Permissions::from_mode(0o700));
     }
-    let raw = temp_next_to(&target);
     let pixbuf = match thumbnailer_for(&src.mime) {
-        Some(t) => {
-            let ok = command(&t.exec, src, &raw).is_some_and(|args| run(&args));
-            let p = if ok {
-                Pixbuf::from_file(&raw).ok()
-            } else {
-                None
-            };
-            let _ = std::fs::remove_file(&raw);
-            p
-        }
+        Some(t) => run_sandboxed(&t.exec, src),
         None if src.mime.starts_with("image/") => {
             Pixbuf::from_file_at_scale(&src.path, SIZE, SIZE, true)
                 .ok()

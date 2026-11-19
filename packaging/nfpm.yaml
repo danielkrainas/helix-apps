@@ -77,6 +77,8 @@ overrides:
       - libpoppler-glib8t64 | libpoppler-glib8
       - libshumate-1.0-1
       - libsane1
+      # Files runs thumbnailers in a bubblewrap sandbox.
+      - bubblewrap
     recommends:
       - gstreamer1.0-plugins-base
       - gstreamer1.0-plugins-good
@@ -103,6 +105,7 @@ overrides:
       - poppler-glib
       - libshumate
       - sane-backends-libs
+      - bubblewrap
     recommends:
       - gstreamer1-plugins-good
       - evolution-data-server
@@ -126,6 +129,7 @@ overrides:
       - poppler-glib
       - libshumate
       - sane
+      - bubblewrap
     recommends:
       - gst-plugins-base
       - gst-plugins-good

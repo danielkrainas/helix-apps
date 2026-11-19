@@ -115,8 +115,30 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
   and other apps take it as valid. Failures are not written to the
   cache's `fail/` folder: a thumbnail that could not be made is not tried
   again while Files runs (unless the file's mtime changes) and is tried
-  again on the next run. Thumbnailers run unsandboxed (GNOME runs them in
-  bubblewrap). Thumbnails are read and decoded on
+  again on the next run.
+- Thumbnailers run only in a bubblewrap sandbox (`ui/sandbox.rs`, after
+  gnome-desktop's): read-only `/usr` (and the merged `/bin`, `/lib`…
+  links), `/etc/ld.so.cache`, `/etc/alternatives` and the fontconfig
+  cache; fresh `/proc` and `/dev`; a private temporary folder as `/tmp`
+  holding the output (`/tmp/thumbnail.png`) and the input bound read-only
+  as `/tmp/file-to-thumbnail.<ext>` (`%i`/`%u` point there); all
+  namespaces unshared (no network), a new session, a cleared environment
+  (`PATH`, `HOME=/tmp`, `LANG=C.UTF-8`, `GIO_USE_VFS=local`,
+  `GST_REGISTRY_1_0`), killed with Files; GStreamer's registry kept in
+  `$XDG_CACHE_HOME/helix-files/thumbnailer/gstreamer-1.0`. A seccomp
+  filter (classic BPF built in Files, passed with `--seccomp`) refuses
+  what gnome-desktop's refuses: other architectures' and x32 system
+  calls, `syslog`, `uselib`, `acct`, `quotactl`, keyring calls, NUMA
+  calls, `unshare`, `setns`, `mount`, `umount2`, `pivot_root`, `chroot`,
+  `clone` with `CLONE_NEWUSER`, `clone3` and the new mount API (`ENOSYS`),
+  `perf_event_open`, `ptrace`, `modify_ldt`, `ioctl` `TIOCSTI`/`TIOCLINUX`,
+  personalities other than `PER_LINUX`, and sockets other than
+  `AF_UNSPEC`/`AF_UNIX`/`AF_INET`/`AF_INET6`/`AF_NETLINK`. The output is
+  read only as a regular file (not a symbolic link) of at most 32 MiB, and
+  the temporary folder is removed afterwards. Whether bubblewrap can make
+  a sandbox is checked once; where it cannot (not installed, user
+  namespaces off), no thumbnailer runs. The package depends on
+  `bubblewrap`. Thumbnails are read and decoded on
   worker threads, at most 4 at a time (`ui/thumbs.rs`): the tiles bound
   most recently first, and a request whose tile shows another file by
   its turn is dropped; the last 192 decoded thumbnails are kept. (Loading
@@ -331,7 +353,6 @@ the main menu.
 - Tree (expandable) list view, compressing/extracting archives,
   batch rename, scripts, "Open in Terminal", folder item counts in the
   size column (`show-directory-item-counts`).
-- Sandboxing thumbnailers (bubblewrap), as GNOME does.
 
 ## Decisions
 - FileChooser portal: Helix's own portal (helix-desktop) stays the
