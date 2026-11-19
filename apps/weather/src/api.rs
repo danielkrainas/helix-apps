@@ -266,9 +266,20 @@ fn get(req: ureq::Request) -> Result<String, String> {
             Err(api_error(&body)
                 .unwrap_or_else(|| trf!("The weather service returned HTTP {code}", code = code)))
         }
-        Err(ureq::Error::Transport(t)) => {
-            Err(trf!("Could not connect to the weather service: {t}", t = t))
-        }
+        Err(ureq::Error::Transport(t)) => Err(trf!(
+            "Could not connect to the weather service: {t}",
+            t = t.kind()
+        )),
+    }
+}
+
+/// What went wrong with a request, without the request's URL (ureq's
+/// own messages include it, and with it the place's coordinates, which
+/// must not end up in the journal).
+pub fn describe_error(e: &ureq::Error) -> String {
+    match e {
+        ureq::Error::Status(code, _) => format!("HTTP {code}"),
+        ureq::Error::Transport(t) => t.kind().to_string(),
     }
 }
 
@@ -317,6 +328,22 @@ pub fn ui_language(locale: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn errors_leave_out_the_url() {
+        let status = ureq::Error::Status(503, ureq::Response::new(503, "Busy", "").unwrap());
+        assert_eq!(describe_error(&status), "HTTP 503");
+        // Fails before any connection (unknown scheme), with the URL in
+        // ureq's own message.
+        let e = ureq::get("nosuchscheme://example.org/v1?latitude=48.1371&longitude=11.5754")
+            .call()
+            .unwrap_err();
+        let text = describe_error(&e);
+        assert!(
+            !text.contains("48.1371") && !text.contains("example.org"),
+            "{text}"
+        );
+    }
 
     const FORECAST: &str = include_str!("fixtures/forecast.json");
     const GEOCODING: &str = include_str!("fixtures/geocoding.json");

@@ -171,8 +171,13 @@ WMO codes map to a description and a standard symbolic icon
   (`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10`,
   `lat`/`lon` rounded to 4 decimals, `accept-language` = UI language; name
   = city/town/village/municipality/hamlet/suburb/county); (3) otherwise
-  "Current Location". The forecast uses the real coordinates, not the
-  city's.
+  "Current Location". As in GNOME Weather the place is the city, at the
+  city's coordinates; without a city nearby the fix is rounded to 2
+  decimals (about 1 km) before anything else (Nominatim, the forecast, the
+  saved list) sees it. The precise fix is not kept.
+- Errors are logged and shown without request URLs (ureq's messages
+  include them, and with them the coordinates): HTTP status or the kind
+  of transport failure only.
 - The located place is kept as the first entry of the saved list (subtitle
   "Current location • Region, Country", a location icon). A new fix
   replaces it; the selection follows it if it was selected (or nothing else

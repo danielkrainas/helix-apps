@@ -4,6 +4,11 @@
 //! Reverse geocoding tries the offline GWeather database first (nearest
 //! city within [`OFFLINE_RADIUS_KM`]), then OpenStreetMap Nominatim, and
 //! finally falls back to an unnamed "Current Location".
+//!
+//! As in GNOME Weather, an automatic place is the nearest city, at the
+//! city's own position; without one nearby, the fix rounded to two
+//! decimals (about a kilometre). The precise fix is not kept, sent
+//! anywhere or logged.
 
 use serde::Deserialize;
 use std::time::Duration;
@@ -19,14 +24,24 @@ pub const OFFLINE_RADIUS_KM: f64 = 50.0;
 const NOMINATIM_URL: &str = "https://nominatim.openstreetmap.org/reverse";
 pub const FALLBACK_NAME: &str = n_("Current Location");
 
-/// Nearest GWeather city within the radius.
+/// `fix` rounded to two decimals (about 1.1 km), enough for a forecast.
+pub fn coarse(fix: Fix) -> Fix {
+    let round = |v: f64| (v * 100.0).round() / 100.0;
+    Fix {
+        latitude: round(fix.latitude),
+        longitude: round(fix.longitude),
+        accuracy: None,
+    }
+}
+
+/// Nearest GWeather city within the radius, at the city's position.
 pub fn offline(db: &gwdb::Db, fix: Fix) -> Option<Place> {
     let c = db.nearest_city((fix.latitude, fix.longitude), OFFLINE_RADIUS_KM)?;
     Some(Place {
         admin1: c.state.clone(),
         country: c.country.clone(),
         timezone: c.tz.clone(),
-        ..Place::at(c.name.clone(), fix.latitude, fix.longitude)
+        ..Place::at(c.name.clone(), c.coords.0, c.coords.1)
     })
 }
 
@@ -98,14 +113,15 @@ fn nominatim(fix: Fix, language: &str) -> Result<Place, String> {
         .query("accept-language", language);
     let body = req
         .call()
-        .map_err(|e| e.to_string())?
+        .map_err(|e| crate::api::describe_error(&e))?
         .into_string()
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.kind().to_string())?;
     parse_nominatim(&body, fix)
 }
 
 /// Names `fix` (blocking; may use the network).
 pub fn name_place(fix: Fix, db: Option<&gwdb::Db>, language: &str) -> Place {
+    let fix = coarse(fix);
     db.and_then(|d| offline(d, fix))
         .or_else(|| {
             nominatim(fix, language)
@@ -143,14 +159,35 @@ mod tests {
         assert_eq!(p.name, "Munich");
         assert_eq!(p.subtitle(), "Bavaria, Germany");
         assert_eq!(p.timezone.as_deref(), Some("Europe/Berlin"));
+        let munich = db
+            .cities
+            .iter()
+            .find(|c| c.name == "Munich")
+            .unwrap()
+            .coords;
         assert_eq!(
             (p.latitude, p.longitude),
-            (48.2, 11.6),
-            "keeps the real position"
+            munich,
+            "the city's position, not the fix"
         );
         assert!(offline(&db, fix(0.0, 0.0)).is_none());
         // Without any source the fallback name is used (no network here:
         // a far-away fix with the database would hit Nominatim).
+    }
+
+    #[test]
+    fn fixes_are_coarsened() {
+        let f = coarse(Fix {
+            latitude: 48.137_154,
+            longitude: -11.575_382,
+            accuracy: Some(5.0),
+        });
+        assert_eq!((f.latitude, f.longitude), (48.14, -11.58));
+        assert_eq!(f.accuracy, None);
+        // Far from any city in the database: no network is used for a
+        // name here, but the place keeps only the coarse position.
+        let p = Place::at(tr(FALLBACK_NAME), f.latitude, f.longitude);
+        assert_eq!(format!("{:.4}", p.latitude), "48.1400");
     }
 
     #[test]
