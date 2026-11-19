@@ -59,7 +59,13 @@ Scan documents and photos.
     linearly from −100…100 onto the option's range around its midpoint.
 - Frames: grey and RGB, plus three-pass R/G/B frames; depths 1 (lineart,
   1 = black), 8 and 16 (reduced to 8 bits). Unknown line counts (`lines`
-  = −1) are handled by reading to EOF.
+  = −1) are handled by reading to EOF. The frame size the backend reports
+  (from the device itself for `net` and `airscan`) is not trusted: a
+  negative or overflowing size counts as unknown, at most 256 MiB is
+  reserved up front (a larger frame grows as data arrives), and a read
+  reporting more bytes than the buffer holds is cut to the buffer. Option
+  value buffers are rounded up to whole words, never smaller than the
+  option's reported size.
 - Scan types:
   - **Single Page** (`Ctrl+1`): one page.
   - **All Pages From Feeder** (`Ctrl+F`): pages until the backend reports

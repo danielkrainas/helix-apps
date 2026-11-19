@@ -474,12 +474,8 @@ fn scan_page(
         debug!("frame {:?}", p);
         let format =
             frame_format(p.format).ok_or_else(|| trf!("Unsupported frame format {}", p.format))?;
-        let expected = if p.lines > 0 {
-            (p.bytes_per_line as usize) * p.lines as usize
-        } else {
-            0
-        };
-        let mut data = Vec::with_capacity(expected);
+        let expected = expected_frame_bytes(p.bytes_per_line, p.lines);
+        let mut data = Vec::with_capacity(expected.min(MAX_PREALLOC));
         let mut last_progress = -1.0;
         loop {
             if cancel.load(Ordering::SeqCst) {
@@ -514,9 +510,37 @@ fn scan_page(
     builder.finish(dpi).map(PageResult::Page)
 }
 
+/// Most memory reserved up front for a frame; a bigger frame grows as
+/// its data arrives. The size comes from the backend, which for network
+/// scanners (`net`, `airscan`) is whatever the device reports.
+const MAX_PREALLOC: usize = 256 << 20;
+
+/// Size of a frame from its reported line length and line count, `0`
+/// when unknown (hand-held scanners report `lines == -1`), negative, or
+/// too large to represent.
+fn expected_frame_bytes(bytes_per_line: i32, lines: i32) -> usize {
+    if bytes_per_line <= 0 || lines <= 0 {
+        return 0;
+    }
+    (bytes_per_line as usize)
+        .checked_mul(lines as usize)
+        .unwrap_or(0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn frame_size_from_untrusted_parameters() {
+        assert_eq!(expected_frame_bytes(300, 400), 120_000);
+        assert_eq!(expected_frame_bytes(-1, 400), 0);
+        assert_eq!(expected_frame_bytes(300, -1), 0);
+        assert_eq!(expected_frame_bytes(i32::MIN, i32::MIN), 0);
+        let huge = expected_frame_bytes(i32::MAX, i32::MAX);
+        assert!(huge > MAX_PREALLOC);
+        assert_eq!(huge.min(MAX_PREALLOC), MAX_PREALLOC);
+    }
 
     const TEST_BACKEND: &str = "/usr/lib/x86_64-linux-gnu/sane/libsane-test.so.1";
 

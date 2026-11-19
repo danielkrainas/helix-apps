@@ -337,8 +337,7 @@ impl DeviceHandle<'_> {
         if opt.size < std::mem::size_of::<Word>() as c_int {
             return Err(Error(4));
         }
-        let n = opt.size as usize / std::mem::size_of::<Word>();
-        let mut buf = vec![0 as Word; n.max(1)];
+        let mut buf = vec![0 as Word; word_count(opt.size)];
         // SAFETY: buffer is at least `size` bytes.
         check(unsafe {
             sane_control_option(
@@ -354,8 +353,7 @@ impl DeviceHandle<'_> {
 
     /// Sets a word option (INT, FIXED or BOOL). Returns the info flags.
     pub fn set_word(&self, opt: &OptionDesc, value: Word) -> Result<Word> {
-        let n = (opt.size.max(4) as usize) / std::mem::size_of::<Word>();
-        let mut buf = vec![value; n];
+        let mut buf = vec![value; word_count(opt.size)];
         let mut info: Word = 0;
         // SAFETY: buffer is at least `size` bytes.
         check(unsafe {
@@ -413,7 +411,9 @@ impl DeviceHandle<'_> {
         let max = buf.len().min(c_int::MAX as usize) as c_int;
         // SAFETY: buffer of `max` bytes.
         check(unsafe { sane_read(self.handle, buf.as_mut_ptr(), max, &mut len) })?;
-        Ok(len.max(0) as usize)
+        // A backend reporting more than it was given cannot be trusted
+        // with the rest either; never index past the buffer.
+        Ok((len.max(0) as usize).min(max as usize))
     }
 
     pub fn cancel(&self) {
@@ -429,6 +429,14 @@ impl Drop for DeviceHandle<'_> {
     }
 }
 
+/// Words in a buffer of at least `size` bytes (an option's reported
+/// size, rounded up), and at least one.
+fn word_count(size: c_int) -> usize {
+    (size.max(0) as usize)
+        .div_ceil(std::mem::size_of::<Word>())
+        .max(1)
+}
+
 pub fn to_fixed(v: f64) -> Word {
     (v * FIXED_SCALE).round() as Word
 }
@@ -440,6 +448,19 @@ pub fn from_fixed(w: Word) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn option_buffers_cover_reported_size() {
+        assert_eq!(word_count(4), 1);
+        assert_eq!(word_count(5), 2);
+        assert_eq!(word_count(7), 2);
+        assert_eq!(word_count(8), 2);
+        assert_eq!(word_count(0), 1);
+        assert_eq!(word_count(-3), 1);
+        for size in 0..64 {
+            assert!(word_count(size) * 4 >= size as usize);
+        }
+    }
 
     #[test]
     fn labels() {
