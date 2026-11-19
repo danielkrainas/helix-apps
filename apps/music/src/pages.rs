@@ -33,6 +33,30 @@ pub fn label(text: &str, classes: &[&str]) -> gtk::Label {
         .build()
 }
 
+/// Keeps `sw` scrolled to `value` while its content is laid out again
+/// (removing the focused row, and the new rows' first layout, would
+/// otherwise move it).
+fn hold_scroll(sw: &gtk::ScrolledWindow, value: f64) {
+    let frames = std::cell::Cell::new(0u8);
+    let restore = move |sw: &gtk::ScrolledWindow| {
+        let adj = sw.vadjustment();
+        let v = value.min(adj.upper() - adj.page_size()).max(adj.lower());
+        if (adj.value() - v).abs() > 0.5 {
+            adj.set_value(v);
+        }
+    };
+    restore(sw);
+    sw.add_tick_callback(move |sw, _| {
+        restore(sw);
+        frames.set(frames.get() + 1);
+        if frames.get() < 3 {
+            glib::ControlFlow::Continue
+        } else {
+            glib::ControlFlow::Break
+        }
+    });
+}
+
 pub fn scrolled(child: &impl IsA<gtk::Widget>, max: i32) -> gtk::ScrolledWindow {
     let clamp = adw::Clamp::builder()
         .maximum_size(max)
@@ -1053,9 +1077,14 @@ impl App {
                 }
             }
         };
-        add(0..rows.len().min(FIRST));
-        if rows.len() > FIRST {
-            let next = std::cell::Cell::new(FIRST);
+        let first = if self.all_rows_now.get() {
+            rows.len()
+        } else {
+            FIRST
+        };
+        add(0..rows.len().min(first));
+        if rows.len() > first {
+            let next = std::cell::Cell::new(first);
             let total = rows.len();
             let l = list.downgrade();
             glib::idle_add_local(move || {
@@ -1623,7 +1652,18 @@ impl App {
         let cur = self.playlist_view.borrow().clone();
         if let Some((w, r)) = cur {
             if let Some(content) = w.upgrade() {
+                // Rebuilt in place (a song moved, added or removed): keep
+                // the scroll position, with every row there to scroll to.
+                let sw = content
+                    .ancestor(gtk::ScrolledWindow::static_type())
+                    .and_downcast::<gtk::ScrolledWindow>();
+                let at = sw.as_ref().map(|sw| sw.vadjustment().value());
+                self.all_rows_now.set(true);
                 self.fill_playlist(&content, &r);
+                self.all_rows_now.set(false);
+                if let (Some(sw), Some(at)) = (sw, at) {
+                    hold_scroll(&sw, at);
+                }
             }
         }
         self.refresh_playlists_list();

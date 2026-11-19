@@ -354,6 +354,9 @@ pub struct App {
     /// The queue in play order: `BoxedAnyObject`s of (item index, path).
     pub queue_model: gio::ListStore,
     pub playlist_view: RefCell<Option<(glib::WeakRef<gtk::Box>, crate::pages::PlRef)>>,
+    /// Track lists built now get all their rows at once (a page being
+    /// rebuilt in place, whose scroll position must survive).
+    pub all_rows_now: Cell<bool>,
 
     pub playing: Cell<bool>,
     pub scanning: Cell<bool>,
@@ -705,6 +708,7 @@ impl App {
                 now_playing: RefCell::default(),
                 queue_model: gio::ListStore::new::<glib::BoxedAnyObject>(),
                 playlist_view: RefCell::default(),
+                all_rows_now: Cell::new(false),
                 playing: Cell::new(false),
                 scanning: Cell::new(false),
                 scan_again: Cell::new(false),
