@@ -425,7 +425,9 @@ saved connection (`nm.rs`). The page follows NetworkManager and BlueZ live
   WPA3 Personal) and password; `AddAndActivateConnection` with
   `802-11-wireless.hidden`.
 - *Wi-Fi Hotspot*: network name (the host name, or the hotspot's
-  previous name) and a random 8-character password; turning it on
+  previous name) and a random 10-character password (GNOME Settings'
+  alphabet of lower-case letters and digits without look-alikes, drawn
+  from `/dev/urandom` with rejection sampling); turning it on
   creates (or updates and activates) a connection with `mode` `ap`,
   `wpa-psk` and `ipv4.method` `shared`, warning that it disconnects the
   current network. While a hotspot runs the network list is replaced by a

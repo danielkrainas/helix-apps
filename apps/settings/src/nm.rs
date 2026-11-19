@@ -806,29 +806,74 @@ pub fn saved_security(saved: &Saved) -> Security {
     }
 }
 
-/// A random password for a hotspot: eight letters and digits, without
-/// ones that look alike.
+/// Characters of a hotspot password: lower-case letters and digits
+/// without ones that look alike (GNOME Settings' set).
+const PASSWORD_CHARS: &[u8] = b"abcdefghjkmnpqrstuvwxyz23456789";
+
+/// Length of a generated hotspot password (about 50 bits).
+pub const PASSWORD_LEN: usize = 10;
+
+/// A random password for a hotspot, from the kernel's random number
+/// generator; empty (the user types one) if that cannot be read.
 pub fn random_password() -> String {
-    const CHARS: &[u8] = b"abcdefghjkmnpqrstuvwxyz23456789";
-    let mut seed = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_nanos() as u64)
-        .unwrap_or(1)
-        ^ (std::process::id() as u64) << 32;
-    (0..8)
-        .map(|_| {
-            // xorshift
-            seed ^= seed << 13;
-            seed ^= seed >> 7;
-            seed ^= seed << 17;
-            CHARS[(seed % CHARS.len() as u64) as usize] as char
-        })
-        .collect()
+    use std::io::Read;
+    let mut urandom = match std::fs::File::open("/dev/urandom") {
+        Ok(f) => f,
+        Err(_) => return String::new(),
+    };
+    password_from(|buf| urandom.read_exact(buf).is_ok()).unwrap_or_default()
+}
+
+/// [`PASSWORD_LEN`] characters of [`PASSWORD_CHARS`], each chosen
+/// uniformly from bytes `fill` provides (rejection sampling: bytes past
+/// the largest multiple of the alphabet's size are drawn again).
+fn password_from(mut fill: impl FnMut(&mut [u8]) -> bool) -> Option<String> {
+    let n = PASSWORD_CHARS.len();
+    let limit = 256 - 256 % n;
+    let mut out = String::with_capacity(PASSWORD_LEN);
+    let mut buf = [0u8; 32];
+    while out.len() < PASSWORD_LEN {
+        if !fill(&mut buf) {
+            return None;
+        }
+        for &b in buf.iter().filter(|&&b| (b as usize) < limit) {
+            if out.len() == PASSWORD_LEN {
+                break;
+            }
+            out.push(PASSWORD_CHARS[b as usize % n] as char);
+        }
+    }
+    Some(out)
 }
 
 #[cfg(test)]
 pub mod tests {
     use super::*;
+
+    #[test]
+    fn password_sampling_is_uniform_and_rejects_high_bytes() {
+        // Bytes at or above 248 (8 × 31) are skipped, so no character
+        // is more likely than another.
+        let mut calls = 0;
+        let p = password_from(|buf| {
+            calls += 1;
+            for (i, b) in buf.iter_mut().enumerate() {
+                *b = if i % 2 == 0 { 255 } else { 31 * (i % 8) as u8 };
+            }
+            true
+        })
+        .unwrap();
+        assert_eq!(p, "a".repeat(PASSWORD_LEN));
+        assert_eq!(calls, 1);
+        // Every byte value below the limit maps to each character the
+        // same number of times.
+        let mut counts = [0u32; 31];
+        for b in 0..248u32 {
+            counts[(b % 31) as usize] += 1;
+        }
+        assert!(counts.iter().all(|&c| c == 8));
+        assert!(password_from(|_| false).is_none());
+    }
     use crate::bus::testbus;
     use std::sync::atomic::Ordering;
     use std::sync::{Arc, Mutex};
@@ -1592,8 +1637,10 @@ pub mod tests {
             "network-wireless-signal-excellent-symbolic"
         );
         let p = random_password();
-        assert_eq!(p.len(), 8);
+        assert_eq!(p.len(), PASSWORD_LEN);
         assert!(password_ok(Security::Personal, &p));
+        assert!(p.bytes().all(|b| PASSWORD_CHARS.contains(&b)));
+        assert_ne!(p, random_password());
         let s = wifi_settings("W", b"W", Security::Wep, "12345", false);
         let sec = &s["802-11-wireless-security"];
         assert_eq!(get::<u32>(sec, "wep-key-type"), Some(1));
