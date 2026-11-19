@@ -1136,7 +1136,7 @@ msgstr "_Calcola"
 #: apps/document-scanner/src/ui.rs:1264 apps/document-scanner/src/ui.rs:1379
 #: apps/document-scanner/src/ui.rs:1417 apps/document-viewer/src/dialogs.rs:169
 #: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
-#: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:675
+#: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
 #: apps/music/src/pages.rs:1522 apps/music/src/pages.rs:1620
 #: apps/music/src/pages.rs:1682 apps/settings/src/ui/apps.rs:553
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
@@ -2005,7 +2005,7 @@ msgid "Search Events"
 msgstr "Cerca eventi"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:978 apps/settings/src/ui/mod.rs:227
+#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:227
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:739
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
@@ -2392,7 +2392,7 @@ msgid "Countdown cancelled"
 msgstr "Conto alla rovescia annullato"
 
 #: apps/camera/src/ui.rs:859 apps/files/src/ui/dialogs.rs:455
-#: apps/files/src/ui/sidebar.rs:555 apps/files/src/ui/window.rs:1574
+#: apps/files/src/ui/sidebar.rs:557 apps/files/src/ui/window.rs:1574
 #: apps/text-editor/src/window.rs:131
 msgid "_Open"
 msgstr "_Apri"
@@ -2595,7 +2595,7 @@ msgid "Character map and emoji picker"
 msgstr "Mappa caratteri e selettore emoji"
 
 #: apps/characters/src/ui.rs:199 apps/contacts/src/ui.rs:1102
-#: apps/files/src/ui/tab.rs:1209 apps/logs/src/ui.rs:719
+#: apps/files/src/ui/tab.rs:1218 apps/logs/src/ui.rs:719
 #: apps/text-editor/src/doc.rs:866
 msgid "No results"
 msgstr "Nessun risultato"
@@ -3992,7 +3992,7 @@ msgid "storage"
 msgstr "archiviazione"
 
 #: apps/disk-usage/src/mounts.rs:155 apps/files/src/pathbar.rs:25
-#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1263
+#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1272
 #: apps/files/src/ui/window.rs:139 apps/settings/src/bluez.rs:229
 msgid "Computer"
 msgstr "Computer"
@@ -5138,7 +5138,7 @@ msgstr "Scollega dispositivo di loop"
 msgid "Drive Options"
 msgstr "Opzioni dell'unità"
 
-#: apps/disks/src/ui.rs:338 apps/files/src/ui/sidebar.rs:473
+#: apps/disks/src/ui.rs:338 apps/files/src/ui/sidebar.rs:475
 msgid "Eject"
 msgstr "Espelli"
 
@@ -5263,7 +5263,7 @@ msgstr "Disattiva swap"
 msgid "Activate Swap"
 msgstr "Attiva swap"
 
-#: apps/disks/src/ui.rs:1033 apps/files/src/ui/sidebar.rs:475
+#: apps/disks/src/ui.rs:1033 apps/files/src/ui/sidebar.rs:477
 msgid "Unmount"
 msgstr "Smonta"
 
@@ -7042,7 +7042,7 @@ msgid "Recent"
 msgstr "Recenti"
 
 #: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:116
-#: apps/files/src/ui/tab.rs:1273 apps/settings/src/bluez.rs:235
+#: apps/files/src/ui/tab.rs:1282 apps/settings/src/bluez.rs:235
 #: apps/settings/src/panels.rs:60 apps/system-monitor/src/res_view.rs:385
 msgid "Network"
 msgstr "Rete"
@@ -7337,23 +7337,23 @@ msgstr "…e altri {}"
 msgid "Some Items Could Not Be Processed"
 msgstr "Non è stato possibile elaborare alcuni elementi"
 
-#: apps/files/src/ui/mod.rs:343
+#: apps/files/src/ui/mod.rs:346
 msgid "Always open a new window"
 msgstr "Apre sempre una nuova finestra"
 
-#: apps/files/src/ui/mod.rs:351
+#: apps/files/src/ui/mod.rs:354
 msgid "Select the given items in their parent folders"
 msgstr "Seleziona gli elementi indicati nelle rispettive cartelle superiori"
 
-#: apps/files/src/ui/mod.rs:359
+#: apps/files/src/ui/mod.rs:362
 msgid "Quit the running instance"
 msgstr "Chiude l'istanza in esecuzione"
 
-#: apps/files/src/ui/mod.rs:362
+#: apps/files/src/ui/mod.rs:365
 msgid "Access and organize files"
 msgstr "Accede ai file e li organizza"
 
-#: apps/files/src/ui/mod.rs:362 apps/files/src/ui/window.rs:156
+#: apps/files/src/ui/mod.rs:365 apps/files/src/ui/window.rs:156
 #: apps/files/src/ui/window.rs:456
 msgid "Files"
 msgstr "File"
@@ -7570,62 +7570,62 @@ msgctxt "home folder"
 msgid "Home"
 msgstr "Home"
 
-#: apps/files/src/ui/sidebar.rs:473
+#: apps/files/src/ui/sidebar.rs:475
 msgid "Eject {name}"
 msgstr "Espelli {name}"
 
-#: apps/files/src/ui/sidebar.rs:475
+#: apps/files/src/ui/sidebar.rs:477
 msgid "Unmount {name}"
 msgstr "Smonta {name}"
 
-#: apps/files/src/ui/sidebar.rs:556 apps/files/src/ui/window.rs:1576
+#: apps/files/src/ui/sidebar.rs:558 apps/files/src/ui/window.rs:1576
 msgid "Open in New _Tab"
 msgstr "Apri in una nuova _scheda"
 
-#: apps/files/src/ui/sidebar.rs:557 apps/files/src/ui/window.rs:1577
+#: apps/files/src/ui/sidebar.rs:559 apps/files/src/ui/window.rs:1577
 msgid "Open in New _Window"
 msgstr "Apri in una nuova _finestra"
 
-#: apps/files/src/ui/sidebar.rs:562 apps/files/src/ui/window.rs:1593
+#: apps/files/src/ui/sidebar.rs:564 apps/files/src/ui/window.rs:1593
 msgid "Rena_me…"
 msgstr "_Rinomina…"
 
-#: apps/files/src/ui/sidebar.rs:563
+#: apps/files/src/ui/sidebar.rs:565
 msgid "_Remove from Bookmarks"
 msgstr "_Rimuovi dai segnalibri"
 
-#: apps/files/src/ui/sidebar.rs:566
+#: apps/files/src/ui/sidebar.rs:568
 msgid "_Eject"
 msgstr "_Espelli"
 
-#: apps/files/src/ui/sidebar.rs:569
+#: apps/files/src/ui/sidebar.rs:571
 msgid "_Unmount"
 msgstr "_Smonta"
 
-#: apps/files/src/ui/sidebar.rs:572 apps/files/src/ui/window.rs:1613
+#: apps/files/src/ui/sidebar.rs:574 apps/files/src/ui/window.rs:1613
 msgid "_Empty Trash…"
 msgstr "S_vuota cestino…"
 
-#: apps/files/src/ui/sidebar.rs:577 apps/files/src/ui/window.rs:1569
+#: apps/files/src/ui/sidebar.rs:579 apps/files/src/ui/window.rs:1569
 #: apps/files/src/ui/window.rs:1604 apps/files/src/ui/window.rs:1628
 #: apps/system-monitor/src/proc_view.rs:156
 msgid "_Properties"
 msgstr "_Proprietà"
 
-#: apps/files/src/ui/sidebar.rs:641 apps/files/src/ui/sidebar.rs:686
+#: apps/files/src/ui/sidebar.rs:643 apps/files/src/ui/sidebar.rs:688
 #: apps/files/src/ui/window.rs:1544
 msgid "Could not save bookmarks: {e}"
 msgstr "Impossibile salvare i segnalibri: {e}"
 
-#: apps/files/src/ui/sidebar.rs:659
+#: apps/files/src/ui/sidebar.rs:661
 msgid "Bookmark _Name"
 msgstr "_Nome del segnalibro"
 
-#: apps/files/src/ui/sidebar.rs:670
+#: apps/files/src/ui/sidebar.rs:672
 msgid "Rename Bookmark"
 msgstr "Rinomina segnalibro"
 
-#: apps/files/src/ui/sidebar.rs:675 apps/files/src/ui/window.rs:1465
+#: apps/files/src/ui/sidebar.rs:677 apps/files/src/ui/window.rs:1465
 #: apps/music/src/pages.rs:1524
 msgid "_Rename"
 msgstr "_Rinomina"
@@ -7642,57 +7642,57 @@ msgstr "_Riprova"
 msgid "Loading folder"
 msgstr "Caricamento della cartella"
 
-#: apps/files/src/ui/tab.rs:922
+#: apps/files/src/ui/tab.rs:931
 msgid "Unable to access location: {}"
 msgstr "Impossibile accedere alla posizione: {}"
 
-#: apps/files/src/ui/tab.rs:955
+#: apps/files/src/ui/tab.rs:964
 msgid "Unable to Open Folder"
 msgstr "Impossibile aprire la cartella"
 
-#: apps/files/src/ui/tab.rs:963
+#: apps/files/src/ui/tab.rs:972
 msgid "Unable to open folder: {}"
 msgstr "Impossibile aprire la cartella: {}"
 
-#: apps/files/src/ui/tab.rs:980
+#: apps/files/src/ui/tab.rs:989
 msgid "Try a different search."
 msgstr "Provare una ricerca diversa."
 
-#: apps/files/src/ui/tab.rs:983
+#: apps/files/src/ui/tab.rs:992
 msgid "Trash is Empty"
 msgstr "Il cestino è vuoto"
 
-#: apps/files/src/ui/tab.rs:987
+#: apps/files/src/ui/tab.rs:996
 msgid "Folder is Empty"
 msgstr "La cartella è vuota"
 
-#: apps/files/src/ui/tab.rs:1211
+#: apps/files/src/ui/tab.rs:1220
 msgid "Search finished: {n} item found"
 msgid_plural "Search finished: {n} items found"
 msgstr[0] "Ricerca terminata: {n} elemento trovato"
 msgstr[1] "Ricerca terminata: {n} elementi trovati"
 
-#: apps/files/src/ui/tab.rs:1237
+#: apps/files/src/ui/tab.rs:1246
 msgid "On This Computer"
 msgstr "Su questo computer"
 
-#: apps/files/src/ui/tab.rs:1269
+#: apps/files/src/ui/tab.rs:1278
 msgid "Networks"
 msgstr "Reti"
 
-#: apps/files/src/ui/tab.rs:1274
+#: apps/files/src/ui/tab.rs:1283
 msgid "Browse the local network"
 msgstr "Esplora la rete locale"
 
-#: apps/files/src/ui/tab.rs:1302
+#: apps/files/src/ui/tab.rs:1308
 msgid "Not mounted"
 msgstr "Non montato"
 
-#: apps/files/src/ui/tab.rs:1315
+#: apps/files/src/ui/tab.rs:1321
 msgid "Connect to Server"
 msgstr "Connetti al server"
 
-#: apps/files/src/ui/tab.rs:1319
+#: apps/files/src/ui/tab.rs:1325
 msgid "Server Address"
 msgstr "Indirizzo del server"
 
@@ -17179,8 +17179,8 @@ msgid ", high contrast"
 msgstr ", contrasto elevato"
 
 #: crates/helix-app-common/src/about.rs:124
-msgid "The Helix Project"
-msgstr "Il progetto Helix"
+msgid "The Helix Desktop Project"
+msgstr "Il progetto Helix Desktop"
 
 #: crates/helix-app-common/src/about.rs:132
 msgid "Dedicated to the public domain (CC0 1.0)"

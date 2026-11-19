@@ -1122,7 +1122,7 @@ msgstr "计算(_A)"
 #: apps/document-scanner/src/ui.rs:1264 apps/document-scanner/src/ui.rs:1379
 #: apps/document-scanner/src/ui.rs:1417 apps/document-viewer/src/dialogs.rs:169
 #: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
-#: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:675
+#: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
 #: apps/music/src/pages.rs:1522 apps/music/src/pages.rs:1620
 #: apps/music/src/pages.rs:1682 apps/settings/src/ui/apps.rs:553
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
@@ -1980,7 +1980,7 @@ msgid "Search Events"
 msgstr "搜索事件"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:978 apps/settings/src/ui/mod.rs:227
+#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:227
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:739
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
@@ -2360,7 +2360,7 @@ msgid "Countdown cancelled"
 msgstr "倒计时已取消"
 
 #: apps/camera/src/ui.rs:859 apps/files/src/ui/dialogs.rs:455
-#: apps/files/src/ui/sidebar.rs:555 apps/files/src/ui/window.rs:1574
+#: apps/files/src/ui/sidebar.rs:557 apps/files/src/ui/window.rs:1574
 #: apps/text-editor/src/window.rs:131
 msgid "_Open"
 msgstr "打开(_O)"
@@ -2560,7 +2560,7 @@ msgid "Character map and emoji picker"
 msgstr "字符映射表和表情符号选择器"
 
 #: apps/characters/src/ui.rs:199 apps/contacts/src/ui.rs:1102
-#: apps/files/src/ui/tab.rs:1209 apps/logs/src/ui.rs:719
+#: apps/files/src/ui/tab.rs:1218 apps/logs/src/ui.rs:719
 #: apps/text-editor/src/doc.rs:866
 msgid "No results"
 msgstr "没有结果"
@@ -3935,7 +3935,7 @@ msgid "storage"
 msgstr "存储"
 
 #: apps/disk-usage/src/mounts.rs:155 apps/files/src/pathbar.rs:25
-#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1263
+#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1272
 #: apps/files/src/ui/window.rs:139 apps/settings/src/bluez.rs:229
 msgid "Computer"
 msgstr "计算机"
@@ -5066,7 +5066,7 @@ msgstr "分离回环设备"
 msgid "Drive Options"
 msgstr "驱动器选项"
 
-#: apps/disks/src/ui.rs:338 apps/files/src/ui/sidebar.rs:473
+#: apps/disks/src/ui.rs:338 apps/files/src/ui/sidebar.rs:475
 msgid "Eject"
 msgstr "弹出"
 
@@ -5191,7 +5191,7 @@ msgstr "停用交换空间"
 msgid "Activate Swap"
 msgstr "激活交换空间"
 
-#: apps/disks/src/ui.rs:1033 apps/files/src/ui/sidebar.rs:475
+#: apps/disks/src/ui.rs:1033 apps/files/src/ui/sidebar.rs:477
 msgid "Unmount"
 msgstr "卸载"
 
@@ -6928,7 +6928,7 @@ msgid "Recent"
 msgstr "最近使用"
 
 #: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:116
-#: apps/files/src/ui/tab.rs:1273 apps/settings/src/bluez.rs:235
+#: apps/files/src/ui/tab.rs:1282 apps/settings/src/bluez.rs:235
 #: apps/settings/src/panels.rs:60 apps/system-monitor/src/res_view.rs:385
 msgid "Network"
 msgstr "网络"
@@ -7218,23 +7218,23 @@ msgstr "…以及另外 {} 个"
 msgid "Some Items Could Not Be Processed"
 msgstr "部分项目无法处理"
 
-#: apps/files/src/ui/mod.rs:343
+#: apps/files/src/ui/mod.rs:346
 msgid "Always open a new window"
 msgstr "总是打开新窗口"
 
-#: apps/files/src/ui/mod.rs:351
+#: apps/files/src/ui/mod.rs:354
 msgid "Select the given items in their parent folders"
 msgstr "在各自的上级文件夹中选中给定的项目"
 
-#: apps/files/src/ui/mod.rs:359
+#: apps/files/src/ui/mod.rs:362
 msgid "Quit the running instance"
 msgstr "退出正在运行的实例"
 
-#: apps/files/src/ui/mod.rs:362
+#: apps/files/src/ui/mod.rs:365
 msgid "Access and organize files"
 msgstr "访问和整理文件"
 
-#: apps/files/src/ui/mod.rs:362 apps/files/src/ui/window.rs:156
+#: apps/files/src/ui/mod.rs:365 apps/files/src/ui/window.rs:156
 #: apps/files/src/ui/window.rs:456
 msgid "Files"
 msgstr "文件"
@@ -7449,62 +7449,62 @@ msgctxt "home folder"
 msgid "Home"
 msgstr "主文件夹"
 
-#: apps/files/src/ui/sidebar.rs:473
+#: apps/files/src/ui/sidebar.rs:475
 msgid "Eject {name}"
 msgstr "弹出 {name}"
 
-#: apps/files/src/ui/sidebar.rs:475
+#: apps/files/src/ui/sidebar.rs:477
 msgid "Unmount {name}"
 msgstr "卸载 {name}"
 
-#: apps/files/src/ui/sidebar.rs:556 apps/files/src/ui/window.rs:1576
+#: apps/files/src/ui/sidebar.rs:558 apps/files/src/ui/window.rs:1576
 msgid "Open in New _Tab"
 msgstr "在新标签页中打开(_T)"
 
-#: apps/files/src/ui/sidebar.rs:557 apps/files/src/ui/window.rs:1577
+#: apps/files/src/ui/sidebar.rs:559 apps/files/src/ui/window.rs:1577
 msgid "Open in New _Window"
 msgstr "在新窗口中打开(_W)"
 
-#: apps/files/src/ui/sidebar.rs:562 apps/files/src/ui/window.rs:1593
+#: apps/files/src/ui/sidebar.rs:564 apps/files/src/ui/window.rs:1593
 msgid "Rena_me…"
 msgstr "重命名(_M)…"
 
-#: apps/files/src/ui/sidebar.rs:563
+#: apps/files/src/ui/sidebar.rs:565
 msgid "_Remove from Bookmarks"
 msgstr "从书签中移除(_R)"
 
-#: apps/files/src/ui/sidebar.rs:566
+#: apps/files/src/ui/sidebar.rs:568
 msgid "_Eject"
 msgstr "弹出(_E)"
 
-#: apps/files/src/ui/sidebar.rs:569
+#: apps/files/src/ui/sidebar.rs:571
 msgid "_Unmount"
 msgstr "卸载(_U)"
 
-#: apps/files/src/ui/sidebar.rs:572 apps/files/src/ui/window.rs:1613
+#: apps/files/src/ui/sidebar.rs:574 apps/files/src/ui/window.rs:1613
 msgid "_Empty Trash…"
 msgstr "清空回收站(_E)…"
 
-#: apps/files/src/ui/sidebar.rs:577 apps/files/src/ui/window.rs:1569
+#: apps/files/src/ui/sidebar.rs:579 apps/files/src/ui/window.rs:1569
 #: apps/files/src/ui/window.rs:1604 apps/files/src/ui/window.rs:1628
 #: apps/system-monitor/src/proc_view.rs:156
 msgid "_Properties"
 msgstr "属性(_P)"
 
-#: apps/files/src/ui/sidebar.rs:641 apps/files/src/ui/sidebar.rs:686
+#: apps/files/src/ui/sidebar.rs:643 apps/files/src/ui/sidebar.rs:688
 #: apps/files/src/ui/window.rs:1544
 msgid "Could not save bookmarks: {e}"
 msgstr "无法保存书签：{e}"
 
-#: apps/files/src/ui/sidebar.rs:659
+#: apps/files/src/ui/sidebar.rs:661
 msgid "Bookmark _Name"
 msgstr "书签名称(_N)"
 
-#: apps/files/src/ui/sidebar.rs:670
+#: apps/files/src/ui/sidebar.rs:672
 msgid "Rename Bookmark"
 msgstr "重命名书签"
 
-#: apps/files/src/ui/sidebar.rs:675 apps/files/src/ui/window.rs:1465
+#: apps/files/src/ui/sidebar.rs:677 apps/files/src/ui/window.rs:1465
 #: apps/music/src/pages.rs:1524
 msgid "_Rename"
 msgstr "重命名(_R)"
@@ -7521,56 +7521,56 @@ msgstr "重试(_T)"
 msgid "Loading folder"
 msgstr "正在加载文件夹"
 
-#: apps/files/src/ui/tab.rs:922
+#: apps/files/src/ui/tab.rs:931
 msgid "Unable to access location: {}"
 msgstr "无法访问位置：{}"
 
-#: apps/files/src/ui/tab.rs:955
+#: apps/files/src/ui/tab.rs:964
 msgid "Unable to Open Folder"
 msgstr "无法打开文件夹"
 
-#: apps/files/src/ui/tab.rs:963
+#: apps/files/src/ui/tab.rs:972
 msgid "Unable to open folder: {}"
 msgstr "无法打开文件夹：{}"
 
-#: apps/files/src/ui/tab.rs:980
+#: apps/files/src/ui/tab.rs:989
 msgid "Try a different search."
 msgstr "请尝试其他搜索。"
 
-#: apps/files/src/ui/tab.rs:983
+#: apps/files/src/ui/tab.rs:992
 msgid "Trash is Empty"
 msgstr "回收站为空"
 
-#: apps/files/src/ui/tab.rs:987
+#: apps/files/src/ui/tab.rs:996
 msgid "Folder is Empty"
 msgstr "文件夹为空"
 
-#: apps/files/src/ui/tab.rs:1211
+#: apps/files/src/ui/tab.rs:1220
 msgid "Search finished: {n} item found"
 msgid_plural "Search finished: {n} items found"
 msgstr[0] "搜索完成：找到 {n} 个项目"
 
-#: apps/files/src/ui/tab.rs:1237
+#: apps/files/src/ui/tab.rs:1246
 msgid "On This Computer"
 msgstr "在本计算机上"
 
-#: apps/files/src/ui/tab.rs:1269
+#: apps/files/src/ui/tab.rs:1278
 msgid "Networks"
 msgstr "网络"
 
-#: apps/files/src/ui/tab.rs:1274
+#: apps/files/src/ui/tab.rs:1283
 msgid "Browse the local network"
 msgstr "浏览本地网络"
 
-#: apps/files/src/ui/tab.rs:1302
+#: apps/files/src/ui/tab.rs:1308
 msgid "Not mounted"
 msgstr "未挂载"
 
-#: apps/files/src/ui/tab.rs:1315
+#: apps/files/src/ui/tab.rs:1321
 msgid "Connect to Server"
 msgstr "连接到服务器"
 
-#: apps/files/src/ui/tab.rs:1319
+#: apps/files/src/ui/tab.rs:1325
 msgid "Server Address"
 msgstr "服务器地址"
 
@@ -16887,8 +16887,8 @@ msgid ", high contrast"
 msgstr "，高对比度"
 
 #: crates/helix-app-common/src/about.rs:124
-msgid "The Helix Project"
-msgstr "Helix 项目"
+msgid "The Helix Desktop Project"
+msgstr "Helix Desktop 项目"
 
 #: crates/helix-app-common/src/about.rs:132
 msgid "Dedicated to the public domain (CC0 1.0)"

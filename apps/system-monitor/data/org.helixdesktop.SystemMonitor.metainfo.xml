@@ -10,7 +10,7 @@
       <p>System Monitor shows which programs are running and how much processor, memory, network and disk they use. Search processes, change their priority, stop or end them, and watch usage over time.</p>
   </description>
   <developer id="org.helixdesktop">
-    <name>The Helix Project</name>
+    <name>The Helix Desktop Project</name>
   </developer>
   <categories>
     <category>System</category>

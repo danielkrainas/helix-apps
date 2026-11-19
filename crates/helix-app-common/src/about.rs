@@ -121,7 +121,7 @@ pub fn show(parent: &impl IsA<gtk::Widget>, app_name: &str, app_id: &str, commen
     let about = adw::AboutDialog::builder()
         .application_name(crate::i18n::tr_dyn(app_name))
         .application_icon(app_id)
-        .developer_name(tr("The Helix Project"))
+        .developer_name(tr("The Helix Desktop Project"))
         .version(VERSION)
         .comments(crate::i18n::tr_dyn(comments))
         .website(WEBSITE)

@@ -10,7 +10,7 @@
       <p>Disk Usage Analyzer shows how the space on your drives is used, folder by folder. Scan your home folder, a drive or any other folder and explore it as a list or a ring chart.</p>
   </description>
   <developer id="org.helixdesktop">
-    <name>The Helix Project</name>
+    <name>The Helix Desktop Project</name>
   </developer>
   <categories>
     <category>System</category>

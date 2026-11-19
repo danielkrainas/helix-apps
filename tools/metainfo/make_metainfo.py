@@ -169,7 +169,7 @@ def metainfo(directory):
 {paras}
   </description>
   <developer id="org.helixdesktop">
-    <name>The Helix Project</name>
+    <name>The Helix Desktop Project</name>
   </developer>
   <categories>
 {cats}

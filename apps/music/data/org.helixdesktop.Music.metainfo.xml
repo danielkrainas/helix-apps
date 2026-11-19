@@ -10,7 +10,7 @@
       <p>Music plays the songs in your Music folder, organized by album, artist and playlist. Make playlists, mark your favourite songs and control playback from the desktop's media controls.</p>
   </description>
   <developer id="org.helixdesktop">
-    <name>The Helix Project</name>
+    <name>The Helix Desktop Project</name>
   </developer>
   <categories>
     <category>AudioVideo</category>

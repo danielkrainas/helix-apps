@@ -10,7 +10,7 @@
       <p>Disks shows the drives and media connected to the computer, their partitions and their health. Format, partition, mount, encrypt and check volumes, attach disk images and read SMART data.</p>
   </description>
   <developer id="org.helixdesktop">
-    <name>The Helix Project</name>
+    <name>The Helix Desktop Project</name>
   </developer>
   <categories>
     <category>System</category>

@@ -10,7 +10,7 @@
       <p>Image Viewer shows images, one at a time, and lets you move through the folder they are in. Zoom, rotate, view details, start a slideshow or set an image as the background.</p>
   </description>
   <developer id="org.helixdesktop">
-    <name>The Helix Project</name>
+    <name>The Helix Desktop Project</name>
   </developer>
   <categories>
     <category>Graphics</category>

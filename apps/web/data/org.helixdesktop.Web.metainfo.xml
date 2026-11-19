@@ -10,7 +10,7 @@
       <p>Web is a browser for the Helix desktop with a clean, simple interface. It has tabs, bookmarks, history, private browsing, a reader view and web apps that run in their own window.</p>
   </description>
   <developer id="org.helixdesktop">
-    <name>The Helix Project</name>
+    <name>The Helix Desktop Project</name>
   </developer>
   <categories>
     <category>Network</category>

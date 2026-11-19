@@ -10,7 +10,7 @@
       <p>Audio Player plays a single audio file with a clear waveform to see and seek through. Playback can be controlled entirely from the keyboard, and the media keys and the desktop's media controls work too.</p>
   </description>
   <developer id="org.helixdesktop">
-    <name>The Helix Project</name>
+    <name>The Helix Desktop Project</name>
   </developer>
   <categories>
     <category>AudioVideo</category>

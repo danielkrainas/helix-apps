@@ -10,7 +10,7 @@
       <p>Weather shows the current conditions and the forecast for the places you choose. See the next hours and days at a glance, with temperatures in the unit you prefer.</p>
   </description>
   <developer id="org.helixdesktop">
-    <name>The Helix Project</name>
+    <name>The Helix Desktop Project</name>
   </developer>
   <categories>
     <category>Utility</category>

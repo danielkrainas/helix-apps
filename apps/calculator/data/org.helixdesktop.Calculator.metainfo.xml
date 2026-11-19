@@ -10,7 +10,7 @@
       <p>Calculator solves everything from simple sums to scientific, financial and programming problems. Type an expression the way you would write it, or use the keypad. Earlier results stay in the history so you can reuse them.</p>
   </description>
   <developer id="org.helixdesktop">
-    <name>The Helix Project</name>
+    <name>The Helix Desktop Project</name>
   </developer>
   <categories>
     <category>Utility</category>
