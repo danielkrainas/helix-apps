@@ -97,6 +97,10 @@ fn from_cache(path: &Path, cache_root: &Path, size: i32) -> Option<RawThumb> {
 
 /// Decodes `path` at thumbnail size (with EXIF orientation applied).
 fn decode_small(path: &Path, size: i32) -> Option<RawThumb> {
+    // A GIF/WebP decompression bomb: no thumbnail, from either decoder.
+    if decode::too_large(path) {
+        return None;
+    }
     if let Ok(pb) = Pixbuf::from_file_at_scale(path, size, size, true) {
         let pb = pb.apply_embedded_orientation().unwrap_or(pb);
         return raw(&pb);

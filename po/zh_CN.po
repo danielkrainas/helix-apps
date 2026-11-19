@@ -1265,7 +1265,7 @@ msgstr "导入失败：{e}"
 msgid "{what}: {error}"
 msgstr "{what}：{error}"
 
-#: apps/calendar/src/backend.rs:441 apps/contacts/src/backend.rs:231
+#: apps/calendar/src/backend.rs:441 apps/contacts/src/backend.rs:233
 msgid "Could not open “{display_name}”: {e}"
 msgstr "无法打开“{display_name}”：{e}"
 
@@ -3099,7 +3099,7 @@ msgid "_Add"
 msgstr "添加(_A)"
 
 #: apps/clocks/src/ui.rs:1353 apps/clocks/src/ui.rs:1908
-#: apps/contacts/src/ui.rs:1814
+#: apps/contacts/src/ui.rs:1816
 msgid "_Done"
 msgstr "完成(_D)"
 
@@ -3307,7 +3307,7 @@ msgstr "人员"
 msgid "Could not create contact: {err}"
 msgstr "无法创建联系人：{err}"
 
-#: apps/contacts/src/backend.rs:145 apps/contacts/src/backend.rs:185
+#: apps/contacts/src/backend.rs:145 apps/contacts/src/backend.rs:187
 msgid "The address book is not available"
 msgstr "通讯录不可用"
 
@@ -3319,11 +3319,11 @@ msgstr "无法保存联系人：{err}"
 msgid "Could not delete contact: {err}"
 msgstr "无法删除联系人：{err}"
 
-#: apps/contacts/src/backend.rs:181
+#: apps/contacts/src/backend.rs:183
 msgid "Import failed: {err}"
 msgstr "导入失败：{err}"
 
-#: apps/contacts/src/backend.rs:273
+#: apps/contacts/src/backend.rs:275
 msgid "Could not read “{display_name}”: {e}"
 msgstr "无法读取“{display_name}”：{e}"
 
@@ -3829,77 +3829,77 @@ msgstr "文件中未找到联系人"
 msgid "Export Contacts"
 msgstr "导出联系人"
 
-#: apps/contacts/src/ui.rs:1777
+#: apps/contacts/src/ui.rs:1779
 msgid "Exported {n} contact"
 msgid_plural "Exported {n} contacts"
 msgstr[0] "已导出 {n} 个联系人"
 
-#: apps/contacts/src/ui.rs:1782 apps/logs/src/ui.rs:809
+#: apps/contacts/src/ui.rs:1784 apps/logs/src/ui.rs:809
 msgid "Export failed: {e}"
 msgstr "导出失败：{e}"
 
-#: apps/contacts/src/ui.rs:1805
+#: apps/contacts/src/ui.rs:1807
 msgid "Choose an Address Book"
 msgstr "选择通讯录"
 
-#: apps/contacts/src/ui.rs:1806
+#: apps/contacts/src/ui.rs:1808
 msgid ""
 "New contacts will be saved in this address book. You can change it later "
 "from the main menu."
 msgstr "新联系人将保存到此通讯录中。您以后可以在主菜单中更改。"
 
-#: apps/contacts/src/ui.rs:1810
+#: apps/contacts/src/ui.rs:1812
 msgid "Address Book for New Contacts"
 msgstr "新联系人所用的通讯录"
 
-#: apps/contacts/src/ui.rs:1857
+#: apps/contacts/src/ui.rs:1859
 msgid "Contact not found"
 msgstr "未找到联系人"
 
 #. Translators: a birthday or anniversary, "17" "May" "1990".
-#: apps/contacts/src/ui.rs:1899
+#: apps/contacts/src/ui.rs:1901
 msgid "{day} {month} {year}"
 msgstr "{year}年{month}{day}日"
 
 #. Translators: a birthday or anniversary without a year, "17" "May".
-#: apps/contacts/src/ui.rs:1901
+#: apps/contacts/src/ui.rs:1903
 msgid "{day} {month}"
 msgstr "{month}{day}日"
 
-#: apps/contacts/src/ui.rs:1918
+#: apps/contacts/src/ui.rs:1920
 msgid "Send Email"
 msgstr "发送电子邮件"
 
-#: apps/contacts/src/ui.rs:1919
+#: apps/contacts/src/ui.rs:1921
 msgid "Call"
 msgstr "呼叫"
 
-#: apps/contacts/src/ui.rs:1920 apps/image-viewer/src/ui.rs:607
+#: apps/contacts/src/ui.rs:1922 apps/image-viewer/src/ui.rs:607
 #: apps/image-viewer/src/ui.rs:609
 msgid "Show on Map"
 msgstr "在地图上显示"
 
-#: apps/contacts/src/ui.rs:1921 apps/maps/src/ui.rs:250
+#: apps/contacts/src/ui.rs:1923 apps/maps/src/ui.rs:250
 msgid "Open Website"
 msgstr "打开网站"
 
-#: apps/contacts/src/ui.rs:1937
+#: apps/contacts/src/ui.rs:1939
 msgid "No app available to send email"
 msgstr "没有可用于发送电子邮件的应用"
 
-#: apps/contacts/src/ui.rs:1938
+#: apps/contacts/src/ui.rs:1940
 msgid "No app available to make calls"
 msgstr "没有可用于拨打电话的应用"
 
-#: apps/contacts/src/ui.rs:1939
+#: apps/contacts/src/ui.rs:1941
 msgid "No app available to show maps"
 msgstr "没有可用于显示地图的应用"
 
-#: apps/contacts/src/ui.rs:1940
+#: apps/contacts/src/ui.rs:1942
 msgid "No app available to open websites"
 msgstr "没有可用于打开网站的应用"
 
-#: apps/contacts/src/ui.rs:1953
+#: apps/contacts/src/ui.rs:1955
 msgid "Copy {}"
 msgstr "复制{}"
 
@@ -8399,15 +8399,19 @@ msgstr "图像"
 msgid "picture"
 msgstr "图片"
 
-#: apps/image-viewer/src/decode.rs:105
+#: apps/image-viewer/src/decode.rs:118
 msgid "WebP"
 msgstr "WebP"
 
-#: apps/image-viewer/src/decode.rs:172
+#: apps/image-viewer/src/decode.rs:182
+msgid "The image is too large to open"
+msgstr "图像过大，无法打开"
+
+#: apps/image-viewer/src/decode.rs:247
 msgid "No frames"
 msgstr "没有帧"
 
-#: apps/image-viewer/src/decode.rs:217 apps/image-viewer/src/save.rs:236
+#: apps/image-viewer/src/decode.rs:353 apps/image-viewer/src/save.rs:236
 msgid "Unsupported pixel layout"
 msgstr "不支持的像素布局"
 
@@ -17237,52 +17241,52 @@ msgstr "端口号无效"
 msgid "Remove the user name and password from the address"
 msgstr "请从地址中移除用户名和密码"
 
-#: crates/helix-eds/src/vcard.rs:686 crates/helix-eds/src/vcard.rs:719
+#: crates/helix-eds/src/vcard.rs:767 crates/helix-eds/src/vcard.rs:800
 msgctxt "phone number type"
 msgid "Mobile"
 msgstr "手机"
 
-#: crates/helix-eds/src/vcard.rs:689 crates/helix-eds/src/vcard.rs:723
+#: crates/helix-eds/src/vcard.rs:770 crates/helix-eds/src/vcard.rs:804
 msgctxt "phone number type"
 msgid "Work Fax"
 msgstr "工作传真"
 
-#: crates/helix-eds/src/vcard.rs:691 crates/helix-eds/src/vcard.rs:722
+#: crates/helix-eds/src/vcard.rs:772 crates/helix-eds/src/vcard.rs:803
 msgctxt "phone number type"
 msgid "Home Fax"
 msgstr "家庭传真"
 
-#: crates/helix-eds/src/vcard.rs:694 crates/helix-eds/src/vcard.rs:724
+#: crates/helix-eds/src/vcard.rs:775 crates/helix-eds/src/vcard.rs:805
 msgctxt "phone number type"
 msgid "Pager"
 msgstr "寻呼机"
 
-#: crates/helix-eds/src/vcard.rs:696 crates/helix-eds/src/vcard.rs:720
+#: crates/helix-eds/src/vcard.rs:777 crates/helix-eds/src/vcard.rs:801
 msgctxt "phone number type"
 msgid "Home"
 msgstr "家庭"
 
-#: crates/helix-eds/src/vcard.rs:698 crates/helix-eds/src/vcard.rs:721
+#: crates/helix-eds/src/vcard.rs:779 crates/helix-eds/src/vcard.rs:802
 msgctxt "phone number type"
 msgid "Work"
 msgstr "工作"
 
-#: crates/helix-eds/src/vcard.rs:700 crates/helix-eds/src/vcard.rs:725
+#: crates/helix-eds/src/vcard.rs:781 crates/helix-eds/src/vcard.rs:806
 msgctxt "phone number type"
 msgid "Other"
 msgstr "其他"
 
-#: crates/helix-eds/src/vcard.rs:708 crates/helix-eds/src/vcard.rs:731
+#: crates/helix-eds/src/vcard.rs:789 crates/helix-eds/src/vcard.rs:812
 msgctxt "email, address or website type"
 msgid "Personal"
 msgstr "个人"
 
-#: crates/helix-eds/src/vcard.rs:710 crates/helix-eds/src/vcard.rs:734
+#: crates/helix-eds/src/vcard.rs:791 crates/helix-eds/src/vcard.rs:815
 msgctxt "email, address or website type"
 msgid "Work"
 msgstr "工作"
 
-#: crates/helix-eds/src/vcard.rs:712 crates/helix-eds/src/vcard.rs:735
+#: crates/helix-eds/src/vcard.rs:793 crates/helix-eds/src/vcard.rs:816
 msgctxt "email, address or website type"
 msgid "Other"
 msgstr "其他"

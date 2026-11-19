@@ -1271,7 +1271,7 @@ msgstr "가져오기 실패: {e}"
 msgid "{what}: {error}"
 msgstr "{what}: {error}"
 
-#: apps/calendar/src/backend.rs:441 apps/contacts/src/backend.rs:231
+#: apps/calendar/src/backend.rs:441 apps/contacts/src/backend.rs:233
 msgid "Could not open “{display_name}”: {e}"
 msgstr "“{display_name}”을(를) 열 수 없습니다: {e}"
 
@@ -3113,7 +3113,7 @@ msgid "_Add"
 msgstr "추가(_A)"
 
 #: apps/clocks/src/ui.rs:1353 apps/clocks/src/ui.rs:1908
-#: apps/contacts/src/ui.rs:1814
+#: apps/contacts/src/ui.rs:1816
 msgid "_Done"
 msgstr "완료(_D)"
 
@@ -3321,7 +3321,7 @@ msgstr "사람"
 msgid "Could not create contact: {err}"
 msgstr "연락처를 만들 수 없습니다: {err}"
 
-#: apps/contacts/src/backend.rs:145 apps/contacts/src/backend.rs:185
+#: apps/contacts/src/backend.rs:145 apps/contacts/src/backend.rs:187
 msgid "The address book is not available"
 msgstr "주소록을 사용할 수 없습니다"
 
@@ -3333,11 +3333,11 @@ msgstr "연락처를 저장할 수 없습니다: {err}"
 msgid "Could not delete contact: {err}"
 msgstr "연락처를 삭제할 수 없습니다: {err}"
 
-#: apps/contacts/src/backend.rs:181
+#: apps/contacts/src/backend.rs:183
 msgid "Import failed: {err}"
 msgstr "가져오기 실패: {err}"
 
-#: apps/contacts/src/backend.rs:273
+#: apps/contacts/src/backend.rs:275
 msgid "Could not read “{display_name}”: {e}"
 msgstr "“{display_name}”을(를) 읽을 수 없습니다: {e}"
 
@@ -3843,78 +3843,78 @@ msgstr "파일에 연락처가 없습니다"
 msgid "Export Contacts"
 msgstr "연락처 내보내기"
 
-#: apps/contacts/src/ui.rs:1777
+#: apps/contacts/src/ui.rs:1779
 msgid "Exported {n} contact"
 msgid_plural "Exported {n} contacts"
 msgstr[0] "연락처 {n}개를 내보냈습니다"
 
-#: apps/contacts/src/ui.rs:1782 apps/logs/src/ui.rs:809
+#: apps/contacts/src/ui.rs:1784 apps/logs/src/ui.rs:809
 msgid "Export failed: {e}"
 msgstr "내보내기 실패: {e}"
 
-#: apps/contacts/src/ui.rs:1805
+#: apps/contacts/src/ui.rs:1807
 msgid "Choose an Address Book"
 msgstr "주소록 선택"
 
-#: apps/contacts/src/ui.rs:1806
+#: apps/contacts/src/ui.rs:1808
 msgid ""
 "New contacts will be saved in this address book. You can change it later "
 "from the main menu."
 msgstr ""
 "새 연락처는 이 주소록에 저장됩니다. 나중에 주 메뉴에서 바꿀 수 있습니다."
 
-#: apps/contacts/src/ui.rs:1810
+#: apps/contacts/src/ui.rs:1812
 msgid "Address Book for New Contacts"
 msgstr "새 연락처를 저장할 주소록"
 
-#: apps/contacts/src/ui.rs:1857
+#: apps/contacts/src/ui.rs:1859
 msgid "Contact not found"
 msgstr "연락처를 찾을 수 없습니다"
 
 #. Translators: a birthday or anniversary, "17" "May" "1990".
-#: apps/contacts/src/ui.rs:1899
+#: apps/contacts/src/ui.rs:1901
 msgid "{day} {month} {year}"
 msgstr "{year}년 {month} {day}일"
 
 #. Translators: a birthday or anniversary without a year, "17" "May".
-#: apps/contacts/src/ui.rs:1901
+#: apps/contacts/src/ui.rs:1903
 msgid "{day} {month}"
 msgstr "{month} {day}일"
 
-#: apps/contacts/src/ui.rs:1918
+#: apps/contacts/src/ui.rs:1920
 msgid "Send Email"
 msgstr "이메일 보내기"
 
-#: apps/contacts/src/ui.rs:1919
+#: apps/contacts/src/ui.rs:1921
 msgid "Call"
 msgstr "전화 걸기"
 
-#: apps/contacts/src/ui.rs:1920 apps/image-viewer/src/ui.rs:607
+#: apps/contacts/src/ui.rs:1922 apps/image-viewer/src/ui.rs:607
 #: apps/image-viewer/src/ui.rs:609
 msgid "Show on Map"
 msgstr "지도에 표시"
 
-#: apps/contacts/src/ui.rs:1921 apps/maps/src/ui.rs:250
+#: apps/contacts/src/ui.rs:1923 apps/maps/src/ui.rs:250
 msgid "Open Website"
 msgstr "웹사이트 열기"
 
-#: apps/contacts/src/ui.rs:1937
+#: apps/contacts/src/ui.rs:1939
 msgid "No app available to send email"
 msgstr "이메일을 보낼 수 있는 앱이 없습니다"
 
-#: apps/contacts/src/ui.rs:1938
+#: apps/contacts/src/ui.rs:1940
 msgid "No app available to make calls"
 msgstr "전화를 걸 수 있는 앱이 없습니다"
 
-#: apps/contacts/src/ui.rs:1939
+#: apps/contacts/src/ui.rs:1941
 msgid "No app available to show maps"
 msgstr "지도를 표시할 수 있는 앱이 없습니다"
 
-#: apps/contacts/src/ui.rs:1940
+#: apps/contacts/src/ui.rs:1942
 msgid "No app available to open websites"
 msgstr "웹사이트를 열 수 있는 앱이 없습니다"
 
-#: apps/contacts/src/ui.rs:1953
+#: apps/contacts/src/ui.rs:1955
 msgid "Copy {}"
 msgstr "{} 복사"
 
@@ -8437,15 +8437,19 @@ msgstr "이미지"
 msgid "picture"
 msgstr "그림"
 
-#: apps/image-viewer/src/decode.rs:105
+#: apps/image-viewer/src/decode.rs:118
 msgid "WebP"
 msgstr "WebP"
 
-#: apps/image-viewer/src/decode.rs:172
+#: apps/image-viewer/src/decode.rs:182
+msgid "The image is too large to open"
+msgstr "이미지가 너무 커서 열 수 없습니다"
+
+#: apps/image-viewer/src/decode.rs:247
 msgid "No frames"
 msgstr "프레임 없음"
 
-#: apps/image-viewer/src/decode.rs:217 apps/image-viewer/src/save.rs:236
+#: apps/image-viewer/src/decode.rs:353 apps/image-viewer/src/save.rs:236
 msgid "Unsupported pixel layout"
 msgstr "지원하지 않는 픽셀 배열"
 
@@ -17375,52 +17379,52 @@ msgstr "포트 번호가 올바르지 않습니다"
 msgid "Remove the user name and password from the address"
 msgstr "주소에서 사용자 이름과 암호를 제거하십시오"
 
-#: crates/helix-eds/src/vcard.rs:686 crates/helix-eds/src/vcard.rs:719
+#: crates/helix-eds/src/vcard.rs:767 crates/helix-eds/src/vcard.rs:800
 msgctxt "phone number type"
 msgid "Mobile"
 msgstr "휴대전화"
 
-#: crates/helix-eds/src/vcard.rs:689 crates/helix-eds/src/vcard.rs:723
+#: crates/helix-eds/src/vcard.rs:770 crates/helix-eds/src/vcard.rs:804
 msgctxt "phone number type"
 msgid "Work Fax"
 msgstr "직장 팩스"
 
-#: crates/helix-eds/src/vcard.rs:691 crates/helix-eds/src/vcard.rs:722
+#: crates/helix-eds/src/vcard.rs:772 crates/helix-eds/src/vcard.rs:803
 msgctxt "phone number type"
 msgid "Home Fax"
 msgstr "집 팩스"
 
-#: crates/helix-eds/src/vcard.rs:694 crates/helix-eds/src/vcard.rs:724
+#: crates/helix-eds/src/vcard.rs:775 crates/helix-eds/src/vcard.rs:805
 msgctxt "phone number type"
 msgid "Pager"
 msgstr "호출기"
 
-#: crates/helix-eds/src/vcard.rs:696 crates/helix-eds/src/vcard.rs:720
+#: crates/helix-eds/src/vcard.rs:777 crates/helix-eds/src/vcard.rs:801
 msgctxt "phone number type"
 msgid "Home"
 msgstr "집"
 
-#: crates/helix-eds/src/vcard.rs:698 crates/helix-eds/src/vcard.rs:721
+#: crates/helix-eds/src/vcard.rs:779 crates/helix-eds/src/vcard.rs:802
 msgctxt "phone number type"
 msgid "Work"
 msgstr "직장"
 
-#: crates/helix-eds/src/vcard.rs:700 crates/helix-eds/src/vcard.rs:725
+#: crates/helix-eds/src/vcard.rs:781 crates/helix-eds/src/vcard.rs:806
 msgctxt "phone number type"
 msgid "Other"
 msgstr "기타"
 
-#: crates/helix-eds/src/vcard.rs:708 crates/helix-eds/src/vcard.rs:731
+#: crates/helix-eds/src/vcard.rs:789 crates/helix-eds/src/vcard.rs:812
 msgctxt "email, address or website type"
 msgid "Personal"
 msgstr "개인"
 
-#: crates/helix-eds/src/vcard.rs:710 crates/helix-eds/src/vcard.rs:734
+#: crates/helix-eds/src/vcard.rs:791 crates/helix-eds/src/vcard.rs:815
 msgctxt "email, address or website type"
 msgid "Work"
 msgstr "직장"
 
-#: crates/helix-eds/src/vcard.rs:712 crates/helix-eds/src/vcard.rs:735
+#: crates/helix-eds/src/vcard.rs:793 crates/helix-eds/src/vcard.rs:816
 msgctxt "email, address or website type"
 msgid "Other"
 msgstr "기타"

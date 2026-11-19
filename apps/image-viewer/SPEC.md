@@ -98,7 +98,16 @@ View images.
   footprint small.
 - Animated images play in a loop using each frame's delay (minimum 20 ms,
   0-delay frames use 100 ms). Animations whose decoded frames would exceed
-  512 MiB show only the first frame.
+  512 MiB, or that have more than 10 000 frames, show only the first frame.
+- **Decompression-bomb limits** (GIF/WebP headers can declare a huge canvas
+  in a file of a few bytes; decoding is in-process, unlike glycin's
+  sandboxed loaders with a memory rlimit): the declared canvas of a GIF or
+  animated WebP may be at most 64 Mpx (8192², 256 MiB as RGBA, since every
+  frame is composited onto a full canvas with up to three such buffers
+  live), a still WebP at most 256 Mpx (16384², the largest a VP8/VP8L
+  bitstream can be). The GIF decoder also gets an `image` allocation limit
+  for those buffers. Larger files show the error page *The image is too
+  large to open*, are not retried with gdk-pixbuf, and get no thumbnail.
 - **EXIF orientation** (tag 0x0112, values 1–8) is read with `kamadak-exif`
   and applied to the decoded pixels for JPEG, TIFF, PNG and WebP. HEIF/AVIF
   are skipped because their container transforms are already applied by the

@@ -1283,7 +1283,7 @@ msgstr "Falló la importación: {e}"
 msgid "{what}: {error}"
 msgstr "{what}: {error}"
 
-#: apps/calendar/src/backend.rs:441 apps/contacts/src/backend.rs:231
+#: apps/calendar/src/backend.rs:441 apps/contacts/src/backend.rs:233
 msgid "Could not open “{display_name}”: {e}"
 msgstr "No se pudo abrir «{display_name}»: {e}"
 
@@ -3146,7 +3146,7 @@ msgid "_Add"
 msgstr "_Añadir"
 
 #: apps/clocks/src/ui.rs:1353 apps/clocks/src/ui.rs:1908
-#: apps/contacts/src/ui.rs:1814
+#: apps/contacts/src/ui.rs:1816
 msgid "_Done"
 msgstr "_Hecho"
 
@@ -3357,7 +3357,7 @@ msgstr "personas"
 msgid "Could not create contact: {err}"
 msgstr "No se pudo crear el contacto: {err}"
 
-#: apps/contacts/src/backend.rs:145 apps/contacts/src/backend.rs:185
+#: apps/contacts/src/backend.rs:145 apps/contacts/src/backend.rs:187
 msgid "The address book is not available"
 msgstr "La libreta de direcciones no está disponible"
 
@@ -3369,11 +3369,11 @@ msgstr "No se pudo guardar el contacto: {err}"
 msgid "Could not delete contact: {err}"
 msgstr "No se pudo eliminar el contacto: {err}"
 
-#: apps/contacts/src/backend.rs:181
+#: apps/contacts/src/backend.rs:183
 msgid "Import failed: {err}"
 msgstr "Falló la importación: {err}"
 
-#: apps/contacts/src/backend.rs:273
+#: apps/contacts/src/backend.rs:275
 msgid "Could not read “{display_name}”: {e}"
 msgstr "No se pudo leer «{display_name}»: {e}"
 
@@ -3887,21 +3887,21 @@ msgstr "No se encontraron contactos en el archivo"
 msgid "Export Contacts"
 msgstr "Exportar contactos"
 
-#: apps/contacts/src/ui.rs:1777
+#: apps/contacts/src/ui.rs:1779
 msgid "Exported {n} contact"
 msgid_plural "Exported {n} contacts"
 msgstr[0] "Se exportó {n} contacto"
 msgstr[1] "Se exportaron {n} contactos"
 
-#: apps/contacts/src/ui.rs:1782 apps/logs/src/ui.rs:809
+#: apps/contacts/src/ui.rs:1784 apps/logs/src/ui.rs:809
 msgid "Export failed: {e}"
 msgstr "Falló la exportación: {e}"
 
-#: apps/contacts/src/ui.rs:1805
+#: apps/contacts/src/ui.rs:1807
 msgid "Choose an Address Book"
 msgstr "Elegir una libreta de direcciones"
 
-#: apps/contacts/src/ui.rs:1806
+#: apps/contacts/src/ui.rs:1808
 msgid ""
 "New contacts will be saved in this address book. You can change it later "
 "from the main menu."
@@ -3909,58 +3909,58 @@ msgstr ""
 "Los contactos nuevos se guardarán en esta libreta de direcciones. Puede "
 "cambiarla más adelante desde el menú principal."
 
-#: apps/contacts/src/ui.rs:1810
+#: apps/contacts/src/ui.rs:1812
 msgid "Address Book for New Contacts"
 msgstr "Libreta de direcciones para contactos nuevos"
 
-#: apps/contacts/src/ui.rs:1857
+#: apps/contacts/src/ui.rs:1859
 msgid "Contact not found"
 msgstr "No se encontró el contacto"
 
 #. Translators: a birthday or anniversary, "17" "May" "1990".
-#: apps/contacts/src/ui.rs:1899
+#: apps/contacts/src/ui.rs:1901
 msgid "{day} {month} {year}"
 msgstr "{day} de {month} de {year}"
 
 #. Translators: a birthday or anniversary without a year, "17" "May".
-#: apps/contacts/src/ui.rs:1901
+#: apps/contacts/src/ui.rs:1903
 msgid "{day} {month}"
 msgstr "{day} de {month}"
 
-#: apps/contacts/src/ui.rs:1918
+#: apps/contacts/src/ui.rs:1920
 msgid "Send Email"
 msgstr "Enviar correo electrónico"
 
-#: apps/contacts/src/ui.rs:1919
+#: apps/contacts/src/ui.rs:1921
 msgid "Call"
 msgstr "Llamar"
 
-#: apps/contacts/src/ui.rs:1920 apps/image-viewer/src/ui.rs:607
+#: apps/contacts/src/ui.rs:1922 apps/image-viewer/src/ui.rs:607
 #: apps/image-viewer/src/ui.rs:609
 msgid "Show on Map"
 msgstr "Mostrar en el mapa"
 
-#: apps/contacts/src/ui.rs:1921 apps/maps/src/ui.rs:250
+#: apps/contacts/src/ui.rs:1923 apps/maps/src/ui.rs:250
 msgid "Open Website"
 msgstr "Abrir sitio web"
 
-#: apps/contacts/src/ui.rs:1937
+#: apps/contacts/src/ui.rs:1939
 msgid "No app available to send email"
 msgstr "No hay ninguna aplicación disponible para enviar correo electrónico"
 
-#: apps/contacts/src/ui.rs:1938
+#: apps/contacts/src/ui.rs:1940
 msgid "No app available to make calls"
 msgstr "No hay ninguna aplicación disponible para hacer llamadas"
 
-#: apps/contacts/src/ui.rs:1939
+#: apps/contacts/src/ui.rs:1941
 msgid "No app available to show maps"
 msgstr "No hay ninguna aplicación disponible para mostrar mapas"
 
-#: apps/contacts/src/ui.rs:1940
+#: apps/contacts/src/ui.rs:1942
 msgid "No app available to open websites"
 msgstr "No hay ninguna aplicación disponible para abrir sitios web"
 
-#: apps/contacts/src/ui.rs:1953
+#: apps/contacts/src/ui.rs:1955
 msgid "Copy {}"
 msgstr "Copiar {}"
 
@@ -8544,15 +8544,19 @@ msgstr "imagen"
 msgid "picture"
 msgstr "fotografía"
 
-#: apps/image-viewer/src/decode.rs:105
+#: apps/image-viewer/src/decode.rs:118
 msgid "WebP"
 msgstr "WebP"
 
-#: apps/image-viewer/src/decode.rs:172
+#: apps/image-viewer/src/decode.rs:182
+msgid "The image is too large to open"
+msgstr "La imagen es demasiado grande para abrirla"
+
+#: apps/image-viewer/src/decode.rs:247
 msgid "No frames"
 msgstr "No hay fotogramas"
 
-#: apps/image-viewer/src/decode.rs:217 apps/image-viewer/src/save.rs:236
+#: apps/image-viewer/src/decode.rs:353 apps/image-viewer/src/save.rs:236
 msgid "Unsupported pixel layout"
 msgstr "Disposición de píxeles no soportada"
 
@@ -17570,52 +17574,52 @@ msgstr "El número de puerto no es válido"
 msgid "Remove the user name and password from the address"
 msgstr "Quite el nombre de usuario y la contraseña de la dirección"
 
-#: crates/helix-eds/src/vcard.rs:686 crates/helix-eds/src/vcard.rs:719
+#: crates/helix-eds/src/vcard.rs:767 crates/helix-eds/src/vcard.rs:800
 msgctxt "phone number type"
 msgid "Mobile"
 msgstr "Móvil"
 
-#: crates/helix-eds/src/vcard.rs:689 crates/helix-eds/src/vcard.rs:723
+#: crates/helix-eds/src/vcard.rs:770 crates/helix-eds/src/vcard.rs:804
 msgctxt "phone number type"
 msgid "Work Fax"
 msgstr "Fax del trabajo"
 
-#: crates/helix-eds/src/vcard.rs:691 crates/helix-eds/src/vcard.rs:722
+#: crates/helix-eds/src/vcard.rs:772 crates/helix-eds/src/vcard.rs:803
 msgctxt "phone number type"
 msgid "Home Fax"
 msgstr "Fax de casa"
 
-#: crates/helix-eds/src/vcard.rs:694 crates/helix-eds/src/vcard.rs:724
+#: crates/helix-eds/src/vcard.rs:775 crates/helix-eds/src/vcard.rs:805
 msgctxt "phone number type"
 msgid "Pager"
 msgstr "Buscapersonas"
 
-#: crates/helix-eds/src/vcard.rs:696 crates/helix-eds/src/vcard.rs:720
+#: crates/helix-eds/src/vcard.rs:777 crates/helix-eds/src/vcard.rs:801
 msgctxt "phone number type"
 msgid "Home"
 msgstr "Casa"
 
-#: crates/helix-eds/src/vcard.rs:698 crates/helix-eds/src/vcard.rs:721
+#: crates/helix-eds/src/vcard.rs:779 crates/helix-eds/src/vcard.rs:802
 msgctxt "phone number type"
 msgid "Work"
 msgstr "Trabajo"
 
-#: crates/helix-eds/src/vcard.rs:700 crates/helix-eds/src/vcard.rs:725
+#: crates/helix-eds/src/vcard.rs:781 crates/helix-eds/src/vcard.rs:806
 msgctxt "phone number type"
 msgid "Other"
 msgstr "Otro"
 
-#: crates/helix-eds/src/vcard.rs:708 crates/helix-eds/src/vcard.rs:731
+#: crates/helix-eds/src/vcard.rs:789 crates/helix-eds/src/vcard.rs:812
 msgctxt "email, address or website type"
 msgid "Personal"
 msgstr "Personal"
 
-#: crates/helix-eds/src/vcard.rs:710 crates/helix-eds/src/vcard.rs:734
+#: crates/helix-eds/src/vcard.rs:791 crates/helix-eds/src/vcard.rs:815
 msgctxt "email, address or website type"
 msgid "Work"
 msgstr "Trabajo"
 
-#: crates/helix-eds/src/vcard.rs:712 crates/helix-eds/src/vcard.rs:735
+#: crates/helix-eds/src/vcard.rs:793 crates/helix-eds/src/vcard.rs:816
 msgctxt "email, address or website type"
 msgid "Other"
 msgstr "Otro"
