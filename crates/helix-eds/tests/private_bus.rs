@@ -8,7 +8,7 @@
 
 use chrono::{Duration, NaiveDate, Utc};
 use helix_eds::ical::{expand, Event, Time, Zones};
-use helix_eds::vcard::{Contact, StructuredName, Typed};
+use helix_eds::vcard::{Contact, Photo, StructuredName, Typed};
 use helix_eds::{sexp, source, Eds, ModType, SourceKind, ViewEvent};
 use std::sync::mpsc;
 
@@ -130,6 +130,47 @@ fn contacts_round_trip() {
 
     eds.remove_source(&src).unwrap();
     wait_source(&eds, &uid, false);
+}
+
+/// What the local (file) backend stores for PHOTO: inline photos become
+/// `file://` URIs in the book's own `photos` directory, and an external
+/// `file://` URI is kept as it is (so readers must not trust it).
+#[test]
+fn photo_uris_round_trip() {
+    let Some(eds) = private_eds() else { return };
+    // The built-in book: creating and removing sources is what sometimes
+    // crashes evolution-source-registry 3.56 here.
+    let book = eds.open_book("system-address-book").unwrap();
+
+    let external = "file:///nonexistent/helix-eds-test/secret.png";
+    let linked = Contact {
+        name: StructuredName::guess_from("Linked Photo"),
+        photo: Some(Photo::Uri(external.into())),
+        ..Default::default()
+    };
+    let inline = Contact {
+        name: StructuredName::guess_from("Inline Photo"),
+        photo: Some(Photo::Inline {
+            mime: Some("image/png".into()),
+            data: b"\x89PNG\r\n\x1a\nnot really".to_vec(),
+        }),
+        ..Default::default()
+    };
+    let uids = book.create(&[linked, inline]).unwrap();
+
+    let got = book.contact(&uids[0]).unwrap();
+    assert_eq!(got.photo, Some(Photo::Uri(external.into())));
+
+    let got = book.contact(&uids[1]).unwrap();
+    let Some(Photo::Uri(stored)) = &got.photo else {
+        panic!("inline photo not stored as a file: {:?}", got.photo);
+    };
+    let data = std::env::var("XDG_DATA_HOME").unwrap();
+    let dir = format!("file://{data}/evolution/addressbook/system/photos/");
+    assert!(stored.starts_with(&dir), "{stored} not under {dir}");
+    assert!(got.photo_bytes().is_some(), "own photo not readable");
+
+    book.remove(&uids).unwrap();
 }
 
 #[test]

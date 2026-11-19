@@ -172,6 +172,8 @@ fn worker(rx: mpsc::Receiver<Cmd>, self_tx: mpsc::Sender<Cmd>, out: async_channe
                         .map(|mut c| {
                             c.uid.clear();
                             c.rev.clear();
+                            // A linked PHOTO could name any local file.
+                            c.keep_inline_photo_only();
                             c
                         })
                         .collect();

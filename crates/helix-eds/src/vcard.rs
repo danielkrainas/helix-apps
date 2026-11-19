@@ -4,6 +4,7 @@
 use crate::contentline::{self, escape_text, fold, Property};
 use crate::nc_;
 use base64::Engine;
+use std::path::{Path, PathBuf};
 
 /// A raw vCard: an ordered list of properties (without BEGIN/END).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -612,26 +613,106 @@ impl Contact {
             .any(|a| a.one_line().to_lowercase().contains(&needle))
     }
 
+    /// The photo's image bytes: an inline photo, or a `file://` photo
+    /// that EDS keeps in an address book's own `photos` directory. Other
+    /// URIs (another local file, http…) are never read: a vCard from an
+    /// import or a shared book could name any file. `None` when larger
+    /// than [`MAX_PHOTO_BYTES`].
     pub fn photo_bytes(&self) -> Option<Vec<u8>> {
         match &self.photo {
-            Some(Photo::Inline { data, .. }) => Some(data.clone()),
-            Some(Photo::Uri(uri)) => {
-                let path = uri.strip_prefix("file://")?;
-                std::fs::read(percent_decode(path)).ok()
+            Some(Photo::Inline { data, .. }) => {
+                (data.len() <= MAX_PHOTO_BYTES).then(|| data.clone())
             }
+            Some(Photo::Uri(uri)) => read_eds_photo(uri, &eds_photo_roots()),
             None => None,
+        }
+    }
+
+    /// For contacts coming from outside (an imported file): keeps only an
+    /// inline photo within [`MAX_PHOTO_BYTES`] and drops linked ones, so
+    /// the address book never stores a URI pointing at an arbitrary file.
+    pub fn keep_inline_photo_only(&mut self) {
+        if !matches!(&self.photo, Some(Photo::Inline { data, .. }) if data.len() <= MAX_PHOTO_BYTES)
+        {
+            self.photo = None;
         }
     }
 }
 
-fn percent_decode(s: &str) -> String {
+/// Largest contact photo read from disk or kept from an import (10 MiB;
+/// avatars are shown at most 96 px wide, and camera JPEGs fit easily).
+pub const MAX_PHOTO_BYTES: usize = 10 * 1024 * 1024;
+
+/// Where EDS keeps address-book data and caches: photos live in
+/// `<root>/<book uid>/photos/` (local books under the data dir, CardDAV
+/// and other cached books under the cache dir).
+fn eds_photo_roots() -> Vec<PathBuf> {
+    let home = std::env::var_os("HOME").map(PathBuf::from);
+    let dir = |var: &str, fallback: &str| {
+        std::env::var_os(var)
+            .map(PathBuf::from)
+            .filter(|p| p.is_absolute())
+            .or_else(|| home.as_ref().map(|h| h.join(fallback)))
+    };
+    [
+        dir("XDG_DATA_HOME", ".local/share"),
+        dir("XDG_CACHE_HOME", ".cache"),
+    ]
+    .into_iter()
+    .flatten()
+    .map(|d| d.join("evolution/addressbook"))
+    .collect()
+}
+
+/// Reads a `file:///…` photo URI when it names a regular file directly in
+/// `<root>/<book>/photos/` for one of `roots` (after resolving symlinks and
+/// `..`), at most [`MAX_PHOTO_BYTES`] long.
+fn read_eds_photo(uri: &str, roots: &[PathBuf]) -> Option<Vec<u8>> {
+    use std::io::Read;
+    use std::os::unix::ffi::OsStrExt;
+    let path = uri.strip_prefix("file://")?;
+    if !path.starts_with('/') {
+        return None;
+    }
+    let path = Path::new(std::ffi::OsStr::from_bytes(&percent_decode(path)))
+        .canonicalize()
+        .ok()?;
+    let inside = roots.iter().any(|root| {
+        let Ok(root) = root.canonicalize() else {
+            return false;
+        };
+        let Ok(rest) = path.strip_prefix(&root) else {
+            return false;
+        };
+        let parts: Vec<_> = rest.components().collect();
+        parts.len() == 3 && parts[1].as_os_str() == "photos"
+    });
+    if !inside {
+        return None;
+    }
+    let meta = std::fs::metadata(&path).ok()?;
+    if !meta.is_file() || meta.len() > MAX_PHOTO_BYTES as u64 {
+        return None;
+    }
+    let mut data = Vec::new();
+    std::fs::File::open(&path)
+        .ok()?
+        .take(MAX_PHOTO_BYTES as u64 + 1)
+        .read_to_end(&mut data)
+        .ok()?;
+    (data.len() <= MAX_PHOTO_BYTES).then_some(data)
+}
+
+/// Decodes `%XX` escapes over bytes (a `%` before anything else is kept).
+fn percent_decode(s: &str) -> Vec<u8> {
     let b = s.as_bytes();
+    let hex = |c: u8| (c as char).to_digit(16).map(|v| v as u8);
     let mut out = Vec::with_capacity(b.len());
     let mut i = 0;
     while i < b.len() {
         if b[i] == b'%' && i + 2 < b.len() {
-            if let Ok(v) = u8::from_str_radix(&s[i + 1..i + 3], 16) {
-                out.push(v);
+            if let (Some(h), Some(l)) = (hex(b[i + 1]), hex(b[i + 2])) {
+                out.push(h << 4 | l);
                 i += 3;
                 continue;
             }
@@ -639,7 +720,7 @@ fn percent_decode(s: &str) -> String {
         out.push(b[i]);
         i += 1;
     }
-    String::from_utf8_lossy(&out).into_owned()
+    out
 }
 
 fn decode_photo(p: &Property) -> Option<Photo> {
@@ -885,6 +966,92 @@ mod tests {
         );
         let out = v4.to_vcard_string();
         assert!(out.contains("PHOTO;ENCODING=b;TYPE=JPEG:aGVsbG8="));
+    }
+
+    #[test]
+    fn percent_decode_is_byte_safe() {
+        assert_eq!(percent_decode("/a%20b/%e2%82%ac"), "/a b/€".as_bytes());
+        // `%` before a multi-byte character or at the end: kept, no panic.
+        assert_eq!(percent_decode("%é%"), "%é%".as_bytes());
+        assert_eq!(percent_decode("x%4"), b"x%4");
+        assert_eq!(percent_decode("%zz"), b"%zz");
+    }
+
+    #[test]
+    fn photo_files_only_from_eds_photo_dirs() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("evolution/addressbook");
+        let photos = root.join("book-1/photos");
+        std::fs::create_dir_all(&photos).unwrap();
+        let uri = |p: &Path| format!("file://{}", p.display()).replace(' ', "%20");
+        let roots = vec![root.clone()];
+
+        let own = photos.join("pas id-1.png");
+        std::fs::write(&own, b"own photo").unwrap();
+        assert_eq!(
+            read_eds_photo(&uri(&own), &roots),
+            Some(b"own photo".to_vec())
+        );
+
+        // Any other file: outside the root, beside `photos`, or reached
+        // through `..` or a symlink.
+        let secret = tmp.path().join("secret.txt");
+        std::fs::write(&secret, b"private").unwrap();
+        let beside = root.join("book-1/contacts.db");
+        std::fs::write(&beside, b"db").unwrap();
+        let dotdot = format!("{}/../../../secret.txt", uri(&photos));
+        let link = photos.join("link.png");
+        std::os::unix::fs::symlink(&secret, &link).unwrap();
+        let zero = photos.join("zero.png");
+        std::os::unix::fs::symlink("/dev/zero", &zero).unwrap();
+        for bad in [uri(&secret), uri(&beside), dotdot, uri(&link), uri(&zero)] {
+            assert_eq!(read_eds_photo(&bad, &roots), None, "{bad}");
+        }
+        // Relative, host-relative, non-file URIs and directories.
+        for bad in [
+            "file://secret.txt".to_string(),
+            "https://example.org/a.png".into(),
+            uri(&photos),
+        ] {
+            assert_eq!(read_eds_photo(&bad, &roots), None, "{bad}");
+        }
+        // Too large (sparse, so nothing is really written).
+        let big = photos.join("big.png");
+        let f = std::fs::File::create(&big).unwrap();
+        f.set_len(MAX_PHOTO_BYTES as u64 + 1).unwrap();
+        assert_eq!(read_eds_photo(&uri(&big), &roots), None);
+
+        // `photo_bytes` never reads a file outside the EDS directories.
+        let c = Contact {
+            photo: Some(Photo::Uri(uri(&secret))),
+            ..Default::default()
+        };
+        assert_eq!(c.photo_bytes(), None);
+    }
+
+    #[test]
+    fn imported_photos_are_inline_only() {
+        let card =
+            "BEGIN:VCARD\nVERSION:3.0\nFN:X\nPHOTO;VALUE=uri:file:///etc/passwd\nEND:VCARD\n";
+        let mut c = Contact::parse(card).unwrap();
+        assert_eq!(c.photo, Some(Photo::Uri("file:///etc/passwd".into())));
+        c.keep_inline_photo_only();
+        assert_eq!(c.photo, None);
+
+        let mut c = Contact::parse(
+            "BEGIN:VCARD\nVERSION:4.0\nFN:X\nPHOTO:data:image/png;base64,aGVsbG8=\nEND:VCARD\n",
+        )
+        .unwrap();
+        c.keep_inline_photo_only();
+        assert_eq!(c.photo_bytes(), Some(b"hello".to_vec()));
+
+        c.photo = Some(Photo::Inline {
+            mime: None,
+            data: vec![0; MAX_PHOTO_BYTES + 1],
+        });
+        assert_eq!(c.photo_bytes(), None);
+        c.keep_inline_photo_only();
+        assert_eq!(c.photo, None);
     }
 
     #[test]

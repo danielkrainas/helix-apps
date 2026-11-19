@@ -176,9 +176,23 @@ writes folks' data.
 
 ### Import / export
 - *Import…* (primary menu) opens a `.vcf` file (one or many vCards, versions
-  2.1/3.0/4.0) and creates them in the default address book.
+  2.1/3.0/4.0) and creates them in the default address book. Only inline
+  photos (`ENCODING=b` or `data:` URIs) of at most 10 MiB are imported;
+  linked `PHOTO` URIs are dropped, since a `file://` URI could name any
+  local file.
 - *Export…* (selection mode or contact menu) saves the chosen contacts as a
-  single `.vcf` (vCard 3.0).
+  single `.vcf` (vCard 3.0). Photos stored by EDS as files are embedded
+  inline; other `file://` photo URIs are left out.
+
+### Photos
+- A photo is shown when it is inline, or a `file://` URI naming a regular
+  file directly inside an EDS `photos` directory
+  (`$XDG_DATA_HOME/evolution/addressbook/<book>/photos/` for local books,
+  the same under `$XDG_CACHE_HOME` for cached remote books), after
+  resolving symlinks and `..`. EDS stores inline photos there itself, but
+  keeps any other URI as given, so a contact from a shared or synced book
+  may name an arbitrary path: such photos are never read. Photos over
+  10 MiB are not shown.
 
 ### Preferences / menu
 - Primary menu: *Sort by First Name / Surname* (radio), *Import…*,

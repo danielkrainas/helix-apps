@@ -1763,12 +1763,14 @@ impl Ui {
                 .iter()
                 .map(|c| {
                     let mut c = c.clone();
-                    if let Some(bytes) = c.photo_bytes() {
-                        // Embed linked photos so the file stands alone.
-                        c.photo = Some(vcard::Photo::Inline {
-                            mime: None,
-                            data: bytes,
-                        });
+                    if let Some(vcard::Photo::Uri(uri)) = c.photo.clone() {
+                        // Embed the address book's own photo files so the
+                        // file stands alone; never another local file.
+                        c.photo = match c.photo_bytes() {
+                            Some(data) => Some(vcard::Photo::Inline { mime: None, data }),
+                            None if uri.starts_with("file:") => None,
+                            None => Some(vcard::Photo::Uri(uri)),
+                        };
                     }
                     c.to_vcard_string()
                 })
