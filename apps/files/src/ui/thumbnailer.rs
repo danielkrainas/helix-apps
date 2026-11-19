@@ -1,7 +1,9 @@
 //! Making thumbnails that are not in the freedesktop thumbnail cache yet
 //! (the Thumbnail Managing Standard): the installed thumbnailer for the
 //! file's type (`thumbnailers/*.thumbnailer` in the data folders), or
-//! gdk-pixbuf for pictures without one. The result goes to the shared
+//! for pictures without one, Files' own gdk-pixbuf helper
+//! (`helix-files --thumbnail SIZE IN OUT`, see [`helper_main`]). The
+//! result goes to the shared
 //! cache (`$XDG_CACHE_HOME/thumbnails/large/<md5 of the URI>.png`) with
 //! the `Thumb::URI` and `Thumb::MTime` keys, so GIO's `thumbnail::path`
 //! finds it and other apps reuse it.
@@ -11,8 +13,10 @@
 //! long, say on a slow share) is retried the next time Files runs, or
 //! when the file changes. Within a run, `thumbs.rs` remembers failures.
 //!
-//! Thumbnailers run in a bubblewrap sandbox (`sandbox.rs`), never
-//! outside one.
+//! Thumbnailers, the helper included, run in a bubblewrap sandbox
+//! (`sandbox.rs`), never outside one: no file is decoded in the Files
+//! process itself, as in GNOME (gnome-desktop's thumbnail factory only
+//! runs thumbnailers).
 //!
 //! Everything here runs on a worker thread.
 
@@ -108,9 +112,64 @@ fn thumbnailer_for(mime: &str) -> Option<&'static Thumbnailer> {
         .find(|t| t.mimes.iter().any(|m| m == mime))
 }
 
+/// The command line [`helper_main`] is run with for pictures no
+/// thumbnailer claims: this program, if it is Files.
+fn helper_exec() -> Option<&'static str> {
+    static EXEC: OnceLock<Option<String>> = OnceLock::new();
+    EXEC.get_or_init(|| {
+        let exe = std::env::current_exe().ok()?;
+        if exe.file_name()? != "helix-files" {
+            return None;
+        }
+        let exe = exe.to_str().filter(|e| !e.contains('%'))?;
+        let exe = glib::shell_quote(exe).into_string().ok()?;
+        Some(format!("{exe} --thumbnail %s %i %o"))
+    })
+    .as_deref()
+}
+
+/// The thumbnailer command line for MIME type `mime`: an installed
+/// thumbnailer's, else the built-in helper's for pictures.
+fn exec_for(mime: &str) -> Option<&'static str> {
+    exec_with(mime, thumbnailer_for(mime), helper_exec())
+}
+
+fn exec_with<'a>(
+    mime: &str,
+    installed: Option<&'a Thumbnailer>,
+    helper: Option<&'a str>,
+) -> Option<&'a str> {
+    match installed {
+        Some(t) => Some(t.exec.as_str()),
+        None if mime.starts_with("image/") => helper,
+        None => None,
+    }
+}
+
 /// Whether a thumbnail can be made for MIME type `mime`.
 pub fn can_make(mime: &str) -> bool {
-    thumbnailer_for(mime).is_some() || mime.starts_with("image/")
+    exec_for(mime).is_some()
+}
+
+/// `helix-files --thumbnail SIZE IN OUT`: writes a PNG thumbnail of the
+/// picture `IN`, at most `SIZE` pixels on its longer side, to `OUT`.
+/// Run only inside the thumbnailer sandbox (see [`run_sandboxed`]).
+pub fn helper_main(args: &[String]) -> glib::ExitCode {
+    let [size, input, output] = args else {
+        eprintln!("usage: helix-files --thumbnail SIZE INPUT OUTPUT");
+        return glib::ExitCode::FAILURE;
+    };
+    let size = size.parse::<i32>().unwrap_or(SIZE).clamp(1, 1024);
+    let made = Pixbuf::from_file_at_scale(input, size, size, true)
+        .map(|p| p.apply_embedded_orientation().unwrap_or(p))
+        .and_then(|p| p.savev(output, "png", &[]));
+    match made {
+        Ok(()) => glib::ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("helix-files: {e}");
+            glib::ExitCode::FAILURE
+        }
+    }
 }
 
 /// The cache file for `uri` (its MD5, `.png`, in `thumbnails/large`).
@@ -289,6 +348,7 @@ fn run_sandboxed(exec: &str, src: &Source) -> Option<Pixbuf> {
         mtime: src.mtime,
     };
     let args = command(exec, &inside, Path::new(&inside_output))?;
+    let program = Path::new(&args[0]);
     let outdir = sandbox::tempdir().ok()?;
     let seccomp = sandbox::filter_fd();
     let gst = sandbox::gst_cache_dir();
@@ -302,6 +362,10 @@ fn run_sandboxed(exec: &str, src: &Source) -> Option<Pixbuf> {
     ));
     if let Some(fd) = &seccomp {
         sandbox::inherit(&mut cmd, fd.as_raw_fd());
+    }
+    if program.is_absolute() && !program.starts_with("/usr") {
+        // Files itself, run from outside /usr (a development build).
+        cmd.arg("--ro-bind").arg(program).arg(program);
     }
     cmd.args(&args);
     let ok = run_command(cmd, &args[0]);
@@ -366,17 +430,14 @@ fn make_in(cache: &Path, src: &Source) -> Option<PathBuf> {
         use std::os::unix::fs::PermissionsExt;
         let _ = std::fs::set_permissions(dir, std::fs::Permissions::from_mode(0o700));
     }
-    let pixbuf = match thumbnailer_for(&src.mime) {
-        Some(t) => run_sandboxed(&t.exec, src),
-        None if src.mime.starts_with("image/") => {
-            Pixbuf::from_file_at_scale(src.path.as_deref()?, SIZE, SIZE, true)
-                .ok()
-                .map(|p| p.apply_embedded_orientation().unwrap_or(p))
-        }
-        None => None,
-    };
-    let pixbuf = fit(pixbuf?)?;
-    let tmp = temp_next_to(&target);
+    let pixbuf = run_sandboxed(exec_for(&src.mime)?, src)?;
+    store(&target, src, &fit(pixbuf)?)
+}
+
+/// Saves `pixbuf` as the thumbnail of `src` at `target`, with the keys
+/// GIO checks; `target` on success.
+fn store(target: &Path, src: &Source, pixbuf: &Pixbuf) -> Option<PathBuf> {
+    let tmp = temp_next_to(target);
     let mtime = src.mtime.to_string();
     let saved = pixbuf.savev(
         &tmp,
@@ -396,11 +457,11 @@ fn make_in(cache: &Path, src: &Source) -> Option<PathBuf> {
         use std::os::unix::fs::PermissionsExt;
         let _ = std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o600));
     }
-    if std::fs::rename(&tmp, &target).is_err() {
+    if std::fs::rename(&tmp, target).is_err() {
         let _ = std::fs::remove_file(&tmp);
         return None;
     }
-    Some(target)
+    Some(target.to_path_buf())
 }
 
 #[cfg(test)]
@@ -495,8 +556,71 @@ mod tests {
         assert_eq!((f.width(), f.height()), (100, 50));
     }
 
-    /// A picture without a thumbnailer is thumbnailed through gdk-pixbuf
-    /// and saved with the keys GIO checks.
+    /// Pictures no thumbnailer claims go to the built-in helper; nothing
+    /// else falls back to it.
+    #[test]
+    fn pictures_without_a_thumbnailer_use_the_helper() {
+        let t = Thumbnailer {
+            mimes: vec!["image/png".into()],
+            exec: "thumb %i %o".into(),
+        };
+        let helper = Some("helix-files --thumbnail %s %i %o");
+        assert_eq!(
+            exec_with("image/png", Some(&t), helper),
+            Some("thumb %i %o")
+        );
+        assert_eq!(exec_with("image/x-tga", None, helper), helper);
+        assert_eq!(exec_with("image/x-tga", None, None), None);
+        assert_eq!(exec_with("application/x-foo", None, helper), None);
+        // The test program is not Files, so it is never the helper.
+        assert_eq!(helper_exec(), None);
+    }
+
+    /// Without a sandboxed thumbnailer or helper, a picture gets no
+    /// thumbnail: Files never decodes it itself.
+    #[test]
+    fn never_decodes_in_process() {
+        let dir = std::env::temp_dir().join(format!("helix-files-nothumb-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let pic = dir.join("pic.bmp");
+        let p = Pixbuf::new(gtk::gdk_pixbuf::Colorspace::Rgb, false, 8, 60, 30).unwrap();
+        p.savev(&pic, "bmp", &[]).unwrap();
+        let src = Source {
+            uri: glib::filename_to_uri(&pic, None).unwrap().to_string(),
+            path: Some(pic.clone()),
+            mime: "image/x-helix-test".into(),
+            mtime: 1,
+        };
+        let cache = dir.join("cache");
+        assert!(make_in(&cache, &src).is_none());
+        assert!(!cache_path_in(&cache, &src.uri).exists());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// The helper writes a scaled PNG.
+    #[test]
+    fn helper_writes_a_scaled_png() {
+        let dir = std::env::temp_dir().join(format!("helix-files-helper-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let pic = dir.join("pic.png");
+        let p = Pixbuf::new(gtk::gdk_pixbuf::Colorspace::Rgb, false, 8, 600, 300).unwrap();
+        p.savev(&pic, "png", &[]).unwrap();
+        let out = dir.join("out.png");
+        let args = [
+            "256".to_string(),
+            pic.to_string_lossy().into_owned(),
+            out.to_string_lossy().into_owned(),
+        ];
+        assert_eq!(helper_main(&args), glib::ExitCode::SUCCESS);
+        let back = Pixbuf::from_file(&out).unwrap();
+        assert_eq!((back.width(), back.height()), (256, 128));
+        assert_eq!(helper_main(&args[..2]), glib::ExitCode::FAILURE);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// A thumbnail is saved with the keys GIO checks.
     #[test]
     fn makes_a_cached_thumbnail_with_its_keys() {
         let dir = std::env::temp_dir().join(format!("helix-files-thumb-{}", std::process::id()));
@@ -506,15 +630,21 @@ mod tests {
         let p = Pixbuf::new(gtk::gdk_pixbuf::Colorspace::Rgb, false, 8, 600, 300).unwrap();
         p.fill(0x3366ccff);
         p.savev(&pic, "bmp", &[]).unwrap();
-        // A MIME type no thumbnailer claims, so gdk-pixbuf makes it.
         let src = Source {
             uri: glib::filename_to_uri(&pic, None).unwrap().to_string(),
             path: Some(pic.clone()),
-            mime: "image/x-helix-test".into(),
+            mime: "image/bmp".into(),
             mtime: 1234,
         };
         let cache = dir.join("cache");
-        let target = make_in(&cache, &src).expect("thumbnail made");
+        let target = cache_path_in(&cache, &src.uri);
+        std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+        let stored = store(
+            &target,
+            &src,
+            &fit(Pixbuf::from_file(&pic).unwrap()).unwrap(),
+        );
+        assert_eq!(stored.as_ref(), Some(&target));
         assert_eq!(target, cache_path_in(&cache, &src.uri));
         // No temporary files left behind.
         let left: Vec<_> = std::fs::read_dir(target.parent().unwrap())

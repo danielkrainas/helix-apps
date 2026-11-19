@@ -119,8 +119,12 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
   thread) with no valid cached thumbnail gets one made
   (`ui/thumbnailer.rs`), at most 2 at a time: the installed thumbnailer
   for its MIME type (`thumbnailers/*.thumbnailer` in the data folders,
-  `%i %u %o %s` expanded, killed after 30 s), or gdk-pixbuf for pictures
-  without one; scaled to fit 256 px and saved to
+  `%i %u %o %s` expanded, killed after 30 s), or for pictures without one
+  Files' own gdk-pixbuf helper (`helix-files --thumbnail SIZE IN OUT`) run
+  the same way. No file is ever decoded in the Files process itself (as in
+  GNOME, whose thumbnail factory only runs thumbnailers): a picture without
+  a thumbnailer gets none when the sandbox is unavailable. Scaled to fit
+  256 px and saved to
   `$XDG_CACHE_HOME/thumbnails/large/<md5(uri)>.png` (0600, written to a
   temporary file and renamed) with `Thumb::URI` and `Thumb::MTime`, so GIO
   and other apps take it as valid. Failures are not written to the

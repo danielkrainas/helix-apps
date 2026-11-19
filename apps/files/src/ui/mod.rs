@@ -334,6 +334,17 @@ fn arg_strings(cmd: &gio::ApplicationCommandLine) -> Vec<String> {
 }
 
 pub fn run() -> glib::ExitCode {
+    // The picture thumbnail helper, run inside the thumbnailer sandbox.
+    if std::env::args_os()
+        .nth(1)
+        .is_some_and(|a| a == "--thumbnail")
+    {
+        let args: Vec<String> = std::env::args_os()
+            .skip(2)
+            .map(|a| a.to_string_lossy().into_owned())
+            .collect();
+        return thumbnailer::helper_main(&args);
+    }
     let app = adw::Application::builder()
         .application_id(APP_ID)
         .flags(gio::ApplicationFlags::HANDLES_COMMAND_LINE)
