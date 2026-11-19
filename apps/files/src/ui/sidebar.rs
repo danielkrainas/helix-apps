@@ -342,7 +342,9 @@ impl Sidebar {
                 gtk::prelude::WidgetExt::activate_action(&w.window, "win.empty-trash", None).ok();
             }
         });
-        self.list.insert_action_group("sidebar", Some(&group));
+        // On the scrolled window: the context menu is its child, not the
+        // list's (see `new`), and must find these actions too.
+        self.widget.insert_action_group("sidebar", Some(&group));
 
         // Device changes.
         let mut handlers = Vec::new();

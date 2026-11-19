@@ -9,7 +9,7 @@ const BAND: [u8; 3] = [0x1e, 0x1e, 0x1e];
 /// Geometry of the strip for a `w`×`h` picture: band width, hole width,
 /// hole height and the vertical pitch between holes (pixels).
 fn geometry(w: usize, h: usize) -> (usize, usize, usize, usize) {
-    let band = (w.min(h) / 9).clamp(3, 28);
+    let band = (w.min(h) / 6).clamp(4, 40);
     let hole_w = (band * 5 / 9).max(1);
     let hole_h = (band * 4 / 9).max(1);
     let pitch = (hole_h * 2).max(2);

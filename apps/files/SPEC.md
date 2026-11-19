@@ -111,7 +111,7 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
   that looks for every file and was most of a big folder's loading time
   (50 000 files: 916 ms with it, 345 ms without; `tests/load_bench.rs`).
   A video's thumbnail (MIME type `video/*`) is shown with a film strip
-  over it (`ui/filmstrip.rs`): a dark band down each side, about a ninth
+  over it (`ui/filmstrip.rs`): a dark band down each side, about a sixth
   of the picture's shorter side wide, with rounded sprocket holes cleared
   to transparent so the view's background shows through. It is drawn
   when shown, never saved into the shared thumbnail cache.
