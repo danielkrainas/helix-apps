@@ -217,7 +217,7 @@ pub const PANELS: &[PanelInfo] = &[
         icon: "preferences-system-privacy-symbolic",
         // Translators: search keywords for this Settings panel, separated
         // by semicolons; add words people would search for in your language.
-        keywords: n_("screen lock;lock;blank;idle;recent files;file history;trash;temporary;location;camera;microphone;problem reporting;"),
+        keywords: n_("screen lock;lock;blank;idle;recent files;file history;trash;temporary;location;camera;microphone;problem reporting;agent;ai;assistant;automation;"),
         group: 4,
         available: true,
     },
@@ -258,6 +258,40 @@ pub const PANELS: &[PanelInfo] = &[
         available: true,
     },
 ];
+
+/// A page inside a panel with its own command-line name.
+#[derive(Debug)]
+pub struct PageInfo {
+    /// Stable command-line name (also the page's navigation tag).
+    pub name: &'static str,
+    pub aliases: &'static [&'static str],
+    pub panel: PanelId,
+    pub title: &'static str,
+    /// The page is only there when this schema is installed.
+    pub schema: Option<&'static str>,
+}
+
+pub const PAGES: &[PageInfo] = &[PageInfo {
+    // Privacy & Security › Agent Access; the shell's agent indicator
+    // opens it. Without the shell's settings it opens Privacy & Security.
+    name: "agent-access",
+    aliases: &["agents"],
+    panel: PanelId::Privacy,
+    title: n_("Agent Access"),
+    schema: Some("org.helixdesktop.agent-access"),
+}];
+
+/// Resolves a command-line name: a panel ([`lookup`]) or a page in one.
+pub fn lookup_target(name: &str) -> Option<(PanelId, Option<&'static str>)> {
+    if let Some(id) = lookup(name) {
+        return Some((id, None));
+    }
+    let name = name.trim().to_lowercase();
+    PAGES
+        .iter()
+        .find(|p| p.name == name || p.aliases.contains(&name.as_str()))
+        .map(|p| (p.panel, Some(p.name)))
+}
 
 pub fn info(id: PanelId) -> &'static PanelInfo {
     PANELS
@@ -367,6 +401,10 @@ mod tests {
             all.push(p.name);
             all.extend(p.aliases);
         }
+        for p in PAGES {
+            all.push(p.name);
+            all.extend(p.aliases);
+        }
         let n = all.len();
         all.sort();
         all.dedup();
@@ -396,6 +434,21 @@ mod tests {
         assert_eq!(lookup("display"), Some(PanelId::Display));
         assert_eq!(lookup("add-ons"), Some(PanelId::Extensions));
         assert_eq!(lookup("nonsense"), None);
+    }
+
+    #[test]
+    fn lookup_pages() {
+        assert_eq!(lookup_target("privacy"), Some((PanelId::Privacy, None)));
+        assert_eq!(
+            lookup_target("agent-access"),
+            Some((PanelId::Privacy, Some("agent-access")))
+        );
+        assert_eq!(
+            lookup_target(" Agents "),
+            Some((PanelId::Privacy, Some("agent-access")))
+        );
+        assert_eq!(lookup("agent-access"), None, "not a panel");
+        assert_eq!(lookup_target("nonsense"), None);
     }
 
     #[test]

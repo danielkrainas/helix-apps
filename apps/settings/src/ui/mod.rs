@@ -6,6 +6,7 @@ use helix_app_common::trnf;
 
 mod about;
 mod access;
+mod agent_access;
 mod appearance;
 mod apps;
 mod bluetooth;
@@ -49,6 +50,10 @@ pub trait Panel {
     fn own_header(&self) -> bool {
         false
     }
+
+    /// Shows the sub-page named `page` (a [`panels::PAGES`] name) in
+    /// `content`, what [`Panel::build`] returned.
+    fn show_page(&self, _ctx: &Rc<Ctx>, _content: &gtk::Widget, _page: &str) {}
 }
 
 /// Implementation registry: `None` for panels that are not available yet.
@@ -445,6 +450,16 @@ impl Window {
         }
     }
 
+    /// Shows panel `id`, on its sub-page `page` when given.
+    fn show_target(&self, (id, page): (PanelId, Option<&str>)) {
+        self.show_panel(id);
+        let Some(page) = page else { return };
+        let content = self.pages.borrow().get(&id).and_then(|p| p.child());
+        if let (Some(panel), Some(content)) = (panel_impl(id), content) {
+            panel.show_page(&self.ctx, &content, page);
+        }
+    }
+
     fn build_page(&self, id: PanelId) -> adw::NavigationPage {
         let info = panels::info(id);
         if let Some(panel) = panel_impl(id).filter(|p| p.own_header()) {
@@ -500,18 +515,18 @@ pub fn run(args: Vec<String>) -> glib::ExitCode {
             .arguments()
             .get(1)
             .and_then(|a| a.to_str().map(str::to_string))
-            .and_then(|a| panels::lookup(&a));
+            .and_then(|a| panels::lookup_target(&a));
         let existing = window.borrow().clone();
         let win = match existing {
             Some(w) => {
-                if let Some(id) = panel {
-                    w.show_panel(id);
+                if let Some(target) = panel {
+                    w.show_target(target);
                 }
                 w
             }
             None => {
                 let w = Window::new(app);
-                w.show_panel(panel.unwrap_or(DEFAULT_PANEL));
+                w.show_target(panel.unwrap_or((DEFAULT_PANEL, None)));
                 *window.borrow_mut() = Some(w.clone());
                 w
             }

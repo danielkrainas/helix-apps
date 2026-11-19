@@ -24,6 +24,8 @@ fn serve_fakes() {
     crate::bluez::tests::serve(&bluez, &log);
     let shell = connect();
     crate::bluez::tests::serve_send_to(&shell, &log);
+    // The shell's Agent Access interface, on the same name.
+    crate::agents::tests::serve_object(&shell, crate::agents::tests::sample_agents());
     let nm = connect();
     crate::nm::tests::serve(&nm, &log);
     let accounts = connect();

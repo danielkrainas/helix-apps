@@ -318,7 +318,7 @@ msgstr "오디오 플레이어 정보(_A)"
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
 #: apps/music/src/ui.rs:480 apps/music/src/ui.rs:482
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
-#: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
+#: apps/settings/src/ui/mod.rs:209 apps/settings/src/ui/mod.rs:211
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:301 apps/terminal/src/window.rs:305
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
@@ -1132,9 +1132,11 @@ msgstr "계산(_A)"
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
 #: apps/help/src/ui.rs:196 apps/music/src/pages.rs:2129
 #: apps/music/src/pages.rs:2232 apps/music/src/pages.rs:2317
-#: apps/settings/src/ui/apps.rs:553 apps/settings/src/ui/bluetooth.rs:647
-#: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
-#: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
+#: apps/settings/src/ui/agent_access.rs:255
+#: apps/settings/src/ui/agent_access.rs:775 apps/settings/src/ui/apps.rs:553
+#: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
+#: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
+#: apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:290 apps/terminal/src/window.rs:1306
 #: apps/text-editor/src/window.rs:973 apps/web/src/app.rs:954
 #: apps/web/src/dialogs.rs:426 apps/web/src/dialogs.rs:464
@@ -1411,7 +1413,7 @@ msgstr "캘린더"
 
 #: apps/calendar/src/editor.rs:504 apps/document-viewer/src/dialogs.rs:112
 #: apps/files/src/ui/window.rs:211 apps/image-viewer/src/ui.rs:592
-#: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:128
+#: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:151
 #: apps/web/src/permissions.rs:24
 msgid "Location"
 msgstr "장소"
@@ -1818,7 +1820,7 @@ msgstr "가져오기"
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:32 apps/music/src/ui.rs:452
 #: apps/music/src/ui.rs:454 apps/settings/src/ui/apps.rs:439
-#: apps/settings/src/ui/mod.rs:189 apps/settings/src/ui/mod.rs:191
+#: apps/settings/src/ui/mod.rs:194 apps/settings/src/ui/mod.rs:196
 #: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
 #: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
 #: apps/web/src/dialogs.rs:142 apps/web/src/window.rs:48
@@ -1971,7 +1973,7 @@ msgstr "가져오기(_I)…"
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:232 apps/maps/src/ui.rs:486
-#: apps/settings/src/ui/mod.rs:198 apps/terminal/src/window.rs:296
+#: apps/settings/src/ui/mod.rs:203 apps/terminal/src/window.rs:296
 #: apps/text-editor/src/window.rs:65 apps/web/src/window.rs:222
 #: apps/web/src/window.rs:265 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -1990,7 +1992,7 @@ msgid "Search Events"
 msgstr "일정 검색"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:227
+#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:232
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:752
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
@@ -1998,7 +2000,7 @@ msgstr "결과 없음"
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:228
+#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:233
 #: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:753
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
@@ -2281,7 +2283,7 @@ msgstr "마지막 촬영 항목 열기"
 #: apps/camera/src/ui.rs:110 apps/camera/src/ui.rs:200
 #: apps/image-viewer/src/ui.rs:576 apps/image-viewer/src/ui.rs:587
 #: apps/settings/src/bluez.rs:230 apps/settings/src/permissions.rs:52
-#: apps/settings/src/ui/privacy.rs:145 apps/web/src/permissions.rs:27
+#: apps/settings/src/ui/privacy.rs:168 apps/web/src/permissions.rs:27
 msgid "Camera"
 msgstr "카메라"
 
@@ -2292,7 +2294,7 @@ msgstr "사진과 동영상을 찍습니다"
 #: apps/camera/src/ui.rs:162 apps/disks/src/ui.rs:937
 #: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:155
 #: apps/settings/src/ui/network.rs:26 apps/settings/src/ui/network.rs:188
-#: apps/settings/src/ui/network.rs:467
+#: apps/settings/src/ui/network.rs:467 apps/settings/src/ui/privacy.rs:194
 msgid "Off"
 msgstr "끔"
 
@@ -3022,10 +3024,10 @@ msgid "Current Location"
 msgstr "현재 위치"
 
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
-#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/input.rs:367
-#: apps/weather/src/ui.rs:902 apps/web/src/dialogs.rs:198
-#: apps/web/src/dialogs.rs:656 apps/web/src/dialogs.rs:1043
-#: apps/web/src/dialogs.rs:1198
+#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:643
+#: apps/settings/src/ui/input.rs:367 apps/weather/src/ui.rs:902
+#: apps/web/src/dialogs.rs:198 apps/web/src/dialogs.rs:656
+#: apps/web/src/dialogs.rs:1043 apps/web/src/dialogs.rs:1198
 msgid "Remove"
 msgstr "제거"
 
@@ -4471,13 +4473,13 @@ msgstr "ZFS 장치"
 #: apps/disks/src/model.rs:303 apps/disks/src/parttypes.rs:171
 #: apps/disks/src/parttypes.rs:203 apps/disks/src/smart.rs:104
 #: apps/disks/src/ui.rs:1872 apps/disks/src/ui.rs:1882
-#: apps/files/src/ui/tab.rs:77 apps/settings/src/ui/about.rs:38
-#: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
-#: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
-#: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
-#: apps/settings/src/ui/about.rs:230 apps/settings/src/ui/apps.rs:526
-#: apps/settings/src/values.rs:283 apps/system-monitor/src/format.rs:107
-#: apps/weather/src/wmo.rs:37
+#: apps/files/src/ui/tab.rs:77 apps/settings/src/agents.rs:277
+#: apps/settings/src/ui/about.rs:38 apps/settings/src/ui/about.rs:42
+#: apps/settings/src/ui/about.rs:58 apps/settings/src/ui/about.rs:64
+#: apps/settings/src/ui/about.rs:113 apps/settings/src/ui/about.rs:186
+#: apps/settings/src/ui/about.rs:197 apps/settings/src/ui/about.rs:230
+#: apps/settings/src/ui/apps.rs:526 apps/settings/src/values.rs:283
+#: apps/system-monitor/src/format.rs:107 apps/weather/src/wmo.rs:37
 msgid "Unknown"
 msgstr "알 수 없음"
 
@@ -5198,7 +5200,7 @@ msgstr "미디어 없음"
 msgid "No volume selected"
 msgstr "선택한 볼륨 없음"
 
-#: apps/disks/src/ui.rs:937
+#: apps/disks/src/ui.rs:937 apps/settings/src/ui/privacy.rs:192
 msgid "On"
 msgstr "켬"
 
@@ -5797,11 +5799,11 @@ msgstr "스캐너와 통신하는 중 오류: {e}"
 msgid "Unsupported frame format {}"
 msgstr "지원하지 않는 프레임 형식 {}"
 
-#: apps/document-scanner/src/settings.rs:30 apps/settings/src/ui/access.rs:552
+#: apps/document-scanner/src/settings.rs:30 apps/settings/src/ui/access.rs:546
 msgid "Color"
 msgstr "컬러"
 
-#: apps/document-scanner/src/settings.rs:31 apps/settings/src/ui/access.rs:553
+#: apps/document-scanner/src/settings.rs:31 apps/settings/src/ui/access.rs:547
 msgid "Grayscale"
 msgstr "회색조"
 
@@ -6219,11 +6221,11 @@ msgstr "텍스트 해상도"
 msgid "Image Resolution"
 msgstr "이미지 해상도"
 
-#: apps/document-scanner/src/ui.rs:1820 apps/settings/src/ui/access.rs:535
+#: apps/document-scanner/src/ui.rs:1820 apps/settings/src/ui/access.rs:529
 msgid "Brightness"
 msgstr "밝기"
 
-#: apps/document-scanner/src/ui.rs:1821 apps/settings/src/ui/access.rs:541
+#: apps/document-scanner/src/ui.rs:1821 apps/settings/src/ui/access.rs:535
 msgid "Contrast"
 msgstr "대비"
 
@@ -6653,7 +6655,7 @@ msgid "Zoom Level"
 msgstr "확대/축소 비율"
 
 #: apps/document-viewer/src/ui.rs:364 apps/settings/src/ui/access.rs:100
-#: apps/settings/src/ui/access.rs:456 apps/terminal/src/shortcuts.rs:56
+#: apps/settings/src/ui/access.rs:450 apps/terminal/src/shortcuts.rs:56
 #: apps/text-editor/src/shortcuts.rs:64
 msgid "Zoom"
 msgstr "확대/축소"
@@ -6739,7 +6741,7 @@ msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr "{n_pages}페이지 중 {page}페이지 검색 중… {total}개 찾음"
 
 #: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1260
-#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:425
+#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:430
 #: apps/settings/src/ui/picker.rs:34
 msgid "No results found"
 msgstr "결과 없음"
@@ -6930,7 +6932,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr "“{file}”을(를) 처리할 수 없습니다: {error}"
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/web/src/window.rs:2341
+#: apps/settings/src/agents.rs:276 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "취소됨"
 
@@ -9815,7 +9817,7 @@ msgid "Disc"
 msgstr "디스크"
 
 #: apps/music/src/details.rs:125 apps/music/src/pages.rs:677
-#: apps/settings/src/ui/access.rs:517
+#: apps/settings/src/ui/access.rs:511
 msgid "Length"
 msgstr "길이"
 
@@ -10761,6 +10763,30 @@ msgstr "기본 설정"
 msgid "settings"
 msgstr "설정"
 
+#: apps/settings/src/agents.rs:51 apps/settings/src/ui/agent_access.rs:32
+msgid "Read Only"
+msgstr "읽기 전용"
+
+#: apps/settings/src/agents.rs:52 apps/settings/src/ui/agent_access.rs:36
+msgid "Control the Desktop"
+msgstr "데스크톱 제어"
+
+#: apps/settings/src/agents.rs:53 apps/settings/src/ui/agent_access.rs:40
+msgid "Control Apps"
+msgstr "앱 제어"
+
+#: apps/settings/src/agents.rs:54 apps/settings/src/ui/agent_access.rs:186
+msgid "Screen and Input"
+msgstr "화면 및 입력"
+
+#: apps/settings/src/agents.rs:273 apps/settings/src/agents.rs:274
+msgid "Refused"
+msgstr "거부됨"
+
+#: apps/settings/src/agents.rs:275 apps/web/src/window.rs:1948
+msgid "Allowed"
+msgstr "허용됨"
+
 #: apps/settings/src/bluez.rs:66 apps/settings/src/ui/network.rs:181
 #: apps/settings/src/ui/network.rs:464 apps/settings/src/ui/wifi.rs:470
 #: apps/settings/src/ui/wifi.rs:833
@@ -11201,7 +11227,7 @@ msgstr ""
 "서 크기;애니메이션 줄이기;고정 키;느린 키;튕김 키;마우스 키;스크롤 막대;화면 "
 "키보드;두 번 누르기;포인터 위치;"
 
-#: apps/settings/src/panels.rs:216
+#: apps/settings/src/panels.rs:216 apps/settings/src/ui/privacy.rs:222
 msgid "Privacy & Security"
 msgstr "개인 정보 및 보안"
 
@@ -11209,12 +11235,13 @@ msgstr "개인 정보 및 보안"
 #: apps/settings/src/panels.rs:220
 msgid ""
 "screen lock;lock;blank;idle;recent files;file "
-"history;trash;temporary;location;camera;microphone;problem reporting;"
+"history;trash;temporary;location;camera;microphone;problem "
+"reporting;agent;ai;assistant;automation;"
 msgstr ""
 "screen lock;lock;blank;idle;recent files;file "
 "history;trash;temporary;location;camera;microphone;problem reporting;화면 잠"
 "금;잠금;화면 끄기;유휴;최근 파일;파일 기록;휴지통;임시;위치;카메라;마이크;문"
-"제 보고;"
+"제 보고;에이전트;인공지능;어시스턴트;자동화;agent;ai;assistant;automation;"
 
 #: apps/settings/src/panels.rs:228
 msgid "Date & Time"
@@ -11250,11 +11277,16 @@ msgstr ""
 "device name;hostname;memory;processor;cpu;disk;os;version;kernel;hardware;장"
 "치 이름;호스트 이름;메모리;프로세서;디스크;운영 체제;버전;커널;하드웨어;"
 
+#: apps/settings/src/panels.rs:280 apps/settings/src/ui/agent_access.rs:69
+#: apps/settings/src/ui/agent_access.rs:169 apps/settings/src/ui/privacy.rs:185
+msgid "Agent Access"
+msgstr "에이전트 접근"
+
 #: apps/settings/src/permissions.rs:31
 msgid "Run in Background"
 msgstr "백그라운드에서 실행"
 
-#: apps/settings/src/permissions.rs:59 apps/settings/src/ui/privacy.rs:153
+#: apps/settings/src/permissions.rs:59 apps/settings/src/ui/privacy.rs:176
 #: apps/web/src/permissions.rs:26
 msgid "Microphone"
 msgstr "마이크"
@@ -11468,301 +11500,625 @@ msgstr "포인팅 및 클릭"
 msgid "Mouse keys, click assist and double-click delay"
 msgstr "마우스 키, 클릭 도우미, 두 번 누르기 간격"
 
-#: apps/settings/src/ui/access.rs:101 apps/settings/src/ui/access.rs:457
+#: apps/settings/src/ui/access.rs:101 apps/settings/src/ui/access.rs:451
 msgid "Magnify part of the screen"
 msgstr "화면 일부를 확대합니다"
 
-#: apps/settings/src/ui/access.rs:146
+#: apps/settings/src/ui/access.rs:140
 msgid "High Contrast"
 msgstr "고대비"
 
-#: apps/settings/src/ui/access.rs:147
+#: apps/settings/src/ui/access.rs:141
 msgid "Increase the contrast of interface elements"
 msgstr "인터페이스 요소의 대비를 높입니다"
 
-#: apps/settings/src/ui/access.rs:154
+#: apps/settings/src/ui/access.rs:148
 msgid "Show Status Shapes"
 msgstr "상태 모양 표시"
 
-#: apps/settings/src/ui/access.rs:155
+#: apps/settings/src/ui/access.rs:149
 msgid ""
 "Use shapes as well as colour to show the state of switches and other controls"
 msgstr "스위치와 다른 컨트롤의 상태를 색과 함께 모양으로도 표시합니다"
 
-#: apps/settings/src/ui/access.rs:164
+#: apps/settings/src/ui/access.rs:158
 msgid "Reduce Animation"
 msgstr "애니메이션 줄이기"
 
-#: apps/settings/src/ui/access.rs:165
+#: apps/settings/src/ui/access.rs:159
 msgid "Turn off animations in the interface"
 msgstr "인터페이스의 애니메이션을 끕니다"
 
-#: apps/settings/src/ui/access.rs:172
+#: apps/settings/src/ui/access.rs:166
 msgid "Always Show Scrollbars"
 msgstr "항상 스크롤 막대 표시"
 
-#: apps/settings/src/ui/access.rs:176 apps/settings/src/ui/access.rs:182
+#: apps/settings/src/ui/access.rs:170 apps/settings/src/ui/access.rs:176
 msgid "Screen Reader"
 msgstr "화면 읽기 프로그램"
 
-#: apps/settings/src/ui/access.rs:183
+#: apps/settings/src/ui/access.rs:177
 msgid "Read the screen aloud"
 msgstr "화면 내용을 소리 내어 읽습니다"
 
-#: apps/settings/src/ui/access.rs:199
+#: apps/settings/src/ui/access.rs:193
 msgid "Overamplification"
 msgstr "과도한 증폭"
 
-#: apps/settings/src/ui/access.rs:200
+#: apps/settings/src/ui/access.rs:194
 msgid "Allow volume above 100 %, which can reduce sound quality"
 msgstr "음량을 100 % 이상으로 높일 수 있게 합니다. 음질이 떨어질 수 있습니다"
 
-#: apps/settings/src/ui/access.rs:206
+#: apps/settings/src/ui/access.rs:200
 msgid "Visual Alerts"
 msgstr "시각적 알림"
 
-#: apps/settings/src/ui/access.rs:207
+#: apps/settings/src/ui/access.rs:201
 msgid "Flash the screen or window when an alert sound plays"
 msgstr "경고음이 울릴 때 화면이나 창을 깜박입니다"
 
-#: apps/settings/src/ui/access.rs:214
+#: apps/settings/src/ui/access.rs:208
 msgid "Flash Area"
 msgstr "깜박일 영역"
 
-#: apps/settings/src/ui/access.rs:231 apps/settings/src/ui/access.rs:387
-#: apps/settings/src/ui/access.rs:408 apps/settings/src/ui/access.rs:427
-#: apps/settings/src/ui/access.rs:518 apps/settings/src/ui/input.rs:257
+#: apps/settings/src/ui/access.rs:225 apps/settings/src/ui/access.rs:381
+#: apps/settings/src/ui/access.rs:402 apps/settings/src/ui/access.rs:421
+#: apps/settings/src/ui/access.rs:512 apps/settings/src/ui/input.rs:257
 msgid "Long"
 msgstr "길게"
 
-#: apps/settings/src/ui/access.rs:231 apps/settings/src/ui/access.rs:387
-#: apps/settings/src/ui/access.rs:408 apps/settings/src/ui/access.rs:427
-#: apps/settings/src/ui/access.rs:518 apps/settings/src/ui/input.rs:257
+#: apps/settings/src/ui/access.rs:225 apps/settings/src/ui/access.rs:381
+#: apps/settings/src/ui/access.rs:402 apps/settings/src/ui/access.rs:421
+#: apps/settings/src/ui/access.rs:512 apps/settings/src/ui/input.rs:257
 msgid "Short"
 msgstr "짧게"
 
-#: apps/settings/src/ui/access.rs:252
+#: apps/settings/src/ui/access.rs:246
 msgid "Screen Keyboard"
 msgstr "화면 키보드"
 
-#: apps/settings/src/ui/access.rs:253
+#: apps/settings/src/ui/access.rs:247
 msgid "Use an on-screen keyboard to type"
 msgstr "화면 키보드로 입력합니다"
 
-#: apps/settings/src/ui/access.rs:259
+#: apps/settings/src/ui/access.rs:253
 msgid "Cursor Blinking"
 msgstr "커서 깜박임"
 
-#: apps/settings/src/ui/access.rs:260
+#: apps/settings/src/ui/access.rs:254
 msgid "Text cursor blinks in text fields"
 msgstr "텍스트 입력란에서 텍스트 커서가 깜박입니다"
 
-#: apps/settings/src/ui/access.rs:270
+#: apps/settings/src/ui/access.rs:264
 msgid "Blink Speed"
 msgstr "깜박임 속도"
 
-#: apps/settings/src/ui/access.rs:271 apps/settings/src/ui/input.rs:86
+#: apps/settings/src/ui/access.rs:265 apps/settings/src/ui/input.rs:86
 #: apps/settings/src/ui/input.rs:135 apps/settings/src/ui/input.rs:268
 msgid "Fast"
 msgstr "빠르게"
 
-#: apps/settings/src/ui/access.rs:271 apps/settings/src/ui/input.rs:86
+#: apps/settings/src/ui/access.rs:265 apps/settings/src/ui/input.rs:86
 #: apps/settings/src/ui/input.rs:135 apps/settings/src/ui/input.rs:268
 msgid "Slow"
 msgstr "느리게"
 
-#: apps/settings/src/ui/access.rs:279
+#: apps/settings/src/ui/access.rs:273
 msgid "Sound Keys"
 msgstr "소리 키"
 
-#: apps/settings/src/ui/access.rs:280
+#: apps/settings/src/ui/access.rs:274
 msgid "Beep when Num Lock or Caps Lock are turned on or off"
 msgstr "Num Lock이나 Caps Lock을 켜거나 끌 때 삑 소리를 냅니다"
 
-#: apps/settings/src/ui/access.rs:284
+#: apps/settings/src/ui/access.rs:278
 msgid "Typing Assist"
 msgstr "입력 도우미"
 
-#: apps/settings/src/ui/access.rs:290
+#: apps/settings/src/ui/access.rs:284
 msgid "Enable by Keyboard"
 msgstr "키보드로 사용"
 
-#: apps/settings/src/ui/access.rs:291
+#: apps/settings/src/ui/access.rs:285
 msgid "Turn accessibility features on and off using the keyboard"
 msgstr "키보드로 접근성 기능을 켜고 끕니다"
 
-#: apps/settings/src/ui/access.rs:297
+#: apps/settings/src/ui/access.rs:291
 msgid "Sticky Keys"
 msgstr "고정 키"
 
-#: apps/settings/src/ui/access.rs:298
+#: apps/settings/src/ui/access.rs:292
 msgid "Treat a sequence of modifier keys as a key combination"
 msgstr "연속으로 누른 보조 키를 키 조합으로 처리합니다"
 
-#: apps/settings/src/ui/access.rs:305
+#: apps/settings/src/ui/access.rs:299
 msgid "Disable if Two Keys Are Pressed Together"
 msgstr "두 키를 함께 누르면 사용 안 함"
 
-#: apps/settings/src/ui/access.rs:313
+#: apps/settings/src/ui/access.rs:307
 msgid "Beep When a Modifier Key Is Pressed"
 msgstr "보조 키를 누르면 삑 소리"
 
-#: apps/settings/src/ui/access.rs:321
+#: apps/settings/src/ui/access.rs:315
 msgid "Slow Keys"
 msgstr "느린 키"
 
-#: apps/settings/src/ui/access.rs:322
+#: apps/settings/src/ui/access.rs:316
 msgid "Put a delay between when a key is pressed and when it is accepted"
 msgstr "키를 누른 후 입력으로 받아들일 때까지 지연 시간을 둡니다"
 
-#: apps/settings/src/ui/access.rs:324 apps/settings/src/ui/access.rs:340
+#: apps/settings/src/ui/access.rs:318 apps/settings/src/ui/access.rs:334
 msgid "Acceptance Delay"
 msgstr "수락 지연 시간"
 
-#: apps/settings/src/ui/access.rs:326
+#: apps/settings/src/ui/access.rs:320
 msgid "Beep When a Key Is Pressed"
 msgstr "키를 누르면 삑 소리"
 
-#: apps/settings/src/ui/access.rs:327
+#: apps/settings/src/ui/access.rs:321
 msgid "Beep When a Key Is Accepted"
 msgstr "키 입력을 받아들이면 삑 소리"
 
-#: apps/settings/src/ui/access.rs:328 apps/settings/src/ui/access.rs:346
+#: apps/settings/src/ui/access.rs:322 apps/settings/src/ui/access.rs:340
 msgid "Beep When a Key Is Rejected"
 msgstr "키 입력을 거부하면 삑 소리"
 
-#: apps/settings/src/ui/access.rs:337
+#: apps/settings/src/ui/access.rs:331
 msgid "Bounce Keys"
 msgstr "튕김 키"
 
-#: apps/settings/src/ui/access.rs:338
+#: apps/settings/src/ui/access.rs:332
 msgid "Ignore fast duplicate key presses"
 msgstr "빠르게 중복하여 누른 키를 무시합니다"
 
-#: apps/settings/src/ui/access.rs:367
+#: apps/settings/src/ui/access.rs:361
 msgid "Mouse Keys"
 msgstr "마우스 키"
 
-#: apps/settings/src/ui/access.rs:368
+#: apps/settings/src/ui/access.rs:362
 msgid "Control the pointer using the keypad"
 msgstr "키패드로 포인터를 조작합니다"
 
-#: apps/settings/src/ui/access.rs:375
+#: apps/settings/src/ui/access.rs:369
 msgid "Locate Pointer"
 msgstr "포인터 위치 찾기"
 
-#: apps/settings/src/ui/access.rs:376
+#: apps/settings/src/ui/access.rs:370
 msgid "Highlight the pointer when the Control key is pressed"
 msgstr "Ctrl 키를 누르면 포인터를 강조 표시합니다"
 
-#: apps/settings/src/ui/access.rs:386
+#: apps/settings/src/ui/access.rs:380
 msgid "Double-Click Delay"
 msgstr "두 번 누르기 간격"
 
-#: apps/settings/src/ui/access.rs:391
+#: apps/settings/src/ui/access.rs:385
 msgid "Click Assist"
 msgstr "클릭 도우미"
 
-#: apps/settings/src/ui/access.rs:396
+#: apps/settings/src/ui/access.rs:390
 msgid "Simulated Secondary Click"
 msgstr "보조 클릭 흉내"
 
-#: apps/settings/src/ui/access.rs:397
+#: apps/settings/src/ui/access.rs:391
 msgid "Trigger a secondary click by holding down the primary button"
 msgstr "주 단추를 누르고 있으면 보조 클릭을 합니다"
 
-#: apps/settings/src/ui/access.rs:407 apps/settings/src/ui/access.rs:426
+#: apps/settings/src/ui/access.rs:401 apps/settings/src/ui/access.rs:420
 #: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:136
 msgid "Delay"
 msgstr "지연 시간"
 
-#: apps/settings/src/ui/access.rs:415
+#: apps/settings/src/ui/access.rs:409
 msgid "Hover Click"
 msgstr "머무르기 클릭"
 
-#: apps/settings/src/ui/access.rs:416
+#: apps/settings/src/ui/access.rs:410
 msgid "Trigger a click when the pointer hovers"
 msgstr "포인터가 머무르면 클릭합니다"
 
-#: apps/settings/src/ui/access.rs:437
+#: apps/settings/src/ui/access.rs:431
 msgid "Motion Threshold"
 msgstr "움직임 임계값"
 
-#: apps/settings/src/ui/access.rs:438 apps/settings/src/values.rs:206
+#: apps/settings/src/ui/access.rs:432 apps/settings/src/values.rs:206
 msgid "Large"
 msgstr "크게"
 
-#: apps/settings/src/ui/access.rs:438
+#: apps/settings/src/ui/access.rs:432
 msgid "Small"
 msgstr "작게"
 
-#: apps/settings/src/ui/access.rs:464
+#: apps/settings/src/ui/access.rs:458
 msgid "Magnification"
 msgstr "확대 비율"
 
-#: apps/settings/src/ui/access.rs:471
+#: apps/settings/src/ui/access.rs:465
 msgid "Magnifier Position"
 msgstr "돋보기 위치"
 
-#: apps/settings/src/ui/access.rs:478
+#: apps/settings/src/ui/access.rs:472
 msgid "Follow the Pointer"
 msgstr "포인터 따라가기"
 
-#: apps/settings/src/ui/access.rs:482 apps/settings/src/ui/access.rs:487
+#: apps/settings/src/ui/access.rs:476 apps/settings/src/ui/access.rs:481
 msgid "Crosshairs"
 msgstr "십자선"
 
-#: apps/settings/src/ui/access.rs:488
+#: apps/settings/src/ui/access.rs:482
 msgid "Show lines through the pointer"
 msgstr "포인터를 지나는 선을 표시합니다"
 
-#: apps/settings/src/ui/access.rs:495
+#: apps/settings/src/ui/access.rs:489
 msgid "Overlap Pointer"
 msgstr "포인터와 겹치기"
 
-#: apps/settings/src/ui/access.rs:506
+#: apps/settings/src/ui/access.rs:500
 msgid "Thickness"
 msgstr "두께"
 
-#: apps/settings/src/ui/access.rs:507
+#: apps/settings/src/ui/access.rs:501
 msgid "Thick"
 msgstr "두껍게"
 
-#: apps/settings/src/ui/access.rs:507
+#: apps/settings/src/ui/access.rs:501
 msgid "Thin"
 msgstr "얇게"
 
-#: apps/settings/src/ui/access.rs:523
+#: apps/settings/src/ui/access.rs:517
 msgid "Color Effects"
 msgstr "색 효과"
 
-#: apps/settings/src/ui/access.rs:529
+#: apps/settings/src/ui/access.rs:523
 msgid "Invert Colors"
 msgstr "색 반전"
 
-#: apps/settings/src/ui/access.rs:536 apps/settings/src/ui/access.rs:542
+#: apps/settings/src/ui/access.rs:530 apps/settings/src/ui/access.rs:536
 msgid "High"
 msgstr "높음"
 
-#: apps/settings/src/ui/access.rs:536 apps/settings/src/ui/access.rs:542
+#: apps/settings/src/ui/access.rs:530 apps/settings/src/ui/access.rs:536
 msgid "Low"
 msgstr "낮음"
 
-#: apps/settings/src/ui/access.rs:553
+#: apps/settings/src/ui/access.rs:547
 msgid "Full Color"
 msgstr "풀 컬러"
 
-#: apps/settings/src/ui/access.rs:603
+#: apps/settings/src/ui/access.rs:597
 msgid "Large Text"
 msgstr "큰 글씨"
 
-#: apps/settings/src/ui/access.rs:604
+#: apps/settings/src/ui/access.rs:598
 msgid "Increase the size of text"
 msgstr "글자 크기를 키웁니다"
 
-#: apps/settings/src/ui/access.rs:637
+#: apps/settings/src/ui/access.rs:631
 msgid "Cursor Size"
 msgstr "커서 크기"
+
+#: apps/settings/src/ui/agent_access.rs:33
+msgid "See windows, apps and recent files, and ask you questions"
+msgstr "창, 앱, 최근 파일을 보고 사용자에게 질문하기"
+
+#: apps/settings/src/ui/agent_access.rs:37
+msgid "Also open apps and files, manage windows and change quick settings"
+msgstr "또한 앱과 파일 열기, 창 관리, 빠른 설정 변경"
+
+#: apps/settings/src/ui/agent_access.rs:41
+msgid "Also read and use the buttons and fields inside apps"
+msgstr "또한 앱 안의 버튼과 입력란을 읽고 사용하기"
+
+#: apps/settings/src/ui/agent_access.rs:66
+msgid ""
+"Agents are programs, such as AI assistants, that read and control your "
+"session through the desktop. Each agent must ask you before it gets access."
+msgstr ""
+"에이전트는 AI 어시스턴트처럼 데스크톱을 통해 세션을 읽고 제어하는 프로그램입"
+"니다. 각 에이전트는 접근 권한을 얻기 전에 사용자에게 물어야 합니다."
+
+#: apps/settings/src/ui/agent_access.rs:76
+msgid "Access"
+msgstr "접근"
+
+#: apps/settings/src/ui/agent_access.rs:83
+msgid "Asking"
+msgstr "묻기"
+
+#: apps/settings/src/ui/agent_access.rs:93
+msgid "Information"
+msgstr "정보"
+
+#: apps/settings/src/ui/agent_access.rs:99
+msgid "Notifications Access"
+msgstr "알림 접근"
+
+#: apps/settings/src/ui/agent_access.rs:100
+msgid ""
+"Agents can read the text of notifications, which can include messages and "
+"sign-in codes"
+msgstr ""
+"에이전트가 알림 내용을 읽을 수 있으며, 여기에는 메시지와 로그인 코드가 포함"
+"될 수 있습니다"
+
+#: apps/settings/src/ui/agent_access.rs:107
+msgid "Clipboard Access"
+msgstr "클립보드 접근"
+
+#: apps/settings/src/ui/agent_access.rs:108
+msgid ""
+"Agents can read and change the clipboard, which can hold passwords and other "
+"copied text"
+msgstr ""
+"에이전트가 클립보드를 읽고 바꿀 수 있으며, 클립보드에는 비밀번호와 복사한 다"
+"른 텍스트가 있을 수 있습니다"
+
+#: apps/settings/src/ui/agent_access.rs:113
+msgid "Safeguards"
+msgstr "보호 장치"
+
+#: apps/settings/src/ui/agent_access.rs:119
+msgid "Confirm Sensitive Actions"
+msgstr "민감한 작업 확인"
+
+#: apps/settings/src/ui/agent_access.rs:120
+msgid ""
+"Ask before an agent deletes files, sends messages or changes network settings"
+msgstr ""
+"에이전트가 파일을 삭제하거나, 메시지를 보내거나, 네트워크 설정을 바꾸기 전에 "
+"묻기"
+
+#: apps/settings/src/ui/agent_access.rs:127
+msgid "Allow From Remote Sessions"
+msgstr "원격 세션에서 허용"
+
+#: apps/settings/src/ui/agent_access.rs:128
+msgid "Agents running in a remote login (SSH) can ask for access"
+msgstr "원격 로그인(SSH)에서 실행되는 에이전트가 접근을 요청할 수 있습니다"
+
+#: apps/settings/src/ui/agent_access.rs:139
+msgid "View Activity"
+msgstr "활동 보기"
+
+#: apps/settings/src/ui/agent_access.rs:140
+msgid "What agents did, and how long it is kept"
+msgstr "에이전트가 한 일과 보관 기간"
+
+#: apps/settings/src/ui/agent_access.rs:181
+msgid "Access Level"
+msgstr "접근 수준"
+
+#: apps/settings/src/ui/agent_access.rs:187
+msgid ""
+"Also take screenshots and use the pointer and keyboard as if they were you"
+msgstr "또한 스크린샷을 찍고 사용자처럼 포인터와 키보드 사용하기"
+
+#: apps/settings/src/ui/agent_access.rs:250
+msgid "Allow Screen and Input?"
+msgstr "화면 및 입력을 허용할까요?"
+
+#: apps/settings/src/ui/agent_access.rs:251
+msgid ""
+"Agents you allow will be able to see everything on the screen and type and "
+"click anywhere, as if they were you. Only turn this on for agents you trust."
+msgstr ""
+"허용한 에이전트는 화면의 모든 것을 보고 사용자처럼 어디서나 입력하고 클릭할 "
+"수 있습니다. 신뢰하는 에이전트에만 켜십시오."
+
+#: apps/settings/src/ui/agent_access.rs:256
+msgid "_Allow"
+msgstr "허용(_A)"
+
+#: apps/settings/src/ui/agent_access.rs:276
+msgid "Ask Each Session"
+msgstr "세션마다 묻기"
+
+#: apps/settings/src/ui/agent_access.rs:277
+msgid "Agents are asked for again in every session"
+msgstr "세션마다 에이전트에게 다시 묻습니다"
+
+#: apps/settings/src/ui/agent_access.rs:281
+msgid "Remember"
+msgstr "기억하기"
+
+#: apps/settings/src/ui/agent_access.rs:282
+msgid "Agents you always allow are not asked again"
+msgstr "항상 허용한 에이전트에게는 다시 묻지 않습니다"
+
+#: apps/settings/src/ui/agent_access.rs:333
+msgid "Allowed Agents"
+msgstr "허용된 에이전트"
+
+#: apps/settings/src/ui/agent_access.rs:334
+msgid ""
+"While an agent is active, an indicator is always shown in the top bar, with "
+"Stop in its menu."
+msgstr ""
+"에이전트가 활동하는 동안에는 상단 표시줄에 항상 표시기가 나타나며, 메뉴에서 "
+"중지할 수 있습니다."
+
+#: apps/settings/src/ui/agent_access.rs:338
+msgid "Revoke All"
+msgstr "모두 취소"
+
+#: apps/settings/src/ui/agent_access.rs:343
+msgid "Revoke Access of All Agents"
+msgstr "모든 에이전트의 접근 취소"
+
+#: apps/settings/src/ui/agent_access.rs:405
+msgid "Only the installed Settings app can change agents' access"
+msgstr "설치된 설정 앱만 에이전트의 접근을 바꿀 수 있습니다"
+
+#: apps/settings/src/ui/agent_access.rs:407
+msgid "Could not change the agent's access: {e}"
+msgstr "에이전트의 접근을 바꿀 수 없습니다: {e}"
+
+#: apps/settings/src/ui/agent_access.rs:433
+msgid "Not active this session"
+msgstr "이번 세션에서 활동 없음"
+
+#: apps/settings/src/ui/agent_access.rs:434
+msgid "Active just now"
+msgstr "방금 활동"
+
+#: apps/settings/src/ui/agent_access.rs:435
+msgid "Active {n} minute ago"
+msgid_plural "Active {n} minutes ago"
+msgstr[0] "{n}분 전 활동"
+
+#: apps/settings/src/ui/agent_access.rs:436
+msgid "Active {n} hour ago"
+msgid_plural "Active {n} hours ago"
+msgstr[0] "{n}시간 전 활동"
+
+#: apps/settings/src/ui/agent_access.rs:437
+msgid "Active {n} day ago"
+msgid_plural "Active {n} days ago"
+msgstr[0] "{n}일 전 활동"
+
+#: apps/settings/src/ui/agent_access.rs:448
+msgid "Denied this session"
+msgstr "이번 세션에서 거부됨"
+
+#: apps/settings/src/ui/agent_access.rs:450
+msgid "Always allowed"
+msgstr "항상 허용됨"
+
+#: apps/settings/src/ui/agent_access.rs:452
+msgid "Allowed this session"
+msgstr "이번 세션에서 허용됨"
+
+#: apps/settings/src/ui/agent_access.rs:473
+msgid "The desktop shell is not running, so agents cannot be listed"
+msgstr "데스크톱 셸이 실행 중이 아니라서 에이전트 목록을 표시할 수 없습니다"
+
+#: apps/settings/src/ui/agent_access.rs:475
+msgid "Only the installed Settings app can list agents"
+msgstr "설치된 설정 앱만 에이전트 목록을 표시할 수 있습니다"
+
+#: apps/settings/src/ui/agent_access.rs:476
+msgid "Agents could not be listed"
+msgstr "에이전트 목록을 표시할 수 없습니다"
+
+#: apps/settings/src/ui/agent_access.rs:478
+msgid "Agents that ask for access are listed here"
+msgstr "접근을 요청한 에이전트가 여기에 표시됩니다"
+
+#: apps/settings/src/ui/agent_access.rs:532
+msgid "Revoke"
+msgstr "취소"
+
+#: apps/settings/src/ui/agent_access.rs:533
+msgid "Revoke Access of {agent}"
+msgstr "{agent}의 접근 취소"
+
+#: apps/settings/src/ui/agent_access.rs:538
+msgid "Forget"
+msgstr "잊기"
+
+#: apps/settings/src/ui/agent_access.rs:539
+msgid "Forget {agent}"
+msgstr "{agent} 잊기"
+
+#: apps/settings/src/ui/agent_access.rs:571
+msgid "Excluded Apps"
+msgstr "제외된 앱"
+
+#: apps/settings/src/ui/agent_access.rs:572
+msgid ""
+"Agents can never read or control these apps. Password fields, the lock "
+"screen, system password prompts and Settings are always excluded."
+msgstr ""
+"에이전트는 이 앱을 절대 읽거나 제어할 수 없습니다. 비밀번호 입력란, 잠금 화"
+"면, 시스템 비밀번호 요청, 설정은 항상 제외됩니다."
+
+#: apps/settings/src/ui/agent_access.rs:576
+msgid "Add App…"
+msgstr "앱 추가…"
+
+#: apps/settings/src/ui/agent_access.rs:595
+msgid "No apps excluded"
+msgstr "제외된 앱 없음"
+
+#: apps/settings/src/ui/agent_access.rs:647
+msgid "Remove {app}"
+msgstr "{app} 제거"
+
+#: apps/settings/src/ui/agent_access.rs:660
+msgid "Exclude an App"
+msgstr "앱 제외"
+
+#: apps/settings/src/ui/agent_access.rs:661
+msgid "Search apps"
+msgstr "앱 검색"
+
+#: apps/settings/src/ui/agent_access.rs:662
+msgid "Search Apps"
+msgstr "앱 검색"
+
+#: apps/settings/src/ui/agent_access.rs:663
+msgid "Loading Apps…"
+msgstr "앱 불러오는 중…"
+
+#: apps/settings/src/ui/agent_access.rs:731
+msgid "Keep Activity For"
+msgstr "활동 보관 기간"
+
+#: apps/settings/src/ui/agent_access.rs:734
+msgid "Clear Activity"
+msgstr "활동 지우기"
+
+#: apps/settings/src/ui/agent_access.rs:735
+msgid "Remove everything agents have done from the log"
+msgstr "에이전트가 한 모든 일을 기록에서 제거합니다"
+
+#: apps/settings/src/ui/agent_access.rs:736
+msgid "Clear…"
+msgstr "지우기…"
+
+#: apps/settings/src/ui/agent_access.rs:742
+msgid "Recent Activity"
+msgstr "최근 활동"
+
+#: apps/settings/src/ui/agent_access.rs:770
+msgid "Clear Agent Activity?"
+msgstr "에이전트 활동을 지울까요?"
+
+#: apps/settings/src/ui/agent_access.rs:771
+msgid "The record of what agents did is removed. This cannot be undone."
+msgstr "에이전트가 한 일의 기록이 제거됩니다. 되돌릴 수 없습니다."
+
+#: apps/settings/src/ui/agent_access.rs:776
+msgid "_Clear"
+msgstr "지우기(_C)"
+
+#: apps/settings/src/ui/agent_access.rs:788
+msgid "Agent activity cleared"
+msgstr "에이전트 활동을 지웠습니다"
+
+#: apps/settings/src/ui/agent_access.rs:789
+msgid "The desktop shell is not running, so the activity cannot be cleared"
+msgstr "데스크톱 셸이 실행 중이 아니라서 활동을 지울 수 없습니다"
+
+#: apps/settings/src/ui/agent_access.rs:793
+msgid "Only the installed Settings app can clear the activity"
+msgstr "설치된 설정 앱만 활동을 지울 수 있습니다"
+
+#: apps/settings/src/ui/agent_access.rs:795
+msgid "Could not clear the activity: {e}"
+msgstr "활동을 지울 수 없습니다: {e}"
+
+#: apps/settings/src/ui/agent_access.rs:804
+msgid "Agent Activity"
+msgstr "에이전트 활동"
+
+#: apps/settings/src/ui/agent_access.rs:836
+msgid "Showing the latest {n} entry."
+msgid_plural "Showing the latest {n} entries."
+msgstr[0] "최근 항목 {n}개를 표시합니다."
+
+#: apps/settings/src/ui/agent_access.rs:845
+msgid "What agents do will be listed here"
+msgstr "에이전트가 하는 일이 여기에 표시됩니다"
 
 #: apps/settings/src/ui/appearance.rs:108 apps/terminal/src/prefs_dialog.rs:31
 #: apps/terminal/src/window.rs:176 apps/text-editor/src/prefs.rs:65
@@ -11998,7 +12354,7 @@ msgstr "컴퓨터의 스위치나 키로 켜십시오."
 msgid "Visible Name"
 msgstr "표시 이름"
 
-#: apps/settings/src/ui/bluetooth.rs:112 apps/settings/src/ui/privacy.rs:139
+#: apps/settings/src/ui/bluetooth.rs:112 apps/settings/src/ui/privacy.rs:162
 msgid "Devices"
 msgstr "장치"
 
@@ -12686,45 +13042,45 @@ msgstr "{source} 아래로 이동"
 msgid "Remove {source}"
 msgstr "{source} 제거"
 
-#: apps/settings/src/ui/mod.rs:160 apps/settings/src/ui/mod.rs:240
-#: apps/settings/src/ui/mod.rs:494
+#: apps/settings/src/ui/mod.rs:165 apps/settings/src/ui/mod.rs:245
+#: apps/settings/src/ui/mod.rs:509
 msgid "Settings"
 msgstr "설정"
 
-#: apps/settings/src/ui/mod.rs:178
+#: apps/settings/src/ui/mod.rs:183
 msgid "Search settings"
 msgstr "설정 검색"
 
-#: apps/settings/src/ui/mod.rs:181 apps/settings/src/ui/shortcuts.rs:10
+#: apps/settings/src/ui/mod.rs:186 apps/settings/src/ui/shortcuts.rs:10
 msgid "Search Settings"
 msgstr "설정 검색"
 
-#: apps/settings/src/ui/mod.rs:199
+#: apps/settings/src/ui/mod.rs:204
 msgid "_About Settings"
 msgstr "설정 정보(_A)"
 
-#: apps/settings/src/ui/mod.rs:349 apps/settings/src/ui/mod.rs:362
+#: apps/settings/src/ui/mod.rs:354 apps/settings/src/ui/mod.rs:367
 msgid "Not yet available"
 msgstr "아직 사용할 수 없음"
 
-#: apps/settings/src/ui/mod.rs:383
+#: apps/settings/src/ui/mod.rs:388
 msgid "Not Yet Available"
 msgstr "아직 사용할 수 없음"
 
-#: apps/settings/src/ui/mod.rs:426
+#: apps/settings/src/ui/mod.rs:431
 msgid "{n} panel found"
 msgid_plural "{n} panels found"
 msgstr[0] "패널 {n}개를 찾았습니다"
 
-#: apps/settings/src/ui/mod.rs:463
+#: apps/settings/src/ui/mod.rs:478
 msgid "{} Is Not Yet Available"
 msgstr "{}은(는) 아직 사용할 수 없습니다"
 
-#: apps/settings/src/ui/mod.rs:464
+#: apps/settings/src/ui/mod.rs:479
 msgid "This panel will be added in a later version of Helix Settings."
 msgstr "이 패널은 Helix 설정의 이후 버전에서 추가됩니다."
 
-#: apps/settings/src/ui/mod.rs:495
+#: apps/settings/src/ui/mod.rs:510
 msgid "Configure the Helix desktop"
 msgstr "Helix 데스크톱을 설정합니다"
 
@@ -13143,7 +13499,7 @@ msgstr "방해 금지"
 msgid "Notification banners are hidden"
 msgstr "알림 배너를 숨깁니다"
 
-#: apps/settings/src/ui/notifications.rs:89 apps/settings/src/ui/privacy.rs:72
+#: apps/settings/src/ui/notifications.rs:89 apps/settings/src/ui/privacy.rs:95
 msgid "Lock Screen Notifications"
 msgstr "잠금 화면 알림"
 
@@ -13217,87 +13573,91 @@ msgstr "상단 표시줄에 정확한 충전량을 표시합니다"
 msgid "Power Button Behavior"
 msgstr "전원 단추 동작"
 
-#: apps/settings/src/ui/privacy.rs:28
+#: apps/settings/src/ui/privacy.rs:51
 msgid "Screen Lock"
 msgstr "화면 잠금"
 
-#: apps/settings/src/ui/privacy.rs:29
+#: apps/settings/src/ui/privacy.rs:52
 msgid "Automatically lock the screen when you are not using the device"
 msgstr "장치를 사용하지 않을 때 자동으로 화면을 잠급니다"
 
-#: apps/settings/src/ui/privacy.rs:39
+#: apps/settings/src/ui/privacy.rs:62
 msgid "Blank Screen Delay"
 msgstr "화면 끄기 지연 시간"
 
-#: apps/settings/src/ui/privacy.rs:41
+#: apps/settings/src/ui/privacy.rs:64
 msgid "Period of inactivity after which the screen will go blank"
 msgstr "화면을 끌 때까지 사용하지 않는 시간"
 
-#: apps/settings/src/ui/privacy.rs:50
+#: apps/settings/src/ui/privacy.rs:73
 msgid "Automatic Screen Lock"
 msgstr "자동 화면 잠금"
 
-#: apps/settings/src/ui/privacy.rs:51
+#: apps/settings/src/ui/privacy.rs:74
 msgid "Locks the screen after it goes blank"
 msgstr "화면이 꺼진 후 화면을 잠급니다"
 
-#: apps/settings/src/ui/privacy.rs:61
+#: apps/settings/src/ui/privacy.rs:84
 msgid "Automatic Screen Lock Delay"
 msgstr "자동 화면 잠금 지연 시간"
 
-#: apps/settings/src/ui/privacy.rs:77
+#: apps/settings/src/ui/privacy.rs:100
 msgid "File History & Trash"
 msgstr "파일 기록 및 휴지통"
 
-#: apps/settings/src/ui/privacy.rs:83
+#: apps/settings/src/ui/privacy.rs:106
 msgid "File History"
 msgstr "파일 기록"
 
-#: apps/settings/src/ui/privacy.rs:84
+#: apps/settings/src/ui/privacy.rs:107
 msgid "Remember recently used files"
 msgstr "최근 사용한 파일을 기억합니다"
 
-#: apps/settings/src/ui/privacy.rs:94
+#: apps/settings/src/ui/privacy.rs:117
 msgid "File History Duration"
 msgstr "파일 기록 보관 기간"
 
-#: apps/settings/src/ui/privacy.rs:106
+#: apps/settings/src/ui/privacy.rs:129
 msgid "Automatically Delete Trash Content"
 msgstr "휴지통 내용 자동 삭제"
 
-#: apps/settings/src/ui/privacy.rs:114
+#: apps/settings/src/ui/privacy.rs:137
 msgid "Automatically Delete Temporary Files"
 msgstr "임시 파일 자동 삭제"
 
-#: apps/settings/src/ui/privacy.rs:124
+#: apps/settings/src/ui/privacy.rs:147
 msgid "Automatically Delete Period"
 msgstr "자동 삭제 기간"
 
-#: apps/settings/src/ui/privacy.rs:134
+#: apps/settings/src/ui/privacy.rs:157
 msgid "Location Services"
 msgstr "위치 서비스"
 
-#: apps/settings/src/ui/privacy.rs:135
+#: apps/settings/src/ui/privacy.rs:158
 msgid "Let apps determine your geographical location"
 msgstr "앱이 지리적 위치를 확인할 수 있게 합니다"
 
-#: apps/settings/src/ui/privacy.rs:146
+#: apps/settings/src/ui/privacy.rs:169
 msgid "Allow apps to use the camera"
 msgstr "앱이 카메라를 사용할 수 있게 합니다"
 
-#: apps/settings/src/ui/privacy.rs:154
+#: apps/settings/src/ui/privacy.rs:177
 msgid "Allow apps to use the microphone"
 msgstr "앱이 마이크를 사용할 수 있게 합니다"
 
-#: apps/settings/src/ui/privacy.rs:158
+#: apps/settings/src/ui/privacy.rs:184
+msgid "Agents"
+msgstr "에이전트"
+
+#: apps/settings/src/ui/privacy.rs:211
 msgid "Diagnostics"
 msgstr "진단"
 
-#: apps/settings/src/ui/privacy.rs:164
+#: apps/settings/src/ui/privacy.rs:217
 msgid "Automatic Problem Reporting"
 msgstr "자동 문제 보고"
 
-#: apps/settings/src/ui/privacy.rs:165
+#: apps/settings/src/ui/privacy.rs:218
 msgid "Send technical reports when problems occur"
 msgstr "문제가 발생하면 기술 보고서를 보냅니다"
 
@@ -17174,10 +17534,6 @@ msgid "Problems: {list}"
 msgstr "문제: {list}"
 
 #: apps/web/src/window.rs:1948
-msgid "Allowed"
-msgstr "허용됨"
-
-#: apps/web/src/window.rs:1948
 msgid "Denied"
 msgstr "거부됨"
 
@@ -17481,3 +17837,12 @@ msgstr "직장"
 msgctxt "email, address or website type"
 msgid "Other"
 msgstr "기타"
+
+#~ msgid ""
+#~ "screen lock;lock;blank;idle;recent files;file "
+#~ "history;trash;temporary;location;camera;microphone;problem reporting;"
+#~ msgstr ""
+#~ "screen lock;lock;blank;idle;recent files;file "
+#~ "history;trash;temporary;location;camera;microphone;problem reporting;화면 "
+#~ "잠금;잠금;화면 끄기;유휴;최근 파일;파일 기록;휴지통;임시;위치;카메라;마이"
+#~ "크;문제 보고;"

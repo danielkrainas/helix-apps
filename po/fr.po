@@ -325,7 +325,7 @@ msgstr "À _propos de Lecteur audio"
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
 #: apps/music/src/ui.rs:480 apps/music/src/ui.rs:482
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
-#: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
+#: apps/settings/src/ui/mod.rs:209 apps/settings/src/ui/mod.rs:211
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:301 apps/terminal/src/window.rs:305
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
@@ -1146,9 +1146,11 @@ msgstr "_Calculer"
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
 #: apps/help/src/ui.rs:196 apps/music/src/pages.rs:2129
 #: apps/music/src/pages.rs:2232 apps/music/src/pages.rs:2317
-#: apps/settings/src/ui/apps.rs:553 apps/settings/src/ui/bluetooth.rs:647
-#: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
-#: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
+#: apps/settings/src/ui/agent_access.rs:255
+#: apps/settings/src/ui/agent_access.rs:775 apps/settings/src/ui/apps.rs:553
+#: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
+#: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
+#: apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:290 apps/terminal/src/window.rs:1306
 #: apps/text-editor/src/window.rs:973 apps/web/src/app.rs:954
 #: apps/web/src/dialogs.rs:426 apps/web/src/dialogs.rs:464
@@ -1427,7 +1429,7 @@ msgstr "Agenda"
 
 #: apps/calendar/src/editor.rs:504 apps/document-viewer/src/dialogs.rs:112
 #: apps/files/src/ui/window.rs:211 apps/image-viewer/src/ui.rs:592
-#: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:128
+#: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:151
 #: apps/web/src/permissions.rs:24
 msgid "Location"
 msgstr "Lieu"
@@ -1842,7 +1844,7 @@ msgstr "Importer"
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:32 apps/music/src/ui.rs:452
 #: apps/music/src/ui.rs:454 apps/settings/src/ui/apps.rs:439
-#: apps/settings/src/ui/mod.rs:189 apps/settings/src/ui/mod.rs:191
+#: apps/settings/src/ui/mod.rs:194 apps/settings/src/ui/mod.rs:196
 #: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
 #: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
 #: apps/web/src/dialogs.rs:142 apps/web/src/window.rs:48
@@ -1995,7 +1997,7 @@ msgstr "_Importer…"
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:232 apps/maps/src/ui.rs:486
-#: apps/settings/src/ui/mod.rs:198 apps/terminal/src/window.rs:296
+#: apps/settings/src/ui/mod.rs:203 apps/terminal/src/window.rs:296
 #: apps/text-editor/src/window.rs:65 apps/web/src/window.rs:222
 #: apps/web/src/window.rs:265 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -2014,7 +2016,7 @@ msgid "Search Events"
 msgstr "Rechercher des événements"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:227
+#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:232
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:752
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
@@ -2022,7 +2024,7 @@ msgstr "Aucun résultat"
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:228
+#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:233
 #: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:753
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
@@ -2310,7 +2312,7 @@ msgstr "Ouvrir la dernière capture"
 #: apps/camera/src/ui.rs:110 apps/camera/src/ui.rs:200
 #: apps/image-viewer/src/ui.rs:576 apps/image-viewer/src/ui.rs:587
 #: apps/settings/src/bluez.rs:230 apps/settings/src/permissions.rs:52
-#: apps/settings/src/ui/privacy.rs:145 apps/web/src/permissions.rs:27
+#: apps/settings/src/ui/privacy.rs:168 apps/web/src/permissions.rs:27
 msgid "Camera"
 msgstr "Appareil photo"
 
@@ -2321,7 +2323,7 @@ msgstr "Prendre des photos et des vidéos"
 #: apps/camera/src/ui.rs:162 apps/disks/src/ui.rs:937
 #: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:155
 #: apps/settings/src/ui/network.rs:26 apps/settings/src/ui/network.rs:188
-#: apps/settings/src/ui/network.rs:467
+#: apps/settings/src/ui/network.rs:467 apps/settings/src/ui/privacy.rs:194
 msgid "Off"
 msgstr "Désactivé"
 
@@ -3062,10 +3064,10 @@ msgid "Current Location"
 msgstr "Position actuelle"
 
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
-#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/input.rs:367
-#: apps/weather/src/ui.rs:902 apps/web/src/dialogs.rs:198
-#: apps/web/src/dialogs.rs:656 apps/web/src/dialogs.rs:1043
-#: apps/web/src/dialogs.rs:1198
+#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:643
+#: apps/settings/src/ui/input.rs:367 apps/weather/src/ui.rs:902
+#: apps/web/src/dialogs.rs:198 apps/web/src/dialogs.rs:656
+#: apps/web/src/dialogs.rs:1043 apps/web/src/dialogs.rs:1198
 msgid "Remove"
 msgstr "Supprimer"
 
@@ -4533,13 +4535,13 @@ msgstr "Périphérique ZFS"
 #: apps/disks/src/model.rs:303 apps/disks/src/parttypes.rs:171
 #: apps/disks/src/parttypes.rs:203 apps/disks/src/smart.rs:104
 #: apps/disks/src/ui.rs:1872 apps/disks/src/ui.rs:1882
-#: apps/files/src/ui/tab.rs:77 apps/settings/src/ui/about.rs:38
-#: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
-#: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
-#: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
-#: apps/settings/src/ui/about.rs:230 apps/settings/src/ui/apps.rs:526
-#: apps/settings/src/values.rs:283 apps/system-monitor/src/format.rs:107
-#: apps/weather/src/wmo.rs:37
+#: apps/files/src/ui/tab.rs:77 apps/settings/src/agents.rs:277
+#: apps/settings/src/ui/about.rs:38 apps/settings/src/ui/about.rs:42
+#: apps/settings/src/ui/about.rs:58 apps/settings/src/ui/about.rs:64
+#: apps/settings/src/ui/about.rs:113 apps/settings/src/ui/about.rs:186
+#: apps/settings/src/ui/about.rs:197 apps/settings/src/ui/about.rs:230
+#: apps/settings/src/ui/apps.rs:526 apps/settings/src/values.rs:283
+#: apps/system-monitor/src/format.rs:107 apps/weather/src/wmo.rs:37
 msgid "Unknown"
 msgstr "Inconnu"
 
@@ -5264,7 +5266,7 @@ msgstr "Aucun support"
 msgid "No volume selected"
 msgstr "Aucun volume sélectionné"
 
-#: apps/disks/src/ui.rs:937
+#: apps/disks/src/ui.rs:937 apps/settings/src/ui/privacy.rs:192
 msgid "On"
 msgstr "Activé"
 
@@ -5870,11 +5872,11 @@ msgstr "Erreur de communication avec le scanner : {e}"
 msgid "Unsupported frame format {}"
 msgstr "Format de trame {} non pris en charge"
 
-#: apps/document-scanner/src/settings.rs:30 apps/settings/src/ui/access.rs:552
+#: apps/document-scanner/src/settings.rs:30 apps/settings/src/ui/access.rs:546
 msgid "Color"
 msgstr "Couleur"
 
-#: apps/document-scanner/src/settings.rs:31 apps/settings/src/ui/access.rs:553
+#: apps/document-scanner/src/settings.rs:31 apps/settings/src/ui/access.rs:547
 msgid "Grayscale"
 msgstr "Niveaux de gris"
 
@@ -6299,11 +6301,11 @@ msgstr "Résolution du texte"
 msgid "Image Resolution"
 msgstr "Résolution des images"
 
-#: apps/document-scanner/src/ui.rs:1820 apps/settings/src/ui/access.rs:535
+#: apps/document-scanner/src/ui.rs:1820 apps/settings/src/ui/access.rs:529
 msgid "Brightness"
 msgstr "Luminosité"
 
-#: apps/document-scanner/src/ui.rs:1821 apps/settings/src/ui/access.rs:541
+#: apps/document-scanner/src/ui.rs:1821 apps/settings/src/ui/access.rs:535
 msgid "Contrast"
 msgstr "Contraste"
 
@@ -6737,7 +6739,7 @@ msgid "Zoom Level"
 msgstr "Niveau de zoom"
 
 #: apps/document-viewer/src/ui.rs:364 apps/settings/src/ui/access.rs:100
-#: apps/settings/src/ui/access.rs:456 apps/terminal/src/shortcuts.rs:56
+#: apps/settings/src/ui/access.rs:450 apps/terminal/src/shortcuts.rs:56
 #: apps/text-editor/src/shortcuts.rs:64
 msgid "Zoom"
 msgstr "Zoom"
@@ -6825,7 +6827,7 @@ msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr "Recherche dans la page {page} sur {n_pages}… {total} trouvés"
 
 #: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1260
-#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:425
+#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:430
 #: apps/settings/src/ui/picker.rs:34
 msgid "No results found"
 msgstr "Aucun résultat trouvé"
@@ -7030,7 +7032,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr "Impossible de traiter « {file} » : {error}"
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/web/src/window.rs:2341
+#: apps/settings/src/agents.rs:276 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "Annulé"
 
@@ -9941,7 +9943,7 @@ msgid "Disc"
 msgstr "Disque"
 
 #: apps/music/src/details.rs:125 apps/music/src/pages.rs:677
-#: apps/settings/src/ui/access.rs:517
+#: apps/settings/src/ui/access.rs:511
 msgid "Length"
 msgstr "Durée"
 
@@ -10912,6 +10914,30 @@ msgstr "préférences"
 msgid "settings"
 msgstr "paramètres"
 
+#: apps/settings/src/agents.rs:51 apps/settings/src/ui/agent_access.rs:32
+msgid "Read Only"
+msgstr "Lecture seule"
+
+#: apps/settings/src/agents.rs:52 apps/settings/src/ui/agent_access.rs:36
+msgid "Control the Desktop"
+msgstr "Contrôler le bureau"
+
+#: apps/settings/src/agents.rs:53 apps/settings/src/ui/agent_access.rs:40
+msgid "Control Apps"
+msgstr "Contrôler les applications"
+
+#: apps/settings/src/agents.rs:54 apps/settings/src/ui/agent_access.rs:186
+msgid "Screen and Input"
+msgstr "Écran et saisie"
+
+#: apps/settings/src/agents.rs:273 apps/settings/src/agents.rs:274
+msgid "Refused"
+msgstr "Refusé"
+
+#: apps/settings/src/agents.rs:275 apps/web/src/window.rs:1948
+msgid "Allowed"
+msgstr "Autorisé"
+
 #: apps/settings/src/bluez.rs:66 apps/settings/src/ui/network.rs:181
 #: apps/settings/src/ui/network.rs:464 apps/settings/src/ui/wifi.rs:470
 #: apps/settings/src/ui/wifi.rs:833
@@ -11352,7 +11378,7 @@ msgstr ""
 "rebond;touches de souris;barres de défilement;clavier visuel;double-"
 "clic;localiser le pointeur;"
 
-#: apps/settings/src/panels.rs:216
+#: apps/settings/src/panels.rs:216 apps/settings/src/ui/privacy.rs:222
 msgid "Privacy & Security"
 msgstr "Confidentialité et sécurité"
 
@@ -11360,12 +11386,13 @@ msgstr "Confidentialité et sécurité"
 #: apps/settings/src/panels.rs:220
 msgid ""
 "screen lock;lock;blank;idle;recent files;file "
-"history;trash;temporary;location;camera;microphone;problem reporting;"
+"history;trash;temporary;location;camera;microphone;problem "
+"reporting;agent;ai;assistant;automation;"
 msgstr ""
 "verrouillage de l’écran;verrouiller;écran noir;inactivité;fichiers "
 "récents;historique des "
 "fichiers;corbeille;temporaire;localisation;caméra;microphone;signalement des "
-"problèmes;"
+"problèmes;agent;ia;assistant;automatisation;"
 
 #: apps/settings/src/panels.rs:228
 msgid "Date & Time"
@@ -11399,11 +11426,16 @@ msgstr ""
 "nom de l’appareil;nom "
 "d’hôte;hostname;mémoire;processeur;cpu;disque;système;os;version;noyau;kernel;matériel;"
 
+#: apps/settings/src/panels.rs:280 apps/settings/src/ui/agent_access.rs:69
+#: apps/settings/src/ui/agent_access.rs:169 apps/settings/src/ui/privacy.rs:185
+msgid "Agent Access"
+msgstr "Accès des agents"
+
 #: apps/settings/src/permissions.rs:31
 msgid "Run in Background"
 msgstr "Exécution en arrière-plan"
 
-#: apps/settings/src/permissions.rs:59 apps/settings/src/ui/privacy.rs:153
+#: apps/settings/src/permissions.rs:59 apps/settings/src/ui/privacy.rs:176
 #: apps/web/src/permissions.rs:26
 msgid "Microphone"
 msgstr "Microphone"
@@ -11619,309 +11651,655 @@ msgstr "Pointage et clic"
 msgid "Mouse keys, click assist and double-click delay"
 msgstr "Touches de souris, aide au clic et délai du double-clic"
 
-#: apps/settings/src/ui/access.rs:101 apps/settings/src/ui/access.rs:457
+#: apps/settings/src/ui/access.rs:101 apps/settings/src/ui/access.rs:451
 msgid "Magnify part of the screen"
 msgstr "Agrandir une partie de l’écran"
 
-#: apps/settings/src/ui/access.rs:146
+#: apps/settings/src/ui/access.rs:140
 msgid "High Contrast"
 msgstr "Contraste élevé"
 
-#: apps/settings/src/ui/access.rs:147
+#: apps/settings/src/ui/access.rs:141
 msgid "Increase the contrast of interface elements"
 msgstr "Augmenter le contraste des éléments de l’interface"
 
-#: apps/settings/src/ui/access.rs:154
+#: apps/settings/src/ui/access.rs:148
 msgid "Show Status Shapes"
 msgstr "Afficher les formes d’état"
 
-#: apps/settings/src/ui/access.rs:155
+#: apps/settings/src/ui/access.rs:149
 msgid ""
 "Use shapes as well as colour to show the state of switches and other controls"
 msgstr ""
 "Utiliser des formes en plus de la couleur pour indiquer l’état des "
 "interrupteurs et autres contrôles"
 
-#: apps/settings/src/ui/access.rs:164
+#: apps/settings/src/ui/access.rs:158
 msgid "Reduce Animation"
 msgstr "Réduire les animations"
 
-#: apps/settings/src/ui/access.rs:165
+#: apps/settings/src/ui/access.rs:159
 msgid "Turn off animations in the interface"
 msgstr "Désactiver les animations de l’interface"
 
-#: apps/settings/src/ui/access.rs:172
+#: apps/settings/src/ui/access.rs:166
 msgid "Always Show Scrollbars"
 msgstr "Toujours afficher les barres de défilement"
 
-#: apps/settings/src/ui/access.rs:176 apps/settings/src/ui/access.rs:182
+#: apps/settings/src/ui/access.rs:170 apps/settings/src/ui/access.rs:176
 msgid "Screen Reader"
 msgstr "Lecteur d’écran"
 
-#: apps/settings/src/ui/access.rs:183
+#: apps/settings/src/ui/access.rs:177
 msgid "Read the screen aloud"
 msgstr "Lire l’écran à voix haute"
 
-#: apps/settings/src/ui/access.rs:199
+#: apps/settings/src/ui/access.rs:193
 msgid "Overamplification"
 msgstr "Suramplification"
 
-#: apps/settings/src/ui/access.rs:200
+#: apps/settings/src/ui/access.rs:194
 msgid "Allow volume above 100 %, which can reduce sound quality"
 msgstr ""
 "Autoriser un volume supérieur à 100 %, ce qui peut réduire la qualité du son"
 
-#: apps/settings/src/ui/access.rs:206
+#: apps/settings/src/ui/access.rs:200
 msgid "Visual Alerts"
 msgstr "Alertes visuelles"
 
-#: apps/settings/src/ui/access.rs:207
+#: apps/settings/src/ui/access.rs:201
 msgid "Flash the screen or window when an alert sound plays"
 msgstr "Faire clignoter l’écran ou la fenêtre lorsqu’un son d’alerte est émis"
 
-#: apps/settings/src/ui/access.rs:214
+#: apps/settings/src/ui/access.rs:208
 msgid "Flash Area"
 msgstr "Zone de clignotement"
 
-#: apps/settings/src/ui/access.rs:231 apps/settings/src/ui/access.rs:387
-#: apps/settings/src/ui/access.rs:408 apps/settings/src/ui/access.rs:427
-#: apps/settings/src/ui/access.rs:518 apps/settings/src/ui/input.rs:257
+#: apps/settings/src/ui/access.rs:225 apps/settings/src/ui/access.rs:381
+#: apps/settings/src/ui/access.rs:402 apps/settings/src/ui/access.rs:421
+#: apps/settings/src/ui/access.rs:512 apps/settings/src/ui/input.rs:257
 msgid "Long"
 msgstr "Long"
 
-#: apps/settings/src/ui/access.rs:231 apps/settings/src/ui/access.rs:387
-#: apps/settings/src/ui/access.rs:408 apps/settings/src/ui/access.rs:427
-#: apps/settings/src/ui/access.rs:518 apps/settings/src/ui/input.rs:257
+#: apps/settings/src/ui/access.rs:225 apps/settings/src/ui/access.rs:381
+#: apps/settings/src/ui/access.rs:402 apps/settings/src/ui/access.rs:421
+#: apps/settings/src/ui/access.rs:512 apps/settings/src/ui/input.rs:257
 msgid "Short"
 msgstr "Court"
 
-#: apps/settings/src/ui/access.rs:252
+#: apps/settings/src/ui/access.rs:246
 msgid "Screen Keyboard"
 msgstr "Clavier visuel"
 
-#: apps/settings/src/ui/access.rs:253
+#: apps/settings/src/ui/access.rs:247
 msgid "Use an on-screen keyboard to type"
 msgstr "Utiliser un clavier à l’écran pour saisir du texte"
 
-#: apps/settings/src/ui/access.rs:259
+#: apps/settings/src/ui/access.rs:253
 msgid "Cursor Blinking"
 msgstr "Clignotement du curseur"
 
-#: apps/settings/src/ui/access.rs:260
+#: apps/settings/src/ui/access.rs:254
 msgid "Text cursor blinks in text fields"
 msgstr "Le curseur de texte clignote dans les champs de saisie"
 
-#: apps/settings/src/ui/access.rs:270
+#: apps/settings/src/ui/access.rs:264
 msgid "Blink Speed"
 msgstr "Vitesse de clignotement"
 
-#: apps/settings/src/ui/access.rs:271 apps/settings/src/ui/input.rs:86
+#: apps/settings/src/ui/access.rs:265 apps/settings/src/ui/input.rs:86
 #: apps/settings/src/ui/input.rs:135 apps/settings/src/ui/input.rs:268
 msgid "Fast"
 msgstr "Rapide"
 
-#: apps/settings/src/ui/access.rs:271 apps/settings/src/ui/input.rs:86
+#: apps/settings/src/ui/access.rs:265 apps/settings/src/ui/input.rs:86
 #: apps/settings/src/ui/input.rs:135 apps/settings/src/ui/input.rs:268
 msgid "Slow"
 msgstr "Lente"
 
-#: apps/settings/src/ui/access.rs:279
+#: apps/settings/src/ui/access.rs:273
 msgid "Sound Keys"
 msgstr "Touches sonores"
 
-#: apps/settings/src/ui/access.rs:280
+#: apps/settings/src/ui/access.rs:274
 msgid "Beep when Num Lock or Caps Lock are turned on or off"
 msgstr ""
 "Émettre un bip lorsque le Verr. Num. ou le Verr. Maj. est activé ou désactivé"
 
-#: apps/settings/src/ui/access.rs:284
+#: apps/settings/src/ui/access.rs:278
 msgid "Typing Assist"
 msgstr "Aide à la saisie"
 
-#: apps/settings/src/ui/access.rs:290
+#: apps/settings/src/ui/access.rs:284
 msgid "Enable by Keyboard"
 msgstr "Activer par le clavier"
 
-#: apps/settings/src/ui/access.rs:291
+#: apps/settings/src/ui/access.rs:285
 msgid "Turn accessibility features on and off using the keyboard"
 msgstr ""
 "Activer et désactiver les fonctions d’accessibilité à l’aide du clavier"
 
-#: apps/settings/src/ui/access.rs:297
+#: apps/settings/src/ui/access.rs:291
 msgid "Sticky Keys"
 msgstr "Touches rémanentes"
 
-#: apps/settings/src/ui/access.rs:298
+#: apps/settings/src/ui/access.rs:292
 msgid "Treat a sequence of modifier keys as a key combination"
 msgstr ""
 "Traiter une séquence de touches de modification comme une combinaison de "
 "touches"
 
-#: apps/settings/src/ui/access.rs:305
+#: apps/settings/src/ui/access.rs:299
 msgid "Disable if Two Keys Are Pressed Together"
 msgstr "Désactiver si deux touches sont pressées simultanément"
 
-#: apps/settings/src/ui/access.rs:313
+#: apps/settings/src/ui/access.rs:307
 msgid "Beep When a Modifier Key Is Pressed"
 msgstr "Émettre un bip lorsqu’une touche de modification est pressée"
 
-#: apps/settings/src/ui/access.rs:321
+#: apps/settings/src/ui/access.rs:315
 msgid "Slow Keys"
 msgstr "Touches lentes"
 
-#: apps/settings/src/ui/access.rs:322
+#: apps/settings/src/ui/access.rs:316
 msgid "Put a delay between when a key is pressed and when it is accepted"
 msgstr "Introduire un délai entre l’appui sur une touche et sa prise en compte"
 
-#: apps/settings/src/ui/access.rs:324 apps/settings/src/ui/access.rs:340
+#: apps/settings/src/ui/access.rs:318 apps/settings/src/ui/access.rs:334
 msgid "Acceptance Delay"
 msgstr "Délai d’acceptation"
 
-#: apps/settings/src/ui/access.rs:326
+#: apps/settings/src/ui/access.rs:320
 msgid "Beep When a Key Is Pressed"
 msgstr "Émettre un bip lorsqu’une touche est pressée"
 
-#: apps/settings/src/ui/access.rs:327
+#: apps/settings/src/ui/access.rs:321
 msgid "Beep When a Key Is Accepted"
 msgstr "Émettre un bip lorsqu’une touche est acceptée"
 
-#: apps/settings/src/ui/access.rs:328 apps/settings/src/ui/access.rs:346
+#: apps/settings/src/ui/access.rs:322 apps/settings/src/ui/access.rs:340
 msgid "Beep When a Key Is Rejected"
 msgstr "Émettre un bip lorsqu’une touche est refusée"
 
-#: apps/settings/src/ui/access.rs:337
+#: apps/settings/src/ui/access.rs:331
 msgid "Bounce Keys"
 msgstr "Touches rebond"
 
-#: apps/settings/src/ui/access.rs:338
+#: apps/settings/src/ui/access.rs:332
 msgid "Ignore fast duplicate key presses"
 msgstr "Ignorer les appuis rapides et répétés sur une même touche"
 
-#: apps/settings/src/ui/access.rs:367
+#: apps/settings/src/ui/access.rs:361
 msgid "Mouse Keys"
 msgstr "Touches de souris"
 
-#: apps/settings/src/ui/access.rs:368
+#: apps/settings/src/ui/access.rs:362
 msgid "Control the pointer using the keypad"
 msgstr "Contrôler le pointeur à l’aide du pavé numérique"
 
-#: apps/settings/src/ui/access.rs:375
+#: apps/settings/src/ui/access.rs:369
 msgid "Locate Pointer"
 msgstr "Localiser le pointeur"
 
-#: apps/settings/src/ui/access.rs:376
+#: apps/settings/src/ui/access.rs:370
 msgid "Highlight the pointer when the Control key is pressed"
 msgstr "Mettre en évidence le pointeur lorsque la touche Ctrl est pressée"
 
-#: apps/settings/src/ui/access.rs:386
+#: apps/settings/src/ui/access.rs:380
 msgid "Double-Click Delay"
 msgstr "Délai du double-clic"
 
-#: apps/settings/src/ui/access.rs:391
+#: apps/settings/src/ui/access.rs:385
 msgid "Click Assist"
 msgstr "Aide au clic"
 
-#: apps/settings/src/ui/access.rs:396
+#: apps/settings/src/ui/access.rs:390
 msgid "Simulated Secondary Click"
 msgstr "Clic secondaire simulé"
 
-#: apps/settings/src/ui/access.rs:397
+#: apps/settings/src/ui/access.rs:391
 msgid "Trigger a secondary click by holding down the primary button"
 msgstr ""
 "Déclencher un clic secondaire en maintenant enfoncé le bouton principal"
 
-#: apps/settings/src/ui/access.rs:407 apps/settings/src/ui/access.rs:426
+#: apps/settings/src/ui/access.rs:401 apps/settings/src/ui/access.rs:420
 #: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:136
 msgid "Delay"
 msgstr "Délai"
 
-#: apps/settings/src/ui/access.rs:415
+#: apps/settings/src/ui/access.rs:409
 msgid "Hover Click"
 msgstr "Clic par survol"
 
-#: apps/settings/src/ui/access.rs:416
+#: apps/settings/src/ui/access.rs:410
 msgid "Trigger a click when the pointer hovers"
 msgstr "Déclencher un clic lorsque le pointeur survole un élément"
 
-#: apps/settings/src/ui/access.rs:437
+#: apps/settings/src/ui/access.rs:431
 msgid "Motion Threshold"
 msgstr "Seuil de mouvement"
 
-#: apps/settings/src/ui/access.rs:438 apps/settings/src/values.rs:206
+#: apps/settings/src/ui/access.rs:432 apps/settings/src/values.rs:206
 msgid "Large"
 msgstr "Grand"
 
-#: apps/settings/src/ui/access.rs:438
+#: apps/settings/src/ui/access.rs:432
 msgid "Small"
 msgstr "Petit"
 
-#: apps/settings/src/ui/access.rs:464
+#: apps/settings/src/ui/access.rs:458
 msgid "Magnification"
 msgstr "Grossissement"
 
-#: apps/settings/src/ui/access.rs:471
+#: apps/settings/src/ui/access.rs:465
 msgid "Magnifier Position"
 msgstr "Position de la loupe"
 
-#: apps/settings/src/ui/access.rs:478
+#: apps/settings/src/ui/access.rs:472
 msgid "Follow the Pointer"
 msgstr "Suivre le pointeur"
 
-#: apps/settings/src/ui/access.rs:482 apps/settings/src/ui/access.rs:487
+#: apps/settings/src/ui/access.rs:476 apps/settings/src/ui/access.rs:481
 msgid "Crosshairs"
 msgstr "Réticule"
 
-#: apps/settings/src/ui/access.rs:488
+#: apps/settings/src/ui/access.rs:482
 msgid "Show lines through the pointer"
 msgstr "Afficher des lignes passant par le pointeur"
 
-#: apps/settings/src/ui/access.rs:495
+#: apps/settings/src/ui/access.rs:489
 msgid "Overlap Pointer"
 msgstr "Chevaucher le pointeur"
 
-#: apps/settings/src/ui/access.rs:506
+#: apps/settings/src/ui/access.rs:500
 msgid "Thickness"
 msgstr "Épaisseur"
 
-#: apps/settings/src/ui/access.rs:507
+#: apps/settings/src/ui/access.rs:501
 msgid "Thick"
 msgstr "Épais"
 
-#: apps/settings/src/ui/access.rs:507
+#: apps/settings/src/ui/access.rs:501
 msgid "Thin"
 msgstr "Fin"
 
-#: apps/settings/src/ui/access.rs:523
+#: apps/settings/src/ui/access.rs:517
 msgid "Color Effects"
 msgstr "Effets de couleur"
 
-#: apps/settings/src/ui/access.rs:529
+#: apps/settings/src/ui/access.rs:523
 msgid "Invert Colors"
 msgstr "Inverser les couleurs"
 
-#: apps/settings/src/ui/access.rs:536 apps/settings/src/ui/access.rs:542
+#: apps/settings/src/ui/access.rs:530 apps/settings/src/ui/access.rs:536
 msgid "High"
 msgstr "Élevé"
 
-#: apps/settings/src/ui/access.rs:536 apps/settings/src/ui/access.rs:542
+#: apps/settings/src/ui/access.rs:530 apps/settings/src/ui/access.rs:536
 msgid "Low"
 msgstr "Faible"
 
-#: apps/settings/src/ui/access.rs:553
+#: apps/settings/src/ui/access.rs:547
 msgid "Full Color"
 msgstr "Couleurs complètes"
 
-#: apps/settings/src/ui/access.rs:603
+#: apps/settings/src/ui/access.rs:597
 msgid "Large Text"
 msgstr "Grand texte"
 
-#: apps/settings/src/ui/access.rs:604
+#: apps/settings/src/ui/access.rs:598
 msgid "Increase the size of text"
 msgstr "Augmenter la taille du texte"
 
-#: apps/settings/src/ui/access.rs:637
+#: apps/settings/src/ui/access.rs:631
 msgid "Cursor Size"
 msgstr "Taille du curseur"
+
+#: apps/settings/src/ui/agent_access.rs:33
+msgid "See windows, apps and recent files, and ask you questions"
+msgstr ""
+"Voir les fenêtres, les applications et les fichiers récents, et vous poser "
+"des questions"
+
+#: apps/settings/src/ui/agent_access.rs:37
+msgid "Also open apps and files, manage windows and change quick settings"
+msgstr ""
+"Également ouvrir des applications et des fichiers, gérer les fenêtres et "
+"modifier les réglages rapides"
+
+#: apps/settings/src/ui/agent_access.rs:41
+msgid "Also read and use the buttons and fields inside apps"
+msgstr "Également lire et utiliser les boutons et les champs des applications"
+
+#: apps/settings/src/ui/agent_access.rs:66
+msgid ""
+"Agents are programs, such as AI assistants, that read and control your "
+"session through the desktop. Each agent must ask you before it gets access."
+msgstr ""
+"Les agents sont des programmes, comme les assistants d’IA, qui lisent et "
+"contrôlent votre session par l’intermédiaire du bureau. Chaque agent doit "
+"vous demander l’autorisation avant d’obtenir l’accès."
+
+#: apps/settings/src/ui/agent_access.rs:76
+msgid "Access"
+msgstr "Accès"
+
+#: apps/settings/src/ui/agent_access.rs:83
+msgid "Asking"
+msgstr "Demandes"
+
+#: apps/settings/src/ui/agent_access.rs:93
+msgid "Information"
+msgstr "Informations"
+
+#: apps/settings/src/ui/agent_access.rs:99
+msgid "Notifications Access"
+msgstr "Accès aux notifications"
+
+#: apps/settings/src/ui/agent_access.rs:100
+msgid ""
+"Agents can read the text of notifications, which can include messages and "
+"sign-in codes"
+msgstr ""
+"Les agents peuvent lire le texte des notifications, qui peut contenir des "
+"messages et des codes de connexion"
+
+#: apps/settings/src/ui/agent_access.rs:107
+msgid "Clipboard Access"
+msgstr "Accès au presse-papiers"
+
+#: apps/settings/src/ui/agent_access.rs:108
+msgid ""
+"Agents can read and change the clipboard, which can hold passwords and other "
+"copied text"
+msgstr ""
+"Les agents peuvent lire et modifier le presse-papiers, qui peut contenir des "
+"mots de passe et d’autres textes copiés"
+
+#: apps/settings/src/ui/agent_access.rs:113
+msgid "Safeguards"
+msgstr "Garde-fous"
+
+#: apps/settings/src/ui/agent_access.rs:119
+msgid "Confirm Sensitive Actions"
+msgstr "Confirmer les actions sensibles"
+
+#: apps/settings/src/ui/agent_access.rs:120
+msgid ""
+"Ask before an agent deletes files, sends messages or changes network settings"
+msgstr ""
+"Demander avant qu’un agent supprime des fichiers, envoie des messages ou "
+"modifie les paramètres réseau"
+
+#: apps/settings/src/ui/agent_access.rs:127
+msgid "Allow From Remote Sessions"
+msgstr "Autoriser depuis les sessions distantes"
+
+#: apps/settings/src/ui/agent_access.rs:128
+msgid "Agents running in a remote login (SSH) can ask for access"
+msgstr ""
+"Les agents exécutés dans une connexion distante (SSH) peuvent demander "
+"l’accès"
+
+#: apps/settings/src/ui/agent_access.rs:139
+msgid "View Activity"
+msgstr "Voir l’activité"
+
+#: apps/settings/src/ui/agent_access.rs:140
+msgid "What agents did, and how long it is kept"
+msgstr "Ce que les agents ont fait, et pendant combien de temps c’est conservé"
+
+#: apps/settings/src/ui/agent_access.rs:181
+msgid "Access Level"
+msgstr "Niveau d’accès"
+
+#: apps/settings/src/ui/agent_access.rs:187
+msgid ""
+"Also take screenshots and use the pointer and keyboard as if they were you"
+msgstr ""
+"Également faire des captures d’écran et utiliser le pointeur et le clavier "
+"comme si c’était vous"
+
+#: apps/settings/src/ui/agent_access.rs:250
+msgid "Allow Screen and Input?"
+msgstr "Autoriser l’écran et la saisie ?"
+
+#: apps/settings/src/ui/agent_access.rs:251
+msgid ""
+"Agents you allow will be able to see everything on the screen and type and "
+"click anywhere, as if they were you. Only turn this on for agents you trust."
+msgstr ""
+"Les agents que vous autorisez pourront voir tout ce qui est à l’écran, et "
+"taper et cliquer n’importe où, comme si c’était vous. N’activez ceci que "
+"pour des agents de confiance."
+
+#: apps/settings/src/ui/agent_access.rs:256
+msgid "_Allow"
+msgstr "_Autoriser"
+
+#: apps/settings/src/ui/agent_access.rs:276
+msgid "Ask Each Session"
+msgstr "Demander à chaque session"
+
+#: apps/settings/src/ui/agent_access.rs:277
+msgid "Agents are asked for again in every session"
+msgstr "Les agents sont de nouveau interrogés à chaque session"
+
+#: apps/settings/src/ui/agent_access.rs:281
+msgid "Remember"
+msgstr "Mémoriser"
+
+#: apps/settings/src/ui/agent_access.rs:282
+msgid "Agents you always allow are not asked again"
+msgstr "Les agents que vous autorisez toujours ne sont plus interrogés"
+
+#: apps/settings/src/ui/agent_access.rs:333
+msgid "Allowed Agents"
+msgstr "Agents autorisés"
+
+#: apps/settings/src/ui/agent_access.rs:334
+msgid ""
+"While an agent is active, an indicator is always shown in the top bar, with "
+"Stop in its menu."
+msgstr ""
+"Lorsqu’un agent est actif, un indicateur est toujours affiché dans la barre "
+"supérieure, avec Arrêter dans son menu."
+
+#: apps/settings/src/ui/agent_access.rs:338
+msgid "Revoke All"
+msgstr "Tout révoquer"
+
+#: apps/settings/src/ui/agent_access.rs:343
+msgid "Revoke Access of All Agents"
+msgstr "Révoquer l’accès de tous les agents"
+
+#: apps/settings/src/ui/agent_access.rs:405
+msgid "Only the installed Settings app can change agents' access"
+msgstr ""
+"Seule l’application Paramètres installée peut modifier l’accès des agents"
+
+#: apps/settings/src/ui/agent_access.rs:407
+msgid "Could not change the agent's access: {e}"
+msgstr "Impossible de modifier l’accès de l’agent : {e}"
+
+#: apps/settings/src/ui/agent_access.rs:433
+msgid "Not active this session"
+msgstr "Pas actif pendant cette session"
+
+#: apps/settings/src/ui/agent_access.rs:434
+msgid "Active just now"
+msgstr "Actif à l’instant"
+
+#: apps/settings/src/ui/agent_access.rs:435
+msgid "Active {n} minute ago"
+msgid_plural "Active {n} minutes ago"
+msgstr[0] "Actif il y a {n} minute"
+msgstr[1] "Actif il y a {n} minutes"
+
+#: apps/settings/src/ui/agent_access.rs:436
+msgid "Active {n} hour ago"
+msgid_plural "Active {n} hours ago"
+msgstr[0] "Actif il y a {n} heure"
+msgstr[1] "Actif il y a {n} heures"
+
+#: apps/settings/src/ui/agent_access.rs:437
+msgid "Active {n} day ago"
+msgid_plural "Active {n} days ago"
+msgstr[0] "Actif il y a {n} jour"
+msgstr[1] "Actif il y a {n} jours"
+
+#: apps/settings/src/ui/agent_access.rs:448
+msgid "Denied this session"
+msgstr "Refusé pour cette session"
+
+#: apps/settings/src/ui/agent_access.rs:450
+msgid "Always allowed"
+msgstr "Toujours autorisé"
+
+#: apps/settings/src/ui/agent_access.rs:452
+msgid "Allowed this session"
+msgstr "Autorisé pour cette session"
+
+#: apps/settings/src/ui/agent_access.rs:473
+msgid "The desktop shell is not running, so agents cannot be listed"
+msgstr ""
+"Le shell du bureau ne fonctionne pas, les agents ne peuvent donc pas être "
+"listés"
+
+#: apps/settings/src/ui/agent_access.rs:475
+msgid "Only the installed Settings app can list agents"
+msgstr "Seule l’application Paramètres installée peut lister les agents"
+
+#: apps/settings/src/ui/agent_access.rs:476
+msgid "Agents could not be listed"
+msgstr "Impossible de lister les agents"
+
+#: apps/settings/src/ui/agent_access.rs:478
+msgid "Agents that ask for access are listed here"
+msgstr "Les agents qui demandent l’accès sont listés ici"
+
+#: apps/settings/src/ui/agent_access.rs:532
+msgid "Revoke"
+msgstr "Révoquer"
+
+#: apps/settings/src/ui/agent_access.rs:533
+msgid "Revoke Access of {agent}"
+msgstr "Révoquer l’accès de {agent}"
+
+#: apps/settings/src/ui/agent_access.rs:538
+msgid "Forget"
+msgstr "Oublier"
+
+#: apps/settings/src/ui/agent_access.rs:539
+msgid "Forget {agent}"
+msgstr "Oublier {agent}"
+
+#: apps/settings/src/ui/agent_access.rs:571
+msgid "Excluded Apps"
+msgstr "Applications exclues"
+
+#: apps/settings/src/ui/agent_access.rs:572
+msgid ""
+"Agents can never read or control these apps. Password fields, the lock "
+"screen, system password prompts and Settings are always excluded."
+msgstr ""
+"Les agents ne peuvent jamais lire ni contrôler ces applications. Les champs "
+"de mot de passe, l’écran de verrouillage, les demandes de mot de passe du "
+"système et Paramètres sont toujours exclus."
+
+#: apps/settings/src/ui/agent_access.rs:576
+msgid "Add App…"
+msgstr "Ajouter une application…"
+
+#: apps/settings/src/ui/agent_access.rs:595
+msgid "No apps excluded"
+msgstr "Aucune application exclue"
+
+#: apps/settings/src/ui/agent_access.rs:647
+msgid "Remove {app}"
+msgstr "Retirer {app}"
+
+#: apps/settings/src/ui/agent_access.rs:660
+msgid "Exclude an App"
+msgstr "Exclure une application"
+
+#: apps/settings/src/ui/agent_access.rs:661
+msgid "Search apps"
+msgstr "Rechercher des applications"
+
+#: apps/settings/src/ui/agent_access.rs:662
+msgid "Search Apps"
+msgstr "Rechercher des applications"
+
+#: apps/settings/src/ui/agent_access.rs:663
+msgid "Loading Apps…"
+msgstr "Chargement des applications…"
+
+#: apps/settings/src/ui/agent_access.rs:731
+msgid "Keep Activity For"
+msgstr "Conserver l’activité pendant"
+
+#: apps/settings/src/ui/agent_access.rs:734
+msgid "Clear Activity"
+msgstr "Effacer l’activité"
+
+#: apps/settings/src/ui/agent_access.rs:735
+msgid "Remove everything agents have done from the log"
+msgstr "Retirer du journal tout ce que les agents ont fait"
+
+#: apps/settings/src/ui/agent_access.rs:736
+msgid "Clear…"
+msgstr "Effacer…"
+
+#: apps/settings/src/ui/agent_access.rs:742
+msgid "Recent Activity"
+msgstr "Activité récente"
+
+#: apps/settings/src/ui/agent_access.rs:770
+msgid "Clear Agent Activity?"
+msgstr "Effacer l’activité des agents ?"
+
+#: apps/settings/src/ui/agent_access.rs:771
+msgid "The record of what agents did is removed. This cannot be undone."
+msgstr ""
+"L’historique de ce que les agents ont fait sera supprimé. Cette action est "
+"irréversible."
+
+#: apps/settings/src/ui/agent_access.rs:776
+msgid "_Clear"
+msgstr "_Effacer"
+
+#: apps/settings/src/ui/agent_access.rs:788
+msgid "Agent activity cleared"
+msgstr "Activité des agents effacée"
+
+#: apps/settings/src/ui/agent_access.rs:789
+msgid "The desktop shell is not running, so the activity cannot be cleared"
+msgstr ""
+"Le shell du bureau ne fonctionne pas, l’activité ne peut donc pas être "
+"effacée"
+
+#: apps/settings/src/ui/agent_access.rs:793
+msgid "Only the installed Settings app can clear the activity"
+msgstr "Seule l’application Paramètres installée peut effacer l’activité"
+
+#: apps/settings/src/ui/agent_access.rs:795
+msgid "Could not clear the activity: {e}"
+msgstr "Impossible d’effacer l’activité : {e}"
+
+#: apps/settings/src/ui/agent_access.rs:804
+msgid "Agent Activity"
+msgstr "Activité des agents"
+
+#: apps/settings/src/ui/agent_access.rs:836
+msgid "Showing the latest {n} entry."
+msgid_plural "Showing the latest {n} entries."
+msgstr[0] "Affichage de la dernière entrée ({n})."
+msgstr[1] "Affichage des {n} dernières entrées."
+
+#: apps/settings/src/ui/agent_access.rs:845
+msgid "What agents do will be listed here"
+msgstr "Ce que font les agents sera listé ici"
 
 #: apps/settings/src/ui/appearance.rs:108 apps/terminal/src/prefs_dialog.rs:31
 #: apps/terminal/src/window.rs:176 apps/text-editor/src/prefs.rs:65
@@ -12161,7 +12539,7 @@ msgstr "Activez-le à l’aide de l’interrupteur ou de la touche de l’ordina
 msgid "Visible Name"
 msgstr "Nom visible"
 
-#: apps/settings/src/ui/bluetooth.rs:112 apps/settings/src/ui/privacy.rs:139
+#: apps/settings/src/ui/bluetooth.rs:112 apps/settings/src/ui/privacy.rs:162
 msgid "Devices"
 msgstr "Périphériques"
 
@@ -12857,47 +13235,47 @@ msgstr "Descendre {source}"
 msgid "Remove {source}"
 msgstr "Supprimer {source}"
 
-#: apps/settings/src/ui/mod.rs:160 apps/settings/src/ui/mod.rs:240
-#: apps/settings/src/ui/mod.rs:494
+#: apps/settings/src/ui/mod.rs:165 apps/settings/src/ui/mod.rs:245
+#: apps/settings/src/ui/mod.rs:509
 msgid "Settings"
 msgstr "Paramètres"
 
-#: apps/settings/src/ui/mod.rs:178
+#: apps/settings/src/ui/mod.rs:183
 msgid "Search settings"
 msgstr "Rechercher dans les paramètres"
 
-#: apps/settings/src/ui/mod.rs:181 apps/settings/src/ui/shortcuts.rs:10
+#: apps/settings/src/ui/mod.rs:186 apps/settings/src/ui/shortcuts.rs:10
 msgid "Search Settings"
 msgstr "Rechercher dans les paramètres"
 
-#: apps/settings/src/ui/mod.rs:199
+#: apps/settings/src/ui/mod.rs:204
 msgid "_About Settings"
 msgstr "À _propos de Paramètres"
 
-#: apps/settings/src/ui/mod.rs:349 apps/settings/src/ui/mod.rs:362
+#: apps/settings/src/ui/mod.rs:354 apps/settings/src/ui/mod.rs:367
 msgid "Not yet available"
 msgstr "Pas encore disponible"
 
-#: apps/settings/src/ui/mod.rs:383
+#: apps/settings/src/ui/mod.rs:388
 msgid "Not Yet Available"
 msgstr "Pas encore disponible"
 
-#: apps/settings/src/ui/mod.rs:426
+#: apps/settings/src/ui/mod.rs:431
 msgid "{n} panel found"
 msgid_plural "{n} panels found"
 msgstr[0] "{n} panneau trouvé"
 msgstr[1] "{n} panneaux trouvés"
 
-#: apps/settings/src/ui/mod.rs:463
+#: apps/settings/src/ui/mod.rs:478
 msgid "{} Is Not Yet Available"
 msgstr "{} n’est pas encore disponible"
 
-#: apps/settings/src/ui/mod.rs:464
+#: apps/settings/src/ui/mod.rs:479
 msgid "This panel will be added in a later version of Helix Settings."
 msgstr ""
 "Ce panneau sera ajouté dans une version ultérieure de Paramètres Helix."
 
-#: apps/settings/src/ui/mod.rs:495
+#: apps/settings/src/ui/mod.rs:510
 msgid "Configure the Helix desktop"
 msgstr "Configurer le bureau Helix"
 
@@ -13324,7 +13702,7 @@ msgstr "Ne pas déranger"
 msgid "Notification banners are hidden"
 msgstr "Les bannières de notification sont masquées"
 
-#: apps/settings/src/ui/notifications.rs:89 apps/settings/src/ui/privacy.rs:72
+#: apps/settings/src/ui/notifications.rs:89 apps/settings/src/ui/privacy.rs:95
 msgid "Lock Screen Notifications"
 msgstr "Notifications sur l’écran de verrouillage"
 
@@ -13400,88 +13778,92 @@ msgstr "Afficher le niveau de charge exact dans la barre supérieure"
 msgid "Power Button Behavior"
 msgstr "Comportement du bouton d’alimentation"
 
-#: apps/settings/src/ui/privacy.rs:28
+#: apps/settings/src/ui/privacy.rs:51
 msgid "Screen Lock"
 msgstr "Verrouillage de l’écran"
 
-#: apps/settings/src/ui/privacy.rs:29
+#: apps/settings/src/ui/privacy.rs:52
 msgid "Automatically lock the screen when you are not using the device"
 msgstr ""
 "Verrouiller automatiquement l’écran lorsque vous n’utilisez pas l’appareil"
 
-#: apps/settings/src/ui/privacy.rs:39
+#: apps/settings/src/ui/privacy.rs:62
 msgid "Blank Screen Delay"
 msgstr "Délai d’extinction de l’écran"
 
-#: apps/settings/src/ui/privacy.rs:41
+#: apps/settings/src/ui/privacy.rs:64
 msgid "Period of inactivity after which the screen will go blank"
 msgstr "Période d’inactivité après laquelle l’écran s’éteint"
 
-#: apps/settings/src/ui/privacy.rs:50
+#: apps/settings/src/ui/privacy.rs:73
 msgid "Automatic Screen Lock"
 msgstr "Verrouillage automatique de l’écran"
 
-#: apps/settings/src/ui/privacy.rs:51
+#: apps/settings/src/ui/privacy.rs:74
 msgid "Locks the screen after it goes blank"
 msgstr "Verrouille l’écran après son extinction"
 
-#: apps/settings/src/ui/privacy.rs:61
+#: apps/settings/src/ui/privacy.rs:84
 msgid "Automatic Screen Lock Delay"
 msgstr "Délai de verrouillage automatique de l’écran"
 
-#: apps/settings/src/ui/privacy.rs:77
+#: apps/settings/src/ui/privacy.rs:100
 msgid "File History & Trash"
 msgstr "Historique des fichiers et corbeille"
 
-#: apps/settings/src/ui/privacy.rs:83
+#: apps/settings/src/ui/privacy.rs:106
 msgid "File History"
 msgstr "Historique des fichiers"
 
-#: apps/settings/src/ui/privacy.rs:84
+#: apps/settings/src/ui/privacy.rs:107
 msgid "Remember recently used files"
 msgstr "Mémoriser les fichiers récemment utilisés"
 
-#: apps/settings/src/ui/privacy.rs:94
+#: apps/settings/src/ui/privacy.rs:117
 msgid "File History Duration"
 msgstr "Durée de l’historique des fichiers"
 
-#: apps/settings/src/ui/privacy.rs:106
+#: apps/settings/src/ui/privacy.rs:129
 msgid "Automatically Delete Trash Content"
 msgstr "Supprimer automatiquement le contenu de la corbeille"
 
-#: apps/settings/src/ui/privacy.rs:114
+#: apps/settings/src/ui/privacy.rs:137
 msgid "Automatically Delete Temporary Files"
 msgstr "Supprimer automatiquement les fichiers temporaires"
 
-#: apps/settings/src/ui/privacy.rs:124
+#: apps/settings/src/ui/privacy.rs:147
 msgid "Automatically Delete Period"
 msgstr "Délai de suppression automatique"
 
-#: apps/settings/src/ui/privacy.rs:134
+#: apps/settings/src/ui/privacy.rs:157
 msgid "Location Services"
 msgstr "Services de localisation"
 
-#: apps/settings/src/ui/privacy.rs:135
+#: apps/settings/src/ui/privacy.rs:158
 msgid "Let apps determine your geographical location"
 msgstr "Permettre aux applications de déterminer votre position géographique"
 
-#: apps/settings/src/ui/privacy.rs:146
+#: apps/settings/src/ui/privacy.rs:169
 msgid "Allow apps to use the camera"
 msgstr "Autoriser les applications à utiliser la caméra"
 
-#: apps/settings/src/ui/privacy.rs:154
+#: apps/settings/src/ui/privacy.rs:177
 msgid "Allow apps to use the microphone"
 msgstr "Autoriser les applications à utiliser le microphone"
 
-#: apps/settings/src/ui/privacy.rs:158
+#: apps/settings/src/ui/privacy.rs:184
+msgid "Agents"
+msgstr "Agents"
+
+#: apps/settings/src/ui/privacy.rs:211
 msgid "Diagnostics"
 msgstr "Diagnostics"
 
-#: apps/settings/src/ui/privacy.rs:164
+#: apps/settings/src/ui/privacy.rs:217
 msgid "Automatic Problem Reporting"
 msgstr "Signalement automatique des problèmes"
 
-#: apps/settings/src/ui/privacy.rs:165
+#: apps/settings/src/ui/privacy.rs:218
 msgid "Send technical reports when problems occur"
 msgstr "Envoyer des rapports techniques lorsque des problèmes surviennent"
 
@@ -17410,10 +17792,6 @@ msgid "Problems: {list}"
 msgstr "Problèmes : {list}"
 
 #: apps/web/src/window.rs:1948
-msgid "Allowed"
-msgstr "Autorisé"
-
-#: apps/web/src/window.rs:1948
 msgid "Denied"
 msgstr "Refusé"
 
@@ -17720,3 +18098,12 @@ msgstr "Professionnel"
 msgctxt "email, address or website type"
 msgid "Other"
 msgstr "Autre"
+
+#~ msgid ""
+#~ "screen lock;lock;blank;idle;recent files;file "
+#~ "history;trash;temporary;location;camera;microphone;problem reporting;"
+#~ msgstr ""
+#~ "verrouillage de l’écran;verrouiller;écran noir;inactivité;fichiers "
+#~ "récents;historique des "
+#~ "fichiers;corbeille;temporaire;localisation;caméra;microphone;signalement "
+#~ "des problèmes;"

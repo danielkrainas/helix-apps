@@ -23,6 +23,7 @@ Primary configuration UI for the desktop and system.
 - GSettings schemas under `org.gnome.desktop.*`, `org.gnome.settings-daemon.*`, NetworkManager, etc.
 - XDG portals: Settings, Background, Lockdown.
 - Session D-Bus: SessionManager, Shell, DisplayConfig, IdleMonitor, NetworkManager, UPower, etc.
+- Helix: `org.helixdesktop.agent-access` (GSettings) and `org.helixdesktop.AgentAccess1` (the shell), helixdesktop/spec `contracts/agent-access/`.
 
 ## Non-goals
 - Every panel from day one. Implement panels incrementally.
@@ -107,6 +108,14 @@ Primary configuration UI for the desktop and system.
 | `datetime` | `date-time`, `time` | yes |
 | `users` | `user-accounts` | yes |
 | `about` | `info-overview`, `info`, `system` | yes |
+
+- Pages inside a panel can have their own names (`panels::PAGES`,
+  resolved by `panels::lookup_target` after the panel names): the panel
+  opens on that page.
+
+| Page | Aliases | Panel | Needs |
+|---|---|---|---|
+| `agent-access` | `agents` | `privacy` | schema `org.helixdesktop.agent-access` (without it: Privacy & Security's main page) |
 
 ### Settings bindings
 - Every control reads its key on build and writes on change. When the key
@@ -255,7 +264,81 @@ in the compat schema.
 - Location: *Location Services* (`org.gnome.system.location enabled`).
 - Devices: *Camera* (inverse `privacy disable-camera`), *Microphone*
   (inverse `disable-microphone`).
+- Agents (only when the schema `org.helixdesktop.agent-access` is
+  installed; an older helix-desktop has none and the group is not
+  shown): an *Agent Access* row (subtitle *On*/*Off* from `enabled`)
+  opening the Agent Access page below.
 - Diagnostics: *Automatic Problem Reporting* (`report-technical-problems`).
+- The panel is an `AdwNavigationView` (root page tagged `privacy`) so
+  sub-pages push with a back button.
+
+##### Agent Access
+Helix's permission for agents (programs such as AI assistants) to read
+and control the session through the desktop
+(helixdesktop/spec#1, contract `contracts/agent-access/` and
+`contracts/gsettings/org.helixdesktop.agent-access.md`). Settings writes
+the GSettings keys directly; the shell enforces them. Navigation tag and
+command-line name `agent-access` (`helix-settings-app agent-access`; the
+shell's agent indicator opens it).
+
+- Top: a description, then the master switch *Agent Access* (`enabled`,
+  default off). While it is off the Access, Asking, Information,
+  Safeguards and Excluded Apps groups are insensitive (Allowed Agents and
+  View Activity stay usable: they only take access away or show
+  history).
+- Access: *Access Level* combo over the first three levels of
+  `access-level` (*Read Only* `read-only`, *Control the Desktop*
+  `desktop`, *Control Apps* `apps`; the choice shown as the row's
+  subtitle so long names fit), the group's description saying what the
+  chosen level allows; *Screen and Input* switch (`screen-and-input`). Turning
+  the switch on shows an `AdwAlertDialog` *Allow Screen and Input?*
+  (Cancel default, *Allow* destructive) and the switch stays off unless
+  *Allow* is chosen; while it is on the combo shows *Control Apps* and is
+  insensitive; turning it off stores `apps`. An unknown stored value
+  shows as *Read Only* (the contract).
+- Asking: radio rows *Ask Each Session* (`remember-mode` `ask`) and
+  *Remember* (`remember`); unknown values show as *Ask Each Session*.
+- Allowed Agents: from the shell's `org.helixdesktop.AgentAccess1`
+  (`ListAgents`, session bus, `org.gnome.Shell`,
+  `/org/helixdesktop/Agent1`), most recently active first. Each row: the
+  display name (else the program) as title; the program (agent id: the
+  executable, or interpreter and script) under a display name, since a
+  name proves nothing; then level · *Always allowed* / *Allowed this
+  session* / *Denied this session* · *Active 5 minutes ago* / *Not
+  active this session*. *Revoke* (shown when it has a session grant or a
+  denial) calls `Revoke`; *Forget* (shown with a remembered grant) calls
+  `Forget`. Header button *Revoke All* (`StopAll`, sensitive when some
+  agent has something to revoke). The list follows `AgentsChanged` and
+  the shell coming and going, and refreshes every 30 s while shown (for
+  "last active"). The group's description says the top-bar indicator is
+  always shown while an agent is active (not a setting). Placeholders:
+  no agents, shell not running, and `AccessDenied` (the shell only
+  accepts `helix-settings-app` beside its own binary or in `/usr/bin`:
+  "Only the installed Settings app can list agents").
+- Information: *Notifications Access* (`notifications`) and *Clipboard
+  Access* (`clipboard`), both off by default, subtitles saying what they
+  expose (messages and sign-in codes; passwords and copied text).
+- Safeguards: *Confirm Sensitive Actions* (`confirm-sensitive`, default
+  on), *Allow From Remote Sessions* (`allow-remote`, SSH, default off).
+- Excluded Apps (`excluded-apps`, app ids without `.desktop`): one row
+  per app (icon, name, id; unknown ids shown as the id) with a Remove
+  button ("Remove *App*"); *Add App…* in the header opens the searchable
+  picker over installed apps (those already excluded and Settings itself
+  left out). The description names the hard exclusions in one line:
+  password fields, the lock screen, system password prompts and
+  Settings (the shell excludes every Settings window from agents).
+- *View Activity* row → *Agent Activity* page (tag `agent-activity`):
+  *Keep Activity For* (`log-retention-days`: 1, 7, 30, 90, 365 days, a
+  stored non-preset is added), *Clear Activity* (*Clear…*, confirmed by
+  an alert, then `ClearLog`), and *Recent Activity*: the newest 300
+  entries of `$XDG_STATE_HOME/helix/agent-activity/YYYY-MM-DD.jsonl`
+  (read directly, as the contract says; keys `time` (Unix seconds or ISO
+  8601), `agent`, `name`, `method`, `target`, `level`, `outcome`, the
+  same `helix-agent log` reads; unknown keys and bad lines ignored), each
+  row "method target" over "who · Allowed / Refused (error) / Cancelled ·
+  time". Empty: "What agents do will be listed here". Until the shell
+  writes the file (helixdesktop/desktop#144) the list stays empty.
+- Settings never grants anything: the interface has no such method.
 
 #### Notifications
 - *Do Not Disturb* (inverse of `org.gnome.desktop.notifications
@@ -850,9 +933,11 @@ registered accelerators.
 
 ### Command line
 - `helix-settings-app [PANEL]` opens (or raises the running instance on)
-  the given panel; ids and aliases as in the registry table.
+  the given panel; ids and aliases as in the registry table. A page name
+  (`agent-access`) opens its panel on that page.
 - `helix-settings-app --list` prints `id<TAB>title<TAB>available|unavailable`
-  for every panel and exits.
+  for every panel, then every page (unavailable when its schema is not
+  installed), and exits.
 - Unknown panel names print an error with the list of ids and exit with
   status 2.
 - `-h` / `--help` prints usage.

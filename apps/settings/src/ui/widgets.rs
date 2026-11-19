@@ -411,6 +411,26 @@ pub fn value_label(value: &str) -> gtk::Label {
         .build()
 }
 
+/// A navigation page with a header bar around `content` (sub-pages of
+/// panels that bring their own `AdwNavigationView`).
+pub fn nav_page(
+    title: &str,
+    content: &impl IsA<gtk::Widget>,
+    tag: Option<&str>,
+) -> adw::NavigationPage {
+    let view = adw::ToolbarView::new();
+    view.add_top_bar(&adw::HeaderBar::new());
+    view.set_content(Some(content));
+    let page = adw::NavigationPage::builder()
+        .title(title)
+        .child(&view)
+        .build();
+    if let Some(tag) = tag {
+        page.set_tag(Some(tag));
+    }
+    page
+}
+
 /// A scrolled preferences page.
 pub fn page() -> adw::PreferencesPage {
     adw::PreferencesPage::new()

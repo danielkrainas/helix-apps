@@ -1,6 +1,7 @@
 //! Helix Settings.
 
 mod accounts;
+mod agents;
 mod bluez;
 mod bus;
 mod dbus;
@@ -25,7 +26,7 @@ mod xkb;
 
 use gtk::glib;
 
-const USAGE: &str = "Usage: helix-settings-app [PANEL]\n       helix-settings-app --list\n\nOpens Settings, optionally on PANEL (see --list).";
+const USAGE: &str = "Usage: helix-settings-app [PANEL]\n       helix-settings-app --list\n\nOpens Settings, optionally on PANEL or a page such as agent-access (see --list).";
 
 fn main() -> glib::ExitCode {
     helix_app_common::i18n::init();
@@ -45,12 +46,23 @@ fn main() -> glib::ExitCode {
                 };
                 println!("{}\t{}\t{}", p.name, p.title, state);
             }
+            for p in panels::PAGES {
+                let there = p
+                    .schema
+                    .is_none_or(|s| helix_app_common::lookup_schema(s).is_some());
+                let state = if there { "available" } else { "unavailable" };
+                println!("{}\t{}\t{}", p.name, p.title, state);
+            }
             return glib::ExitCode::SUCCESS;
         }
-        Some(name) if args.len() == 2 && panels::lookup(name).is_some() => {}
+        Some(name) if args.len() == 2 && panels::lookup_target(name).is_some() => {}
         Some(name) => {
             eprintln!("helix-settings-app: unknown panel '{name}'");
-            let names: Vec<&str> = panels::PANELS.iter().map(|p| p.name).collect();
+            let names: Vec<&str> = panels::PANELS
+                .iter()
+                .map(|p| p.name)
+                .chain(panels::PAGES.iter().map(|p| p.name))
+                .collect();
             eprintln!("Panels: {}", names.join(", "));
             return glib::ExitCode::from(2);
         }

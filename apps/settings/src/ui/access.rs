@@ -123,13 +123,7 @@ impl Panel for AccessibilityPanel {
 
 /// A navigation page with a header bar around `content`.
 fn subpage(title: &str, content: &adw::PreferencesPage) -> adw::NavigationPage {
-    let view = adw::ToolbarView::new();
-    view.add_top_bar(&adw::HeaderBar::new());
-    view.set_content(Some(content));
-    adw::NavigationPage::builder()
-        .title(title)
-        .child(&view)
-        .build()
+    widgets::nav_page(title, content, None)
 }
 
 fn seeing_page(ctx: &Rc<Ctx>) -> adw::PreferencesPage {

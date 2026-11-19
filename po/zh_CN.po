@@ -317,7 +317,7 @@ msgstr "关于音频播放器(_A)"
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
 #: apps/music/src/ui.rs:480 apps/music/src/ui.rs:482
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
-#: apps/settings/src/ui/mod.rs:204 apps/settings/src/ui/mod.rs:206
+#: apps/settings/src/ui/mod.rs:209 apps/settings/src/ui/mod.rs:211
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:301 apps/terminal/src/window.rs:305
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
@@ -1127,9 +1127,11 @@ msgstr "计算(_A)"
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
 #: apps/help/src/ui.rs:196 apps/music/src/pages.rs:2129
 #: apps/music/src/pages.rs:2232 apps/music/src/pages.rs:2317
-#: apps/settings/src/ui/apps.rs:553 apps/settings/src/ui/bluetooth.rs:647
-#: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
-#: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
+#: apps/settings/src/ui/agent_access.rs:255
+#: apps/settings/src/ui/agent_access.rs:775 apps/settings/src/ui/apps.rs:553
+#: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
+#: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
+#: apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:290 apps/terminal/src/window.rs:1306
 #: apps/text-editor/src/window.rs:973 apps/web/src/app.rs:954
 #: apps/web/src/dialogs.rs:426 apps/web/src/dialogs.rs:464
@@ -1405,7 +1407,7 @@ msgstr "日历"
 
 #: apps/calendar/src/editor.rs:504 apps/document-viewer/src/dialogs.rs:112
 #: apps/files/src/ui/window.rs:211 apps/image-viewer/src/ui.rs:592
-#: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:128
+#: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:151
 #: apps/web/src/permissions.rs:24
 msgid "Location"
 msgstr "地点"
@@ -1811,7 +1813,7 @@ msgstr "导入"
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:32 apps/music/src/ui.rs:452
 #: apps/music/src/ui.rs:454 apps/settings/src/ui/apps.rs:439
-#: apps/settings/src/ui/mod.rs:189 apps/settings/src/ui/mod.rs:191
+#: apps/settings/src/ui/mod.rs:194 apps/settings/src/ui/mod.rs:196
 #: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
 #: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
 #: apps/web/src/dialogs.rs:142 apps/web/src/window.rs:48
@@ -1964,7 +1966,7 @@ msgstr "导入(_I)…"
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:232 apps/maps/src/ui.rs:486
-#: apps/settings/src/ui/mod.rs:198 apps/terminal/src/window.rs:296
+#: apps/settings/src/ui/mod.rs:203 apps/terminal/src/window.rs:296
 #: apps/text-editor/src/window.rs:65 apps/web/src/window.rs:222
 #: apps/web/src/window.rs:265 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -1983,7 +1985,7 @@ msgid "Search Events"
 msgstr "搜索事件"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:227
+#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:232
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:752
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
@@ -1991,7 +1993,7 @@ msgstr "未找到结果"
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:228
+#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:233
 #: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:753
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
@@ -2273,7 +2275,7 @@ msgstr "打开上次拍摄的内容"
 #: apps/camera/src/ui.rs:110 apps/camera/src/ui.rs:200
 #: apps/image-viewer/src/ui.rs:576 apps/image-viewer/src/ui.rs:587
 #: apps/settings/src/bluez.rs:230 apps/settings/src/permissions.rs:52
-#: apps/settings/src/ui/privacy.rs:145 apps/web/src/permissions.rs:27
+#: apps/settings/src/ui/privacy.rs:168 apps/web/src/permissions.rs:27
 msgid "Camera"
 msgstr "相机"
 
@@ -2284,7 +2286,7 @@ msgstr "拍摄照片和视频"
 #: apps/camera/src/ui.rs:162 apps/disks/src/ui.rs:937
 #: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:155
 #: apps/settings/src/ui/network.rs:26 apps/settings/src/ui/network.rs:188
-#: apps/settings/src/ui/network.rs:467
+#: apps/settings/src/ui/network.rs:467 apps/settings/src/ui/privacy.rs:194
 msgid "Off"
 msgstr "关"
 
@@ -3008,10 +3010,10 @@ msgid "Current Location"
 msgstr "当前位置"
 
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
-#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/input.rs:367
-#: apps/weather/src/ui.rs:902 apps/web/src/dialogs.rs:198
-#: apps/web/src/dialogs.rs:656 apps/web/src/dialogs.rs:1043
-#: apps/web/src/dialogs.rs:1198
+#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:643
+#: apps/settings/src/ui/input.rs:367 apps/weather/src/ui.rs:902
+#: apps/web/src/dialogs.rs:198 apps/web/src/dialogs.rs:656
+#: apps/web/src/dialogs.rs:1043 apps/web/src/dialogs.rs:1198
 msgid "Remove"
 msgstr "移除"
 
@@ -4452,13 +4454,13 @@ msgstr "ZFS 设备"
 #: apps/disks/src/model.rs:303 apps/disks/src/parttypes.rs:171
 #: apps/disks/src/parttypes.rs:203 apps/disks/src/smart.rs:104
 #: apps/disks/src/ui.rs:1872 apps/disks/src/ui.rs:1882
-#: apps/files/src/ui/tab.rs:77 apps/settings/src/ui/about.rs:38
-#: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
-#: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
-#: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
-#: apps/settings/src/ui/about.rs:230 apps/settings/src/ui/apps.rs:526
-#: apps/settings/src/values.rs:283 apps/system-monitor/src/format.rs:107
-#: apps/weather/src/wmo.rs:37
+#: apps/files/src/ui/tab.rs:77 apps/settings/src/agents.rs:277
+#: apps/settings/src/ui/about.rs:38 apps/settings/src/ui/about.rs:42
+#: apps/settings/src/ui/about.rs:58 apps/settings/src/ui/about.rs:64
+#: apps/settings/src/ui/about.rs:113 apps/settings/src/ui/about.rs:186
+#: apps/settings/src/ui/about.rs:197 apps/settings/src/ui/about.rs:230
+#: apps/settings/src/ui/apps.rs:526 apps/settings/src/values.rs:283
+#: apps/system-monitor/src/format.rs:107 apps/weather/src/wmo.rs:37
 msgid "Unknown"
 msgstr "未知"
 
@@ -5179,7 +5181,7 @@ msgstr "无介质"
 msgid "No volume selected"
 msgstr "未选择卷"
 
-#: apps/disks/src/ui.rs:937
+#: apps/disks/src/ui.rs:937 apps/settings/src/ui/privacy.rs:192
 msgid "On"
 msgstr "开"
 
@@ -5771,11 +5773,11 @@ msgstr "与扫描仪通信时出错：{e}"
 msgid "Unsupported frame format {}"
 msgstr "不支持的帧格式 {}"
 
-#: apps/document-scanner/src/settings.rs:30 apps/settings/src/ui/access.rs:552
+#: apps/document-scanner/src/settings.rs:30 apps/settings/src/ui/access.rs:546
 msgid "Color"
 msgstr "彩色"
 
-#: apps/document-scanner/src/settings.rs:31 apps/settings/src/ui/access.rs:553
+#: apps/document-scanner/src/settings.rs:31 apps/settings/src/ui/access.rs:547
 msgid "Grayscale"
 msgstr "灰度"
 
@@ -6191,11 +6193,11 @@ msgstr "文本分辨率"
 msgid "Image Resolution"
 msgstr "图像分辨率"
 
-#: apps/document-scanner/src/ui.rs:1820 apps/settings/src/ui/access.rs:535
+#: apps/document-scanner/src/ui.rs:1820 apps/settings/src/ui/access.rs:529
 msgid "Brightness"
 msgstr "亮度"
 
-#: apps/document-scanner/src/ui.rs:1821 apps/settings/src/ui/access.rs:541
+#: apps/document-scanner/src/ui.rs:1821 apps/settings/src/ui/access.rs:535
 msgid "Contrast"
 msgstr "对比度"
 
@@ -6623,7 +6625,7 @@ msgid "Zoom Level"
 msgstr "缩放级别"
 
 #: apps/document-viewer/src/ui.rs:364 apps/settings/src/ui/access.rs:100
-#: apps/settings/src/ui/access.rs:456 apps/terminal/src/shortcuts.rs:56
+#: apps/settings/src/ui/access.rs:450 apps/terminal/src/shortcuts.rs:56
 #: apps/text-editor/src/shortcuts.rs:64
 msgid "Zoom"
 msgstr "缩放"
@@ -6709,7 +6711,7 @@ msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr "正在搜索第 {page} 页，共 {n_pages} 页… 已找到 {total} 个"
 
 #: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1260
-#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:425
+#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:430
 #: apps/settings/src/ui/picker.rs:34
 msgid "No results found"
 msgstr "未找到结果"
@@ -6898,7 +6900,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr "无法处理“{file}”：{error}"
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/web/src/window.rs:2341
+#: apps/settings/src/agents.rs:276 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "已取消"
 
@@ -9767,7 +9769,7 @@ msgid "Disc"
 msgstr "碟片"
 
 #: apps/music/src/details.rs:125 apps/music/src/pages.rs:677
-#: apps/settings/src/ui/access.rs:517
+#: apps/settings/src/ui/access.rs:511
 msgid "Length"
 msgstr "时长"
 
@@ -10706,6 +10708,30 @@ msgstr "首选项"
 msgid "settings"
 msgstr "设置"
 
+#: apps/settings/src/agents.rs:51 apps/settings/src/ui/agent_access.rs:32
+msgid "Read Only"
+msgstr "只读"
+
+#: apps/settings/src/agents.rs:52 apps/settings/src/ui/agent_access.rs:36
+msgid "Control the Desktop"
+msgstr "控制桌面"
+
+#: apps/settings/src/agents.rs:53 apps/settings/src/ui/agent_access.rs:40
+msgid "Control Apps"
+msgstr "控制应用"
+
+#: apps/settings/src/agents.rs:54 apps/settings/src/ui/agent_access.rs:186
+msgid "Screen and Input"
+msgstr "屏幕和输入"
+
+#: apps/settings/src/agents.rs:273 apps/settings/src/agents.rs:274
+msgid "Refused"
+msgstr "已拒绝"
+
+#: apps/settings/src/agents.rs:275 apps/web/src/window.rs:1948
+msgid "Allowed"
+msgstr "已允许"
+
 #: apps/settings/src/bluez.rs:66 apps/settings/src/ui/network.rs:181
 #: apps/settings/src/ui/network.rs:464 apps/settings/src/ui/wifi.rs:470
 #: apps/settings/src/ui/wifi.rs:833
@@ -11119,7 +11145,7 @@ msgstr ""
 "高对比度;大号文本;缩放;放大镜;屏幕阅读器;光标大小;减少动画;粘滞键;慢速键;回弹"
 "键;鼠标键;滚动条;屏幕键盘;双击;定位指针;accessibility;"
 
-#: apps/settings/src/panels.rs:216
+#: apps/settings/src/panels.rs:216 apps/settings/src/ui/privacy.rs:222
 msgid "Privacy & Security"
 msgstr "隐私与安全"
 
@@ -11127,10 +11153,11 @@ msgstr "隐私与安全"
 #: apps/settings/src/panels.rs:220
 msgid ""
 "screen lock;lock;blank;idle;recent files;file "
-"history;trash;temporary;location;camera;microphone;problem reporting;"
+"history;trash;temporary;location;camera;microphone;problem "
+"reporting;agent;ai;assistant;automation;"
 msgstr ""
 "锁屏;锁定;黑屏;空闲;最近文件;文件历史;回收站;临时文件;位置;相机;麦克风;问题报"
-"告;privacy;"
+"告;privacy;代理;智能体;人工智能;助手;自动化;agent;ai;assistant;automation;"
 
 #: apps/settings/src/panels.rs:228
 msgid "Date & Time"
@@ -11161,11 +11188,16 @@ msgid ""
 msgstr ""
 "设备名称;主机名;内存;处理器;cpu;磁盘;操作系统;版本;内核;硬件;hostname;os;"
 
+#: apps/settings/src/panels.rs:280 apps/settings/src/ui/agent_access.rs:69
+#: apps/settings/src/ui/agent_access.rs:169 apps/settings/src/ui/privacy.rs:185
+msgid "Agent Access"
+msgstr "智能体访问"
+
 #: apps/settings/src/permissions.rs:31
 msgid "Run in Background"
 msgstr "在后台运行"
 
-#: apps/settings/src/permissions.rs:59 apps/settings/src/ui/privacy.rs:153
+#: apps/settings/src/permissions.rs:59 apps/settings/src/ui/privacy.rs:176
 #: apps/web/src/permissions.rs:26
 msgid "Microphone"
 msgstr "麦克风"
@@ -11379,301 +11411,617 @@ msgstr "指向和点击"
 msgid "Mouse keys, click assist and double-click delay"
 msgstr "鼠标键、点击辅助和双击延迟"
 
-#: apps/settings/src/ui/access.rs:101 apps/settings/src/ui/access.rs:457
+#: apps/settings/src/ui/access.rs:101 apps/settings/src/ui/access.rs:451
 msgid "Magnify part of the screen"
 msgstr "放大屏幕的一部分"
 
-#: apps/settings/src/ui/access.rs:146
+#: apps/settings/src/ui/access.rs:140
 msgid "High Contrast"
 msgstr "高对比度"
 
-#: apps/settings/src/ui/access.rs:147
+#: apps/settings/src/ui/access.rs:141
 msgid "Increase the contrast of interface elements"
 msgstr "提高界面元素的对比度"
 
-#: apps/settings/src/ui/access.rs:154
+#: apps/settings/src/ui/access.rs:148
 msgid "Show Status Shapes"
 msgstr "显示状态形状"
 
-#: apps/settings/src/ui/access.rs:155
+#: apps/settings/src/ui/access.rs:149
 msgid ""
 "Use shapes as well as colour to show the state of switches and other controls"
 msgstr "除颜色外，还使用形状来显示开关和其他控件的状态"
 
-#: apps/settings/src/ui/access.rs:164
+#: apps/settings/src/ui/access.rs:158
 msgid "Reduce Animation"
 msgstr "减少动画"
 
-#: apps/settings/src/ui/access.rs:165
+#: apps/settings/src/ui/access.rs:159
 msgid "Turn off animations in the interface"
 msgstr "关闭界面中的动画"
 
-#: apps/settings/src/ui/access.rs:172
+#: apps/settings/src/ui/access.rs:166
 msgid "Always Show Scrollbars"
 msgstr "始终显示滚动条"
 
-#: apps/settings/src/ui/access.rs:176 apps/settings/src/ui/access.rs:182
+#: apps/settings/src/ui/access.rs:170 apps/settings/src/ui/access.rs:176
 msgid "Screen Reader"
 msgstr "屏幕阅读器"
 
-#: apps/settings/src/ui/access.rs:183
+#: apps/settings/src/ui/access.rs:177
 msgid "Read the screen aloud"
 msgstr "朗读屏幕内容"
 
-#: apps/settings/src/ui/access.rs:199
+#: apps/settings/src/ui/access.rs:193
 msgid "Overamplification"
 msgstr "超额放大"
 
-#: apps/settings/src/ui/access.rs:200
+#: apps/settings/src/ui/access.rs:194
 msgid "Allow volume above 100 %, which can reduce sound quality"
 msgstr "允许音量超过 100 %，这可能会降低音质"
 
-#: apps/settings/src/ui/access.rs:206
+#: apps/settings/src/ui/access.rs:200
 msgid "Visual Alerts"
 msgstr "视觉提醒"
 
-#: apps/settings/src/ui/access.rs:207
+#: apps/settings/src/ui/access.rs:201
 msgid "Flash the screen or window when an alert sound plays"
 msgstr "播放提示音时闪烁屏幕或窗口"
 
-#: apps/settings/src/ui/access.rs:214
+#: apps/settings/src/ui/access.rs:208
 msgid "Flash Area"
 msgstr "闪烁区域"
 
-#: apps/settings/src/ui/access.rs:231 apps/settings/src/ui/access.rs:387
-#: apps/settings/src/ui/access.rs:408 apps/settings/src/ui/access.rs:427
-#: apps/settings/src/ui/access.rs:518 apps/settings/src/ui/input.rs:257
+#: apps/settings/src/ui/access.rs:225 apps/settings/src/ui/access.rs:381
+#: apps/settings/src/ui/access.rs:402 apps/settings/src/ui/access.rs:421
+#: apps/settings/src/ui/access.rs:512 apps/settings/src/ui/input.rs:257
 msgid "Long"
 msgstr "长"
 
-#: apps/settings/src/ui/access.rs:231 apps/settings/src/ui/access.rs:387
-#: apps/settings/src/ui/access.rs:408 apps/settings/src/ui/access.rs:427
-#: apps/settings/src/ui/access.rs:518 apps/settings/src/ui/input.rs:257
+#: apps/settings/src/ui/access.rs:225 apps/settings/src/ui/access.rs:381
+#: apps/settings/src/ui/access.rs:402 apps/settings/src/ui/access.rs:421
+#: apps/settings/src/ui/access.rs:512 apps/settings/src/ui/input.rs:257
 msgid "Short"
 msgstr "短"
 
-#: apps/settings/src/ui/access.rs:252
+#: apps/settings/src/ui/access.rs:246
 msgid "Screen Keyboard"
 msgstr "屏幕键盘"
 
-#: apps/settings/src/ui/access.rs:253
+#: apps/settings/src/ui/access.rs:247
 msgid "Use an on-screen keyboard to type"
 msgstr "使用屏幕键盘打字"
 
-#: apps/settings/src/ui/access.rs:259
+#: apps/settings/src/ui/access.rs:253
 msgid "Cursor Blinking"
 msgstr "光标闪烁"
 
-#: apps/settings/src/ui/access.rs:260
+#: apps/settings/src/ui/access.rs:254
 msgid "Text cursor blinks in text fields"
 msgstr "文本框中的文本光标闪烁"
 
-#: apps/settings/src/ui/access.rs:270
+#: apps/settings/src/ui/access.rs:264
 msgid "Blink Speed"
 msgstr "闪烁速度"
 
-#: apps/settings/src/ui/access.rs:271 apps/settings/src/ui/input.rs:86
+#: apps/settings/src/ui/access.rs:265 apps/settings/src/ui/input.rs:86
 #: apps/settings/src/ui/input.rs:135 apps/settings/src/ui/input.rs:268
 msgid "Fast"
 msgstr "快"
 
-#: apps/settings/src/ui/access.rs:271 apps/settings/src/ui/input.rs:86
+#: apps/settings/src/ui/access.rs:265 apps/settings/src/ui/input.rs:86
 #: apps/settings/src/ui/input.rs:135 apps/settings/src/ui/input.rs:268
 msgid "Slow"
 msgstr "慢"
 
-#: apps/settings/src/ui/access.rs:279
+#: apps/settings/src/ui/access.rs:273
 msgid "Sound Keys"
 msgstr "声音键"
 
-#: apps/settings/src/ui/access.rs:280
+#: apps/settings/src/ui/access.rs:274
 msgid "Beep when Num Lock or Caps Lock are turned on or off"
 msgstr "打开或关闭 Num Lock 或 Caps Lock 时发出提示音"
 
-#: apps/settings/src/ui/access.rs:284
+#: apps/settings/src/ui/access.rs:278
 msgid "Typing Assist"
 msgstr "打字辅助"
 
-#: apps/settings/src/ui/access.rs:290
+#: apps/settings/src/ui/access.rs:284
 msgid "Enable by Keyboard"
 msgstr "通过键盘启用"
 
-#: apps/settings/src/ui/access.rs:291
+#: apps/settings/src/ui/access.rs:285
 msgid "Turn accessibility features on and off using the keyboard"
 msgstr "使用键盘打开和关闭无障碍功能"
 
-#: apps/settings/src/ui/access.rs:297
+#: apps/settings/src/ui/access.rs:291
 msgid "Sticky Keys"
 msgstr "粘滞键"
 
-#: apps/settings/src/ui/access.rs:298
+#: apps/settings/src/ui/access.rs:292
 msgid "Treat a sequence of modifier keys as a key combination"
 msgstr "将依次按下的修饰键视为组合键"
 
-#: apps/settings/src/ui/access.rs:305
+#: apps/settings/src/ui/access.rs:299
 msgid "Disable if Two Keys Are Pressed Together"
 msgstr "同时按下两个键时禁用"
 
-#: apps/settings/src/ui/access.rs:313
+#: apps/settings/src/ui/access.rs:307
 msgid "Beep When a Modifier Key Is Pressed"
 msgstr "按下修饰键时发出提示音"
 
-#: apps/settings/src/ui/access.rs:321
+#: apps/settings/src/ui/access.rs:315
 msgid "Slow Keys"
 msgstr "慢速键"
 
-#: apps/settings/src/ui/access.rs:322
+#: apps/settings/src/ui/access.rs:316
 msgid "Put a delay between when a key is pressed and when it is accepted"
 msgstr "在按下按键与接受按键之间设置延迟"
 
-#: apps/settings/src/ui/access.rs:324 apps/settings/src/ui/access.rs:340
+#: apps/settings/src/ui/access.rs:318 apps/settings/src/ui/access.rs:334
 msgid "Acceptance Delay"
 msgstr "接受延迟"
 
-#: apps/settings/src/ui/access.rs:326
+#: apps/settings/src/ui/access.rs:320
 msgid "Beep When a Key Is Pressed"
 msgstr "按下按键时发出提示音"
 
-#: apps/settings/src/ui/access.rs:327
+#: apps/settings/src/ui/access.rs:321
 msgid "Beep When a Key Is Accepted"
 msgstr "接受按键时发出提示音"
 
-#: apps/settings/src/ui/access.rs:328 apps/settings/src/ui/access.rs:346
+#: apps/settings/src/ui/access.rs:322 apps/settings/src/ui/access.rs:340
 msgid "Beep When a Key Is Rejected"
 msgstr "拒绝按键时发出提示音"
 
-#: apps/settings/src/ui/access.rs:337
+#: apps/settings/src/ui/access.rs:331
 msgid "Bounce Keys"
 msgstr "回弹键"
 
-#: apps/settings/src/ui/access.rs:338
+#: apps/settings/src/ui/access.rs:332
 msgid "Ignore fast duplicate key presses"
 msgstr "忽略快速重复的按键"
 
-#: apps/settings/src/ui/access.rs:367
+#: apps/settings/src/ui/access.rs:361
 msgid "Mouse Keys"
 msgstr "鼠标键"
 
-#: apps/settings/src/ui/access.rs:368
+#: apps/settings/src/ui/access.rs:362
 msgid "Control the pointer using the keypad"
 msgstr "使用小键盘控制指针"
 
-#: apps/settings/src/ui/access.rs:375
+#: apps/settings/src/ui/access.rs:369
 msgid "Locate Pointer"
 msgstr "定位指针"
 
-#: apps/settings/src/ui/access.rs:376
+#: apps/settings/src/ui/access.rs:370
 msgid "Highlight the pointer when the Control key is pressed"
 msgstr "按下 Ctrl 键时突出显示指针"
 
-#: apps/settings/src/ui/access.rs:386
+#: apps/settings/src/ui/access.rs:380
 msgid "Double-Click Delay"
 msgstr "双击延迟"
 
-#: apps/settings/src/ui/access.rs:391
+#: apps/settings/src/ui/access.rs:385
 msgid "Click Assist"
 msgstr "点击辅助"
 
-#: apps/settings/src/ui/access.rs:396
+#: apps/settings/src/ui/access.rs:390
 msgid "Simulated Secondary Click"
 msgstr "模拟辅助点击"
 
-#: apps/settings/src/ui/access.rs:397
+#: apps/settings/src/ui/access.rs:391
 msgid "Trigger a secondary click by holding down the primary button"
 msgstr "按住主按钮以触发辅助点击"
 
-#: apps/settings/src/ui/access.rs:407 apps/settings/src/ui/access.rs:426
+#: apps/settings/src/ui/access.rs:401 apps/settings/src/ui/access.rs:420
 #: apps/settings/src/ui/input.rs:256 apps/settings/src/ui/power.rs:136
 msgid "Delay"
 msgstr "延迟"
 
-#: apps/settings/src/ui/access.rs:415
+#: apps/settings/src/ui/access.rs:409
 msgid "Hover Click"
 msgstr "悬停点击"
 
-#: apps/settings/src/ui/access.rs:416
+#: apps/settings/src/ui/access.rs:410
 msgid "Trigger a click when the pointer hovers"
 msgstr "指针悬停时触发点击"
 
-#: apps/settings/src/ui/access.rs:437
+#: apps/settings/src/ui/access.rs:431
 msgid "Motion Threshold"
 msgstr "移动阈值"
 
-#: apps/settings/src/ui/access.rs:438 apps/settings/src/values.rs:206
+#: apps/settings/src/ui/access.rs:432 apps/settings/src/values.rs:206
 msgid "Large"
 msgstr "大"
 
-#: apps/settings/src/ui/access.rs:438
+#: apps/settings/src/ui/access.rs:432
 msgid "Small"
 msgstr "小"
 
-#: apps/settings/src/ui/access.rs:464
+#: apps/settings/src/ui/access.rs:458
 msgid "Magnification"
 msgstr "放大倍数"
 
-#: apps/settings/src/ui/access.rs:471
+#: apps/settings/src/ui/access.rs:465
 msgid "Magnifier Position"
 msgstr "放大镜位置"
 
-#: apps/settings/src/ui/access.rs:478
+#: apps/settings/src/ui/access.rs:472
 msgid "Follow the Pointer"
 msgstr "跟随指针"
 
-#: apps/settings/src/ui/access.rs:482 apps/settings/src/ui/access.rs:487
+#: apps/settings/src/ui/access.rs:476 apps/settings/src/ui/access.rs:481
 msgid "Crosshairs"
 msgstr "十字准线"
 
-#: apps/settings/src/ui/access.rs:488
+#: apps/settings/src/ui/access.rs:482
 msgid "Show lines through the pointer"
 msgstr "显示穿过指针的线条"
 
-#: apps/settings/src/ui/access.rs:495
+#: apps/settings/src/ui/access.rs:489
 msgid "Overlap Pointer"
 msgstr "与指针重叠"
 
-#: apps/settings/src/ui/access.rs:506
+#: apps/settings/src/ui/access.rs:500
 msgid "Thickness"
 msgstr "粗细"
 
-#: apps/settings/src/ui/access.rs:507
+#: apps/settings/src/ui/access.rs:501
 msgid "Thick"
 msgstr "粗"
 
-#: apps/settings/src/ui/access.rs:507
+#: apps/settings/src/ui/access.rs:501
 msgid "Thin"
 msgstr "细"
 
-#: apps/settings/src/ui/access.rs:523
+#: apps/settings/src/ui/access.rs:517
 msgid "Color Effects"
 msgstr "颜色效果"
 
-#: apps/settings/src/ui/access.rs:529
+#: apps/settings/src/ui/access.rs:523
 msgid "Invert Colors"
 msgstr "反转颜色"
 
-#: apps/settings/src/ui/access.rs:536 apps/settings/src/ui/access.rs:542
+#: apps/settings/src/ui/access.rs:530 apps/settings/src/ui/access.rs:536
 msgid "High"
 msgstr "高"
 
-#: apps/settings/src/ui/access.rs:536 apps/settings/src/ui/access.rs:542
+#: apps/settings/src/ui/access.rs:530 apps/settings/src/ui/access.rs:536
 msgid "Low"
 msgstr "低"
 
-#: apps/settings/src/ui/access.rs:553
+#: apps/settings/src/ui/access.rs:547
 msgid "Full Color"
 msgstr "全彩"
 
-#: apps/settings/src/ui/access.rs:603
+#: apps/settings/src/ui/access.rs:597
 msgid "Large Text"
 msgstr "大号文本"
 
-#: apps/settings/src/ui/access.rs:604
+#: apps/settings/src/ui/access.rs:598
 msgid "Increase the size of text"
 msgstr "增大文本的大小"
 
-#: apps/settings/src/ui/access.rs:637
+#: apps/settings/src/ui/access.rs:631
 msgid "Cursor Size"
 msgstr "光标大小"
+
+#: apps/settings/src/ui/agent_access.rs:33
+msgid "See windows, apps and recent files, and ask you questions"
+msgstr "查看窗口、应用和最近的文件，并向您提问"
+
+#: apps/settings/src/ui/agent_access.rs:37
+msgid "Also open apps and files, manage windows and change quick settings"
+msgstr "还可以打开应用和文件、管理窗口以及更改快速设置"
+
+#: apps/settings/src/ui/agent_access.rs:41
+msgid "Also read and use the buttons and fields inside apps"
+msgstr "还可以读取和使用应用中的按钮和输入框"
+
+#: apps/settings/src/ui/agent_access.rs:66
+msgid ""
+"Agents are programs, such as AI assistants, that read and control your "
+"session through the desktop. Each agent must ask you before it gets access."
+msgstr ""
+"智能体是通过桌面读取和控制您的会话的程序，例如 AI 助手。每个智能体在获得访问"
+"权限之前都必须征得您的同意。"
+
+#: apps/settings/src/ui/agent_access.rs:76
+msgid "Access"
+msgstr "访问"
+
+#: apps/settings/src/ui/agent_access.rs:83
+msgid "Asking"
+msgstr "询问"
+
+#: apps/settings/src/ui/agent_access.rs:93
+msgid "Information"
+msgstr "信息"
+
+#: apps/settings/src/ui/agent_access.rs:99
+msgid "Notifications Access"
+msgstr "通知访问"
+
+#: apps/settings/src/ui/agent_access.rs:100
+msgid ""
+"Agents can read the text of notifications, which can include messages and "
+"sign-in codes"
+msgstr "智能体可以读取通知的文本，其中可能包含消息和登录验证码"
+
+#: apps/settings/src/ui/agent_access.rs:107
+msgid "Clipboard Access"
+msgstr "剪贴板访问"
+
+#: apps/settings/src/ui/agent_access.rs:108
+msgid ""
+"Agents can read and change the clipboard, which can hold passwords and other "
+"copied text"
+msgstr "智能体可以读取和更改剪贴板，其中可能包含密码和其他复制的文本"
+
+#: apps/settings/src/ui/agent_access.rs:113
+msgid "Safeguards"
+msgstr "安全措施"
+
+#: apps/settings/src/ui/agent_access.rs:119
+msgid "Confirm Sensitive Actions"
+msgstr "确认敏感操作"
+
+#: apps/settings/src/ui/agent_access.rs:120
+msgid ""
+"Ask before an agent deletes files, sends messages or changes network settings"
+msgstr "在智能体删除文件、发送消息或更改网络设置之前询问"
+
+#: apps/settings/src/ui/agent_access.rs:127
+msgid "Allow From Remote Sessions"
+msgstr "允许来自远程会话"
+
+#: apps/settings/src/ui/agent_access.rs:128
+msgid "Agents running in a remote login (SSH) can ask for access"
+msgstr "在远程登录 (SSH) 中运行的智能体可以请求访问"
+
+#: apps/settings/src/ui/agent_access.rs:139
+msgid "View Activity"
+msgstr "查看活动"
+
+#: apps/settings/src/ui/agent_access.rs:140
+msgid "What agents did, and how long it is kept"
+msgstr "智能体做了什么，以及保留多长时间"
+
+#: apps/settings/src/ui/agent_access.rs:181
+msgid "Access Level"
+msgstr "访问级别"
+
+#: apps/settings/src/ui/agent_access.rs:187
+msgid ""
+"Also take screenshots and use the pointer and keyboard as if they were you"
+msgstr "还可以截屏，并像您本人一样使用指针和键盘"
+
+#: apps/settings/src/ui/agent_access.rs:250
+msgid "Allow Screen and Input?"
+msgstr "允许屏幕和输入吗？"
+
+#: apps/settings/src/ui/agent_access.rs:251
+msgid ""
+"Agents you allow will be able to see everything on the screen and type and "
+"click anywhere, as if they were you. Only turn this on for agents you trust."
+msgstr ""
+"您允许的智能体将能够看到屏幕上的一切，并像您本人一样在任何地方输入和点击。请"
+"只为您信任的智能体开启此项。"
+
+#: apps/settings/src/ui/agent_access.rs:256
+msgid "_Allow"
+msgstr "允许(_A)"
+
+#: apps/settings/src/ui/agent_access.rs:276
+msgid "Ask Each Session"
+msgstr "每个会话都询问"
+
+#: apps/settings/src/ui/agent_access.rs:277
+msgid "Agents are asked for again in every session"
+msgstr "每个会话都会再次询问智能体"
+
+#: apps/settings/src/ui/agent_access.rs:281
+msgid "Remember"
+msgstr "记住"
+
+#: apps/settings/src/ui/agent_access.rs:282
+msgid "Agents you always allow are not asked again"
+msgstr "您始终允许的智能体不会再被询问"
+
+#: apps/settings/src/ui/agent_access.rs:333
+msgid "Allowed Agents"
+msgstr "已允许的智能体"
+
+#: apps/settings/src/ui/agent_access.rs:334
+msgid ""
+"While an agent is active, an indicator is always shown in the top bar, with "
+"Stop in its menu."
+msgstr "智能体处于活动状态时，顶栏总会显示一个指示器，其菜单中有“停止”。"
+
+#: apps/settings/src/ui/agent_access.rs:338
+msgid "Revoke All"
+msgstr "全部撤销"
+
+#: apps/settings/src/ui/agent_access.rs:343
+msgid "Revoke Access of All Agents"
+msgstr "撤销所有智能体的访问权限"
+
+#: apps/settings/src/ui/agent_access.rs:405
+msgid "Only the installed Settings app can change agents' access"
+msgstr "只有已安装的设置应用才能更改智能体的访问权限"
+
+#: apps/settings/src/ui/agent_access.rs:407
+msgid "Could not change the agent's access: {e}"
+msgstr "无法更改智能体的访问权限：{e}"
+
+#: apps/settings/src/ui/agent_access.rs:433
+msgid "Not active this session"
+msgstr "本次会话中未活动"
+
+#: apps/settings/src/ui/agent_access.rs:434
+msgid "Active just now"
+msgstr "刚刚活动"
+
+#: apps/settings/src/ui/agent_access.rs:435
+msgid "Active {n} minute ago"
+msgid_plural "Active {n} minutes ago"
+msgstr[0] "{n} 分钟前活动"
+
+#: apps/settings/src/ui/agent_access.rs:436
+msgid "Active {n} hour ago"
+msgid_plural "Active {n} hours ago"
+msgstr[0] "{n} 小时前活动"
+
+#: apps/settings/src/ui/agent_access.rs:437
+msgid "Active {n} day ago"
+msgid_plural "Active {n} days ago"
+msgstr[0] "{n} 天前活动"
+
+#: apps/settings/src/ui/agent_access.rs:448
+msgid "Denied this session"
+msgstr "本次会话中已拒绝"
+
+#: apps/settings/src/ui/agent_access.rs:450
+msgid "Always allowed"
+msgstr "始终允许"
+
+#: apps/settings/src/ui/agent_access.rs:452
+msgid "Allowed this session"
+msgstr "本次会话中允许"
+
+#: apps/settings/src/ui/agent_access.rs:473
+msgid "The desktop shell is not running, so agents cannot be listed"
+msgstr "桌面外壳未运行，因此无法列出智能体"
+
+#: apps/settings/src/ui/agent_access.rs:475
+msgid "Only the installed Settings app can list agents"
+msgstr "只有已安装的设置应用才能列出智能体"
+
+#: apps/settings/src/ui/agent_access.rs:476
+msgid "Agents could not be listed"
+msgstr "无法列出智能体"
+
+#: apps/settings/src/ui/agent_access.rs:478
+msgid "Agents that ask for access are listed here"
+msgstr "请求访问的智能体会列在这里"
+
+#: apps/settings/src/ui/agent_access.rs:532
+msgid "Revoke"
+msgstr "撤销"
+
+#: apps/settings/src/ui/agent_access.rs:533
+msgid "Revoke Access of {agent}"
+msgstr "撤销 {agent} 的访问权限"
+
+#: apps/settings/src/ui/agent_access.rs:538
+msgid "Forget"
+msgstr "忘记"
+
+#: apps/settings/src/ui/agent_access.rs:539
+msgid "Forget {agent}"
+msgstr "忘记 {agent}"
+
+#: apps/settings/src/ui/agent_access.rs:571
+msgid "Excluded Apps"
+msgstr "排除的应用"
+
+#: apps/settings/src/ui/agent_access.rs:572
+msgid ""
+"Agents can never read or control these apps. Password fields, the lock "
+"screen, system password prompts and Settings are always excluded."
+msgstr ""
+"智能体永远无法读取或控制这些应用。密码输入框、锁屏、系统密码提示和设置始终被"
+"排除。"
+
+#: apps/settings/src/ui/agent_access.rs:576
+msgid "Add App…"
+msgstr "添加应用…"
+
+#: apps/settings/src/ui/agent_access.rs:595
+msgid "No apps excluded"
+msgstr "没有排除的应用"
+
+#: apps/settings/src/ui/agent_access.rs:647
+msgid "Remove {app}"
+msgstr "移除 {app}"
+
+#: apps/settings/src/ui/agent_access.rs:660
+msgid "Exclude an App"
+msgstr "排除应用"
+
+#: apps/settings/src/ui/agent_access.rs:661
+msgid "Search apps"
+msgstr "搜索应用"
+
+#: apps/settings/src/ui/agent_access.rs:662
+msgid "Search Apps"
+msgstr "搜索应用"
+
+#: apps/settings/src/ui/agent_access.rs:663
+msgid "Loading Apps…"
+msgstr "正在加载应用…"
+
+#: apps/settings/src/ui/agent_access.rs:731
+msgid "Keep Activity For"
+msgstr "活动保留时长"
+
+#: apps/settings/src/ui/agent_access.rs:734
+msgid "Clear Activity"
+msgstr "清除活动"
+
+#: apps/settings/src/ui/agent_access.rs:735
+msgid "Remove everything agents have done from the log"
+msgstr "从日志中移除智能体所做的一切"
+
+#: apps/settings/src/ui/agent_access.rs:736
+msgid "Clear…"
+msgstr "清除…"
+
+#: apps/settings/src/ui/agent_access.rs:742
+msgid "Recent Activity"
+msgstr "最近活动"
+
+#: apps/settings/src/ui/agent_access.rs:770
+msgid "Clear Agent Activity?"
+msgstr "清除智能体活动吗？"
+
+#: apps/settings/src/ui/agent_access.rs:771
+msgid "The record of what agents did is removed. This cannot be undone."
+msgstr "智能体所做操作的记录将被移除。此操作无法撤销。"
+
+#: apps/settings/src/ui/agent_access.rs:776
+msgid "_Clear"
+msgstr "清除(_C)"
+
+#: apps/settings/src/ui/agent_access.rs:788
+msgid "Agent activity cleared"
+msgstr "已清除智能体活动"
+
+#: apps/settings/src/ui/agent_access.rs:789
+msgid "The desktop shell is not running, so the activity cannot be cleared"
+msgstr "桌面外壳未运行，因此无法清除活动"
+
+#: apps/settings/src/ui/agent_access.rs:793
+msgid "Only the installed Settings app can clear the activity"
+msgstr "只有已安装的设置应用才能清除活动"
+
+#: apps/settings/src/ui/agent_access.rs:795
+msgid "Could not clear the activity: {e}"
+msgstr "无法清除活动：{e}"
+
+#: apps/settings/src/ui/agent_access.rs:804
+msgid "Agent Activity"
+msgstr "智能体活动"
+
+#: apps/settings/src/ui/agent_access.rs:836
+msgid "Showing the latest {n} entry."
+msgid_plural "Showing the latest {n} entries."
+msgstr[0] "显示最新的 {n} 条记录。"
+
+#: apps/settings/src/ui/agent_access.rs:845
+msgid "What agents do will be listed here"
+msgstr "智能体的操作会列在这里"
 
 #: apps/settings/src/ui/appearance.rs:108 apps/terminal/src/prefs_dialog.rs:31
 #: apps/terminal/src/window.rs:176 apps/text-editor/src/prefs.rs:65
@@ -11909,7 +12257,7 @@ msgstr "请使用计算机上的开关或按键将其打开。"
 msgid "Visible Name"
 msgstr "可见名称"
 
-#: apps/settings/src/ui/bluetooth.rs:112 apps/settings/src/ui/privacy.rs:139
+#: apps/settings/src/ui/bluetooth.rs:112 apps/settings/src/ui/privacy.rs:162
 msgid "Devices"
 msgstr "设备"
 
@@ -12595,45 +12943,45 @@ msgstr "下移 {source}"
 msgid "Remove {source}"
 msgstr "移除 {source}"
 
-#: apps/settings/src/ui/mod.rs:160 apps/settings/src/ui/mod.rs:240
-#: apps/settings/src/ui/mod.rs:494
+#: apps/settings/src/ui/mod.rs:165 apps/settings/src/ui/mod.rs:245
+#: apps/settings/src/ui/mod.rs:509
 msgid "Settings"
 msgstr "设置"
 
-#: apps/settings/src/ui/mod.rs:178
+#: apps/settings/src/ui/mod.rs:183
 msgid "Search settings"
 msgstr "搜索设置"
 
-#: apps/settings/src/ui/mod.rs:181 apps/settings/src/ui/shortcuts.rs:10
+#: apps/settings/src/ui/mod.rs:186 apps/settings/src/ui/shortcuts.rs:10
 msgid "Search Settings"
 msgstr "搜索设置"
 
-#: apps/settings/src/ui/mod.rs:199
+#: apps/settings/src/ui/mod.rs:204
 msgid "_About Settings"
 msgstr "关于设置(_A)"
 
-#: apps/settings/src/ui/mod.rs:349 apps/settings/src/ui/mod.rs:362
+#: apps/settings/src/ui/mod.rs:354 apps/settings/src/ui/mod.rs:367
 msgid "Not yet available"
 msgstr "尚不可用"
 
-#: apps/settings/src/ui/mod.rs:383
+#: apps/settings/src/ui/mod.rs:388
 msgid "Not Yet Available"
 msgstr "尚不可用"
 
-#: apps/settings/src/ui/mod.rs:426
+#: apps/settings/src/ui/mod.rs:431
 msgid "{n} panel found"
 msgid_plural "{n} panels found"
 msgstr[0] "找到 {n} 个面板"
 
-#: apps/settings/src/ui/mod.rs:463
+#: apps/settings/src/ui/mod.rs:478
 msgid "{} Is Not Yet Available"
 msgstr "{}尚不可用"
 
-#: apps/settings/src/ui/mod.rs:464
+#: apps/settings/src/ui/mod.rs:479
 msgid "This panel will be added in a later version of Helix Settings."
 msgstr "此面板将在 Helix 设置的后续版本中添加。"
 
-#: apps/settings/src/ui/mod.rs:495
+#: apps/settings/src/ui/mod.rs:510
 msgid "Configure the Helix desktop"
 msgstr "配置 Helix 桌面"
 
@@ -13045,7 +13393,7 @@ msgstr "请勿打扰"
 msgid "Notification banners are hidden"
 msgstr "通知横幅已隐藏"
 
-#: apps/settings/src/ui/notifications.rs:89 apps/settings/src/ui/privacy.rs:72
+#: apps/settings/src/ui/notifications.rs:89 apps/settings/src/ui/privacy.rs:95
 msgid "Lock Screen Notifications"
 msgstr "锁屏通知"
 
@@ -13118,87 +13466,91 @@ msgstr "在顶栏中显示准确的电量"
 msgid "Power Button Behavior"
 msgstr "电源按钮行为"
 
-#: apps/settings/src/ui/privacy.rs:28
+#: apps/settings/src/ui/privacy.rs:51
 msgid "Screen Lock"
 msgstr "锁屏"
 
-#: apps/settings/src/ui/privacy.rs:29
+#: apps/settings/src/ui/privacy.rs:52
 msgid "Automatically lock the screen when you are not using the device"
 msgstr "不使用设备时自动锁定屏幕"
 
-#: apps/settings/src/ui/privacy.rs:39
+#: apps/settings/src/ui/privacy.rs:62
 msgid "Blank Screen Delay"
 msgstr "息屏延迟"
 
-#: apps/settings/src/ui/privacy.rs:41
+#: apps/settings/src/ui/privacy.rs:64
 msgid "Period of inactivity after which the screen will go blank"
 msgstr "屏幕在不活动多长时间后变黑"
 
-#: apps/settings/src/ui/privacy.rs:50
+#: apps/settings/src/ui/privacy.rs:73
 msgid "Automatic Screen Lock"
 msgstr "自动锁屏"
 
-#: apps/settings/src/ui/privacy.rs:51
+#: apps/settings/src/ui/privacy.rs:74
 msgid "Locks the screen after it goes blank"
 msgstr "屏幕变黑后锁定屏幕"
 
-#: apps/settings/src/ui/privacy.rs:61
+#: apps/settings/src/ui/privacy.rs:84
 msgid "Automatic Screen Lock Delay"
 msgstr "自动锁屏延迟"
 
-#: apps/settings/src/ui/privacy.rs:77
+#: apps/settings/src/ui/privacy.rs:100
 msgid "File History & Trash"
 msgstr "文件历史和回收站"
 
-#: apps/settings/src/ui/privacy.rs:83
+#: apps/settings/src/ui/privacy.rs:106
 msgid "File History"
 msgstr "文件历史"
 
-#: apps/settings/src/ui/privacy.rs:84
+#: apps/settings/src/ui/privacy.rs:107
 msgid "Remember recently used files"
 msgstr "记住最近使用的文件"
 
-#: apps/settings/src/ui/privacy.rs:94
+#: apps/settings/src/ui/privacy.rs:117
 msgid "File History Duration"
 msgstr "文件历史保留时长"
 
-#: apps/settings/src/ui/privacy.rs:106
+#: apps/settings/src/ui/privacy.rs:129
 msgid "Automatically Delete Trash Content"
 msgstr "自动删除回收站内容"
 
-#: apps/settings/src/ui/privacy.rs:114
+#: apps/settings/src/ui/privacy.rs:137
 msgid "Automatically Delete Temporary Files"
 msgstr "自动删除临时文件"
 
-#: apps/settings/src/ui/privacy.rs:124
+#: apps/settings/src/ui/privacy.rs:147
 msgid "Automatically Delete Period"
 msgstr "自动删除周期"
 
-#: apps/settings/src/ui/privacy.rs:134
+#: apps/settings/src/ui/privacy.rs:157
 msgid "Location Services"
 msgstr "位置服务"
 
-#: apps/settings/src/ui/privacy.rs:135
+#: apps/settings/src/ui/privacy.rs:158
 msgid "Let apps determine your geographical location"
 msgstr "允许应用确定您的地理位置"
 
-#: apps/settings/src/ui/privacy.rs:146
+#: apps/settings/src/ui/privacy.rs:169
 msgid "Allow apps to use the camera"
 msgstr "允许应用使用相机"
 
-#: apps/settings/src/ui/privacy.rs:154
+#: apps/settings/src/ui/privacy.rs:177
 msgid "Allow apps to use the microphone"
 msgstr "允许应用使用麦克风"
 
-#: apps/settings/src/ui/privacy.rs:158
+#: apps/settings/src/ui/privacy.rs:184
+msgid "Agents"
+msgstr "智能体"
+
+#: apps/settings/src/ui/privacy.rs:211
 msgid "Diagnostics"
 msgstr "诊断"
 
-#: apps/settings/src/ui/privacy.rs:164
+#: apps/settings/src/ui/privacy.rs:217
 msgid "Automatic Problem Reporting"
 msgstr "自动问题报告"
 
-#: apps/settings/src/ui/privacy.rs:165
+#: apps/settings/src/ui/privacy.rs:218
 msgid "Send technical reports when problems occur"
 msgstr "出现问题时发送技术报告"
 
@@ -17036,10 +17388,6 @@ msgid "Problems: {list}"
 msgstr "问题：{list}"
 
 #: apps/web/src/window.rs:1948
-msgid "Allowed"
-msgstr "已允许"
-
-#: apps/web/src/window.rs:1948
 msgid "Denied"
 msgstr "已拒绝"
 
@@ -17343,3 +17691,10 @@ msgstr "工作"
 msgctxt "email, address or website type"
 msgid "Other"
 msgstr "其他"
+
+#~ msgid ""
+#~ "screen lock;lock;blank;idle;recent files;file "
+#~ "history;trash;temporary;location;camera;microphone;problem reporting;"
+#~ msgstr ""
+#~ "锁屏;锁定;黑屏;空闲;最近文件;文件历史;回收站;临时文件;位置;相机;麦克风;问"
+#~ "题报告;privacy;"

@@ -3,7 +3,8 @@
 use adw::prelude::*;
 use std::rc::Rc;
 
-use super::widgets::{self, days_label, preset_combo, seconds_label, switch, Num};
+use super::agent_access;
+use super::widgets::{self, days_label, preset_combo, seconds_label, switch, watch, Num};
 use super::{Ctx, Panel};
 use crate::values;
 use helix_app_common::i18n::tr;
@@ -16,8 +17,30 @@ const LOCATION: &str = "org.gnome.system.location";
 
 pub struct PrivacyPanel;
 
+/// The panel's root page, under its sub-pages (Agent Access).
+const ROOT_TAG: &str = "privacy";
+
 impl Panel for PrivacyPanel {
+    fn own_header(&self) -> bool {
+        true
+    }
+
+    fn show_page(&self, ctx: &Rc<Ctx>, content: &gtk::Widget, page: &str) {
+        let Some(nav) = content.downcast_ref::<adw::NavigationView>() else {
+            return;
+        };
+        if page != agent_access::TAG || !agent_access::available() {
+            return;
+        }
+        if nav.visible_page().and_then(|p| p.tag()).as_deref() == Some(agent_access::TAG) {
+            return;
+        }
+        nav.pop_to_tag(ROOT_TAG);
+        nav.push(&agent_access::page(ctx, nav));
+    }
+
     fn build(&self, ctx: &Rc<Ctx>) -> gtk::Widget {
+        let nav = adw::NavigationView::new();
         let session = ctx.prefs(SESSION);
         let saver = ctx.prefs(SCREENSAVER);
         let notif = ctx.prefs(NOTIFICATIONS);
@@ -155,6 +178,36 @@ impl Panel for PrivacyPanel {
         ));
         page.add(&devices);
 
+        // Helix's Agent Access, a permission like Location and Camera;
+        // not offered when the shell's settings are not installed.
+        if agent_access::available() {
+            let agents = widgets::group(tr("Agents"));
+            let row = widgets::subpage_row(tr("Agent Access"), "", "system-run-symbolic");
+            let prefs = ctx.prefs(crate::agents::SCHEMA);
+            let sync = {
+                let (row, prefs) = (row.downgrade(), prefs.clone());
+                move || {
+                    if let Some(row) = row.upgrade() {
+                        row.set_subtitle(if prefs.get::<bool>("enabled", false) {
+                            tr("On")
+                        } else {
+                            tr("Off")
+                        });
+                    }
+                }
+            };
+            sync();
+            watch(&prefs, "enabled", sync);
+            let (weak_nav, weak_ctx) = (nav.downgrade(), Rc::downgrade(ctx));
+            row.connect_activated(move |_| {
+                if let (Some(nav), Some(ctx)) = (weak_nav.upgrade(), weak_ctx.upgrade()) {
+                    nav.push(&agent_access::page(&ctx, &nav));
+                }
+            });
+            agents.add(&row);
+            page.add(&agents);
+        }
+
         let diag = widgets::group(tr("Diagnostics"));
         diag.add(&switch(
             &privacy,
@@ -165,6 +218,11 @@ impl Panel for PrivacyPanel {
             tr("Send technical reports when problems occur"),
         ));
         page.add(&diag);
-        page.upcast()
+        nav.add(&widgets::nav_page(
+            tr("Privacy & Security"),
+            &page,
+            Some(ROOT_TAG),
+        ));
+        nav.upcast()
     }
 }
