@@ -258,6 +258,9 @@ Music library and player.
 - Text with LRC time tags (`[mm:ss]`, `[mm:ss.xx]`, several per line,
   `[offset:±ms]`; ID tags and enhanced word times ignored) is synced;
   anything else is shown as plain text.
+- Limits against crafted files (each time tag copies its line): a sidecar
+  or tag over 1 MiB is ignored; at most 100 time tags per line, 10 000
+  synced lines and 4 MiB of synced text are kept (the rest is dropped).
 - Now Playing shows a *Lyrics* toggle (`media-view-subtitles-symbolic`)
   when the song has lyrics; on, the lyrics replace the cover. Synced
   lyrics highlight the current line (accent colour) from the position

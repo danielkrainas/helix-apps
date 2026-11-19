@@ -4,7 +4,20 @@
 //! synced: Now Playing highlights the current line.
 
 use lofty::prelude::*;
+use std::io::Read;
 use std::path::Path;
+
+/// Larger lyrics (a sidecar file or a tag) are ignored. Real LRC files
+/// are a few KiB; 1 MiB is hours of text.
+const MAX_LYRICS_BYTES: usize = 1 << 20;
+/// Time tags used per line (`[00:10][01:10]…Chorus`); more are skipped.
+const MAX_TIMES_PER_LINE: usize = 100;
+/// Synced lines kept in total.
+const MAX_SYNCED_LINES: usize = 10_000;
+/// Text kept over all synced lines. A line with many time tags is stored
+/// once per tag, so without this cap a crafted file could expand 1 MiB of
+/// input into gigabytes.
+const MAX_SYNCED_TEXT: usize = 4 << 20;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Lyrics {
@@ -17,6 +30,7 @@ pub enum Lyrics {
 fn time_tag(tag: &str) -> Option<u64> {
     let (m, rest) = tag.split_once(':')?;
     let m: u64 = m.trim().parse().ok()?;
+    let m_ms = m.checked_mul(60_000)?;
     let (s, frac) = match rest.split_once(['.', ':']) {
         Some((s, f)) => (s, f),
         None => (rest, ""),
@@ -37,7 +51,7 @@ fn time_tag(tag: &str) -> Option<u64> {
         let v: u64 = digits.parse().ok()?;
         v * 10u64.pow(3 - digits.len() as u32)
     };
-    Some(m * 60_000 + s * 1000 + ms)
+    m_ms.checked_add(s * 1000 + ms)
 }
 
 /// Removes enhanced-LRC word timings (`<mm:ss.xx>`).
@@ -61,10 +75,16 @@ fn strip_word_times(text: &str) -> String {
 }
 
 /// Reads lyrics text: LRC when it has time tags, plain text otherwise.
+/// Text over [`MAX_LYRICS_BYTES`] is ignored; synced lyrics stop at
+/// [`MAX_SYNCED_LINES`] lines or [`MAX_SYNCED_TEXT`] bytes of text.
 pub fn parse(text: &str) -> Option<Lyrics> {
+    if text.len() > MAX_LYRICS_BYTES {
+        return None;
+    }
     let text = text.trim_start_matches('\u{feff}');
     let mut offset: i64 = 0;
     let mut lines: Vec<(u64, String)> = Vec::new();
+    let mut synced_text = 0usize;
     let mut plain: Vec<&str> = Vec::new();
     for raw in text.lines() {
         let mut rest = raw.trim();
@@ -74,7 +94,11 @@ pub fn parse(text: &str) -> Option<Lyrics> {
             let Some(end) = inner.find(']') else { break };
             let tag = &inner[..end];
             match time_tag(tag) {
-                Some(t) => times.push(t),
+                Some(t) => {
+                    if times.len() < MAX_TIMES_PER_LINE {
+                        times.push(t);
+                    }
+                }
                 None => {
                     // ID tags ([ar:…], [ti:…]); [offset:+ms] moves the times.
                     let Some((key, value)) = tag.split_once(':') else {
@@ -94,6 +118,10 @@ pub fn parse(text: &str) -> Option<Lyrics> {
         if !times.is_empty() {
             let line = strip_word_times(rest);
             for t in times {
+                if lines.len() >= MAX_SYNCED_LINES || synced_text + line.len() > MAX_SYNCED_TEXT {
+                    break;
+                }
+                synced_text += line.len();
                 lines.push((t, line.clone()));
             }
         } else if !tagged {
@@ -103,7 +131,7 @@ pub fn parse(text: &str) -> Option<Lyrics> {
     if !lines.is_empty() {
         // A positive offset makes the lyrics appear sooner.
         for (t, _) in lines.iter_mut() {
-            *t = (*t as i64 - offset).max(0) as u64;
+            *t = (*t as i64).saturating_sub(offset).max(0) as u64;
         }
         lines.sort_by_key(|(t, _)| *t);
         return Some(Lyrics::Synced(lines));
@@ -118,6 +146,17 @@ pub fn current_line(starts: &[u64], pos_ms: u64) -> Option<usize> {
     starts.partition_point(|t| *t <= pos_ms).checked_sub(1)
 }
 
+/// Reads a file of at most [`MAX_LYRICS_BYTES`]; `None` when larger.
+fn read_capped(path: &Path) -> Option<Vec<u8>> {
+    let mut data = Vec::new();
+    std::fs::File::open(path)
+        .ok()?
+        .take(MAX_LYRICS_BYTES as u64 + 1)
+        .read_to_end(&mut data)
+        .ok()?;
+    (data.len() <= MAX_LYRICS_BYTES).then_some(data)
+}
+
 /// The song's lyrics: `<stem>.lrc` (any case) beside it, then its tags.
 pub fn find(path: &Path) -> Option<Lyrics> {
     if let (Some(dir), Some(stem)) = (path.parent(), path.file_stem()) {
@@ -129,7 +168,7 @@ pub fn find(path: &Path) -> Option<Lyrics> {
                         .is_some_and(|e| e.eq_ignore_ascii_case("lrc"))
             })
         });
-        if let Some(text) = sidecar.and_then(|f| std::fs::read(f).ok()) {
+        if let Some(text) = sidecar.and_then(|f| read_capped(&f)) {
             if let Some(l) = parse(&String::from_utf8_lossy(&text)) {
                 return Some(l);
             }
@@ -195,6 +234,57 @@ mod tests {
             parse("[Chorus]\nla la"),
             Some(Lyrics::Plain("[Chorus]\nla la".into()))
         );
+    }
+
+    #[test]
+    fn crafted_lrc_stays_small() {
+        // Many time tags in front of a long line: each tag would copy it.
+        let line = format!("{}{}\n", "[00:01]".repeat(5000), "x".repeat(100_000));
+        let Some(Lyrics::Synced(lines)) = parse(&line.repeat(7)) else {
+            panic!("not synced");
+        };
+        let text: usize = lines.iter().map(|(_, l)| l.len()).sum();
+        assert!(text <= MAX_SYNCED_TEXT, "{text}");
+        assert_eq!(lines.len(), MAX_SYNCED_TEXT / 100_000);
+
+        // One line: at most MAX_TIMES_PER_LINE copies.
+        let Some(Lyrics::Synced(lines)) = parse(&format!("{}a", "[00:02]".repeat(5000))) else {
+            panic!("not synced");
+        };
+        assert_eq!(lines.len(), MAX_TIMES_PER_LINE);
+
+        // Many short lines.
+        let Some(Lyrics::Synced(lines)) = parse(&"[00:03]a\n".repeat(MAX_SYNCED_LINES + 10)) else {
+            panic!("not synced");
+        };
+        assert_eq!(lines.len(), MAX_SYNCED_LINES);
+
+        // Too much text is ignored outright.
+        assert_eq!(parse(&"a".repeat(MAX_LYRICS_BYTES + 1)), None);
+    }
+
+    #[test]
+    fn overflowing_times_do_not_panic() {
+        assert_eq!(
+            parse("[offset:-9223372036854775808]\n[00:01]a"),
+            Some(Lyrics::Synced(vec![(u64::MAX >> 1, "a".into())]))
+        );
+        // Minutes that overflow the millisecond count: not time tags.
+        assert!(matches!(
+            parse("[99999999999999999999:00]a\n[307445734561825860:00]b\n[307445734561825:59]c"),
+            Some(Lyrics::Plain(_))
+        ));
+    }
+
+    #[test]
+    fn oversized_sidecar_is_ignored() {
+        let dir = tempfile::tempdir().unwrap();
+        let song = dir.path().join("Song.ogg");
+        std::fs::write(&song, b"not audio").unwrap();
+        let lrc = std::fs::File::create(dir.path().join("Song.lrc")).unwrap();
+        // Sparse: nothing is really written.
+        lrc.set_len(MAX_LYRICS_BYTES as u64 + 1).unwrap();
+        assert_eq!(find(&song), None);
     }
 
     #[test]
