@@ -9,7 +9,7 @@ use std::rc::Rc;
 
 use crate::model::{self, format_duration, format_total};
 use crate::playlist::{self, EntryInfo, Playlist, Smart};
-use crate::ui::{music_dir, set_heart_icon, sync_heart, toast, App, RowHandle};
+use crate::ui::{music_dir, set_heart_icon, sync_heart, toast, App, Live, RowHandle};
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 use helix_app_common::trnf;
@@ -59,7 +59,9 @@ fn scrolled(child: &impl IsA<gtk::Widget>, max: i32) -> gtk::ScrolledWindow {
 fn add_header_button(buttons: &gtk::FlowBox, button: &impl IsA<gtk::Widget>) {
     button.as_ref().set_halign(gtk::Align::Start);
     buttons.append(button);
-    if let Some(slot) = button.as_ref().parent() {
+    // The slot is only a layout cell: no focus, hover or activation of
+    // its own (see `.hm-header-buttons` in the CSS).
+    if let Some(slot) = button.as_ref().parent().and_downcast::<gtk::FlowBoxChild>() {
         slot.set_focusable(false);
     }
 }
@@ -109,6 +111,25 @@ fn pill(label: &str, icon: &str, suggested: bool) -> gtk::Button {
         b.add_css_class("suggested-action");
     }
     b
+}
+
+/// Registers a recycled list cell's widget: whenever the cell is bound to
+/// another track it shows that track's playing, favourite or play-count
+/// state, and it follows later changes (see `App::refresh_rows`).
+fn live_cell(app: &std::rc::Weak<App>, item: &gtk::ListItem, live: Live) {
+    let Some(a) = app.upgrade() else { return };
+    let handle = RowHandle::new(None, live);
+    a.register_row(handle.clone());
+    let app = app.clone();
+    item.connect_item_notify(move |item| {
+        let Some(app) = app.upgrade() else { return };
+        let lib = app.lib();
+        *handle.path.borrow_mut() = item
+            .item()
+            .and_then(|o| lib.tracks.get(unboxed(&o)))
+            .map(|t| t.path.clone());
+        app.refresh_row(&handle);
+    });
 }
 
 fn boxed(i: usize) -> glib::BoxedAnyObject {
@@ -315,30 +336,14 @@ impl App {
             })
         };
 
-        // Playing indicator.
+        // Playing indicator: registered so it follows the playing track.
         let f = gtk::SignalListItemFactory::new();
-        f.connect_setup(|_, item| {
-            let item = item.downcast_ref::<gtk::ListItem>().unwrap();
-            item.set_child(Some(&gtk::Image::new()));
-        });
         let wi = w.clone();
-        f.connect_bind(move |_, item| {
-            let Some(app) = wi.upgrade() else { return };
+        f.connect_setup(move |_, item| {
             let item = item.downcast_ref::<gtk::ListItem>().unwrap();
-            let i = unboxed(&item.item().unwrap());
-            let lib = app.lib();
-            let playing = lib
-                .tracks
-                .get(i)
-                .is_some_and(|t| app.queue.borrow().current() == Some(&t.path));
-            if let Some(img) = item.child().and_downcast::<gtk::Image>() {
-                img.set_icon_name(playing.then_some("media-playback-start-symbolic"));
-                if playing {
-                    img.update_property(&[gtk::accessible::Property::Label(tr("Now Playing"))]);
-                } else {
-                    img.reset_property(gtk::AccessibleProperty::Label);
-                }
-            }
+            let img = gtk::Image::new();
+            item.set_child(Some(&img));
+            live_cell(&wi, item, Live::PlayingIcon(img.downgrade()));
         });
         cv.append_column(
             &gtk::ColumnViewColumn::builder()
@@ -361,9 +366,20 @@ impl App {
         })));
         let length = text_col(tr("Length"), false, |t, _| format_duration(t.duration_ms));
         length.set_sorter(Some(&sorter(|t, _| SortKey::Num(t.duration_ms))));
-        let plays = text_col(tr("Plays"), false, |t, app| {
-            app.stats.borrow().plays(&t.path).to_string()
+        // Play counts change while the table is shown.
+        let f = gtk::SignalListItemFactory::new();
+        let wp = w.clone();
+        f.connect_setup(move |_, item| {
+            let item = item.downcast_ref::<gtk::ListItem>().unwrap();
+            let l = label("", &["numeric"]);
+            item.set_child(Some(&l));
+            live_cell(&wp, item, Live::Plays(l.downgrade()));
         });
+        let plays = gtk::ColumnViewColumn::builder()
+            .title(tr("Plays"))
+            .factory(&f)
+            .resizable(true)
+            .build();
         plays.set_sorter(Some(&sorter(|t, app| {
             SortKey::Num(app.stats.borrow().plays(&t.path) as u64)
         })));
@@ -386,11 +402,11 @@ impl App {
                 .css_classes(["flat"])
                 .build()
                 .labelled(tr("Add to Favorites"));
-            let ws = ws.clone();
+            let w2 = ws.clone();
             let it = item.downgrade();
             heart.connect_toggled(move |h| {
                 set_heart_icon(h);
-                let (Some(app), Some(item)) = (ws.upgrade(), it.upgrade()) else {
+                let (Some(app), Some(item)) = (w2.upgrade(), it.upgrade()) else {
                     return;
                 };
                 let Some(obj) = item.item() else { return };
@@ -400,20 +416,7 @@ impl App {
                 }
             });
             item.set_child(Some(&heart));
-        });
-        let wb = w.clone();
-        f.connect_bind(move |_, item| {
-            let Some(app) = wb.upgrade() else { return };
-            let item = item.downcast_ref::<gtk::ListItem>().unwrap();
-            let i = unboxed(&item.item().unwrap());
-            let fav = app
-                .lib()
-                .tracks
-                .get(i)
-                .is_some_and(|t| app.stats.borrow().is_favorite(&t.path));
-            if let Some(h) = item.child().and_downcast::<gtk::ToggleButton>() {
-                sync_heart(&h, fav);
-            }
+            live_cell(&ws, item, Live::Heart(heart.downgrade()));
         });
         cv.append_column(
             &gtk::ColumnViewColumn::builder()
@@ -619,13 +622,14 @@ impl App {
             .child(&b)
             .activatable(true)
             .build();
-        let playing = self.queue.borrow().current() == Some(&t.path);
-        crate::ui::show_playing(&indicator, playing);
-        self.register_row(RowHandle {
-            path: t.path.clone(),
-            indicator: indicator.downgrade(),
-            heart: heart.downgrade(),
-        });
+        self.register_row(RowHandle::new(
+            Some(t.path.clone()),
+            Live::Indicator(indicator.downgrade()),
+        ));
+        self.register_row(RowHandle::new(
+            Some(t.path.clone()),
+            Live::Heart(heart.downgrade()),
+        ));
         row
     }
 
@@ -690,6 +694,7 @@ impl App {
             .margin_top(6)
             .halign(gtk::Align::Start)
             .max_children_per_line(8)
+            .css_classes(["hm-header-buttons"])
             .build();
         let play = pill(tr("Play"), "media-playback-start-symbolic", true);
         let shuffle = pill(tr("Shuffle"), "media-playlist-shuffle-symbolic", false);
@@ -1446,8 +1451,6 @@ impl App {
             }
             if favs > 0 {
                 app.refresh_rows();
-                let n = app.songs_model.n_items();
-                app.songs_model.items_changed(0, n, n);
             }
             if favs + lists > 0 {
                 app.toasts

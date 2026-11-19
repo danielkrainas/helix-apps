@@ -81,7 +81,12 @@ fn load_css() {
          .hm-tile { padding: 6px; }
          .hm-playerbar { padding: 6px 12px; border-top: 1px solid alpha(currentColor, 0.15); }
          .hm-num { min-width: 2.5em; }
-         .hm-disc { margin-top: 12px; }",
+         .hm-disc { margin-top: 12px; }
+         .hm-header-buttons > flowboxchild,
+         .hm-header-buttons > flowboxchild:hover,
+         .hm-header-buttons > flowboxchild:active,
+         .hm-header-buttons > flowboxchild:selected {
+             background: none; padding: 0; box-shadow: none; outline: none; }",
         ".hm-playerbar { border-top-color: alpha(currentColor, 0.6); }",
     );
 }
@@ -150,12 +155,71 @@ pub fn friendly_folder_name(dir: &std::path::Path, home: &std::path::Path) -> St
     }
 }
 
-/// Registered track row widgets, updated when the playing track or a
-/// favourite changes.
+/// A widget that shows something about a track that can change while it
+/// is on screen.
+pub enum Live {
+    /// Track row: the number, or a play icon while the track plays.
+    Indicator(glib::WeakRef<gtk::Stack>),
+    /// Songs table: a play icon while the track plays.
+    PlayingIcon(glib::WeakRef<gtk::Image>),
+    /// Favourite toggle.
+    Heart(glib::WeakRef<gtk::ToggleButton>),
+    /// Play count.
+    Plays(glib::WeakRef<gtk::Label>),
+}
+
+/// A registered track widget, updated when the playing track, a favourite
+/// or a play count changes. Recycled list cells change `path` whenever
+/// they are bound to another track.
 pub struct RowHandle {
-    pub path: PathBuf,
-    pub indicator: glib::WeakRef<gtk::Stack>,
-    pub heart: glib::WeakRef<gtk::ToggleButton>,
+    pub path: RefCell<Option<PathBuf>>,
+    pub live: Live,
+}
+
+impl RowHandle {
+    pub fn new(path: Option<PathBuf>, live: Live) -> Rc<RowHandle> {
+        Rc::new(RowHandle {
+            path: RefCell::new(path),
+            live,
+        })
+    }
+
+    fn alive(&self) -> bool {
+        match &self.live {
+            Live::Indicator(w) => w.upgrade().is_some(),
+            Live::PlayingIcon(w) => w.upgrade().is_some(),
+            Live::Heart(w) => w.upgrade().is_some(),
+            Live::Plays(w) => w.upgrade().is_some(),
+        }
+    }
+
+    /// Shows the current state; false once the widget is gone.
+    fn update(&self, current: Option<&PathBuf>, stats: &Stats) -> bool {
+        let path = self.path.borrow();
+        let playing = path.is_some() && path.as_ref() == current;
+        match &self.live {
+            Live::Indicator(w) => match w.upgrade() {
+                Some(ind) => show_playing(&ind, playing),
+                None => return false,
+            },
+            Live::PlayingIcon(w) => match w.upgrade() {
+                Some(img) => show_playing_icon(&img, playing),
+                None => return false,
+            },
+            Live::Heart(w) => match w.upgrade() {
+                Some(h) => sync_heart(&h, path.as_deref().is_some_and(|p| stats.is_favorite(p))),
+                None => return false,
+            },
+            Live::Plays(w) => match w.upgrade() {
+                Some(l) => {
+                    let n = path.as_deref().map_or(0, |p| stats.plays(p));
+                    l.set_label(&n.to_string());
+                }
+                None => return false,
+            },
+        }
+        true
+    }
 }
 
 pub struct PlayerBar {
@@ -211,7 +275,7 @@ pub struct App {
     pub mpris: Option<Mpris>,
     pub state: RefCell<AppState>,
     pub textures: RefCell<HashMap<String, Option<gdk::Texture>>>,
-    pub rows: RefCell<Vec<RowHandle>>,
+    pub rows: RefCell<Vec<Rc<RowHandle>>>,
     pub queue_view: RefCell<Option<glib::WeakRef<gtk::ListBox>>>,
     pub playlist_view: RefCell<Option<(glib::WeakRef<gtk::Box>, crate::pages::PlRef)>>,
 
@@ -337,9 +401,11 @@ impl App {
         let albums_model = gio::ListStore::new::<glib::BoxedAnyObject>();
         let songs_model = gio::ListStore::new::<glib::BoxedAnyObject>();
         let songs_sorted = gtk::SortListModel::new(Some(songs_model.clone()), None::<gtk::Sorter>);
+        // Only as tall as its rows, not the whole view.
         let artists_list = gtk::ListBox::builder()
             .selection_mode(gtk::SelectionMode::None)
             .css_classes(["boxed-list"])
+            .valign(gtk::Align::Start)
             .build();
         let playlists_list = gtk::ListBox::builder()
             .selection_mode(gtk::SelectionMode::None)
@@ -1030,6 +1096,7 @@ impl App {
                     self.counted.set(true);
                     self.stats.borrow_mut().record_play(&t.path, now_secs());
                     self.save_stats();
+                    self.refresh_rows();
                 }
             }
         }
@@ -1124,8 +1191,6 @@ impl App {
         self.update_position(None);
         self.refresh_rows();
         self.refresh_queue_view();
-        let songs_n = self.songs_model.n_items();
-        self.songs_model.items_changed(0, songs_n, songs_n);
         if let Some(m) = &self.mpris {
             let meta = track.as_ref().map(|t| mpris::Metadata {
                 track_id: mpris::track_id(&t.path),
@@ -1263,28 +1328,37 @@ impl App {
         if self.current_track().is_some_and(|t| t.path == path) {
             sync_heart(&self.bar.heart, on);
         }
-        let n = self.songs_model.n_items();
-        self.songs_model.items_changed(0, n, n);
     }
 
-    pub fn register_row(&self, handle: RowHandle) {
+    /// Registers a track widget and shows its current state.
+    pub fn register_row(&self, handle: Rc<RowHandle>) {
+        self.refresh_row(&handle);
         self.rows.borrow_mut().push(handle);
     }
 
-    /// Updates playing indicators and hearts of all live track rows.
+    /// Shows the current state in one registered widget (after a list
+    /// cell was bound to another track).
+    pub fn refresh_row(&self, handle: &RowHandle) {
+        let current = self.queue.borrow().current().cloned();
+        handle.update(current.as_ref(), &self.stats.borrow());
+    }
+
+    /// Updates playing indicators, hearts and play counts of all live
+    /// track widgets. Toggling a heart here re-enters `set_favorite`,
+    /// which returns early, so the registry is not borrowed meanwhile.
     pub fn refresh_rows(&self) {
         let current = self.queue.borrow().current().cloned();
-        let stats = self.stats.borrow();
-        self.rows.borrow_mut().retain(|r| {
-            let Some(ind) = r.indicator.upgrade() else {
-                return false;
-            };
-            show_playing(&ind, current.as_ref() == Some(&r.path));
-            if let Some(h) = r.heart.upgrade() {
-                sync_heart(&h, stats.is_favorite(&r.path));
+        let rows: Vec<Rc<RowHandle>> = self.rows.borrow().clone();
+        let mut dead = false;
+        {
+            let stats = self.stats.borrow();
+            for r in &rows {
+                dead |= !r.update(current.as_ref(), &stats);
             }
-            true
-        });
+        }
+        if dead {
+            self.rows.borrow_mut().retain(|r| r.alive());
+        }
     }
 
     // ----- window plumbing ---------------------------------------------------
@@ -1571,15 +1645,59 @@ impl App {
                 app.state.borrow_mut().volume = s.value();
             }
         });
+        // While the knob is dragged (or the trough is held) it follows the
+        // pointer and the labels preview the time; one seek happens on
+        // release. Keyboard steps seek at once. A legacy controller sees
+        // the press and release without taking them from the scale's own
+        // gestures.
+        let held = gtk::EventControllerLegacy::new();
+        held.set_propagation_phase(gtk::PropagationPhase::Capture);
         let w = Rc::downgrade(self);
-        b.scale.connect_change_value(move |_, _, value| {
+        held.connect_event(move |c, ev| {
+            use gdk::EventType as E;
+            let Some(app) = w.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
+            match ev.event_type() {
+                E::ButtonPress | E::TouchBegin => app.seeking.set(true),
+                E::ButtonRelease | E::TouchEnd | E::TouchCancel if app.seeking.replace(false) => {
+                    if let Some(scale) = c.widget().and_downcast::<gtk::Scale>() {
+                        app.seek_ms(scale.value().max(0.0) as u64);
+                    }
+                }
+                _ => {}
+            }
+            glib::Propagation::Proceed
+        });
+        b.scale.add_controller(held);
+        let w = Rc::downgrade(self);
+        b.scale.connect_change_value(move |s, _, value| {
             if let Some(app) = w.upgrade() {
-                if !app.suppress_ui.get() {
-                    app.seek_ms(value.max(0.0) as u64);
+                if app.suppress_ui.get() {
+                    return glib::Propagation::Proceed;
+                }
+                let (lo, hi) = (s.adjustment().lower(), s.adjustment().upper());
+                let ms = value.clamp(lo, hi).max(0.0) as u64;
+                if app.seeking.get() {
+                    app.preview_position(ms, hi as u64);
+                } else {
+                    app.seek_ms(ms);
                 }
             }
             glib::Propagation::Proceed
         });
+    }
+
+    /// Shows a position while the seek slider is dragged, without seeking.
+    fn preview_position(&self, pos: u64, dur: u64) {
+        self.bar.elapsed.set_label(&model::format_duration(pos));
+        self.bar
+            .scale
+            .update_property(
+                &[gtk::accessible::Property::ValueText(&model::position_text(
+                    pos, dur,
+                ))],
+            );
     }
 
     pub fn add_folder_dialog(self: &Rc<Self>) {
@@ -1623,6 +1741,16 @@ pub fn show_playing(indicator: &gtk::Stack, playing: bool) {
         } else {
             row.reset_property(gtk::AccessibleProperty::Description);
         }
+    }
+}
+
+/// The Songs table's playing cell: a play icon named "Now Playing".
+pub fn show_playing_icon(img: &gtk::Image, playing: bool) {
+    img.set_icon_name(playing.then_some("media-playback-start-symbolic"));
+    if playing {
+        img.update_property(&[gtk::accessible::Property::Label(tr("Now Playing"))]);
+    } else {
+        img.reset_property(gtk::AccessibleProperty::Label);
     }
 }
 

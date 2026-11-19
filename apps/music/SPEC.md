@@ -124,7 +124,9 @@ Music library and player.
 - **Songs**: a `GtkColumnView` with a *Playing* column (the playing
   track's cell shows a play icon named "Now Playing"), sortable columns
   Title, Artist, Album, Length, Plays and a *Favorite* column. Activating a row plays the full song
-  list (in the current sort order) starting there.
+  list (in the current sort order) starting there. The playing icon, play
+  counts and favourites update in place as they change (the table's cells
+  are registered like track rows; the model is not rebuilt).
 - **Playlists**: smart playlists first — *Favorite Songs*, *Most Played*
   (top 50 with ≥ 1 play), *Recently Played* (last 50 played),
   *Recently Added* (50 newest) — then user playlists. A "New Playlist" button
@@ -150,6 +152,10 @@ Music library and player.
   queue button opening *Now Playing*.
 - **Now Playing** page: large cover, title, artist, album, and the queue
   (in play order); clicking a queue row jumps to it, each row can be removed.
+- Seek slider: while it is dragged (or the trough is held) the knob
+  follows the pointer and the elapsed time previews the target; one seek
+  (and one MPRIS `Seeked`) happens on release. Arrow keys and other
+  keyboard steps seek at once.
 - Previous restarts the current track when more than 3 s have elapsed,
   otherwise goes to the previous queue item.
 
