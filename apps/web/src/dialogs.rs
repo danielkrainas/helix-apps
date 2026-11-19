@@ -307,6 +307,19 @@ pub fn show_preferences(app: &Rc<App>) {
         }
     });
     content.add(&popups);
+    let ask = adw::SwitchRow::builder()
+        .title(tr("Ask Before Downloading"))
+        .subtitle(tr("Files a page saves without a click"))
+        .active(s.ask_before_downloads)
+        .build();
+    let weak = Rc::downgrade(app);
+    ask.connect_active_notify(move |r| {
+        if let Some(app) = weak.upgrade() {
+            let v = r.is_active();
+            app.update_settings(|s| s.ask_before_downloads = v);
+        }
+    });
+    content.add(&ask);
     let cookies = adw::ComboRow::builder()
         .title(tr("Cookies"))
         .model(&gtk::StringList::new(&[

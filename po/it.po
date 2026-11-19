@@ -1145,10 +1145,10 @@ msgstr "_Calcola"
 #: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
 #: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:290 apps/terminal/src/window.rs:1306
-#: apps/text-editor/src/window.rs:973 apps/web/src/app.rs:953
-#: apps/web/src/dialogs.rs:413 apps/web/src/dialogs.rs:451
-#: apps/web/src/dialogs.rs:707 apps/web/src/dialogs.rs:928
-#: apps/web/src/dialogs.rs:1130 apps/web/src/tab.rs:1163
+#: apps/text-editor/src/window.rs:973 apps/web/src/app.rs:954
+#: apps/web/src/dialogs.rs:426 apps/web/src/dialogs.rs:464
+#: apps/web/src/dialogs.rs:720 apps/web/src/dialogs.rs:941
+#: apps/web/src/dialogs.rs:1143 apps/web/src/tab.rs:1163
 #: apps/web/src/tab.rs:1176 crates/helix-app-common/src/links.rs:138
 msgid "_Cancel"
 msgstr "_Annulla"
@@ -1687,7 +1687,7 @@ msgstr ""
 "essere annullata."
 
 #: apps/calendar/src/manage.rs:375 apps/settings/src/ui/netedit.rs:390
-#: apps/web/src/dialogs.rs:928
+#: apps/web/src/dialogs.rs:941
 msgid "_Remove"
 msgstr "_Rimuovi"
 
@@ -1954,7 +1954,7 @@ msgstr "Mostra/Nascondi barra laterale"
 
 #: apps/calendar/src/ui.rs:253 apps/calendar/src/ui.rs:507
 #: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:155
-#: apps/web/src/dialogs.rs:589
+#: apps/web/src/dialogs.rs:602
 msgid "Today"
 msgstr "Oggi"
 
@@ -2009,7 +2009,7 @@ msgstr "Cerca eventi"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
 #: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:227
-#: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:739
+#: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:752
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
 msgstr "Nessun risultato trovato"
@@ -2017,7 +2017,7 @@ msgstr "Nessun risultato trovato"
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
 #: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:228
-#: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:740
+#: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:753
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
 msgstr "Provare una ricerca diversa"
@@ -2911,7 +2911,7 @@ msgid "Coordinated Universal Time (UTC)"
 msgstr "Tempo coordinato universale (UTC)"
 
 #: apps/clocks/src/tz.rs:312 apps/files/src/fmt.rs:35
-#: apps/web/src/dialogs.rs:590
+#: apps/web/src/dialogs.rs:603
 msgid "Yesterday"
 msgstr "Ieri"
 
@@ -3054,8 +3054,8 @@ msgstr "Posizione attuale"
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
 #: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/input.rs:367
 #: apps/weather/src/ui.rs:902 apps/web/src/dialogs.rs:198
-#: apps/web/src/dialogs.rs:643 apps/web/src/dialogs.rs:1030
-#: apps/web/src/dialogs.rs:1185
+#: apps/web/src/dialogs.rs:656 apps/web/src/dialogs.rs:1043
+#: apps/web/src/dialogs.rs:1198
 msgid "Remove"
 msgstr "Rimuovi"
 
@@ -10945,7 +10945,7 @@ msgid "Other Device"
 msgstr "Altro dispositivo"
 
 #: apps/settings/src/defaults.rs:15 apps/web/src/app.rs:128
-#: apps/web/src/app.rs:152 apps/web/src/app.rs:979 apps/web/src/window.rs:320
+#: apps/web/src/app.rs:152 apps/web/src/app.rs:988 apps/web/src/window.rs:320
 #: apps/web/src/window.rs:1574
 msgid "Web"
 msgstr "Web"
@@ -12041,7 +12041,7 @@ msgstr ""
 "L’app viene rimossa da questo computer. I suoi dati e le impostazioni "
 "vengono mantenuti."
 
-#: apps/settings/src/ui/apps.rs:554 apps/web/src/dialogs.rs:1130
+#: apps/settings/src/ui/apps.rs:554 apps/web/src/dialogs.rs:1143
 msgid "_Uninstall"
 msgstr "_Disinstalla"
 
@@ -12292,7 +12292,7 @@ msgstr "Richiede i servizi di localizzazione"
 msgid "Date &amp; Time"
 msgstr "Data e ora"
 
-#: apps/settings/src/ui/datetime.rs:144 apps/web/src/dialogs.rs:870
+#: apps/settings/src/ui/datetime.rs:144 apps/web/src/dialogs.rs:883
 msgid "Loading…"
 msgstr "Caricamento…"
 
@@ -12457,7 +12457,7 @@ msgstr "Riduce l'immagine per i televisori che ne tagliano i bordi"
 msgid "The display settings changed."
 msgstr "Le impostazioni dello schermo sono cambiate."
 
-#: apps/settings/src/ui/displays.rs:162 apps/web/src/dialogs.rs:413
+#: apps/settings/src/ui/displays.rs:162 apps/web/src/dialogs.rs:426
 msgid "_Reset"
 msgstr "_Ripristina"
 
@@ -16355,7 +16355,7 @@ msgstr "internet"
 msgid "web"
 msgstr "web"
 
-#: apps/web/src/app.rs:152 apps/web/src/app.rs:979
+#: apps/web/src/app.rs:152 apps/web/src/app.rs:988
 msgid "Browse the web"
 msgstr "Naviga sul web"
 
@@ -16375,7 +16375,11 @@ msgstr "Scaricare il file?"
 msgid "{site} wants to save “{name}” to your Downloads folder."
 msgstr "{site} vuole salvare «{name}» nella cartella Scaricati."
 
-#: apps/web/src/app.rs:953
+#: apps/web/src/app.rs:955
+msgid "_Always Download"
+msgstr "Scarica _sempre"
+
+#: apps/web/src/app.rs:956
 msgid "_Download"
 msgstr "_Scarica"
 
@@ -16473,66 +16477,74 @@ msgid "Windows opened by pages without a click"
 msgstr "Finestre aperte dalle pagine senza un clic"
 
 #: apps/web/src/dialogs.rs:311
+msgid "Ask Before Downloading"
+msgstr "Chiedi prima di scaricare"
+
+#: apps/web/src/dialogs.rs:312
+msgid "Files a page saves without a click"
+msgstr "File che una pagina salva senza un clic"
+
+#: apps/web/src/dialogs.rs:324
 msgid "Cookies"
 msgstr "Cookie"
 
-#: apps/web/src/dialogs.rs:313
+#: apps/web/src/dialogs.rs:326
 msgid "Always Accept"
 msgstr "Accetta sempre"
 
-#: apps/web/src/dialogs.rs:314
+#: apps/web/src/dialogs.rs:327
 msgid "Block Third-Party Cookies"
 msgstr "Blocca i cookie di terze parti"
 
-#: apps/web/src/dialogs.rs:315
+#: apps/web/src/dialogs.rs:328
 msgid "Block All Cookies"
 msgstr "Blocca tutti i cookie"
 
-#: apps/web/src/dialogs.rs:334 apps/web/src/dialogs.rs:861
+#: apps/web/src/dialogs.rs:347 apps/web/src/dialogs.rs:874
 msgid "Passwords"
 msgstr "Password"
 
-#: apps/web/src/dialogs.rs:335
+#: apps/web/src/dialogs.rs:348
 msgid "Passwords are kept in your keyring (Secret Service)."
 msgstr "Le password sono conservate nel portachiavi (Secret Service)."
 
-#: apps/web/src/dialogs.rs:338
+#: apps/web/src/dialogs.rs:351
 msgid "Remember Passwords"
 msgstr "Ricorda le password"
 
-#: apps/web/src/dialogs.rs:339
+#: apps/web/src/dialogs.rs:352
 msgid "Offer to save site logins and fill them in"
 msgstr "Propone di salvare gli accessi ai siti e di compilarli"
 
-#: apps/web/src/dialogs.rs:351
+#: apps/web/src/dialogs.rs:364
 msgid "Saved Passwords…"
 msgstr "Password salvate…"
 
-#: apps/web/src/dialogs.rs:365
+#: apps/web/src/dialogs.rs:378
 msgid "Browsing Data"
 msgstr "Dati di navigazione"
 
-#: apps/web/src/dialogs.rs:368
+#: apps/web/src/dialogs.rs:381
 msgid "Clear Browsing Data…"
 msgstr "Cancella dati di navigazione…"
 
-#: apps/web/src/dialogs.rs:374
+#: apps/web/src/dialogs.rs:387
 msgid "Reset All Site Permissions"
 msgstr "Ripristina tutti i permessi dei siti"
 
-#: apps/web/src/dialogs.rs:375
+#: apps/web/src/dialogs.rs:388
 msgid "Forget every allow/deny decision"
 msgstr "Dimentica ogni decisione di consenso o rifiuto"
 
-#: apps/web/src/dialogs.rs:406
+#: apps/web/src/dialogs.rs:419
 msgid "No site permissions to reset"
 msgstr "Nessun permesso dei siti da ripristinare"
 
-#: apps/web/src/dialogs.rs:410
+#: apps/web/src/dialogs.rs:423
 msgid "Reset All Site Permissions?"
 msgstr "Ripristinare tutti i permessi dei siti?"
 
-#: apps/web/src/dialogs.rs:411
+#: apps/web/src/dialogs.rs:424
 msgid ""
 "Every site will ask again before using your camera, location, notifications "
 "and other permissions."
@@ -16540,203 +16552,203 @@ msgstr ""
 "Ogni sito chiederà di nuovo prima di usare fotocamera, posizione, notifiche "
 "e altri permessi."
 
-#: apps/web/src/dialogs.rs:423
+#: apps/web/src/dialogs.rs:436
 msgid "Site permissions reset"
 msgstr "Permessi dei siti ripristinati"
 
-#: apps/web/src/dialogs.rs:431
+#: apps/web/src/dialogs.rs:444
 msgid "Clear Browsing Data?"
 msgstr "Cancellare i dati di navigazione?"
 
-#: apps/web/src/dialogs.rs:432
+#: apps/web/src/dialogs.rs:445
 msgid "Data from all time will be removed."
 msgstr "Verranno rimossi i dati di tutto il periodo."
 
-#: apps/web/src/dialogs.rs:436
+#: apps/web/src/dialogs.rs:449
 msgid "Cookies and site data"
 msgstr "Cookie e dati dei siti"
 
-#: apps/web/src/dialogs.rs:440
+#: apps/web/src/dialogs.rs:453
 msgid "Cached files"
 msgstr "File nella cache"
 
-#: apps/web/src/dialogs.rs:444
+#: apps/web/src/dialogs.rs:457
 msgid "Browsing history"
 msgstr "Cronologia di navigazione"
 
-#: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
+#: apps/web/src/dialogs.rs:464 apps/web/src/dialogs.rs:720
 msgid "C_lear"
 msgstr "_Cancella"
 
-#: apps/web/src/dialogs.rs:465
+#: apps/web/src/dialogs.rs:478
 msgid "Browsing data cleared"
 msgstr "Dati di navigazione cancellati"
 
-#: apps/web/src/dialogs.rs:466
+#: apps/web/src/dialogs.rs:479
 msgid "Could not clear browsing data: {e}"
 msgstr "Impossibile cancellare i dati di navigazione: {e}"
 
-#: apps/web/src/dialogs.rs:487 apps/web/src/shortcuts.rs:55
+#: apps/web/src/dialogs.rs:500 apps/web/src/shortcuts.rs:55
 #: apps/web/src/window.rs:51
 msgid "History"
 msgstr "Cronologia"
 
-#: apps/web/src/dialogs.rs:492
+#: apps/web/src/dialogs.rs:505
 msgid "Clear All…"
 msgstr "Cancella tutto…"
 
-#: apps/web/src/dialogs.rs:496
+#: apps/web/src/dialogs.rs:509
 msgid "Search history"
 msgstr "Cerca nella cronologia"
 
-#: apps/web/src/dialogs.rs:502
+#: apps/web/src/dialogs.rs:515
 msgid "Search History"
 msgstr "Cerca nella cronologia"
 
-#: apps/web/src/dialogs.rs:646
+#: apps/web/src/dialogs.rs:659
 msgid "Remove {title}"
 msgstr "Rimuovi {title}"
 
-#: apps/web/src/dialogs.rs:704
+#: apps/web/src/dialogs.rs:717
 msgid "Clear All History?"
 msgstr "Cancellare tutta la cronologia?"
 
-#: apps/web/src/dialogs.rs:705
+#: apps/web/src/dialogs.rs:718
 msgid "All pages you visited will be removed from history."
 msgstr "Tutte le pagine visitate verranno rimosse dalla cronologia."
 
-#: apps/web/src/dialogs.rs:733
+#: apps/web/src/dialogs.rs:746
 msgid "No History"
 msgstr "Nessuna cronologia"
 
-#: apps/web/src/dialogs.rs:734
+#: apps/web/src/dialogs.rs:747
 msgid "Pages you visit will appear here"
 msgstr "Le pagine visitate appariranno qui"
 
-#: apps/web/src/dialogs.rs:782
+#: apps/web/src/dialogs.rs:795
 msgid "HTML Bookmark Files"
 msgstr "File di segnalibri HTML"
 
-#: apps/web/src/dialogs.rs:793
+#: apps/web/src/dialogs.rs:806
 msgid "Import Bookmarks"
 msgstr "Importa segnalibri"
 
-#: apps/web/src/dialogs.rs:813
+#: apps/web/src/dialogs.rs:826
 msgid "Imported {n} bookmark"
 msgid_plural "Imported {n} bookmarks"
 msgstr[0] "Importato {n} segnalibro"
 msgstr[1] "Importati {n} segnalibri"
 
-#: apps/web/src/dialogs.rs:816
+#: apps/web/src/dialogs.rs:829
 msgid "Could not read file: {e}"
 msgstr "Impossibile leggere il file: {e}"
 
-#: apps/web/src/dialogs.rs:825
+#: apps/web/src/dialogs.rs:838
 msgid "Export Bookmarks"
 msgstr "Esporta segnalibri"
 
-#: apps/web/src/dialogs.rs:847
+#: apps/web/src/dialogs.rs:860
 msgid "Could not export bookmarks: {e}"
 msgstr "Impossibile esportare i segnalibri: {e}"
 
-#: apps/web/src/dialogs.rs:888
+#: apps/web/src/dialogs.rs:901
 msgid "No Saved Passwords"
 msgstr "Nessuna password salvata"
 
-#: apps/web/src/dialogs.rs:889
+#: apps/web/src/dialogs.rs:902
 msgid "Logins you save while browsing appear here."
 msgstr "Gli accessi salvati durante la navigazione appaiono qui."
 
-#: apps/web/src/dialogs.rs:913
+#: apps/web/src/dialogs.rs:926
 msgid "the saved password for {host}"
 msgstr "la password salvata per {host}"
 
-#: apps/web/src/dialogs.rs:915
+#: apps/web/src/dialogs.rs:928
 msgid "the saved password for {user} on {host}"
 msgstr "la password salvata per {user} su {host}"
 
-#: apps/web/src/dialogs.rs:922
+#: apps/web/src/dialogs.rs:935
 msgid "Remove Password?"
 msgstr "Rimuovere la password?"
 
-#: apps/web/src/dialogs.rs:923
+#: apps/web/src/dialogs.rs:936
 msgid "This removes {who} from your keyring. It cannot be undone."
 msgstr ""
 "Questa operazione rimuove {who} dal portachiavi. Non può essere annullata."
 
-#: apps/web/src/dialogs.rs:958
+#: apps/web/src/dialogs.rs:971
 msgid "Password for {host} removed"
 msgstr "Password per {host} rimossa"
 
-#: apps/web/src/dialogs.rs:968
+#: apps/web/src/dialogs.rs:981
 msgid "Could not remove the password: {e}"
 msgstr "Impossibile rimuovere la password: {e}"
 
-#: apps/web/src/dialogs.rs:976
+#: apps/web/src/dialogs.rs:989
 msgid "Could not remove the password"
 msgstr "Impossibile rimuovere la password"
 
-#: apps/web/src/dialogs.rs:995
+#: apps/web/src/dialogs.rs:1008
 msgid "Keyring Unavailable"
 msgstr "Portachiavi non disponibile"
 
-#: apps/web/src/dialogs.rs:1023
+#: apps/web/src/dialogs.rs:1036
 msgid "(no user name)"
 msgstr "(nessun nome utente)"
 
-#: apps/web/src/dialogs.rs:1088 apps/web/src/dialogs.rs:1110
+#: apps/web/src/dialogs.rs:1101 apps/web/src/dialogs.rs:1123
 msgid "Could Not Install Web Application"
 msgstr "Impossibile installare l'applicazione web"
 
-#: apps/web/src/dialogs.rs:1089
+#: apps/web/src/dialogs.rs:1102
 msgid "No icon is available for this site."
 msgstr "Nessuna icona disponibile per questo sito."
 
-#: apps/web/src/dialogs.rs:1101
+#: apps/web/src/dialogs.rs:1114
 msgid "Web Application Installed"
 msgstr "Applicazione web installata"
 
-#: apps/web/src/dialogs.rs:1102
+#: apps/web/src/dialogs.rs:1115
 msgid "“{name}” can now be started from your applications."
 msgstr "«{name}» può ora essere avviata dalle applicazioni."
 
-#: apps/web/src/dialogs.rs:1125
+#: apps/web/src/dialogs.rs:1138
 msgid "Uninstall Web Application?"
 msgstr "Disinstallare l'applicazione web?"
 
-#: apps/web/src/dialogs.rs:1126
+#: apps/web/src/dialogs.rs:1139
 msgid "The launcher is removed. Its saved site data stays on disk."
 msgstr "Il launcher viene rimosso. I dati del sito salvati restano sul disco."
 
-#: apps/web/src/dialogs.rs:1142
+#: apps/web/src/dialogs.rs:1155
 msgid "Could Not Uninstall"
 msgstr "Impossibile disinstallare"
 
-#: apps/web/src/dialogs.rs:1156
+#: apps/web/src/dialogs.rs:1169
 msgid "Remove password for {host}"
 msgstr "Rimuovi password per {host}"
 
-#: apps/web/src/dialogs.rs:1158
+#: apps/web/src/dialogs.rs:1171
 msgid "Remove password for {user} on {host}"
 msgstr "Rimuovi password per {user} su {host}"
 
-#: apps/web/src/dialogs.rs:1172
+#: apps/web/src/dialogs.rs:1185
 msgid "No additional sites"
 msgstr "Nessun sito aggiuntivo"
 
-#: apps/web/src/dialogs.rs:1188
+#: apps/web/src/dialogs.rs:1201
 msgid "Remove {site}"
 msgstr "Rimuovi {site}"
 
-#: apps/web/src/dialogs.rs:1212
+#: apps/web/src/dialogs.rs:1225
 msgid "Web Application Settings"
 msgstr "Impostazioni dell'applicazione web"
 
-#: apps/web/src/dialogs.rs:1215
+#: apps/web/src/dialogs.rs:1228
 msgid "Additional Allowed Sites"
 msgstr "Siti consentiti aggiuntivi"
 
-#: apps/web/src/dialogs.rs:1216
+#: apps/web/src/dialogs.rs:1229
 msgid ""
 "Links to these sites open in this web application instead of the browser, "
 "like links within {host}. Write *.example.com to include all subdomains."
@@ -16745,11 +16757,11 @@ msgstr ""
 "nel browser, come i collegamenti all'interno di {host}. Scrivere "
 "*.example.com per includere tutti i sottodomini."
 
-#: apps/web/src/dialogs.rs:1229
+#: apps/web/src/dialogs.rs:1242
 msgid "Add site, e.g. accounts.example.com"
 msgstr "Aggiungi sito, per esempio accounts.example.com"
 
-#: apps/web/src/dialogs.rs:1250
+#: apps/web/src/dialogs.rs:1263
 msgid "Enter a site address, such as example.org"
 msgstr "Inserire l'indirizzo di un sito, come example.org"
 
@@ -16882,15 +16894,15 @@ msgstr "impossibile configurare o usare la sessione cifrata di Secret Service"
 msgid "Login"
 msgstr "Accesso"
 
-#: apps/web/src/settings.rs:152
+#: apps/web/src/settings.rs:157
 msgid "Enter a name for the search engine"
 msgstr "Inserire un nome per il motore di ricerca"
 
-#: apps/web/src/settings.rs:158
+#: apps/web/src/settings.rs:163
 msgid "A search engine with this name already exists"
 msgstr "Esiste già un motore di ricerca con questo nome"
 
-#: apps/web/src/settings.rs:160
+#: apps/web/src/settings.rs:165
 msgid ""
 "The address must start with https:// or http:// and contain %s where the "
 "search goes"

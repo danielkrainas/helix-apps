@@ -1141,10 +1141,10 @@ msgstr "計算(_A)"
 #: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
 #: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:290 apps/terminal/src/window.rs:1306
-#: apps/text-editor/src/window.rs:973 apps/web/src/app.rs:953
-#: apps/web/src/dialogs.rs:413 apps/web/src/dialogs.rs:451
-#: apps/web/src/dialogs.rs:707 apps/web/src/dialogs.rs:928
-#: apps/web/src/dialogs.rs:1130 apps/web/src/tab.rs:1163
+#: apps/text-editor/src/window.rs:973 apps/web/src/app.rs:954
+#: apps/web/src/dialogs.rs:426 apps/web/src/dialogs.rs:464
+#: apps/web/src/dialogs.rs:720 apps/web/src/dialogs.rs:941
+#: apps/web/src/dialogs.rs:1143 apps/web/src/tab.rs:1163
 #: apps/web/src/tab.rs:1176 crates/helix-app-common/src/links.rs:138
 msgid "_Cancel"
 msgstr "キャンセル(_C)"
@@ -1681,7 +1681,7 @@ msgid "The calendar and all its events will be deleted. This cannot be undone."
 msgstr "カレンダーとそのすべての予定が削除されます。元に戻すことはできません。"
 
 #: apps/calendar/src/manage.rs:375 apps/settings/src/ui/netedit.rs:390
-#: apps/web/src/dialogs.rs:928
+#: apps/web/src/dialogs.rs:941
 msgid "_Remove"
 msgstr "削除(_R)"
 
@@ -1944,7 +1944,7 @@ msgstr "サイドバーの切り替え"
 
 #: apps/calendar/src/ui.rs:253 apps/calendar/src/ui.rs:507
 #: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:155
-#: apps/web/src/dialogs.rs:589
+#: apps/web/src/dialogs.rs:602
 msgid "Today"
 msgstr "今日"
 
@@ -1999,7 +1999,7 @@ msgstr "予定を検索"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
 #: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:227
-#: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:739
+#: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:752
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
 msgstr "結果が見つかりません"
@@ -2007,7 +2007,7 @@ msgstr "結果が見つかりません"
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
 #: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:228
-#: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:740
+#: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:753
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
 msgstr "別の検索語を試してください"
@@ -2896,7 +2896,7 @@ msgid "Coordinated Universal Time (UTC)"
 msgstr "協定世界時 (UTC)"
 
 #: apps/clocks/src/tz.rs:312 apps/files/src/fmt.rs:35
-#: apps/web/src/dialogs.rs:590
+#: apps/web/src/dialogs.rs:603
 msgid "Yesterday"
 msgstr "昨日"
 
@@ -3035,8 +3035,8 @@ msgstr "現在地"
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
 #: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/input.rs:367
 #: apps/weather/src/ui.rs:902 apps/web/src/dialogs.rs:198
-#: apps/web/src/dialogs.rs:643 apps/web/src/dialogs.rs:1030
-#: apps/web/src/dialogs.rs:1185
+#: apps/web/src/dialogs.rs:656 apps/web/src/dialogs.rs:1043
+#: apps/web/src/dialogs.rs:1198
 msgid "Remove"
 msgstr "削除"
 
@@ -10883,7 +10883,7 @@ msgid "Other Device"
 msgstr "その他のデバイス"
 
 #: apps/settings/src/defaults.rs:15 apps/web/src/app.rs:128
-#: apps/web/src/app.rs:152 apps/web/src/app.rs:979 apps/web/src/window.rs:320
+#: apps/web/src/app.rs:152 apps/web/src/app.rs:988 apps/web/src/window.rs:320
 #: apps/web/src/window.rs:1574
 msgid "Web"
 msgstr "ウェブ"
@@ -11987,7 +11987,7 @@ msgstr "{name} をアンインストールしますか?"
 msgid "The app is removed from this computer. Its data and settings are kept."
 msgstr "アプリはこのコンピューターから削除されます。データと設定は残ります。"
 
-#: apps/settings/src/ui/apps.rs:554 apps/web/src/dialogs.rs:1130
+#: apps/settings/src/ui/apps.rs:554 apps/web/src/dialogs.rs:1143
 msgid "_Uninstall"
 msgstr "アンインストール(_U)"
 
@@ -12236,7 +12236,7 @@ msgstr "位置情報サービスが必要です"
 msgid "Date &amp; Time"
 msgstr "日付と時刻"
 
-#: apps/settings/src/ui/datetime.rs:144 apps/web/src/dialogs.rs:870
+#: apps/settings/src/ui/datetime.rs:144 apps/web/src/dialogs.rs:883
 msgid "Loading…"
 msgstr "読み込み中…"
 
@@ -12400,7 +12400,7 @@ msgstr "端が切れて表示されるテレビ向けに画像を縮小します
 msgid "The display settings changed."
 msgstr "ディスプレイの設定が変更されました。"
 
-#: apps/settings/src/ui/displays.rs:162 apps/web/src/dialogs.rs:413
+#: apps/settings/src/ui/displays.rs:162 apps/web/src/dialogs.rs:426
 msgid "_Reset"
 msgstr "元に戻す(_R)"
 
@@ -16280,7 +16280,7 @@ msgstr "インターネット"
 msgid "web"
 msgstr "ウェブ"
 
-#: apps/web/src/app.rs:152 apps/web/src/app.rs:979
+#: apps/web/src/app.rs:152 apps/web/src/app.rs:988
 msgid "Browse the web"
 msgstr "ウェブを閲覧します"
 
@@ -16300,7 +16300,11 @@ msgstr "ファイルをダウンロードしますか?"
 msgid "{site} wants to save “{name}” to your Downloads folder."
 msgstr "{site} が「{name}」をダウンロードフォルダーに保存しようとしています。"
 
-#: apps/web/src/app.rs:953
+#: apps/web/src/app.rs:955
+msgid "_Always Download"
+msgstr "常にダウンロード(_A)"
+
+#: apps/web/src/app.rs:956
 msgid "_Download"
 msgstr "ダウンロード(_D)"
 
@@ -16398,66 +16402,74 @@ msgid "Windows opened by pages without a click"
 msgstr "クリックなしでページが開くウィンドウ"
 
 #: apps/web/src/dialogs.rs:311
+msgid "Ask Before Downloading"
+msgstr "ダウンロード前に確認する"
+
+#: apps/web/src/dialogs.rs:312
+msgid "Files a page saves without a click"
+msgstr "クリックなしでページが保存するファイル"
+
+#: apps/web/src/dialogs.rs:324
 msgid "Cookies"
 msgstr "Cookie"
 
-#: apps/web/src/dialogs.rs:313
+#: apps/web/src/dialogs.rs:326
 msgid "Always Accept"
 msgstr "常に受け入れる"
 
-#: apps/web/src/dialogs.rs:314
+#: apps/web/src/dialogs.rs:327
 msgid "Block Third-Party Cookies"
 msgstr "サードパーティ Cookie をブロック"
 
-#: apps/web/src/dialogs.rs:315
+#: apps/web/src/dialogs.rs:328
 msgid "Block All Cookies"
 msgstr "すべての Cookie をブロック"
 
-#: apps/web/src/dialogs.rs:334 apps/web/src/dialogs.rs:861
+#: apps/web/src/dialogs.rs:347 apps/web/src/dialogs.rs:874
 msgid "Passwords"
 msgstr "パスワード"
 
-#: apps/web/src/dialogs.rs:335
+#: apps/web/src/dialogs.rs:348
 msgid "Passwords are kept in your keyring (Secret Service)."
 msgstr "パスワードはキーリング (Secret Service) に保存されます。"
 
-#: apps/web/src/dialogs.rs:338
+#: apps/web/src/dialogs.rs:351
 msgid "Remember Passwords"
 msgstr "パスワードを記憶"
 
-#: apps/web/src/dialogs.rs:339
+#: apps/web/src/dialogs.rs:352
 msgid "Offer to save site logins and fill them in"
 msgstr "サイトのログイン情報の保存と入力を提案します"
 
-#: apps/web/src/dialogs.rs:351
+#: apps/web/src/dialogs.rs:364
 msgid "Saved Passwords…"
 msgstr "保存したパスワード…"
 
-#: apps/web/src/dialogs.rs:365
+#: apps/web/src/dialogs.rs:378
 msgid "Browsing Data"
 msgstr "閲覧データ"
 
-#: apps/web/src/dialogs.rs:368
+#: apps/web/src/dialogs.rs:381
 msgid "Clear Browsing Data…"
 msgstr "閲覧データを消去…"
 
-#: apps/web/src/dialogs.rs:374
+#: apps/web/src/dialogs.rs:387
 msgid "Reset All Site Permissions"
 msgstr "すべてのサイトの権限をリセット"
 
-#: apps/web/src/dialogs.rs:375
+#: apps/web/src/dialogs.rs:388
 msgid "Forget every allow/deny decision"
 msgstr "許可/拒否の判断をすべて消去します"
 
-#: apps/web/src/dialogs.rs:406
+#: apps/web/src/dialogs.rs:419
 msgid "No site permissions to reset"
 msgstr "リセットするサイトの権限はありません"
 
-#: apps/web/src/dialogs.rs:410
+#: apps/web/src/dialogs.rs:423
 msgid "Reset All Site Permissions?"
 msgstr "すべてのサイトの権限をリセットしますか?"
 
-#: apps/web/src/dialogs.rs:411
+#: apps/web/src/dialogs.rs:424
 msgid ""
 "Every site will ask again before using your camera, location, notifications "
 "and other permissions."
@@ -16465,201 +16477,201 @@ msgstr ""
 "どのサイトも、カメラ、位置情報、通知などの権限を使用する前に再度確認するよう"
 "になります。"
 
-#: apps/web/src/dialogs.rs:423
+#: apps/web/src/dialogs.rs:436
 msgid "Site permissions reset"
 msgstr "サイトの権限をリセットしました"
 
-#: apps/web/src/dialogs.rs:431
+#: apps/web/src/dialogs.rs:444
 msgid "Clear Browsing Data?"
 msgstr "閲覧データを消去しますか?"
 
-#: apps/web/src/dialogs.rs:432
+#: apps/web/src/dialogs.rs:445
 msgid "Data from all time will be removed."
 msgstr "すべての期間のデータが削除されます。"
 
-#: apps/web/src/dialogs.rs:436
+#: apps/web/src/dialogs.rs:449
 msgid "Cookies and site data"
 msgstr "Cookie とサイトデータ"
 
-#: apps/web/src/dialogs.rs:440
+#: apps/web/src/dialogs.rs:453
 msgid "Cached files"
 msgstr "キャッシュされたファイル"
 
-#: apps/web/src/dialogs.rs:444
+#: apps/web/src/dialogs.rs:457
 msgid "Browsing history"
 msgstr "閲覧履歴"
 
-#: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
+#: apps/web/src/dialogs.rs:464 apps/web/src/dialogs.rs:720
 msgid "C_lear"
 msgstr "消去(_L)"
 
-#: apps/web/src/dialogs.rs:465
+#: apps/web/src/dialogs.rs:478
 msgid "Browsing data cleared"
 msgstr "閲覧データを消去しました"
 
-#: apps/web/src/dialogs.rs:466
+#: apps/web/src/dialogs.rs:479
 msgid "Could not clear browsing data: {e}"
 msgstr "閲覧データを消去できませんでした: {e}"
 
-#: apps/web/src/dialogs.rs:487 apps/web/src/shortcuts.rs:55
+#: apps/web/src/dialogs.rs:500 apps/web/src/shortcuts.rs:55
 #: apps/web/src/window.rs:51
 msgid "History"
 msgstr "履歴"
 
-#: apps/web/src/dialogs.rs:492
+#: apps/web/src/dialogs.rs:505
 msgid "Clear All…"
 msgstr "すべて消去…"
 
-#: apps/web/src/dialogs.rs:496
+#: apps/web/src/dialogs.rs:509
 msgid "Search history"
 msgstr "履歴を検索"
 
-#: apps/web/src/dialogs.rs:502
+#: apps/web/src/dialogs.rs:515
 msgid "Search History"
 msgstr "履歴を検索"
 
-#: apps/web/src/dialogs.rs:646
+#: apps/web/src/dialogs.rs:659
 msgid "Remove {title}"
 msgstr "{title} を削除"
 
-#: apps/web/src/dialogs.rs:704
+#: apps/web/src/dialogs.rs:717
 msgid "Clear All History?"
 msgstr "すべての履歴を消去しますか?"
 
-#: apps/web/src/dialogs.rs:705
+#: apps/web/src/dialogs.rs:718
 msgid "All pages you visited will be removed from history."
 msgstr "訪問したすべてのページが履歴から削除されます。"
 
-#: apps/web/src/dialogs.rs:733
+#: apps/web/src/dialogs.rs:746
 msgid "No History"
 msgstr "履歴はありません"
 
-#: apps/web/src/dialogs.rs:734
+#: apps/web/src/dialogs.rs:747
 msgid "Pages you visit will appear here"
 msgstr "訪問したページがここに表示されます"
 
-#: apps/web/src/dialogs.rs:782
+#: apps/web/src/dialogs.rs:795
 msgid "HTML Bookmark Files"
 msgstr "HTML ブックマークファイル"
 
-#: apps/web/src/dialogs.rs:793
+#: apps/web/src/dialogs.rs:806
 msgid "Import Bookmarks"
 msgstr "ブックマークのインポート"
 
-#: apps/web/src/dialogs.rs:813
+#: apps/web/src/dialogs.rs:826
 msgid "Imported {n} bookmark"
 msgid_plural "Imported {n} bookmarks"
 msgstr[0] "{n} 件のブックマークをインポートしました"
 
-#: apps/web/src/dialogs.rs:816
+#: apps/web/src/dialogs.rs:829
 msgid "Could not read file: {e}"
 msgstr "ファイルを読み取れませんでした: {e}"
 
-#: apps/web/src/dialogs.rs:825
+#: apps/web/src/dialogs.rs:838
 msgid "Export Bookmarks"
 msgstr "ブックマークのエクスポート"
 
-#: apps/web/src/dialogs.rs:847
+#: apps/web/src/dialogs.rs:860
 msgid "Could not export bookmarks: {e}"
 msgstr "ブックマークをエクスポートできませんでした: {e}"
 
-#: apps/web/src/dialogs.rs:888
+#: apps/web/src/dialogs.rs:901
 msgid "No Saved Passwords"
 msgstr "保存したパスワードはありません"
 
-#: apps/web/src/dialogs.rs:889
+#: apps/web/src/dialogs.rs:902
 msgid "Logins you save while browsing appear here."
 msgstr "ブラウジング中に保存したログイン情報がここに表示されます。"
 
-#: apps/web/src/dialogs.rs:913
+#: apps/web/src/dialogs.rs:926
 msgid "the saved password for {host}"
 msgstr "{host} の保存したパスワード"
 
-#: apps/web/src/dialogs.rs:915
+#: apps/web/src/dialogs.rs:928
 msgid "the saved password for {user} on {host}"
 msgstr "{host} の {user} の保存したパスワード"
 
-#: apps/web/src/dialogs.rs:922
+#: apps/web/src/dialogs.rs:935
 msgid "Remove Password?"
 msgstr "パスワードを削除しますか?"
 
-#: apps/web/src/dialogs.rs:923
+#: apps/web/src/dialogs.rs:936
 msgid "This removes {who} from your keyring. It cannot be undone."
 msgstr "キーリングから{who}を削除します。元に戻すことはできません。"
 
-#: apps/web/src/dialogs.rs:958
+#: apps/web/src/dialogs.rs:971
 msgid "Password for {host} removed"
 msgstr "{host} のパスワードを削除しました"
 
-#: apps/web/src/dialogs.rs:968
+#: apps/web/src/dialogs.rs:981
 msgid "Could not remove the password: {e}"
 msgstr "パスワードを削除できませんでした: {e}"
 
-#: apps/web/src/dialogs.rs:976
+#: apps/web/src/dialogs.rs:989
 msgid "Could not remove the password"
 msgstr "パスワードを削除できませんでした"
 
-#: apps/web/src/dialogs.rs:995
+#: apps/web/src/dialogs.rs:1008
 msgid "Keyring Unavailable"
 msgstr "キーリングを利用できません"
 
-#: apps/web/src/dialogs.rs:1023
+#: apps/web/src/dialogs.rs:1036
 msgid "(no user name)"
 msgstr "(ユーザー名なし)"
 
-#: apps/web/src/dialogs.rs:1088 apps/web/src/dialogs.rs:1110
+#: apps/web/src/dialogs.rs:1101 apps/web/src/dialogs.rs:1123
 msgid "Could Not Install Web Application"
 msgstr "ウェブアプリケーションをインストールできませんでした"
 
-#: apps/web/src/dialogs.rs:1089
+#: apps/web/src/dialogs.rs:1102
 msgid "No icon is available for this site."
 msgstr "このサイトにはアイコンがありません。"
 
-#: apps/web/src/dialogs.rs:1101
+#: apps/web/src/dialogs.rs:1114
 msgid "Web Application Installed"
 msgstr "ウェブアプリケーションをインストールしました"
 
-#: apps/web/src/dialogs.rs:1102
+#: apps/web/src/dialogs.rs:1115
 msgid "“{name}” can now be started from your applications."
 msgstr "「{name}」をアプリケーションから起動できるようになりました。"
 
-#: apps/web/src/dialogs.rs:1125
+#: apps/web/src/dialogs.rs:1138
 msgid "Uninstall Web Application?"
 msgstr "ウェブアプリケーションをアンインストールしますか?"
 
-#: apps/web/src/dialogs.rs:1126
+#: apps/web/src/dialogs.rs:1139
 msgid "The launcher is removed. Its saved site data stays on disk."
 msgstr "ランチャーは削除されます。保存されたサイトデータはディスクに残ります。"
 
-#: apps/web/src/dialogs.rs:1142
+#: apps/web/src/dialogs.rs:1155
 msgid "Could Not Uninstall"
 msgstr "アンインストールできませんでした"
 
-#: apps/web/src/dialogs.rs:1156
+#: apps/web/src/dialogs.rs:1169
 msgid "Remove password for {host}"
 msgstr "{host} のパスワードを削除"
 
-#: apps/web/src/dialogs.rs:1158
+#: apps/web/src/dialogs.rs:1171
 msgid "Remove password for {user} on {host}"
 msgstr "{host} の {user} のパスワードを削除"
 
-#: apps/web/src/dialogs.rs:1172
+#: apps/web/src/dialogs.rs:1185
 msgid "No additional sites"
 msgstr "追加のサイトはありません"
 
-#: apps/web/src/dialogs.rs:1188
+#: apps/web/src/dialogs.rs:1201
 msgid "Remove {site}"
 msgstr "{site} を削除"
 
-#: apps/web/src/dialogs.rs:1212
+#: apps/web/src/dialogs.rs:1225
 msgid "Web Application Settings"
 msgstr "ウェブアプリケーションの設定"
 
-#: apps/web/src/dialogs.rs:1215
+#: apps/web/src/dialogs.rs:1228
 msgid "Additional Allowed Sites"
 msgstr "追加で許可するサイト"
 
-#: apps/web/src/dialogs.rs:1216
+#: apps/web/src/dialogs.rs:1229
 msgid ""
 "Links to these sites open in this web application instead of the browser, "
 "like links within {host}. Write *.example.com to include all subdomains."
@@ -16668,11 +16680,11 @@ msgstr ""
 "ウェブアプリケーションで開きます。すべてのサブドメインを含めるには "
 "*.example.com と入力してください。"
 
-#: apps/web/src/dialogs.rs:1229
+#: apps/web/src/dialogs.rs:1242
 msgid "Add site, e.g. accounts.example.com"
 msgstr "サイトを追加 (例: accounts.example.com)"
 
-#: apps/web/src/dialogs.rs:1250
+#: apps/web/src/dialogs.rs:1263
 msgid "Enter a site address, such as example.org"
 msgstr "example.org のようなサイトのアドレスを入力してください"
 
@@ -16804,15 +16816,15 @@ msgstr "暗号化された Secret Service セッションを設定または使�
 msgid "Login"
 msgstr "ログイン"
 
-#: apps/web/src/settings.rs:152
+#: apps/web/src/settings.rs:157
 msgid "Enter a name for the search engine"
 msgstr "検索エンジンの名前を入力してください"
 
-#: apps/web/src/settings.rs:158
+#: apps/web/src/settings.rs:163
 msgid "A search engine with this name already exists"
 msgstr "この名前の検索エンジンはすでに存在します"
 
-#: apps/web/src/settings.rs:160
+#: apps/web/src/settings.rs:165
 msgid ""
 "The address must start with https:// or http:// and contain %s where the "
 "search goes"

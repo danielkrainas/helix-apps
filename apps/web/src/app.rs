@@ -891,7 +891,7 @@ impl App {
                     t.download_gate.set(gate);
                     ok
                 });
-            if admitted {
+            if admitted || !app.settings.borrow().ask_before_downloads {
                 app.start_download(d, &name);
             } else {
                 app.confirm_download(d, &name);
@@ -950,7 +950,11 @@ impl App {
                 name = shown
             )),
         );
-        dialog.add_responses(&[("cancel", tr("_Cancel")), ("download", tr("_Download"))]);
+        dialog.add_responses(&[
+            ("cancel", tr("_Cancel")),
+            ("always", tr("_Always Download")),
+            ("download", tr("_Download")),
+        ]);
         dialog.set_default_response(Some("cancel"));
         dialog.set_close_response("cancel");
         let weak = self.this.clone();
@@ -958,6 +962,11 @@ impl App {
         let name = name.to_string();
         dialog.connect_response(None, move |_, response| match weak.upgrade() {
             Some(app) if response == "download" => app.start_download(&d, &name),
+            Some(app) if response == "always" => {
+                // Preferences › Ask Before Downloading turns it back on.
+                app.update_settings(|s| s.ask_before_downloads = false);
+                app.start_download(&d, &name);
+            }
             _ => d.cancel(),
         });
         dialog.present(Some(&w.win));

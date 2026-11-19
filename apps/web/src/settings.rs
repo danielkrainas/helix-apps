@@ -65,6 +65,10 @@ pub struct Settings {
     pub reader_font: String,
     /// `light` | `dark` (`org.gnome.Epiphany.reader color-scheme`).
     pub reader_colors: String,
+    /// Ask before saving a download the user didn't start (Helix's own
+    /// key, kept only in settings.json: Epiphany's `ask-on-download`
+    /// means something else and is off by default).
+    pub ask_before_downloads: bool,
 }
 
 impl Default for Settings {
@@ -81,6 +85,7 @@ impl Default for Settings {
             remember_passwords: true,
             reader_font: "sans".into(),
             reader_colors: "light".into(),
+            ask_before_downloads: true,
         }
     }
 }
@@ -410,6 +415,9 @@ mod tests {
         assert_eq!(s.cookies_policy, "no-third-party");
         assert_eq!(s.home_url().as_deref(), Some("https://h/"));
         assert!(s.javascript);
+        assert!(s.ask_before_downloads);
+        let s: Settings = serde_json::from_str(r#"{"ask_before_downloads": false}"#).unwrap();
+        assert!(!s.ask_before_downloads);
     }
 
     #[test]

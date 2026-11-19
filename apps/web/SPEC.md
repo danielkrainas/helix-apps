@@ -206,8 +206,13 @@ Web browser.
   forward or reload; redirects continue the navigation). Anything else —
   a page navigating to a file by itself, a second or later download from
   the same page — asks *Download File?* ("{site} wants to save “{name}”
-  to your Downloads folder.", *Cancel* / *Download*); cancelling cancels
-  the download.
+  to your Downloads folder.", *Cancel* / *Always Download* /
+  *Download*); cancelling cancels the download. *Always Download* saves
+  it and turns off *Ask Before Downloading* (Preferences › Privacy › Web
+  Content, on by default; kept in `settings.json` as
+  `ask_before_downloads`, not mirrored to Epiphany's `ask-on-download`,
+  which means something else), after which such downloads start without
+  asking. Downloads are named and placed the same way either way.
 - Destination: XDG Download directory (fallback `~/Downloads`) with the
   server-suggested name sanitised (no path separators, control chars,
   Unicode formatting characters such as bidirectional overrides, which can
@@ -383,7 +388,7 @@ Web browser.
   (empty name, a name already in use, or an address that does not start
   with https:// / http:// or lacks `%s`); editing either row clears the
   mark.
-- Privacy: Enable JavaScript, Block pop-up windows, Cookies (Always
+- Privacy: Enable JavaScript, Block pop-up windows, Ask Before Downloading, Cookies (Always
   accept / Block third-party (default) / Block all); Passwords (Remember
   Passwords, Saved Passwords…); Clear Browsing Data… (cookies & site data,
   cache, history — all time), confirmed by its dialog and reported when

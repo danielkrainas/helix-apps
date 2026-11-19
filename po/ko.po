@@ -1136,10 +1136,10 @@ msgstr "계산(_A)"
 #: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
 #: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:290 apps/terminal/src/window.rs:1306
-#: apps/text-editor/src/window.rs:973 apps/web/src/app.rs:953
-#: apps/web/src/dialogs.rs:413 apps/web/src/dialogs.rs:451
-#: apps/web/src/dialogs.rs:707 apps/web/src/dialogs.rs:928
-#: apps/web/src/dialogs.rs:1130 apps/web/src/tab.rs:1163
+#: apps/text-editor/src/window.rs:973 apps/web/src/app.rs:954
+#: apps/web/src/dialogs.rs:426 apps/web/src/dialogs.rs:464
+#: apps/web/src/dialogs.rs:720 apps/web/src/dialogs.rs:941
+#: apps/web/src/dialogs.rs:1143 apps/web/src/tab.rs:1163
 #: apps/web/src/tab.rs:1176 crates/helix-app-common/src/links.rs:138
 msgid "_Cancel"
 msgstr "취소(_C)"
@@ -1673,7 +1673,7 @@ msgid "The calendar and all its events will be deleted. This cannot be undone."
 msgstr "캘린더와 모든 일정이 삭제됩니다. 되돌릴 수 없습니다."
 
 #: apps/calendar/src/manage.rs:375 apps/settings/src/ui/netedit.rs:390
-#: apps/web/src/dialogs.rs:928
+#: apps/web/src/dialogs.rs:941
 msgid "_Remove"
 msgstr "제거(_R)"
 
@@ -1936,7 +1936,7 @@ msgstr "가장자리 창 표시 전환"
 
 #: apps/calendar/src/ui.rs:253 apps/calendar/src/ui.rs:507
 #: apps/clocks/src/tz.rs:313 apps/weather/src/timefmt.rs:155
-#: apps/web/src/dialogs.rs:589
+#: apps/web/src/dialogs.rs:602
 msgid "Today"
 msgstr "오늘"
 
@@ -1991,7 +1991,7 @@ msgstr "일정 검색"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
 #: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:227
-#: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:739
+#: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:752
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
 msgstr "결과 없음"
@@ -1999,7 +1999,7 @@ msgstr "결과 없음"
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
 #: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:228
-#: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:740
+#: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:753
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
 msgstr "다른 검색어를 사용해 보십시오"
@@ -2885,7 +2885,7 @@ msgid "Coordinated Universal Time (UTC)"
 msgstr "협정 세계시(UTC)"
 
 #: apps/clocks/src/tz.rs:312 apps/files/src/fmt.rs:35
-#: apps/web/src/dialogs.rs:590
+#: apps/web/src/dialogs.rs:603
 msgid "Yesterday"
 msgstr "어제"
 
@@ -3024,8 +3024,8 @@ msgstr "현재 위치"
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
 #: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/input.rs:367
 #: apps/weather/src/ui.rs:902 apps/web/src/dialogs.rs:198
-#: apps/web/src/dialogs.rs:643 apps/web/src/dialogs.rs:1030
-#: apps/web/src/dialogs.rs:1185
+#: apps/web/src/dialogs.rs:656 apps/web/src/dialogs.rs:1043
+#: apps/web/src/dialogs.rs:1198
 msgid "Remove"
 msgstr "제거"
 
@@ -10834,7 +10834,7 @@ msgid "Other Device"
 msgstr "기타 장치"
 
 #: apps/settings/src/defaults.rs:15 apps/web/src/app.rs:128
-#: apps/web/src/app.rs:152 apps/web/src/app.rs:979 apps/web/src/window.rs:320
+#: apps/web/src/app.rs:152 apps/web/src/app.rs:988 apps/web/src/window.rs:320
 #: apps/web/src/window.rs:1574
 msgid "Web"
 msgstr "웹"
@@ -11930,7 +11930,7 @@ msgstr "{name}을(를) 제거할까요?"
 msgid "The app is removed from this computer. Its data and settings are kept."
 msgstr "앱이 이 컴퓨터에서 제거됩니다. 데이터와 설정은 유지됩니다."
 
-#: apps/settings/src/ui/apps.rs:554 apps/web/src/dialogs.rs:1130
+#: apps/settings/src/ui/apps.rs:554 apps/web/src/dialogs.rs:1143
 msgid "_Uninstall"
 msgstr "제거(_U)"
 
@@ -12179,7 +12179,7 @@ msgstr "위치 서비스가 필요합니다"
 msgid "Date &amp; Time"
 msgstr "날짜 및 시각"
 
-#: apps/settings/src/ui/datetime.rs:144 apps/web/src/dialogs.rs:870
+#: apps/settings/src/ui/datetime.rs:144 apps/web/src/dialogs.rs:883
 msgid "Loading…"
 msgstr "불러오는 중…"
 
@@ -12343,7 +12343,7 @@ msgstr "가장자리가 잘리는 TV에 맞게 화면을 줄입니다"
 msgid "The display settings changed."
 msgstr "디스플레이 설정을 바꿨습니다."
 
-#: apps/settings/src/ui/displays.rs:162 apps/web/src/dialogs.rs:413
+#: apps/settings/src/ui/displays.rs:162 apps/web/src/dialogs.rs:426
 msgid "_Reset"
 msgstr "되돌리기(_R)"
 
@@ -16208,7 +16208,7 @@ msgstr "인터넷"
 msgid "web"
 msgstr "웹"
 
-#: apps/web/src/app.rs:152 apps/web/src/app.rs:979
+#: apps/web/src/app.rs:152 apps/web/src/app.rs:988
 msgid "Browse the web"
 msgstr "웹을 탐색합니다"
 
@@ -16228,7 +16228,11 @@ msgstr "파일을 다운로드하시겠습니까?"
 msgid "{site} wants to save “{name}” to your Downloads folder."
 msgstr "{site}에서 “{name}”을(를) 다운로드 폴더에 저장하려고 합니다."
 
-#: apps/web/src/app.rs:953
+#: apps/web/src/app.rs:955
+msgid "_Always Download"
+msgstr "항상 다운로드(_A)"
+
+#: apps/web/src/app.rs:956
 msgid "_Download"
 msgstr "다운로드(_D)"
 
@@ -16324,267 +16328,275 @@ msgid "Windows opened by pages without a click"
 msgstr "클릭하지 않았는데 페이지가 연 창"
 
 #: apps/web/src/dialogs.rs:311
+msgid "Ask Before Downloading"
+msgstr "다운로드 전에 묻기"
+
+#: apps/web/src/dialogs.rs:312
+msgid "Files a page saves without a click"
+msgstr "클릭 없이 페이지가 저장하는 파일"
+
+#: apps/web/src/dialogs.rs:324
 msgid "Cookies"
 msgstr "쿠키"
 
-#: apps/web/src/dialogs.rs:313
+#: apps/web/src/dialogs.rs:326
 msgid "Always Accept"
 msgstr "항상 허용"
 
-#: apps/web/src/dialogs.rs:314
+#: apps/web/src/dialogs.rs:327
 msgid "Block Third-Party Cookies"
 msgstr "서드 파티 쿠키 차단"
 
-#: apps/web/src/dialogs.rs:315
+#: apps/web/src/dialogs.rs:328
 msgid "Block All Cookies"
 msgstr "모든 쿠키 차단"
 
-#: apps/web/src/dialogs.rs:334 apps/web/src/dialogs.rs:861
+#: apps/web/src/dialogs.rs:347 apps/web/src/dialogs.rs:874
 msgid "Passwords"
 msgstr "암호"
 
-#: apps/web/src/dialogs.rs:335
+#: apps/web/src/dialogs.rs:348
 msgid "Passwords are kept in your keyring (Secret Service)."
 msgstr "암호는 키 모음(Secret Service)에 보관됩니다."
 
-#: apps/web/src/dialogs.rs:338
+#: apps/web/src/dialogs.rs:351
 msgid "Remember Passwords"
 msgstr "암호 기억"
 
-#: apps/web/src/dialogs.rs:339
+#: apps/web/src/dialogs.rs:352
 msgid "Offer to save site logins and fill them in"
 msgstr "사이트 로그인 정보를 저장하고 채워 넣을지 묻습니다"
 
-#: apps/web/src/dialogs.rs:351
+#: apps/web/src/dialogs.rs:364
 msgid "Saved Passwords…"
 msgstr "저장한 암호…"
 
-#: apps/web/src/dialogs.rs:365
+#: apps/web/src/dialogs.rs:378
 msgid "Browsing Data"
 msgstr "탐색 데이터"
 
-#: apps/web/src/dialogs.rs:368
+#: apps/web/src/dialogs.rs:381
 msgid "Clear Browsing Data…"
 msgstr "탐색 데이터 지우기…"
 
-#: apps/web/src/dialogs.rs:374
+#: apps/web/src/dialogs.rs:387
 msgid "Reset All Site Permissions"
 msgstr "모든 사이트 권한 초기화"
 
-#: apps/web/src/dialogs.rs:375
+#: apps/web/src/dialogs.rs:388
 msgid "Forget every allow/deny decision"
 msgstr "모든 허용/거부 결정을 잊습니다"
 
-#: apps/web/src/dialogs.rs:406
+#: apps/web/src/dialogs.rs:419
 msgid "No site permissions to reset"
 msgstr "초기화할 사이트 권한이 없습니다"
 
-#: apps/web/src/dialogs.rs:410
+#: apps/web/src/dialogs.rs:423
 msgid "Reset All Site Permissions?"
 msgstr "모든 사이트 권한을 초기화하시겠습니까?"
 
-#: apps/web/src/dialogs.rs:411
+#: apps/web/src/dialogs.rs:424
 msgid ""
 "Every site will ask again before using your camera, location, notifications "
 "and other permissions."
 msgstr ""
 "모든 사이트가 카메라, 위치, 알림 등의 권한을 사용하기 전에 다시 묻습니다."
 
-#: apps/web/src/dialogs.rs:423
+#: apps/web/src/dialogs.rs:436
 msgid "Site permissions reset"
 msgstr "사이트 권한을 초기화했습니다"
 
-#: apps/web/src/dialogs.rs:431
+#: apps/web/src/dialogs.rs:444
 msgid "Clear Browsing Data?"
 msgstr "탐색 데이터를 지우시겠습니까?"
 
-#: apps/web/src/dialogs.rs:432
+#: apps/web/src/dialogs.rs:445
 msgid "Data from all time will be removed."
 msgstr "전체 기간의 데이터를 제거합니다."
 
-#: apps/web/src/dialogs.rs:436
+#: apps/web/src/dialogs.rs:449
 msgid "Cookies and site data"
 msgstr "쿠키 및 사이트 데이터"
 
-#: apps/web/src/dialogs.rs:440
+#: apps/web/src/dialogs.rs:453
 msgid "Cached files"
 msgstr "캐시된 파일"
 
-#: apps/web/src/dialogs.rs:444
+#: apps/web/src/dialogs.rs:457
 msgid "Browsing history"
 msgstr "탐색 기록"
 
-#: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
+#: apps/web/src/dialogs.rs:464 apps/web/src/dialogs.rs:720
 msgid "C_lear"
 msgstr "지우기(_L)"
 
-#: apps/web/src/dialogs.rs:465
+#: apps/web/src/dialogs.rs:478
 msgid "Browsing data cleared"
 msgstr "탐색 데이터를 지웠습니다"
 
-#: apps/web/src/dialogs.rs:466
+#: apps/web/src/dialogs.rs:479
 msgid "Could not clear browsing data: {e}"
 msgstr "탐색 데이터를 지울 수 없습니다: {e}"
 
-#: apps/web/src/dialogs.rs:487 apps/web/src/shortcuts.rs:55
+#: apps/web/src/dialogs.rs:500 apps/web/src/shortcuts.rs:55
 #: apps/web/src/window.rs:51
 msgid "History"
 msgstr "기록"
 
-#: apps/web/src/dialogs.rs:492
+#: apps/web/src/dialogs.rs:505
 msgid "Clear All…"
 msgstr "모두 지우기…"
 
-#: apps/web/src/dialogs.rs:496
+#: apps/web/src/dialogs.rs:509
 msgid "Search history"
 msgstr "기록 검색"
 
-#: apps/web/src/dialogs.rs:502
+#: apps/web/src/dialogs.rs:515
 msgid "Search History"
 msgstr "기록 검색"
 
-#: apps/web/src/dialogs.rs:646
+#: apps/web/src/dialogs.rs:659
 msgid "Remove {title}"
 msgstr "{title} 제거"
 
-#: apps/web/src/dialogs.rs:704
+#: apps/web/src/dialogs.rs:717
 msgid "Clear All History?"
 msgstr "모든 기록을 지우시겠습니까?"
 
-#: apps/web/src/dialogs.rs:705
+#: apps/web/src/dialogs.rs:718
 msgid "All pages you visited will be removed from history."
 msgstr "방문한 모든 페이지를 기록에서 제거합니다."
 
-#: apps/web/src/dialogs.rs:733
+#: apps/web/src/dialogs.rs:746
 msgid "No History"
 msgstr "기록 없음"
 
-#: apps/web/src/dialogs.rs:734
+#: apps/web/src/dialogs.rs:747
 msgid "Pages you visit will appear here"
 msgstr "방문한 페이지가 여기에 나타납니다"
 
-#: apps/web/src/dialogs.rs:782
+#: apps/web/src/dialogs.rs:795
 msgid "HTML Bookmark Files"
 msgstr "HTML 책갈피 파일"
 
-#: apps/web/src/dialogs.rs:793
+#: apps/web/src/dialogs.rs:806
 msgid "Import Bookmarks"
 msgstr "책갈피 가져오기"
 
-#: apps/web/src/dialogs.rs:813
+#: apps/web/src/dialogs.rs:826
 msgid "Imported {n} bookmark"
 msgid_plural "Imported {n} bookmarks"
 msgstr[0] "책갈피 {n}개를 가져왔습니다"
 
-#: apps/web/src/dialogs.rs:816
+#: apps/web/src/dialogs.rs:829
 msgid "Could not read file: {e}"
 msgstr "파일을 읽을 수 없습니다: {e}"
 
-#: apps/web/src/dialogs.rs:825
+#: apps/web/src/dialogs.rs:838
 msgid "Export Bookmarks"
 msgstr "책갈피 내보내기"
 
-#: apps/web/src/dialogs.rs:847
+#: apps/web/src/dialogs.rs:860
 msgid "Could not export bookmarks: {e}"
 msgstr "책갈피를 내보낼 수 없습니다: {e}"
 
-#: apps/web/src/dialogs.rs:888
+#: apps/web/src/dialogs.rs:901
 msgid "No Saved Passwords"
 msgstr "저장한 암호 없음"
 
-#: apps/web/src/dialogs.rs:889
+#: apps/web/src/dialogs.rs:902
 msgid "Logins you save while browsing appear here."
 msgstr "탐색하면서 저장한 로그인 정보가 여기에 나타납니다."
 
-#: apps/web/src/dialogs.rs:913
+#: apps/web/src/dialogs.rs:926
 msgid "the saved password for {host}"
 msgstr "{host}에 저장한 암호"
 
-#: apps/web/src/dialogs.rs:915
+#: apps/web/src/dialogs.rs:928
 msgid "the saved password for {user} on {host}"
 msgstr "{host}의 {user}에 대해 저장한 암호"
 
-#: apps/web/src/dialogs.rs:922
+#: apps/web/src/dialogs.rs:935
 msgid "Remove Password?"
 msgstr "암호를 제거하시겠습니까?"
 
-#: apps/web/src/dialogs.rs:923
+#: apps/web/src/dialogs.rs:936
 msgid "This removes {who} from your keyring. It cannot be undone."
 msgstr "키 모음에서 {who}을(를) 제거합니다. 되돌릴 수 없습니다."
 
-#: apps/web/src/dialogs.rs:958
+#: apps/web/src/dialogs.rs:971
 msgid "Password for {host} removed"
 msgstr "{host}의 암호를 제거했습니다"
 
-#: apps/web/src/dialogs.rs:968
+#: apps/web/src/dialogs.rs:981
 msgid "Could not remove the password: {e}"
 msgstr "암호를 제거할 수 없습니다: {e}"
 
-#: apps/web/src/dialogs.rs:976
+#: apps/web/src/dialogs.rs:989
 msgid "Could not remove the password"
 msgstr "암호를 제거할 수 없습니다"
 
-#: apps/web/src/dialogs.rs:995
+#: apps/web/src/dialogs.rs:1008
 msgid "Keyring Unavailable"
 msgstr "키 모음을 사용할 수 없습니다"
 
-#: apps/web/src/dialogs.rs:1023
+#: apps/web/src/dialogs.rs:1036
 msgid "(no user name)"
 msgstr "(사용자 이름 없음)"
 
-#: apps/web/src/dialogs.rs:1088 apps/web/src/dialogs.rs:1110
+#: apps/web/src/dialogs.rs:1101 apps/web/src/dialogs.rs:1123
 msgid "Could Not Install Web Application"
 msgstr "웹 앱을 설치할 수 없습니다"
 
-#: apps/web/src/dialogs.rs:1089
+#: apps/web/src/dialogs.rs:1102
 msgid "No icon is available for this site."
 msgstr "이 사이트에 사용할 수 있는 아이콘이 없습니다."
 
-#: apps/web/src/dialogs.rs:1101
+#: apps/web/src/dialogs.rs:1114
 msgid "Web Application Installed"
 msgstr "웹 앱을 설치했습니다"
 
-#: apps/web/src/dialogs.rs:1102
+#: apps/web/src/dialogs.rs:1115
 msgid "“{name}” can now be started from your applications."
 msgstr "이제 프로그램 목록에서 “{name}”을(를) 시작할 수 있습니다."
 
-#: apps/web/src/dialogs.rs:1125
+#: apps/web/src/dialogs.rs:1138
 msgid "Uninstall Web Application?"
 msgstr "웹 앱을 제거하시겠습니까?"
 
-#: apps/web/src/dialogs.rs:1126
+#: apps/web/src/dialogs.rs:1139
 msgid "The launcher is removed. Its saved site data stays on disk."
 msgstr "실행 항목을 제거합니다. 저장된 사이트 데이터는 디스크에 남습니다."
 
-#: apps/web/src/dialogs.rs:1142
+#: apps/web/src/dialogs.rs:1155
 msgid "Could Not Uninstall"
 msgstr "제거할 수 없습니다"
 
-#: apps/web/src/dialogs.rs:1156
+#: apps/web/src/dialogs.rs:1169
 msgid "Remove password for {host}"
 msgstr "{host}의 암호 제거"
 
-#: apps/web/src/dialogs.rs:1158
+#: apps/web/src/dialogs.rs:1171
 msgid "Remove password for {user} on {host}"
 msgstr "{host}의 {user} 암호 제거"
 
-#: apps/web/src/dialogs.rs:1172
+#: apps/web/src/dialogs.rs:1185
 msgid "No additional sites"
 msgstr "추가 사이트 없음"
 
-#: apps/web/src/dialogs.rs:1188
+#: apps/web/src/dialogs.rs:1201
 msgid "Remove {site}"
 msgstr "{site} 제거"
 
-#: apps/web/src/dialogs.rs:1212
+#: apps/web/src/dialogs.rs:1225
 msgid "Web Application Settings"
 msgstr "웹 앱 설정"
 
-#: apps/web/src/dialogs.rs:1215
+#: apps/web/src/dialogs.rs:1228
 msgid "Additional Allowed Sites"
 msgstr "추가로 허용한 사이트"
 
-#: apps/web/src/dialogs.rs:1216
+#: apps/web/src/dialogs.rs:1229
 msgid ""
 "Links to these sites open in this web application instead of the browser, "
 "like links within {host}. Write *.example.com to include all subdomains."
@@ -16592,11 +16604,11 @@ msgstr ""
 "이 사이트로 가는 링크는 {host} 안의 링크처럼 브라우저 대신 이 웹 앱에서 열립"
 "니다. 모든 하위 도메인을 포함하려면 *.example.com처럼 쓰십시오."
 
-#: apps/web/src/dialogs.rs:1229
+#: apps/web/src/dialogs.rs:1242
 msgid "Add site, e.g. accounts.example.com"
 msgstr "사이트 추가, 예: accounts.example.com"
 
-#: apps/web/src/dialogs.rs:1250
+#: apps/web/src/dialogs.rs:1263
 msgid "Enter a site address, such as example.org"
 msgstr "example.org 같은 사이트 주소를 입력하십시오"
 
@@ -16728,15 +16740,15 @@ msgstr "암호화된 Secret Service 세션을 설정하거나 사용할 수 없�
 msgid "Login"
 msgstr "로그인"
 
-#: apps/web/src/settings.rs:152
+#: apps/web/src/settings.rs:157
 msgid "Enter a name for the search engine"
 msgstr "검색 엔진 이름을 입력하십시오"
 
-#: apps/web/src/settings.rs:158
+#: apps/web/src/settings.rs:163
 msgid "A search engine with this name already exists"
 msgstr "같은 이름의 검색 엔진이 이미 있습니다"
 
-#: apps/web/src/settings.rs:160
+#: apps/web/src/settings.rs:165
 msgid ""
 "The address must start with https:// or http:// and contain %s where the "
 "search goes"
