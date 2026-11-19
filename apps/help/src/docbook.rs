@@ -539,8 +539,12 @@ impl Renderer<'_, '_, '_> {
     }
 
     fn resource(&self, src: &str) -> String {
-        if src.contains("://") {
-            return src.to_string();
+        if crate::policy::scheme(src).is_some() {
+            return if crate::policy::link_allowed(src) {
+                src.to_string()
+            } else {
+                String::new()
+            };
         }
         let base = self.doc.entry.parent().unwrap_or(&self.doc.dir);
         let rel = base
@@ -581,6 +585,9 @@ impl Renderer<'_, '_, '_> {
         } else {
             content
         };
+        if !crate::policy::link_allowed(url) {
+            return text;
+        }
         let internal = url.starts_with("help:") || url.starts_with("ghelp:");
         let cls = if internal { "" } else { " class=\"external\"" };
         format!("<a href=\"{}\"{cls}>{text}</a>", escape_attr(url))
@@ -971,6 +978,9 @@ impl Renderer<'_, '_, '_> {
             },
             "uri" => {
                 let t = xmlutil::text_of(n);
+                if !crate::policy::link_allowed(&t) {
+                    return escape(&t);
+                }
                 format!(
                     "<a href=\"{}\" class=\"external\">{}</a>",
                     escape_attr(&t),
@@ -1086,6 +1096,26 @@ mod tests {
         let (_, adv) = d.render(&DocRef::Id("w".into()), Some("advanced")).unwrap();
         assert!(adv.contains("<thead><tr><th>Name</th><th>Value</th></tr></thead><tbody><tr><td>a</td><td><p>b</p></td></tr></tbody>"), "{adv}");
         assert!(d.render(&DocRef::Id("w".into()), Some("nope")).is_none());
+    }
+
+    #[test]
+    fn unsafe_link_schemes_are_dropped() {
+        let src = r#"<article xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <info><title>Links</title></info>
+            <para><link xlink:href="javascript:alert(1)">one</link>
+              <ulink url="vbscript:x">two</ulink>
+              <uri>javascript:alert(2)</uri>
+              <link xlink:href="file:///etc/passwd">four</link>
+              <ulink url="https://example.org/">web</ulink>
+              <inlinemediaobject><imageobject><imagedata fileref="javascript:x"/></imageobject></inlinemediaobject></para>
+        </article>"#;
+        let d = DocBookDoc::from_source(src.into(), "/d".into(), "/d/x.xml".into()).unwrap();
+        let (_, h) = d.render(&DocRef::Id("l".into()), None).unwrap();
+        for gone in ["javascript:", "vbscript:", "file:"] {
+            assert!(!h.contains(&format!("=\"{gone}")), "{gone} kept\n{h}");
+        }
+        assert!(h.contains("one") && h.contains("two") && h.contains("four"));
+        assert!(h.contains("<a href=\"https://example.org/\" class=\"external\">web</a>"));
     }
 
     #[test]

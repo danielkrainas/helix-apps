@@ -13,11 +13,13 @@ pub fn page(lang: Option<&str>, title: &str, body: &str) -> String {
         .unwrap_or_default();
     format!(
         "<!DOCTYPE html>\n<html{lang}><head><meta charset=\"utf-8\">\
+         <meta http-equiv=\"Content-Security-Policy\" content=\"{csp}\">\
          <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
          <meta name=\"color-scheme\" content=\"light dark\">\
          <title>{}</title><style>{CSS}</style></head>\
          <body><main>{body}</main></body></html>",
-        escape(title)
+        escape(title),
+        csp = crate::policy::PAGE_CSP,
     )
 }
 
@@ -82,28 +84,4 @@ pub fn link_list(class: &str, heading: Option<&str>, items: &[LinkItem]) -> Stri
     }
     s.push_str("</ul></div>");
     s
-}
-
-pub fn guess_mime(path: &str) -> &'static str {
-    let ext = path
-        .rsplit_once('.')
-        .map(|(_, e)| e.to_ascii_lowercase())
-        .unwrap_or_default();
-    match ext.as_str() {
-        "png" => "image/png",
-        "jpg" | "jpeg" => "image/jpeg",
-        "gif" => "image/gif",
-        "svg" => "image/svg+xml",
-        "webp" => "image/webp",
-        "ogv" => "video/ogg",
-        "webm" => "video/webm",
-        "mp4" => "video/mp4",
-        "ogg" | "oga" => "audio/ogg",
-        "mp3" => "audio/mpeg",
-        "css" => "text/css",
-        "js" => "text/javascript",
-        "html" | "htm" => "text/html",
-        "txt" => "text/plain",
-        _ => "application/octet-stream",
-    }
 }

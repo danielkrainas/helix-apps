@@ -260,20 +260,18 @@ impl Library {
 
     fn resource(&self, doc: &DocRef, rel: &str) -> Option<Response> {
         // A figure missing from a translation comes from the next copy, as
-        // pages do.
+        // pages do. Only figures and media are served, from inside the
+        // document's directory.
         let copies = match doc {
             DocRef::Id(id) => discovery::find_all(id, &self.dirs, &self.locales),
             DocRef::Path(_) => self.resolve(doc).into_iter().collect(),
         };
         copies.iter().find_map(|f| {
-            let base = f.dir.canonicalize().ok()?;
-            let path = base.join(rel).canonicalize().ok()?;
-            if !path.starts_with(&base) || !path.is_file() {
-                return None;
-            }
+            let mime = crate::policy::resource_mime(rel)?;
+            let path = crate::policy::confined(&f.dir, rel)?;
             let body = std::fs::read(&path).ok()?;
             Some(Response {
-                mime: html::guess_mime(rel).to_string(),
+                mime: mime.to_string(),
                 body,
             })
         })
@@ -535,6 +533,20 @@ mod tests {
             path: "../secret.txt".into(),
         });
         assert_ne!(esc.body, b"SECRET");
+        // Only figures and media are served from the document directory.
+        for name in ["page.html", "page.xhtml", "x.js", "notes.txt", "wifi.page"] {
+            let file = root.join("help/C/fixture").join(name);
+            if !file.exists() {
+                fs::write(file, b"<p>").unwrap();
+            }
+            let r = lib.respond(&Location::Resource {
+                doc: DocRef::Id("fixture".into()),
+                path: name.into(),
+            });
+            assert_eq!(r.mime, "text/plain", "{name}");
+            assert_eq!(r.body, b"Not found", "{name}");
+        }
+        assert!(idx.contains("http-equiv=\"Content-Security-Policy\""));
 
         let s = body(lib.respond(&uri::parse("help:fixture?search=wireless%20password", cwd)));
         let w = s.find("help:fixture/wifi").unwrap();
@@ -599,6 +611,8 @@ mod tests {
     fn installed_docs() {
         let lib = Library::new(vec![PathBuf::from("/usr/share/help")], vec!["C".into()]);
         let mut pages = 0;
+        let mut figures = 0;
+        let mut missing = 0;
         let mut failures = Vec::new();
         let start = std::time::Instant::now();
         for d in lib.documents() {
@@ -622,11 +636,33 @@ mod tests {
                 if h.contains("Page Not Found") {
                     failures.push(format!("{}/{:?}", d.id, p));
                 }
+                // Every figure and media file a page shows is of a served
+                // type and comes from the help schemes.
+                for src in h
+                    .split("src=\"")
+                    .skip(1)
+                    .filter_map(|s| s.split('"').next())
+                {
+                    figures += 1;
+                    let src = src.replace("&amp;", "&");
+                    match uri::parse(&src, Path::new("/")) {
+                        Location::Resource { path, .. } => {
+                            if crate::policy::resource_mime(&path).is_none() {
+                                failures.push(format!("{}/{:?}: refused {src}", d.id, p));
+                            } else if lib.respond(&uri::parse(&src, Path::new("/"))).mime
+                                == "text/plain"
+                            {
+                                missing += 1;
+                            }
+                        }
+                        _ => failures.push(format!("{}/{:?}: not a help resource {src}", d.id, p)),
+                    }
+                }
             }
             println!("{:30} {:5} pages  {}", d.id, loaded.toc().len(), d.title);
         }
         println!(
-            "{pages} pages rendered in {:?}; failures: {failures:?}",
+            "{pages} pages ({figures} figures, {missing} not installed) rendered in {:?}; failures: {failures:?}",
             start.elapsed()
         );
         assert!(failures.is_empty());

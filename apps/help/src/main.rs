@@ -6,6 +6,7 @@ mod html;
 mod library;
 mod locale;
 mod mallard;
+mod policy;
 mod sandbox;
 mod search;
 mod shortcuts;

@@ -318,8 +318,8 @@ msgstr "_Info zu Audio-Wiedergabe"
 #: apps/document-scanner/src/ui.rs:317 apps/document-scanner/src/ui.rs:319
 #: apps/document-viewer/src/ui.rs:312 apps/document-viewer/src/ui.rs:315
 #: apps/files/src/ui/window.rs:238 apps/files/src/ui/window.rs:241
-#: apps/fonts/src/ui.rs:123 apps/fonts/src/ui.rs:126 apps/help/src/ui.rs:360
-#: apps/help/src/ui.rs:362 apps/image-viewer/src/ui.rs:337
+#: apps/fonts/src/ui.rs:123 apps/fonts/src/ui.rs:126 apps/help/src/ui.rs:403
+#: apps/help/src/ui.rs:405 apps/image-viewer/src/ui.rs:337
 #: apps/image-viewer/src/ui.rs:339 apps/logs/src/ui.rs:308
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
 #: apps/music/src/ui.rs:480 apps/music/src/ui.rs:482
@@ -1145,11 +1145,11 @@ msgstr "_Berechnen"
 #: apps/document-scanner/src/ui.rs:1417 apps/document-viewer/src/dialogs.rs:169
 #: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
-#: apps/music/src/pages.rs:2129 apps/music/src/pages.rs:2232
-#: apps/music/src/pages.rs:2317 apps/settings/src/ui/apps.rs:553
-#: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
-#: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
-#: apps/system-monitor/src/dialogs.rs:142
+#: apps/help/src/ui.rs:196 apps/music/src/pages.rs:2129
+#: apps/music/src/pages.rs:2232 apps/music/src/pages.rs:2317
+#: apps/settings/src/ui/apps.rs:553 apps/settings/src/ui/bluetooth.rs:647
+#: apps/settings/src/ui/netedit.rs:389 apps/settings/src/ui/users.rs:642
+#: apps/settings/src/ui/wifi.rs:587 apps/system-monitor/src/dialogs.rs:142
 #: apps/system-monitor/src/dialogs.rs:288 apps/terminal/src/window.rs:1288
 #: apps/text-editor/src/window.rs:973 apps/web/src/dialogs.rs:413
 #: apps/web/src/dialogs.rs:451 apps/web/src/dialogs.rs:707
@@ -1837,7 +1837,7 @@ msgstr "Importieren"
 #: apps/files/src/ui/window.rs:274 apps/files/src/ui/window.rs:276
 #: apps/fonts/src/shortcuts.rs:17 apps/fonts/src/ui.rs:290
 #: apps/fonts/src/ui.rs:292 apps/help/src/shortcuts.rs:32
-#: apps/help/src/ui.rs:334 apps/help/src/ui.rs:336
+#: apps/help/src/ui.rs:377 apps/help/src/ui.rs:379
 #: apps/logs/src/shortcuts.rs:17 apps/logs/src/ui.rs:276
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:32 apps/music/src/ui.rs:452
@@ -1879,7 +1879,7 @@ msgstr "Monatsansicht"
 #: apps/calendar/src/shortcuts.rs:23 apps/document-viewer/src/shortcuts.rs:14
 #: apps/files/src/ui/shortcuts.rs:50 apps/files/src/ui/window.rs:180
 #: apps/files/src/ui/window.rs:182 apps/help/src/shortcuts.rs:33
-#: apps/help/src/ui.rs:328 apps/help/src/ui.rs:331
+#: apps/help/src/ui.rs:371 apps/help/src/ui.rs:374
 msgid "Show Sidebar"
 msgstr "Seitenleiste anzeigen"
 
@@ -2404,7 +2404,7 @@ msgstr "Countdown abgebrochen"
 
 #: apps/camera/src/ui.rs:859 apps/files/src/ui/dialogs.rs:455
 #: apps/files/src/ui/sidebar.rs:557 apps/files/src/ui/window.rs:1574
-#: apps/text-editor/src/window.rs:131
+#: apps/help/src/ui.rs:197 apps/text-editor/src/window.rs:131
 msgid "_Open"
 msgstr "_Öffnen"
 
@@ -2660,7 +2660,7 @@ msgid "Code point"
 msgstr "Codepunkt"
 
 #: apps/characters/src/ui.rs:600 apps/help/src/mallard.rs:535
-#: apps/help/src/mallard.rs:1057
+#: apps/help/src/mallard.rs:1061
 msgid "See Also"
 msgstr "Siehe auch"
 
@@ -3000,7 +3000,7 @@ msgstr "Nacht"
 #: apps/document-viewer/src/shortcuts.rs:33 apps/files/src/ui/shortcuts.rs:22
 #: apps/files/src/ui/window.rs:185 apps/files/src/ui/window.rs:188
 #: apps/files/src/ui/window.rs:379 apps/help/src/shortcuts.rs:29
-#: apps/help/src/ui.rs:310 apps/help/src/ui.rs:313 apps/web/src/shortcuts.rs:37
+#: apps/help/src/ui.rs:353 apps/help/src/ui.rs:356 apps/web/src/shortcuts.rs:37
 #: apps/web/src/window.rs:338
 msgid "Back"
 msgstr "Zurück"
@@ -4212,7 +4212,7 @@ msgstr "Größe"
 
 #: apps/disk-usage/src/ui.rs:1007 apps/disks/src/ui.rs:457
 #: apps/files/src/ui/properties.rs:132 apps/files/src/ui/properties.rs:241
-#: apps/help/src/docbook.rs:326 apps/help/src/ui.rs:400
+#: apps/help/src/docbook.rs:326 apps/help/src/ui.rs:443
 msgid "Contents"
 msgstr "Inhalt"
 
@@ -5921,7 +5921,7 @@ msgstr "Drucken"
 
 #: apps/document-scanner/src/shortcuts.rs:28
 #: apps/document-viewer/src/dialogs.rs:105 apps/document-viewer/src/ui.rs:531
-#: apps/help/src/library.rs:341 apps/help/src/library.rs:344
+#: apps/help/src/library.rs:339 apps/help/src/library.rs:342
 msgid "Pages"
 msgstr "Seiten"
 
@@ -6003,7 +6003,7 @@ msgid "_Copy Page"
 msgstr "Seite _kopieren"
 
 #: apps/document-scanner/src/ui.rs:185 apps/document-viewer/src/ui.rs:297
-#: apps/help/src/ui.rs:340 apps/web/src/window.rs:208
+#: apps/help/src/ui.rs:383 apps/web/src/window.rs:208
 #: apps/web/src/window.rs:249
 msgid "_Print…"
 msgstr "_Drucken…"
@@ -6630,7 +6630,7 @@ msgstr "Gehe zu Seite"
 #: apps/document-viewer/src/shortcuts.rs:34 apps/files/src/ui/shortcuts.rs:23
 #: apps/files/src/ui/window.rs:191 apps/files/src/ui/window.rs:194
 #: apps/files/src/ui/window.rs:381 apps/help/src/shortcuts.rs:30
-#: apps/help/src/ui.rs:316 apps/help/src/ui.rs:319 apps/web/src/shortcuts.rs:38
+#: apps/help/src/ui.rs:359 apps/help/src/ui.rs:362 apps/web/src/shortcuts.rs:38
 #: apps/web/src/window.rs:339
 msgid "Forward"
 msgstr "Vorwärts"
@@ -8290,7 +8290,7 @@ msgstr "Hilfe"
 msgid "manual"
 msgstr "Handbuch"
 
-#: apps/help/src/html.rs:51
+#: apps/help/src/html.rs:53
 msgid "All help documents"
 msgstr "Alle Hilfedokumente"
 
@@ -8322,25 +8322,25 @@ msgstr "Seite nicht gefunden"
 msgid "The page “{page}” was not found in this document."
 msgstr "Die Seite „{page}“ wurde in diesem Dokument nicht gefunden."
 
-#: apps/help/src/library.rs:284 apps/help/src/library.rs:302
-#: apps/help/src/ui.rs:45 apps/help/src/ui.rs:59 apps/help/src/ui.rs:371
-#: apps/help/src/ui.rs:419 apps/help/src/ui.rs:469
+#: apps/help/src/library.rs:282 apps/help/src/library.rs:300
+#: apps/help/src/ui.rs:47 apps/help/src/ui.rs:61 apps/help/src/ui.rs:414
+#: apps/help/src/ui.rs:462 apps/help/src/ui.rs:512
 msgid "Help"
 msgstr "Hilfe"
 
-#: apps/help/src/library.rs:288
+#: apps/help/src/library.rs:286
 msgid "No help documents are installed."
 msgstr "Es sind keine Hilfedokumente installiert."
 
-#: apps/help/src/library.rs:375
+#: apps/help/src/library.rs:373
 msgid "Search results for “{q}”"
 msgstr "Suchergebnisse für „{q}“"
 
-#: apps/help/src/library.rs:380
+#: apps/help/src/library.rs:378
 msgid "No matching pages were found."
 msgstr "Es wurden keine passenden Seiten gefunden."
 
-#: apps/help/src/library.rs:388
+#: apps/help/src/library.rs:386
 msgid "Search: {q}"
 msgstr "Suche: {q}"
 
@@ -8356,7 +8356,7 @@ msgstr "Es wurde kein Hilfedokument angegeben."
 msgid "{}: no Mallard pages"
 msgstr "{}: keine Mallard-Seiten"
 
-#: apps/help/src/mallard.rs:548 apps/help/src/mallard.rs:1073
+#: apps/help/src/mallard.rs:548 apps/help/src/mallard.rs:1077
 msgid "More Information"
 msgstr "Weitere Informationen"
 
@@ -8488,44 +8488,52 @@ msgstr "Kleinerer Text"
 msgid "Normal Text Size"
 msgstr "Normale Textgröße"
 
-#: apps/help/src/ui.rs:45
+#: apps/help/src/ui.rs:47
 msgid "View help documentation"
 msgstr "Hilfedokumentation ansehen"
 
-#: apps/help/src/ui.rs:118
+#: apps/help/src/ui.rs:126
 msgid "help page rendering failed"
 msgstr "Darstellung der Hilfeseite fehlgeschlagen"
 
-#: apps/help/src/ui.rs:274 apps/text-editor/src/doc.rs:149
+#: apps/help/src/ui.rs:190
+msgid "Open Link?"
+msgstr "Link öffnen?"
+
+#: apps/help/src/ui.rs:191
+msgid "This help page wants to open “{uri}” in another application."
+msgstr "Diese Hilfeseite möchte „{uri}“ in einer anderen Anwendung öffnen."
+
+#: apps/help/src/ui.rs:317 apps/text-editor/src/doc.rs:149
 #: apps/web/src/tab.rs:199 apps/web/src/window.rs:2404
 msgid "_Reload"
 msgstr "_Neu laden"
 
-#: apps/help/src/ui.rs:322 apps/help/src/ui.rs:325
+#: apps/help/src/ui.rs:365 apps/help/src/ui.rs:368
 msgid "All Help"
 msgstr "Alle Hilfethemen"
 
-#: apps/help/src/ui.rs:343
+#: apps/help/src/ui.rs:386
 msgid "_Larger Text"
 msgstr "_Größerer Text"
 
-#: apps/help/src/ui.rs:344
+#: apps/help/src/ui.rs:387
 msgid "_Smaller Text"
 msgstr "_Kleinerer Text"
 
-#: apps/help/src/ui.rs:345
+#: apps/help/src/ui.rs:388
 msgid "_Normal Size"
 msgstr "_Normale Größe"
 
-#: apps/help/src/ui.rs:348
+#: apps/help/src/ui.rs:391
 msgid "_Caret Browsing"
 msgstr "_Cursor-Navigation"
 
-#: apps/help/src/ui.rs:355
+#: apps/help/src/ui.rs:398
 msgid "_About Help"
 msgstr "_Info zu Hilfe"
 
-#: apps/help/src/ui.rs:375
+#: apps/help/src/ui.rs:418
 msgid "Search help"
 msgstr "Hilfe durchsuchen"
 

@@ -1,11 +1,13 @@
 //! GTK user interface: header bar, sidebar outline and WebKit view.
 
 use crate::library::Library;
+use crate::policy;
 use crate::textsize;
 use crate::uri::{self, DocRef, Location};
 use adw::prelude::*;
 use gtk::{gio, glib};
 use helix_app_common::i18n::tr;
+use helix_app_common::trf;
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
 use std::cell::RefCell;
@@ -110,6 +112,12 @@ fn make_context(library: Arc<Library>) -> webkit6::WebContext {
                         };
                         let resp = webkit6::URISchemeResponse::new(&stream, len);
                         resp.set_content_type(&mime);
+                        let headers = webkit6::soup::MessageHeaders::new(
+                            webkit6::soup::MessageHeadersType::Response,
+                        );
+                        headers.append("Content-Security-Policy", policy::csp_for(&mime));
+                        headers.append("X-Content-Type-Options", "nosniff");
+                        resp.set_http_headers(headers);
                         request.finish_with_response(&resp);
                     }
                     Err(_) => {
@@ -163,8 +171,40 @@ fn resolve_target(ui: &Ui, target: &str) -> Result<String, String> {
 fn navigate(ui: &Ui, target: &str) {
     match resolve_target(ui, target) {
         Ok(u) => ui.view.load_uri(&u),
-        Err(u) => launch_external(&ui.window, &u),
+        Err(u) => open_external(&ui.window, &u, false),
     }
+}
+
+/// Hands a web or mail link to the default application, after asking
+/// when `confirm` is set. Other schemes are not opened.
+fn open_external(window: &adw::ApplicationWindow, uri: &str, confirm: bool) {
+    if !policy::external_allowed(uri) {
+        eprintln!("helix-help: not opening link with unsupported scheme: {uri}");
+        return;
+    }
+    if !confirm {
+        launch_external(window, uri);
+        return;
+    }
+    let d = adw::AlertDialog::new(
+        Some(tr("Open Link?")),
+        Some(&trf!(
+            "This help page wants to open \u{201C}{uri}\u{201D} in another application.",
+            uri = uri
+        )),
+    );
+    d.add_response("cancel", tr("_Cancel"));
+    d.add_response("open", tr("_Open"));
+    d.set_default_response(Some("cancel"));
+    d.set_close_response("cancel");
+    let uri = uri.to_string();
+    let w = window.clone();
+    d.connect_response(None, move |_, r| {
+        if r == "open" {
+            launch_external(&w, &uri);
+        }
+    });
+    d.present(Some(window));
 }
 
 fn launch_external(window: &adw::ApplicationWindow, uri: &str) {
@@ -257,6 +297,9 @@ fn build(app: &adw::Application, context: &webkit6::WebContext, library: Arc<Lib
     let settings = webkit6::Settings::new();
     settings.set_enable_developer_extras(false);
     settings.set_enable_caret_browsing(prefs.get("show-cursor", false));
+    // Help pages are static: no page scripts at all.
+    settings.set_enable_javascript(false);
+    settings.set_enable_javascript_markup(false);
     settings.set_javascript_can_open_windows_automatically(false);
     apply_text_size(&settings, prefs.get("font-adjustment", 0i32));
     let content = webkit6::UserContentManager::new();
@@ -560,6 +603,13 @@ fn decide_policy(
     match scheme.as_str() {
         "about" | "data" | "blob" => false,
         _ if is_help_uri(&target) => {
+            // Figures in a document format (SVG) are only shown inside pages.
+            if let Location::Resource { path, .. } = uri::parse(&target, &ui.cwd) {
+                if !policy::resource_navigable(&path) {
+                    decision.ignore();
+                    return true;
+                }
+            }
             // Plain HTML help is shown straight from disk.
             if let Ok(resolved) = resolve_target(ui, &target) {
                 if resolved.starts_with("file:") {
@@ -593,7 +643,11 @@ fn decide_policy(
         }
         _ => {
             decision.ignore();
-            launch_external(&ui.window, &target);
+            // A link the user clicked opens directly; anything else (a
+            // redirect, say) asks first.
+            let clicked = action.navigation_type() == webkit6::NavigationType::LinkClicked
+                && action.is_user_gesture();
+            open_external(&ui.window, &target, !clicked);
             true
         }
     }

@@ -620,8 +620,12 @@ struct Renderer<'d> {
 
 impl Renderer<'_> {
     fn resource(&self, src: &str) -> String {
-        if src.contains("://") || src.starts_with("help:") || src.starts_with("ghelp:") {
-            return src.to_string();
+        if crate::policy::scheme(src).is_some() {
+            return if crate::policy::link_allowed(src) {
+                src.to_string()
+            } else {
+                String::new()
+            };
         }
         // Paths are relative to the page file; express them relative to the doc dir.
         let page_dir = self.page.path.parent().unwrap_or(&self.doc.dir);
@@ -1109,6 +1113,9 @@ impl Renderer<'_> {
             }
         }
         if let Some(h) = n.attribute("href") {
+            if !crate::policy::link_allowed(h) {
+                return if has_content { content } else { escape(h) };
+            }
             let internal = h.starts_with("help:") || h.starts_with("ghelp:") || h.starts_with('#');
             let cls = if internal { "" } else { " class=\"external\"" };
             let text = if has_content { content } else { escape(h) };
@@ -1249,6 +1256,33 @@ mod tests {
         let (_, wifi) = d.render(&docref, "wifi").unwrap();
         assert!(wifi.contains("See Also") && wifi.contains("help:fx/vpn"));
         assert!(wifi.contains("More Information") && wifi.contains("help:fx/net"));
+    }
+
+    #[test]
+    fn unsafe_link_schemes_are_dropped() {
+        let body = r##"<title>Links</title>
+            <p><link href="javascript:alert(1)">one</link>
+               <link href=" JavaScript:alert(2)"/>
+               <link href="data:text/html,x">three</link>
+               <link href="file:///etc/passwd">four</link>
+               <link href="mailto:a@example.org">mail</link>
+               <link href="help:other-doc">help</link>
+               <media type="image" src="javascript:alert(3)">i</media>
+               <media type="image" src="file:///etc/passwd">j</media></p>"##;
+        let mut d = MallardDoc {
+            dir: "/doc".into(),
+            pages: BTreeMap::new(),
+        };
+        d.pages
+            .insert("links".into(), page("links", "topic", "", body));
+        let (_, h) = d.render(&DocRef::Id("fx".into()), "links").unwrap();
+        for gone in ["javascript:", "JavaScript:", "data:", "file:"] {
+            assert!(!h.contains(&format!("=\"{gone}")), "{gone} kept\n{h}");
+            assert!(!h.contains(&format!("=\" {gone}")), "{gone} kept\n{h}");
+        }
+        assert!(h.contains("one") && h.contains("three") && h.contains("four"));
+        assert!(h.contains("<a href=\"mailto:a@example.org\" class=\"external\">mail</a>"));
+        assert!(h.contains("<a href=\"help:other-doc\">help</a>"));
     }
 
     #[test]

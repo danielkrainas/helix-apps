@@ -80,11 +80,43 @@ behaviour is derived from the public Mallard specification
   finished on the main thread.
 - Plain HTML help is loaded directly through `file://` so its own relative
   links keep working.
-- `http`, `https`, `mailto` and other non-help links are not navigated
-  inside the viewer; they are opened with `gtk::UriLauncher` (OpenURI
-  portal when sandboxed).
-- Resource paths are confined to the document directory (canonicalized;
-  `..` escapes are refused).
+- `http`, `https` and `mailto` links are not navigated inside the viewer;
+  they are opened with `gtk::UriLauncher` (OpenURI portal when
+  sandboxed). A link the user clicks opens directly; any other navigation
+  to such a URI (a redirect, for example) first asks "Open Link?" with the
+  URI shown. Other schemes are never handed to other applications.
+- Resource paths are confined to the document directory (canonicalized,
+  so symbolic links are followed; `..` escapes and links pointing outside
+  are refused). A figure missing from a translation comes from the next
+  locale's copy.
+
+### Page content rules
+- Help pages are static: JavaScript is off in the WebView
+  (`enable-javascript` and `enable-javascript-markup` false), and no
+  feature relies on page scripts (search, the sidebar outline, text size
+  and print are app-side; media use native `<video controls>`/`<audio
+  controls>`).
+- Rendered pages carry a Content-Security-Policy, as a `<meta>` element
+  and as a header on every scheme response:
+  `default-src 'none'; img-src help: ghelp: data:; media-src help: ghelp:;
+  style-src 'unsafe-inline'; frame-src 'none'; form-action 'none';
+  base-uri 'none'`. Figures from `http(s)`/`file` URIs are therefore not
+  shown. Files served from a document directory get
+  `default-src 'none'; style-src 'unsafe-inline'; sandbox` and
+  `X-Content-Type-Options: nosniff`.
+- Links in Mallard (`link/@href`) and DocBook (`ulink`, `link/@xlink:href`,
+  `uri`) are emitted only for `help:`, `ghelp:`, `gnome-help:`,
+  `help-list:`, `http:`, `https:`, `mailto:` and relative or fragment
+  references (tabs/newlines and leading control characters are ignored
+  when reading the scheme, as browsers do). Other links render as their
+  text without a link. Media `src` values with another scheme are dropped.
+- Only figures and media are served from a document directory: PNG, JPEG,
+  GIF, WebP, SVG, Ogg/WebM/MP4 video, Ogg/MP3 audio. Pages, HTML/XHTML,
+  scripts, style sheets, text and unknown types are not served. SVG is
+  shown only inside pages; navigating to an SVG file itself is ignored.
+- Documents may be opened from any path (as Yelp does), e.g. while
+  writing help; the rules above apply to them the same way.
+- Plain HTML help (loaded via `file://`) is shown with scripts off too.
 
 ### Discovery
 - Search path: `$XDG_DATA_HOME/help` then each `$XDG_DATA_DIRS/*/help`.
