@@ -1,5 +1,11 @@
 //! Cached thumbnails for the grid, loaded a few at a time.
 //!
+//! Thumbnails are found here, for the tiles being shown, not by asking
+//! GIO for `thumbnail::path` while a folder lists: that hashes every
+//! file's URI and looks in up to four cache folders for each, and was
+//! more than half of a big folder's loading time (50 000 files: 916 ms
+//! with it, 345 ms without; `tests/load_bench.rs`).
+//!
 //! A folder of thousands of pictures or videos binds its grid tiles many
 //! times while it loads and scrolls. Starting a load for every bind kept
 //! about a thousand thumbnail files open at once, which ran the process
@@ -31,17 +37,27 @@ const CACHE: usize = 192;
 /// Waiting requests above which those no longer wanted are pruned.
 const MAX_QUEUED: usize = 512;
 
-/// A request: show the thumbnail at `path` in `img` while `item` still
-/// shows `expected`; first make it from `make` if that is set.
+/// A request: show the thumbnail of `uri` (modified at `mtime`) in `img`
+/// while `item` still shows `expected`. It is looked up in the cache
+/// first; if there is none and `make` is set, one is made.
+#[derive(Clone)]
 struct Request {
-    path: String,
+    uri: String,
+    mtime: u64,
     make: Option<Source>,
+    /// Making the thumbnail (else looking it up).
+    making: bool,
     img: glib::WeakRef<gtk::Image>,
     item: glib::WeakRef<gtk::ListItem>,
     expected: glib::WeakRef<gio::FileInfo>,
 }
 
 impl Request {
+    /// Decoded thumbnails are kept by file and version.
+    fn key(&self) -> String {
+        format!("{}\n{}", self.uri, self.mtime)
+    }
+
     /// The tile still shows the file the thumbnail is for.
     fn wanted(&self) -> bool {
         match (self.item.upgrade(), self.expected.upgrade()) {
@@ -71,7 +87,7 @@ struct Loader {
 
 impl Loader {
     fn has_slot(&self, req: &Request) -> bool {
-        if req.make.is_some() {
+        if req.making {
             self.making.get() < MAX_MAKING
         } else {
             self.running.get() < MAX_RUNNING
@@ -116,32 +132,23 @@ thread_local! {
     static LOADER: Loader = Loader::default();
 }
 
-/// Show the cached thumbnail at `path` in `img` (the tile of `item`, now
-/// showing `expected`), now if it is in the cache, else when its turn
-/// comes.
-pub fn request(path: &str, img: &gtk::Image, item: &gtk::ListItem, expected: &gio::FileInfo) {
+/// Shows the thumbnail of `uri` (modified at `mtime`) in `img` (the tile
+/// of `item`, now showing `expected`): now if it was decoded recently,
+/// else when its turn comes, from the thumbnail cache, or made from
+/// `make` if the cache has none (unless that failed before in this run).
+pub fn request(
+    uri: String,
+    mtime: u64,
+    make: Option<Source>,
+    img: &gtk::Image,
+    item: &gtk::ListItem,
+    expected: &gio::FileInfo,
+) {
     enqueue(Request {
-        path: path.to_owned(),
-        make: None,
-        img: img.downgrade(),
-        item: item.downgrade(),
-        expected: expected.downgrade(),
-    });
-}
-
-/// Like [`request`] for a file with no cached thumbnail: one is made
-/// first (unless that failed before in this run). On success `expected`
-/// gets the new `thumbnail::path`, so its tile reads it from then on.
-pub fn request_made(src: Source, img: &gtk::Image, item: &gtk::ListItem, expected: &gio::FileInfo) {
-    let failed = LOADER.with(|l| l.failed.borrow().contains(&(src.uri.clone(), src.mtime)));
-    if failed {
-        return;
-    }
-    enqueue(Request {
-        path: thumbnailer::cache_path(&src.uri)
-            .to_string_lossy()
-            .into_owned(),
-        make: Some(src),
+        uri,
+        mtime,
+        make,
+        making: false,
         img: img.downgrade(),
         item: item.downgrade(),
         expected: expected.downgrade(),
@@ -150,7 +157,7 @@ pub fn request_made(src: Source, img: &gtk::Image, item: &gtk::ListItem, expecte
 
 fn enqueue(req: Request) {
     LOADER.with(|l| {
-        if let Some(texture) = l.cache.borrow_mut().get(&req.path) {
+        if let Some(texture) = l.cache.borrow_mut().get(&req.key()) {
             req.show(&texture);
             return;
         }
@@ -164,7 +171,16 @@ fn enqueue(req: Request) {
     pump();
 }
 
-/// Start queued work while slots are free (reads: [`MAX_RUNNING`],
+/// What a request's work came to.
+enum Outcome {
+    Texture(gdk::Texture),
+    /// Not in the cache (a lookup).
+    Missing,
+    /// Could not be made or read.
+    Failed,
+}
+
+/// Start queued work while slots are free (lookups: [`MAX_RUNNING`],
 /// thumbnails made: [`MAX_MAKING`]): the newest request first (the tiles
 /// on screen now), skipping ones no longer wanted.
 fn pump() {
@@ -178,7 +194,7 @@ fn pump() {
                     queue.remove(i);
                     continue;
                 }
-                if let Some(texture) = l.cache.borrow_mut().get(&queue[i].path) {
+                if let Some(texture) = l.cache.borrow_mut().get(&queue[i].key()) {
                     if let Some(req) = queue.remove(i) {
                         req.show(&texture);
                     }
@@ -188,7 +204,7 @@ fn pump() {
                     continue;
                 }
                 let req = queue.remove(i)?;
-                if req.make.is_some() {
+                if req.making {
                     l.making.set(l.making.get() + 1);
                 } else {
                     l.running.set(l.running.get() + 1);
@@ -199,42 +215,63 @@ fn pump() {
         });
         let Some(req) = next else { return };
         glib::spawn_future_local(async move {
-            let path = req.path.clone();
+            let (uri, mtime, making) = (req.uri.clone(), req.mtime, req.making);
             let make = req.make.clone();
-            let result = gio::spawn_blocking(move || {
-                let path = match &make {
-                    Some(src) => thumbnailer::make(src)?.to_string_lossy().into_owned(),
-                    None => path,
+            let outcome = gio::spawn_blocking(move || {
+                let bytes = if making {
+                    let Some(path) = make.as_ref().and_then(thumbnailer::make) else {
+                        return Outcome::Failed;
+                    };
+                    match std::fs::read(path) {
+                        Ok(b) => b,
+                        Err(_) => return Outcome::Failed,
+                    }
+                } else {
+                    match thumbnailer::lookup(&uri, mtime) {
+                        Some((_, b)) => b,
+                        None => return Outcome::Missing,
+                    }
                 };
-                let bytes = std::fs::read(&path).ok()?;
-                let texture = gdk::Texture::from_bytes(&glib::Bytes::from_owned(bytes)).ok()?;
-                Some((path, texture))
+                match gdk::Texture::from_bytes(&glib::Bytes::from_owned(bytes)) {
+                    Ok(t) => Outcome::Texture(t),
+                    Err(_) => Outcome::Failed,
+                }
             })
             .await
-            .ok()
-            .flatten();
-            LOADER.with(|l| {
-                match &req.make {
-                    Some(src) => {
-                        l.making.set(l.making.get() - 1);
-                        if result.is_none() {
-                            l.failed.borrow_mut().insert((src.uri.clone(), src.mtime));
-                        }
-                    }
-                    None => l.running.set(l.running.get() - 1),
+            .unwrap_or(Outcome::Failed);
+            let retry = LOADER.with(|l| {
+                if req.making {
+                    l.making.set(l.making.get() - 1);
+                } else {
+                    l.running.set(l.running.get() - 1);
                 }
-                if let Some((_, texture)) = &result {
-                    l.cache.borrow_mut().put(req.path.clone(), texture.clone());
+                let id = (req.uri.clone(), req.mtime);
+                match &outcome {
+                    Outcome::Texture(t) => {
+                        l.cache.borrow_mut().put(req.key(), t.clone());
+                        None
+                    }
+                    Outcome::Failed if req.making => {
+                        l.failed.borrow_mut().insert(id);
+                        None
+                    }
+                    // None cached (or unreadable): make one.
+                    _ if !req.making && req.make.is_some() && !l.failed.borrow().contains(&id) => {
+                        Some(Request {
+                            making: true,
+                            ..req.clone()
+                        })
+                    }
+                    _ => None,
                 }
             });
-            if let Some((path, texture)) = result {
-                if req.make.is_some() {
-                    if let Some(info) = req.expected.upgrade() {
-                        info.set_attribute_byte_string("thumbnail::path", path.as_str());
-                        info.set_attribute_boolean("thumbnail::is-valid", true);
-                    }
+            if let Outcome::Texture(t) = &outcome {
+                req.show(t);
+            }
+            if let Some(r) = retry {
+                if r.wanted() {
+                    LOADER.with(|l| l.queue.borrow_mut().push_back(r));
                 }
-                req.show(&texture);
             }
             pump();
         });

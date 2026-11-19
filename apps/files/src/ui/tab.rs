@@ -23,12 +23,12 @@ pub fn info_file(info: &gio::FileInfo) -> Option<gio::File> {
 }
 
 /// What a missing thumbnail of `file` (described by `info`) is made from:
-/// a regular file with a local path (GVfs gives remote files one too),
-/// of a type a thumbnailer handles.
-fn thumbnail_source(info: &gio::FileInfo, file: &gio::File) -> Option<super::thumbnailer::Source> {
-    if info.file_type() != gio::FileType::Regular {
-        return None;
-    }
+/// a file of a type a thumbnailer handles.
+fn thumbnail_source(
+    info: &gio::FileInfo,
+    file: &gio::File,
+    mtime: u64,
+) -> Option<super::thumbnailer::Source> {
     let content_type = info
         .content_type()
         .or_else(|| info.attribute_string("standard::fast-content-type"))?;
@@ -36,9 +36,9 @@ fn thumbnail_source(info: &gio::FileInfo, file: &gio::File) -> Option<super::thu
     if !super::thumbnailer::can_make(&mime) {
         return None;
     }
-    let mtime = u64::try_from(info.modification_date_time()?.to_unix()).ok()?;
     Some(super::thumbnailer::Source {
-        path: file.path()?,
+        // A remote file's (FUSE) path is found on the worker thread.
+        path: super::window::local_path(file),
         uri: file.uri().to_string(),
         mime,
         mtime,
@@ -685,21 +685,24 @@ impl Tab {
             }
             let file = info_file(&info);
             mark_cut(&b, file.as_ref().is_some_and(|f| t.is_cut(f)));
-            // Cached thumbnails, loaded asynchronously.
-            let thumb = info.attribute_byte_string("thumbnail::path").filter(|_| {
-                !info.has_attribute("thumbnail::is-valid") || info.boolean("thumbnail::is-valid")
-            });
-            match (thumb, file) {
-                (Some(path), Some(file)) if t.thumbnail_allowed(&file) => {
-                    super::thumbs::request(path.as_str(), &img, item, &info);
-                }
-                // None cached yet: make one.
-                (None, Some(file)) if t.thumbnail_allowed(&file) => {
-                    if let Some(src) = thumbnail_source(&info, &file) {
-                        super::thumbs::request_made(src, &img, item, &info);
+            // Thumbnails: looked up (or made) for the tiles shown.
+            if let Some(file) = file.filter(|f| t.thumbnail_allowed(f)) {
+                if info.file_type() == gio::FileType::Regular {
+                    if let Some(mtime) = info
+                        .modification_date_time()
+                        .and_then(|d| u64::try_from(d.to_unix()).ok())
+                    {
+                        let make = thumbnail_source(&info, &file, mtime);
+                        super::thumbs::request(
+                            file.uri().to_string(),
+                            mtime,
+                            make,
+                            &img,
+                            item,
+                            &info,
+                        );
                     }
                 }
-                _ => {}
             }
         });
         f
@@ -1280,10 +1283,7 @@ impl Tab {
                 continue;
             }
             let root = mount.root();
-            let subtitle = root
-                .path()
-                .map(|p| p.display().to_string())
-                .unwrap_or_else(|| root.uri().to_string());
+            let subtitle = super::window::display_location(&root);
             let group = if root.is_native() { &computer } else { &remote };
             add_row(
                 group,

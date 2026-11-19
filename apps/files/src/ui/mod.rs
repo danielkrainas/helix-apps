@@ -42,12 +42,14 @@ pub const GRID_ZOOM: [(&str, i32); 5] = [
 ];
 pub const LIST_ZOOM: [(&str, i32); 3] = [("small", 16), ("medium", 32), ("large", 48)];
 
-/// Attributes queried for every listed file.
+/// Attributes queried for every listed file. (Not `thumbnail::*`: those
+/// cost more than half of a big folder's loading time; `thumbs.rs` looks
+/// thumbnails up for the tiles shown.)
 pub const FILE_ATTRS: &str = "standard::name,standard::display-name,standard::edit-name,standard::type,\
 standard::size,standard::icon,standard::symbolic-icon,standard::content-type,standard::fast-content-type,\
 standard::is-hidden,standard::is-backup,standard::is-symlink,standard::symlink-target,standard::target-uri,\
 time::modified,unix::mode,access::can-read,access::can-write,access::can-trash,access::can-delete,\
-access::can-rename,thumbnail::path,thumbnail::is-valid,trash::orig-path,trash::deletion-date";
+access::can-rename,trash::orig-path,trash::deletion-date";
 
 /// State of our own clipboard content.
 #[derive(Clone)]

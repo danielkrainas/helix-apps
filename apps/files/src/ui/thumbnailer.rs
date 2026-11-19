@@ -36,8 +36,10 @@ const MAX_OUTPUT: u64 = 32 << 20;
 /// What a thumbnail is made from.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Source {
-    /// Local path (or the GVfs FUSE path of a remote file).
-    pub path: PathBuf,
+    /// Local path; `None` for a remote file, whose GVfs FUSE path
+    /// [`make`] finds (that asks the GVfs daemon, so not on the main
+    /// thread).
+    pub path: Option<PathBuf>,
     pub uri: String,
     pub mime: String,
     /// Modification time, seconds since the epoch (`Thumb::MTime`).
@@ -112,10 +114,6 @@ pub fn can_make(mime: &str) -> bool {
 }
 
 /// The cache file for `uri` (its MD5, `.png`, in `thumbnails/large`).
-pub fn cache_path(uri: &str) -> PathBuf {
-    cache_path_in(&glib::user_cache_dir(), uri)
-}
-
 fn cache_path_in(cache: &Path, uri: &str) -> PathBuf {
     cache.join("thumbnails").join("large").join(cache_name(uri))
 }
@@ -125,6 +123,76 @@ fn cache_name(uri: &str) -> String {
         .map(|s| s.to_string())
         .unwrap_or_default();
     format!("{sum}.png")
+}
+
+/// The `tEXt` chunks of a PNG file, as (key, value).
+fn png_text(png: &[u8]) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    if !png.starts_with(b"\x89PNG\r\n\x1a\n") {
+        return out;
+    }
+    let mut at = 8;
+    while at + 8 <= png.len() {
+        let len = u32::from_be_bytes([png[at], png[at + 1], png[at + 2], png[at + 3]]) as usize;
+        let kind = &png[at + 4..at + 8];
+        let end = (at + 8).saturating_add(len).min(png.len());
+        let data = &png[at + 8..end];
+        if kind == b"tEXt" {
+            if let Some(nul) = data.iter().position(|&b| b == 0) {
+                out.push((
+                    String::from_utf8_lossy(&data[..nul]).into_owned(),
+                    String::from_utf8_lossy(&data[nul + 1..]).into_owned(),
+                ));
+            }
+        }
+        if kind == b"IEND" {
+            break;
+        }
+        at = end + 4;
+    }
+    out
+}
+
+/// Whether `png` is a valid thumbnail of the file `uri` modified at
+/// `mtime`: its `Thumb::MTime` matches (and its `Thumb::URI`, if set),
+/// as GIO's `thumbnail::is-valid` checks.
+fn is_valid(png: &[u8], uri: &str, mtime: u64) -> bool {
+    let text = png_text(png);
+    let get = |k: &str| {
+        text.iter()
+            .find(|(key, _)| key == k)
+            .map(|(_, v)| v.as_str())
+    };
+    get("Thumb::MTime").and_then(|v| v.parse::<u64>().ok()) == Some(mtime)
+        && get("Thumb::URI").is_none_or(|u| u == uri)
+}
+
+/// A valid cached thumbnail of `uri` (modified at `mtime`): its path and
+/// contents. Looked up when a tile is shown rather than for every file
+/// as a folder loads (`thumbnail::path` cost Files more than half of a
+/// big folder's loading time).
+pub fn lookup(uri: &str, mtime: u64) -> Option<(PathBuf, Vec<u8>)> {
+    lookup_in(&glib::user_cache_dir(), uri, mtime)
+}
+
+fn lookup_in(cache: &Path, uri: &str, mtime: u64) -> Option<(PathBuf, Vec<u8>)> {
+    let name = cache_name(uri);
+    for size in ["large", "x-large", "xx-large", "normal"] {
+        let path = cache.join("thumbnails").join(size).join(&name);
+        let Ok(meta) = std::fs::metadata(&path) else {
+            continue;
+        };
+        if !meta.is_file() || meta.len() > MAX_OUTPUT {
+            continue;
+        }
+        let Ok(bytes) = std::fs::read(&path) else {
+            continue;
+        };
+        if is_valid(&bytes, uri, mtime) {
+            return Some((path, bytes));
+        }
+    }
+    None
 }
 
 /// The thumbnailer's command line for `src`, writing to `out`.
@@ -142,7 +210,11 @@ fn command(exec: &str, src: &Source, out: &Path) -> Option<Vec<String>> {
                     continue;
                 }
                 match chars.next() {
-                    Some('i') => s.push_str(&src.path.to_string_lossy()),
+                    Some('i') => {
+                        if let Some(p) = &src.path {
+                            s.push_str(&p.to_string_lossy());
+                        }
+                    }
                     Some('u') => s.push_str(&src.uri),
                     Some('o') => s.push_str(&out.to_string_lossy()),
                     Some('s') => s.push_str(&SIZE.to_string()),
@@ -194,8 +266,8 @@ fn run_command(mut cmd: std::process::Command, program: &str) -> bool {
 /// runs where bubblewrap cannot make a sandbox.
 fn run_sandboxed(exec: &str, src: &Source) -> Option<Pixbuf> {
     let bwrap = sandbox::bwrap()?;
-    let ext: String = src
-        .path
+    let input = src.path.as_deref()?;
+    let ext: String = input
         .extension()
         .map(|e| e.to_string_lossy().into_owned())
         .unwrap_or_default()
@@ -211,7 +283,7 @@ fn run_sandboxed(exec: &str, src: &Source) -> Option<Pixbuf> {
     let inside_input = format!("{}/{name}", sandbox::TMP);
     let inside_output = format!("{}/thumbnail.png", sandbox::TMP);
     let inside = Source {
-        path: PathBuf::from(&inside_input),
+        path: Some(PathBuf::from(&inside_input)),
         uri: format!("file://{inside_input}"),
         mime: src.mime.clone(),
         mtime: src.mtime,
@@ -223,7 +295,7 @@ fn run_sandboxed(exec: &str, src: &Source) -> Option<Pixbuf> {
     let mut cmd = std::process::Command::new(bwrap);
     cmd.args(sandbox::bwrap_args(
         &outdir,
-        &src.path,
+        input,
         &inside_input,
         seccomp.as_ref().map(|f| f.as_raw_fd()),
         gst.as_deref(),
@@ -276,7 +348,13 @@ fn temp_next_to(target: &Path) -> PathBuf {
 /// Makes and caches the thumbnail of `src`; its cache path, or `None` if
 /// no thumbnail could be made.
 pub fn make(src: &Source) -> Option<PathBuf> {
-    make_in(&glib::user_cache_dir(), src)
+    let mut src = src.clone();
+    if src.path.is_none() {
+        src.path = Some(gtk::gio::prelude::FileExt::path(&gtk::gio::File::for_uri(
+            &src.uri,
+        ))?);
+    }
+    make_in(&glib::user_cache_dir(), &src)
 }
 
 fn make_in(cache: &Path, src: &Source) -> Option<PathBuf> {
@@ -291,7 +369,7 @@ fn make_in(cache: &Path, src: &Source) -> Option<PathBuf> {
     let pixbuf = match thumbnailer_for(&src.mime) {
         Some(t) => run_sandboxed(&t.exec, src),
         None if src.mime.starts_with("image/") => {
-            Pixbuf::from_file_at_scale(&src.path, SIZE, SIZE, true)
+            Pixbuf::from_file_at_scale(src.path.as_deref()?, SIZE, SIZE, true)
                 .ok()
                 .map(|p| p.apply_embedded_orientation().unwrap_or(p))
         }
@@ -329,25 +407,38 @@ fn make_in(cache: &Path, src: &Source) -> Option<PathBuf> {
 mod tests {
     use super::*;
 
-    /// The `tEXt` chunks of a PNG file, as (key, value).
-    fn png_text(png: &[u8]) -> Vec<(String, String)> {
-        let mut out = Vec::new();
-        let mut at = 8;
-        while at + 8 <= png.len() {
-            let len = u32::from_be_bytes(png[at..at + 4].try_into().unwrap()) as usize;
-            let kind = &png[at + 4..at + 8];
-            let data = &png[at + 8..(at + 8 + len).min(png.len())];
-            if kind == b"tEXt" {
-                if let Some(nul) = data.iter().position(|&b| b == 0) {
-                    out.push((
-                        String::from_utf8_lossy(&data[..nul]).into_owned(),
-                        String::from_utf8_lossy(&data[nul + 1..]).into_owned(),
-                    ));
-                }
-            }
-            at += 12 + len;
-        }
-        out
+    #[test]
+    fn finds_only_valid_thumbnails() {
+        let dir = std::env::temp_dir().join(format!("helix-files-lookup-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let uri = "file:///photos/a.jpg";
+        let save = |size: &str, mtime: &str| {
+            let p = dir.join("thumbnails").join(size).join(cache_name(uri));
+            std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+            let pb = Pixbuf::new(gtk::gdk_pixbuf::Colorspace::Rgb, false, 8, 4, 4).unwrap();
+            pb.savev(
+                &p,
+                "png",
+                &[("tEXt::Thumb::URI", uri), ("tEXt::Thumb::MTime", mtime)],
+            )
+            .unwrap();
+            p
+        };
+        assert!(lookup_in(&dir, uri, 100).is_none());
+        // Stale (file changed since): not used.
+        save("large", "99");
+        assert!(lookup_in(&dir, uri, 100).is_none());
+        // A fresh one in another size folder is found.
+        let normal = save("normal", "100");
+        assert_eq!(lookup_in(&dir, uri, 100).map(|(p, _)| p), Some(normal));
+        // Another file has no thumbnail.
+        assert!(lookup_in(&dir, "file:///photos/b.jpg", 100).is_none());
+        // A thumbnail naming another URI is not this file's.
+        let png = std::fs::read(dir.join("thumbnails/normal").join(cache_name(uri))).unwrap();
+        assert!(is_valid(&png, uri, 100));
+        assert!(!is_valid(&png, "file:///elsewhere.jpg", 100));
+        assert!(!is_valid(b"not a png", uri, 100));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -369,7 +460,7 @@ mod tests {
         assert_eq!(try_exec.as_deref(), Some("gst-video-thumbnailer"));
         assert_eq!(t.mimes, ["video/mp4", "video/webm"]);
         let src = Source {
-            path: "/home/u/My Videos/a b.mp4".into(),
+            path: Some("/home/u/My Videos/a b.mp4".into()),
             uri: "file:///home/u/My%20Videos/a%20b.mp4".into(),
             mime: "video/mp4".into(),
             mtime: 1,
@@ -418,7 +509,7 @@ mod tests {
         // A MIME type no thumbnailer claims, so gdk-pixbuf makes it.
         let src = Source {
             uri: glib::filename_to_uri(&pic, None).unwrap().to_string(),
-            path: pic.clone(),
+            path: Some(pic.clone()),
             mime: "image/x-helix-test".into(),
             mtime: 1234,
         };

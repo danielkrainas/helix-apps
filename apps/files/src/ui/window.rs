@@ -131,7 +131,7 @@ pub fn location_title(file: &gio::File) -> String {
     if uri == OTHER_LOCATIONS {
         return tr("Other Locations").into();
     }
-    if let Some(p) = file.path() {
+    if let Some(p) = local_path(file) {
         if p == glib::home_dir() {
             return tr(nc_!("home folder", "Home")).into();
         }
@@ -140,7 +140,7 @@ pub fn location_title(file: &gio::File) -> String {
         }
     }
     match pathbar::crumbs_for_uri(&uri) {
-        Some(c) if file.path().is_none() => c.last().map(|c| c.label.clone()).unwrap_or_default(),
+        Some(c) if !file.is_native() => c.last().map(|c| c.label.clone()).unwrap_or_default(),
         _ => crate::ops::display_name(file),
     }
 }
@@ -814,7 +814,7 @@ impl Window {
             icon: "user-home-symbolic",
         }];
         for m in gio::VolumeMonitor::get().mounts() {
-            if let Some(p) = m.root().path() {
+            if let Some(p) = local_path(&m.root()) {
                 if p != std::path::Path::new("/") {
                     roots.push(pathbar::Root {
                         path: p,
@@ -836,7 +836,7 @@ impl Window {
         while let Some(c) = self.crumbs.first_child() {
             self.crumbs.remove(&c);
         }
-        let crumbs = match loc.path() {
+        let crumbs = match local_path(loc) {
             Some(p) => pathbar::crumbs_for_path(&p, &self.path_roots()),
             None => pathbar::crumbs_for_uri(&loc.uri()).unwrap_or_default(),
         };
@@ -1918,10 +1918,27 @@ impl Window {
 }
 
 /// What the location entry shows: a path for local files, else the URI.
+/// How a location is written for people: a local file's path, else its
+/// URI. (Not `path()` for remote ones: for a GVfs location that asks the
+/// GVfs daemon over D-Bus, synchronously, and the sidebar does this for
+/// every place while a window opens; it held a new window for seconds.
+/// Their FUSE path is no better to read than the URI either.)
 pub fn display_location(f: &gio::File) -> String {
-    match f.path() {
+    match local_path(f) {
         Some(p) => p.display().to_string(),
         None => f.uri().to_string(),
+    }
+}
+
+/// A local file's path, without asking anyone: `None` for remote (GVfs)
+/// locations, whose `path()` is a synchronous D-Bus call to the GVfs
+/// daemon (their FUSE path), which must not run on the main thread for
+/// every place, crumb or title.
+pub fn local_path(f: &gio::File) -> Option<std::path::PathBuf> {
+    if f.is_native() {
+        f.path()
+    } else {
+        None
     }
 }
 

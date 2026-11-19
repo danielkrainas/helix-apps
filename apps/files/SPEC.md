@@ -101,11 +101,17 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
 - `Ctrl+1` grid, `Ctrl+2` list (`default-folder-viewer`
   `icon-view`/`list-view` is the initial view and is updated on toggle).
   `Ctrl+plus` / `Ctrl+minus` / `Ctrl+0` zoom in/out/reset.
-- Thumbnails: thumbnails from the freedesktop thumbnail cache
-  (`thumbnail::path`) are shown in the grid when allowed by
-  `show-image-thumbnails` (`never`, `local-only`, `always`). Otherwise the
-  themed icon for the content type. A regular file with a local path
-  (GVfs FUSE paths included) and no valid cached thumbnail gets one made
+- Thumbnails: thumbnails from the freedesktop thumbnail cache are shown
+  in the grid when allowed by `show-image-thumbnails` (`never`,
+  `local-only`, `always`). Otherwise the themed icon for the content type.
+  They are looked up for the tiles shown, on worker threads
+  (`$XDG_CACHE_HOME/thumbnails/{large,x-large,xx-large,normal}/<md5(uri)>.png`
+  whose `Thumb::MTime` equals the file's and whose `Thumb::URI`, if set,
+  is the file's), not with GIO's `thumbnail::path` while a folder lists:
+  that looks for every file and was most of a big folder's loading time
+  (50 000 files: 916 ms with it, 345 ms without; `tests/load_bench.rs`).
+  A regular file (a remote one's GVfs FUSE path is found on the worker
+  thread) with no valid cached thumbnail gets one made
   (`ui/thumbnailer.rs`), at most 2 at a time: the installed thumbnailer
   for its MIME type (`thumbnailers/*.thumbnailer` in the data folders,
   `%i %u %o %s` expanded, killed after 30 s), or gdk-pixbuf for pictures
