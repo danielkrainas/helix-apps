@@ -381,7 +381,7 @@ msgid "Repeat"
 msgstr "Ripeti"
 
 #: apps/audio-player/src/ui.rs:378 apps/audio-player/src/ui.rs:380
-#: apps/music/src/shortcuts.rs:19 apps/settings/src/ui/sound.rs:116
+#: apps/music/src/shortcuts.rs:19 apps/settings/src/ui/sound.rs:121
 #: apps/video-player/src/ui.rs:482 apps/video-player/src/ui.rs:484
 msgid "Mute"
 msgstr "Muto"
@@ -389,7 +389,7 @@ msgstr "Muto"
 #: apps/audio-player/src/ui.rs:386 apps/audio-player/src/ui.rs:394
 #: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:2615
 #: apps/music/src/ui.rs:2622 apps/music/src/ui.rs:2627
-#: apps/settings/src/ui/sound.rs:163 apps/video-player/src/ui.rs:158
+#: apps/settings/src/ui/sound.rs:168 apps/video-player/src/ui.rs:158
 #: apps/video-player/src/ui.rs:491 apps/video-player/src/ui.rs:497
 #: apps/video-player/src/ui.rs:503
 msgid "Volume"
@@ -6264,7 +6264,7 @@ msgstr "Lati da acquisire"
 msgid "For the document feeder"
 msgstr "Per l'alimentatore documenti"
 
-#: apps/document-scanner/src/ui.rs:1779 apps/settings/src/ui/sound.rs:247
+#: apps/document-scanner/src/ui.rs:1779 apps/settings/src/ui/sound.rs:252
 msgid "Front"
 msgstr "Fronte"
 
@@ -7170,7 +7170,7 @@ msgid "Applications"
 msgstr "Applicazioni"
 
 #: apps/files/src/ui/dialogs.rs:364 apps/settings/src/ui/appearance.rs:107
-#: apps/settings/src/ui/sound.rs:829 apps/settings/src/values.rs:204
+#: apps/settings/src/ui/sound.rs:928 apps/settings/src/values.rs:204
 msgid "Default"
 msgstr "Predefinito"
 
@@ -9860,7 +9860,7 @@ msgstr "{n} kbit/s"
 msgid "{rate} kHz"
 msgstr "{rate} kHz"
 
-#: apps/music/src/details.rs:86 apps/settings/src/sound.rs:721
+#: apps/music/src/details.rs:86 apps/settings/src/sound.rs:852
 msgid "Mono"
 msgstr "Mono"
 
@@ -10885,7 +10885,7 @@ msgstr "Cuffie con microfono"
 msgid "Headphones"
 msgstr "Cuffie"
 
-#: apps/settings/src/bluez.rs:223 apps/settings/src/sound.rs:722
+#: apps/settings/src/bluez.rs:223 apps/settings/src/sound.rs:853
 msgid "Speaker"
 msgstr "Altoparlante"
 
@@ -11225,7 +11225,7 @@ msgid "dark;light;style;theme;icon;icons;accent;color;colour;wallpaper;backgroun
 msgstr "scuro;chiaro;stile;tema;icona;icone;accento;colore;sfondo;wallpaper;"
 
 #: apps/settings/src/panels.rs:144 apps/settings/src/ui/notifications.rs:100
-#: apps/settings/src/ui/sound.rs:283
+#: apps/settings/src/ui/sound.rs:288
 msgid "Apps"
 msgstr "Applicazioni"
 
@@ -11348,39 +11348,39 @@ msgstr "Altoparlanti"
 msgid "Screenshots"
 msgstr "Schermate"
 
-#: apps/settings/src/sound.rs:712
+#: apps/settings/src/sound.rs:843
 msgid "Front Left"
 msgstr "Anteriore sinistro"
 
-#: apps/settings/src/sound.rs:713
+#: apps/settings/src/sound.rs:844
 msgid "Front Right"
 msgstr "Anteriore destro"
 
-#: apps/settings/src/sound.rs:714
+#: apps/settings/src/sound.rs:845
 msgid "Front Center"
 msgstr "Anteriore centrale"
 
-#: apps/settings/src/sound.rs:715
+#: apps/settings/src/sound.rs:846
 msgid "Rear Left"
 msgstr "Posteriore sinistro"
 
-#: apps/settings/src/sound.rs:716
+#: apps/settings/src/sound.rs:847
 msgid "Rear Right"
 msgstr "Posteriore destro"
 
-#: apps/settings/src/sound.rs:717
+#: apps/settings/src/sound.rs:848
 msgid "Rear Center"
 msgstr "Posteriore centrale"
 
-#: apps/settings/src/sound.rs:718
+#: apps/settings/src/sound.rs:849
 msgid "Side Left"
 msgstr "Laterale sinistro"
 
-#: apps/settings/src/sound.rs:719
+#: apps/settings/src/sound.rs:850
 msgid "Side Right"
 msgstr "Laterale destro"
 
-#: apps/settings/src/sound.rs:720
+#: apps/settings/src/sound.rs:851
 msgid "Subwoofer"
 msgstr "Subwoofer"
 
@@ -12647,11 +12647,11 @@ msgstr "Impossibile usare questi tasti: {msg}"
 msgid "Primary Button"
 msgstr "Pulsante principale"
 
-#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:229
+#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:234
 msgid "Left"
 msgstr "Sinistra"
 
-#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:231
+#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:236
 msgid "Right"
 msgstr "Destra"
 
@@ -13426,164 +13426,168 @@ msgstr "Cancella e chiudi la ricerca"
 msgid "About Settings"
 msgstr "Informazioni su Impostazioni"
 
-#: apps/settings/src/ui/sound.rs:141
+#: apps/settings/src/ui/sound.rs:146
 msgid "Input"
 msgstr "Ingresso"
 
-#: apps/settings/src/ui/sound.rs:141
+#: apps/settings/src/ui/sound.rs:146
 msgid "Output"
 msgstr "Uscita"
 
-#: apps/settings/src/ui/sound.rs:145
+#: apps/settings/src/ui/sound.rs:150
 msgid "Output Device"
 msgstr "Dispositivo di uscita"
 
-#: apps/settings/src/ui/sound.rs:147
+#: apps/settings/src/ui/sound.rs:152
 msgid "Input Device"
 msgstr "Dispositivo di ingresso"
 
-#: apps/settings/src/ui/sound.rs:154
+#: apps/settings/src/ui/sound.rs:159
 msgid "Output Port"
 msgstr "Porta di uscita"
 
-#: apps/settings/src/ui/sound.rs:156
+#: apps/settings/src/ui/sound.rs:161
 msgid "Input Port"
 msgstr "Porta di ingresso"
 
-#: apps/settings/src/ui/sound.rs:166
+#: apps/settings/src/ui/sound.rs:171
 msgid "Mute Output"
 msgstr "Silenzia uscita"
 
-#: apps/settings/src/ui/sound.rs:168
+#: apps/settings/src/ui/sound.rs:173
 msgid "Mute Input"
 msgstr "Silenzia ingresso"
 
-#: apps/settings/src/ui/sound.rs:171
+#: apps/settings/src/ui/sound.rs:176
 msgid "Output Volume"
 msgstr "Volume in uscita"
 
-#: apps/settings/src/ui/sound.rs:173
+#: apps/settings/src/ui/sound.rs:178
 msgid "Input Volume"
 msgstr "Volume in ingresso"
 
-#: apps/settings/src/ui/sound.rs:180
+#: apps/settings/src/ui/sound.rs:185
 msgid "Configuration"
 msgstr "Configurazione"
 
-#: apps/settings/src/ui/sound.rs:186
+#: apps/settings/src/ui/sound.rs:191
 msgid "Output Configuration"
 msgstr "Configurazione dell'uscita"
 
-#: apps/settings/src/ui/sound.rs:188
+#: apps/settings/src/ui/sound.rs:193
 msgid "Input Configuration"
 msgstr "Configurazione dell'ingresso"
 
-#: apps/settings/src/ui/sound.rs:208
+#: apps/settings/src/ui/sound.rs:213
 msgid "Loading Sound…"
 msgstr "Caricamento dell'audio…"
 
-#: apps/settings/src/ui/sound.rs:212
+#: apps/settings/src/ui/sound.rs:217
 msgid "Sound Is Not Available"
 msgstr "Audio non disponibile"
 
-#: apps/settings/src/ui/sound.rs:213
+#: apps/settings/src/ui/sound.rs:218
 msgid "No sound server is running."
 msgstr "Nessun server audio in esecuzione."
 
-#: apps/settings/src/ui/sound.rs:222 apps/settings/src/ui/sound.rs:232
+#: apps/settings/src/ui/sound.rs:227 apps/settings/src/ui/sound.rs:237
 msgid "Balance"
 msgstr "Bilanciamento"
 
-#: apps/settings/src/ui/sound.rs:237 apps/settings/src/ui/sound.rs:248
+#: apps/settings/src/ui/sound.rs:242 apps/settings/src/ui/sound.rs:253
 msgid "Fade"
 msgstr "Dissolvenza"
 
-#: apps/settings/src/ui/sound.rs:245
+#: apps/settings/src/ui/sound.rs:250
 msgid "Rear"
 msgstr "Posteriore"
 
-#: apps/settings/src/ui/sound.rs:253
+#: apps/settings/src/ui/sound.rs:258
 msgid "Test Speakers"
 msgstr "Prova altoparlanti"
 
-#: apps/settings/src/ui/sound.rs:254
+#: apps/settings/src/ui/sound.rs:259
 msgid "Play a sound on each speaker"
 msgstr "Riproduce un suono su ciascun altoparlante"
 
-#: apps/settings/src/ui/sound.rs:255
+#: apps/settings/src/ui/sound.rs:260
 msgid "Test…"
 msgstr "Prova…"
 
-#: apps/settings/src/ui/sound.rs:264 apps/settings/src/ui/sound.rs:277
+#: apps/settings/src/ui/sound.rs:269 apps/settings/src/ui/sound.rs:282
 msgid "Input Level"
 msgstr "Livello di ingresso"
 
-#: apps/settings/src/ui/sound.rs:286
+#: apps/settings/src/ui/sound.rs:291
 msgid "Sounds"
 msgstr "Suoni"
 
-#: apps/settings/src/ui/sound.rs:292
+#: apps/settings/src/ui/sound.rs:297
 msgid "Over-Amplification"
 msgstr "Sovramplificazione"
 
-#: apps/settings/src/ui/sound.rs:293
+#: apps/settings/src/ui/sound.rs:298
 msgid "Lets the volume go above 100 %, which can distort the sound"
 msgstr ""
 "Consente al volume di superare il 100 %, il che può distorcere il suono"
 
-#: apps/settings/src/ui/sound.rs:300
+#: apps/settings/src/ui/sound.rs:305
 msgid "System Sounds"
 msgstr "Suoni di sistema"
 
-#: apps/settings/src/ui/sound.rs:301
+#: apps/settings/src/ui/sound.rs:306
 msgid "Sounds for events such as a message arriving"
 msgstr "Suoni per eventi come l'arrivo di un messaggio"
 
-#: apps/settings/src/ui/sound.rs:524
+#: apps/settings/src/ui/sound.rs:310 apps/settings/src/ui/sound.rs:313
+msgid "System Sounds Volume"
+msgstr "Volume dei suoni di sistema"
+
+#: apps/settings/src/ui/sound.rs:623
 msgid "Could not change the sound settings: {e}"
 msgstr "Impossibile modificare le impostazioni audio: {e}"
 
-#: apps/settings/src/ui/sound.rs:547
+#: apps/settings/src/ui/sound.rs:646
 msgid "No output devices"
 msgstr "Nessun dispositivo di uscita"
 
-#: apps/settings/src/ui/sound.rs:549
+#: apps/settings/src/ui/sound.rs:648
 msgid "No input devices"
 msgstr "Nessun dispositivo di ingresso"
 
-#: apps/settings/src/ui/sound.rs:679
+#: apps/settings/src/ui/sound.rs:778
 msgid "Unknown App"
 msgstr "Applicazione sconosciuta"
 
-#: apps/settings/src/ui/sound.rs:688
+#: apps/settings/src/ui/sound.rs:787
 msgid "Mute {app}"
 msgstr "Silenzia {app}"
 
-#: apps/settings/src/ui/sound.rs:689
+#: apps/settings/src/ui/sound.rs:788
 msgid "Volume of {app}"
 msgstr "Volume di {app}"
 
-#: apps/settings/src/ui/sound.rs:733
+#: apps/settings/src/ui/sound.rs:832
 msgid "No apps are playing sound."
 msgstr "Nessuna applicazione sta riproducendo audio."
 
-#: apps/settings/src/ui/sound.rs:778
+#: apps/settings/src/ui/sound.rs:877
 msgid "Select a speaker to play a sound on it."
 msgstr "Selezionare un altoparlante per riprodurvi un suono."
 
-#: apps/settings/src/ui/sound.rs:812
+#: apps/settings/src/ui/sound.rs:911
 msgid "Could not play the test sound: {e}"
 msgstr "Impossibile riprodurre il suono di prova: {e}"
 
-#: apps/settings/src/ui/sound.rs:821
+#: apps/settings/src/ui/sound.rs:920
 msgid "Test {device}"
 msgstr "Prova {device}"
 
-#: apps/settings/src/ui/sound.rs:833
+#: apps/settings/src/ui/sound.rs:932
 msgid "Alert Sound"
 msgstr "Suono di avviso"
 
-#: apps/settings/src/ui/sound.rs:871
+#: apps/settings/src/ui/sound.rs:970
 msgid "Could not change the alert sound: {e}"
 msgstr "Impossibile cambiare il suono di avviso: {e}"
 

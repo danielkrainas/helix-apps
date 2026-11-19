@@ -686,13 +686,34 @@ and the `set-*` commands (`sound.rs`). The page follows `pactl subscribe`
   sound." when there are none.
 - *Sounds*: *Over-Amplification* (`org.gnome.desktop.sound
   allow-volume-above-100-percent`), *System Sounds* (`event-sounds`),
-  *Alert Sound*: *Default* (the theme's bell) or one of the sounds in
+  *System Sounds Volume* (a slider, "System Sounds Volume", 0–100 %,
+  dimmed while system sounds are off; see below), *Alert Sound*: *Default* (the theme's bell) or one of the sounds in
   `sounds/gnome/default/alerts` of the data directories (by file name).
   Choosing one writes a sound theme `__custom` in
   `$XDG_DATA_HOME/sounds` that inherits from the previous theme and links
   `bell-terminal.oga` and `bell-window-system.oga` to the file, sets
   `theme-name` to it and plays the sound; *Default* removes the theme and
   restores the inherited name.
+- The system sounds volume is PulseAudio's stream-restore entry
+  `sink-input-by-media-role:event`, which GNOME Settings and pavucontrol
+  set through libpulse's ext-stream-restore. `pactl` cannot reach that
+  extension, so the panel goes one level down: pipewire-pulse keeps those
+  entries in PipeWire's `route-settings` metadata (WirePlumber makes it,
+  stores what is written there and applies it to each new event sound),
+  under `restore.stream.Output/Audio.media.role:Notification`
+  (pipewire-pulse's name for the `event` role). The panel reads it with
+  `pw-metadata -n route-settings 0`, follows it with `pw-metadata -m`,
+  and writes the entry pipewire-pulse would write: `{ "mute": …,
+  "volumes": [ v, v ], "channels": [ "FL", "FR" ] }`, linear amplitudes
+  (v = slider³, PulseAudio's cubic scale; the mute flag is kept as it
+  was). Stereo rather than mono because WirePlumber applies the volumes
+  to a new sound by channel position, and a mono entry leaves the right
+  channel of a stereo event sound silent. GNOME Settings and pavucontrol
+  read the same entry, and the panel shows theirs (any layout; the
+  loudest channel). No entry is 100 %. Event sounds playing at that
+  moment are set too (`set-sink-input-volume`), as PulseAudio's
+  stream-restore does. Without the metadata object (no WirePlumber, or
+  PulseAudio itself) or without `pw-metadata`, the row is hidden.
 - Slider changes go out one at a time (only the newest waiting one is
   kept), and readings leave a slider alone for 0.8 s after the user
   moved it.
@@ -704,9 +725,17 @@ and the `set-*` commands (`sound.rs`). The page follows `pactl subscribe`
   5.1 sink's monitor and sounds on its channel only, for each of the six
   channels, and the input level stays at zero until a test source plays
   into the microphone, then rises. Fade, ports and profiles are tested on
-  `pactl` output (null devices have neither ports nor cards). Not yet: a
-  system sounds volume (only the on/off switch; it needs the
-  stream-restore extension, which `pactl` does not reach).
+  `pactl` output (null devices have neither ports nor cards). The system
+  sounds volume is tested against the fake audio session's
+  `route-settings` metadata (set from the panel, read back, followed when
+  another program writes a mono entry as pipewire-pulse does for
+  libpulse, and when it is removed), on `pw-metadata` output, and as
+  unavailable on a PipeWire without the metadata object. It was also
+  checked by hand against a private PipeWire with WirePlumber (hardware
+  monitors off) and pipewire-pulse: libpulse's ext-stream-restore (from
+  a ctypes script) writes and reads the same key and values, an event
+  sound started afterwards gets the volume, one playing is set at once,
+  and WirePlumber keeps it in its `stream-properties` state.
 
 #### Bluetooth
 BlueZ (`org.bluez` on the system bus: the object manager at `/`,

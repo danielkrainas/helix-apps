@@ -10,7 +10,7 @@ use std::time::{Duration, Instant};
 
 use super::widgets::{self, switch, watch};
 use super::{follow, spawn_worker, Ctx, Panel};
-use crate::sound::{self, Device, Server, Sound};
+use crate::sound::{self, Device, EventVolume, Server, Sound};
 use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 
@@ -77,6 +77,11 @@ struct State {
     level: gtk::LevelBar,
     apps: adw::PreferencesGroup,
     app_rows: RefCell<Vec<(u64, gtk::Scale, gtk::ToggleButton, gtk::Widget)>>,
+    /// The system sounds volume row; hidden when the sound server keeps
+    /// no stream-restore entries.
+    events_row: adw::ActionRow,
+    events: gtk::Scale,
+    event_volume: Cell<Option<EventVolume>>,
     sound: RefCell<Sound>,
     quiet: Cell<bool>,
     held: Cell<Option<Instant>>,
@@ -300,6 +305,14 @@ impl Panel for SoundPanel {
             tr("System Sounds"),
             tr("Sounds for events such as a message arriving"),
         ));
+        let events_row = adw::ActionRow::builder()
+            .use_markup(false)
+            .title(tr("System Sounds Volume"))
+            .visible(false)
+            .build();
+        let events = volume_scale(tr("System Sounds Volume"));
+        events_row.add_suffix(&events);
+        sounds.add(&events_row);
         sounds.add(&alert_row(ctx, &prefs));
         page.add(&sounds);
         stack.add_named(&page, Some("page"));
@@ -318,6 +331,9 @@ impl Panel for SoundPanel {
             level,
             apps,
             app_rows: RefCell::default(),
+            events_row,
+            events,
+            event_volume: Cell::default(),
             sound: RefCell::default(),
             quiet: Cell::new(false),
             held: Cell::new(None),
@@ -345,6 +361,20 @@ impl Panel for SoundPanel {
                 }
             }
         });
+        let weak = Rc::downgrade(&state);
+        state.events.connect_value_changed(move |sc| {
+            if let Some(state) = weak.upgrade() {
+                if !state.quiet.get() {
+                    send_event_volume(&state, sc.value());
+                }
+            }
+        });
+        // System sounds are off: their volume does nothing.
+        let row = state.events_row.clone();
+        let events_on = move |p: &Prefs| row.set_sensitive(p.get::<bool>("event-sounds", true));
+        events_on(&prefs);
+        let p = prefs.clone();
+        watch(&prefs, "event-sounds", move || events_on(&p));
         let weak = Rc::downgrade(&state);
         test.connect_clicked(move |_| {
             if let Some(state) = weak.upgrade() {
@@ -382,6 +412,14 @@ impl Panel for SoundPanel {
             Duration::from_millis(150),
             move |tell| sound::watch(&server, tell),
             refresh,
+        );
+        refresh_events(&state);
+        let server = state.server.clone();
+        follow(
+            &state,
+            Duration::from_millis(150),
+            move |tell| sound::watch_event_volume(&server, tell),
+            refresh_events,
         );
         stack.connect_destroy(move |_| {
             let _ = &state;
@@ -514,6 +552,67 @@ fn refresh(state: &Rc<State>) {
             }
         },
     );
+}
+
+/// Sets the system sounds volume, and that of the event sounds playing
+/// now (the stored one only reaches sounds to come).
+fn send_event_volume(state: &Rc<State>, level: f64) {
+    let Some(current) = state.event_volume.get() else {
+        return;
+    };
+    state.hold();
+    let volume = EventVolume { level, ..current };
+    state.event_volume.set(Some(volume));
+    let playing: Vec<u64> = state
+        .sound
+        .borrow()
+        .apps
+        .iter()
+        .filter(|a| a.role == "event")
+        .map(|a| a.index)
+        .collect();
+    let server = state.server.clone();
+    state.throttle.run(move || {
+        sound::set_event_volume(&server, &volume)?;
+        for i in playing {
+            // It may have ended meanwhile.
+            let _ = sound::set_app_volume(&server, i, volume.level);
+        }
+        Ok(())
+    });
+}
+
+fn refresh_events(state: &Rc<State>) {
+    let (weak, server) = (Rc::downgrade(state), state.server.clone());
+    spawn_worker(
+        move || sound::read_event_volume(&server),
+        move |r| {
+            if let Some(state) = weak.upgrade() {
+                show_events(&state, r.ok().flatten());
+            }
+        },
+    );
+}
+
+fn show_events(state: &Rc<State>, volume: Option<EventVolume>) {
+    state.events_row.set_visible(volume.is_some());
+    if let Some(v) = &volume {
+        state.quiet.set(true);
+        state.events.set_range(0.0, v.level.max(1.0));
+        if !state.holding() {
+            state.events.set_value(v.level);
+        }
+        state.quiet.set(false);
+        state
+            .events
+            .update_property(&[gtk::accessible::Property::ValueText(&format!(
+                "{:.0} %",
+                v.level * 100.0
+            ))]);
+    }
+    if !state.holding() || volume.is_none() {
+        state.event_volume.set(volume);
+    }
 }
 
 fn done(weak: &std::rc::Weak<State>, r: sound::Result<()>) {

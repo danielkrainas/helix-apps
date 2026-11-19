@@ -382,7 +382,7 @@ msgid "Repeat"
 msgstr "Повторювати"
 
 #: apps/audio-player/src/ui.rs:378 apps/audio-player/src/ui.rs:380
-#: apps/music/src/shortcuts.rs:19 apps/settings/src/ui/sound.rs:116
+#: apps/music/src/shortcuts.rs:19 apps/settings/src/ui/sound.rs:121
 #: apps/video-player/src/ui.rs:482 apps/video-player/src/ui.rs:484
 msgid "Mute"
 msgstr "Вимкнути звук"
@@ -390,7 +390,7 @@ msgstr "Вимкнути звук"
 #: apps/audio-player/src/ui.rs:386 apps/audio-player/src/ui.rs:394
 #: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:2615
 #: apps/music/src/ui.rs:2622 apps/music/src/ui.rs:2627
-#: apps/settings/src/ui/sound.rs:163 apps/video-player/src/ui.rs:158
+#: apps/settings/src/ui/sound.rs:168 apps/video-player/src/ui.rs:158
 #: apps/video-player/src/ui.rs:491 apps/video-player/src/ui.rs:497
 #: apps/video-player/src/ui.rs:503
 msgid "Volume"
@@ -6294,7 +6294,7 @@ msgstr "Сторони сканування"
 msgid "For the document feeder"
 msgstr "Для пристрою подачі документів"
 
-#: apps/document-scanner/src/ui.rs:1779 apps/settings/src/ui/sound.rs:247
+#: apps/document-scanner/src/ui.rs:1779 apps/settings/src/ui/sound.rs:252
 msgid "Front"
 msgstr "Лицьова"
 
@@ -7215,7 +7215,7 @@ msgid "Applications"
 msgstr "Програми"
 
 #: apps/files/src/ui/dialogs.rs:364 apps/settings/src/ui/appearance.rs:107
-#: apps/settings/src/ui/sound.rs:829 apps/settings/src/values.rs:204
+#: apps/settings/src/ui/sound.rs:928 apps/settings/src/values.rs:204
 msgid "Default"
 msgstr "Типово"
 
@@ -9914,7 +9914,7 @@ msgstr "{n} кбіт/с"
 msgid "{rate} kHz"
 msgstr "{rate} кГц"
 
-#: apps/music/src/details.rs:86 apps/settings/src/sound.rs:721
+#: apps/music/src/details.rs:86 apps/settings/src/sound.rs:852
 msgid "Mono"
 msgstr "Моно"
 
@@ -10948,7 +10948,7 @@ msgstr "Гарнітура"
 msgid "Headphones"
 msgstr "Навушники"
 
-#: apps/settings/src/bluez.rs:223 apps/settings/src/sound.rs:722
+#: apps/settings/src/bluez.rs:223 apps/settings/src/sound.rs:853
 msgid "Speaker"
 msgstr "Динамік"
 
@@ -11296,7 +11296,7 @@ msgid "dark;light;style;theme;icon;icons;accent;color;colour;wallpaper;backgroun
 msgstr "темний;світлий;стиль;тема;піктограма;піктограми;акцент;колір;шпалери;тло;dark;light;style;theme;icon;icons;accent;color;colour;wallpaper;background;"
 
 #: apps/settings/src/panels.rs:144 apps/settings/src/ui/notifications.rs:100
-#: apps/settings/src/ui/sound.rs:283
+#: apps/settings/src/ui/sound.rs:288
 msgid "Apps"
 msgstr "Програми"
 
@@ -11434,39 +11434,39 @@ msgstr "Динаміки"
 msgid "Screenshots"
 msgstr "Знімки екрана"
 
-#: apps/settings/src/sound.rs:712
+#: apps/settings/src/sound.rs:843
 msgid "Front Left"
 msgstr "Передній лівий"
 
-#: apps/settings/src/sound.rs:713
+#: apps/settings/src/sound.rs:844
 msgid "Front Right"
 msgstr "Передній правий"
 
-#: apps/settings/src/sound.rs:714
+#: apps/settings/src/sound.rs:845
 msgid "Front Center"
 msgstr "Передній центральний"
 
-#: apps/settings/src/sound.rs:715
+#: apps/settings/src/sound.rs:846
 msgid "Rear Left"
 msgstr "Задній лівий"
 
-#: apps/settings/src/sound.rs:716
+#: apps/settings/src/sound.rs:847
 msgid "Rear Right"
 msgstr "Задній правий"
 
-#: apps/settings/src/sound.rs:717
+#: apps/settings/src/sound.rs:848
 msgid "Rear Center"
 msgstr "Задній центральний"
 
-#: apps/settings/src/sound.rs:718
+#: apps/settings/src/sound.rs:849
 msgid "Side Left"
 msgstr "Бічний лівий"
 
-#: apps/settings/src/sound.rs:719
+#: apps/settings/src/sound.rs:850
 msgid "Side Right"
 msgstr "Бічний правий"
 
-#: apps/settings/src/sound.rs:720
+#: apps/settings/src/sound.rs:851
 msgid "Subwoofer"
 msgstr "Сабвуфер"
 
@@ -12720,11 +12720,11 @@ msgstr "Не вдалося використати ці клавіші: {msg}"
 msgid "Primary Button"
 msgstr "Основна кнопка"
 
-#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:229
+#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:234
 msgid "Left"
 msgstr "Ліва"
 
-#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:231
+#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:236
 msgid "Right"
 msgstr "Права"
 
@@ -13492,163 +13492,167 @@ msgstr "Очистити й закрити пошук"
 msgid "About Settings"
 msgstr "Про Параметри"
 
-#: apps/settings/src/ui/sound.rs:141
+#: apps/settings/src/ui/sound.rs:146
 msgid "Input"
 msgstr "Вхід"
 
-#: apps/settings/src/ui/sound.rs:141
+#: apps/settings/src/ui/sound.rs:146
 msgid "Output"
 msgstr "Вихід"
 
-#: apps/settings/src/ui/sound.rs:145
+#: apps/settings/src/ui/sound.rs:150
 msgid "Output Device"
 msgstr "Пристрій виведення"
 
-#: apps/settings/src/ui/sound.rs:147
+#: apps/settings/src/ui/sound.rs:152
 msgid "Input Device"
 msgstr "Пристрій введення"
 
-#: apps/settings/src/ui/sound.rs:154
+#: apps/settings/src/ui/sound.rs:159
 msgid "Output Port"
 msgstr "Порт виведення"
 
-#: apps/settings/src/ui/sound.rs:156
+#: apps/settings/src/ui/sound.rs:161
 msgid "Input Port"
 msgstr "Порт введення"
 
-#: apps/settings/src/ui/sound.rs:166
+#: apps/settings/src/ui/sound.rs:171
 msgid "Mute Output"
 msgstr "Вимкнути виведення звуку"
 
-#: apps/settings/src/ui/sound.rs:168
+#: apps/settings/src/ui/sound.rs:173
 msgid "Mute Input"
 msgstr "Вимкнути введення звуку"
 
-#: apps/settings/src/ui/sound.rs:171
+#: apps/settings/src/ui/sound.rs:176
 msgid "Output Volume"
 msgstr "Гучність виведення"
 
-#: apps/settings/src/ui/sound.rs:173
+#: apps/settings/src/ui/sound.rs:178
 msgid "Input Volume"
 msgstr "Гучність введення"
 
-#: apps/settings/src/ui/sound.rs:180
+#: apps/settings/src/ui/sound.rs:185
 msgid "Configuration"
 msgstr "Конфігурація"
 
-#: apps/settings/src/ui/sound.rs:186
+#: apps/settings/src/ui/sound.rs:191
 msgid "Output Configuration"
 msgstr "Конфігурація виведення"
 
-#: apps/settings/src/ui/sound.rs:188
+#: apps/settings/src/ui/sound.rs:193
 msgid "Input Configuration"
 msgstr "Конфігурація введення"
 
-#: apps/settings/src/ui/sound.rs:208
+#: apps/settings/src/ui/sound.rs:213
 msgid "Loading Sound…"
 msgstr "Завантаження звуку…"
 
-#: apps/settings/src/ui/sound.rs:212
+#: apps/settings/src/ui/sound.rs:217
 msgid "Sound Is Not Available"
 msgstr "Звук недоступний"
 
-#: apps/settings/src/ui/sound.rs:213
+#: apps/settings/src/ui/sound.rs:218
 msgid "No sound server is running."
 msgstr "Не запущено жодного звукового сервера."
 
-#: apps/settings/src/ui/sound.rs:222 apps/settings/src/ui/sound.rs:232
+#: apps/settings/src/ui/sound.rs:227 apps/settings/src/ui/sound.rs:237
 msgid "Balance"
 msgstr "Баланс"
 
-#: apps/settings/src/ui/sound.rs:237 apps/settings/src/ui/sound.rs:248
+#: apps/settings/src/ui/sound.rs:242 apps/settings/src/ui/sound.rs:253
 msgid "Fade"
 msgstr "Фронт/тил"
 
-#: apps/settings/src/ui/sound.rs:245
+#: apps/settings/src/ui/sound.rs:250
 msgid "Rear"
 msgstr "Тил"
 
-#: apps/settings/src/ui/sound.rs:253
+#: apps/settings/src/ui/sound.rs:258
 msgid "Test Speakers"
 msgstr "Перевірити динаміки"
 
-#: apps/settings/src/ui/sound.rs:254
+#: apps/settings/src/ui/sound.rs:259
 msgid "Play a sound on each speaker"
 msgstr "Відтворити звук на кожному динаміку"
 
-#: apps/settings/src/ui/sound.rs:255
+#: apps/settings/src/ui/sound.rs:260
 msgid "Test…"
 msgstr "Перевірити…"
 
-#: apps/settings/src/ui/sound.rs:264 apps/settings/src/ui/sound.rs:277
+#: apps/settings/src/ui/sound.rs:269 apps/settings/src/ui/sound.rs:282
 msgid "Input Level"
 msgstr "Рівень входу"
 
-#: apps/settings/src/ui/sound.rs:286
+#: apps/settings/src/ui/sound.rs:291
 msgid "Sounds"
 msgstr "Звуки"
 
-#: apps/settings/src/ui/sound.rs:292
+#: apps/settings/src/ui/sound.rs:297
 msgid "Over-Amplification"
 msgstr "Надмірне підсилення"
 
-#: apps/settings/src/ui/sound.rs:293
+#: apps/settings/src/ui/sound.rs:298
 msgid "Lets the volume go above 100 %, which can distort the sound"
 msgstr "Дозволяє гучність понад 100 %, що може спотворювати звук"
 
-#: apps/settings/src/ui/sound.rs:300
+#: apps/settings/src/ui/sound.rs:305
 msgid "System Sounds"
 msgstr "Системні звуки"
 
-#: apps/settings/src/ui/sound.rs:301
+#: apps/settings/src/ui/sound.rs:306
 msgid "Sounds for events such as a message arriving"
 msgstr "Звуки для подій, наприклад надходження повідомлення"
 
-#: apps/settings/src/ui/sound.rs:524
+#: apps/settings/src/ui/sound.rs:310 apps/settings/src/ui/sound.rs:313
+msgid "System Sounds Volume"
+msgstr "Гучність системних звуків"
+
+#: apps/settings/src/ui/sound.rs:623
 msgid "Could not change the sound settings: {e}"
 msgstr "Не вдалося змінити параметри звуку: {e}"
 
-#: apps/settings/src/ui/sound.rs:547
+#: apps/settings/src/ui/sound.rs:646
 msgid "No output devices"
 msgstr "Немає пристроїв виведення"
 
-#: apps/settings/src/ui/sound.rs:549
+#: apps/settings/src/ui/sound.rs:648
 msgid "No input devices"
 msgstr "Немає пристроїв введення"
 
-#: apps/settings/src/ui/sound.rs:679
+#: apps/settings/src/ui/sound.rs:778
 msgid "Unknown App"
 msgstr "Невідома програма"
 
-#: apps/settings/src/ui/sound.rs:688
+#: apps/settings/src/ui/sound.rs:787
 msgid "Mute {app}"
 msgstr "Вимкнути звук {app}"
 
-#: apps/settings/src/ui/sound.rs:689
+#: apps/settings/src/ui/sound.rs:788
 msgid "Volume of {app}"
 msgstr "Гучність {app}"
 
-#: apps/settings/src/ui/sound.rs:733
+#: apps/settings/src/ui/sound.rs:832
 msgid "No apps are playing sound."
 msgstr "Жодна програма не відтворює звук."
 
-#: apps/settings/src/ui/sound.rs:778
+#: apps/settings/src/ui/sound.rs:877
 msgid "Select a speaker to play a sound on it."
 msgstr "Виберіть динамік, щоб відтворити на ньому звук."
 
-#: apps/settings/src/ui/sound.rs:812
+#: apps/settings/src/ui/sound.rs:911
 msgid "Could not play the test sound: {e}"
 msgstr "Не вдалося відтворити тестовий звук: {e}"
 
-#: apps/settings/src/ui/sound.rs:821
+#: apps/settings/src/ui/sound.rs:920
 msgid "Test {device}"
 msgstr "Перевірити {device}"
 
-#: apps/settings/src/ui/sound.rs:833
+#: apps/settings/src/ui/sound.rs:932
 msgid "Alert Sound"
 msgstr "Звук сигналу"
 
-#: apps/settings/src/ui/sound.rs:871
+#: apps/settings/src/ui/sound.rs:970
 msgid "Could not change the alert sound: {e}"
 msgstr "Не вдалося змінити звук сигналу: {e}"
 

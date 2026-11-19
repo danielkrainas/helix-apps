@@ -1,6 +1,8 @@
 //! Sound devices and volumes through the sound server's PulseAudio
 //! interface (`pactl`, as the shell uses; PipeWire serves it with
-//! pipewire-pulse), and the alert sound (a sound theme of its own).
+//! pipewire-pulse), the system sounds volume (PipeWire's `route-settings`
+//! metadata through `pw-metadata`), and the alert sound (a sound theme of
+//! its own).
 //! Blocking; worker threads only.
 
 use std::io::{BufRead, Read, Write};
@@ -38,6 +40,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct Server {
     /// `PULSE_SERVER` for the commands, when not the session's.
     pub address: Option<String>,
+    /// `PIPEWIRE_RUNTIME_DIR` for `pw-metadata`, when not the session's.
+    pub pipewire: Option<PathBuf>,
 }
 
 impl Server {
@@ -47,7 +51,25 @@ impl Server {
         if let Some(a) = &self.address {
             c.env("PULSE_SERVER", a);
         }
+        if let Some(d) = &self.pipewire {
+            c.env("PIPEWIRE_RUNTIME_DIR", d);
+        }
         c
+    }
+
+    fn pw_metadata(&self, args: &[&str]) -> Result<String> {
+        let out = self
+            .command("pw-metadata")
+            .args(["-n", ROUTE_SETTINGS])
+            .args(args)
+            .stdin(Stdio::null())
+            .output()
+            .map_err(|_| Error::Missing)?;
+        if out.status.success() {
+            Ok(String::from_utf8_lossy(&out.stdout).into_owned())
+        } else {
+            Err(Error::Missing)
+        }
     }
 
     fn pactl(&self, args: &[&str]) -> Result<String> {
@@ -469,6 +491,115 @@ pub fn set_profile(server: &Server, card: &str, profile: &str) -> Result<()> {
     server.pactl(&["set-card-profile", card, profile]).map(drop)
 }
 
+/// The metadata object where pipewire-pulse keeps PulseAudio's
+/// stream-restore entries (WirePlumber makes it and stores what is
+/// written there).
+const ROUTE_SETTINGS: &str = "route-settings";
+/// The stream-restore entry of event sounds: PulseAudio's
+/// `sink-input-by-media-role:event`, as pipewire-pulse names it (it maps
+/// the `event` role to PipeWire's `Notification`). GNOME Settings and
+/// pavucontrol set the system sounds volume there through libpulse's
+/// ext-stream-restore, which pipewire-pulse turns into this key.
+pub const EVENT_KEY: &str = "restore.stream.Output/Audio.media.role:Notification";
+
+/// The volume of system (event) sounds.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct EventVolume {
+    /// 1.0 = 100 %, as the other sliders (PulseAudio's cubic scale).
+    pub level: f64,
+    pub muted: bool,
+}
+
+/// Reads `pw-metadata -n route-settings 0` output (pure, for tests):
+/// `None` without the metadata object (no session manager keeping
+/// stream-restore entries), else the entry, 100 % when there is none.
+pub fn parse_event_volume(listing: &str) -> Option<EventVolume> {
+    let mut found = false;
+    let mut volume = EventVolume {
+        level: 1.0,
+        muted: false,
+    };
+    for line in listing.lines() {
+        if line.starts_with(&format!("Found \"{ROUTE_SETTINGS}\"")) {
+            found = true;
+        }
+        let Some(rest) = line.split_once(&format!("key:'{EVENT_KEY}' value:'")) else {
+            continue;
+        };
+        let json = rest.1.rsplit_once("' type:").map_or(rest.1, |r| r.0);
+        let Ok(v) = serde_json::from_str::<Value>(json) else {
+            continue;
+        };
+        // The values are linear amplitudes, as pipewire-pulse stores them.
+        let linear = v
+            .get("volumes")
+            .and_then(Value::as_array)
+            .map(|a| a.iter().filter_map(Value::as_f64).fold(0.0, f64::max));
+        if let Some(l) = linear {
+            volume.level = l.max(0.0).cbrt();
+        }
+        volume.muted = v.get("mute").and_then(Value::as_bool).unwrap_or(false);
+    }
+    found.then_some(volume)
+}
+
+/// The system sounds volume; `Ok(None)` when the sound server keeps no
+/// stream-restore entries (no PipeWire session manager).
+pub fn read_event_volume(server: &Server) -> Result<Option<EventVolume>> {
+    server
+        .pw_metadata(&["0"])
+        .map(|out| parse_event_volume(&out))
+}
+
+/// The entry for `volume`, as pipewire-pulse writes one: linear
+/// amplitudes per channel. Stereo, because WirePlumber applies the
+/// volumes to a new event sound by position and leaves the right
+/// channel of a stereo sound silent with a mono entry; a mono sound
+/// takes the first.
+pub fn event_entry(volume: &EventVolume) -> String {
+    let v = volume.level.max(0.0).powi(3);
+    format!(
+        "{{ \"mute\": {}, \"volumes\": [ {v:.6}, {v:.6} ], \"channels\": [ \"FL\", \"FR\" ] }}",
+        volume.muted
+    )
+}
+
+/// Sets the system sounds volume for the sounds to come (WirePlumber
+/// applies it to each new event sound and keeps it).
+pub fn set_event_volume(server: &Server, volume: &EventVolume) -> Result<()> {
+    let entry = event_entry(volume);
+    server
+        .pw_metadata(&["0", EVENT_KEY, &entry, "Spa:String:JSON"])
+        .map(drop)
+}
+
+/// Calls `changed` when the system sounds volume changes (or the
+/// metadata object appears); returns when it returns false or the sound
+/// server goes away.
+pub fn watch_event_volume(server: &Server, mut changed: impl FnMut() -> bool) {
+    let Ok(mut child) = server
+        .command("pw-metadata")
+        .args(["-m", "-n", ROUTE_SETTINGS])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .stdin(Stdio::null())
+        .spawn()
+    else {
+        return;
+    };
+    if let Some(out) = child.stdout.take() {
+        for line in std::io::BufReader::new(out).lines() {
+            let Ok(line) = line else { break };
+            let shown = line.starts_with("Found ") || line.contains(&format!("key:'{EVENT_KEY}'"));
+            if shown && !changed() {
+                break;
+            }
+        }
+    }
+    let _ = child.kill();
+    let _ = child.wait();
+}
+
 /// Calls `changed` for every change the server reports; returns when it
 /// returns false or the server goes away.
 pub fn watch(server: &Server, mut changed: impl FnMut() -> bool) {
@@ -781,6 +912,7 @@ pub mod tests {
             children: Vec::new(),
             server: Server {
                 address: Some(format!("unix:{}", dir.join("pulse/native").display())),
+                pipewire: Some(dir.clone()),
             },
             dir: dir.clone(),
         };
@@ -850,6 +982,9 @@ pub mod tests {
         let ins: Vec<&str> = s.inputs.iter().map(|d| d.description.as_str()).collect();
         assert_eq!(ins, ["Microphone"], "monitors are not inputs");
         assert_eq!(s.outputs[0].channels, ["front-left", "front-right"]);
+        // No session manager, so no stream-restore entries: the system
+        // sounds volume is not available.
+        assert_eq!(read_event_volume(server), Ok(None));
 
         // Live changes are reported.
         let (tx, rx) = std::sync::mpsc::channel();
@@ -937,6 +1072,7 @@ pub mod tests {
         };
         let server = Server {
             address: Some(audio.pulse_server()),
+            pipewire: Some(audio.runtime_dir().to_path_buf()),
         };
         let s = read(&server).unwrap();
         let surround = s.outputs.iter().find(|d| d.name == SURROUND).unwrap();
@@ -1007,8 +1143,114 @@ pub mod tests {
     fn no_server() {
         let server = Server {
             address: Some("unix:/nonexistent/helix-test/native".into()),
+            pipewire: Some("/nonexistent/helix-test".into()),
         };
         assert_eq!(read(&server), Err(Error::Missing));
+        assert_eq!(read_event_volume(&server), Err(Error::Missing));
+    }
+
+    /// The system sounds volume through the fake audio session's
+    /// `route-settings` metadata: read, set, and followed when another
+    /// program (pavucontrol or GNOME Settings, through pipewire-pulse)
+    /// changes it.
+    #[test]
+    fn system_sounds_volume_with_fake_audio() {
+        use helix_test_audio::FakeAudio;
+        let Some(audio) = FakeAudio::start() else {
+            return;
+        };
+        let server = Server {
+            address: Some(audio.pulse_server()),
+            pipewire: Some(audio.runtime_dir().to_path_buf()),
+        };
+        let none = EventVolume {
+            level: 1.0,
+            muted: false,
+        };
+        assert_eq!(read_event_volume(&server), Ok(Some(none)));
+
+        let (tx, rx) = std::sync::mpsc::channel();
+        let watcher = server.clone();
+        std::thread::spawn(move || watch_event_volume(&watcher, || tx.send(()).is_ok()));
+        // The first line ("Found …") once the watcher is connected.
+        rx.recv_timeout(std::time::Duration::from_secs(3)).unwrap();
+
+        let half = EventVolume {
+            level: 0.5,
+            muted: false,
+        };
+        set_event_volume(&server, &half).unwrap();
+        rx.recv_timeout(std::time::Duration::from_secs(3)).unwrap();
+        assert_eq!(read_event_volume(&server), Ok(Some(half)));
+        let raw = audio
+            .command("pw-metadata")
+            .args(["-n", "route-settings", "0"])
+            .output()
+            .unwrap();
+        let raw = String::from_utf8_lossy(&raw.stdout);
+        assert!(
+            raw.contains(r#""volumes": [ 0.125000, 0.125000 ], "channels": [ "FL", "FR" ]"#),
+            "{raw}"
+        );
+
+        // As pipewire-pulse writes an ext-stream-restore entry from
+        // libpulse: mono, linear, here 20 % and muted.
+        audio
+            .command("pw-metadata")
+            .args([
+                "-n",
+                "route-settings",
+                "0",
+                EVENT_KEY,
+                r#"{ "mute": true, "volumes": [ 0.008000 ], "channels": [ "MONO" ] }"#,
+                "Spa:String:JSON",
+            ])
+            .stdout(Stdio::null())
+            .status()
+            .unwrap();
+        rx.recv_timeout(std::time::Duration::from_secs(3)).unwrap();
+        let v = read_event_volume(&server).unwrap().unwrap();
+        assert!((v.level - 0.2).abs() < 1e-6 && v.muted, "{v:?}");
+
+        // Removed: back to 100 %.
+        audio
+            .command("pw-metadata")
+            .args(["-n", "route-settings", "-d", "0", EVENT_KEY])
+            .stdout(Stdio::null())
+            .status()
+            .unwrap();
+        rx.recv_timeout(std::time::Duration::from_secs(3)).unwrap();
+        assert_eq!(read_event_volume(&server), Ok(Some(none)));
+    }
+
+    #[test]
+    fn event_volume_entries() {
+        let listing = "Found \"route-settings\" metadata 39\n\
+            update: id:0 key:'restore.stream.Output/Audio.media.role:Movie' value:'{ \"volumes\": [ 1.0 ] }' type:'Spa:String:JSON'\n\
+            update: id:0 key:'restore.stream.Output/Audio.media.role:Notification' value:'{ \"mute\": false, \"volumes\": [ 0.064000, 0.027000 ], \"channels\": [ \"FL\", \"FR\" ] }' type:'Spa:String:JSON'\n";
+        let v = parse_event_volume(listing).unwrap();
+        assert!((v.level - 0.4).abs() < 1e-9, "the louder channel: {v:?}");
+        assert!(!v.muted);
+        // No entry: 100 %; no metadata object: not available.
+        assert_eq!(
+            parse_event_volume("Found \"route-settings\" metadata 39\n"),
+            Some(EventVolume {
+                level: 1.0,
+                muted: false
+            })
+        );
+        assert_eq!(parse_event_volume(""), None);
+        let e = event_entry(&EventVolume {
+            level: 0.5,
+            muted: true,
+        });
+        assert_eq!(
+            e,
+            r#"{ "mute": true, "volumes": [ 0.125000, 0.125000 ], "channels": [ "FL", "FR" ] }"#
+        );
+        let back = format!("Found \"route-settings\" metadata 1\nupdate: id:0 key:'{EVENT_KEY}' value:'{e}' type:'Spa:String:JSON'\n");
+        let v = parse_event_volume(&back).unwrap();
+        assert!((v.level - 0.5).abs() < 1e-6 && v.muted);
     }
 
     #[test]

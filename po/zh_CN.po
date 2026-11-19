@@ -374,7 +374,7 @@ msgid "Repeat"
 msgstr "重复"
 
 #: apps/audio-player/src/ui.rs:378 apps/audio-player/src/ui.rs:380
-#: apps/music/src/shortcuts.rs:19 apps/settings/src/ui/sound.rs:116
+#: apps/music/src/shortcuts.rs:19 apps/settings/src/ui/sound.rs:121
 #: apps/video-player/src/ui.rs:482 apps/video-player/src/ui.rs:484
 msgid "Mute"
 msgstr "静音"
@@ -382,7 +382,7 @@ msgstr "静音"
 #: apps/audio-player/src/ui.rs:386 apps/audio-player/src/ui.rs:394
 #: apps/audio-player/src/ui.rs:397 apps/music/src/ui.rs:2615
 #: apps/music/src/ui.rs:2622 apps/music/src/ui.rs:2627
-#: apps/settings/src/ui/sound.rs:163 apps/video-player/src/ui.rs:158
+#: apps/settings/src/ui/sound.rs:168 apps/video-player/src/ui.rs:158
 #: apps/video-player/src/ui.rs:491 apps/video-player/src/ui.rs:497
 #: apps/video-player/src/ui.rs:503
 msgid "Volume"
@@ -6170,7 +6170,7 @@ msgstr "扫描面"
 msgid "For the document feeder"
 msgstr "用于文档进纸器"
 
-#: apps/document-scanner/src/ui.rs:1779 apps/settings/src/ui/sound.rs:247
+#: apps/document-scanner/src/ui.rs:1779 apps/settings/src/ui/sound.rs:252
 msgid "Front"
 msgstr "正面"
 
@@ -7053,7 +7053,7 @@ msgid "Applications"
 msgstr "应用"
 
 #: apps/files/src/ui/dialogs.rs:364 apps/settings/src/ui/appearance.rs:107
-#: apps/settings/src/ui/sound.rs:829 apps/settings/src/values.rs:204
+#: apps/settings/src/ui/sound.rs:928 apps/settings/src/values.rs:204
 msgid "Default"
 msgstr "默认"
 
@@ -9711,7 +9711,7 @@ msgstr "{n} kbit/s"
 msgid "{rate} kHz"
 msgstr "{rate} kHz"
 
-#: apps/music/src/details.rs:86 apps/settings/src/sound.rs:721
+#: apps/music/src/details.rs:86 apps/settings/src/sound.rs:852
 msgid "Mono"
 msgstr "单声道"
 
@@ -10719,7 +10719,7 @@ msgstr "耳麦"
 msgid "Headphones"
 msgstr "耳机"
 
-#: apps/settings/src/bluez.rs:223 apps/settings/src/sound.rs:722
+#: apps/settings/src/bluez.rs:223 apps/settings/src/sound.rs:853
 msgid "Speaker"
 msgstr "扬声器"
 
@@ -11050,7 +11050,7 @@ msgstr ""
 "深色;浅色;样式;主题;图标;强调色;颜色;壁纸;背景;dark;light;theme;wallpaper;"
 
 #: apps/settings/src/panels.rs:144 apps/settings/src/ui/notifications.rs:100
-#: apps/settings/src/ui/sound.rs:283
+#: apps/settings/src/ui/sound.rs:288
 msgid "Apps"
 msgstr "应用"
 
@@ -11165,39 +11165,39 @@ msgstr "扬声器"
 msgid "Screenshots"
 msgstr "截图"
 
-#: apps/settings/src/sound.rs:712
+#: apps/settings/src/sound.rs:843
 msgid "Front Left"
 msgstr "左前"
 
-#: apps/settings/src/sound.rs:713
+#: apps/settings/src/sound.rs:844
 msgid "Front Right"
 msgstr "右前"
 
-#: apps/settings/src/sound.rs:714
+#: apps/settings/src/sound.rs:845
 msgid "Front Center"
 msgstr "前中"
 
-#: apps/settings/src/sound.rs:715
+#: apps/settings/src/sound.rs:846
 msgid "Rear Left"
 msgstr "左后"
 
-#: apps/settings/src/sound.rs:716
+#: apps/settings/src/sound.rs:847
 msgid "Rear Right"
 msgstr "右后"
 
-#: apps/settings/src/sound.rs:717
+#: apps/settings/src/sound.rs:848
 msgid "Rear Center"
 msgstr "后中"
 
-#: apps/settings/src/sound.rs:718
+#: apps/settings/src/sound.rs:849
 msgid "Side Left"
 msgstr "左侧"
 
-#: apps/settings/src/sound.rs:719
+#: apps/settings/src/sound.rs:850
 msgid "Side Right"
 msgstr "右侧"
 
-#: apps/settings/src/sound.rs:720
+#: apps/settings/src/sound.rs:851
 msgid "Subwoofer"
 msgstr "低音炮"
 
@@ -12442,11 +12442,11 @@ msgstr "无法使用这些按键：{msg}"
 msgid "Primary Button"
 msgstr "主按钮"
 
-#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:229
+#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:234
 msgid "Left"
 msgstr "左"
 
-#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:231
+#: apps/settings/src/ui/input.rs:70 apps/settings/src/ui/sound.rs:236
 msgid "Right"
 msgstr "右"
 
@@ -13201,163 +13201,167 @@ msgstr "清除并关闭搜索"
 msgid "About Settings"
 msgstr "关于设置"
 
-#: apps/settings/src/ui/sound.rs:141
+#: apps/settings/src/ui/sound.rs:146
 msgid "Input"
 msgstr "输入"
 
-#: apps/settings/src/ui/sound.rs:141
+#: apps/settings/src/ui/sound.rs:146
 msgid "Output"
 msgstr "输出"
 
-#: apps/settings/src/ui/sound.rs:145
+#: apps/settings/src/ui/sound.rs:150
 msgid "Output Device"
 msgstr "输出设备"
 
-#: apps/settings/src/ui/sound.rs:147
+#: apps/settings/src/ui/sound.rs:152
 msgid "Input Device"
 msgstr "输入设备"
 
-#: apps/settings/src/ui/sound.rs:154
+#: apps/settings/src/ui/sound.rs:159
 msgid "Output Port"
 msgstr "输出端口"
 
-#: apps/settings/src/ui/sound.rs:156
+#: apps/settings/src/ui/sound.rs:161
 msgid "Input Port"
 msgstr "输入端口"
 
-#: apps/settings/src/ui/sound.rs:166
+#: apps/settings/src/ui/sound.rs:171
 msgid "Mute Output"
 msgstr "输出静音"
 
-#: apps/settings/src/ui/sound.rs:168
+#: apps/settings/src/ui/sound.rs:173
 msgid "Mute Input"
 msgstr "输入静音"
 
-#: apps/settings/src/ui/sound.rs:171
+#: apps/settings/src/ui/sound.rs:176
 msgid "Output Volume"
 msgstr "输出音量"
 
-#: apps/settings/src/ui/sound.rs:173
+#: apps/settings/src/ui/sound.rs:178
 msgid "Input Volume"
 msgstr "输入音量"
 
-#: apps/settings/src/ui/sound.rs:180
+#: apps/settings/src/ui/sound.rs:185
 msgid "Configuration"
 msgstr "配置"
 
-#: apps/settings/src/ui/sound.rs:186
+#: apps/settings/src/ui/sound.rs:191
 msgid "Output Configuration"
 msgstr "输出配置"
 
-#: apps/settings/src/ui/sound.rs:188
+#: apps/settings/src/ui/sound.rs:193
 msgid "Input Configuration"
 msgstr "输入配置"
 
-#: apps/settings/src/ui/sound.rs:208
+#: apps/settings/src/ui/sound.rs:213
 msgid "Loading Sound…"
 msgstr "正在加载声音…"
 
-#: apps/settings/src/ui/sound.rs:212
+#: apps/settings/src/ui/sound.rs:217
 msgid "Sound Is Not Available"
 msgstr "声音不可用"
 
-#: apps/settings/src/ui/sound.rs:213
+#: apps/settings/src/ui/sound.rs:218
 msgid "No sound server is running."
 msgstr "没有正在运行的声音服务器。"
 
-#: apps/settings/src/ui/sound.rs:222 apps/settings/src/ui/sound.rs:232
+#: apps/settings/src/ui/sound.rs:227 apps/settings/src/ui/sound.rs:237
 msgid "Balance"
 msgstr "平衡"
 
-#: apps/settings/src/ui/sound.rs:237 apps/settings/src/ui/sound.rs:248
+#: apps/settings/src/ui/sound.rs:242 apps/settings/src/ui/sound.rs:253
 msgid "Fade"
 msgstr "前后平衡"
 
-#: apps/settings/src/ui/sound.rs:245
+#: apps/settings/src/ui/sound.rs:250
 msgid "Rear"
 msgstr "后"
 
-#: apps/settings/src/ui/sound.rs:253
+#: apps/settings/src/ui/sound.rs:258
 msgid "Test Speakers"
 msgstr "测试扬声器"
 
-#: apps/settings/src/ui/sound.rs:254
+#: apps/settings/src/ui/sound.rs:259
 msgid "Play a sound on each speaker"
 msgstr "在每个扬声器上播放声音"
 
-#: apps/settings/src/ui/sound.rs:255
+#: apps/settings/src/ui/sound.rs:260
 msgid "Test…"
 msgstr "测试…"
 
-#: apps/settings/src/ui/sound.rs:264 apps/settings/src/ui/sound.rs:277
+#: apps/settings/src/ui/sound.rs:269 apps/settings/src/ui/sound.rs:282
 msgid "Input Level"
 msgstr "输入电平"
 
-#: apps/settings/src/ui/sound.rs:286
+#: apps/settings/src/ui/sound.rs:291
 msgid "Sounds"
 msgstr "声音"
 
-#: apps/settings/src/ui/sound.rs:292
+#: apps/settings/src/ui/sound.rs:297
 msgid "Over-Amplification"
 msgstr "超额放大"
 
-#: apps/settings/src/ui/sound.rs:293
+#: apps/settings/src/ui/sound.rs:298
 msgid "Lets the volume go above 100 %, which can distort the sound"
 msgstr "允许音量超过 100 %，这可能会使声音失真"
 
-#: apps/settings/src/ui/sound.rs:300
+#: apps/settings/src/ui/sound.rs:305
 msgid "System Sounds"
 msgstr "系统声音"
 
-#: apps/settings/src/ui/sound.rs:301
+#: apps/settings/src/ui/sound.rs:306
 msgid "Sounds for events such as a message arriving"
 msgstr "收到消息等事件的提示声音"
 
-#: apps/settings/src/ui/sound.rs:524
+#: apps/settings/src/ui/sound.rs:310 apps/settings/src/ui/sound.rs:313
+msgid "System Sounds Volume"
+msgstr "系统声音音量"
+
+#: apps/settings/src/ui/sound.rs:623
 msgid "Could not change the sound settings: {e}"
 msgstr "无法更改声音设置：{e}"
 
-#: apps/settings/src/ui/sound.rs:547
+#: apps/settings/src/ui/sound.rs:646
 msgid "No output devices"
 msgstr "没有输出设备"
 
-#: apps/settings/src/ui/sound.rs:549
+#: apps/settings/src/ui/sound.rs:648
 msgid "No input devices"
 msgstr "没有输入设备"
 
-#: apps/settings/src/ui/sound.rs:679
+#: apps/settings/src/ui/sound.rs:778
 msgid "Unknown App"
 msgstr "未知应用"
 
-#: apps/settings/src/ui/sound.rs:688
+#: apps/settings/src/ui/sound.rs:787
 msgid "Mute {app}"
 msgstr "将 {app} 静音"
 
-#: apps/settings/src/ui/sound.rs:689
+#: apps/settings/src/ui/sound.rs:788
 msgid "Volume of {app}"
 msgstr "{app} 的音量"
 
-#: apps/settings/src/ui/sound.rs:733
+#: apps/settings/src/ui/sound.rs:832
 msgid "No apps are playing sound."
 msgstr "没有应用正在播放声音。"
 
-#: apps/settings/src/ui/sound.rs:778
+#: apps/settings/src/ui/sound.rs:877
 msgid "Select a speaker to play a sound on it."
 msgstr "选择一个扬声器以在其上播放声音。"
 
-#: apps/settings/src/ui/sound.rs:812
+#: apps/settings/src/ui/sound.rs:911
 msgid "Could not play the test sound: {e}"
 msgstr "无法播放测试声音：{e}"
 
-#: apps/settings/src/ui/sound.rs:821
+#: apps/settings/src/ui/sound.rs:920
 msgid "Test {device}"
 msgstr "测试 {device}"
 
-#: apps/settings/src/ui/sound.rs:833
+#: apps/settings/src/ui/sound.rs:932
 msgid "Alert Sound"
 msgstr "提示音"
 
-#: apps/settings/src/ui/sound.rs:871
+#: apps/settings/src/ui/sound.rs:970
 msgid "Could not change the alert sound: {e}"
 msgstr "无法更改提示音：{e}"
 

@@ -25,6 +25,11 @@
 //! It does not move streams that are already linked, and the devices have
 //! no cards or profiles.
 //!
+//! The daemon also has a `route-settings` metadata object, where
+//! pipewire-pulse keeps PulseAudio's stream-restore entries (e.g. the
+//! system sounds volume, `restore.stream.Output/Audio.media.role:Notification`)
+//! as WirePlumber provides it; nothing applies those entries to new streams.
+//!
 //! Tests play into a device with [`FakeAudio::play`] (also into the
 //! microphone, which then "hears" the tone) and read levels back with
 //! [`FakeAudio::peaks`]. Not for use in the apps.
@@ -113,6 +118,7 @@ stream.properties = {{
 }}
 context.objects = [
     {{ factory = metadata args = {{ metadata.name = default }} }}
+    {{ factory = metadata args = {{ metadata.name = route-settings }} }}
     {{ factory = spa-node-factory
         args = {{
             factory.name    = support.node.driver
