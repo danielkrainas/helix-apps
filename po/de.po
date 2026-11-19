@@ -2321,7 +2321,7 @@ msgid "Take pictures and videos"
 msgstr "Fotos und Videos aufnehmen"
 
 #: apps/camera/src/ui.rs:162 apps/disks/src/ui.rs:937
-#: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:116
+#: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:155
 #: apps/settings/src/ui/network.rs:26 apps/settings/src/ui/network.rs:188
 #: apps/settings/src/ui/network.rs:467
 msgid "Off"
@@ -10999,108 +10999,137 @@ msgstr "Software"
 msgid "Variable (up to {rate})"
 msgstr "Variabel (bis zu {rate})"
 
+#. Translators: {name} is a D-Bus name, e.g. org.example.Weather.
+#: apps/settings/src/extensions.rs:28
+msgid "see whether {name} is running"
+msgstr "sehen, ob {name} läuft"
+
+#: apps/settings/src/extensions.rs:29
+msgid "talk to {name}"
+msgstr "mit {name} kommunizieren"
+
+#: apps/settings/src/extensions.rs:30
+msgid "offer services as {name}"
+msgstr "Dienste als {name} anbieten"
+
+#. Translators: {rule} is a D-Bus rule, e.g. org.example.Player.*@/org/example.
+#: apps/settings/src/extensions.rs:32
+msgid "call {rule} on {name}"
+msgstr "{rule} bei {name} aufrufen"
+
+#: apps/settings/src/extensions.rs:34
+msgid "hear {rule} signals from {name}"
+msgstr "{rule}-Signale von {name} empfangen"
+
 #. Translators: what an extension may do; completes "Can: …".
-#: apps/settings/src/extensions.rs:21
+#: apps/settings/src/extensions.rs:41
 msgid "show notifications"
 msgstr "Benachrichtigungen anzeigen"
 
-#: apps/settings/src/extensions.rs:22
+#: apps/settings/src/extensions.rs:42
 msgid "keep the screen on"
 msgstr "den Bildschirm eingeschaltet lassen"
 
-#: apps/settings/src/extensions.rs:23
+#: apps/settings/src/extensions.rs:43
 msgid "start apps"
 msgstr "Anwendungen starten"
 
-#: apps/settings/src/extensions.rs:24
+#: apps/settings/src/extensions.rs:44
 msgid "show its own panels"
 msgstr "eigene Leisten anzeigen"
 
-#: apps/settings/src/extensions.rs:25
+#: apps/settings/src/extensions.rs:45
 msgid "use the network"
 msgstr "das Netzwerk verwenden"
 
-#: apps/settings/src/extensions.rs:26
-msgid "read and change all your files"
-msgstr "alle Ihre Dateien lesen und ändern"
+#: apps/settings/src/extensions.rs:48
+msgid "read and change all your files, which lets it do anything you can"
+msgstr ""
+"alle Ihre Dateien lesen und ändern, womit sie alles kann, was Sie können"
 
-#: apps/settings/src/extensions.rs:27
+#: apps/settings/src/extensions.rs:50
 msgid "read and change your Documents"
 msgstr "Ihre Dokumente lesen und ändern"
 
-#: apps/settings/src/extensions.rs:28
+#: apps/settings/src/extensions.rs:51
 msgid "read and change your Downloads"
 msgstr "Ihre Downloads lesen und ändern"
 
-#: apps/settings/src/extensions.rs:29
+#: apps/settings/src/extensions.rs:52
 msgid "read and change your Music"
 msgstr "Ihre Musik lesen und ändern"
 
-#: apps/settings/src/extensions.rs:30
+#: apps/settings/src/extensions.rs:53
 msgid "read and change your Pictures"
 msgstr "Ihre Bilder lesen und ändern"
 
-#: apps/settings/src/extensions.rs:31
+#: apps/settings/src/extensions.rs:54
 msgid "read and change your Videos"
 msgstr "Ihre Videos lesen und ändern"
 
-#: apps/settings/src/extensions.rs:32
+#: apps/settings/src/extensions.rs:55
 msgid "read and change your Desktop"
 msgstr "Ihre Schreibtisch-Dateien lesen und ändern"
 
-#: apps/settings/src/extensions.rs:33
-msgid "talk to your other programs"
-msgstr "mit Ihren anderen Programmen kommunizieren"
+#: apps/settings/src/extensions.rs:58
+msgid "offer its own services to your other programs"
+msgstr "Ihren anderen Programmen eigene Dienste anbieten"
 
-#: apps/settings/src/extensions.rs:34
+#: apps/settings/src/extensions.rs:60
 msgid "talk to system services"
 msgstr "mit Systemdiensten kommunizieren"
 
-#: apps/settings/src/extensions.rs:79
+#: apps/settings/src/extensions.rs:108
 msgid "Development"
 msgstr "Entwicklung"
 
-#: apps/settings/src/extensions.rs:95
+#: apps/settings/src/extensions.rs:124
 msgid "Can: {}"
 msgstr "Kann: {}"
 
-#: apps/settings/src/extensions.rs:98
+#: apps/settings/src/extensions.rs:128
+msgid "Its permissions let it out of its sandbox: it can do anything you can."
+msgstr ""
+"Ihre Berechtigungen lassen sie aus der Sandbox heraus: Sie kann alles, was "
+"Sie können."
+
+#: apps/settings/src/extensions.rs:132
 msgid "Sandboxed"
 msgstr "In Sandbox"
 
-#: apps/settings/src/extensions.rs:100
+#: apps/settings/src/extensions.rs:134
 msgid "Full access: it can do anything you can"
 msgstr "Vollzugriff: Die Erweiterung kann alles, was Sie können"
 
-#: apps/settings/src/extensions.rs:112 apps/system-monitor/src/format.rs:96
+#: apps/settings/src/extensions.rs:151 apps/system-monitor/src/format.rs:96
 msgid "Running"
 msgstr "Läuft"
 
-#: apps/settings/src/extensions.rs:113
+#: apps/settings/src/extensions.rs:152
 msgid "Starting"
 msgstr "Wird gestartet"
 
-#: apps/settings/src/extensions.rs:114
+#: apps/settings/src/extensions.rs:153
 msgid "Not running"
 msgstr "Läuft nicht"
 
-#: apps/settings/src/extensions.rs:115
+#: apps/settings/src/extensions.rs:154
 msgid "Off for this session"
 msgstr "Für diese Sitzung aus"
 
-#: apps/settings/src/extensions.rs:117
+#: apps/settings/src/extensions.rs:156
 msgid "Needs approval"
 msgstr "Benötigt Zustimmung"
 
-#: apps/settings/src/extensions.rs:118
+#: apps/settings/src/extensions.rs:157
 msgid "Cannot run: {}"
 msgstr "Kann nicht ausgeführt werden: {}"
 
-#: apps/settings/src/extensions.rs:119
+#: apps/settings/src/extensions.rs:158
 msgid "Stopped working"
 msgstr "Funktioniert nicht mehr"
 
-#: apps/settings/src/extensions.rs:120
+#: apps/settings/src/extensions.rs:159
 msgid "Stopped working: {}"
 msgstr "Funktioniert nicht mehr: {}"
 

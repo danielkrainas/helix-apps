@@ -253,10 +253,10 @@ fn update_row(row: &ExtRow, e: &Ext, settings: &[Setting]) {
     let (title, below) = e.access();
     row.access.set_title(&title);
     row.access.set_subtitle(&below);
-    if e.sandboxed {
-        row.access.remove_css_class("warning");
-    } else {
+    if e.full_access() {
         row.access.add_css_class("warning");
+    } else {
+        row.access.remove_css_class("warning");
     }
     row.problem.set_visible(e.troubled());
     row.problem.set_subtitle(&e.error);

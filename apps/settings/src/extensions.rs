@@ -13,9 +13,29 @@ pub const BUS: &str = "org.gnome.Shell";
 pub const PATH: &str = "/org/helixdesktop/Extensions1";
 pub const IFACE: &str = "org.helixdesktop.Extensions1";
 
-/// What an extension's permission lets it do (as the shell words it),
-/// completing "Can: …".
+/// What an extension's permission lets it do, completing "Can: …". The
+/// texts are the shell's (helix-desktop `ext_host/manifest.rs`), word
+/// for word, so that both translate them alike; a `[session-bus]` rule
+/// (`session-bus:<kind>=<NAME>[=<RULE>]`) names exactly what it allows.
 pub fn permission_text(name: &str) -> String {
+    if let Some((kind, value)) = name
+        .strip_prefix("session-bus:")
+        .and_then(|r| r.split_once('='))
+    {
+        let (name, rule) = value.split_once('=').unwrap_or((value, ""));
+        match kind {
+            // Translators: {name} is a D-Bus name, e.g. org.example.Weather.
+            "see" => return trf!("see whether {name} is running", name = name),
+            "talk" => return trf!("talk to {name}", name = name),
+            "own" => return trf!("offer services as {name}", name = name),
+            // Translators: {rule} is a D-Bus rule, e.g. org.example.Player.*@/org/example.
+            "call" => return trf!("call {rule} on {name}", rule = rule, name = name),
+            "broadcast" => {
+                return trf!("hear {rule} signals from {name}", rule = rule, name = name);
+            }
+            _ => {}
+        }
+    }
     const TEXTS: [(&str, &str); 14] = [
         // Translators: what an extension may do; completes "Can: …".
         ("notifications", n_("show notifications")),
@@ -23,14 +43,20 @@ pub fn permission_text(name: &str) -> String {
         ("launch-apps", n_("start apps")),
         ("popover", n_("show its own panels")),
         ("network", n_("use the network")),
-        ("files:home", n_("read and change all your files")),
+        (
+            "files:home",
+            n_("read and change all your files, which lets it do anything you can"),
+        ),
         ("files:documents", n_("read and change your Documents")),
         ("files:downloads", n_("read and change your Downloads")),
         ("files:music", n_("read and change your Music")),
         ("files:pictures", n_("read and change your Pictures")),
         ("files:videos", n_("read and change your Videos")),
         ("files:desktop", n_("read and change your Desktop")),
-        ("session-bus", n_("talk to your other programs")),
+        (
+            "session-bus",
+            n_("offer its own services to your other programs"),
+        ),
         ("system-bus", n_("talk to system services")),
     ];
     TEXTS
@@ -56,6 +82,9 @@ pub struct Ext {
     /// Command id, title, accelerator.
     pub commands: Vec<(String, String, String)>,
     pub sandboxed: bool,
+    /// Sandboxed, but with permissions that let it out of its sandbox
+    /// (the shell decides: `leaves-sandbox`).
+    pub leaves_sandbox: bool,
 }
 
 impl Ext {
@@ -94,11 +123,21 @@ impl Ext {
         } else {
             trf!("Can: {}", can.join(", "))
         };
-        if self.sandboxed {
+        if self.sandboxed && self.leaves_sandbox {
+            (
+                tr("Its permissions let it out of its sandbox: it can do anything you can.").into(),
+                below,
+            )
+        } else if self.sandboxed {
             (tr("Sandboxed").into(), below)
         } else {
             (tr("Full access: it can do anything you can").into(), below)
         }
+    }
+
+    /// Its *Access* row warns: it can do anything the user can.
+    pub fn full_access(&self) -> bool {
+        !self.sandboxed || self.leaves_sandbox
     }
 
     /// It has a problem worth a *Problem* row.
@@ -131,21 +170,32 @@ fn get<T: TryFrom<OwnedValue>>(entry: &HashMap<String, OwnedValue>, key: &str) -
 pub fn parse_list(list: HashMap<String, HashMap<String, OwnedValue>>) -> Vec<Ext> {
     let mut out: Vec<Ext> = list
         .into_iter()
-        .map(|(id, e)| Ext {
-            name: get::<String>(&e, "name")
-                .filter(|n| !n.is_empty())
-                .unwrap_or_else(|| id.clone()),
-            id,
-            description: get(&e, "description").unwrap_or_default(),
-            version: get(&e, "version").unwrap_or_default(),
-            kind: get(&e, "type").unwrap_or_default(),
-            enabled: get(&e, "enabled").unwrap_or(false),
-            approved: get(&e, "approved").unwrap_or(false),
-            state: get(&e, "state").unwrap_or_default(),
-            error: get(&e, "error").unwrap_or_default(),
-            permissions: get(&e, "permissions").unwrap_or_default(),
-            commands: get(&e, "commands").unwrap_or_default(),
-            sandboxed: get(&e, "sandboxed").unwrap_or(false),
+        .map(|(id, e)| {
+            let permissions: Vec<String> = get(&e, "permissions").unwrap_or_default();
+            // A shell before `leaves-sandbox`: the whole home folder and
+            // the then unfiltered session bus.
+            let leaves_sandbox = get(&e, "leaves-sandbox").unwrap_or_else(|| {
+                permissions
+                    .iter()
+                    .any(|p| p == "files:home" || p == "session-bus")
+            });
+            Ext {
+                name: get::<String>(&e, "name")
+                    .filter(|n| !n.is_empty())
+                    .unwrap_or_else(|| id.clone()),
+                id,
+                description: get(&e, "description").unwrap_or_default(),
+                version: get(&e, "version").unwrap_or_default(),
+                kind: get(&e, "type").unwrap_or_default(),
+                enabled: get(&e, "enabled").unwrap_or(false),
+                approved: get(&e, "approved").unwrap_or(false),
+                state: get(&e, "state").unwrap_or_default(),
+                error: get(&e, "error").unwrap_or_default(),
+                permissions,
+                commands: get(&e, "commands").unwrap_or_default(),
+                sandboxed: get(&e, "sandboxed").unwrap_or(false),
+                leaves_sandbox,
+            }
         })
         .collect();
     out.sort_by_key(|e| (e.development(), e.name.to_lowercase(), e.id.clone()));
@@ -542,8 +592,78 @@ mod tests {
     fn permission_texts() {
         assert_eq!(
             permission_text("files:home"),
-            "read and change all your files"
+            "read and change all your files, which lets it do anything you can"
+        );
+        assert_eq!(
+            permission_text("session-bus"),
+            "offer its own services to your other programs"
+        );
+        assert_eq!(
+            permission_text("session-bus:talk=org.example.Weather"),
+            "talk to org.example.Weather"
+        );
+        assert_eq!(
+            permission_text("session-bus:see=org.mpris.MediaPlayer2.*"),
+            "see whether org.mpris.MediaPlayer2.* is running"
+        );
+        assert_eq!(
+            permission_text("session-bus:own=org.example.W"),
+            "offer services as org.example.W"
+        );
+        assert_eq!(
+            permission_text("session-bus:call=org.example.P=org.example.P.Pause@/p"),
+            "call org.example.P.Pause@/p on org.example.P"
+        );
+        assert_eq!(
+            permission_text("session-bus:broadcast=org.example.P=*@/p"),
+            "hear *@/p signals from org.example.P"
         );
         assert_eq!(permission_text("something-new"), "something-new");
+        assert_eq!(
+            permission_text("session-bus:root=x.y"),
+            "session-bus:root=x.y"
+        );
+    }
+
+    #[test]
+    fn leaving_the_sandbox() {
+        let entry = |permissions: &[&str], leaves: Option<bool>| {
+            let mut e: HashMap<String, OwnedValue> = HashMap::from([
+                ("sandboxed".to_owned(), v(true)),
+                (
+                    "permissions".to_owned(),
+                    v(permissions
+                        .iter()
+                        .map(|p| p.to_string())
+                        .collect::<Vec<_>>()),
+                ),
+            ]);
+            if let Some(leaves) = leaves {
+                e.insert("leaves-sandbox".to_owned(), v(leaves));
+            }
+            parse_list(HashMap::from([("org.x.A".to_owned(), e)])).remove(0)
+        };
+        let escape = "Its permissions let it out of its sandbox: it can do anything you can.";
+        // The shell says so.
+        let e = entry(
+            &["session-bus", "session-bus:talk=org.freedesktop.systemd1"],
+            Some(true),
+        );
+        assert!(e.full_access());
+        assert_eq!(
+            e.access(),
+            (
+                escape.to_owned(),
+                "Can: offer its own services to your other programs, talk to org.freedesktop.systemd1"
+                    .to_owned()
+            )
+        );
+        let e = entry(&["session-bus"], Some(false));
+        assert!(!e.full_access());
+        assert_eq!(e.access().0, "Sandboxed");
+        // An older shell, without the key: its unfiltered session bus.
+        assert!(entry(&["session-bus"], None).full_access());
+        assert!(entry(&["files:home"], None).full_access());
+        assert!(!entry(&["files:music"], None).full_access());
     }
 }

@@ -2289,7 +2289,7 @@ msgid "Take pictures and videos"
 msgstr "사진과 동영상을 찍습니다"
 
 #: apps/camera/src/ui.rs:162 apps/disks/src/ui.rs:937
-#: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:116
+#: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:155
 #: apps/settings/src/ui/network.rs:26 apps/settings/src/ui/network.rs:188
 #: apps/settings/src/ui/network.rs:467
 msgid "Off"
@@ -10854,108 +10854,137 @@ msgstr "소프트웨어"
 msgid "Variable (up to {rate})"
 msgstr "가변(최대 {rate})"
 
+#. Translators: {name} is a D-Bus name, e.g. org.example.Weather.
+#: apps/settings/src/extensions.rs:28
+msgid "see whether {name} is running"
+msgstr "{name} 실행 여부 확인"
+
+#: apps/settings/src/extensions.rs:29
+msgid "talk to {name}"
+msgstr "{name}와(과) 통신"
+
+#: apps/settings/src/extensions.rs:30
+msgid "offer services as {name}"
+msgstr "{name}(으)로 서비스 제공"
+
+#. Translators: {rule} is a D-Bus rule, e.g. org.example.Player.*@/org/example.
+#: apps/settings/src/extensions.rs:32
+msgid "call {rule} on {name}"
+msgstr "{name}의 {rule} 호출"
+
+#: apps/settings/src/extensions.rs:34
+msgid "hear {rule} signals from {name}"
+msgstr "{name}의 {rule} 신호 수신"
+
 #. Translators: what an extension may do; completes "Can: …".
-#: apps/settings/src/extensions.rs:21
+#: apps/settings/src/extensions.rs:41
 msgid "show notifications"
 msgstr "알림 표시"
 
-#: apps/settings/src/extensions.rs:22
+#: apps/settings/src/extensions.rs:42
 msgid "keep the screen on"
 msgstr "화면 켜 두기"
 
-#: apps/settings/src/extensions.rs:23
+#: apps/settings/src/extensions.rs:43
 msgid "start apps"
 msgstr "앱 시작"
 
-#: apps/settings/src/extensions.rs:24
+#: apps/settings/src/extensions.rs:44
 msgid "show its own panels"
 msgstr "자체 패널 표시"
 
-#: apps/settings/src/extensions.rs:25
+#: apps/settings/src/extensions.rs:45
 msgid "use the network"
 msgstr "네트워크 사용"
 
-#: apps/settings/src/extensions.rs:26
-msgid "read and change all your files"
-msgstr "모든 파일 읽기 및 변경"
+#: apps/settings/src/extensions.rs:48
+msgid "read and change all your files, which lets it do anything you can"
+msgstr ""
+"모든 파일 읽기 및 변경(이를 통해 사용자가 할 수 있는 모든 일을 할 수 있음)"
 
-#: apps/settings/src/extensions.rs:27
+#: apps/settings/src/extensions.rs:50
 msgid "read and change your Documents"
 msgstr "문서 폴더 읽기 및 변경"
 
-#: apps/settings/src/extensions.rs:28
+#: apps/settings/src/extensions.rs:51
 msgid "read and change your Downloads"
 msgstr "다운로드 폴더 읽기 및 변경"
 
-#: apps/settings/src/extensions.rs:29
+#: apps/settings/src/extensions.rs:52
 msgid "read and change your Music"
 msgstr "음악 폴더 읽기 및 변경"
 
-#: apps/settings/src/extensions.rs:30
+#: apps/settings/src/extensions.rs:53
 msgid "read and change your Pictures"
 msgstr "사진 폴더 읽기 및 변경"
 
-#: apps/settings/src/extensions.rs:31
+#: apps/settings/src/extensions.rs:54
 msgid "read and change your Videos"
 msgstr "비디오 폴더 읽기 및 변경"
 
-#: apps/settings/src/extensions.rs:32
+#: apps/settings/src/extensions.rs:55
 msgid "read and change your Desktop"
 msgstr "바탕 화면 폴더 읽기 및 변경"
 
-#: apps/settings/src/extensions.rs:33
-msgid "talk to your other programs"
-msgstr "다른 프로그램과 통신"
+#: apps/settings/src/extensions.rs:58
+msgid "offer its own services to your other programs"
+msgstr "다른 프로그램에 자체 서비스 제공"
 
-#: apps/settings/src/extensions.rs:34
+#: apps/settings/src/extensions.rs:60
 msgid "talk to system services"
 msgstr "시스템 서비스와 통신"
 
-#: apps/settings/src/extensions.rs:79
+#: apps/settings/src/extensions.rs:108
 msgid "Development"
 msgstr "개발"
 
-#: apps/settings/src/extensions.rs:95
+#: apps/settings/src/extensions.rs:124
 msgid "Can: {}"
 msgstr "가능한 작업: {}"
 
-#: apps/settings/src/extensions.rs:98
+#: apps/settings/src/extensions.rs:128
+msgid "Its permissions let it out of its sandbox: it can do anything you can."
+msgstr ""
+"권한 때문에 샌드박스 밖으로 나갈 수 있습니다. 사용자가 할 수 있는 모든 일을 "
+"할 수 있습니다."
+
+#: apps/settings/src/extensions.rs:132
 msgid "Sandboxed"
 msgstr "샌드박스"
 
-#: apps/settings/src/extensions.rs:100
+#: apps/settings/src/extensions.rs:134
 msgid "Full access: it can do anything you can"
 msgstr "전체 접근: 사용자가 할 수 있는 모든 작업을 할 수 있습니다"
 
-#: apps/settings/src/extensions.rs:112 apps/system-monitor/src/format.rs:96
+#: apps/settings/src/extensions.rs:151 apps/system-monitor/src/format.rs:96
 msgid "Running"
 msgstr "실행 중"
 
-#: apps/settings/src/extensions.rs:113
+#: apps/settings/src/extensions.rs:152
 msgid "Starting"
 msgstr "시작하는 중"
 
-#: apps/settings/src/extensions.rs:114
+#: apps/settings/src/extensions.rs:153
 msgid "Not running"
 msgstr "실행 중 아님"
 
-#: apps/settings/src/extensions.rs:115
+#: apps/settings/src/extensions.rs:154
 msgid "Off for this session"
 msgstr "이 세션에서 꺼짐"
 
-#: apps/settings/src/extensions.rs:117
+#: apps/settings/src/extensions.rs:156
 msgid "Needs approval"
 msgstr "승인 필요"
 
-#: apps/settings/src/extensions.rs:118
+#: apps/settings/src/extensions.rs:157
 msgid "Cannot run: {}"
 msgstr "실행할 수 없음: {}"
 
-#: apps/settings/src/extensions.rs:119
+#: apps/settings/src/extensions.rs:158
 msgid "Stopped working"
 msgstr "작동 중지됨"
 
-#: apps/settings/src/extensions.rs:120
+#: apps/settings/src/extensions.rs:159
 msgid "Stopped working: {}"
 msgstr "작동 중지됨: {}"
 

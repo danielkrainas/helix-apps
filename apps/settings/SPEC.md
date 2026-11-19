@@ -298,8 +298,16 @@ menu entry opens this panel when Settings is installed.
     and a toast says "<name> was not turned on". Turning it off calls
     `Disable(id)`.
   - Rows inside: the description; *Access*: "Sandboxed" (with "Can: …"
-    and the permission texts below), or "Full access: it can do anything
+    and the permission texts below), "Its permissions let it out of its
+    sandbox: it can do anything you can." for a sandboxed one whose
+    permissions do (`leaves-sandbox`; from a shell without that key,
+    `files:home` or `session-bus`), or "Full access: it can do anything
     you can" for one that is not sandboxed, plus the permission texts;
+    the last two are shown as warnings. The permission texts are the
+    shell's, word for word (helixdesktop/spec
+    `contracts/extensions/README.md`, "Permissions"), and each
+    `session-bus:…` rule names what it allows ("talk to
+    org.freedesktop.Notifications");
     *Problem* (invalid or crashed) with the reason and a *Show Log* button
     (a dialog with `GetLog(id)`, newest last); *Restart* (running or
     crashed) calls `Restart(id)`.

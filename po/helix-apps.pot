@@ -2281,7 +2281,7 @@ msgid "Take pictures and videos"
 msgstr ""
 
 #: apps/camera/src/ui.rs:162 apps/disks/src/ui.rs:937
-#: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:116
+#: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:155
 #: apps/settings/src/ui/network.rs:26 apps/settings/src/ui/network.rs:188
 #: apps/settings/src/ui/network.rs:467
 msgid "Off"
@@ -10792,108 +10792,134 @@ msgstr ""
 msgid "Variable (up to {rate})"
 msgstr ""
 
-#. Translators: what an extension may do; completes "Can: …".
-#: apps/settings/src/extensions.rs:21
-msgid "show notifications"
-msgstr ""
-
-#: apps/settings/src/extensions.rs:22
-msgid "keep the screen on"
-msgstr ""
-
-#: apps/settings/src/extensions.rs:23
-msgid "start apps"
-msgstr ""
-
-#: apps/settings/src/extensions.rs:24
-msgid "show its own panels"
-msgstr ""
-
-#: apps/settings/src/extensions.rs:25
-msgid "use the network"
-msgstr ""
-
-#: apps/settings/src/extensions.rs:26
-msgid "read and change all your files"
-msgstr ""
-
-#: apps/settings/src/extensions.rs:27
-msgid "read and change your Documents"
-msgstr ""
-
+#. Translators: {name} is a D-Bus name, e.g. org.example.Weather.
 #: apps/settings/src/extensions.rs:28
-msgid "read and change your Downloads"
+msgid "see whether {name} is running"
 msgstr ""
 
 #: apps/settings/src/extensions.rs:29
-msgid "read and change your Music"
+msgid "talk to {name}"
 msgstr ""
 
 #: apps/settings/src/extensions.rs:30
-msgid "read and change your Pictures"
+msgid "offer services as {name}"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:31
-msgid "read and change your Videos"
-msgstr ""
-
+#. Translators: {rule} is a D-Bus rule, e.g. org.example.Player.*@/org/example.
 #: apps/settings/src/extensions.rs:32
-msgid "read and change your Desktop"
-msgstr ""
-
-#: apps/settings/src/extensions.rs:33
-msgid "talk to your other programs"
+msgid "call {rule} on {name}"
 msgstr ""
 
 #: apps/settings/src/extensions.rs:34
+msgid "hear {rule} signals from {name}"
+msgstr ""
+
+#. Translators: what an extension may do; completes "Can: …".
+#: apps/settings/src/extensions.rs:41
+msgid "show notifications"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:42
+msgid "keep the screen on"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:43
+msgid "start apps"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:44
+msgid "show its own panels"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:45
+msgid "use the network"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:48
+msgid "read and change all your files, which lets it do anything you can"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:50
+msgid "read and change your Documents"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:51
+msgid "read and change your Downloads"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:52
+msgid "read and change your Music"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:53
+msgid "read and change your Pictures"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:54
+msgid "read and change your Videos"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:55
+msgid "read and change your Desktop"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:58
+msgid "offer its own services to your other programs"
+msgstr ""
+
+#: apps/settings/src/extensions.rs:60
 msgid "talk to system services"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:79
+#: apps/settings/src/extensions.rs:108
 msgid "Development"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:95
+#: apps/settings/src/extensions.rs:124
 msgid "Can: {}"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:98
+#: apps/settings/src/extensions.rs:128
+msgid "Its permissions let it out of its sandbox: it can do anything you can."
+msgstr ""
+
+#: apps/settings/src/extensions.rs:132
 msgid "Sandboxed"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:100
+#: apps/settings/src/extensions.rs:134
 msgid "Full access: it can do anything you can"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:112 apps/system-monitor/src/format.rs:96
+#: apps/settings/src/extensions.rs:151 apps/system-monitor/src/format.rs:96
 msgid "Running"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:113
+#: apps/settings/src/extensions.rs:152
 msgid "Starting"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:114
+#: apps/settings/src/extensions.rs:153
 msgid "Not running"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:115
+#: apps/settings/src/extensions.rs:154
 msgid "Off for this session"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:117
+#: apps/settings/src/extensions.rs:156
 msgid "Needs approval"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:118
+#: apps/settings/src/extensions.rs:157
 msgid "Cannot run: {}"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:119
+#: apps/settings/src/extensions.rs:158
 msgid "Stopped working"
 msgstr ""
 
-#: apps/settings/src/extensions.rs:120
+#: apps/settings/src/extensions.rs:159
 msgid "Stopped working: {}"
 msgstr ""
 
