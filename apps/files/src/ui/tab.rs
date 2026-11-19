@@ -22,6 +22,29 @@ pub fn info_file(info: &gio::FileInfo) -> Option<gio::File> {
         .and_downcast::<gio::File>()
 }
 
+/// What a missing thumbnail of `file` (described by `info`) is made from:
+/// a regular file with a local path (GVfs gives remote files one too),
+/// of a type a thumbnailer handles.
+fn thumbnail_source(info: &gio::FileInfo, file: &gio::File) -> Option<super::thumbnailer::Source> {
+    if info.file_type() != gio::FileType::Regular {
+        return None;
+    }
+    let content_type = info
+        .content_type()
+        .or_else(|| info.attribute_string("standard::fast-content-type"))?;
+    let mime = gio::content_type_get_mime_type(&content_type)?.to_string();
+    if !super::thumbnailer::can_make(&mime) {
+        return None;
+    }
+    let mtime = u64::try_from(info.modification_date_time()?.to_unix()).ok()?;
+    Some(super::thumbnailer::Source {
+        path: file.path()?,
+        uri: file.uri().to_string(),
+        mime,
+        mtime,
+    })
+}
+
 /// The file to open for an item: its `standard::target-uri` if any.
 pub fn info_target(info: &gio::FileInfo) -> Option<gio::File> {
     match info.attribute_string("standard::target-uri") {
@@ -147,10 +170,12 @@ impl Tab {
     pub fn new(shared: &Rc<Shared>, win: Weak<Window>, location: &gio::File) -> Rc<Tab> {
         let settings = Rc::new(RefCell::new(shared.view_settings()));
 
+        // Monitored from the start (GTK's default). Turning monitoring on
+        // after a folder loaded makes GTK drop every item and load the
+        // folder again, so a big folder showed, went blank and refilled.
+        // A location that cannot be monitored just gets no monitor.
         let dir_list = gtk::DirectoryList::new(Some(FILE_ATTRS), None::<&gio::File>);
-        // Monitoring starts once a folder loaded fine (GTK would try to
-        // monitor unsupported locations too).
-        dir_list.set_monitored(false);
+        dir_list.set_monitored(true);
         dir_list.set_io_priority(glib::Priority::DEFAULT_IDLE);
         let search_store = gio::ListStore::new::<gio::FileInfo>();
 
@@ -332,9 +357,6 @@ impl Tab {
             if let Some(t) = weak.upgrade() {
                 t.update_status();
                 if !t.dir_list.is_loading() {
-                    if t.dir_list.error().is_none() && t.dir_list.file().is_some() {
-                        t.dir_list.set_monitored(true);
-                    }
                     t.select_pending();
                 }
                 t.notify_window();
@@ -667,10 +689,17 @@ impl Tab {
             let thumb = info.attribute_byte_string("thumbnail::path").filter(|_| {
                 !info.has_attribute("thumbnail::is-valid") || info.boolean("thumbnail::is-valid")
             });
-            if let (Some(path), Some(file)) = (thumb, file) {
-                if t.thumbnail_allowed(&file) {
+            match (thumb, file) {
+                (Some(path), Some(file)) if t.thumbnail_allowed(&file) => {
                     super::thumbs::request(path.as_str(), &img, item, &info);
                 }
+                // None cached yet: make one.
+                (None, Some(file)) if t.thumbnail_allowed(&file) => {
+                    if let Some(src) = thumbnail_source(&info, &file) {
+                        super::thumbs::request_made(src, &img, item, &info);
+                    }
+                }
+                _ => {}
             }
         });
         f
@@ -849,7 +878,6 @@ impl Tab {
             self.build_other_locations();
             self.stack.set_visible_child_name("other");
         } else {
-            self.dir_list.set_monitored(false);
             self.dir_list.set_file(Some(file));
             let list_view = self.settings.borrow().list_view;
             self.stack

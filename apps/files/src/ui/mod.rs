@@ -9,6 +9,7 @@ mod properties;
 mod shortcuts;
 mod sidebar;
 mod tab;
+mod thumbnailer;
 mod thumbs;
 mod window;
 

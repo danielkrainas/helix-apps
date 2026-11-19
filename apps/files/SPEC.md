@@ -31,7 +31,7 @@ File manager for local and remote locations.
 All file access goes through GIO (`GFile`), so every location GVFS can
 handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
 `network:///` …) works like a local folder. Folder listings use
-`GtkDirectoryList` (asynchronous, monitored for changes).
+`GtkDirectoryList` (asynchronous, monitored for changes from the start: turning monitoring on after a folder loaded makes GTK drop and reload every item, so a big folder flashed blank).
 
 ### Window
 - `AdwApplicationWindow` containing an `AdwOverlaySplitView`:
@@ -101,10 +101,22 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
 - `Ctrl+1` grid, `Ctrl+2` list (`default-folder-viewer`
   `icon-view`/`list-view` is the initial view and is updated on toggle).
   `Ctrl+plus` / `Ctrl+minus` / `Ctrl+0` zoom in/out/reset.
-- Thumbnails: existing thumbnails from the freedesktop thumbnail cache
+- Thumbnails: thumbnails from the freedesktop thumbnail cache
   (`thumbnail::path`) are shown in the grid when allowed by
   `show-image-thumbnails` (`never`, `local-only`, `always`). Otherwise the
-  themed icon for the content type. Thumbnails are read and decoded on
+  themed icon for the content type. A regular file with a local path
+  (GVfs FUSE paths included) and no valid cached thumbnail gets one made
+  (`ui/thumbnailer.rs`), at most 2 at a time: the installed thumbnailer
+  for its MIME type (`thumbnailers/*.thumbnailer` in the data folders,
+  `%i %u %o %s` expanded, killed after 30 s), or gdk-pixbuf for pictures
+  without one; scaled to fit 256 px and saved to
+  `$XDG_CACHE_HOME/thumbnails/large/<md5(uri)>.png` (0600, written to a
+  temporary file and renamed) with `Thumb::URI` and `Thumb::MTime`, so GIO
+  and other apps take it as valid. Failures are not written to the
+  cache's `fail/` folder: a thumbnail that could not be made is not tried
+  again while Files runs (unless the file's mtime changes) and is tried
+  again on the next run. Thumbnailers run unsandboxed (GNOME runs them in
+  bubblewrap). Thumbnails are read and decoded on
   worker threads, at most 4 at a time (`ui/thumbs.rs`): the tiles bound
   most recently first, and a request whose tile shows another file by
   its turn is dropped; the last 192 decoded thumbnails are kept. (Loading
@@ -319,7 +331,7 @@ the main menu.
 - Tree (expandable) list view, compressing/extracting archives,
   batch rename, scripts, "Open in Terminal", folder item counts in the
   size column (`show-directory-item-counts`).
-- Generating new thumbnails (only existing cached thumbnails are shown).
+- Sandboxing thumbnailers (bubblewrap), as GNOME does.
 
 ## Decisions
 - FileChooser portal: Helix's own portal (helix-desktop) stays the
