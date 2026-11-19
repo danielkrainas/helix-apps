@@ -276,8 +276,17 @@ impl Player {
         }
         self.send(Command::SetPosition(position));
     }
-    fn open_uri(&self, uri: String) {
+    /// Only local files, as `SupportedUriSchemes` says: any session-bus
+    /// client may call this, and must not make the player fetch from the
+    /// network.
+    fn open_uri(&self, uri: String) -> zbus::fdo::Result<()> {
+        if helix_app_common::links::local_path(&uri).is_none() {
+            return Err(zbus::fdo::Error::NotSupported(
+                "Only local file URIs are supported".into(),
+            ));
+        }
         self.send(Command::OpenUri(uri));
+        Ok(())
     }
 
     #[zbus(property)]
@@ -548,5 +557,25 @@ mod tests {
         let mut keys: Vec<_> = changed_properties(&c, &d).keys().copied().collect();
         keys.sort();
         assert_eq!(keys, ["Rate", "Volume"]);
+    }
+
+    #[test]
+    fn open_uri_accepts_only_local_files() {
+        let (cmds, rx) = async_channel::unbounded();
+        let p = Player {
+            cmds,
+            shared: Arc::default(),
+        };
+        for bad in [
+            "http://example.org/a.ogg",
+            "rtsp://h/s",
+            "smb://h/x.ogg",
+            "/tmp/x",
+        ] {
+            assert!(p.open_uri(bad.into()).is_err(), "{bad}");
+        }
+        assert!(rx.try_recv().is_err());
+        assert!(p.open_uri("file:///tmp/song.ogg".into()).is_ok());
+        assert!(matches!(rx.try_recv(), Ok(Command::OpenUri(u)) if u == "file:///tmp/song.ogg"));
     }
 }

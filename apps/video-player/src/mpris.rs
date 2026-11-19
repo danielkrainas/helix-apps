@@ -217,8 +217,17 @@ impl PlayerIface {
             self.send(Command::SetPosition(position));
         }
     }
-    fn open_uri(&self, uri: &str) {
+    /// Only local files, as `SupportedUriSchemes` says: any session-bus
+    /// client may call this, and must not make the player fetch from the
+    /// network.
+    fn open_uri(&self, uri: &str) -> zbus::fdo::Result<()> {
+        if helix_app_common::links::local_path(uri).is_none() {
+            return Err(zbus::fdo::Error::NotSupported(
+                "Only local file URIs are supported".into(),
+            ));
+        }
         self.send(Command::OpenUri(uri.to_string()));
+        Ok(())
     }
 
     #[zbus(signal)]
@@ -410,5 +419,25 @@ mod tests {
         assert_eq!(m.len(), 4);
         assert_eq!(i64::try_from(m["mpris:length"].clone()).unwrap(), 5_000_000);
         assert_eq!(s.track_path(), "/org/helixdesktop/VideoPlayer/Track/3");
+    }
+
+    #[test]
+    fn open_uri_accepts_only_local_files() {
+        let (tx, rx) = async_channel::unbounded();
+        let p = PlayerIface {
+            tx,
+            state: Shared::default(),
+        };
+        for bad in [
+            "http://example.org/a.webm",
+            "rtsp://h/s",
+            "smb://h/x.mkv",
+            "/tmp/x",
+        ] {
+            assert!(p.open_uri(bad).is_err(), "{bad}");
+        }
+        assert!(rx.try_recv().is_err());
+        assert!(p.open_uri("file:///tmp/clip.webm").is_ok());
+        assert!(matches!(rx.try_recv(), Ok(Command::OpenUri(u)) if u == "file:///tmp/clip.webm"));
     }
 }

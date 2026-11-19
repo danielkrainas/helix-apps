@@ -185,7 +185,9 @@ Play video files.
   `org.helixdesktop.VideoPlayer`, SupportedUriSchemes `file`, SupportedMimeTypes
   (list from the .desktop file), Fullscreen/CanSetFullscreen.
 - `org.mpris.MediaPlayer2.Player`: Play, Pause, PlayPause, Stop, Seek,
-  SetPosition, OpenUri, Next/Previous (no-ops); PlaybackStatus, Rate
+  SetPosition, OpenUri (local `file:` URIs only, as SupportedUriSchemes
+  says; anything else fails with `NotSupported`, so no bus client can make
+  the player fetch from the network), Next/Previous (no-ops); PlaybackStatus, Rate
   (0.5–2.0), Metadata (`mpris:trackid`, `mpris:length`, `xesam:title`,
   `xesam:url`), Volume, Position, CanPlay/CanPause/CanSeek/CanControl;
   `Seeked` signal. Property changes are emitted as PropertiesChanged.

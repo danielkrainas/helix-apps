@@ -119,7 +119,10 @@ or queue (see *Decisions*).
   desktop file).
 - `org.mpris.MediaPlayer2.Player`: `Play`, `Pause`, `PlayPause`, `Stop`,
   `Seek(offset µs)`, `SetPosition(trackid, µs)` (ignored if trackid is not
-  current or out of range), `OpenUri`, `Next`/`Previous` (no-ops).
+  current or out of range), `OpenUri` (local `file:` URIs only, as
+  `SupportedUriSchemes` says; anything else — `http:`, `rtsp:`, `smb:`,
+  a remote host — fails with `NotSupported`, so no bus client can make the
+  player fetch from the network), `Next`/`Previous` (no-ops).
   Properties `PlaybackStatus`, `LoopStatus` ("None"/"Track", writable),
   `Rate` (writable, clamped 0.5–2), `Shuffle` (false), `Metadata`,
   `Volume` (writable, the linear playbin volume), `Position`,
