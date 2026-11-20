@@ -24,6 +24,10 @@ Primary configuration UI for the desktop and system.
 - XDG portals: Settings, Background, Lockdown.
 - Session D-Bus: SessionManager, Shell, DisplayConfig, IdleMonitor, NetworkManager, UPower, etc.
 - Helix: `org.helixdesktop.agent-access` (GSettings) and `org.helixdesktop.AgentAccess1` (the shell), helixdesktop/spec `contracts/agent-access/`.
+- Helix greeter: `/etc/helix/greeter.toml`, `helix-login-config` and
+  `helix-login-monitors` through `pkexec`, helixdesktop/spec
+  `components/greeter.md` ("Configuration", "Changing the configuration",
+  "Setting the login screen's layout", "Installing and switching").
 
 ## Non-goals
 - Every panel from day one. Implement panels incrementally.
@@ -107,6 +111,7 @@ Primary configuration UI for the desktop and system.
 | `privacy` | `security`, `screen-lock`, `location` | yes |
 | `datetime` | `date-time`, `time` | yes |
 | `users` | `user-accounts` | yes |
+| `login-screen` | `greeter`, `login` | only with the Helix greeter under greetd (below) |
 | `about` | `info-overview`, `info`, `system` | yes |
 
 - Pages inside a panel can have their own names (`panels::PAGES`,
@@ -698,6 +703,97 @@ shell's agent) may ask for a password.
   changing one's own password by giving the current one (polkit asks
   instead).
 
+#### Login Screen
+Helix's own panel (GNOME Settings has none; GDM is configured by hand):
+the Helix greeter's settings for everyone, `/etc/helix/greeter.toml`
+(helixdesktop/spec `components/greeter.md`, "Configuration").
+- **Shown only** when helix-greeter is installed (`/usr/bin/helix-greeter`
+  and `/usr/lib/systemd/system/greetd.service.d/helix-greeter.conf` are
+  files) and greetd is the display manager: systemd's
+  `GetUnit("display-manager.service")` on the system bus, whose
+  `org.freedesktop.systemd1.Unit.Id` is `greetd.service` (no `systemctl`;
+  systemd is asked only when both files are there). Otherwise the panel
+  and its row are hidden and search does not find it. The check runs on
+  a worker thread when the window is made (the row appears when it
+  answers), so switching display managers and reopening Settings is
+  enough. Keywords: *login, greeter, lock, banner, user list, sign in,
+  display manager, greetd, accent, clock*.
+- The page description says the settings are everyone's, need an
+  administrator and apply the next time the login screen starts.
+- **Values** are read from the file directly (it is world-readable) when
+  the panel is built, after every change, and when a file monitor sees
+  it change. A missing file, a file that is not valid TOML, not a regular
+  file or larger than 1 MiB, and keys of the wrong type show the
+  defaults. A broken file also shows a banner ("The login screen's
+  settings file can't be read. Fix /etc/helix/greeter.toml to change
+  them here.") and the controls are insensitive: the helper would leave
+  such a file alone (exit 2) rather than drop the administrator's
+  content.
+  - *Users* › *Show User List* (`user-list`, default on): "When off, the
+    login screen asks for a username".
+  - *Banner* › *Show a Banner* and *Banner Message* (`banner`): the
+    entry is sensitive while the switch is on; switching it off keeps the
+    text in the entry but removes the key; an empty or blank text
+    removes it too (the helper refuses an empty banner). Checked as the
+    helper checks it: at most 200 characters (Unicode scalar values), no
+    control characters (line breaks and tabs included) and no
+    bidirectional overrides or isolates (U+202A–U+202E, U+2066–U+2069);
+    a problem is the group's description ("The banner is too long: 203
+    characters, at most 200"…), the entry gets the `error` style, the
+    message is announced once typing settles, and *Apply…* is
+    insensitive. Only a banner being changed is checked: one already in
+    the file (written by hand) blocks no other change.
+  - *Accent Color* (`accent`): Appearance's nine swatches (named for
+    assistive technology and in tooltips); unset or an unknown name shows
+    *Blue*, as the greeter draws it.
+  - *Clock* › *Clock Format* (`clock-format`): *Automatic* (no key: the
+    system's `clock-format` or the language, as the greeter decides),
+    *24-hour* (`24h`), *12-hour* (`12h`); an unknown value shows
+    *Automatic*.
+  - *Displays* › *Use This Layout for the Login Screen*: the Displays
+    panel's action (below), here too when `helix-login-monitors` is
+    installed. It applies at once through its own helper.
+- **Changes are staged.** The controls show what is wanted; while that
+  differs from the file (compared as the greeter sees it: an unset user
+  list is a shown one, so switching it off and on again is no change), an
+  action bar at the bottom says "Changes not applied yet" with *Discard*
+  (the controls show the file again) and *Apply…* (suggested; accessible
+  names "Discard Login Screen Changes", "Apply Login Screen Changes";
+  tooltip "Needs an administrator"). *Apply…* runs `pkexec
+  /usr/libexec/helix/helix-login-config` once for the whole batch, with
+  no arguments, the changed keys on its standard input as TOML (only
+  `user-list`, `banner`, `accent`, `clock-format` that changed, and
+  `remove = ["banner", "clock-format"]` for keys to delete; a key is
+  never both), so one administrator prompt covers all the edits (polkit
+  keeps the authorization for a while, `auth_admin_keep`). While it runs
+  the bar says "Waiting for an administrator…" and its buttons are
+  insensitive. Then: exit 0: toast "Saved. The login screen will use
+  these settings the next time it starts." and the file is read again;
+  pkexec 126 (the prompt dismissed): nothing is said, the edits stay;
+  127 (not authorized, authentication failed): toast "Could not change
+  the login screen: not authorized", the edits stay; anything else (1
+  invalid input, 2 the file could not be read or written): toast "Could
+  not change the login screen settings: <the helper's reason>", the edits
+  stay and the file is read again. Settings never writes the file
+  itself. The helper is the authority: Settings checks the same limits
+  only to say what is wrong at once.
+- Without `helix-login-config` (or `pkexec`) a banner says the settings
+  can't be changed here and the controls are insensitive.
+- A change to the file made elsewhere is shown at once when nothing is
+  staged; with staged edits they are kept and compared with the new file.
+- Tested: reading (the spec's example, empty, wrong types, unknown
+  values, broken and missing files, a directory), banner rules, the
+  changes sent for every key (the spec's example input), the helper run
+  through a fake `pkexec` (arguments, input, every exit status), each
+  visibility condition with fake files and a fake systemd answer, and the
+  systemd query against a fake systemd on a private bus. Looked at in a
+  headless helix-comp session with fake files (`HELIX_SETTINGS_TEST_ROOT`,
+  debug builds only) and a fake systemd (`fakes::serve_fakes` with
+  `HELIX_FAKE_DISPLAY_MANAGER`): the panel, staged edits, *Apply…* with
+  a fake helper (input `user-list = false`, `accent = "red"`,
+  `remove = ["banner"]`), a too-long banner, a broken file, and the panel
+  hidden under GDM (search "login" finds only Users).
+
 #### Apps
 - *Default Apps*: *Web*, *Mail*, *Calendar*, *Music*, *Video*, *Photos*,
   each a choice of the apps GIO lists for its first content type
@@ -808,6 +904,16 @@ going (`displays.rs`).
   monitors that report `is-underscanning`). Changing a size keeps the
   monitors touching (they are laid side by side again when they would
   overlap or drift apart).
+- *Login Screen* › *Use This Layout for the Login Screen* (shown when
+  `/usr/libexec/helix/helix-login-monitors` and `pkexec` are installed;
+  also on the Login Screen panel): the layout shown now, as one
+  remembered configuration for the monitors connected now (virtual
+  screen-cast monitors left out), goes to `pkexec helix-login-monitors`
+  on its standard input (helixdesktop/spec `components/greeter.md`,
+  "Setting the login screen's layout"). Toasts: "The login screen will
+  use this layout"; nothing for a dismissed prompt (pkexec 126); "Could
+  not change the login screen: not authorized" (127); "Could not use
+  this layout for the login screen: <reason>" otherwise.
 - *Night Light* (`org.gnome.settings-daemon.plugins.color`): *Night
   Light* (`night-light-enabled`), *Schedule* (*Sunset to Sunrise* /
   *Manual Schedule*: `night-light-schedule-automatic`), *From* and *To*
@@ -1023,8 +1129,11 @@ registered accelerators.
   the given panel; ids and aliases as in the registry table. A page name
   (`agent-access`, `agent-activity`) opens its panel on that page.
 - `helix-settings-app --list` prints `id<TAB>title<TAB>available|unavailable`
-  for every panel, then every page (unavailable when its schema is not
-  installed), and exits.
+  for every panel (`login-screen` unavailable when it is hidden), then
+  every page (unavailable when its schema is not installed), and exits.
+- A hidden panel's name (`login-screen` on a system without the Helix
+  greeter) opens the default panel; asked for before the check below has
+  answered, the panel opens once it says the panel is shown.
 - Unknown panel names print an error with the list of ids and exit with
   status 2.
 - `-h` / `--help` prints usage.
@@ -1034,6 +1143,13 @@ registered accelerators.
   Search, Color, Wacom, power mode (`org.freedesktop.UPower.PowerProfiles`).
 
 ## Decisions
+- Login Screen: edits are staged and sent with one *Apply…* rather than
+  unlocking first (as Users does): the file is world-readable, so the
+  controls can always show and take edits, and the administrator prompt
+  comes once, for exactly the changes being made, from one helper run.
+  An *Unlock* button would need a second privileged step (polkit's
+  authorization is per helper run through `pkexec`) and would leave the
+  user unsure what had been written.
 - Style cards: no third *Light* card; match GNOME with *Default* and *Dark*
   only (`prefer-light` set elsewhere shows as *Default* and is kept).
 - Focus is kept across list rebuilds (`helix_app_common::focus`): Input sources: Move Up / Move Down keep focus on the moved source's button (so repeated presses keep moving it; at the top or bottom focus stays in the row), Remove moves focus to the neighbouring source's Remove button, or to *Add Input Source…* when no source is left.

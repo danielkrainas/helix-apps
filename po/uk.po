@@ -325,7 +325,7 @@ msgstr "_Про програму"
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
 #: apps/music/src/ui.rs:480 apps/music/src/ui.rs:482
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
-#: apps/settings/src/ui/mod.rs:209 apps/settings/src/ui/mod.rs:211
+#: apps/settings/src/ui/mod.rs:218 apps/settings/src/ui/mod.rs:220
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:301 apps/terminal/src/window.rs:305
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
@@ -736,7 +736,8 @@ msgstr "{} не визначено для цих значень"
 
 #: apps/calculator/src/format.rs:33 apps/document-scanner/src/settings.rs:29
 #: apps/document-scanner/src/ui.rs:1728 apps/document-scanner/src/ui.rs:1795
-#: apps/settings/src/ui/netedit.rs:32 apps/settings/src/ui/network.rs:28
+#: apps/settings/src/ui/greeter.rs:27 apps/settings/src/ui/netedit.rs:32
+#: apps/settings/src/ui/network.rs:28
 msgid "Automatic"
 msgstr "Автоматично"
 
@@ -1432,7 +1433,7 @@ msgstr "Календар"
 msgid "Location"
 msgstr "Місце"
 
-#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:883
+#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:892
 msgid "Schedule"
 msgstr "Розклад"
 
@@ -1845,7 +1846,7 @@ msgstr "Імпорт"
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:32 apps/music/src/ui.rs:452
 #: apps/music/src/ui.rs:454 apps/settings/src/ui/apps.rs:439
-#: apps/settings/src/ui/mod.rs:194 apps/settings/src/ui/mod.rs:196
+#: apps/settings/src/ui/mod.rs:203 apps/settings/src/ui/mod.rs:205
 #: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
 #: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
 #: apps/web/src/dialogs.rs:142 apps/web/src/window.rs:48
@@ -1998,7 +1999,7 @@ msgstr "_Імпортувати…"
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:232 apps/maps/src/ui.rs:486
-#: apps/settings/src/ui/mod.rs:203 apps/terminal/src/window.rs:296
+#: apps/settings/src/ui/mod.rs:212 apps/terminal/src/window.rs:296
 #: apps/text-editor/src/window.rs:65 apps/web/src/window.rs:222
 #: apps/web/src/window.rs:265 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -2017,7 +2018,7 @@ msgid "Search Events"
 msgstr "Пошук подій"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:232
+#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:244
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:752
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
@@ -2025,7 +2026,7 @@ msgstr "Нічого не знайдено"
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:233
+#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:245
 #: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:753
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
@@ -3862,7 +3863,8 @@ msgid "Changes to this contact have not been saved."
 msgstr "Зміни цього контакту не збережено."
 
 #: apps/contacts/src/ui.rs:1511 apps/document-scanner/src/ui.rs:1265
-#: apps/document-scanner/src/ui.rs:1379 apps/text-editor/src/window.rs:979
+#: apps/document-scanner/src/ui.rs:1379 apps/settings/src/ui/greeter.rs:143
+#: apps/text-editor/src/window.rs:979
 msgid "_Discard"
 msgstr "_Відкинути"
 
@@ -6840,7 +6842,7 @@ msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr "Пошук на сторінці {page} з {n_pages}… знайдено: {total}"
 
 #: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1260
-#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:430
+#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:461
 #: apps/settings/src/ui/picker.rs:34
 msgid "No results found"
 msgstr "Нічого не знайдено"
@@ -7094,7 +7096,7 @@ msgstr "Нещодавні"
 
 #: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:116
 #: apps/files/src/ui/tab.rs:1282 apps/settings/src/bluez.rs:235
-#: apps/settings/src/panels.rs:60 apps/system-monitor/src/res_view.rs:385
+#: apps/settings/src/panels.rs:63 apps/system-monitor/src/res_view.rs:385
 msgid "Network"
 msgstr "Мережа"
 
@@ -10429,7 +10431,7 @@ msgstr "ReplayGain"
 msgid "Even out loudness using the volume tags of songs or albums"
 msgstr "Вирівнювати гучність за допомогою міток гучності пісень або альбомів"
 
-#: apps/music/src/pages.rs:2436 apps/settings/src/panels.rs:156
+#: apps/music/src/pages.rs:2436 apps/settings/src/panels.rs:159
 #: apps/settings/src/permissions.rs:38 apps/settings/src/ui/apps.rs:419
 #: apps/web/src/permissions.rs:25
 msgid "Notifications"
@@ -11623,8 +11625,8 @@ msgstr "Вікно застосунку {app}"
 msgid "A window"
 msgstr "Вікно"
 
-#: apps/settings/src/agents.rs:804 apps/settings/src/ui/mod.rs:165
-#: apps/settings/src/ui/mod.rs:245 apps/settings/src/ui/mod.rs:509
+#: apps/settings/src/agents.rs:804 apps/settings/src/ui/mod.rs:174
+#: apps/settings/src/ui/mod.rs:257 apps/settings/src/ui/mod.rs:552
 msgid "Settings"
 msgstr "Параметри"
 
@@ -11719,7 +11721,7 @@ msgstr "Навушники"
 msgid "Speaker"
 msgstr "Динамік"
 
-#: apps/settings/src/bluez.rs:224 apps/settings/src/panels.rs:192
+#: apps/settings/src/bluez.rs:224 apps/settings/src/panels.rs:195
 msgid "Keyboard"
 msgstr "Клавіатура"
 
@@ -11749,7 +11751,7 @@ msgstr "Модем"
 
 #: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:98
 #: apps/settings/src/ui/displays.rs:122 apps/settings/src/ui/displays.rs:123
-#: apps/settings/src/ui/displays.rs:434
+#: apps/settings/src/ui/displays.rs:443
 msgid "Display"
 msgstr "Дисплей"
 
@@ -11978,115 +11980,115 @@ msgstr "Відмінний сигнал"
 msgid "Hotspot"
 msgstr "Точка доступу"
 
-#: apps/settings/src/panels.rs:48 apps/settings/src/ui/wifi.rs:106
+#: apps/settings/src/panels.rs:51 apps/settings/src/ui/wifi.rs:106
 msgid "Wi-Fi"
 msgstr "Wi-Fi"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:52
+#: apps/settings/src/panels.rs:55
 msgid "network;wireless;wlan;hotspot;internet;airplane;"
 msgstr ""
 "мережа;бездротова;wlan;точка доступу;інтернет;режим "
 "польоту;network;wireless;hotspot;internet;airplane;"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:64
+#: apps/settings/src/panels.rs:67
 msgid "ethernet;wired;vpn;proxy;ip;dns;internet;"
 msgstr "ethernet;дротова;vpn;проксі;ip;dns;інтернет;мережа;wired;proxy;internet;"
 
-#: apps/settings/src/panels.rs:72 apps/settings/src/ui/bluetooth.rs:102
+#: apps/settings/src/panels.rs:75 apps/settings/src/ui/bluetooth.rs:102
 msgid "Bluetooth"
 msgstr "Bluetooth"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:76
+#: apps/settings/src/panels.rs:79
 msgid "share;devices;pair;headset;wireless;"
 msgstr ""
 "спільний "
 "доступ;пристрої;сполучення;гарнітура;бездротовий;share;devices;pair;headset;wireless;"
 
-#: apps/settings/src/panels.rs:84
+#: apps/settings/src/panels.rs:87 apps/settings/src/ui/greeter.rs:124
 msgid "Displays"
 msgstr "Екрани"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:88
+#: apps/settings/src/panels.rs:91
 msgid "monitor;screen;resolution;refresh;scale;night light;projector;rotation;"
 msgstr ""
 "монітор;екран;роздільність;частота оновлення;масштаб;нічне "
 "світло;проєктор;обертання;monitor;screen;resolution;refresh;scale;night "
 "light;projector;rotation;"
 
-#: apps/settings/src/panels.rs:96
+#: apps/settings/src/panels.rs:99
 msgid "Sound"
 msgstr "Звук"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:100
+#: apps/settings/src/panels.rs:103
 msgid "volume;speaker;microphone;audio;output;input;alert;mute;"
 msgstr ""
 "гучність;динамік;мікрофон;аудіо;звук;вихід;вхід;сигнал;вимкнути "
 "звук;volume;speaker;microphone;audio;output;input;alert;mute;"
 
-#: apps/settings/src/panels.rs:108
+#: apps/settings/src/panels.rs:111
 msgid "Power"
 msgstr "Живлення"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:112
+#: apps/settings/src/panels.rs:115
 msgid "battery;suspend;sleep;dim;blank;power button;hibernate;energy;"
 msgstr ""
 "акумулятор;батарея;присипляння;сон;затемнення;вимкнення екрана;кнопка "
 "живлення;приспання;енергія;battery;suspend;sleep;dim;blank;power "
 "button;hibernate;energy;"
 
-#: apps/settings/src/panels.rs:120
+#: apps/settings/src/panels.rs:123
 msgid "Multitasking"
 msgstr "Багатозадачність"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:124
+#: apps/settings/src/panels.rs:127
 msgid "hot corner;workspace;screen edges;tiling;app switching;multi-monitor;"
 msgstr ""
 "гарячий кут;робочий простір;краї екрана;розташування плиткою;перемикання "
 "програм;кілька моніторів;hot corner;workspace;screen edges;tiling;app "
 "switching;multi-monitor;"
 
-#: apps/settings/src/panels.rs:132 apps/terminal/src/prefs_dialog.rs:24
+#: apps/settings/src/panels.rs:135 apps/terminal/src/prefs_dialog.rs:24
 #: apps/text-editor/src/prefs.rs:58
 msgid "Appearance"
 msgstr "Вигляд"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:136
+#: apps/settings/src/panels.rs:139
 msgid "dark;light;style;theme;icon;icons;accent;color;colour;wallpaper;background;"
 msgstr "темний;світлий;стиль;тема;піктограма;піктограми;акцент;колір;шпалери;тло;dark;light;style;theme;icon;icons;accent;color;colour;wallpaper;background;"
 
-#: apps/settings/src/panels.rs:144 apps/settings/src/ui/notifications.rs:100
+#: apps/settings/src/panels.rs:147 apps/settings/src/ui/notifications.rs:100
 #: apps/settings/src/ui/sound.rs:288
 msgid "Apps"
 msgstr "Програми"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:148
+#: apps/settings/src/panels.rs:151
 msgid "default;applications;permissions;browser;storage;"
 msgstr ""
 "типові;програми;права "
 "доступу;браузер;сховище;default;applications;permissions;browser;storage;"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:160
+#: apps/settings/src/panels.rs:163
 msgid "do not disturb;dnd;banner;alerts;lock screen;messages;"
 msgstr ""
 "не турбувати;банер;сповіщення;попередження;екран блокування;повідомлення;do "
 "not disturb;dnd;banner;alerts;lock screen;messages;"
 
-#: apps/settings/src/panels.rs:168
+#: apps/settings/src/panels.rs:171
 msgid "Extensions"
 msgstr "Розширення"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:172
+#: apps/settings/src/panels.rs:175
 msgid ""
 "add-on;plugin;panel item;indicator;quick settings;dock;sandbox;permissions;"
 msgstr ""
@@ -12094,12 +12096,12 @@ msgstr ""
 "налаштування;док;пісочниця;права доступу;add-on;plugin;panel "
 "item;indicator;quick settings;dock;sandbox;permissions;"
 
-#: apps/settings/src/panels.rs:180
+#: apps/settings/src/panels.rs:183
 msgid "Mouse & Touchpad"
 msgstr "Миша і сенсорна панель"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:184
+#: apps/settings/src/panels.rs:187
 msgid ""
 "touchpad;pointer;speed;scroll;natural;tap;click;trackpad;primary "
 "button;acceleration;"
@@ -12110,18 +12112,18 @@ msgstr ""
 "button;acceleration;"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:196
+#: apps/settings/src/panels.rs:199
 msgid "layout;input source;language;repeat;delay;typing;xkb;"
 msgstr ""
 "розкладка;джерело введення;мова;повтор;затримка;набір;xkb;layout;input "
 "source;language;repeat;delay;typing;"
 
-#: apps/settings/src/panels.rs:204 apps/settings/src/ui/access.rs:119
+#: apps/settings/src/panels.rs:207 apps/settings/src/ui/access.rs:119
 msgid "Accessibility"
 msgstr "Спеціальні можливості"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:208
+#: apps/settings/src/panels.rs:211
 msgid ""
 "high contrast;large text;zoom;magnifier;screen reader;cursor size;reduce "
 "animation;sticky keys;slow keys;bounce keys;mouse keys;scrollbars;screen "
@@ -12134,12 +12136,12 @@ msgstr ""
 "text;zoom;magnifier;screen reader;cursor size;sticky keys;slow keys;bounce "
 "keys;mouse keys;"
 
-#: apps/settings/src/panels.rs:216 apps/settings/src/ui/privacy.rs:226
+#: apps/settings/src/panels.rs:219 apps/settings/src/ui/privacy.rs:226
 msgid "Privacy & Security"
 msgstr "Приватність і безпека"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:220
+#: apps/settings/src/panels.rs:223
 msgid ""
 "screen lock;lock;blank;idle;recent files;file "
 "history;trash;temporary;location;camera;microphone;problem "
@@ -12150,34 +12152,48 @@ msgstr ""
 "про проблеми;screen lock;lock;idle;recent "
 "files;trash;location;camera;microphone;агент;ші;асистент;автоматизація;agent;ai;"
 
-#: apps/settings/src/panels.rs:228
+#: apps/settings/src/panels.rs:231
 msgid "Date & Time"
 msgstr "Дата й час"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:232
+#: apps/settings/src/panels.rs:235
 msgid "clock;time zone;timezone;ntp;24-hour;am/pm;week numbers;calendar;"
 msgstr ""
 "годинник;часовий пояс;ntp;24-годинний;am/pm;номери "
 "тижнів;календар;clock;time zone;timezone;24-hour;week numbers;calendar;"
 
-#: apps/settings/src/panels.rs:240
+#: apps/settings/src/panels.rs:243 apps/settings/src/ui/greeter.rs:64
 msgid "Users"
 msgstr "Користувачі"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:244
+#: apps/settings/src/panels.rs:247
 msgid "account;password;login;avatar;administrator;"
 msgstr ""
 "обліковий "
 "запис;пароль;вхід;аватар;адміністратор;account;password;login;avatar;administrator;"
 
-#: apps/settings/src/panels.rs:252
+#: apps/settings/src/panels.rs:255 apps/settings/src/ui/displays.rs:252
+msgid "Login Screen"
+msgstr "Екран входу"
+
+#. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
+#: apps/settings/src/panels.rs:259
+msgid ""
+"login;greeter;lock;banner;user list;sign in;display "
+"manager;greetd;accent;clock;"
+msgstr ""
+"login;greeter;lock;banner;user list;sign in;display "
+"manager;greetd;accent;clock;вхід;екран входу;блокування;банер;список "
+"користувачів;акцент;годинник;"
+
+#: apps/settings/src/panels.rs:267
 msgid "About"
 msgstr "Про систему"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:256
+#: apps/settings/src/panels.rs:271
 msgid ""
 "device name;hostname;memory;processor;cpu;disk;os;version;kernel;hardware;"
 msgstr ""
@@ -12185,12 +12201,12 @@ msgstr ""
 "вузла;пам'ять;процесор;cpu;диск;ос;версія;ядро;обладнання;device "
 "name;hostname;memory;processor;disk;os;version;kernel;hardware;"
 
-#: apps/settings/src/panels.rs:281 apps/settings/src/ui/agent_access.rs:70
+#: apps/settings/src/panels.rs:296 apps/settings/src/ui/agent_access.rs:70
 #: apps/settings/src/ui/agent_access.rs:183 apps/settings/src/ui/privacy.rs:189
 msgid "Agent Access"
 msgstr "Доступ агентів"
 
-#: apps/settings/src/panels.rs:289 apps/settings/src/ui/agent_access.rs:983
+#: apps/settings/src/panels.rs:304 apps/settings/src/ui/agent_access.rs:983
 msgid "Agent Activity"
 msgstr "Активність агентів"
 
@@ -13102,7 +13118,7 @@ msgstr "Тут буде показано, що роблять агенти"
 msgid "Dark"
 msgstr "Темний"
 
-#: apps/settings/src/ui/appearance.rs:165
+#: apps/settings/src/ui/appearance.rs:165 apps/settings/src/ui/greeter.rs:89
 msgid "Accent Color"
 msgstr "Колір акценту"
 
@@ -13518,7 +13534,7 @@ msgstr "Дата та час"
 msgid "Loading…"
 msgstr "Завантаження…"
 
-#: apps/settings/src/ui/datetime.rs:155
+#: apps/settings/src/ui/datetime.rs:155 apps/settings/src/ui/greeter.rs:28
 msgid "24-hour"
 msgstr "24-годинний"
 
@@ -13694,15 +13710,11 @@ msgstr "Екрани недоступні"
 msgid "The display service is not running."
 msgstr "Служба екранів не запущена."
 
-#: apps/settings/src/ui/displays.rs:252
-msgid "Login Screen"
-msgstr "Екран входу"
-
-#: apps/settings/src/ui/displays.rs:253
+#: apps/settings/src/ui/displays.rs:260
 msgid "Use This Layout for the Login Screen"
 msgstr "Використовувати це розташування для екрана входу"
 
-#: apps/settings/src/ui/displays.rs:257
+#: apps/settings/src/ui/displays.rs:264
 msgid ""
 "The login screen shows these displays arranged as they are now. Needs an "
 "administrator."
@@ -13710,81 +13722,85 @@ msgstr ""
 "Екран входу показує ці дисплеї в поточному розташуванні. Потрібні права "
 "адміністратора."
 
-#: apps/settings/src/ui/displays.rs:282
+#: apps/settings/src/ui/displays.rs:289
 msgid "The login screen will use this layout"
 msgstr "Екран входу використовуватиме це розташування"
 
-#: apps/settings/src/ui/displays.rs:284
+#: apps/settings/src/ui/displays.rs:292 apps/settings/src/ui/greeter.rs:420
+msgid "Could not change the login screen: not authorized"
+msgstr "Не вдалося змінити екран входу: немає прав"
+
+#: apps/settings/src/ui/displays.rs:294
 msgid "Could not use this layout for the login screen: {e}"
 msgstr "Не вдалося використати це розташування для екрана входу: {e}"
 
-#: apps/settings/src/ui/displays.rs:288
+#: apps/settings/src/ui/displays.rs:298
 msgid "Could not read the current layout"
 msgstr "Не вдалося прочитати поточне розташування"
 
-#: apps/settings/src/ui/displays.rs:313
+#: apps/settings/src/ui/displays.rs:322
 msgid "Changing the displays is not allowed in this session."
 msgstr "Змінювати екрани в цьому сеансі заборонено."
 
-#: apps/settings/src/ui/displays.rs:348
+#: apps/settings/src/ui/displays.rs:357
 msgid "Could not change the displays: {e}"
 msgstr "Не вдалося змінити екрани: {e}"
 
-#: apps/settings/src/ui/displays.rs:428
+#: apps/settings/src/ui/displays.rs:437
 msgid "Mirrored Displays"
 msgstr "Віддзеркалені екрани"
 
-#: apps/settings/src/ui/displays.rs:535
+#: apps/settings/src/ui/displays.rs:544
 msgid "These displays have no resolution in common to mirror"
 msgstr "Ці екрани не мають спільної роздільності для віддзеркалення"
 
-#: apps/settings/src/ui/displays.rs:788
+#: apps/settings/src/ui/displays.rs:797
 msgid "{display} at {x}, {y}"
 msgstr "{display} у позиції {x}, {y}"
 
-#: apps/settings/src/ui/displays.rs:819
+#: apps/settings/src/ui/displays.rs:828
 msgid "{time}, Hours"
 msgstr "{time}, години"
 
-#: apps/settings/src/ui/displays.rs:820
+#: apps/settings/src/ui/displays.rs:829
 msgid "{time}, Minutes"
 msgstr "{time}, хвилини"
 
-#: apps/settings/src/ui/displays.rs:870 apps/settings/src/ui/displays.rs:879
+#: apps/settings/src/ui/displays.rs:879 apps/settings/src/ui/displays.rs:888
 msgid "Night Light"
 msgstr "Нічне світло"
 
-#: apps/settings/src/ui/displays.rs:871
+#: apps/settings/src/ui/displays.rs:880
 msgid "Makes the screen warmer in the evening, which can help you sleep."
 msgstr "Робить екран теплішим увечері, що може допомогти заснути."
 
-#: apps/settings/src/ui/displays.rs:885
+#: apps/settings/src/ui/displays.rs:894
 msgid "Sunset to Sunrise"
 msgstr "Від заходу до світанку"
 
-#: apps/settings/src/ui/displays.rs:886
+#: apps/settings/src/ui/displays.rs:895
 msgid "Manual Schedule"
 msgstr "Ручний розклад"
 
-#: apps/settings/src/ui/displays.rs:904
+#: apps/settings/src/ui/displays.rs:913
 msgctxt "time range"
 msgid "From"
 msgstr "З"
 
-#: apps/settings/src/ui/displays.rs:910
+#: apps/settings/src/ui/displays.rs:919
 msgctxt "time range"
 msgid "To"
 msgstr "До"
 
-#: apps/settings/src/ui/displays.rs:922
+#: apps/settings/src/ui/displays.rs:931
 msgid "Color Temperature"
 msgstr "Колірна температура"
 
-#: apps/settings/src/ui/displays.rs:923
+#: apps/settings/src/ui/displays.rs:932
 msgid "Cooler"
 msgstr "Холодніше"
 
-#: apps/settings/src/ui/displays.rs:923
+#: apps/settings/src/ui/displays.rs:932
 msgid "Warmer"
 msgstr "Тепліше"
 
@@ -13876,6 +13892,122 @@ msgstr "Не дозволено"
 #: apps/settings/src/ui/extensions.rs:706
 msgid "Could not use these keys: {msg}"
 msgstr "Не вдалося використати ці клавіші: {msg}"
+
+#: apps/settings/src/ui/greeter.rs:29
+msgid "12-hour"
+msgstr "12-годинний"
+
+#: apps/settings/src/ui/greeter.rs:60
+msgid ""
+"How the login screen looks for everyone on this computer. Changes need an "
+"administrator and apply the next time the login screen starts."
+msgstr ""
+"Як екран входу виглядає для всіх на цьому комп’ютері. Для змін потрібен "
+"адміністратор; вони діють з наступного запуску екрана входу."
+
+#: apps/settings/src/ui/greeter.rs:67
+msgid "Show User List"
+msgstr "Список користувачів"
+
+#: apps/settings/src/ui/greeter.rs:68
+msgid "When off, the login screen asks for a username"
+msgstr "Якщо вимкнено, екран входу запитує ім’я користувача"
+
+#: apps/settings/src/ui/greeter.rs:73
+msgid "Banner"
+msgstr "Банер"
+
+#: apps/settings/src/ui/greeter.rs:76
+msgid "Show a Banner"
+msgstr "Показувати банер"
+
+#: apps/settings/src/ui/greeter.rs:77
+msgid "A message under the clock, such as “Authorized use only.”"
+msgstr "Повідомлення під годинником, наприклад «Лише для уповноважених осіб.»"
+
+#: apps/settings/src/ui/greeter.rs:83
+msgid "Banner Message"
+msgstr "Текст банера"
+
+#: apps/settings/src/ui/greeter.rs:111
+msgid "Clock"
+msgstr "Годинник"
+
+#: apps/settings/src/ui/greeter.rs:115
+msgid "Clock Format"
+msgstr "Формат часу"
+
+#: apps/settings/src/ui/greeter.rs:116
+msgid "Automatic follows the system’s setting or the language"
+msgstr "«Автоматично» відповідає налаштуванню системи або мові"
+
+#: apps/settings/src/ui/greeter.rs:131 apps/settings/src/ui/greeter.rs:340
+msgid "Changes not applied yet"
+msgstr "Зміни ще не застосовано"
+
+#: apps/settings/src/ui/greeter.rs:136
+msgid "_Apply…"
+msgstr "_Застосувати…"
+
+#: apps/settings/src/ui/greeter.rs:140
+msgid "Apply Login Screen Changes"
+msgstr "Застосувати зміни екрана входу"
+
+#: apps/settings/src/ui/greeter.rs:141
+msgid "Needs an administrator"
+msgstr "Потрібен адміністратор"
+
+#: apps/settings/src/ui/greeter.rs:146
+msgid "Discard Login Screen Changes"
+msgstr "Скасувати зміни екрана входу"
+
+#: apps/settings/src/ui/greeter.rs:274
+msgid "The banner is too long: {n} characters, at most {max}"
+msgid_plural "The banner is too long: {n} characters, at most {max}"
+msgstr[0] "Банер задовгий: {n} символ, не більше {max}"
+msgstr[1] "Банер задовгий: {n} символи, не більше {max}"
+msgstr[2] "Банер задовгий: {n} символів, не більше {max}"
+
+#: apps/settings/src/ui/greeter.rs:281
+msgid "The banner can’t contain line breaks, tabs or other control characters"
+msgstr ""
+"Банер не може містити розривів рядків, табуляцій чи інших керівних символів"
+
+#: apps/settings/src/ui/greeter.rs:283
+msgid "The banner can’t contain text direction controls"
+msgstr "Банер не може містити символів керування напрямком тексту"
+
+#: apps/settings/src/ui/greeter.rs:294
+msgid ""
+"These settings can’t be changed here: helix-login-config is not installed"
+msgstr ""
+"Ці налаштування не можна змінити тут: helix-login-config не встановлено"
+
+#: apps/settings/src/ui/greeter.rs:300
+msgid ""
+"The login screen’s settings file can’t be read. Fix {path} to change them "
+"here."
+msgstr ""
+"Не вдається прочитати файл налаштувань екрана входу. Виправте {path}, щоб "
+"змінювати їх тут."
+
+#: apps/settings/src/ui/greeter.rs:336
+msgid "Waiting for an administrator…"
+msgstr "Очікування адміністратора…"
+
+#: apps/settings/src/ui/greeter.rs:338
+msgid "Fix the banner to apply the changes"
+msgstr "Виправте банер, щоб застосувати зміни"
+
+#: apps/settings/src/ui/greeter.rs:411
+msgid ""
+"Saved. The login screen will use these settings the next time it starts."
+msgstr ""
+"Збережено. Екран входу використає ці налаштування під час наступного запуску."
+
+#: apps/settings/src/ui/greeter.rs:424
+msgid "Could not change the login screen settings: {e}"
+msgstr "Не вдалося змінити налаштування екрана входу: {e}"
 
 #: apps/settings/src/ui/input.rs:69
 msgid "Primary Button"
@@ -14021,42 +14153,42 @@ msgstr "Пересунути {source} вниз"
 msgid "Remove {source}"
 msgstr "Вилучити {source}"
 
-#: apps/settings/src/ui/mod.rs:183
+#: apps/settings/src/ui/mod.rs:192
 msgid "Search settings"
 msgstr "Шукати параметри"
 
-#: apps/settings/src/ui/mod.rs:186 apps/settings/src/ui/shortcuts.rs:10
+#: apps/settings/src/ui/mod.rs:195 apps/settings/src/ui/shortcuts.rs:10
 msgid "Search Settings"
 msgstr "Пошук параметрів"
 
-#: apps/settings/src/ui/mod.rs:204
+#: apps/settings/src/ui/mod.rs:213
 msgid "_About Settings"
 msgstr "_Про програму"
 
-#: apps/settings/src/ui/mod.rs:354 apps/settings/src/ui/mod.rs:367
+#: apps/settings/src/ui/mod.rs:385 apps/settings/src/ui/mod.rs:398
 msgid "Not yet available"
 msgstr "Ще недоступно"
 
-#: apps/settings/src/ui/mod.rs:388
+#: apps/settings/src/ui/mod.rs:419
 msgid "Not Yet Available"
 msgstr "Ще недоступно"
 
-#: apps/settings/src/ui/mod.rs:431
+#: apps/settings/src/ui/mod.rs:462
 msgid "{n} panel found"
 msgid_plural "{n} panels found"
 msgstr[0] "Знайдено {n} панель"
 msgstr[1] "Знайдено {n} панелі"
 msgstr[2] "Знайдено {n} панелей"
 
-#: apps/settings/src/ui/mod.rs:478
+#: apps/settings/src/ui/mod.rs:521
 msgid "{} Is Not Yet Available"
 msgstr "{} ще недоступно"
 
-#: apps/settings/src/ui/mod.rs:479
+#: apps/settings/src/ui/mod.rs:522
 msgid "This panel will be added in a later version of Helix Settings."
 msgstr "Цю панель буде додано в одній з наступних версій Параметрів Helix."
 
-#: apps/settings/src/ui/mod.rs:510
+#: apps/settings/src/ui/mod.rs:553
 msgid "Configure the Helix desktop"
 msgstr "Налаштування стільниці Helix"
 

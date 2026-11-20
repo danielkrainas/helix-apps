@@ -21,6 +21,7 @@ async-channel = "2"
 serde.workspace = true
 serde_json.workspace = true
 qrcode = { version = "0.14", default-features = false }
+toml = { version = "1", default-features = false, features = ["parse", "serde", "std"] }
 
 [dev-dependencies]
 helix-test-audio = { path = "../../crates/helix-test-audio" }

@@ -23,7 +23,7 @@ const THUMB_MIN_W: i32 = 136;
 
 pub struct AppearancePanel;
 
-fn install_css() {
+pub(super) fn install_css() {
     thread_local!(static DONE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) });
     if DONE.with(|d| d.replace(true)) {
         return;
@@ -140,7 +140,7 @@ fn style_group(prefs: &Prefs) -> adw::PreferencesGroup {
 
 /// A centred box that wraps its children onto more lines when narrow (at
 /// most `per_line` on one line).
-fn wrapping_box(per_line: u32, spacing: u32) -> gtk::FlowBox {
+pub(super) fn wrapping_box(per_line: u32, spacing: u32) -> gtk::FlowBox {
     gtk::FlowBox::builder()
         .selection_mode(gtk::SelectionMode::None)
         .homogeneous(true)
@@ -154,7 +154,7 @@ fn wrapping_box(per_line: u32, spacing: u32) -> gtk::FlowBox {
 
 /// Appends `child` to `flow` so that the button itself, not the flow box
 /// slot around it, takes keyboard focus.
-fn flow_append(flow: &gtk::FlowBox, child: &impl IsA<gtk::Widget>) {
+pub(super) fn flow_append(flow: &gtk::FlowBox, child: &impl IsA<gtk::Widget>) {
     flow.append(child);
     if let Some(slot) = child.as_ref().parent() {
         slot.set_focusable(false);

@@ -37,6 +37,12 @@ fn serve_fakes() {
     if std::env::var_os("HELIX_FAKE_DISPLAYS").is_some_and(|v| !v.is_empty()) {
         crate::displays::tests::serve(&displays, &log);
     }
+    // systemd's display manager, for the Login Screen panel (with the
+    // greeter's files under HELIX_SETTINGS_TEST_ROOT).
+    let systemd = connect();
+    if let Ok(dm) = std::env::var("HELIX_FAKE_DISPLAY_MANAGER") {
+        crate::greeter::tests::serve_systemd(&systemd, Some(dm.as_str()).filter(|d| !d.is_empty()));
+    }
     eprintln!("fakes ready");
     loop {
         std::thread::sleep(std::time::Duration::from_secs(5));

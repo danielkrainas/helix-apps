@@ -323,7 +323,7 @@ msgstr "_Over Audiospeler"
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
 #: apps/music/src/ui.rs:480 apps/music/src/ui.rs:482
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
-#: apps/settings/src/ui/mod.rs:209 apps/settings/src/ui/mod.rs:211
+#: apps/settings/src/ui/mod.rs:218 apps/settings/src/ui/mod.rs:220
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:301 apps/terminal/src/window.rs:305
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
@@ -734,7 +734,8 @@ msgstr "{} is ongedefinieerd voor deze waarden"
 
 #: apps/calculator/src/format.rs:33 apps/document-scanner/src/settings.rs:29
 #: apps/document-scanner/src/ui.rs:1728 apps/document-scanner/src/ui.rs:1795
-#: apps/settings/src/ui/netedit.rs:32 apps/settings/src/ui/network.rs:28
+#: apps/settings/src/ui/greeter.rs:27 apps/settings/src/ui/netedit.rs:32
+#: apps/settings/src/ui/network.rs:28
 msgid "Automatic"
 msgstr "Automatisch"
 
@@ -1429,7 +1430,7 @@ msgstr "Agenda"
 msgid "Location"
 msgstr "Locatie"
 
-#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:883
+#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:892
 msgid "Schedule"
 msgstr "Planning"
 
@@ -1839,7 +1840,7 @@ msgstr "Importeren"
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:32 apps/music/src/ui.rs:452
 #: apps/music/src/ui.rs:454 apps/settings/src/ui/apps.rs:439
-#: apps/settings/src/ui/mod.rs:194 apps/settings/src/ui/mod.rs:196
+#: apps/settings/src/ui/mod.rs:203 apps/settings/src/ui/mod.rs:205
 #: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
 #: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
 #: apps/web/src/dialogs.rs:142 apps/web/src/window.rs:48
@@ -1992,7 +1993,7 @@ msgstr "_Importeren…"
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:232 apps/maps/src/ui.rs:486
-#: apps/settings/src/ui/mod.rs:203 apps/terminal/src/window.rs:296
+#: apps/settings/src/ui/mod.rs:212 apps/terminal/src/window.rs:296
 #: apps/text-editor/src/window.rs:65 apps/web/src/window.rs:222
 #: apps/web/src/window.rs:265 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -2011,7 +2012,7 @@ msgid "Search Events"
 msgstr "Afspraken zoeken"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:232
+#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:244
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:752
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
@@ -2019,7 +2020,7 @@ msgstr "Geen resultaten gevonden"
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:233
+#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:245
 #: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:753
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
@@ -3841,7 +3842,8 @@ msgid "Changes to this contact have not been saved."
 msgstr "Wijzigingen aan dit contact zijn niet opgeslagen."
 
 #: apps/contacts/src/ui.rs:1511 apps/document-scanner/src/ui.rs:1265
-#: apps/document-scanner/src/ui.rs:1379 apps/text-editor/src/window.rs:979
+#: apps/document-scanner/src/ui.rs:1379 apps/settings/src/ui/greeter.rs:143
+#: apps/text-editor/src/window.rs:979
 msgid "_Discard"
 msgstr "_Verwerpen"
 
@@ -6811,7 +6813,7 @@ msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr "Pagina {page} van {n_pages} doorzoeken… {total} gevonden"
 
 #: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1260
-#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:430
+#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:461
 #: apps/settings/src/ui/picker.rs:34
 msgid "No results found"
 msgstr "Geen resultaten gevonden"
@@ -7050,7 +7052,7 @@ msgstr "Recent"
 
 #: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:116
 #: apps/files/src/ui/tab.rs:1282 apps/settings/src/bluez.rs:235
-#: apps/settings/src/panels.rs:60 apps/system-monitor/src/res_view.rs:385
+#: apps/settings/src/panels.rs:63 apps/system-monitor/src/res_view.rs:385
 msgid "Network"
 msgstr "Netwerk"
 
@@ -10369,7 +10371,7 @@ msgstr "ReplayGain"
 msgid "Even out loudness using the volume tags of songs or albums"
 msgstr "Geluidsniveau gelijktrekken met de volumelabels van nummers of albums"
 
-#: apps/music/src/pages.rs:2436 apps/settings/src/panels.rs:156
+#: apps/music/src/pages.rs:2436 apps/settings/src/panels.rs:159
 #: apps/settings/src/permissions.rs:38 apps/settings/src/ui/apps.rs:419
 #: apps/web/src/permissions.rs:25
 msgid "Notifications"
@@ -11548,8 +11550,8 @@ msgstr "Een venster van {app}"
 msgid "A window"
 msgstr "Een venster"
 
-#: apps/settings/src/agents.rs:804 apps/settings/src/ui/mod.rs:165
-#: apps/settings/src/ui/mod.rs:245 apps/settings/src/ui/mod.rs:509
+#: apps/settings/src/agents.rs:804 apps/settings/src/ui/mod.rs:174
+#: apps/settings/src/ui/mod.rs:257 apps/settings/src/ui/mod.rs:552
 msgid "Settings"
 msgstr "Instellingen"
 
@@ -11643,7 +11645,7 @@ msgstr "Koptelefoon"
 msgid "Speaker"
 msgstr "Luidspreker"
 
-#: apps/settings/src/bluez.rs:224 apps/settings/src/panels.rs:192
+#: apps/settings/src/bluez.rs:224 apps/settings/src/panels.rs:195
 msgid "Keyboard"
 msgstr "Toetsenbord"
 
@@ -11673,7 +11675,7 @@ msgstr "Modem"
 
 #: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:98
 #: apps/settings/src/ui/displays.rs:122 apps/settings/src/ui/displays.rs:123
-#: apps/settings/src/ui/displays.rs:434
+#: apps/settings/src/ui/displays.rs:443
 msgid "Display"
 msgstr "Beeldscherm"
 
@@ -11899,113 +11901,113 @@ msgstr "Uitstekend signaal"
 msgid "Hotspot"
 msgstr "Hotspot"
 
-#: apps/settings/src/panels.rs:48 apps/settings/src/ui/wifi.rs:106
+#: apps/settings/src/panels.rs:51 apps/settings/src/ui/wifi.rs:106
 msgid "Wi-Fi"
 msgstr "Wi-Fi"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:52
+#: apps/settings/src/panels.rs:55
 msgid "network;wireless;wlan;hotspot;internet;airplane;"
 msgstr "netwerk;draadloos;wlan;wifi;hotspot;internet;vliegtuig;vliegtuigmodus;"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:64
+#: apps/settings/src/panels.rs:67
 msgid "ethernet;wired;vpn;proxy;ip;dns;internet;"
 msgstr "ethernet;bekabeld;kabel;vpn;proxy;ip;dns;internet;netwerk;"
 
-#: apps/settings/src/panels.rs:72 apps/settings/src/ui/bluetooth.rs:102
+#: apps/settings/src/panels.rs:75 apps/settings/src/ui/bluetooth.rs:102
 msgid "Bluetooth"
 msgstr "Bluetooth"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:76
+#: apps/settings/src/panels.rs:79
 msgid "share;devices;pair;headset;wireless;"
 msgstr "delen;apparaten;koppelen;headset;draadloos;"
 
-#: apps/settings/src/panels.rs:84
+#: apps/settings/src/panels.rs:87 apps/settings/src/ui/greeter.rs:124
 msgid "Displays"
 msgstr "Beeldschermen"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:88
+#: apps/settings/src/panels.rs:91
 msgid "monitor;screen;resolution;refresh;scale;night light;projector;rotation;"
 msgstr "monitor;scherm;beeldscherm;resolutie;verversingsfrequentie;schaal;nachtlicht;projector;rotatie;draaien;"
 
-#: apps/settings/src/panels.rs:96
+#: apps/settings/src/panels.rs:99
 msgid "Sound"
 msgstr "Geluid"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:100
+#: apps/settings/src/panels.rs:103
 msgid "volume;speaker;microphone;audio;output;input;alert;mute;"
 msgstr "volume;luidspreker;microfoon;audio;uitvoer;invoer;waarschuwing;dempen;geluid;"
 
-#: apps/settings/src/panels.rs:108
+#: apps/settings/src/panels.rs:111
 msgid "Power"
 msgstr "Energie"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:112
+#: apps/settings/src/panels.rs:115
 msgid "battery;suspend;sleep;dim;blank;power button;hibernate;energy;"
 msgstr ""
 "accu;batterij;pauzestand;slaapstand;dimmen;uitschakelen;aan-"
 "uitknop;sluimerstand;energie;"
 
-#: apps/settings/src/panels.rs:120
+#: apps/settings/src/panels.rs:123
 msgid "Multitasking"
 msgstr "Multitasking"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:124
+#: apps/settings/src/panels.rs:127
 msgid "hot corner;workspace;screen edges;tiling;app switching;multi-monitor;"
 msgstr ""
 "actieve hoek;werkblad;schermranden;tegels;apps wisselen;meerdere "
 "beeldschermen;"
 
-#: apps/settings/src/panels.rs:132 apps/terminal/src/prefs_dialog.rs:24
+#: apps/settings/src/panels.rs:135 apps/terminal/src/prefs_dialog.rs:24
 #: apps/text-editor/src/prefs.rs:58
 msgid "Appearance"
 msgstr "Uiterlijk"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:136
+#: apps/settings/src/panels.rs:139
 msgid "dark;light;style;theme;icon;icons;accent;color;colour;wallpaper;background;"
 msgstr "donker;licht;stijl;thema;pictogram;pictogrammen;accent;kleur;bureaubladachtergrond;achtergrond;"
 
-#: apps/settings/src/panels.rs:144 apps/settings/src/ui/notifications.rs:100
+#: apps/settings/src/panels.rs:147 apps/settings/src/ui/notifications.rs:100
 #: apps/settings/src/ui/sound.rs:288
 msgid "Apps"
 msgstr "Apps"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:148
+#: apps/settings/src/panels.rs:151
 msgid "default;applications;permissions;browser;storage;"
 msgstr "standaard;toepassingen;apps;rechten;browser;opslag;"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:160
+#: apps/settings/src/panels.rs:163
 msgid "do not disturb;dnd;banner;alerts;lock screen;messages;"
 msgstr ""
 "niet storen;dnd;banner;waarschuwingen;vergrendelscherm;berichten;meldingen;"
 
-#: apps/settings/src/panels.rs:168
+#: apps/settings/src/panels.rs:171
 msgid "Extensions"
 msgstr "Uitbreidingen"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:172
+#: apps/settings/src/panels.rs:175
 msgid ""
 "add-on;plugin;panel item;indicator;quick settings;dock;sandbox;permissions;"
 msgstr ""
 "add-on;plug-in;plugin;paneelitem;indicator;snelle "
 "instellingen;dock;sandbox;rechten;uitbreiding;"
 
-#: apps/settings/src/panels.rs:180
+#: apps/settings/src/panels.rs:183
 msgid "Mouse & Touchpad"
 msgstr "Muis en touchpad"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:184
+#: apps/settings/src/panels.rs:187
 msgid ""
 "touchpad;pointer;speed;scroll;natural;tap;click;trackpad;primary "
 "button;acceleration;"
@@ -12014,16 +12016,16 @@ msgstr ""
 "knop;versnelling;muis;"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:196
+#: apps/settings/src/panels.rs:199
 msgid "layout;input source;language;repeat;delay;typing;xkb;"
 msgstr "indeling;invoerbron;taal;herhalen;vertraging;typen;xkb;toetsenbord;"
 
-#: apps/settings/src/panels.rs:204 apps/settings/src/ui/access.rs:119
+#: apps/settings/src/panels.rs:207 apps/settings/src/ui/access.rs:119
 msgid "Accessibility"
 msgstr "Toegankelijkheid"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:208
+#: apps/settings/src/panels.rs:211
 msgid ""
 "high contrast;large text;zoom;magnifier;screen reader;cursor size;reduce "
 "animation;sticky keys;slow keys;bounce keys;mouse keys;scrollbars;screen "
@@ -12035,12 +12037,12 @@ msgstr ""
 "toetsen;stuitertoetsen;muistoetsen;schuifbalken;schermtoetsenbord;dubbelklikken;aanwijzer "
 "lokaliseren;"
 
-#: apps/settings/src/panels.rs:216 apps/settings/src/ui/privacy.rs:226
+#: apps/settings/src/panels.rs:219 apps/settings/src/ui/privacy.rs:226
 msgid "Privacy & Security"
 msgstr "Privacy en beveiliging"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:220
+#: apps/settings/src/panels.rs:223
 msgid ""
 "screen lock;lock;blank;idle;recent files;file "
 "history;trash;temporary;location;camera;microphone;problem "
@@ -12049,40 +12051,53 @@ msgstr ""
 "schermvergrendeling;vergrendelen;leeg scherm;inactief;recente "
 "bestanden;bestandsgeschiedenis;prullenbak;tijdelijk;locatie;camera;microfoon;probleemrapportage;agent;ai;assistent;automatisering;"
 
-#: apps/settings/src/panels.rs:228
+#: apps/settings/src/panels.rs:231
 msgid "Date & Time"
 msgstr "Datum en tijd"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:232
+#: apps/settings/src/panels.rs:235
 msgid "clock;time zone;timezone;ntp;24-hour;am/pm;week numbers;calendar;"
 msgstr "klok;tijdzone;tijd;ntp;24-uurs;am/pm;weeknummers;kalender;agenda;"
 
-#: apps/settings/src/panels.rs:240
+#: apps/settings/src/panels.rs:243 apps/settings/src/ui/greeter.rs:64
 msgid "Users"
 msgstr "Gebruikers"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:244
+#: apps/settings/src/panels.rs:247
 msgid "account;password;login;avatar;administrator;"
 msgstr "account;wachtwoord;aanmelden;inloggen;avatar;beheerder;gebruiker;"
 
-#: apps/settings/src/panels.rs:252
+#: apps/settings/src/panels.rs:255 apps/settings/src/ui/displays.rs:252
+msgid "Login Screen"
+msgstr "Aanmeldscherm"
+
+#. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
+#: apps/settings/src/panels.rs:259
+msgid ""
+"login;greeter;lock;banner;user list;sign in;display "
+"manager;greetd;accent;clock;"
+msgstr ""
+"login;greeter;lock;banner;user list;sign in;display "
+"manager;greetd;accent;clock;aanmelden;aanmeldscherm;vergrendelen;gebruikerslijst;accentkleur;klok;"
+
+#: apps/settings/src/panels.rs:267
 msgid "About"
 msgstr "Info"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:256
+#: apps/settings/src/panels.rs:271
 msgid ""
 "device name;hostname;memory;processor;cpu;disk;os;version;kernel;hardware;"
 msgstr "apparaatnaam;hostnaam;geheugen;processor;cpu;schijf;besturingssysteem;os;versie;kernel;hardware;info;"
 
-#: apps/settings/src/panels.rs:281 apps/settings/src/ui/agent_access.rs:70
+#: apps/settings/src/panels.rs:296 apps/settings/src/ui/agent_access.rs:70
 #: apps/settings/src/ui/agent_access.rs:183 apps/settings/src/ui/privacy.rs:189
 msgid "Agent Access"
 msgstr "Agenttoegang"
 
-#: apps/settings/src/panels.rs:289 apps/settings/src/ui/agent_access.rs:983
+#: apps/settings/src/panels.rs:304 apps/settings/src/ui/agent_access.rs:983
 msgid "Agent Activity"
 msgstr "Agentactiviteit"
 
@@ -12995,7 +13010,7 @@ msgstr "Wat agenten doen, wordt hier weergegeven"
 msgid "Dark"
 msgstr "Donker"
 
-#: apps/settings/src/ui/appearance.rs:165
+#: apps/settings/src/ui/appearance.rs:165 apps/settings/src/ui/greeter.rs:89
 msgid "Accent Color"
 msgstr "Accentkleur"
 
@@ -13414,7 +13429,7 @@ msgstr "Datum en tijd"
 msgid "Loading…"
 msgstr "Laden…"
 
-#: apps/settings/src/ui/datetime.rs:155
+#: apps/settings/src/ui/datetime.rs:155 apps/settings/src/ui/greeter.rs:28
 msgid "24-hour"
 msgstr "24-uurs"
 
@@ -13591,15 +13606,11 @@ msgstr "Beeldschermen zijn niet beschikbaar"
 msgid "The display service is not running."
 msgstr "De beeldschermdienst is niet actief."
 
-#: apps/settings/src/ui/displays.rs:252
-msgid "Login Screen"
-msgstr "Aanmeldscherm"
-
-#: apps/settings/src/ui/displays.rs:253
+#: apps/settings/src/ui/displays.rs:260
 msgid "Use This Layout for the Login Screen"
 msgstr "Deze indeling gebruiken voor het aanmeldscherm"
 
-#: apps/settings/src/ui/displays.rs:257
+#: apps/settings/src/ui/displays.rs:264
 msgid ""
 "The login screen shows these displays arranged as they are now. Needs an "
 "administrator."
@@ -13607,82 +13618,86 @@ msgstr ""
 "Het aanmeldscherm toont deze beeldschermen zoals ze nu zijn ingedeeld. "
 "Vereist een beheerder."
 
-#: apps/settings/src/ui/displays.rs:282
+#: apps/settings/src/ui/displays.rs:289
 msgid "The login screen will use this layout"
 msgstr "Het aanmeldscherm gebruikt deze indeling"
 
-#: apps/settings/src/ui/displays.rs:284
+#: apps/settings/src/ui/displays.rs:292 apps/settings/src/ui/greeter.rs:420
+msgid "Could not change the login screen: not authorized"
+msgstr "Kan het aanmeldscherm niet wijzigen: niet gemachtigd"
+
+#: apps/settings/src/ui/displays.rs:294
 msgid "Could not use this layout for the login screen: {e}"
 msgstr "Kan deze indeling niet gebruiken voor het aanmeldscherm: {e}"
 
-#: apps/settings/src/ui/displays.rs:288
+#: apps/settings/src/ui/displays.rs:298
 msgid "Could not read the current layout"
 msgstr "Kan de huidige indeling niet lezen"
 
-#: apps/settings/src/ui/displays.rs:313
+#: apps/settings/src/ui/displays.rs:322
 msgid "Changing the displays is not allowed in this session."
 msgstr "Het wijzigen van de beeldschermen is niet toegestaan in deze sessie."
 
-#: apps/settings/src/ui/displays.rs:348
+#: apps/settings/src/ui/displays.rs:357
 msgid "Could not change the displays: {e}"
 msgstr "Kon de beeldschermen niet wijzigen: {e}"
 
-#: apps/settings/src/ui/displays.rs:428
+#: apps/settings/src/ui/displays.rs:437
 msgid "Mirrored Displays"
 msgstr "Gespiegelde beeldschermen"
 
-#: apps/settings/src/ui/displays.rs:535
+#: apps/settings/src/ui/displays.rs:544
 msgid "These displays have no resolution in common to mirror"
 msgstr ""
 "Deze beeldschermen hebben geen gemeenschappelijke resolutie om te spiegelen"
 
-#: apps/settings/src/ui/displays.rs:788
+#: apps/settings/src/ui/displays.rs:797
 msgid "{display} at {x}, {y}"
 msgstr "{display} op {x}, {y}"
 
-#: apps/settings/src/ui/displays.rs:819
+#: apps/settings/src/ui/displays.rs:828
 msgid "{time}, Hours"
 msgstr "{time}, uren"
 
-#: apps/settings/src/ui/displays.rs:820
+#: apps/settings/src/ui/displays.rs:829
 msgid "{time}, Minutes"
 msgstr "{time}, minuten"
 
-#: apps/settings/src/ui/displays.rs:870 apps/settings/src/ui/displays.rs:879
+#: apps/settings/src/ui/displays.rs:879 apps/settings/src/ui/displays.rs:888
 msgid "Night Light"
 msgstr "Nachtlicht"
 
-#: apps/settings/src/ui/displays.rs:871
+#: apps/settings/src/ui/displays.rs:880
 msgid "Makes the screen warmer in the evening, which can help you sleep."
 msgstr "Maakt het scherm 's avonds warmer, wat u kan helpen slapen."
 
-#: apps/settings/src/ui/displays.rs:885
+#: apps/settings/src/ui/displays.rs:894
 msgid "Sunset to Sunrise"
 msgstr "Zonsondergang tot zonsopkomst"
 
-#: apps/settings/src/ui/displays.rs:886
+#: apps/settings/src/ui/displays.rs:895
 msgid "Manual Schedule"
 msgstr "Handmatige planning"
 
-#: apps/settings/src/ui/displays.rs:904
+#: apps/settings/src/ui/displays.rs:913
 msgctxt "time range"
 msgid "From"
 msgstr "Van"
 
-#: apps/settings/src/ui/displays.rs:910
+#: apps/settings/src/ui/displays.rs:919
 msgctxt "time range"
 msgid "To"
 msgstr "Tot"
 
-#: apps/settings/src/ui/displays.rs:922
+#: apps/settings/src/ui/displays.rs:931
 msgid "Color Temperature"
 msgstr "Kleurtemperatuur"
 
-#: apps/settings/src/ui/displays.rs:923
+#: apps/settings/src/ui/displays.rs:932
 msgid "Cooler"
 msgstr "Koeler"
 
-#: apps/settings/src/ui/displays.rs:923
+#: apps/settings/src/ui/displays.rs:932
 msgid "Warmer"
 msgstr "Warmer"
 
@@ -13774,6 +13789,123 @@ msgstr "Niet toegestaan"
 #: apps/settings/src/ui/extensions.rs:706
 msgid "Could not use these keys: {msg}"
 msgstr "Kon deze toetsen niet gebruiken: {msg}"
+
+#: apps/settings/src/ui/greeter.rs:29
+msgid "12-hour"
+msgstr "12 uur"
+
+#: apps/settings/src/ui/greeter.rs:60
+msgid ""
+"How the login screen looks for everyone on this computer. Changes need an "
+"administrator and apply the next time the login screen starts."
+msgstr ""
+"Hoe het aanmeldscherm eruitziet voor iedereen op deze computer. Wijzigingen "
+"vereisen een beheerder en gelden vanaf de volgende keer dat het "
+"aanmeldscherm start."
+
+#: apps/settings/src/ui/greeter.rs:67
+msgid "Show User List"
+msgstr "Gebruikerslijst tonen"
+
+#: apps/settings/src/ui/greeter.rs:68
+msgid "When off, the login screen asks for a username"
+msgstr "Als dit uit staat, vraagt het aanmeldscherm om een gebruikersnaam"
+
+#: apps/settings/src/ui/greeter.rs:73
+msgid "Banner"
+msgstr "Banner"
+
+#: apps/settings/src/ui/greeter.rs:76
+msgid "Show a Banner"
+msgstr "Een banner tonen"
+
+#: apps/settings/src/ui/greeter.rs:77
+msgid "A message under the clock, such as “Authorized use only.”"
+msgstr "Een bericht onder de klok, zoals ‘Alleen voor bevoegd gebruik.’"
+
+#: apps/settings/src/ui/greeter.rs:83
+msgid "Banner Message"
+msgstr "Bannertekst"
+
+#: apps/settings/src/ui/greeter.rs:111
+msgid "Clock"
+msgstr "Klok"
+
+#: apps/settings/src/ui/greeter.rs:115
+msgid "Clock Format"
+msgstr "Tijdnotatie"
+
+#: apps/settings/src/ui/greeter.rs:116
+msgid "Automatic follows the system’s setting or the language"
+msgstr "Automatisch volgt de systeeminstelling of de taal"
+
+#: apps/settings/src/ui/greeter.rs:131 apps/settings/src/ui/greeter.rs:340
+msgid "Changes not applied yet"
+msgstr "Wijzigingen nog niet toegepast"
+
+#: apps/settings/src/ui/greeter.rs:136
+msgid "_Apply…"
+msgstr "_Toepassen…"
+
+#: apps/settings/src/ui/greeter.rs:140
+msgid "Apply Login Screen Changes"
+msgstr "Wijzigingen aan het aanmeldscherm toepassen"
+
+#: apps/settings/src/ui/greeter.rs:141
+msgid "Needs an administrator"
+msgstr "Vereist een beheerder"
+
+#: apps/settings/src/ui/greeter.rs:146
+msgid "Discard Login Screen Changes"
+msgstr "Wijzigingen aan het aanmeldscherm verwerpen"
+
+#: apps/settings/src/ui/greeter.rs:274
+msgid "The banner is too long: {n} characters, at most {max}"
+msgid_plural "The banner is too long: {n} characters, at most {max}"
+msgstr[0] "De banner is te lang: {n} teken, hoogstens {max}"
+msgstr[1] "De banner is te lang: {n} tekens, hoogstens {max}"
+
+#: apps/settings/src/ui/greeter.rs:281
+msgid "The banner can’t contain line breaks, tabs or other control characters"
+msgstr "De banner mag geen regeleinden, tabs of andere stuurtekens bevatten"
+
+#: apps/settings/src/ui/greeter.rs:283
+msgid "The banner can’t contain text direction controls"
+msgstr "De banner mag geen stuurtekens voor de tekstrichting bevatten"
+
+#: apps/settings/src/ui/greeter.rs:294
+msgid ""
+"These settings can’t be changed here: helix-login-config is not installed"
+msgstr ""
+"Deze instellingen kunnen hier niet worden gewijzigd: helix-login-config is "
+"niet geïnstalleerd"
+
+#: apps/settings/src/ui/greeter.rs:300
+msgid ""
+"The login screen’s settings file can’t be read. Fix {path} to change them "
+"here."
+msgstr ""
+"Het instellingenbestand van het aanmeldscherm kan niet worden gelezen. "
+"Herstel {path} om ze hier te wijzigen."
+
+#: apps/settings/src/ui/greeter.rs:336
+msgid "Waiting for an administrator…"
+msgstr "Wachten op een beheerder…"
+
+#: apps/settings/src/ui/greeter.rs:338
+msgid "Fix the banner to apply the changes"
+msgstr "Herstel de banner om de wijzigingen toe te passen"
+
+#: apps/settings/src/ui/greeter.rs:411
+msgid ""
+"Saved. The login screen will use these settings the next time it starts."
+msgstr ""
+"Opgeslagen. Het aanmeldscherm gebruikt deze instellingen de volgende keer "
+"dat het start."
+
+#: apps/settings/src/ui/greeter.rs:424
+msgid "Could not change the login screen settings: {e}"
+msgstr "Kan de instellingen van het aanmeldscherm niet wijzigen: {e}"
 
 #: apps/settings/src/ui/input.rs:69
 msgid "Primary Button"
@@ -13919,42 +14051,42 @@ msgstr "{source} omlaag verplaatsen"
 msgid "Remove {source}"
 msgstr "{source} verwijderen"
 
-#: apps/settings/src/ui/mod.rs:183
+#: apps/settings/src/ui/mod.rs:192
 msgid "Search settings"
 msgstr "Instellingen doorzoeken"
 
-#: apps/settings/src/ui/mod.rs:186 apps/settings/src/ui/shortcuts.rs:10
+#: apps/settings/src/ui/mod.rs:195 apps/settings/src/ui/shortcuts.rs:10
 msgid "Search Settings"
 msgstr "Instellingen doorzoeken"
 
-#: apps/settings/src/ui/mod.rs:204
+#: apps/settings/src/ui/mod.rs:213
 msgid "_About Settings"
 msgstr "_Over Instellingen"
 
-#: apps/settings/src/ui/mod.rs:354 apps/settings/src/ui/mod.rs:367
+#: apps/settings/src/ui/mod.rs:385 apps/settings/src/ui/mod.rs:398
 msgid "Not yet available"
 msgstr "Nog niet beschikbaar"
 
-#: apps/settings/src/ui/mod.rs:388
+#: apps/settings/src/ui/mod.rs:419
 msgid "Not Yet Available"
 msgstr "Nog niet beschikbaar"
 
-#: apps/settings/src/ui/mod.rs:431
+#: apps/settings/src/ui/mod.rs:462
 msgid "{n} panel found"
 msgid_plural "{n} panels found"
 msgstr[0] "{n} paneel gevonden"
 msgstr[1] "{n} panelen gevonden"
 
-#: apps/settings/src/ui/mod.rs:478
+#: apps/settings/src/ui/mod.rs:521
 msgid "{} Is Not Yet Available"
 msgstr "{} is nog niet beschikbaar"
 
-#: apps/settings/src/ui/mod.rs:479
+#: apps/settings/src/ui/mod.rs:522
 msgid "This panel will be added in a later version of Helix Settings."
 msgstr ""
 "Dit paneel wordt toegevoegd in een latere versie van Helix Instellingen."
 
-#: apps/settings/src/ui/mod.rs:510
+#: apps/settings/src/ui/mod.rs:553
 msgid "Configure the Helix desktop"
 msgstr "Het Helix-bureaublad configureren"
 

@@ -21,6 +21,9 @@ pub enum PanelId {
     Privacy,
     DateTime,
     Users,
+    /// Shown only with the Helix greeter under greetd
+    /// ([`crate::greeter::panel_shown`]).
+    LoginScreen,
     About,
 }
 
@@ -246,6 +249,18 @@ pub const PANELS: &[PanelInfo] = &[
         available: true,
     },
     PanelInfo {
+        id: PanelId::LoginScreen,
+        name: "login-screen",
+        aliases: &["greeter", "login"],
+        title: n_("Login Screen"),
+        icon: "system-lock-screen-symbolic",
+        // Translators: search keywords for this Settings panel, separated
+        // by semicolons; add words people would search for in your language.
+        keywords: n_("login;greeter;lock;banner;user list;sign in;display manager;greetd;accent;clock;"),
+        group: 5,
+        available: true,
+    },
+    PanelInfo {
         id: PanelId::About,
         name: "about",
         aliases: &["info-overview", "info", "system"],
@@ -344,6 +359,14 @@ pub fn sidebar_order(query: &str) -> Vec<PanelId> {
     ids
 }
 
+/// [`sidebar_order`] without the panels in `hidden` (a panel that is
+/// not shown on this system is not found by search either).
+pub fn sidebar_order_shown(query: &str, hidden: &[PanelId]) -> Vec<PanelId> {
+    let mut ids = sidebar_order(query);
+    ids.retain(|id| !hidden.contains(id));
+    ids
+}
+
 /// Lower rank is a better match; `None` means no match.
 fn rank(p: &PanelInfo, query: &str, terms: &[&str]) -> Option<u8> {
     let title = helix_app_common::i18n::tr(p.title).to_lowercase();
@@ -396,6 +419,7 @@ mod tests {
             PanelId::Privacy,
             PanelId::DateTime,
             PanelId::Users,
+            PanelId::LoginScreen,
             PanelId::About,
         ];
         assert_eq!(ids.len(), PANELS.len());
@@ -502,6 +526,30 @@ mod tests {
         assert_eq!(search("hot corner"), vec![PanelId::Multitasking]);
         assert!(search("timezone").contains(&PanelId::DateTime));
         assert!(search("battery").contains(&PanelId::Power));
+    }
+
+    #[test]
+    fn login_screen_keywords_and_hiding() {
+        for q in [
+            "login",
+            "greeter",
+            "lock",
+            "banner",
+            "user list",
+            "Login Screen",
+        ] {
+            assert!(search(q).contains(&PanelId::LoginScreen), "{q}");
+            assert!(
+                !sidebar_order_shown(q, &[PanelId::LoginScreen]).contains(&PanelId::LoginScreen),
+                "{q}: hidden, not found"
+            );
+        }
+        assert_eq!(search("greeter"), vec![PanelId::LoginScreen]);
+        assert_eq!(lookup("login-screen"), Some(PanelId::LoginScreen));
+        assert_eq!(lookup("greeter"), Some(PanelId::LoginScreen));
+        let all = sidebar_order_shown("", &[PanelId::LoginScreen]);
+        assert_eq!(all.len(), PANELS.len() - 1);
+        assert_eq!(sidebar_order_shown("", &[]), sidebar_order(""));
     }
 
     #[test]

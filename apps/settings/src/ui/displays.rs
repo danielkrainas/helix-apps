@@ -250,6 +250,13 @@ impl Panel for DisplaysPanel {
 /// the login screen, through the helper (an administrator must agree).
 fn login_screen_group(ctx: &Rc<Ctx>, helper: login_screen::Helper) -> adw::PreferencesGroup {
     let group = widgets::group(tr("Login Screen"));
+    group.add(&login_layout_row(ctx, helper));
+    group
+}
+
+/// The row of "Use This Layout for the Login Screen" (Displays, and the
+/// Login Screen panel).
+pub fn login_layout_row(ctx: &Rc<Ctx>, helper: login_screen::Helper) -> adw::ActionRow {
     let title = tr("Use This Layout for the Login Screen");
     let row = adw::ActionRow::builder()
         .use_markup(false)
@@ -281,6 +288,9 @@ fn login_screen_group(ctx: &Rc<Ctx>, helper: login_screen::Helper) -> adw::Prefe
                 match outcome {
                     Some(Outcome::Done) => ctx.toast(tr("The login screen will use this layout")),
                     Some(Outcome::Cancelled) => {}
+                    Some(Outcome::NotAuthorized) => {
+                        ctx.toast(tr("Could not change the login screen: not authorized"))
+                    }
                     Some(Outcome::Failed(e)) => ctx.toast(&trf!(
                         "Could not use this layout for the login screen: {e}",
                         e = e
@@ -290,8 +300,7 @@ fn login_screen_group(ctx: &Rc<Ctx>, helper: login_screen::Helper) -> adw::Prefe
             },
         );
     });
-    group.add(&row);
-    group
+    row
 }
 
 fn refresh(state: &Rc<State>) {

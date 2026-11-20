@@ -317,7 +317,7 @@ msgstr "关于音频播放器(_A)"
 #: apps/logs/src/ui.rs:310 apps/maps/src/ui.rs:492 apps/maps/src/ui.rs:494
 #: apps/music/src/ui.rs:480 apps/music/src/ui.rs:482
 #: apps/screenshot/src/ui.rs:290 apps/screenshot/src/ui.rs:292
-#: apps/settings/src/ui/mod.rs:209 apps/settings/src/ui/mod.rs:211
+#: apps/settings/src/ui/mod.rs:218 apps/settings/src/ui/mod.rs:220
 #: apps/system-monitor/src/ui.rs:260 apps/system-monitor/src/ui.rs:262
 #: apps/terminal/src/window.rs:301 apps/terminal/src/window.rs:305
 #: apps/text-editor/src/window.rs:149 apps/text-editor/src/window.rs:151
@@ -721,7 +721,8 @@ msgstr "{} 对这些值无定义"
 
 #: apps/calculator/src/format.rs:33 apps/document-scanner/src/settings.rs:29
 #: apps/document-scanner/src/ui.rs:1728 apps/document-scanner/src/ui.rs:1795
-#: apps/settings/src/ui/netedit.rs:32 apps/settings/src/ui/network.rs:28
+#: apps/settings/src/ui/greeter.rs:27 apps/settings/src/ui/netedit.rs:32
+#: apps/settings/src/ui/network.rs:28
 msgid "Automatic"
 msgstr "自动"
 
@@ -1412,7 +1413,7 @@ msgstr "日历"
 msgid "Location"
 msgstr "地点"
 
-#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:883
+#: apps/calendar/src/editor.rs:514 apps/settings/src/ui/displays.rs:892
 msgid "Schedule"
 msgstr "时间安排"
 
@@ -1813,7 +1814,7 @@ msgstr "导入"
 #: apps/logs/src/ui.rs:278 apps/maps/src/shortcuts.rs:48
 #: apps/music/src/shortcuts.rs:32 apps/music/src/ui.rs:452
 #: apps/music/src/ui.rs:454 apps/settings/src/ui/apps.rs:439
-#: apps/settings/src/ui/mod.rs:194 apps/settings/src/ui/mod.rs:196
+#: apps/settings/src/ui/mod.rs:203 apps/settings/src/ui/mod.rs:205
 #: apps/settings/src/ui/shortcuts.rs:8 apps/system-monitor/src/shortcuts.rs:31
 #: apps/system-monitor/src/ui.rs:223 apps/system-monitor/src/ui.rs:225
 #: apps/web/src/dialogs.rs:142 apps/web/src/window.rs:48
@@ -1966,7 +1967,7 @@ msgstr "导入(_I)…"
 
 #: apps/calendar/src/ui.rs:291 apps/contacts/src/ui.rs:206
 #: apps/files/src/ui/window.rs:232 apps/maps/src/ui.rs:486
-#: apps/settings/src/ui/mod.rs:203 apps/terminal/src/window.rs:296
+#: apps/settings/src/ui/mod.rs:212 apps/terminal/src/window.rs:296
 #: apps/text-editor/src/window.rs:65 apps/web/src/window.rs:222
 #: apps/web/src/window.rs:265 crates/helix-app-common/src/shortcuts.rs:25
 msgid "_Keyboard Shortcuts"
@@ -1985,7 +1986,7 @@ msgid "Search Events"
 msgstr "搜索事件"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:232
+#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:244
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:752
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
@@ -1993,7 +1994,7 @@ msgstr "未找到结果"
 
 #: apps/calendar/src/ui.rs:372 apps/characters/src/ui.rs:456
 #: apps/files/src/ui/dialogs.rs:434 apps/fonts/src/ui.rs:436
-#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:233
+#: apps/music/src/pages.rs:1687 apps/settings/src/ui/mod.rs:245
 #: apps/settings/src/ui/picker.rs:116 apps/web/src/dialogs.rs:753
 #: apps/web/src/window.rs:2379
 msgid "Try a different search"
@@ -3787,7 +3788,8 @@ msgid "Changes to this contact have not been saved."
 msgstr "对此联系人的更改尚未保存。"
 
 #: apps/contacts/src/ui.rs:1511 apps/document-scanner/src/ui.rs:1265
-#: apps/document-scanner/src/ui.rs:1379 apps/text-editor/src/window.rs:979
+#: apps/document-scanner/src/ui.rs:1379 apps/settings/src/ui/greeter.rs:143
+#: apps/text-editor/src/window.rs:979
 msgid "_Discard"
 msgstr "放弃(_D)"
 
@@ -6711,7 +6713,7 @@ msgid "Searching page {page} of {n_pages}… {total} found"
 msgstr "正在搜索第 {page} 页，共 {n_pages} 页… 已找到 {total} 个"
 
 #: apps/document-viewer/src/ui.rs:1644 apps/maps/src/ui.rs:1260
-#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:430
+#: apps/maps/src/ui.rs:1263 apps/settings/src/ui/mod.rs:461
 #: apps/settings/src/ui/picker.rs:34
 msgid "No results found"
 msgstr "未找到结果"
@@ -6935,7 +6937,7 @@ msgstr "最近使用"
 
 #: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:116
 #: apps/files/src/ui/tab.rs:1282 apps/settings/src/bluez.rs:235
-#: apps/settings/src/panels.rs:60 apps/system-monitor/src/res_view.rs:385
+#: apps/settings/src/panels.rs:63 apps/system-monitor/src/res_view.rs:385
 msgid "Network"
 msgstr "网络"
 
@@ -10210,7 +10212,7 @@ msgstr "回放增益"
 msgid "Even out loudness using the volume tags of songs or albums"
 msgstr "使用歌曲或专辑的音量标签均衡响度"
 
-#: apps/music/src/pages.rs:2436 apps/settings/src/panels.rs:156
+#: apps/music/src/pages.rs:2436 apps/settings/src/panels.rs:159
 #: apps/settings/src/permissions.rs:38 apps/settings/src/ui/apps.rs:419
 #: apps/web/src/permissions.rs:25
 msgid "Notifications"
@@ -11370,8 +11372,8 @@ msgstr "{app} 的窗口"
 msgid "A window"
 msgstr "一个窗口"
 
-#: apps/settings/src/agents.rs:804 apps/settings/src/ui/mod.rs:165
-#: apps/settings/src/ui/mod.rs:245 apps/settings/src/ui/mod.rs:509
+#: apps/settings/src/agents.rs:804 apps/settings/src/ui/mod.rs:174
+#: apps/settings/src/ui/mod.rs:257 apps/settings/src/ui/mod.rs:552
 msgid "Settings"
 msgstr "设置"
 
@@ -11464,7 +11466,7 @@ msgstr "耳机"
 msgid "Speaker"
 msgstr "扬声器"
 
-#: apps/settings/src/bluez.rs:224 apps/settings/src/panels.rs:192
+#: apps/settings/src/bluez.rs:224 apps/settings/src/panels.rs:195
 msgid "Keyboard"
 msgstr "键盘"
 
@@ -11494,7 +11496,7 @@ msgstr "调制解调器"
 
 #: apps/settings/src/bluez.rs:236 apps/settings/src/ui/displays.rs:98
 #: apps/settings/src/ui/displays.rs:122 apps/settings/src/ui/displays.rs:123
-#: apps/settings/src/ui/displays.rs:434
+#: apps/settings/src/ui/displays.rs:443
 msgid "Display"
 msgstr "显示器"
 
@@ -11720,108 +11722,108 @@ msgstr "信号极佳"
 msgid "Hotspot"
 msgstr "热点"
 
-#: apps/settings/src/panels.rs:48 apps/settings/src/ui/wifi.rs:106
+#: apps/settings/src/panels.rs:51 apps/settings/src/ui/wifi.rs:106
 msgid "Wi-Fi"
 msgstr "Wi-Fi"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:52
+#: apps/settings/src/panels.rs:55
 msgid "network;wireless;wlan;hotspot;internet;airplane;"
 msgstr "网络;无线;wlan;热点;互联网;飞行模式;network;wireless;wifi;"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:64
+#: apps/settings/src/panels.rs:67
 msgid "ethernet;wired;vpn;proxy;ip;dns;internet;"
 msgstr "以太网;有线;vpn;代理;ip;dns;互联网;ethernet;wired;proxy;"
 
-#: apps/settings/src/panels.rs:72 apps/settings/src/ui/bluetooth.rs:102
+#: apps/settings/src/panels.rs:75 apps/settings/src/ui/bluetooth.rs:102
 msgid "Bluetooth"
 msgstr "蓝牙"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:76
+#: apps/settings/src/panels.rs:79
 msgid "share;devices;pair;headset;wireless;"
 msgstr "共享;设备;配对;耳机;无线;蓝牙;bluetooth;pair;"
 
-#: apps/settings/src/panels.rs:84
+#: apps/settings/src/panels.rs:87 apps/settings/src/ui/greeter.rs:124
 msgid "Displays"
 msgstr "显示器"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:88
+#: apps/settings/src/panels.rs:91
 msgid "monitor;screen;resolution;refresh;scale;night light;projector;rotation;"
 msgstr "显示器;屏幕;分辨率;刷新率;缩放;夜灯;投影仪;旋转;monitor;display;"
 
-#: apps/settings/src/panels.rs:96
+#: apps/settings/src/panels.rs:99
 msgid "Sound"
 msgstr "声音"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:100
+#: apps/settings/src/panels.rs:103
 msgid "volume;speaker;microphone;audio;output;input;alert;mute;"
 msgstr "音量;扬声器;麦克风;音频;输出;输入;提示音;静音;volume;sound;audio;"
 
-#: apps/settings/src/panels.rs:108
+#: apps/settings/src/panels.rs:111
 msgid "Power"
 msgstr "电源"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:112
+#: apps/settings/src/panels.rs:115
 msgid "battery;suspend;sleep;dim;blank;power button;hibernate;energy;"
 msgstr "电池;挂起;睡眠;变暗;黑屏;电源按钮;休眠;能耗;battery;power;suspend;"
 
-#: apps/settings/src/panels.rs:120
+#: apps/settings/src/panels.rs:123
 msgid "Multitasking"
 msgstr "多任务"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:124
+#: apps/settings/src/panels.rs:127
 msgid "hot corner;workspace;screen edges;tiling;app switching;multi-monitor;"
 msgstr "热区;工作区;屏幕边缘;平铺;应用切换;多显示器;workspace;"
 
-#: apps/settings/src/panels.rs:132 apps/terminal/src/prefs_dialog.rs:24
+#: apps/settings/src/panels.rs:135 apps/terminal/src/prefs_dialog.rs:24
 #: apps/text-editor/src/prefs.rs:58
 msgid "Appearance"
 msgstr "外观"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:136
+#: apps/settings/src/panels.rs:139
 msgid "dark;light;style;theme;icon;icons;accent;color;colour;wallpaper;background;"
 msgstr ""
 "深色;浅色;样式;主题;图标;强调色;颜色;壁纸;背景;dark;light;theme;wallpaper;"
 
-#: apps/settings/src/panels.rs:144 apps/settings/src/ui/notifications.rs:100
+#: apps/settings/src/panels.rs:147 apps/settings/src/ui/notifications.rs:100
 #: apps/settings/src/ui/sound.rs:288
 msgid "Apps"
 msgstr "应用"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:148
+#: apps/settings/src/panels.rs:151
 msgid "default;applications;permissions;browser;storage;"
 msgstr "默认;应用;程序;权限;浏览器;存储;default;applications;"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:160
+#: apps/settings/src/panels.rs:163
 msgid "do not disturb;dnd;banner;alerts;lock screen;messages;"
 msgstr "请勿打扰;勿扰;横幅;提醒;锁屏;消息;notifications;dnd;"
 
-#: apps/settings/src/panels.rs:168
+#: apps/settings/src/panels.rs:171
 msgid "Extensions"
 msgstr "扩展"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:172
+#: apps/settings/src/panels.rs:175
 msgid ""
 "add-on;plugin;panel item;indicator;quick settings;dock;sandbox;permissions;"
 msgstr ""
 "附加组件;插件;面板项目;指示器;快速设置;程序坞;沙盒;权限;extension;plugin;"
 
-#: apps/settings/src/panels.rs:180
+#: apps/settings/src/panels.rs:183
 msgid "Mouse & Touchpad"
 msgstr "鼠标和触摸板"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:184
+#: apps/settings/src/panels.rs:187
 msgid ""
 "touchpad;pointer;speed;scroll;natural;tap;click;trackpad;primary "
 "button;acceleration;"
@@ -11829,16 +11831,16 @@ msgstr ""
 "触摸板;指针;速度;滚动;自然滚动;轻触;点击;触控板;主按钮;加速;touchpad;mouse;"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:196
+#: apps/settings/src/panels.rs:199
 msgid "layout;input source;language;repeat;delay;typing;xkb;"
 msgstr "布局;输入源;语言;重复;延迟;打字;输入法;xkb;keyboard;"
 
-#: apps/settings/src/panels.rs:204 apps/settings/src/ui/access.rs:119
+#: apps/settings/src/panels.rs:207 apps/settings/src/ui/access.rs:119
 msgid "Accessibility"
 msgstr "无障碍"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:208
+#: apps/settings/src/panels.rs:211
 msgid ""
 "high contrast;large text;zoom;magnifier;screen reader;cursor size;reduce "
 "animation;sticky keys;slow keys;bounce keys;mouse keys;scrollbars;screen "
@@ -11847,12 +11849,12 @@ msgstr ""
 "高对比度;大号文本;缩放;放大镜;屏幕阅读器;光标大小;减少动画;粘滞键;慢速键;回弹"
 "键;鼠标键;滚动条;屏幕键盘;双击;定位指针;accessibility;"
 
-#: apps/settings/src/panels.rs:216 apps/settings/src/ui/privacy.rs:226
+#: apps/settings/src/panels.rs:219 apps/settings/src/ui/privacy.rs:226
 msgid "Privacy & Security"
 msgstr "隐私与安全"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:220
+#: apps/settings/src/panels.rs:223
 msgid ""
 "screen lock;lock;blank;idle;recent files;file "
 "history;trash;temporary;location;camera;microphone;problem "
@@ -11861,41 +11863,54 @@ msgstr ""
 "锁屏;锁定;黑屏;空闲;最近文件;文件历史;回收站;临时文件;位置;相机;麦克风;问题报"
 "告;privacy;代理;智能体;人工智能;助手;自动化;agent;ai;assistant;automation;"
 
-#: apps/settings/src/panels.rs:228
+#: apps/settings/src/panels.rs:231
 msgid "Date & Time"
 msgstr "日期和时间"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:232
+#: apps/settings/src/panels.rs:235
 msgid "clock;time zone;timezone;ntp;24-hour;am/pm;week numbers;calendar;"
 msgstr "时钟;时区;ntp;24 小时制;上午/下午;周数;日历;clock;timezone;"
 
-#: apps/settings/src/panels.rs:240
+#: apps/settings/src/panels.rs:243 apps/settings/src/ui/greeter.rs:64
 msgid "Users"
 msgstr "用户"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:244
+#: apps/settings/src/panels.rs:247
 msgid "account;password;login;avatar;administrator;"
 msgstr "账户;密码;登录;头像;管理员;account;user;"
 
-#: apps/settings/src/panels.rs:252
+#: apps/settings/src/panels.rs:255 apps/settings/src/ui/displays.rs:252
+msgid "Login Screen"
+msgstr "登录屏幕"
+
+#. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
+#: apps/settings/src/panels.rs:259
+msgid ""
+"login;greeter;lock;banner;user list;sign in;display "
+"manager;greetd;accent;clock;"
+msgstr ""
+"login;greeter;lock;banner;user list;sign in;display "
+"manager;greetd;accent;clock;登录;登录界面;锁定;横幅;用户列表;强调色;时钟;"
+
+#: apps/settings/src/panels.rs:267
 msgid "About"
 msgstr "关于"
 
 #. Translators: search keywords for this Settings panel, separated by semicolons; add words people would search for in your language.
-#: apps/settings/src/panels.rs:256
+#: apps/settings/src/panels.rs:271
 msgid ""
 "device name;hostname;memory;processor;cpu;disk;os;version;kernel;hardware;"
 msgstr ""
 "设备名称;主机名;内存;处理器;cpu;磁盘;操作系统;版本;内核;硬件;hostname;os;"
 
-#: apps/settings/src/panels.rs:281 apps/settings/src/ui/agent_access.rs:70
+#: apps/settings/src/panels.rs:296 apps/settings/src/ui/agent_access.rs:70
 #: apps/settings/src/ui/agent_access.rs:183 apps/settings/src/ui/privacy.rs:189
 msgid "Agent Access"
 msgstr "智能体访问"
 
-#: apps/settings/src/panels.rs:289 apps/settings/src/ui/agent_access.rs:983
+#: apps/settings/src/panels.rs:304 apps/settings/src/ui/agent_access.rs:983
 msgid "Agent Activity"
 msgstr "智能体活动"
 
@@ -12773,7 +12788,7 @@ msgstr "智能体的操作会列在这里"
 msgid "Dark"
 msgstr "深色"
 
-#: apps/settings/src/ui/appearance.rs:165
+#: apps/settings/src/ui/appearance.rs:165 apps/settings/src/ui/greeter.rs:89
 msgid "Accent Color"
 msgstr "强调色"
 
@@ -13186,7 +13201,7 @@ msgstr "日期和时间"
 msgid "Loading…"
 msgstr "正在加载…"
 
-#: apps/settings/src/ui/datetime.rs:155
+#: apps/settings/src/ui/datetime.rs:155 apps/settings/src/ui/greeter.rs:28
 msgid "24-hour"
 msgstr "24 小时制"
 
@@ -13362,95 +13377,95 @@ msgstr "显示器不可用"
 msgid "The display service is not running."
 msgstr "显示服务未运行。"
 
-#: apps/settings/src/ui/displays.rs:252
-msgid "Login Screen"
-msgstr "登录屏幕"
-
-#: apps/settings/src/ui/displays.rs:253
+#: apps/settings/src/ui/displays.rs:260
 msgid "Use This Layout for the Login Screen"
 msgstr "将此布局用于登录屏幕"
 
-#: apps/settings/src/ui/displays.rs:257
+#: apps/settings/src/ui/displays.rs:264
 msgid ""
 "The login screen shows these displays arranged as they are now. Needs an "
 "administrator."
 msgstr "登录屏幕将按当前的排列方式显示这些显示器。需要管理员权限。"
 
-#: apps/settings/src/ui/displays.rs:282
+#: apps/settings/src/ui/displays.rs:289
 msgid "The login screen will use this layout"
 msgstr "登录屏幕将使用此布局"
 
-#: apps/settings/src/ui/displays.rs:284
+#: apps/settings/src/ui/displays.rs:292 apps/settings/src/ui/greeter.rs:420
+msgid "Could not change the login screen: not authorized"
+msgstr "无法更改登录界面：未获授权"
+
+#: apps/settings/src/ui/displays.rs:294
 msgid "Could not use this layout for the login screen: {e}"
 msgstr "无法将此布局用于登录屏幕：{e}"
 
-#: apps/settings/src/ui/displays.rs:288
+#: apps/settings/src/ui/displays.rs:298
 msgid "Could not read the current layout"
 msgstr "无法读取当前布局"
 
-#: apps/settings/src/ui/displays.rs:313
+#: apps/settings/src/ui/displays.rs:322
 msgid "Changing the displays is not allowed in this session."
 msgstr "此会话中不允许更改显示器设置。"
 
-#: apps/settings/src/ui/displays.rs:348
+#: apps/settings/src/ui/displays.rs:357
 msgid "Could not change the displays: {e}"
 msgstr "无法更改显示器设置：{e}"
 
-#: apps/settings/src/ui/displays.rs:428
+#: apps/settings/src/ui/displays.rs:437
 msgid "Mirrored Displays"
 msgstr "镜像显示器"
 
-#: apps/settings/src/ui/displays.rs:535
+#: apps/settings/src/ui/displays.rs:544
 msgid "These displays have no resolution in common to mirror"
 msgstr "这些显示器没有可用于镜像的共同分辨率"
 
-#: apps/settings/src/ui/displays.rs:788
+#: apps/settings/src/ui/displays.rs:797
 msgid "{display} at {x}, {y}"
 msgstr "{display}，位于 {x}, {y}"
 
-#: apps/settings/src/ui/displays.rs:819
+#: apps/settings/src/ui/displays.rs:828
 msgid "{time}, Hours"
 msgstr "{time}，小时"
 
-#: apps/settings/src/ui/displays.rs:820
+#: apps/settings/src/ui/displays.rs:829
 msgid "{time}, Minutes"
 msgstr "{time}，分钟"
 
-#: apps/settings/src/ui/displays.rs:870 apps/settings/src/ui/displays.rs:879
+#: apps/settings/src/ui/displays.rs:879 apps/settings/src/ui/displays.rs:888
 msgid "Night Light"
 msgstr "夜灯"
 
-#: apps/settings/src/ui/displays.rs:871
+#: apps/settings/src/ui/displays.rs:880
 msgid "Makes the screen warmer in the evening, which can help you sleep."
 msgstr "在傍晚使屏幕色调变暖，有助于睡眠。"
 
-#: apps/settings/src/ui/displays.rs:885
+#: apps/settings/src/ui/displays.rs:894
 msgid "Sunset to Sunrise"
 msgstr "日落到日出"
 
-#: apps/settings/src/ui/displays.rs:886
+#: apps/settings/src/ui/displays.rs:895
 msgid "Manual Schedule"
 msgstr "手动计划"
 
-#: apps/settings/src/ui/displays.rs:904
+#: apps/settings/src/ui/displays.rs:913
 msgctxt "time range"
 msgid "From"
 msgstr "从"
 
-#: apps/settings/src/ui/displays.rs:910
+#: apps/settings/src/ui/displays.rs:919
 msgctxt "time range"
 msgid "To"
 msgstr "至"
 
-#: apps/settings/src/ui/displays.rs:922
+#: apps/settings/src/ui/displays.rs:931
 msgid "Color Temperature"
 msgstr "色温"
 
-#: apps/settings/src/ui/displays.rs:923
+#: apps/settings/src/ui/displays.rs:932
 msgid "Cooler"
 msgstr "更冷"
 
-#: apps/settings/src/ui/displays.rs:923
+#: apps/settings/src/ui/displays.rs:932
 msgid "Warmer"
 msgstr "更暖"
 
@@ -13542,6 +13557,115 @@ msgstr "不允许"
 #: apps/settings/src/ui/extensions.rs:706
 msgid "Could not use these keys: {msg}"
 msgstr "无法使用这些按键：{msg}"
+
+#: apps/settings/src/ui/greeter.rs:29
+msgid "12-hour"
+msgstr "12 小时制"
+
+#: apps/settings/src/ui/greeter.rs:60
+msgid ""
+"How the login screen looks for everyone on this computer. Changes need an "
+"administrator and apply the next time the login screen starts."
+msgstr ""
+"这台计算机上所有人看到的登录界面外观。更改需要管理员，并在登录界面下次启动时"
+"生效。"
+
+#: apps/settings/src/ui/greeter.rs:67
+msgid "Show User List"
+msgstr "显示用户列表"
+
+#: apps/settings/src/ui/greeter.rs:68
+msgid "When off, the login screen asks for a username"
+msgstr "关闭后，登录界面会询问用户名"
+
+#: apps/settings/src/ui/greeter.rs:73
+msgid "Banner"
+msgstr "横幅"
+
+#: apps/settings/src/ui/greeter.rs:76
+msgid "Show a Banner"
+msgstr "显示横幅"
+
+#: apps/settings/src/ui/greeter.rs:77
+msgid "A message under the clock, such as “Authorized use only.”"
+msgstr "时钟下方的一条消息，例如“仅限授权使用。”"
+
+#: apps/settings/src/ui/greeter.rs:83
+msgid "Banner Message"
+msgstr "横幅消息"
+
+#: apps/settings/src/ui/greeter.rs:111
+msgid "Clock"
+msgstr "时钟"
+
+#: apps/settings/src/ui/greeter.rs:115
+msgid "Clock Format"
+msgstr "时钟格式"
+
+#: apps/settings/src/ui/greeter.rs:116
+msgid "Automatic follows the system’s setting or the language"
+msgstr "“自动”跟随系统设置或语言"
+
+#: apps/settings/src/ui/greeter.rs:131 apps/settings/src/ui/greeter.rs:340
+msgid "Changes not applied yet"
+msgstr "更改尚未应用"
+
+#: apps/settings/src/ui/greeter.rs:136
+msgid "_Apply…"
+msgstr "应用(_A)…"
+
+#: apps/settings/src/ui/greeter.rs:140
+msgid "Apply Login Screen Changes"
+msgstr "应用登录界面更改"
+
+#: apps/settings/src/ui/greeter.rs:141
+msgid "Needs an administrator"
+msgstr "需要管理员"
+
+#: apps/settings/src/ui/greeter.rs:146
+msgid "Discard Login Screen Changes"
+msgstr "放弃登录界面更改"
+
+#: apps/settings/src/ui/greeter.rs:274
+msgid "The banner is too long: {n} characters, at most {max}"
+msgid_plural "The banner is too long: {n} characters, at most {max}"
+msgstr[0] "横幅过长：{n} 个字符，最多 {max} 个"
+
+#: apps/settings/src/ui/greeter.rs:281
+msgid "The banner can’t contain line breaks, tabs or other control characters"
+msgstr "横幅不能包含换行、制表符或其他控制字符"
+
+#: apps/settings/src/ui/greeter.rs:283
+msgid "The banner can’t contain text direction controls"
+msgstr "横幅不能包含文字方向控制字符"
+
+#: apps/settings/src/ui/greeter.rs:294
+msgid ""
+"These settings can’t be changed here: helix-login-config is not installed"
+msgstr "无法在此处更改这些设置：未安装 helix-login-config"
+
+#: apps/settings/src/ui/greeter.rs:300
+msgid ""
+"The login screen’s settings file can’t be read. Fix {path} to change them "
+"here."
+msgstr "无法读取登录界面的设置文件。请修复 {path} 以便在此处更改。"
+
+#: apps/settings/src/ui/greeter.rs:336
+msgid "Waiting for an administrator…"
+msgstr "正在等待管理员…"
+
+#: apps/settings/src/ui/greeter.rs:338
+msgid "Fix the banner to apply the changes"
+msgstr "请修复横幅以应用更改"
+
+#: apps/settings/src/ui/greeter.rs:411
+msgid ""
+"Saved. The login screen will use these settings the next time it starts."
+msgstr "已保存。登录界面将在下次启动时使用这些设置。"
+
+#: apps/settings/src/ui/greeter.rs:424
+msgid "Could not change the login screen settings: {e}"
+msgstr "无法更改登录界面设置：{e}"
 
 #: apps/settings/src/ui/input.rs:69
 msgid "Primary Button"
@@ -13687,40 +13811,40 @@ msgstr "下移 {source}"
 msgid "Remove {source}"
 msgstr "移除 {source}"
 
-#: apps/settings/src/ui/mod.rs:183
+#: apps/settings/src/ui/mod.rs:192
 msgid "Search settings"
 msgstr "搜索设置"
 
-#: apps/settings/src/ui/mod.rs:186 apps/settings/src/ui/shortcuts.rs:10
+#: apps/settings/src/ui/mod.rs:195 apps/settings/src/ui/shortcuts.rs:10
 msgid "Search Settings"
 msgstr "搜索设置"
 
-#: apps/settings/src/ui/mod.rs:204
+#: apps/settings/src/ui/mod.rs:213
 msgid "_About Settings"
 msgstr "关于设置(_A)"
 
-#: apps/settings/src/ui/mod.rs:354 apps/settings/src/ui/mod.rs:367
+#: apps/settings/src/ui/mod.rs:385 apps/settings/src/ui/mod.rs:398
 msgid "Not yet available"
 msgstr "尚不可用"
 
-#: apps/settings/src/ui/mod.rs:388
+#: apps/settings/src/ui/mod.rs:419
 msgid "Not Yet Available"
 msgstr "尚不可用"
 
-#: apps/settings/src/ui/mod.rs:431
+#: apps/settings/src/ui/mod.rs:462
 msgid "{n} panel found"
 msgid_plural "{n} panels found"
 msgstr[0] "找到 {n} 个面板"
 
-#: apps/settings/src/ui/mod.rs:478
+#: apps/settings/src/ui/mod.rs:521
 msgid "{} Is Not Yet Available"
 msgstr "{}尚不可用"
 
-#: apps/settings/src/ui/mod.rs:479
+#: apps/settings/src/ui/mod.rs:522
 msgid "This panel will be added in a later version of Helix Settings."
 msgstr "此面板将在 Helix 设置的后续版本中添加。"
 
-#: apps/settings/src/ui/mod.rs:510
+#: apps/settings/src/ui/mod.rs:553
 msgid "Configure the Helix desktop"
 msgstr "配置 Helix 桌面"
 

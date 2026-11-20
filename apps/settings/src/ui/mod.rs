@@ -13,6 +13,7 @@ mod bluetooth;
 mod datetime;
 mod displays;
 mod extensions;
+mod greeter;
 mod input;
 mod multitasking;
 mod netedit;
@@ -31,7 +32,7 @@ use adw::prelude::*;
 use gtk::{gio, glib};
 use helix_app_common::Labelled;
 use helix_app_common::Prefs;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -77,6 +78,7 @@ fn panel_impl(id: PanelId) -> Option<&'static dyn Panel> {
         PanelId::Display => &displays::DisplaysPanel,
         PanelId::Apps => &apps::AppsPanel,
         PanelId::Users => &users::UsersPanel,
+        PanelId::LoginScreen => &greeter::LoginScreenPanel,
     })
 }
 
@@ -156,6 +158,13 @@ struct Window {
     rows: Vec<(PanelId, gtk::ListBoxRow)>,
     pages: RefCell<HashMap<PanelId, adw::NavigationPage>>,
     searching: RefCell<bool>,
+    /// Panels not shown on this system: the Login Screen until the check
+    /// says it is (the check runs when the window is made).
+    hidden: RefCell<Vec<PanelId>>,
+    /// Whether that check has answered.
+    checked: Cell<bool>,
+    /// A hidden panel asked for before the check answered.
+    deferred: RefCell<Option<(PanelId, Option<&'static str>)>>,
 }
 
 impl Window {
@@ -217,9 +226,12 @@ impl Window {
             .css_classes(["navigation-sidebar"])
             .build();
         let mut rows = Vec::new();
+        let hidden = vec![PanelId::LoginScreen];
         for id in panels::sidebar_order("") {
             let row = Self::make_row(panels::info(id));
-            list.append(&row);
+            if !hidden.contains(&id) {
+                list.append(&row);
+            }
             rows.push((id, row));
         }
         let scrolled = gtk::ScrolledWindow::builder()
@@ -270,6 +282,25 @@ impl Window {
             rows,
             pages: RefCell::default(),
             searching: RefCell::new(false),
+            hidden: RefCell::new(hidden),
+            checked: Cell::new(false),
+            deferred: RefCell::default(),
+        });
+        // Whether the Login Screen panel is shown: files, then systemd on
+        // the system bus (only with helix-greeter installed).
+        let weak = Rc::downgrade(&this);
+        spawn_worker(crate::greeter::panel_shown_here, move |shown| {
+            let Some(this) = weak.upgrade() else { return };
+            this.checked.set(true);
+            if shown {
+                this.hidden.borrow_mut().clear();
+                this.filter(&this.search_entry.text());
+            }
+            if let Some(target) = this.deferred.take() {
+                if shown {
+                    this.show_target(target);
+                }
+            }
         });
 
         list.set_header_func(glib::clone!(
@@ -410,7 +441,7 @@ impl Window {
 
     fn filter(&self, query: &str) {
         *self.searching.borrow_mut() = !query.trim().is_empty();
-        let order = panels::sidebar_order(query);
+        let order = panels::sidebar_order_shown(query, &self.hidden.borrow());
         for (_, row) in &self.rows {
             if row.parent().is_some() {
                 self.list.remove(row);
@@ -450,8 +481,20 @@ impl Window {
         }
     }
 
-    /// Shows panel `id`, on its sub-page `page` when given.
-    fn show_target(&self, (id, page): (PanelId, Option<&str>)) {
+    /// Shows panel `id`, on its sub-page `page` when given. A hidden
+    /// panel is not shown (the default one is, when there is none yet);
+    /// asked for before the check answered, it is shown if the check
+    /// says so.
+    fn show_target(&self, (id, page): (PanelId, Option<&'static str>)) {
+        if self.hidden.borrow().contains(&id) {
+            if !self.checked.get() {
+                *self.deferred.borrow_mut() = Some((id, page));
+            }
+            if self.split.content().is_none() {
+                self.show_panel(DEFAULT_PANEL);
+            }
+            return;
+        }
         self.show_panel(id);
         let Some(page) = page else { return };
         let content = self.pages.borrow().get(&id).and_then(|p| p.child());

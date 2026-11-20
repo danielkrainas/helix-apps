@@ -15,10 +15,22 @@ use crate::displays::State;
 
 /// Where helix-desktop installs the helper.
 pub const HELPER: &str = "/usr/libexec/helix/helix-login-monitors";
-const PKEXEC: &str = "/usr/bin/pkexec";
+pub const PKEXEC: &str = "/usr/bin/pkexec";
 
-/// How the helper is run: `pkexec helper`, the layout on its standard
-/// input.
+/// A system file's path: as given, or under a scratch root in debug
+/// builds (`HELIX_SETTINGS_TEST_ROOT`, for looking at the Login Screen
+/// panel in a scratch session with fake files; never set by tests).
+pub fn system_path(path: &str) -> PathBuf {
+    #[cfg(debug_assertions)]
+    if let Some(root) = std::env::var_os("HELIX_SETTINGS_TEST_ROOT").filter(|r| !r.is_empty()) {
+        return Path::new(&root).join(path.trim_start_matches('/'));
+    }
+    PathBuf::from(path)
+}
+
+/// How a privileged helper is run: `pkexec helper`, with no arguments,
+/// its input on its standard input (`helix-login-monitors` here,
+/// `helix-login-config` for the Login Screen panel).
 #[derive(Debug, Clone)]
 pub struct Helper {
     pkexec: PathBuf,
@@ -31,13 +43,17 @@ pub enum Outcome {
     Done,
     /// The authentication was dismissed (pkexec's 126): nothing to say.
     Cancelled,
+    /// Not authorized, or the authentication failed (pkexec's 127).
+    NotAuthorized,
+    /// The helper refused or failed: its reason (English, its last line
+    /// on standard error).
     Failed(String),
 }
 
 impl Helper {
     /// The installed helper, if it and pkexec are there.
     pub fn system() -> Option<Self> {
-        Self::at(Path::new(PKEXEC), Path::new(HELPER))
+        Self::at(&system_path(PKEXEC), &system_path(HELPER))
     }
 
     /// `helper` run through `pkexec`, if both are files.
@@ -71,14 +87,20 @@ impl Helper {
         match output.status.code() {
             Some(0) => Outcome::Done,
             Some(126) => Outcome::Cancelled,
+            Some(127) => Outcome::NotAuthorized,
             code => {
                 let text = String::from_utf8_lossy(&output.stderr);
+                let prefix = self
+                    .helper
+                    .file_name()
+                    .map(|n| format!("{}: ", n.to_string_lossy()))
+                    .unwrap_or_default();
                 let last = text
                     .lines()
                     .map(str::trim)
                     .rev()
                     .find(|l| !l.is_empty())
-                    .map(|l| l.trim_start_matches("helix-login-monitors: ").to_owned());
+                    .map(|l| l.strip_prefix(prefix.as_str()).unwrap_or(l).to_owned());
                 Outcome::Failed(last.unwrap_or_else(|| match code {
                     Some(c) => format!("exit status {c}"),
                     None => "killed".to_owned(),
@@ -89,7 +111,7 @@ impl Helper {
 }
 
 /// A TOML basic string.
-fn quoted(s: &str) -> String {
+pub fn quoted(s: &str) -> String {
     let mut out = String::from("\"");
     for c in s.chars() {
         match c {
@@ -293,9 +315,13 @@ underscan = false
         let _ = std::fs::remove_dir_all(&dir);
 
         let (dir, helper) = fakes("refused", Some(127), 0, "");
+        assert_eq!(helper.run(LAYOUT), Outcome::NotAuthorized);
+        let _ = std::fs::remove_dir_all(&dir);
+
+        let (dir, helper) = fakes("unreadable", None, 2, "cannot read monitors.toml");
         assert_eq!(
             helper.run(LAYOUT),
-            Outcome::Failed("exit status 127".into())
+            Outcome::Failed("cannot read monitors.toml".into())
         );
         let _ = std::fs::remove_dir_all(&dir);
     }

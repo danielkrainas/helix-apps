@@ -10,6 +10,7 @@ mod displays;
 mod extensions;
 #[cfg(test)]
 mod fakes;
+mod greeter;
 mod icon_themes;
 mod login_screen;
 mod netconf;
@@ -39,7 +40,9 @@ fn main() -> glib::ExitCode {
         }
         Some("-l" | "--list") => {
             for p in panels::PANELS {
-                let state = if p.available {
+                let state = if p.available
+                    && (p.id != panels::PanelId::LoginScreen || greeter::panel_shown_here())
+                {
                     "available"
                 } else {
                     "unavailable"

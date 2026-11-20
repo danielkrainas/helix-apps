@@ -156,6 +156,7 @@ apps/settings/src/ui/bluetooth.rs
 apps/settings/src/ui/datetime.rs
 apps/settings/src/ui/displays.rs
 apps/settings/src/ui/extensions.rs
+apps/settings/src/ui/greeter.rs
 apps/settings/src/ui/input.rs
 apps/settings/src/ui/mod.rs
 apps/settings/src/ui/multitasking.rs
