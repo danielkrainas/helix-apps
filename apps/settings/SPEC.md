@@ -354,7 +354,7 @@ shell's agent indicator opens it).
   entries of `$XDG_STATE_HOME/helix/agent-activity/YYYY-MM-DD.jsonl`,
   read directly and sorted by `time`, as the contract's "Activity log"
   pins the lines (keys `time` (Unix seconds or ISO 8601), `agent`,
-  `name`, `method`, `target`, `level`, `outcome`, `error`, `grant`,
+  `name`, `method`, `target`, `level`, `outcome`, `reason`, `error`, `grant`,
   `count`/`until`, `dropped`, `role`, `action`, `node-count`,
   `text-length`, `choice-count`, `mime-type`, `data-length`, `scope`,
   `width`/`height`, `filled-count`, `event-count`, `done-count`,
@@ -409,18 +409,27 @@ shell's agent indicator opens it).
     *Failed: timed out* / *not found* / *not supported* / *invalid
     request* / *cancelled* / *Failed* for an `error` (*Failed: Name*
     for others); *Refused* (*Refused 37 times* for a coalesced line)
-    and the reason (*Agent Access was off*, *Needs a higher access
-    level*, *Excluded app*, *Denied by you*, *Only Settings may do
-    this*, …, the raw name for unknown ones; where the method says
-    more: *Clipboard access was off* (`FeatureOff` on the clipboard
-    methods), *Copied from a protected app, or a password*
+    and the reason. When the line has a `reason` this version knows
+    (contract "Activity log", "Reasons"), that says it: *A password
+    field* (`password-field`; *A password manager marked it secret* for
+    `GetClipboard`), *A system prompt was open* (`system-prompt`), *Part
+    of the desktop* (`shell`), *Settings* (`settings`), *An excluded
+    app* (`app`), *Clipboard access was off* (`clipboard`). Otherwise
+    (older lines, unknown tokens) the error's: *Agent Access was off*,
+    *Needs a higher access level*, *Excluded app*, *Denied by you*,
+    *Only Settings may do this*, …, the raw name for unknown ones; where
+    the method says more: *Clipboard access was off* (`FeatureOff` on
+    the clipboard methods), *Copied from a protected app, or a password*
     (`GetClipboard` `Excluded`), *A system prompt was open*
     (`SetClipboard`), *A protected window or a system prompt*
     (`Screenshot`), *A protected window, a password field or a system
-    prompt* (`Input`): the line does not say which); *Cancelled*, and for
-    an `Input` stopped while it ran (`cancelled` with a `done-count`: the
-    user's input, *Stop*, or the cooldown after input; the line does not
-    say which) *Stopped by you*. Consent
+    prompt* (`Input`). A `cancelled` line with a known `reason` shows
+    only it: *Stopped: you used the keyboard or pointer* (`user-input`),
+    *Refused: you had just used the keyboard or pointer* (`cooldown`),
+    *Stopped from the indicator or Settings* (`stopped`: *Stop*,
+    *Revoke*, *Forget*, *Stop all* or Agent Access turned off). Without
+    one: *Cancelled*, and for an `Input` stopped while it ran
+    (`cancelled` with a `done-count`) *Stopped by you*. Consent
     prompts: the level asked and *Allowed for this session* / *Always
     allowed* (`grant`) / *Denied* / *Not answered*; sensitive prompts
     *Allowed* / *Denied* / *Not answered*; `Stop` and Settings' own

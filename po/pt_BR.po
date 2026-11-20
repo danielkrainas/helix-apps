@@ -4191,7 +4191,7 @@ msgid "{} on disk, {} apparent"
 msgstr "{} em disco, {} aparente"
 
 #: apps/disk-usage/src/ui.rs:816 apps/disk-usage/src/ui.rs:1150
-#: apps/files/src/fmt.rs:12 apps/settings/src/agents.rs:634
+#: apps/files/src/fmt.rs:12 apps/settings/src/agents.rs:638
 msgid "{n} item"
 msgid_plural "{n} items"
 msgstr[0] "{n} item"
@@ -7007,7 +7007,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr "Não foi possível processar “{file}”: {error}"
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/settings/src/agents.rs:866 apps/web/src/window.rs:2341
+#: apps/settings/src/agents.rs:896 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "Cancelado"
 
@@ -8208,7 +8208,7 @@ msgstr "O mapa de caracteres deste formato de fonte não pode ser mostrado"
 msgid "Info"
 msgstr "Informação"
 
-#: apps/fonts/src/ui.rs:1067 apps/settings/src/agents.rs:683
+#: apps/fonts/src/ui.rs:1067 apps/settings/src/agents.rs:687
 msgid "{n} character"
 msgid_plural "{n} characters"
 msgstr[0] "{n} caractere"
@@ -10895,726 +10895,755 @@ msgstr "Controlar aplicativos"
 msgid "Screen and Input"
 msgstr "Tela e entrada"
 
-#: apps/settings/src/agents.rs:451
+#: apps/settings/src/agents.rs:455
 msgid "Checked its access"
 msgstr "Verificou seu acesso"
 
-#: apps/settings/src/agents.rs:452 apps/settings/src/agents.rs:490
+#: apps/settings/src/agents.rs:456 apps/settings/src/agents.rs:494
 msgid "Asked for access"
 msgstr "Pediu acesso"
 
-#: apps/settings/src/agents.rs:453
+#: apps/settings/src/agents.rs:457
 msgid "Read the desktop state"
 msgstr "Leu o estado da área de trabalho"
 
-#: apps/settings/src/agents.rs:454
+#: apps/settings/src/agents.rs:458
 msgid "Listed windows"
 msgstr "Listou as janelas"
 
-#: apps/settings/src/agents.rs:455
+#: apps/settings/src/agents.rs:459
 msgid "Listed apps"
 msgstr "Listou os aplicativos"
 
-#: apps/settings/src/agents.rs:456
+#: apps/settings/src/agents.rs:460
 msgid "Listed workspaces"
 msgstr "Listou os espaços de trabalho"
 
-#: apps/settings/src/agents.rs:457
+#: apps/settings/src/agents.rs:461
 msgid "Listed displays"
 msgstr "Listou as telas"
 
-#: apps/settings/src/agents.rs:458
+#: apps/settings/src/agents.rs:462
 msgid "Listed notifications"
 msgstr "Listou as notificações"
 
-#: apps/settings/src/agents.rs:459
+#: apps/settings/src/agents.rs:463
 msgid "Listed recent files"
 msgstr "Listou os arquivos recentes"
 
-#: apps/settings/src/agents.rs:460
+#: apps/settings/src/agents.rs:464
 msgid "Searched files"
 msgstr "Pesquisou arquivos"
 
-#: apps/settings/src/agents.rs:461
+#: apps/settings/src/agents.rs:465
 msgid "Waited for a window"
 msgstr "Esperou por uma janela"
 
-#: apps/settings/src/agents.rs:462
+#: apps/settings/src/agents.rs:466
 msgid "Waited for a window to close"
 msgstr "Esperou uma janela fechar"
 
-#: apps/settings/src/agents.rs:463
+#: apps/settings/src/agents.rs:467
 msgid "Asked you a question"
 msgstr "Fez uma pergunta a você"
 
-#: apps/settings/src/agents.rs:464
+#: apps/settings/src/agents.rs:468
 msgid "Asked you to confirm"
 msgstr "Pediu sua confirmação"
 
-#: apps/settings/src/agents.rs:465
+#: apps/settings/src/agents.rs:469
 msgid "Added a reminder"
 msgstr "Adicionou um lembrete"
 
-#: apps/settings/src/agents.rs:466
+#: apps/settings/src/agents.rs:470
 msgid "Listed reminders"
 msgstr "Listou os lembretes"
 
-#: apps/settings/src/agents.rs:467
+#: apps/settings/src/agents.rs:471
 msgid "Cancelled a reminder"
 msgstr "Cancelou um lembrete"
 
-#: apps/settings/src/agents.rs:468
+#: apps/settings/src/agents.rs:472
 msgid "Opened a file or link"
 msgstr "Abriu um arquivo ou link"
 
-#: apps/settings/src/agents.rs:469
+#: apps/settings/src/agents.rs:473
 msgid "Started an app"
 msgstr "Iniciou um aplicativo"
 
-#: apps/settings/src/agents.rs:470
+#: apps/settings/src/agents.rs:474
 msgid "Changed a window"
 msgstr "Alterou uma janela"
 
-#: apps/settings/src/agents.rs:471
+#: apps/settings/src/agents.rs:475
 msgid "Switched workspace"
 msgstr "Trocou de espaço de trabalho"
 
-#: apps/settings/src/agents.rs:472
+#: apps/settings/src/agents.rs:476
 msgid "Turned a setting on or off"
 msgstr "Ligou ou desligou uma configuração"
 
-#: apps/settings/src/agents.rs:473
+#: apps/settings/src/agents.rs:477
 msgid "Adjusted a setting"
 msgstr "Ajustou uma configuração"
 
-#: apps/settings/src/agents.rs:474
+#: apps/settings/src/agents.rs:478
 msgid "Sent a notification"
 msgstr "Enviou uma notificação"
 
-#: apps/settings/src/agents.rs:475
+#: apps/settings/src/agents.rs:479
 msgid "Read the clipboard"
 msgstr "Leu a área de transferência"
 
-#: apps/settings/src/agents.rs:476
+#: apps/settings/src/agents.rs:480
 msgid "Changed the clipboard"
 msgstr "Alterou a área de transferência"
 
-#: apps/settings/src/agents.rs:477
+#: apps/settings/src/agents.rs:481
 msgid "Read an app’s contents"
 msgstr "Leu o conteúdo de um aplicativo"
 
-#: apps/settings/src/agents.rs:478
+#: apps/settings/src/agents.rs:482
 msgid "Searched an app’s controls"
 msgstr "Pesquisou os controles de um aplicativo"
 
-#: apps/settings/src/agents.rs:479
+#: apps/settings/src/agents.rs:483
 msgid "Used a control in an app"
 msgstr "Usou um controle em um aplicativo"
 
-#: apps/settings/src/agents.rs:480
+#: apps/settings/src/agents.rs:484
 msgid "Filled in a field in an app"
 msgstr "Preencheu um campo em um aplicativo"
 
-#: apps/settings/src/agents.rs:481
+#: apps/settings/src/agents.rs:485
 msgid "Took a screenshot"
 msgstr "Fez uma captura de tela"
 
-#: apps/settings/src/agents.rs:482
+#: apps/settings/src/agents.rs:486
 msgid "Typed or clicked"
 msgstr "Digitou ou clicou"
 
-#: apps/settings/src/agents.rs:484
+#: apps/settings/src/agents.rs:488
 msgid "Listed agents"
 msgstr "Listou os agentes"
 
-#: apps/settings/src/agents.rs:485
+#: apps/settings/src/agents.rs:489
 msgid "Access revoked"
 msgstr "Acesso revogado"
 
-#: apps/settings/src/agents.rs:486
+#: apps/settings/src/agents.rs:490
 msgid "Access revoked and forgotten"
 msgstr "Acesso revogado e esquecido"
 
-#: apps/settings/src/agents.rs:487
+#: apps/settings/src/agents.rs:491
 msgid "All access revoked"
 msgstr "Todo o acesso revogado"
 
-#: apps/settings/src/agents.rs:488
+#: apps/settings/src/agents.rs:492
 msgid "Activity log cleared"
 msgstr "Registro de atividade limpo"
 
-#: apps/settings/src/agents.rs:491
+#: apps/settings/src/agents.rs:495
 msgid "Asked to confirm an action"
 msgstr "Pediu para confirmar uma ação"
 
-#: apps/settings/src/agents.rs:492 apps/settings/src/agents.rs:864
+#: apps/settings/src/agents.rs:496 apps/settings/src/agents.rs:894
 msgid "Stopped by you"
 msgstr "Parado por você"
 
-#: apps/settings/src/agents.rs:493
+#: apps/settings/src/agents.rs:497
 msgid "Reminder due"
 msgstr "Lembrete vencido"
 
-#: apps/settings/src/agents.rs:494
+#: apps/settings/src/agents.rs:498
 msgid "Activity log full"
 msgstr "Registro de atividade cheio"
 
-#: apps/settings/src/agents.rs:503
+#: apps/settings/src/agents.rs:507
 msgid "Reminder cancelled"
 msgstr "Lembrete cancelado"
 
-#: apps/settings/src/agents.rs:512
+#: apps/settings/src/agents.rs:516
 msgid "Tried to list agents"
 msgstr "Tentou listar os agentes"
 
-#: apps/settings/src/agents.rs:513
+#: apps/settings/src/agents.rs:517
 msgid "Tried to list reminders"
 msgstr "Tentou listar os lembretes"
 
-#: apps/settings/src/agents.rs:514
+#: apps/settings/src/agents.rs:518
 msgid "Tried to cancel a reminder"
 msgstr "Tentou cancelar um lembrete"
 
-#: apps/settings/src/agents.rs:515
+#: apps/settings/src/agents.rs:519
 msgid "Tried to revoke access"
 msgstr "Tentou revogar o acesso"
 
-#: apps/settings/src/agents.rs:516
+#: apps/settings/src/agents.rs:520
 msgid "Tried to forget an agent"
 msgstr "Tentou esquecer um agente"
 
-#: apps/settings/src/agents.rs:517
+#: apps/settings/src/agents.rs:521
 msgid "Tried to revoke all access"
 msgstr "Tentou revogar todo o acesso"
 
-#: apps/settings/src/agents.rs:518
+#: apps/settings/src/agents.rs:522
 msgid "Tried to clear the activity log"
 msgstr "Tentou limpar o registro de atividade"
 
-#: apps/settings/src/agents.rs:526
+#: apps/settings/src/agents.rs:530
 msgid "From a sandboxed app"
 msgstr "De um aplicativo isolado"
 
-#: apps/settings/src/agents.rs:527
+#: apps/settings/src/agents.rs:531
 msgid "Agent Access was off"
 msgstr "O acesso de agentes estava desligado"
 
-#: apps/settings/src/agents.rs:528
+#: apps/settings/src/agents.rs:532
 msgid "From a remote session"
 msgstr "De uma sessão remota"
 
-#: apps/settings/src/agents.rs:529
+#: apps/settings/src/agents.rs:533
 msgid "The screen was locked"
 msgstr "A tela estava bloqueada"
 
-#: apps/settings/src/agents.rs:530
+#: apps/settings/src/agents.rs:534
 msgid "Needs a higher access level"
 msgstr "Precisa de um nível de acesso maior"
 
-#: apps/settings/src/agents.rs:531
+#: apps/settings/src/agents.rs:535
 msgid "That feature was turned off"
 msgstr "Esse recurso estava desligado"
 
-#: apps/settings/src/agents.rs:532
+#: apps/settings/src/agents.rs:536
 msgid "Not allowed yet"
 msgstr "Ainda não permitido"
 
-#: apps/settings/src/agents.rs:533
+#: apps/settings/src/agents.rs:537
 msgid "Denied by you"
 msgstr "Negado por você"
 
-#: apps/settings/src/agents.rs:534
+#: apps/settings/src/agents.rs:538
 msgid "Excluded app"
 msgstr "Aplicativo excluído"
 
-#: apps/settings/src/agents.rs:535
+#: apps/settings/src/agents.rs:539
 msgid "Needed your confirmation"
 msgstr "Precisava da sua confirmação"
 
-#: apps/settings/src/agents.rs:536
+#: apps/settings/src/agents.rs:540
 msgid "Only Settings may do this"
 msgstr "Só as Configurações podem fazer isso"
 
-#: apps/settings/src/agents.rs:544
+#: apps/settings/src/agents.rs:548
 msgid "Failed: timed out"
 msgstr "Falhou: tempo esgotado"
 
-#: apps/settings/src/agents.rs:545
+#: apps/settings/src/agents.rs:549
 msgid "Failed: not found"
 msgstr "Falhou: não encontrado"
 
-#: apps/settings/src/agents.rs:546
+#: apps/settings/src/agents.rs:550
 msgid "Failed: not supported"
 msgstr "Falhou: não suportado"
 
-#: apps/settings/src/agents.rs:547
+#: apps/settings/src/agents.rs:551
 msgid "Failed: invalid request"
 msgstr "Falhou: solicitação inválida"
 
-#: apps/settings/src/agents.rs:548
+#: apps/settings/src/agents.rs:552
 msgid "Failed: cancelled"
 msgstr "Falhou: cancelado"
 
-#: apps/settings/src/agents.rs:549
+#: apps/settings/src/agents.rs:553
 msgid "Failed"
 msgstr "Falhou"
 
-#: apps/settings/src/agents.rs:558
+#: apps/settings/src/agents.rs:562
 msgctxt "accessible role"
 msgid "Button"
 msgstr "Botão"
 
-#: apps/settings/src/agents.rs:559
+#: apps/settings/src/agents.rs:563
 msgctxt "accessible role"
 msgid "Toggle button"
 msgstr "Botão de alternância"
 
-#: apps/settings/src/agents.rs:560
+#: apps/settings/src/agents.rs:564
 msgctxt "accessible role"
 msgid "Menu button"
 msgstr "Botão de menu"
 
-#: apps/settings/src/agents.rs:561
+#: apps/settings/src/agents.rs:565
 msgctxt "accessible role"
 msgid "Check box"
 msgstr "Caixa de seleção"
 
-#: apps/settings/src/agents.rs:562
+#: apps/settings/src/agents.rs:566
 msgctxt "accessible role"
 msgid "Option button"
 msgstr "Botão de opção"
 
-#: apps/settings/src/agents.rs:563
+#: apps/settings/src/agents.rs:567
 msgctxt "accessible role"
 msgid "Switch"
 msgstr "Interruptor"
 
-#: apps/settings/src/agents.rs:564
+#: apps/settings/src/agents.rs:568
 msgctxt "accessible role"
 msgid "Text field"
 msgstr "Campo de texto"
 
-#: apps/settings/src/agents.rs:565
+#: apps/settings/src/agents.rs:569
 msgctxt "accessible role"
 msgid "Password field"
 msgstr "Campo de senha"
 
-#: apps/settings/src/agents.rs:566
+#: apps/settings/src/agents.rs:570
 msgctxt "accessible role"
 msgid "Drop-down list"
 msgstr "Lista suspensa"
 
-#: apps/settings/src/agents.rs:567
+#: apps/settings/src/agents.rs:571
 msgctxt "accessible role"
 msgid "Slider"
 msgstr "Controle deslizante"
 
-#: apps/settings/src/agents.rs:568
+#: apps/settings/src/agents.rs:572
 msgctxt "accessible role"
 msgid "Number field"
 msgstr "Campo numérico"
 
-#: apps/settings/src/agents.rs:569
+#: apps/settings/src/agents.rs:573
 msgctxt "accessible role"
 msgid "Link"
 msgstr "Link"
 
-#: apps/settings/src/agents.rs:570
+#: apps/settings/src/agents.rs:574
 msgctxt "accessible role"
 msgid "Menu item"
 msgstr "Item de menu"
 
-#: apps/settings/src/agents.rs:571
+#: apps/settings/src/agents.rs:575
 msgctxt "accessible role"
 msgid "Tab"
 msgstr "Aba"
 
-#: apps/settings/src/agents.rs:572
+#: apps/settings/src/agents.rs:576
 msgctxt "accessible role"
 msgid "List item"
 msgstr "Item de lista"
 
-#: apps/settings/src/agents.rs:573
+#: apps/settings/src/agents.rs:577
 msgctxt "accessible role"
 msgid "Table cell"
 msgstr "Célula de tabela"
 
-#: apps/settings/src/agents.rs:574
+#: apps/settings/src/agents.rs:578
 msgctxt "accessible role"
 msgid "Label"
 msgstr "Rótulo"
 
-#: apps/settings/src/agents.rs:575
+#: apps/settings/src/agents.rs:579
 msgctxt "accessible role"
 msgid "Heading"
 msgstr "Cabeçalho"
 
-#: apps/settings/src/agents.rs:576
+#: apps/settings/src/agents.rs:580
 msgctxt "accessible role"
 msgid "Image"
 msgstr "Imagem"
 
-#: apps/settings/src/agents.rs:577
+#: apps/settings/src/agents.rs:581
 msgctxt "accessible role"
 msgid "Dialog"
 msgstr "Diálogo"
 
-#: apps/settings/src/agents.rs:578
+#: apps/settings/src/agents.rs:582
 msgctxt "accessible role"
 msgid "Window"
 msgstr "Janela"
 
-#: apps/settings/src/agents.rs:587
+#: apps/settings/src/agents.rs:591
 msgctxt "control action"
 msgid "Clicked"
 msgstr "Clicado"
 
-#: apps/settings/src/agents.rs:588
+#: apps/settings/src/agents.rs:592
 msgctxt "control action"
 msgid "Activated"
 msgstr "Ativado"
 
-#: apps/settings/src/agents.rs:589
+#: apps/settings/src/agents.rs:593
 msgctxt "control action"
 msgid "Toggled"
 msgstr "Alternado"
 
-#: apps/settings/src/agents.rs:590
+#: apps/settings/src/agents.rs:594
 msgctxt "control action"
 msgid "Selected"
 msgstr "Selecionado"
 
-#: apps/settings/src/agents.rs:591
+#: apps/settings/src/agents.rs:595
 msgctxt "control action"
 msgid "Focused"
 msgstr "Focado"
 
-#: apps/settings/src/agents.rs:592
+#: apps/settings/src/agents.rs:596
 msgctxt "control action"
 msgid "Expanded"
 msgstr "Expandido"
 
-#: apps/settings/src/agents.rs:593
+#: apps/settings/src/agents.rs:597
 msgctxt "control action"
 msgid "Collapsed"
 msgstr "Recolhido"
 
-#: apps/settings/src/agents.rs:594
+#: apps/settings/src/agents.rs:598
 msgctxt "control action"
 msgid "Opened"
 msgstr "Aberto"
 
-#: apps/settings/src/agents.rs:595
+#: apps/settings/src/agents.rs:599
 msgctxt "control action"
 msgid "Followed a link"
 msgstr "Seguiu um link"
 
-#: apps/settings/src/agents.rs:596
+#: apps/settings/src/agents.rs:600
 msgctxt "control action"
 msgid "Opened a menu"
 msgstr "Abriu um menu"
 
-#: apps/settings/src/agents.rs:597
+#: apps/settings/src/agents.rs:601
 msgctxt "control action"
 msgid "Increased"
 msgstr "Aumentado"
 
-#: apps/settings/src/agents.rs:598
+#: apps/settings/src/agents.rs:602
 msgctxt "control action"
 msgid "Decreased"
 msgstr "Diminuído"
 
-#: apps/settings/src/agents.rs:599
+#: apps/settings/src/agents.rs:603
 msgctxt "control action"
 msgid "Closed the window"
 msgstr "Fechou a janela"
 
-#: apps/settings/src/agents.rs:600
+#: apps/settings/src/agents.rs:604
 msgctxt "control action"
 msgid "Minimized the window"
 msgstr "Minimizou a janela"
 
-#: apps/settings/src/agents.rs:601
+#: apps/settings/src/agents.rs:605
 msgctxt "control action"
 msgid "Maximized or restored the window"
 msgstr "Maximizou ou restaurou a janela"
 
-#: apps/settings/src/agents.rs:602
+#: apps/settings/src/agents.rs:606
 msgctxt "control action"
 msgid "Selected all"
 msgstr "Selecionou tudo"
 
-#: apps/settings/src/agents.rs:603
+#: apps/settings/src/agents.rs:607
 msgctxt "control action"
 msgid "Deleted the selection"
 msgstr "Excluiu a seleção"
 
-#: apps/settings/src/agents.rs:604
+#: apps/settings/src/agents.rs:608
 msgctxt "control action"
 msgid "Cleared the text"
 msgstr "Limpou o texto"
 
-#: apps/settings/src/agents.rs:605
+#: apps/settings/src/agents.rs:609
 msgctxt "control action"
 msgid "Copied"
 msgstr "Copiado"
 
-#: apps/settings/src/agents.rs:606
+#: apps/settings/src/agents.rs:610
 msgctxt "control action"
 msgid "Cut"
 msgstr "Recortado"
 
-#: apps/settings/src/agents.rs:607
+#: apps/settings/src/agents.rs:611
 msgctxt "control action"
 msgid "Pasted"
 msgstr "Colado"
 
-#: apps/settings/src/agents.rs:608
+#: apps/settings/src/agents.rs:612
 msgctxt "control action"
 msgid "Copied a link"
 msgstr "Copiou um link"
 
-#: apps/settings/src/agents.rs:609
+#: apps/settings/src/agents.rs:613
 msgctxt "control action"
 msgid "Inserted an emoji"
 msgstr "Inseriu um emoji"
 
-#: apps/settings/src/agents.rs:610
+#: apps/settings/src/agents.rs:614
 msgctxt "control action"
 msgid "Another action"
 msgstr "Outra ação"
 
-#: apps/settings/src/agents.rs:611
+#: apps/settings/src/agents.rs:615
 msgctxt "control action"
 msgid "Set text"
 msgstr "Definiu texto"
 
-#: apps/settings/src/agents.rs:612
+#: apps/settings/src/agents.rs:616
 msgctxt "control action"
 msgid "Set a value"
 msgstr "Definiu um valor"
 
-#: apps/settings/src/agents.rs:632 apps/web/src/window.rs:2157
+#: apps/settings/src/agents.rs:636 apps/web/src/window.rs:2157
 msgid "{n} match"
 msgid_plural "{n} matches"
 msgstr[0] "{n} correspondência"
 msgstr[1] "{n} correspondências"
 
-#: apps/settings/src/agents.rs:646
+#: apps/settings/src/agents.rs:650
 msgid "{width} × {height} pixels"
 msgstr "{width} × {height} pixels"
 
-#: apps/settings/src/agents.rs:653
+#: apps/settings/src/agents.rs:657
 msgid "Nothing hidden"
 msgstr "Nada ocultado"
 
-#: apps/settings/src/agents.rs:654
+#: apps/settings/src/agents.rs:658
 msgid "{n} area hidden"
 msgid_plural "{n} areas hidden"
 msgstr[0] "{n} área ocultada"
 msgstr[1] "{n} áreas ocultadas"
 
-#: apps/settings/src/agents.rs:659
+#: apps/settings/src/agents.rs:663
 msgid "{n} action"
 msgid_plural "{n} actions"
 msgstr[0] "{n} ação"
 msgstr[1] "{n} ações"
 
-#: apps/settings/src/agents.rs:662
+#: apps/settings/src/agents.rs:666
 msgid "{n} click"
 msgid_plural "{n} clicks"
 msgstr[0] "{n} clique"
 msgstr[1] "{n} cliques"
 
-#: apps/settings/src/agents.rs:664
+#: apps/settings/src/agents.rs:668
 msgid "{n} shortcut"
 msgid_plural "{n} shortcuts"
 msgstr[0] "{n} atalho"
 msgstr[1] "{n} atalhos"
 
-#: apps/settings/src/agents.rs:665
+#: apps/settings/src/agents.rs:669
 msgid "{n} key"
 msgid_plural "{n} keys"
 msgstr[0] "{n} tecla"
 msgstr[1] "{n} teclas"
 
-#: apps/settings/src/agents.rs:667
+#: apps/settings/src/agents.rs:671
 msgid "{n} pointer move"
 msgid_plural "{n} pointer moves"
 msgstr[0] "{n} movimento do ponteiro"
 msgstr[1] "{n} movimentos do ponteiro"
 
-#: apps/settings/src/agents.rs:669
+#: apps/settings/src/agents.rs:673
 msgid "{n} scroll"
 msgid_plural "{n} scrolls"
 msgstr[0] "{n} rolagem"
 msgstr[1] "{n} rolagens"
 
-#: apps/settings/src/agents.rs:671
+#: apps/settings/src/agents.rs:675
 msgid "{n} button press or release"
 msgid_plural "{n} button presses or releases"
 msgstr[0] "{n} pressionamento ou liberação de botão"
 msgstr[1] "{n} pressionamentos ou liberações de botão"
 
-#: apps/settings/src/agents.rs:681
+#: apps/settings/src/agents.rs:685
 msgid "{n} character typed"
 msgid_plural "{n} characters typed"
 msgstr[0] "{n} caractere digitado"
 msgstr[1] "{n} caracteres digitados"
 
-#: apps/settings/src/agents.rs:687
+#: apps/settings/src/agents.rs:691
 msgid "{n} choice"
 msgid_plural "{n} choices"
 msgstr[0] "{n} opção"
 msgstr[1] "{n} opções"
 
-#: apps/settings/src/agents.rs:694
+#: apps/settings/src/agents.rs:698
 msgid "Stopped before the first step"
 msgstr "Parado antes do primeiro passo"
 
-#: apps/settings/src/agents.rs:696
+#: apps/settings/src/agents.rs:700
 msgid "Stopped after {n} step"
 msgid_plural "Stopped after {n} steps"
 msgstr[0] "Parado após {n} passo"
 msgstr[1] "Parado após {n} passos"
 
-#: apps/settings/src/agents.rs:708
+#: apps/settings/src/agents.rs:712
 msgctxt "clipboard content"
 msgid "Text"
 msgstr "Texto"
 
-#: apps/settings/src/agents.rs:709
+#: apps/settings/src/agents.rs:713
 msgctxt "clipboard content"
 msgid "HTML"
 msgstr "HTML"
 
-#: apps/settings/src/agents.rs:710
+#: apps/settings/src/agents.rs:714
 msgctxt "clipboard content"
 msgid "Links"
 msgstr "Links"
 
-#: apps/settings/src/agents.rs:712
+#: apps/settings/src/agents.rs:716
 msgctxt "clipboard content"
 msgid "Picture"
 msgstr "Imagem"
 
-#: apps/settings/src/agents.rs:714
+#: apps/settings/src/agents.rs:718
 msgctxt "clipboard content"
 msgid "PDF document"
 msgstr "Documento PDF"
 
-#: apps/settings/src/agents.rs:715
+#: apps/settings/src/agents.rs:719
 msgctxt "clipboard content"
 msgid "Password manager hint"
 msgstr "Indicação do gerenciador de senhas"
 
-#: apps/settings/src/agents.rs:716
+#: apps/settings/src/agents.rs:720
 msgctxt "clipboard content"
 msgid "Other"
 msgstr "Outro"
 
-#: apps/settings/src/agents.rs:726
+#: apps/settings/src/agents.rs:730
 msgid "Copied from a protected app, or a password"
 msgstr "Copiado de um app protegido, ou uma senha"
 
-#: apps/settings/src/agents.rs:727
+#: apps/settings/src/agents.rs:731 apps/settings/src/agents.rs:746
 msgid "A system prompt was open"
 msgstr "Havia um aviso do sistema aberto"
 
-#: apps/settings/src/agents.rs:728
+#: apps/settings/src/agents.rs:732 apps/settings/src/agents.rs:750
 msgid "Clipboard access was off"
 msgstr "O acesso à área de transferência estava desligado"
 
-#: apps/settings/src/agents.rs:729
+#: apps/settings/src/agents.rs:733
 msgid "A protected window or a system prompt"
 msgstr "Uma janela protegida ou um aviso do sistema"
 
-#: apps/settings/src/agents.rs:730
+#: apps/settings/src/agents.rs:734
 msgid "A protected window, a password field or a system prompt"
 msgstr "Uma janela protegida, um campo de senha ou um aviso do sistema"
 
-#: apps/settings/src/agents.rs:762
-msgid "Copied from {app}"
-msgstr "Copiado de {app}"
+#: apps/settings/src/agents.rs:744
+msgid "A password manager marked it secret"
+msgstr "Um gerenciador de senhas marcou como secreto"
 
-#: apps/settings/src/agents.rs:764 apps/settings/src/agents.rs:884
-msgid "The whole screen"
-msgstr "A tela inteira"
+#: apps/settings/src/agents.rs:745
+msgid "A password field"
+msgstr "Um campo de senha"
 
-#: apps/settings/src/agents.rs:766
-msgid "Display {name}"
-msgstr "Tela {name}"
+#: apps/settings/src/agents.rs:747
+msgid "Part of the desktop"
+msgstr "Parte da área de trabalho"
 
-#: apps/settings/src/agents.rs:773
-msgid "A window of {app}"
-msgstr "Uma janela de {app}"
-
-#: apps/settings/src/agents.rs:775 apps/settings/src/agents.rs:886
-msgid "A window"
-msgstr "Uma janela"
-
-#: apps/settings/src/agents.rs:804 apps/settings/src/ui/mod.rs:174
-#: apps/settings/src/ui/mod.rs:257 apps/settings/src/ui/mod.rs:552
+#: apps/settings/src/agents.rs:748 apps/settings/src/agents.rs:827
+#: apps/settings/src/ui/mod.rs:174 apps/settings/src/ui/mod.rs:257
+#: apps/settings/src/ui/mod.rs:552
 msgid "Settings"
 msgstr "Configurações"
 
-#: apps/settings/src/agents.rs:819
+#: apps/settings/src/agents.rs:749
+msgid "An excluded app"
+msgstr "Um aplicativo excluído"
+
+#: apps/settings/src/agents.rs:751
+msgid "Stopped: you used the keyboard or pointer"
+msgstr "Parado: você usou o teclado ou o ponteiro"
+
+#: apps/settings/src/agents.rs:752
+msgid "Refused: you had just used the keyboard or pointer"
+msgstr "Recusado: você tinha acabado de usar o teclado ou o ponteiro"
+
+#: apps/settings/src/agents.rs:753
+msgid "Stopped from the indicator or Settings"
+msgstr "Parado pelo indicador ou pelas Configurações"
+
+#: apps/settings/src/agents.rs:785
+msgid "Copied from {app}"
+msgstr "Copiado de {app}"
+
+#: apps/settings/src/agents.rs:787 apps/settings/src/agents.rs:914
+msgid "The whole screen"
+msgstr "A tela inteira"
+
+#: apps/settings/src/agents.rs:789
+msgid "Display {name}"
+msgstr "Tela {name}"
+
+#: apps/settings/src/agents.rs:796
+msgid "A window of {app}"
+msgstr "Uma janela de {app}"
+
+#: apps/settings/src/agents.rs:798 apps/settings/src/agents.rs:916
+msgid "A window"
+msgstr "Uma janela"
+
+#: apps/settings/src/agents.rs:845
 msgid "Allowed for this session"
 msgstr "Permitido nesta sessão"
 
-#: apps/settings/src/agents.rs:820 apps/settings/src/ui/agent_access.rs:475
+#: apps/settings/src/agents.rs:846 apps/settings/src/ui/agent_access.rs:475
 msgid "Always allowed"
 msgstr "Sempre permitido"
 
-#: apps/settings/src/agents.rs:821 apps/settings/src/agents.rs:828
-#: apps/settings/src/agents.rs:853 apps/web/src/window.rs:1948
+#: apps/settings/src/agents.rs:847 apps/settings/src/agents.rs:854
+#: apps/settings/src/agents.rs:879 apps/web/src/window.rs:1948
 msgid "Allowed"
 msgstr "Permitido"
 
-#: apps/settings/src/agents.rs:822 apps/settings/src/agents.rs:829
+#: apps/settings/src/agents.rs:848 apps/settings/src/agents.rs:855
 #: apps/web/src/window.rs:1948
 msgid "Denied"
 msgstr "Negado"
 
-#: apps/settings/src/agents.rs:823 apps/settings/src/agents.rs:830
+#: apps/settings/src/agents.rs:849 apps/settings/src/agents.rs:856
 msgid "Not answered"
 msgstr "Sem resposta"
 
-#: apps/settings/src/agents.rs:836
+#: apps/settings/src/agents.rs:862
 msgid "Shown"
 msgstr "Mostrado"
 
-#: apps/settings/src/agents.rs:837
+#: apps/settings/src/agents.rs:863
 msgid "Cancelled by you"
 msgstr "Cancelado por você"
 
-#: apps/settings/src/agents.rs:839
+#: apps/settings/src/agents.rs:865
 msgid "Not shown"
 msgstr "Não mostrado"
 
-#: apps/settings/src/agents.rs:847
+#: apps/settings/src/agents.rs:873
 msgid "Refused calls are no longer recorded today"
 msgstr "Chamadas recusadas não são mais registradas hoje"
 
-#: apps/settings/src/agents.rs:848
+#: apps/settings/src/agents.rs:874
 msgid "Nothing more is recorded today"
 msgstr "Nada mais é registrado hoje"
 
-#: apps/settings/src/agents.rs:857
+#: apps/settings/src/agents.rs:883
 msgid "Failed: {error}"
 msgstr "Falhou: {error}"
 
-#: apps/settings/src/agents.rs:870
+#: apps/settings/src/agents.rs:900
 msgid "Refused {n} time"
 msgid_plural "Refused {n} times"
 msgstr[0] "Recusado {n} vez"
 msgstr[1] "Recusado {n} vezes"
 
-#: apps/settings/src/agents.rs:871
+#: apps/settings/src/agents.rs:901
 msgid "Refused"
 msgstr "Recusado"
 
-#: apps/settings/src/agents.rs:885
+#: apps/settings/src/agents.rs:915
 msgid "A display"
 msgstr "Uma tela"
 

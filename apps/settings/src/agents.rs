@@ -298,6 +298,9 @@ pub struct Entry {
     pub level: String,
     /// `allowed`, `refused:<error>` or `cancelled`.
     pub outcome: String,
+    /// A refused or cancelled call: why, as a token (`password-field`,
+    /// `user-input`, …); empty in lines from before the shell wrote it.
+    pub reason: String,
     /// An allowed call that then failed: the error's short name.
     pub error: String,
     /// Consent prompts: `session` or `always`.
@@ -376,6 +379,7 @@ impl Entry {
             target: s("target"),
             level: s("level"),
             outcome: s("outcome"),
+            reason: s("reason"),
             error: s("error"),
             grant: s("grant"),
             count: obj.get("count").and_then(|v| v.as_u64()).unwrap_or(0),
@@ -720,7 +724,7 @@ pub fn mime_kind_label(kind: &str) -> Option<&'static str> {
 
 /// Why the policy refused a call, where the method says more than the
 /// error alone (`Excluded` covers protected apps, password fields and
-/// system prompts; the line does not say which).
+/// system prompts): for lines without a `reason` ([`reason_label`]).
 pub fn method_refusal_label(method: &str, error: &str) -> Option<&'static str> {
     Some(match (method, error) {
         ("GetClipboard", "Excluded") => n_("Copied from a protected app, or a password"),
@@ -729,6 +733,25 @@ pub fn method_refusal_label(method: &str, error: &str) -> Option<&'static str> {
         ("Screenshot", "Excluded") => n_("A protected window or a system prompt"),
         ("Input", "Excluded") => n_("A protected window, a password field or a system prompt"),
         _ => return refusal_label(error),
+    })
+}
+
+/// Why a call was refused or cancelled (`reason`, contract "Activity
+/// log", "Reasons"), untranslated; `None` for a token this version does
+/// not know (the line is then shown as if it had none).
+pub fn reason_label(method: &str, reason: &str) -> Option<&'static str> {
+    Some(match (method, reason) {
+        ("GetClipboard", "password-field") => n_("A password manager marked it secret"),
+        (_, "password-field") => n_("A password field"),
+        (_, "system-prompt") => n_("A system prompt was open"),
+        (_, "shell") => n_("Part of the desktop"),
+        (_, "settings") => n_("Settings"),
+        (_, "app") => n_("An excluded app"),
+        (_, "clipboard") => n_("Clipboard access was off"),
+        (_, "user-input") => n_("Stopped: you used the keyboard or pointer"),
+        (_, "cooldown") => n_("Refused: you had just used the keyboard or pointer"),
+        (_, "stopped") => n_("Stopped from the indicator or Settings"),
+        _ => return None,
     })
 }
 
@@ -805,7 +828,10 @@ pub fn describe(e: &Entry) -> Described {
     } else {
         raw(e.who())
     };
-    let reason = |why: &str| match method_refusal_label(method, why) {
+    // The line's `reason` says more than the error; older lines have
+    // none, and get what the method and error say.
+    let known_reason = reason_label(method, &e.reason);
+    let reason = |why: &str| match known_reason.or_else(|| method_refusal_label(method, why)) {
         Some(t) => tr_dyn(t),
         None => raw(why),
     };
@@ -857,6 +883,10 @@ pub fn describe(e: &Entry) -> Described {
                     None => trf!("Failed: {error}", error = e.error),
                 });
             }
+        }
+        // Stopped, and the line says why.
+        (_, "cancelled") if known_reason.is_some() => {
+            status.extend(known_reason.map(tr_dyn));
         }
         // Stopped while it ran (it has a done-count): the user's input,
         // Stop, or the cooldown after the user's input.
@@ -1621,6 +1651,153 @@ pub mod tests {
             ))
             .3,
             "Refused · Needs a higher access level"
+        );
+    }
+
+    #[test]
+    fn reasons() {
+        let agent =
+            r#""time":1795082480,"agent":"/usr/bin/node /home/me/agent.js","name":"Example""#;
+        let line = |rest: &str| format!("{{{agent},{rest}}}");
+        let parsed = Entry::parse(&line(
+            r#""method":"Input","outcome":"cancelled","reason":"user-input""#,
+        ))
+        .unwrap();
+        assert_eq!(parsed.reason, "user-input");
+        // Every token, refused (Excluded, FeatureOff) or cancelled (Input).
+        for (method, outcome, reason, said) in [
+            (
+                "Input",
+                "refused:Excluded",
+                "password-field",
+                "Refused · A password field",
+            ),
+            (
+                "A11ySetValue",
+                "refused:Excluded",
+                "password-field",
+                "Refused · A password field",
+            ),
+            (
+                "GetClipboard",
+                "refused:Excluded",
+                "password-field",
+                "Refused · A password manager marked it secret",
+            ),
+            (
+                "Screenshot",
+                "refused:Excluded",
+                "system-prompt",
+                "Refused · A system prompt was open",
+            ),
+            (
+                "A11yTree",
+                "refused:Excluded",
+                "shell",
+                "Refused · Part of the desktop",
+            ),
+            (
+                "GetClipboard",
+                "refused:Excluded",
+                "shell",
+                "Refused · Part of the desktop",
+            ),
+            (
+                "WindowAction",
+                "refused:Excluded",
+                "settings",
+                "Refused · Settings",
+            ),
+            (
+                "Input",
+                "refused:Excluded",
+                "app",
+                "Refused · An excluded app",
+            ),
+            (
+                "GetClipboard",
+                "refused:Excluded",
+                "app",
+                "Refused · An excluded app",
+            ),
+            (
+                "A11yAction",
+                "refused:FeatureOff",
+                "clipboard",
+                "Refused · Clipboard access was off",
+            ),
+            (
+                "Input",
+                "cancelled",
+                "user-input",
+                "Stopped: you used the keyboard or pointer",
+            ),
+            (
+                "Input",
+                "cancelled",
+                "cooldown",
+                "Refused: you had just used the keyboard or pointer",
+            ),
+            (
+                "Input",
+                "cancelled",
+                "stopped",
+                "Stopped from the indicator or Settings",
+            ),
+        ] {
+            let l = line(&format!(
+                r#""method":"{method}","target":"window:11","level":"screen-and-input","outcome":"{outcome}","reason":"{reason}","done-count":2"#
+            ));
+            assert_eq!(shown(&l).3, said, "{method} {reason}");
+            assert!(reason_label(method, reason).is_some(), "{reason}");
+        }
+        // A coalesced refusal keeps its count.
+        assert_eq!(
+            shown(&line(
+                r#""method":"ListWindows","target":"org.example.Vault","level":"read-only","outcome":"refused:Excluded","reason":"app","count":3,"until":1795082490"#
+            ))
+            .3,
+            "Refused 3 times · An excluded app"
+        );
+        // No reason (older lines) or one this version does not know: what
+        // the method and error say.
+        for reason in ["", r#","reason":"later""#] {
+            let input = |outcome: &str, more: &str| {
+                shown(&line(&format!(
+                    r#""method":"Input","level":"screen-and-input","outcome":"{outcome}"{reason}{more}"#
+                )))
+                .3
+            };
+            assert_eq!(
+                input("refused:Excluded", ""),
+                "Refused · A protected window, a password field or a system prompt"
+            );
+            assert_eq!(input("cancelled", r#","done-count":2"#), "Stopped by you");
+            assert_eq!(input("cancelled", ""), "Cancelled");
+            assert_eq!(
+                shown(&line(&format!(
+                    r#""method":"GetClipboard","level":"read-only","outcome":"refused:Excluded"{reason}"#
+                )))
+                .3,
+                "Refused · Copied from a protected app, or a password"
+            );
+            assert_eq!(
+                shown(&line(&format!(
+                    r#""method":"ListWindows","level":"read-only","outcome":"refused:Excluded"{reason}"#
+                )))
+                .3,
+                "Refused · Excluded app"
+            );
+        }
+        assert_eq!(reason_label("Input", "later"), None);
+        assert_eq!(reason_label("Input", ""), None);
+        // A reason never turns an allowed call into anything else.
+        assert_eq!(
+            shown(&line(
+                r#""method":"Input","level":"screen-and-input","outcome":"allowed","reason":"app""#
+            ))
+            .3,
+            "Allowed"
         );
     }
 

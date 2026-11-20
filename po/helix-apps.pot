@@ -4142,7 +4142,7 @@ msgid "{} on disk, {} apparent"
 msgstr ""
 
 #: apps/disk-usage/src/ui.rs:816 apps/disk-usage/src/ui.rs:1150
-#: apps/files/src/fmt.rs:12 apps/settings/src/agents.rs:634
+#: apps/files/src/fmt.rs:12 apps/settings/src/agents.rs:638
 msgid "{n} item"
 msgid_plural "{n} items"
 msgstr[0] ""
@@ -6917,7 +6917,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr ""
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/settings/src/agents.rs:866 apps/web/src/window.rs:2341
+#: apps/settings/src/agents.rs:896 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr ""
 
@@ -8108,7 +8108,7 @@ msgstr ""
 msgid "Info"
 msgstr ""
 
-#: apps/fonts/src/ui.rs:1067 apps/settings/src/agents.rs:683
+#: apps/fonts/src/ui.rs:1067 apps/settings/src/agents.rs:687
 msgid "{n} character"
 msgid_plural "{n} characters"
 msgstr[0] ""
@@ -10719,726 +10719,755 @@ msgstr ""
 msgid "Screen and Input"
 msgstr ""
 
-#: apps/settings/src/agents.rs:451
+#: apps/settings/src/agents.rs:455
 msgid "Checked its access"
 msgstr ""
 
-#: apps/settings/src/agents.rs:452 apps/settings/src/agents.rs:490
+#: apps/settings/src/agents.rs:456 apps/settings/src/agents.rs:494
 msgid "Asked for access"
 msgstr ""
 
-#: apps/settings/src/agents.rs:453
+#: apps/settings/src/agents.rs:457
 msgid "Read the desktop state"
 msgstr ""
 
-#: apps/settings/src/agents.rs:454
+#: apps/settings/src/agents.rs:458
 msgid "Listed windows"
 msgstr ""
 
-#: apps/settings/src/agents.rs:455
+#: apps/settings/src/agents.rs:459
 msgid "Listed apps"
 msgstr ""
 
-#: apps/settings/src/agents.rs:456
+#: apps/settings/src/agents.rs:460
 msgid "Listed workspaces"
 msgstr ""
 
-#: apps/settings/src/agents.rs:457
+#: apps/settings/src/agents.rs:461
 msgid "Listed displays"
 msgstr ""
 
-#: apps/settings/src/agents.rs:458
+#: apps/settings/src/agents.rs:462
 msgid "Listed notifications"
 msgstr ""
 
-#: apps/settings/src/agents.rs:459
+#: apps/settings/src/agents.rs:463
 msgid "Listed recent files"
 msgstr ""
 
-#: apps/settings/src/agents.rs:460
+#: apps/settings/src/agents.rs:464
 msgid "Searched files"
 msgstr ""
 
-#: apps/settings/src/agents.rs:461
+#: apps/settings/src/agents.rs:465
 msgid "Waited for a window"
 msgstr ""
 
-#: apps/settings/src/agents.rs:462
+#: apps/settings/src/agents.rs:466
 msgid "Waited for a window to close"
 msgstr ""
 
-#: apps/settings/src/agents.rs:463
+#: apps/settings/src/agents.rs:467
 msgid "Asked you a question"
 msgstr ""
 
-#: apps/settings/src/agents.rs:464
+#: apps/settings/src/agents.rs:468
 msgid "Asked you to confirm"
 msgstr ""
 
-#: apps/settings/src/agents.rs:465
+#: apps/settings/src/agents.rs:469
 msgid "Added a reminder"
 msgstr ""
 
-#: apps/settings/src/agents.rs:466
+#: apps/settings/src/agents.rs:470
 msgid "Listed reminders"
 msgstr ""
 
-#: apps/settings/src/agents.rs:467
+#: apps/settings/src/agents.rs:471
 msgid "Cancelled a reminder"
 msgstr ""
 
-#: apps/settings/src/agents.rs:468
+#: apps/settings/src/agents.rs:472
 msgid "Opened a file or link"
 msgstr ""
 
-#: apps/settings/src/agents.rs:469
+#: apps/settings/src/agents.rs:473
 msgid "Started an app"
 msgstr ""
 
-#: apps/settings/src/agents.rs:470
+#: apps/settings/src/agents.rs:474
 msgid "Changed a window"
 msgstr ""
 
-#: apps/settings/src/agents.rs:471
+#: apps/settings/src/agents.rs:475
 msgid "Switched workspace"
 msgstr ""
 
-#: apps/settings/src/agents.rs:472
+#: apps/settings/src/agents.rs:476
 msgid "Turned a setting on or off"
 msgstr ""
 
-#: apps/settings/src/agents.rs:473
+#: apps/settings/src/agents.rs:477
 msgid "Adjusted a setting"
 msgstr ""
 
-#: apps/settings/src/agents.rs:474
+#: apps/settings/src/agents.rs:478
 msgid "Sent a notification"
 msgstr ""
 
-#: apps/settings/src/agents.rs:475
+#: apps/settings/src/agents.rs:479
 msgid "Read the clipboard"
 msgstr ""
 
-#: apps/settings/src/agents.rs:476
+#: apps/settings/src/agents.rs:480
 msgid "Changed the clipboard"
 msgstr ""
 
-#: apps/settings/src/agents.rs:477
+#: apps/settings/src/agents.rs:481
 msgid "Read an app’s contents"
 msgstr ""
 
-#: apps/settings/src/agents.rs:478
+#: apps/settings/src/agents.rs:482
 msgid "Searched an app’s controls"
 msgstr ""
 
-#: apps/settings/src/agents.rs:479
+#: apps/settings/src/agents.rs:483
 msgid "Used a control in an app"
 msgstr ""
 
-#: apps/settings/src/agents.rs:480
+#: apps/settings/src/agents.rs:484
 msgid "Filled in a field in an app"
 msgstr ""
 
-#: apps/settings/src/agents.rs:481
+#: apps/settings/src/agents.rs:485
 msgid "Took a screenshot"
 msgstr ""
 
-#: apps/settings/src/agents.rs:482
+#: apps/settings/src/agents.rs:486
 msgid "Typed or clicked"
 msgstr ""
 
-#: apps/settings/src/agents.rs:484
+#: apps/settings/src/agents.rs:488
 msgid "Listed agents"
 msgstr ""
 
-#: apps/settings/src/agents.rs:485
+#: apps/settings/src/agents.rs:489
 msgid "Access revoked"
 msgstr ""
 
-#: apps/settings/src/agents.rs:486
+#: apps/settings/src/agents.rs:490
 msgid "Access revoked and forgotten"
 msgstr ""
 
-#: apps/settings/src/agents.rs:487
+#: apps/settings/src/agents.rs:491
 msgid "All access revoked"
 msgstr ""
 
-#: apps/settings/src/agents.rs:488
+#: apps/settings/src/agents.rs:492
 msgid "Activity log cleared"
 msgstr ""
 
-#: apps/settings/src/agents.rs:491
+#: apps/settings/src/agents.rs:495
 msgid "Asked to confirm an action"
 msgstr ""
 
-#: apps/settings/src/agents.rs:492 apps/settings/src/agents.rs:864
+#: apps/settings/src/agents.rs:496 apps/settings/src/agents.rs:894
 msgid "Stopped by you"
 msgstr ""
 
-#: apps/settings/src/agents.rs:493
+#: apps/settings/src/agents.rs:497
 msgid "Reminder due"
 msgstr ""
 
-#: apps/settings/src/agents.rs:494
+#: apps/settings/src/agents.rs:498
 msgid "Activity log full"
 msgstr ""
 
-#: apps/settings/src/agents.rs:503
+#: apps/settings/src/agents.rs:507
 msgid "Reminder cancelled"
 msgstr ""
 
-#: apps/settings/src/agents.rs:512
+#: apps/settings/src/agents.rs:516
 msgid "Tried to list agents"
 msgstr ""
 
-#: apps/settings/src/agents.rs:513
+#: apps/settings/src/agents.rs:517
 msgid "Tried to list reminders"
 msgstr ""
 
-#: apps/settings/src/agents.rs:514
+#: apps/settings/src/agents.rs:518
 msgid "Tried to cancel a reminder"
 msgstr ""
 
-#: apps/settings/src/agents.rs:515
+#: apps/settings/src/agents.rs:519
 msgid "Tried to revoke access"
 msgstr ""
 
-#: apps/settings/src/agents.rs:516
+#: apps/settings/src/agents.rs:520
 msgid "Tried to forget an agent"
 msgstr ""
 
-#: apps/settings/src/agents.rs:517
+#: apps/settings/src/agents.rs:521
 msgid "Tried to revoke all access"
 msgstr ""
 
-#: apps/settings/src/agents.rs:518
+#: apps/settings/src/agents.rs:522
 msgid "Tried to clear the activity log"
 msgstr ""
 
-#: apps/settings/src/agents.rs:526
+#: apps/settings/src/agents.rs:530
 msgid "From a sandboxed app"
 msgstr ""
 
-#: apps/settings/src/agents.rs:527
+#: apps/settings/src/agents.rs:531
 msgid "Agent Access was off"
 msgstr ""
 
-#: apps/settings/src/agents.rs:528
+#: apps/settings/src/agents.rs:532
 msgid "From a remote session"
 msgstr ""
 
-#: apps/settings/src/agents.rs:529
+#: apps/settings/src/agents.rs:533
 msgid "The screen was locked"
 msgstr ""
 
-#: apps/settings/src/agents.rs:530
+#: apps/settings/src/agents.rs:534
 msgid "Needs a higher access level"
 msgstr ""
 
-#: apps/settings/src/agents.rs:531
+#: apps/settings/src/agents.rs:535
 msgid "That feature was turned off"
 msgstr ""
 
-#: apps/settings/src/agents.rs:532
+#: apps/settings/src/agents.rs:536
 msgid "Not allowed yet"
 msgstr ""
 
-#: apps/settings/src/agents.rs:533
+#: apps/settings/src/agents.rs:537
 msgid "Denied by you"
 msgstr ""
 
-#: apps/settings/src/agents.rs:534
+#: apps/settings/src/agents.rs:538
 msgid "Excluded app"
 msgstr ""
 
-#: apps/settings/src/agents.rs:535
+#: apps/settings/src/agents.rs:539
 msgid "Needed your confirmation"
 msgstr ""
 
-#: apps/settings/src/agents.rs:536
+#: apps/settings/src/agents.rs:540
 msgid "Only Settings may do this"
 msgstr ""
 
-#: apps/settings/src/agents.rs:544
+#: apps/settings/src/agents.rs:548
 msgid "Failed: timed out"
 msgstr ""
 
-#: apps/settings/src/agents.rs:545
+#: apps/settings/src/agents.rs:549
 msgid "Failed: not found"
 msgstr ""
 
-#: apps/settings/src/agents.rs:546
+#: apps/settings/src/agents.rs:550
 msgid "Failed: not supported"
 msgstr ""
 
-#: apps/settings/src/agents.rs:547
+#: apps/settings/src/agents.rs:551
 msgid "Failed: invalid request"
 msgstr ""
 
-#: apps/settings/src/agents.rs:548
+#: apps/settings/src/agents.rs:552
 msgid "Failed: cancelled"
 msgstr ""
 
-#: apps/settings/src/agents.rs:549
+#: apps/settings/src/agents.rs:553
 msgid "Failed"
-msgstr ""
-
-#: apps/settings/src/agents.rs:558
-msgctxt "accessible role"
-msgid "Button"
-msgstr ""
-
-#: apps/settings/src/agents.rs:559
-msgctxt "accessible role"
-msgid "Toggle button"
-msgstr ""
-
-#: apps/settings/src/agents.rs:560
-msgctxt "accessible role"
-msgid "Menu button"
-msgstr ""
-
-#: apps/settings/src/agents.rs:561
-msgctxt "accessible role"
-msgid "Check box"
 msgstr ""
 
 #: apps/settings/src/agents.rs:562
 msgctxt "accessible role"
-msgid "Option button"
+msgid "Button"
 msgstr ""
 
 #: apps/settings/src/agents.rs:563
 msgctxt "accessible role"
-msgid "Switch"
+msgid "Toggle button"
 msgstr ""
 
 #: apps/settings/src/agents.rs:564
 msgctxt "accessible role"
-msgid "Text field"
+msgid "Menu button"
 msgstr ""
 
 #: apps/settings/src/agents.rs:565
 msgctxt "accessible role"
-msgid "Password field"
+msgid "Check box"
 msgstr ""
 
 #: apps/settings/src/agents.rs:566
 msgctxt "accessible role"
-msgid "Drop-down list"
+msgid "Option button"
 msgstr ""
 
 #: apps/settings/src/agents.rs:567
 msgctxt "accessible role"
-msgid "Slider"
+msgid "Switch"
 msgstr ""
 
 #: apps/settings/src/agents.rs:568
 msgctxt "accessible role"
-msgid "Number field"
+msgid "Text field"
 msgstr ""
 
 #: apps/settings/src/agents.rs:569
 msgctxt "accessible role"
-msgid "Link"
+msgid "Password field"
 msgstr ""
 
 #: apps/settings/src/agents.rs:570
 msgctxt "accessible role"
-msgid "Menu item"
+msgid "Drop-down list"
 msgstr ""
 
 #: apps/settings/src/agents.rs:571
 msgctxt "accessible role"
-msgid "Tab"
+msgid "Slider"
 msgstr ""
 
 #: apps/settings/src/agents.rs:572
 msgctxt "accessible role"
-msgid "List item"
+msgid "Number field"
 msgstr ""
 
 #: apps/settings/src/agents.rs:573
 msgctxt "accessible role"
-msgid "Table cell"
+msgid "Link"
 msgstr ""
 
 #: apps/settings/src/agents.rs:574
 msgctxt "accessible role"
-msgid "Label"
+msgid "Menu item"
 msgstr ""
 
 #: apps/settings/src/agents.rs:575
 msgctxt "accessible role"
-msgid "Heading"
+msgid "Tab"
 msgstr ""
 
 #: apps/settings/src/agents.rs:576
 msgctxt "accessible role"
-msgid "Image"
+msgid "List item"
 msgstr ""
 
 #: apps/settings/src/agents.rs:577
 msgctxt "accessible role"
-msgid "Dialog"
+msgid "Table cell"
 msgstr ""
 
 #: apps/settings/src/agents.rs:578
 msgctxt "accessible role"
+msgid "Label"
+msgstr ""
+
+#: apps/settings/src/agents.rs:579
+msgctxt "accessible role"
+msgid "Heading"
+msgstr ""
+
+#: apps/settings/src/agents.rs:580
+msgctxt "accessible role"
+msgid "Image"
+msgstr ""
+
+#: apps/settings/src/agents.rs:581
+msgctxt "accessible role"
+msgid "Dialog"
+msgstr ""
+
+#: apps/settings/src/agents.rs:582
+msgctxt "accessible role"
 msgid "Window"
-msgstr ""
-
-#: apps/settings/src/agents.rs:587
-msgctxt "control action"
-msgid "Clicked"
-msgstr ""
-
-#: apps/settings/src/agents.rs:588
-msgctxt "control action"
-msgid "Activated"
-msgstr ""
-
-#: apps/settings/src/agents.rs:589
-msgctxt "control action"
-msgid "Toggled"
-msgstr ""
-
-#: apps/settings/src/agents.rs:590
-msgctxt "control action"
-msgid "Selected"
 msgstr ""
 
 #: apps/settings/src/agents.rs:591
 msgctxt "control action"
-msgid "Focused"
+msgid "Clicked"
 msgstr ""
 
 #: apps/settings/src/agents.rs:592
 msgctxt "control action"
-msgid "Expanded"
+msgid "Activated"
 msgstr ""
 
 #: apps/settings/src/agents.rs:593
 msgctxt "control action"
-msgid "Collapsed"
+msgid "Toggled"
 msgstr ""
 
 #: apps/settings/src/agents.rs:594
 msgctxt "control action"
-msgid "Opened"
+msgid "Selected"
 msgstr ""
 
 #: apps/settings/src/agents.rs:595
 msgctxt "control action"
-msgid "Followed a link"
+msgid "Focused"
 msgstr ""
 
 #: apps/settings/src/agents.rs:596
 msgctxt "control action"
-msgid "Opened a menu"
+msgid "Expanded"
 msgstr ""
 
 #: apps/settings/src/agents.rs:597
 msgctxt "control action"
-msgid "Increased"
+msgid "Collapsed"
 msgstr ""
 
 #: apps/settings/src/agents.rs:598
 msgctxt "control action"
-msgid "Decreased"
+msgid "Opened"
 msgstr ""
 
 #: apps/settings/src/agents.rs:599
 msgctxt "control action"
-msgid "Closed the window"
+msgid "Followed a link"
 msgstr ""
 
 #: apps/settings/src/agents.rs:600
 msgctxt "control action"
-msgid "Minimized the window"
+msgid "Opened a menu"
 msgstr ""
 
 #: apps/settings/src/agents.rs:601
 msgctxt "control action"
-msgid "Maximized or restored the window"
+msgid "Increased"
 msgstr ""
 
 #: apps/settings/src/agents.rs:602
 msgctxt "control action"
-msgid "Selected all"
+msgid "Decreased"
 msgstr ""
 
 #: apps/settings/src/agents.rs:603
 msgctxt "control action"
-msgid "Deleted the selection"
+msgid "Closed the window"
 msgstr ""
 
 #: apps/settings/src/agents.rs:604
 msgctxt "control action"
-msgid "Cleared the text"
+msgid "Minimized the window"
 msgstr ""
 
 #: apps/settings/src/agents.rs:605
 msgctxt "control action"
-msgid "Copied"
+msgid "Maximized or restored the window"
 msgstr ""
 
 #: apps/settings/src/agents.rs:606
 msgctxt "control action"
-msgid "Cut"
+msgid "Selected all"
 msgstr ""
 
 #: apps/settings/src/agents.rs:607
 msgctxt "control action"
-msgid "Pasted"
+msgid "Deleted the selection"
 msgstr ""
 
 #: apps/settings/src/agents.rs:608
 msgctxt "control action"
-msgid "Copied a link"
+msgid "Cleared the text"
 msgstr ""
 
 #: apps/settings/src/agents.rs:609
 msgctxt "control action"
-msgid "Inserted an emoji"
+msgid "Copied"
 msgstr ""
 
 #: apps/settings/src/agents.rs:610
 msgctxt "control action"
-msgid "Another action"
+msgid "Cut"
 msgstr ""
 
 #: apps/settings/src/agents.rs:611
 msgctxt "control action"
-msgid "Set text"
+msgid "Pasted"
 msgstr ""
 
 #: apps/settings/src/agents.rs:612
 msgctxt "control action"
+msgid "Copied a link"
+msgstr ""
+
+#: apps/settings/src/agents.rs:613
+msgctxt "control action"
+msgid "Inserted an emoji"
+msgstr ""
+
+#: apps/settings/src/agents.rs:614
+msgctxt "control action"
+msgid "Another action"
+msgstr ""
+
+#: apps/settings/src/agents.rs:615
+msgctxt "control action"
+msgid "Set text"
+msgstr ""
+
+#: apps/settings/src/agents.rs:616
+msgctxt "control action"
 msgid "Set a value"
 msgstr ""
 
-#: apps/settings/src/agents.rs:632 apps/web/src/window.rs:2157
+#: apps/settings/src/agents.rs:636 apps/web/src/window.rs:2157
 msgid "{n} match"
 msgid_plural "{n} matches"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:646
+#: apps/settings/src/agents.rs:650
 msgid "{width} × {height} pixels"
 msgstr ""
 
-#: apps/settings/src/agents.rs:653
+#: apps/settings/src/agents.rs:657
 msgid "Nothing hidden"
 msgstr ""
 
-#: apps/settings/src/agents.rs:654
+#: apps/settings/src/agents.rs:658
 msgid "{n} area hidden"
 msgid_plural "{n} areas hidden"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:659
+#: apps/settings/src/agents.rs:663
 msgid "{n} action"
 msgid_plural "{n} actions"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:662
+#: apps/settings/src/agents.rs:666
 msgid "{n} click"
 msgid_plural "{n} clicks"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:664
+#: apps/settings/src/agents.rs:668
 msgid "{n} shortcut"
 msgid_plural "{n} shortcuts"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:665
+#: apps/settings/src/agents.rs:669
 msgid "{n} key"
 msgid_plural "{n} keys"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:667
+#: apps/settings/src/agents.rs:671
 msgid "{n} pointer move"
 msgid_plural "{n} pointer moves"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:669
+#: apps/settings/src/agents.rs:673
 msgid "{n} scroll"
 msgid_plural "{n} scrolls"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:671
+#: apps/settings/src/agents.rs:675
 msgid "{n} button press or release"
 msgid_plural "{n} button presses or releases"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:681
+#: apps/settings/src/agents.rs:685
 msgid "{n} character typed"
 msgid_plural "{n} characters typed"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:687
+#: apps/settings/src/agents.rs:691
 msgid "{n} choice"
 msgid_plural "{n} choices"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:694
+#: apps/settings/src/agents.rs:698
 msgid "Stopped before the first step"
 msgstr ""
 
-#: apps/settings/src/agents.rs:696
+#: apps/settings/src/agents.rs:700
 msgid "Stopped after {n} step"
 msgid_plural "Stopped after {n} steps"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:708
+#: apps/settings/src/agents.rs:712
 msgctxt "clipboard content"
 msgid "Text"
 msgstr ""
 
-#: apps/settings/src/agents.rs:709
+#: apps/settings/src/agents.rs:713
 msgctxt "clipboard content"
 msgid "HTML"
 msgstr ""
 
-#: apps/settings/src/agents.rs:710
+#: apps/settings/src/agents.rs:714
 msgctxt "clipboard content"
 msgid "Links"
 msgstr ""
 
-#: apps/settings/src/agents.rs:712
+#: apps/settings/src/agents.rs:716
 msgctxt "clipboard content"
 msgid "Picture"
 msgstr ""
 
-#: apps/settings/src/agents.rs:714
+#: apps/settings/src/agents.rs:718
 msgctxt "clipboard content"
 msgid "PDF document"
 msgstr ""
 
-#: apps/settings/src/agents.rs:715
+#: apps/settings/src/agents.rs:719
 msgctxt "clipboard content"
 msgid "Password manager hint"
 msgstr ""
 
-#: apps/settings/src/agents.rs:716
+#: apps/settings/src/agents.rs:720
 msgctxt "clipboard content"
 msgid "Other"
 msgstr ""
 
-#: apps/settings/src/agents.rs:726
+#: apps/settings/src/agents.rs:730
 msgid "Copied from a protected app, or a password"
 msgstr ""
 
-#: apps/settings/src/agents.rs:727
+#: apps/settings/src/agents.rs:731 apps/settings/src/agents.rs:746
 msgid "A system prompt was open"
 msgstr ""
 
-#: apps/settings/src/agents.rs:728
+#: apps/settings/src/agents.rs:732 apps/settings/src/agents.rs:750
 msgid "Clipboard access was off"
 msgstr ""
 
-#: apps/settings/src/agents.rs:729
+#: apps/settings/src/agents.rs:733
 msgid "A protected window or a system prompt"
 msgstr ""
 
-#: apps/settings/src/agents.rs:730
+#: apps/settings/src/agents.rs:734
 msgid "A protected window, a password field or a system prompt"
 msgstr ""
 
-#: apps/settings/src/agents.rs:762
-msgid "Copied from {app}"
+#: apps/settings/src/agents.rs:744
+msgid "A password manager marked it secret"
 msgstr ""
 
-#: apps/settings/src/agents.rs:764 apps/settings/src/agents.rs:884
-msgid "The whole screen"
+#: apps/settings/src/agents.rs:745
+msgid "A password field"
 msgstr ""
 
-#: apps/settings/src/agents.rs:766
-msgid "Display {name}"
+#: apps/settings/src/agents.rs:747
+msgid "Part of the desktop"
 msgstr ""
 
-#: apps/settings/src/agents.rs:773
-msgid "A window of {app}"
-msgstr ""
-
-#: apps/settings/src/agents.rs:775 apps/settings/src/agents.rs:886
-msgid "A window"
-msgstr ""
-
-#: apps/settings/src/agents.rs:804 apps/settings/src/ui/mod.rs:174
-#: apps/settings/src/ui/mod.rs:257 apps/settings/src/ui/mod.rs:552
+#: apps/settings/src/agents.rs:748 apps/settings/src/agents.rs:827
+#: apps/settings/src/ui/mod.rs:174 apps/settings/src/ui/mod.rs:257
+#: apps/settings/src/ui/mod.rs:552
 msgid "Settings"
 msgstr ""
 
-#: apps/settings/src/agents.rs:819
+#: apps/settings/src/agents.rs:749
+msgid "An excluded app"
+msgstr ""
+
+#: apps/settings/src/agents.rs:751
+msgid "Stopped: you used the keyboard or pointer"
+msgstr ""
+
+#: apps/settings/src/agents.rs:752
+msgid "Refused: you had just used the keyboard or pointer"
+msgstr ""
+
+#: apps/settings/src/agents.rs:753
+msgid "Stopped from the indicator or Settings"
+msgstr ""
+
+#: apps/settings/src/agents.rs:785
+msgid "Copied from {app}"
+msgstr ""
+
+#: apps/settings/src/agents.rs:787 apps/settings/src/agents.rs:914
+msgid "The whole screen"
+msgstr ""
+
+#: apps/settings/src/agents.rs:789
+msgid "Display {name}"
+msgstr ""
+
+#: apps/settings/src/agents.rs:796
+msgid "A window of {app}"
+msgstr ""
+
+#: apps/settings/src/agents.rs:798 apps/settings/src/agents.rs:916
+msgid "A window"
+msgstr ""
+
+#: apps/settings/src/agents.rs:845
 msgid "Allowed for this session"
 msgstr ""
 
-#: apps/settings/src/agents.rs:820 apps/settings/src/ui/agent_access.rs:475
+#: apps/settings/src/agents.rs:846 apps/settings/src/ui/agent_access.rs:475
 msgid "Always allowed"
 msgstr ""
 
-#: apps/settings/src/agents.rs:821 apps/settings/src/agents.rs:828
-#: apps/settings/src/agents.rs:853 apps/web/src/window.rs:1948
+#: apps/settings/src/agents.rs:847 apps/settings/src/agents.rs:854
+#: apps/settings/src/agents.rs:879 apps/web/src/window.rs:1948
 msgid "Allowed"
 msgstr ""
 
-#: apps/settings/src/agents.rs:822 apps/settings/src/agents.rs:829
+#: apps/settings/src/agents.rs:848 apps/settings/src/agents.rs:855
 #: apps/web/src/window.rs:1948
 msgid "Denied"
 msgstr ""
 
-#: apps/settings/src/agents.rs:823 apps/settings/src/agents.rs:830
+#: apps/settings/src/agents.rs:849 apps/settings/src/agents.rs:856
 msgid "Not answered"
 msgstr ""
 
-#: apps/settings/src/agents.rs:836
+#: apps/settings/src/agents.rs:862
 msgid "Shown"
 msgstr ""
 
-#: apps/settings/src/agents.rs:837
+#: apps/settings/src/agents.rs:863
 msgid "Cancelled by you"
 msgstr ""
 
-#: apps/settings/src/agents.rs:839
+#: apps/settings/src/agents.rs:865
 msgid "Not shown"
 msgstr ""
 
-#: apps/settings/src/agents.rs:847
+#: apps/settings/src/agents.rs:873
 msgid "Refused calls are no longer recorded today"
 msgstr ""
 
-#: apps/settings/src/agents.rs:848
+#: apps/settings/src/agents.rs:874
 msgid "Nothing more is recorded today"
 msgstr ""
 
-#: apps/settings/src/agents.rs:857
+#: apps/settings/src/agents.rs:883
 msgid "Failed: {error}"
 msgstr ""
 
-#: apps/settings/src/agents.rs:870
+#: apps/settings/src/agents.rs:900
 msgid "Refused {n} time"
 msgid_plural "Refused {n} times"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/settings/src/agents.rs:871
+#: apps/settings/src/agents.rs:901
 msgid "Refused"
 msgstr ""
 
-#: apps/settings/src/agents.rs:885
+#: apps/settings/src/agents.rs:915
 msgid "A display"
 msgstr ""
 
