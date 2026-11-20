@@ -351,7 +351,10 @@ shell's agent indicator opens it).
   pins the lines (keys `time` (Unix seconds or ISO 8601), `agent`,
   `name`, `method`, `target`, `level`, `outcome`, `error`, `grant`,
   `count`/`until`, `dropped`, `role`, `action`, `node-count`,
-  `text-length`, `choice-count`; unknown keys, the other `*-length` keys
+  `text-length`, `choice-count`, `mime-type`, `data-length`, `scope`,
+  `width`/`height`, `filled-count`, `event-count`, `done-count`,
+  `move-count`, `click-count`, `button-count`, `scroll-count`,
+  `key-count`, `shortcut-count`; unknown keys, the other `*-length` keys
   and lines that are not a JSON object are ignored). Each row:
   - title: what happened, as a short translated phrase for every
     `Agent1` and `AgentAccess1` method (also those the shell does not
@@ -371,14 +374,30 @@ shell's agent indicator opens it).
   - subtitle line 1 (when there is a target): a window as *A window of
     org.example.App* (*A window* without its app), a `file://` URI as a
     path, a `SensitivePrompt`'s method by its phrase, a reminder
-    (`reminder:<id>`) not at all, else as written; then, from the line's
+    (`reminder:<id>`) not at all, `GetClipboard`'s app as *Copied from
+    org.example.App*, a `Screenshot`'s `screen` as *The whole screen* and
+    `monitor:<connector>` as *Display HDMI-A-1* (without a target, its
+    `scope`: *The whole screen*, *A display*, *A window*), else as
+    written; then, from the line's
     own keys: the control's role (*Button*, *Text field*, *Password
     field*…, less common AT-SPI roles as named), an `A11yAction`/
     `A11ySetValue` action (*Clicked*, *Pasted*, *Closed the window*,
     *Another action* for `other`, *Set text*…, unknown ones raw), *143
     items* (`A11yTree` `node-count`), *1 match* (`A11yFind`), *17
-    characters* (`text-length`), *2 choices* (`choice-count`). This line
-    is set a little apart from the next so the two do not read as one.
+    characters* (`text-length`), *2 choices* (`choice-count`); the
+    clipboard's kind of content (`mime-type`: *Text*, *HTML*, *Links*,
+    *Picture* for every image kind, *PDF document*, *Password manager
+    hint*, *Other*; unknown kinds raw) and size (`data-length`, GLib's
+    *12.3 kB*); a screenshot's *2560 × 720 pixels* and *3 areas hidden*
+    (`filled-count`; *Nothing hidden* for 0); an `Input`'s *5 actions*
+    (`event-count`), then *1 click*, *1 shortcut*, *2 keys*, *1 pointer
+    move*, *1 scroll*, *1 button press or release* (each kind's count,
+    when there) and *10 characters typed* (`text-length`), and, when it
+    did not finish (refused, cancelled or failed with a `done-count`),
+    *Stopped after 2 steps* / *Stopped before the first step*
+    (`done-count` counts steps, not events: a click is a press and a
+    release, so it is never shown against `event-count`). This line is
+    set a little apart from the next so the two do not read as one.
   - subtitle line 2: who (display name, else the agent id; *Settings*
     for Settings' own allowed `AgentAccess1` calls; nothing for
     `LogFull`) · how it went · when. How it went: *Allowed*, plus
@@ -387,7 +406,16 @@ shell's agent indicator opens it).
     for others); *Refused* (*Refused 37 times* for a coalesced line)
     and the reason (*Agent Access was off*, *Needs a higher access
     level*, *Excluded app*, *Denied by you*, *Only Settings may do
-    this*, …, the raw name for unknown ones); *Cancelled*. Consent
+    this*, …, the raw name for unknown ones; where the method says
+    more: *Clipboard access was off* (`FeatureOff` on the clipboard
+    methods), *Copied from a protected app, or a password*
+    (`GetClipboard` `Excluded`), *A system prompt was open*
+    (`SetClipboard`), *A protected window or a system prompt*
+    (`Screenshot`), *A protected window, a password field or a system
+    prompt* (`Input`): the line does not say which); *Cancelled*, and for
+    an `Input` stopped while it ran (`cancelled` with a `done-count`: the
+    user's input, *Stop*, or the cooldown after input; the line does not
+    say which) *Stopped by you*. Consent
     prompts: the level asked and *Allowed for this session* / *Always
     allowed* (`grant`) / *Denied* / *Not answered*; sensitive prompts
     *Allowed* / *Denied* / *Not answered*; `Stop` and Settings' own

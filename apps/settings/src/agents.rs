@@ -320,6 +320,29 @@ pub struct Entry {
     pub text_length: Option<u64>,
     /// `Ask` with choices: how many.
     pub choice_count: Option<u64>,
+    /// `Screenshot`: `screen`, `monitor` or `window`.
+    pub scope: String,
+    /// `Screenshot`: the picture's size in pixels.
+    pub width: Option<u64>,
+    pub height: Option<u64>,
+    /// `Screenshot`: how many windows and surfaces were blacked out.
+    pub filled_count: Option<u64>,
+    /// `GetClipboard`, `SetClipboard`: the type as a common kind
+    /// (`text/plain`, `image/png`, …, `other`).
+    pub mime_type: String,
+    /// `GetClipboard`, `SetClipboard`: bytes read or sent.
+    pub data_length: Option<u64>,
+    /// `Input`: how many events it had, and how many steps were carried
+    /// out (steps are not events: a click is a press and a release).
+    pub event_count: Option<u64>,
+    pub done_count: Option<u64>,
+    /// `Input`: how many of each kind of event (absent for none).
+    pub move_count: Option<u64>,
+    pub click_count: Option<u64>,
+    pub button_count: Option<u64>,
+    pub scroll_count: Option<u64>,
+    pub key_count: Option<u64>,
+    pub shortcut_count: Option<u64>,
 }
 
 /// A time: Unix seconds, or ISO 8601 text (0 when unreadable).
@@ -344,6 +367,7 @@ impl Entry {
                 .unwrap_or_default()
                 .to_string()
         };
+        let n = |k: &str| obj.get(k).and_then(|v| v.as_u64());
         Some(Entry {
             time: json_time(obj.get("time")),
             agent: s("agent"),
@@ -359,9 +383,23 @@ impl Entry {
             dropped: s("dropped"),
             role: s("role"),
             action: s("action"),
-            node_count: obj.get("node-count").and_then(|v| v.as_u64()),
-            text_length: obj.get("text-length").and_then(|v| v.as_u64()),
-            choice_count: obj.get("choice-count").and_then(|v| v.as_u64()),
+            node_count: n("node-count"),
+            text_length: n("text-length"),
+            choice_count: n("choice-count"),
+            scope: s("scope"),
+            width: n("width"),
+            height: n("height"),
+            filled_count: n("filled-count"),
+            mime_type: s("mime-type"),
+            data_length: n("data-length"),
+            event_count: n("event-count"),
+            done_count: n("done-count"),
+            move_count: n("move-count"),
+            click_count: n("click-count"),
+            button_count: n("button-count"),
+            scroll_count: n("scroll-count"),
+            key_count: n("key-count"),
+            shortcut_count: n("shortcut-count"),
         })
     }
 
@@ -596,13 +634,102 @@ pub fn details(e: &Entry) -> Vec<String> {
             trnf!("{n} item", "{n} items", n)
         });
     }
+    // The clipboard: what kind of content, and how much.
+    if !e.mime_type.is_empty() {
+        out.push(mime_kind_label(&e.mime_type).map_or_else(|| e.mime_type.clone(), tr_dyn));
+    }
+    if let Some(n) = e.data_length {
+        out.push(gtk::glib::format_size(n).to_string());
+    }
+    // A screenshot: its size and what was blacked out in it.
+    if let (Some(width), Some(height)) = (e.width, e.height) {
+        out.push(trf!(
+            "{width} × {height} pixels",
+            width = width,
+            height = height
+        ));
+    }
+    match e.filled_count {
+        Some(0) => out.push(tr("Nothing hidden").to_string()),
+        Some(n) => out.push(trnf!("{n} area hidden", "{n} areas hidden", n)),
+        None => {}
+    }
+    // Input: how many events of each kind, never which keys or where.
+    if let Some(n) = e.event_count {
+        out.push(trnf!("{n} action", "{n} actions", n));
+    }
+    let kinds = [
+        e.click_count.map(|n| trnf!("{n} click", "{n} clicks", n)),
+        e.shortcut_count
+            .map(|n| trnf!("{n} shortcut", "{n} shortcuts", n)),
+        e.key_count.map(|n| trnf!("{n} key", "{n} keys", n)),
+        e.move_count
+            .map(|n| trnf!("{n} pointer move", "{n} pointer moves", n)),
+        e.scroll_count
+            .map(|n| trnf!("{n} scroll", "{n} scrolls", n)),
+        e.button_count.map(|n| {
+            trnf!(
+                "{n} button press or release",
+                "{n} button presses or releases",
+                n
+            )
+        }),
+    ];
+    out.extend(kinds.into_iter().flatten());
     if let Some(n) = e.text_length {
-        out.push(trnf!("{n} character", "{n} characters", n));
+        out.push(if e.method == "Input" {
+            trnf!("{n} character typed", "{n} characters typed", n)
+        } else {
+            trnf!("{n} character", "{n} characters", n)
+        });
     }
     if let Some(n) = e.choice_count {
         out.push(trnf!("{n} choice", "{n} choices", n));
     }
+    // How far an input went when it did not go to the end (a finished
+    // one carried out every step: nothing to add).
+    if let Some(n) = e.done_count {
+        if e.outcome != "allowed" || !e.error.is_empty() {
+            out.push(if n == 0 {
+                tr("Stopped before the first step").to_string()
+            } else {
+                trnf!("Stopped after {n} step", "Stopped after {n} steps", n)
+            });
+        }
+    }
     out
+}
+
+/// What kind of content went to or from the clipboard (`mime-type`, as
+/// the log names it), untranslated (`None` for a kind this version does
+/// not know).
+pub fn mime_kind_label(kind: &str) -> Option<&'static str> {
+    Some(match kind {
+        "text/plain" => nc_!("clipboard content", "Text"),
+        "text/html" => nc_!("clipboard content", "HTML"),
+        "text/uri-list" => nc_!("clipboard content", "Links"),
+        "image/png" | "image/jpeg" | "image/gif" | "image/svg+xml" => {
+            nc_!("clipboard content", "Picture")
+        }
+        "application/pdf" => nc_!("clipboard content", "PDF document"),
+        "x-kde-passwordManagerHint" => nc_!("clipboard content", "Password manager hint"),
+        "other" => nc_!("clipboard content", "Other"),
+        _ => return None,
+    })
+}
+
+/// Why the policy refused a call, where the method says more than the
+/// error alone (`Excluded` covers protected apps, password fields and
+/// system prompts; the line does not say which).
+pub fn method_refusal_label(method: &str, error: &str) -> Option<&'static str> {
+    Some(match (method, error) {
+        ("GetClipboard", "Excluded") => n_("Copied from a protected app, or a password"),
+        ("SetClipboard", "Excluded") => n_("A system prompt was open"),
+        ("GetClipboard" | "SetClipboard", "FeatureOff") => n_("Clipboard access was off"),
+        ("Screenshot", "Excluded") => n_("A protected window or a system prompt"),
+        ("Input", "Excluded") => n_("A protected window, a password field or a system prompt"),
+        _ => return refusal_label(error),
+    })
 }
 
 /// A log line as the page shows it, translated: what happened, what it
@@ -628,6 +755,17 @@ pub fn target_label(method: &str, target: &str) -> String {
     }
     if target.starts_with("reminder:") {
         return String::new();
+    }
+    match (method, target) {
+        // Where the content came from.
+        ("GetClipboard", app) if !app.is_empty() && !app.starts_with("window:") => {
+            return trf!("Copied from {app}", app = app);
+        }
+        ("Screenshot", "screen") => return tr("The whole screen").to_string(),
+        ("Screenshot", t) if t.starts_with("monitor:") => {
+            return trf!("Display {name}", name = &t["monitor:".len()..]);
+        }
+        _ => {}
     }
     if let Some(window) = target.strip_prefix("window:") {
         return match window.split_once(" (") {
@@ -667,7 +805,7 @@ pub fn describe(e: &Entry) -> Described {
     } else {
         raw(e.who())
     };
-    let reason = |why: &str| match refusal_label(why) {
+    let reason = |why: &str| match method_refusal_label(method, why) {
         Some(t) => tr_dyn(t),
         None => raw(why),
     };
@@ -720,6 +858,11 @@ pub fn describe(e: &Entry) -> Described {
                 });
             }
         }
+        // Stopped while it ran (it has a done-count): the user's input,
+        // Stop, or the cooldown after the user's input.
+        ("Input", "cancelled") if e.done_count.is_some() => {
+            status.push(tr("Stopped by you").to_string())
+        }
         (_, "cancelled") => status.push(tr("Cancelled").to_string()),
         (_, outcome) => match refusal {
             Some(why) => {
@@ -734,9 +877,19 @@ pub fn describe(e: &Entry) -> Described {
             None => status.push(raw(outcome)),
         },
     }
+    let mut target = target_label(method, &e.target);
+    if target.is_empty() && method == "Screenshot" {
+        // No target recorded: what was taken, from the scope.
+        target = match e.scope.as_str() {
+            "screen" => tr("The whole screen").to_string(),
+            "monitor" => tr("A display").to_string(),
+            "window" => tr("A window").to_string(),
+            _ => String::new(),
+        };
+    }
     Described {
         title,
-        target: target_label(method, &e.target),
+        target,
         details: details(e),
         who,
         status,
@@ -1238,6 +1391,236 @@ pub mod tests {
                 "Example",
                 "Refused · Agent Access was off"
             )
+        );
+    }
+
+    #[test]
+    fn clipboard_lines() {
+        let agent =
+            r#""time":1795082470,"agent":"/usr/bin/node /home/me/agent.js","name":"Example""#;
+        let line = |rest: &str| format!("{{{agent},{rest}}}");
+        // Read: the kind, the size and where it came from; never the text.
+        let get = line(
+            r#""method":"GetClipboard","target":"org.gnome.TextEditor","level":"read-only","outcome":"allowed","mime-type":"text/plain","data-length":12345"#,
+        );
+        assert_eq!(
+            shown(&get),
+            four(
+                "Read the clipboard",
+                "Copied from org.gnome.TextEditor",
+                "Example",
+                "Allowed"
+            )
+        );
+        // GLib's size, in GLib's words ("12.3 kB").
+        let size = |n: u64| gtk::glib::format_size(n).to_string();
+        assert!(size(12345).starts_with("12.3"));
+        assert_eq!(details_of(&get), format!("Text · {}", size(12345)));
+        // From an app whose window is not known: no target.
+        let unknown = line(
+            r#""method":"GetClipboard","level":"read-only","outcome":"allowed","mime-type":"image/png","data-length":1"#,
+        );
+        assert_eq!(shown(&unknown).1, "");
+        assert_eq!(details_of(&unknown), format!("Picture · {}", size(1)));
+        // Set: what the agent sent.
+        let set = line(
+            r#""method":"SetClipboard","level":"desktop","outcome":"allowed","mime-type":"text/html","data-length":2048"#,
+        );
+        assert_eq!(
+            shown(&set),
+            four("Changed the clipboard", "", "Example", "Allowed")
+        );
+        assert_eq!(details_of(&set), format!("HTML · {}", size(2048)));
+        for (kind, word) in [
+            ("text/uri-list", "Links"),
+            ("image/jpeg", "Picture"),
+            ("image/gif", "Picture"),
+            ("image/svg+xml", "Picture"),
+            ("application/pdf", "PDF document"),
+            ("x-kde-passwordManagerHint", "Password manager hint"),
+            ("other", "Other"),
+        ] {
+            let l = line(&format!(
+                r#""method":"GetClipboard","level":"read-only","outcome":"allowed","mime-type":"{kind}""#
+            ));
+            assert_eq!(details_of(&l), word, "{kind}");
+        }
+        // A kind this version does not know shows as the log has it.
+        assert_eq!(
+            details_of(&line(
+                r#""method":"GetClipboard","level":"read-only","outcome":"allowed","mime-type":"text/x-later""#
+            )),
+            "text/x-later"
+        );
+        // Refusals: the switch, a protected source, a system prompt.
+        assert_eq!(
+            shown(&line(
+                r#""method":"GetClipboard","level":"read-only","outcome":"refused:FeatureOff""#
+            ))
+            .3,
+            "Refused · Clipboard access was off"
+        );
+        let excluded = line(
+            r#""method":"GetClipboard","target":"org.keepassxc.KeePassXC","level":"read-only","outcome":"refused:Excluded","mime-type":"text/plain""#,
+        );
+        assert_eq!(
+            shown(&excluded),
+            four(
+                "Read the clipboard",
+                "Copied from org.keepassxc.KeePassXC",
+                "Example",
+                "Refused · Copied from a protected app, or a password"
+            )
+        );
+        assert_eq!(
+            shown(&line(
+                r#""method":"SetClipboard","level":"desktop","outcome":"refused:Excluded","mime-type":"text/plain","data-length":5"#
+            ))
+            .3,
+            "Refused · A system prompt was open"
+        );
+        // Failed after the check: the clipboard changed meanwhile.
+        assert_eq!(
+            shown(&line(
+                r#""method":"GetClipboard","level":"read-only","outcome":"allowed","error":"Failed","mime-type":"text/plain""#
+            ))
+            .3,
+            "Allowed · Failed"
+        );
+        // Other methods' refusals keep their reasons.
+        assert_eq!(
+            method_refusal_label("A11yAction", "Excluded"),
+            Some("Excluded app")
+        );
+    }
+
+    #[test]
+    fn screen_and_input_lines() {
+        let agent =
+            r#""time":1795082480,"agent":"/usr/bin/node /home/me/agent.js","name":"Example""#;
+        let line = |rest: &str| format!("{{{agent},{rest}}}");
+        // The shell's own test lines (helix-shell agent_screen_bus).
+        let screen = line(
+            r#""method":"Screenshot","target":"screen","level":"screen-and-input","outcome":"allowed","scope":"screen","width":2560,"height":720,"filled-count":3"#,
+        );
+        assert_eq!(
+            shown(&screen),
+            four(
+                "Took a screenshot",
+                "The whole screen",
+                "Example",
+                "Allowed"
+            )
+        );
+        assert_eq!(details_of(&screen), "2560 × 720 pixels · 3 areas hidden");
+        let monitor = line(
+            r#""method":"Screenshot","target":"monitor:HDMI-A-1","level":"screen-and-input","outcome":"allowed","scope":"monitor","width":1920,"height":1080,"filled-count":1"#,
+        );
+        assert_eq!(shown(&monitor).1, "Display HDMI-A-1");
+        assert_eq!(details_of(&monitor), "1920 × 1080 pixels · 1 area hidden");
+        let window = line(
+            r#""method":"Screenshot","target":"window:11 (org.gnome.TextEditor)","level":"screen-and-input","outcome":"allowed","scope":"window","width":800,"height":600,"filled-count":0"#,
+        );
+        assert_eq!(shown(&window).1, "A window of org.gnome.TextEditor");
+        assert_eq!(details_of(&window), "800 × 600 pixels · Nothing hidden");
+        // No target: the scope says what.
+        for (scope, said) in [
+            ("screen", "The whole screen"),
+            ("monitor", "A display"),
+            ("window", "A window"),
+        ] {
+            let l = line(&format!(
+                r#""method":"Screenshot","level":"screen-and-input","outcome":"allowed","scope":"{scope}""#
+            ));
+            assert_eq!(shown(&l).1, said, "{scope}");
+        }
+        let protected = line(
+            r#""method":"Screenshot","target":"window:12 (org.example.Vault)","level":"screen-and-input","outcome":"refused:Excluded","scope":"window""#,
+        );
+        assert_eq!(
+            shown(&protected).3,
+            "Refused · A protected window or a system prompt"
+        );
+        assert_eq!(details_of(&protected), "");
+
+        // Input: counts by kind, never keys, text or positions.
+        let input = line(
+            r#""method":"Input","target":"window:11 (org.gnome.TextEditor)","level":"screen-and-input","outcome":"allowed","event-count":5,"click-count":1,"scroll-count":1,"shortcut-count":1,"text-length":10,"done-count":10"#,
+        );
+        assert_eq!(
+            shown(&input),
+            four(
+                "Typed or clicked",
+                "A window of org.gnome.TextEditor",
+                "Example",
+                "Allowed"
+            )
+        );
+        assert_eq!(
+            details_of(&input),
+            "5 actions · 1 click · 1 shortcut · 1 scroll · 10 characters typed",
+            "finished: no step count"
+        );
+        let every = line(
+            r#""method":"Input","target":"window:11","level":"screen-and-input","outcome":"allowed","event-count":8,"move-count":1,"click-count":2,"button-count":1,"scroll-count":1,"key-count":2,"shortcut-count":1,"text-length":6,"done-count":14"#,
+        );
+        assert_eq!(
+            details_of(&every),
+            "8 actions · 2 clicks · 1 shortcut · 2 keys · 1 pointer move · 1 scroll · \
+             1 button press or release · 6 characters typed"
+        );
+        // Stopped by the user's input or Stop, part way.
+        let stopped = line(
+            r#""method":"Input","target":"window:11 (org.gnome.TextEditor)","level":"screen-and-input","outcome":"cancelled","event-count":1,"text-length":42,"done-count":2"#,
+        );
+        assert_eq!(shown(&stopped).3, "Stopped by you");
+        assert_eq!(
+            details_of(&stopped),
+            "1 action · 42 characters typed · Stopped after 2 steps"
+        );
+        // Refused during the cooldown: nothing carried out.
+        let cooldown = line(
+            r#""method":"Input","target":"window:11","level":"screen-and-input","outcome":"cancelled","event-count":1,"click-count":1,"done-count":0"#,
+        );
+        assert_eq!(shown(&cooldown).3, "Stopped by you");
+        assert_eq!(
+            details_of(&cooldown),
+            "1 action · 1 click · Stopped before the first step"
+        );
+        // A sensitive prompt left unanswered: never ran, no done-count.
+        let unanswered = line(
+            r#""method":"Input","target":"window:11","level":"screen-and-input","outcome":"cancelled","event-count":1,"key-count":1"#,
+        );
+        assert_eq!(shown(&unanswered).3, "Cancelled");
+        assert_eq!(details_of(&unanswered), "1 action · 1 key");
+        // A password field took the focus part way.
+        let password = line(
+            r#""method":"Input","target":"window:11 (org.gnome.TextEditor)","level":"screen-and-input","outcome":"refused:Excluded","event-count":3,"click-count":1,"text-length":8,"done-count":2"#,
+        );
+        assert_eq!(
+            shown(&password).3,
+            "Refused · A protected window, a password field or a system prompt"
+        );
+        assert_eq!(
+            details_of(&password),
+            "3 actions · 1 click · 8 characters typed · Stopped after 2 steps"
+        );
+        // The window lost the focus: allowed, then failed part way.
+        let lost = line(
+            r#""method":"Input","target":"window:11","level":"screen-and-input","outcome":"allowed","error":"Failed","event-count":2,"key-count":2,"done-count":1"#,
+        );
+        assert_eq!(shown(&lost).3, "Allowed · Failed");
+        assert_eq!(
+            details_of(&lost),
+            "2 actions · 2 keys · Stopped after 1 step"
+        );
+        // Refused before it began: no done-count, nothing about steps.
+        assert_eq!(
+            shown(&line(
+                r#""method":"Input","level":"screen-and-input","outcome":"refused:LevelTooLow""#
+            ))
+            .3,
+            "Refused · Needs a higher access level"
         );
     }
 

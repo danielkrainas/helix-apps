@@ -1138,7 +1138,7 @@ msgstr "計算(_A)"
 #: apps/help/src/ui.rs:196 apps/music/src/pages.rs:2129
 #: apps/music/src/pages.rs:2232 apps/music/src/pages.rs:2317
 #: apps/settings/src/ui/agent_access.rs:280
-#: apps/settings/src/ui/agent_access.rs:953 apps/settings/src/ui/apps.rs:553
+#: apps/settings/src/ui/agent_access.rs:954 apps/settings/src/ui/apps.rs:553
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
 #: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
 #: apps/system-monitor/src/dialogs.rs:142
@@ -3035,7 +3035,7 @@ msgid "Current Location"
 msgstr "現在地"
 
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
-#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:821
+#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:822
 #: apps/settings/src/ui/input.rs:367 apps/weather/src/ui.rs:902
 #: apps/web/src/dialogs.rs:198 apps/web/src/dialogs.rs:656
 #: apps/web/src/dialogs.rs:1043 apps/web/src/dialogs.rs:1198
@@ -4162,7 +4162,7 @@ msgid "{} on disk, {} apparent"
 msgstr "ディスク上 {}、見かけ上 {}"
 
 #: apps/disk-usage/src/ui.rs:816 apps/disk-usage/src/ui.rs:1150
-#: apps/files/src/fmt.rs:12 apps/settings/src/agents.rs:596
+#: apps/files/src/fmt.rs:12 apps/settings/src/agents.rs:634
 msgid "{n} item"
 msgid_plural "{n} items"
 msgstr[0] "{n} 項目"
@@ -6962,7 +6962,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr "「{file}」を処理できませんでした: {error}"
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/settings/src/agents.rs:723 apps/web/src/window.rs:2341
+#: apps/settings/src/agents.rs:866 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "キャンセルしました"
 
@@ -8154,7 +8154,7 @@ msgstr "このフォント形式の文字マップは表示できません"
 msgid "Info"
 msgstr "情報"
 
-#: apps/fonts/src/ui.rs:1067 apps/settings/src/agents.rs:600
+#: apps/fonts/src/ui.rs:1067 apps/settings/src/agents.rs:683
 msgid "{n} character"
 msgid_plural "{n} characters"
 msgstr[0] "{n} 文字"
@@ -10828,582 +10828,715 @@ msgstr "アプリの操作"
 msgid "Screen and Input"
 msgstr "画面と入力"
 
-#: apps/settings/src/agents.rs:413
+#: apps/settings/src/agents.rs:451
 msgid "Checked its access"
 msgstr "アクセス状態を確認"
 
-#: apps/settings/src/agents.rs:414 apps/settings/src/agents.rs:452
+#: apps/settings/src/agents.rs:452 apps/settings/src/agents.rs:490
 msgid "Asked for access"
 msgstr "アクセスを要求"
 
-#: apps/settings/src/agents.rs:415
+#: apps/settings/src/agents.rs:453
 msgid "Read the desktop state"
 msgstr "デスクトップの状態を読み取り"
 
-#: apps/settings/src/agents.rs:416
+#: apps/settings/src/agents.rs:454
 msgid "Listed windows"
 msgstr "ウィンドウを一覧表示"
 
-#: apps/settings/src/agents.rs:417
+#: apps/settings/src/agents.rs:455
 msgid "Listed apps"
 msgstr "アプリを一覧表示"
 
-#: apps/settings/src/agents.rs:418
+#: apps/settings/src/agents.rs:456
 msgid "Listed workspaces"
 msgstr "ワークスペースを一覧表示"
 
-#: apps/settings/src/agents.rs:419
+#: apps/settings/src/agents.rs:457
 msgid "Listed displays"
 msgstr "ディスプレイを一覧表示"
 
-#: apps/settings/src/agents.rs:420
+#: apps/settings/src/agents.rs:458
 msgid "Listed notifications"
 msgstr "通知を一覧表示"
 
-#: apps/settings/src/agents.rs:421
+#: apps/settings/src/agents.rs:459
 msgid "Listed recent files"
 msgstr "最近使ったファイルを一覧表示"
 
-#: apps/settings/src/agents.rs:422
+#: apps/settings/src/agents.rs:460
 msgid "Searched files"
 msgstr "ファイルを検索"
 
-#: apps/settings/src/agents.rs:423
+#: apps/settings/src/agents.rs:461
 msgid "Waited for a window"
 msgstr "ウィンドウを待機"
 
-#: apps/settings/src/agents.rs:424
+#: apps/settings/src/agents.rs:462
 msgid "Waited for a window to close"
 msgstr "ウィンドウが閉じるのを待機"
 
-#: apps/settings/src/agents.rs:425
+#: apps/settings/src/agents.rs:463
 msgid "Asked you a question"
 msgstr "あなたに質問"
 
-#: apps/settings/src/agents.rs:426
+#: apps/settings/src/agents.rs:464
 msgid "Asked you to confirm"
 msgstr "あなたに確認を要求"
 
-#: apps/settings/src/agents.rs:427
+#: apps/settings/src/agents.rs:465
 msgid "Added a reminder"
 msgstr "リマインダーを追加"
 
-#: apps/settings/src/agents.rs:428
+#: apps/settings/src/agents.rs:466
 msgid "Listed reminders"
 msgstr "リマインダーを一覧表示"
 
-#: apps/settings/src/agents.rs:429
+#: apps/settings/src/agents.rs:467
 msgid "Cancelled a reminder"
 msgstr "リマインダーを取り消し"
 
-#: apps/settings/src/agents.rs:430
+#: apps/settings/src/agents.rs:468
 msgid "Opened a file or link"
 msgstr "ファイルまたはリンクを開いた"
 
-#: apps/settings/src/agents.rs:431
+#: apps/settings/src/agents.rs:469
 msgid "Started an app"
 msgstr "アプリを起動"
 
-#: apps/settings/src/agents.rs:432
+#: apps/settings/src/agents.rs:470
 msgid "Changed a window"
 msgstr "ウィンドウを変更"
 
-#: apps/settings/src/agents.rs:433
+#: apps/settings/src/agents.rs:471
 msgid "Switched workspace"
 msgstr "ワークスペースを切り替え"
 
-#: apps/settings/src/agents.rs:434
+#: apps/settings/src/agents.rs:472
 msgid "Turned a setting on or off"
 msgstr "設定をオン/オフ"
 
-#: apps/settings/src/agents.rs:435
+#: apps/settings/src/agents.rs:473
 msgid "Adjusted a setting"
 msgstr "設定を調整"
 
-#: apps/settings/src/agents.rs:436
+#: apps/settings/src/agents.rs:474
 msgid "Sent a notification"
 msgstr "通知を送信"
 
-#: apps/settings/src/agents.rs:437
+#: apps/settings/src/agents.rs:475
 msgid "Read the clipboard"
 msgstr "クリップボードを読み取り"
 
-#: apps/settings/src/agents.rs:438
+#: apps/settings/src/agents.rs:476
 msgid "Changed the clipboard"
 msgstr "クリップボードを変更"
 
-#: apps/settings/src/agents.rs:439
+#: apps/settings/src/agents.rs:477
 msgid "Read an app’s contents"
 msgstr "アプリの内容を読み取り"
 
-#: apps/settings/src/agents.rs:440
+#: apps/settings/src/agents.rs:478
 msgid "Searched an app’s controls"
 msgstr "アプリのコントロールを検索しました"
 
-#: apps/settings/src/agents.rs:441
+#: apps/settings/src/agents.rs:479
 msgid "Used a control in an app"
 msgstr "アプリのコントロールを操作"
 
-#: apps/settings/src/agents.rs:442
+#: apps/settings/src/agents.rs:480
 msgid "Filled in a field in an app"
 msgstr "アプリの欄に入力"
 
-#: apps/settings/src/agents.rs:443
+#: apps/settings/src/agents.rs:481
 msgid "Took a screenshot"
 msgstr "スクリーンショットを撮影"
 
-#: apps/settings/src/agents.rs:444
+#: apps/settings/src/agents.rs:482
 msgid "Typed or clicked"
 msgstr "入力またはクリック"
 
-#: apps/settings/src/agents.rs:446
+#: apps/settings/src/agents.rs:484
 msgid "Listed agents"
 msgstr "エージェントを一覧表示"
 
-#: apps/settings/src/agents.rs:447
+#: apps/settings/src/agents.rs:485
 msgid "Access revoked"
 msgstr "アクセスを取り消しました"
 
-#: apps/settings/src/agents.rs:448
+#: apps/settings/src/agents.rs:486
 msgid "Access revoked and forgotten"
 msgstr "アクセスを取り消して記憶を削除しました"
 
-#: apps/settings/src/agents.rs:449
+#: apps/settings/src/agents.rs:487
 msgid "All access revoked"
 msgstr "すべてのアクセスを取り消しました"
 
-#: apps/settings/src/agents.rs:450
+#: apps/settings/src/agents.rs:488
 msgid "Activity log cleared"
 msgstr "アクティビティログを消去しました"
 
-#: apps/settings/src/agents.rs:453
+#: apps/settings/src/agents.rs:491
 msgid "Asked to confirm an action"
 msgstr "操作の確認を要求"
 
-#: apps/settings/src/agents.rs:454
+#: apps/settings/src/agents.rs:492 apps/settings/src/agents.rs:864
 msgid "Stopped by you"
 msgstr "あなたが停止"
 
-#: apps/settings/src/agents.rs:455
+#: apps/settings/src/agents.rs:493
 msgid "Reminder due"
 msgstr "リマインダーの時刻"
 
-#: apps/settings/src/agents.rs:456
+#: apps/settings/src/agents.rs:494
 msgid "Activity log full"
 msgstr "アクティビティログが満杯"
 
-#: apps/settings/src/agents.rs:465
+#: apps/settings/src/agents.rs:503
 msgid "Reminder cancelled"
 msgstr "リマインダーをキャンセルしました"
 
-#: apps/settings/src/agents.rs:474
+#: apps/settings/src/agents.rs:512
 msgid "Tried to list agents"
 msgstr "エージェントの一覧表示を試行"
 
-#: apps/settings/src/agents.rs:475
+#: apps/settings/src/agents.rs:513
 msgid "Tried to list reminders"
 msgstr "リマインダーの一覧取得を試みました"
 
-#: apps/settings/src/agents.rs:476
+#: apps/settings/src/agents.rs:514
 msgid "Tried to cancel a reminder"
 msgstr "リマインダーのキャンセルを試みました"
 
-#: apps/settings/src/agents.rs:477
+#: apps/settings/src/agents.rs:515
 msgid "Tried to revoke access"
 msgstr "アクセスの取り消しを試行"
 
-#: apps/settings/src/agents.rs:478
+#: apps/settings/src/agents.rs:516
 msgid "Tried to forget an agent"
 msgstr "エージェントの削除を試行"
 
-#: apps/settings/src/agents.rs:479
+#: apps/settings/src/agents.rs:517
 msgid "Tried to revoke all access"
 msgstr "すべてのアクセスの取り消しを試行"
 
-#: apps/settings/src/agents.rs:480
+#: apps/settings/src/agents.rs:518
 msgid "Tried to clear the activity log"
 msgstr "アクティビティログの消去を試行"
 
-#: apps/settings/src/agents.rs:488
+#: apps/settings/src/agents.rs:526
 msgid "From a sandboxed app"
 msgstr "サンドボックス化されたアプリから"
 
-#: apps/settings/src/agents.rs:489
+#: apps/settings/src/agents.rs:527
 msgid "Agent Access was off"
 msgstr "エージェントのアクセスがオフでした"
 
-#: apps/settings/src/agents.rs:490
+#: apps/settings/src/agents.rs:528
 msgid "From a remote session"
 msgstr "リモートセッションから"
 
-#: apps/settings/src/agents.rs:491
+#: apps/settings/src/agents.rs:529
 msgid "The screen was locked"
 msgstr "画面がロックされていました"
 
-#: apps/settings/src/agents.rs:492
+#: apps/settings/src/agents.rs:530
 msgid "Needs a higher access level"
 msgstr "より高いアクセスレベルが必要"
 
-#: apps/settings/src/agents.rs:493
+#: apps/settings/src/agents.rs:531
 msgid "That feature was turned off"
 msgstr "その機能はオフでした"
 
-#: apps/settings/src/agents.rs:494
+#: apps/settings/src/agents.rs:532
 msgid "Not allowed yet"
 msgstr "まだ許可されていません"
 
-#: apps/settings/src/agents.rs:495
+#: apps/settings/src/agents.rs:533
 msgid "Denied by you"
 msgstr "あなたが拒否"
 
-#: apps/settings/src/agents.rs:496
+#: apps/settings/src/agents.rs:534
 msgid "Excluded app"
 msgstr "除外されたアプリ"
 
-#: apps/settings/src/agents.rs:497
+#: apps/settings/src/agents.rs:535
 msgid "Needed your confirmation"
 msgstr "あなたの確認が必要でした"
 
-#: apps/settings/src/agents.rs:498
+#: apps/settings/src/agents.rs:536
 msgid "Only Settings may do this"
 msgstr "これができるのは設定だけです"
 
-#: apps/settings/src/agents.rs:506
+#: apps/settings/src/agents.rs:544
 msgid "Failed: timed out"
 msgstr "失敗: タイムアウト"
 
-#: apps/settings/src/agents.rs:507
+#: apps/settings/src/agents.rs:545
 msgid "Failed: not found"
 msgstr "失敗: 見つかりません"
 
-#: apps/settings/src/agents.rs:508
+#: apps/settings/src/agents.rs:546
 msgid "Failed: not supported"
 msgstr "失敗: 未対応"
 
-#: apps/settings/src/agents.rs:509
+#: apps/settings/src/agents.rs:547
 msgid "Failed: invalid request"
 msgstr "失敗: 無効な要求"
 
-#: apps/settings/src/agents.rs:510
+#: apps/settings/src/agents.rs:548
 msgid "Failed: cancelled"
 msgstr "失敗: キャンセル"
 
-#: apps/settings/src/agents.rs:511
+#: apps/settings/src/agents.rs:549
 msgid "Failed"
 msgstr "失敗"
 
-#: apps/settings/src/agents.rs:520
+#: apps/settings/src/agents.rs:558
 msgctxt "accessible role"
 msgid "Button"
 msgstr "ボタン"
 
-#: apps/settings/src/agents.rs:521
+#: apps/settings/src/agents.rs:559
 msgctxt "accessible role"
 msgid "Toggle button"
 msgstr "トグルボタン"
 
-#: apps/settings/src/agents.rs:522
+#: apps/settings/src/agents.rs:560
 msgctxt "accessible role"
 msgid "Menu button"
 msgstr "メニューボタン"
 
-#: apps/settings/src/agents.rs:523
+#: apps/settings/src/agents.rs:561
 msgctxt "accessible role"
 msgid "Check box"
 msgstr "チェックボックス"
 
-#: apps/settings/src/agents.rs:524
+#: apps/settings/src/agents.rs:562
 msgctxt "accessible role"
 msgid "Option button"
 msgstr "ラジオボタン"
 
-#: apps/settings/src/agents.rs:525
+#: apps/settings/src/agents.rs:563
 msgctxt "accessible role"
 msgid "Switch"
 msgstr "スイッチ"
 
-#: apps/settings/src/agents.rs:526
+#: apps/settings/src/agents.rs:564
 msgctxt "accessible role"
 msgid "Text field"
 msgstr "テキストフィールド"
 
-#: apps/settings/src/agents.rs:527
+#: apps/settings/src/agents.rs:565
 msgctxt "accessible role"
 msgid "Password field"
 msgstr "パスワードフィールド"
 
-#: apps/settings/src/agents.rs:528
+#: apps/settings/src/agents.rs:566
 msgctxt "accessible role"
 msgid "Drop-down list"
 msgstr "ドロップダウンリスト"
 
-#: apps/settings/src/agents.rs:529
+#: apps/settings/src/agents.rs:567
 msgctxt "accessible role"
 msgid "Slider"
 msgstr "スライダー"
 
-#: apps/settings/src/agents.rs:530
+#: apps/settings/src/agents.rs:568
 msgctxt "accessible role"
 msgid "Number field"
 msgstr "数値フィールド"
 
-#: apps/settings/src/agents.rs:531
+#: apps/settings/src/agents.rs:569
 msgctxt "accessible role"
 msgid "Link"
 msgstr "リンク"
 
-#: apps/settings/src/agents.rs:532
+#: apps/settings/src/agents.rs:570
 msgctxt "accessible role"
 msgid "Menu item"
 msgstr "メニュー項目"
 
-#: apps/settings/src/agents.rs:533
+#: apps/settings/src/agents.rs:571
 msgctxt "accessible role"
 msgid "Tab"
 msgstr "タブ"
 
-#: apps/settings/src/agents.rs:534
+#: apps/settings/src/agents.rs:572
 msgctxt "accessible role"
 msgid "List item"
 msgstr "リスト項目"
 
-#: apps/settings/src/agents.rs:535
+#: apps/settings/src/agents.rs:573
 msgctxt "accessible role"
 msgid "Table cell"
 msgstr "表のセル"
 
-#: apps/settings/src/agents.rs:536
+#: apps/settings/src/agents.rs:574
 msgctxt "accessible role"
 msgid "Label"
 msgstr "ラベル"
 
-#: apps/settings/src/agents.rs:537
+#: apps/settings/src/agents.rs:575
 msgctxt "accessible role"
 msgid "Heading"
 msgstr "見出し"
 
-#: apps/settings/src/agents.rs:538
+#: apps/settings/src/agents.rs:576
 msgctxt "accessible role"
 msgid "Image"
 msgstr "画像"
 
-#: apps/settings/src/agents.rs:539
+#: apps/settings/src/agents.rs:577
 msgctxt "accessible role"
 msgid "Dialog"
 msgstr "ダイアログ"
 
-#: apps/settings/src/agents.rs:540
+#: apps/settings/src/agents.rs:578
 msgctxt "accessible role"
 msgid "Window"
 msgstr "ウィンドウ"
 
-#: apps/settings/src/agents.rs:549
+#: apps/settings/src/agents.rs:587
 msgctxt "control action"
 msgid "Clicked"
 msgstr "クリック"
 
-#: apps/settings/src/agents.rs:550
+#: apps/settings/src/agents.rs:588
 msgctxt "control action"
 msgid "Activated"
 msgstr "アクティブ化"
 
-#: apps/settings/src/agents.rs:551
+#: apps/settings/src/agents.rs:589
 msgctxt "control action"
 msgid "Toggled"
 msgstr "切り替え"
 
-#: apps/settings/src/agents.rs:552
+#: apps/settings/src/agents.rs:590
 msgctxt "control action"
 msgid "Selected"
 msgstr "選択"
 
-#: apps/settings/src/agents.rs:553
+#: apps/settings/src/agents.rs:591
 msgctxt "control action"
 msgid "Focused"
 msgstr "フォーカス"
 
-#: apps/settings/src/agents.rs:554
+#: apps/settings/src/agents.rs:592
 msgctxt "control action"
 msgid "Expanded"
 msgstr "展開"
 
-#: apps/settings/src/agents.rs:555
+#: apps/settings/src/agents.rs:593
 msgctxt "control action"
 msgid "Collapsed"
 msgstr "折りたたみ"
 
-#: apps/settings/src/agents.rs:556
+#: apps/settings/src/agents.rs:594
 msgctxt "control action"
 msgid "Opened"
 msgstr "開く"
 
-#: apps/settings/src/agents.rs:557
+#: apps/settings/src/agents.rs:595
 msgctxt "control action"
 msgid "Followed a link"
 msgstr "リンクをたどりました"
 
-#: apps/settings/src/agents.rs:558
+#: apps/settings/src/agents.rs:596
 msgctxt "control action"
 msgid "Opened a menu"
 msgstr "メニューを開きました"
 
-#: apps/settings/src/agents.rs:559
+#: apps/settings/src/agents.rs:597
 msgctxt "control action"
 msgid "Increased"
 msgstr "増加"
 
-#: apps/settings/src/agents.rs:560
+#: apps/settings/src/agents.rs:598
 msgctxt "control action"
 msgid "Decreased"
 msgstr "減少"
 
-#: apps/settings/src/agents.rs:561
+#: apps/settings/src/agents.rs:599
 msgctxt "control action"
 msgid "Closed the window"
 msgstr "ウィンドウを閉じました"
 
-#: apps/settings/src/agents.rs:562
+#: apps/settings/src/agents.rs:600
 msgctxt "control action"
 msgid "Minimized the window"
 msgstr "ウィンドウを最小化しました"
 
-#: apps/settings/src/agents.rs:563
+#: apps/settings/src/agents.rs:601
 msgctxt "control action"
 msgid "Maximized or restored the window"
 msgstr "ウィンドウを最大化または元に戻しました"
 
-#: apps/settings/src/agents.rs:564
+#: apps/settings/src/agents.rs:602
 msgctxt "control action"
 msgid "Selected all"
 msgstr "すべて選択しました"
 
-#: apps/settings/src/agents.rs:565
+#: apps/settings/src/agents.rs:603
 msgctxt "control action"
 msgid "Deleted the selection"
 msgstr "選択範囲を削除しました"
 
-#: apps/settings/src/agents.rs:566
+#: apps/settings/src/agents.rs:604
 msgctxt "control action"
 msgid "Cleared the text"
 msgstr "テキストを消去しました"
 
-#: apps/settings/src/agents.rs:567
+#: apps/settings/src/agents.rs:605
 msgctxt "control action"
 msgid "Copied"
 msgstr "コピー"
 
-#: apps/settings/src/agents.rs:568
+#: apps/settings/src/agents.rs:606
 msgctxt "control action"
 msgid "Cut"
 msgstr "切り取り"
 
-#: apps/settings/src/agents.rs:569
+#: apps/settings/src/agents.rs:607
 msgctxt "control action"
 msgid "Pasted"
 msgstr "貼り付け"
 
-#: apps/settings/src/agents.rs:570
+#: apps/settings/src/agents.rs:608
 msgctxt "control action"
 msgid "Copied a link"
 msgstr "リンクをコピーしました"
 
-#: apps/settings/src/agents.rs:571
+#: apps/settings/src/agents.rs:609
 msgctxt "control action"
 msgid "Inserted an emoji"
 msgstr "絵文字を挿入しました"
 
-#: apps/settings/src/agents.rs:572
+#: apps/settings/src/agents.rs:610
 msgctxt "control action"
 msgid "Another action"
 msgstr "その他の操作"
 
-#: apps/settings/src/agents.rs:573
+#: apps/settings/src/agents.rs:611
 msgctxt "control action"
 msgid "Set text"
 msgstr "テキストを設定"
 
-#: apps/settings/src/agents.rs:574
+#: apps/settings/src/agents.rs:612
 msgctxt "control action"
 msgid "Set a value"
 msgstr "値を設定"
 
-#: apps/settings/src/agents.rs:594 apps/web/src/window.rs:2157
+#: apps/settings/src/agents.rs:632 apps/web/src/window.rs:2157
 msgid "{n} match"
 msgid_plural "{n} matches"
 msgstr[0] "{n} 件一致"
 
-#: apps/settings/src/agents.rs:603
+#: apps/settings/src/agents.rs:646
+msgid "{width} × {height} pixels"
+msgstr "{width} × {height} ピクセル"
+
+#: apps/settings/src/agents.rs:653
+msgid "Nothing hidden"
+msgstr "隠された部分なし"
+
+#: apps/settings/src/agents.rs:654
+msgid "{n} area hidden"
+msgid_plural "{n} areas hidden"
+msgstr[0] "{n} か所を隠しました"
+
+#: apps/settings/src/agents.rs:659
+msgid "{n} action"
+msgid_plural "{n} actions"
+msgstr[0] "{n} 件の操作"
+
+#: apps/settings/src/agents.rs:662
+msgid "{n} click"
+msgid_plural "{n} clicks"
+msgstr[0] "{n} 回のクリック"
+
+#: apps/settings/src/agents.rs:664
+msgid "{n} shortcut"
+msgid_plural "{n} shortcuts"
+msgstr[0] "{n} 回のショートカット"
+
+#: apps/settings/src/agents.rs:665
+msgid "{n} key"
+msgid_plural "{n} keys"
+msgstr[0] "{n} 回のキー"
+
+#: apps/settings/src/agents.rs:667
+msgid "{n} pointer move"
+msgid_plural "{n} pointer moves"
+msgstr[0] "{n} 回のポインター移動"
+
+#: apps/settings/src/agents.rs:669
+msgid "{n} scroll"
+msgid_plural "{n} scrolls"
+msgstr[0] "{n} 回のスクロール"
+
+#: apps/settings/src/agents.rs:671
+msgid "{n} button press or release"
+msgid_plural "{n} button presses or releases"
+msgstr[0] "{n} 回のボタンの押下または解放"
+
+#: apps/settings/src/agents.rs:681
+msgid "{n} character typed"
+msgid_plural "{n} characters typed"
+msgstr[0] "{n} 文字を入力"
+
+#: apps/settings/src/agents.rs:687
 msgid "{n} choice"
 msgid_plural "{n} choices"
 msgstr[0] "{n} 個の選択肢"
 
-#: apps/settings/src/agents.rs:635
+#: apps/settings/src/agents.rs:694
+msgid "Stopped before the first step"
+msgstr "最初の手順の前に停止"
+
+#: apps/settings/src/agents.rs:696
+msgid "Stopped after {n} step"
+msgid_plural "Stopped after {n} steps"
+msgstr[0] "{n} 手順の後に停止"
+
+#: apps/settings/src/agents.rs:708
+msgctxt "clipboard content"
+msgid "Text"
+msgstr "テキスト"
+
+#: apps/settings/src/agents.rs:709
+msgctxt "clipboard content"
+msgid "HTML"
+msgstr "HTML"
+
+#: apps/settings/src/agents.rs:710
+msgctxt "clipboard content"
+msgid "Links"
+msgstr "リンク"
+
+#: apps/settings/src/agents.rs:712
+msgctxt "clipboard content"
+msgid "Picture"
+msgstr "画像"
+
+#: apps/settings/src/agents.rs:714
+msgctxt "clipboard content"
+msgid "PDF document"
+msgstr "PDF 文書"
+
+#: apps/settings/src/agents.rs:715
+msgctxt "clipboard content"
+msgid "Password manager hint"
+msgstr "パスワードマネージャーのヒント"
+
+#: apps/settings/src/agents.rs:716
+msgctxt "clipboard content"
+msgid "Other"
+msgstr "その他"
+
+#: apps/settings/src/agents.rs:726
+msgid "Copied from a protected app, or a password"
+msgstr "保護されたアプリからのコピー、またはパスワード"
+
+#: apps/settings/src/agents.rs:727
+msgid "A system prompt was open"
+msgstr "システムのプロンプトが開いていました"
+
+#: apps/settings/src/agents.rs:728
+msgid "Clipboard access was off"
+msgstr "クリップボードへのアクセスがオフでした"
+
+#: apps/settings/src/agents.rs:729
+msgid "A protected window or a system prompt"
+msgstr "保護されたウィンドウまたはシステムのプロンプト"
+
+#: apps/settings/src/agents.rs:730
+msgid "A protected window, a password field or a system prompt"
+msgstr "保護されたウィンドウ、パスワード欄、またはシステムのプロンプト"
+
+#: apps/settings/src/agents.rs:762
+msgid "Copied from {app}"
+msgstr "{app} からコピー"
+
+#: apps/settings/src/agents.rs:764 apps/settings/src/agents.rs:884
+msgid "The whole screen"
+msgstr "画面全体"
+
+#: apps/settings/src/agents.rs:766
+msgid "Display {name}"
+msgstr "ディスプレイ {name}"
+
+#: apps/settings/src/agents.rs:773
 msgid "A window of {app}"
 msgstr "{app} のウィンドウ"
 
-#: apps/settings/src/agents.rs:637
+#: apps/settings/src/agents.rs:775 apps/settings/src/agents.rs:886
 msgid "A window"
 msgstr "ウィンドウ"
 
-#: apps/settings/src/agents.rs:666 apps/settings/src/ui/mod.rs:165
+#: apps/settings/src/agents.rs:804 apps/settings/src/ui/mod.rs:165
 #: apps/settings/src/ui/mod.rs:245 apps/settings/src/ui/mod.rs:509
 msgid "Settings"
 msgstr "設定"
 
-#: apps/settings/src/agents.rs:681
+#: apps/settings/src/agents.rs:819
 msgid "Allowed for this session"
 msgstr "このセッションで許可"
 
-#: apps/settings/src/agents.rs:682 apps/settings/src/ui/agent_access.rs:475
+#: apps/settings/src/agents.rs:820 apps/settings/src/ui/agent_access.rs:475
 msgid "Always allowed"
 msgstr "常に許可"
 
-#: apps/settings/src/agents.rs:683 apps/settings/src/agents.rs:690
-#: apps/settings/src/agents.rs:715 apps/web/src/window.rs:1948
+#: apps/settings/src/agents.rs:821 apps/settings/src/agents.rs:828
+#: apps/settings/src/agents.rs:853 apps/web/src/window.rs:1948
 msgid "Allowed"
 msgstr "許可"
 
-#: apps/settings/src/agents.rs:684 apps/settings/src/agents.rs:691
+#: apps/settings/src/agents.rs:822 apps/settings/src/agents.rs:829
 #: apps/web/src/window.rs:1948
 msgid "Denied"
 msgstr "拒否"
 
-#: apps/settings/src/agents.rs:685 apps/settings/src/agents.rs:692
+#: apps/settings/src/agents.rs:823 apps/settings/src/agents.rs:830
 msgid "Not answered"
 msgstr "未回答"
 
-#: apps/settings/src/agents.rs:698
+#: apps/settings/src/agents.rs:836
 msgid "Shown"
 msgstr "表示済み"
 
-#: apps/settings/src/agents.rs:699
+#: apps/settings/src/agents.rs:837
 msgid "Cancelled by you"
 msgstr "あなたがキャンセル"
 
-#: apps/settings/src/agents.rs:701
+#: apps/settings/src/agents.rs:839
 msgid "Not shown"
 msgstr "表示されませんでした"
 
-#: apps/settings/src/agents.rs:709
+#: apps/settings/src/agents.rs:847
 msgid "Refused calls are no longer recorded today"
 msgstr "拒否された呼び出しは今日はもう記録されません"
 
-#: apps/settings/src/agents.rs:710
+#: apps/settings/src/agents.rs:848
 msgid "Nothing more is recorded today"
 msgstr "今日はこれ以上記録されません"
 
-#: apps/settings/src/agents.rs:719
+#: apps/settings/src/agents.rs:857
 msgid "Failed: {error}"
 msgstr "失敗: {error}"
 
-#: apps/settings/src/agents.rs:727
+#: apps/settings/src/agents.rs:870
 msgid "Refused {n} time"
 msgid_plural "Refused {n} times"
 msgstr[0] "{n} 回拒否"
 
-#: apps/settings/src/agents.rs:728
+#: apps/settings/src/agents.rs:871
 msgid "Refused"
 msgstr "拒否"
+
+#: apps/settings/src/agents.rs:885
+msgid "A display"
+msgstr "ディスプレイ"
 
 #: apps/settings/src/bluez.rs:66 apps/settings/src/ui/network.rs:181
 #: apps/settings/src/ui/network.rs:464 apps/settings/src/ui/wifi.rs:470
@@ -11909,7 +12042,7 @@ msgstr ""
 msgid "Agent Access"
 msgstr "エージェントのアクセス"
 
-#: apps/settings/src/panels.rs:289 apps/settings/src/ui/agent_access.rs:982
+#: apps/settings/src/panels.rs:289 apps/settings/src/ui/agent_access.rs:983
 msgid "Agent Activity"
 msgstr "エージェントのアクティビティ"
 
@@ -12493,7 +12626,9 @@ msgstr "テキストフィールドの読み取り"
 msgid ""
 "Agents controlling apps can see what is typed in fields; password fields are "
 "never shown"
-msgstr "アプリを操作するエージェントはフィールドに入力された内容を見ることができます。パスワードフィールドは決して表示されません"
+msgstr ""
+"アプリを操作するエージェントはフィールドに入力された内容を見ることができま"
+"す。パスワードフィールドは決して表示されません"
 
 #: apps/settings/src/ui/agent_access.rs:127
 msgid "Safeguards"
@@ -12669,43 +12804,45 @@ msgstr "{agent} を忘れる"
 msgid ""
 "Reminders agents have set for you. They are shown as notifications when they "
 "are due."
-msgstr "エージェントがあなたのために設定したリマインダーです。時刻になると通知として表示されます。"
+msgstr ""
+"エージェントがあなたのために設定したリマインダーです。時刻になると通知として"
+"表示されます。"
 
-#: apps/settings/src/ui/agent_access.rs:661
+#: apps/settings/src/ui/agent_access.rs:662
 msgid "No reminders"
 msgstr "リマインダーはありません"
 
-#: apps/settings/src/ui/agent_access.rs:678
+#: apps/settings/src/ui/agent_access.rs:679
 msgctxt "agent reminder without text"
 msgid "Reminder"
 msgstr "リマインダー"
 
-#: apps/settings/src/ui/agent_access.rs:688
+#: apps/settings/src/ui/agent_access.rs:689
 msgid "Due {time}"
 msgstr "期限 {time}"
 
-#: apps/settings/src/ui/agent_access.rs:711
+#: apps/settings/src/ui/agent_access.rs:712
 msgctxt "cancel an agent's reminder"
 msgid "Cancel"
 msgstr "キャンセル"
 
-#: apps/settings/src/ui/agent_access.rs:714
+#: apps/settings/src/ui/agent_access.rs:715
 msgid "Cancel Reminder “{text}”"
 msgstr "リマインダー「{text}」をキャンセル"
 
-#: apps/settings/src/ui/agent_access.rs:728
+#: apps/settings/src/ui/agent_access.rs:729
 msgid "Only the installed Settings app can cancel reminders"
 msgstr "リマインダーをキャンセルできるのはインストールされた設定アプリだけです"
 
-#: apps/settings/src/ui/agent_access.rs:730
+#: apps/settings/src/ui/agent_access.rs:731
 msgid "Could not cancel the reminder: {e}"
 msgstr "リマインダーをキャンセルできませんでした: {e}"
 
-#: apps/settings/src/ui/agent_access.rs:749
+#: apps/settings/src/ui/agent_access.rs:750
 msgid "Excluded Apps"
 msgstr "除外するアプリ"
 
-#: apps/settings/src/ui/agent_access.rs:750
+#: apps/settings/src/ui/agent_access.rs:751
 msgid ""
 "Agents can never read or control these apps. Password fields, the lock "
 "screen, system password prompts and Settings are always excluded."
@@ -12713,89 +12850,89 @@ msgstr ""
 "エージェントはこれらのアプリを読み取ることも操作することもできません。パス"
 "ワード欄、ロック画面、システムのパスワード入力、設定は常に除外されます。"
 
-#: apps/settings/src/ui/agent_access.rs:754
+#: apps/settings/src/ui/agent_access.rs:755
 msgid "Add App…"
 msgstr "アプリを追加…"
 
-#: apps/settings/src/ui/agent_access.rs:773
+#: apps/settings/src/ui/agent_access.rs:774
 msgid "No apps excluded"
 msgstr "除外しているアプリはありません"
 
-#: apps/settings/src/ui/agent_access.rs:825
+#: apps/settings/src/ui/agent_access.rs:826
 msgid "Remove {app}"
 msgstr "{app} を削除"
 
-#: apps/settings/src/ui/agent_access.rs:838
+#: apps/settings/src/ui/agent_access.rs:839
 msgid "Exclude an App"
 msgstr "アプリを除外"
 
-#: apps/settings/src/ui/agent_access.rs:839
+#: apps/settings/src/ui/agent_access.rs:840
 msgid "Search apps"
 msgstr "アプリを検索"
 
-#: apps/settings/src/ui/agent_access.rs:840
+#: apps/settings/src/ui/agent_access.rs:841
 msgid "Search Apps"
 msgstr "アプリの検索"
 
-#: apps/settings/src/ui/agent_access.rs:841
+#: apps/settings/src/ui/agent_access.rs:842
 msgid "Loading Apps…"
 msgstr "アプリを読み込んでいます…"
 
-#: apps/settings/src/ui/agent_access.rs:909
+#: apps/settings/src/ui/agent_access.rs:910
 msgid "Keep Activity For"
 msgstr "アクティビティの保存期間"
 
-#: apps/settings/src/ui/agent_access.rs:912
+#: apps/settings/src/ui/agent_access.rs:913
 msgid "Clear Activity"
 msgstr "アクティビティを消去"
 
-#: apps/settings/src/ui/agent_access.rs:913
+#: apps/settings/src/ui/agent_access.rs:914
 msgid "Remove everything agents have done from the log"
 msgstr "エージェントが行ったことをすべてログから削除します"
 
-#: apps/settings/src/ui/agent_access.rs:914
+#: apps/settings/src/ui/agent_access.rs:915
 msgid "Clear…"
 msgstr "消去…"
 
-#: apps/settings/src/ui/agent_access.rs:920
+#: apps/settings/src/ui/agent_access.rs:921
 msgid "Recent Activity"
 msgstr "最近のアクティビティ"
 
-#: apps/settings/src/ui/agent_access.rs:948
+#: apps/settings/src/ui/agent_access.rs:949
 msgid "Clear Agent Activity?"
 msgstr "エージェントのアクティビティを消去しますか?"
 
-#: apps/settings/src/ui/agent_access.rs:949
+#: apps/settings/src/ui/agent_access.rs:950
 msgid "The record of what agents did is removed. This cannot be undone."
 msgstr ""
 "エージェントが行ったことの記録が削除されます。元に戻すことはできません。"
 
-#: apps/settings/src/ui/agent_access.rs:954
+#: apps/settings/src/ui/agent_access.rs:955
 msgid "_Clear"
 msgstr "消去(_C)"
 
-#: apps/settings/src/ui/agent_access.rs:966
+#: apps/settings/src/ui/agent_access.rs:967
 msgid "Agent activity cleared"
 msgstr "エージェントのアクティビティを消去しました"
 
-#: apps/settings/src/ui/agent_access.rs:967
+#: apps/settings/src/ui/agent_access.rs:968
 msgid "The desktop shell is not running, so the activity cannot be cleared"
 msgstr "デスクトップシェルが動作していないため、アクティビティを消去できません"
 
-#: apps/settings/src/ui/agent_access.rs:971
+#: apps/settings/src/ui/agent_access.rs:972
 msgid "Only the installed Settings app can clear the activity"
 msgstr "アクティビティを消去できるのは、インストールされた設定アプリだけです"
 
-#: apps/settings/src/ui/agent_access.rs:973
+#: apps/settings/src/ui/agent_access.rs:974
 msgid "Could not clear the activity: {e}"
 msgstr "アクティビティを消去できませんでした: {e}"
 
-#: apps/settings/src/ui/agent_access.rs:1014
+#: apps/settings/src/ui/agent_access.rs:1015
 msgid "Showing the latest {n} entry."
 msgid_plural "Showing the latest {n} entries."
 msgstr[0] "最新の {n} 件を表示しています。"
 
-#: apps/settings/src/ui/agent_access.rs:1023
+#: apps/settings/src/ui/agent_access.rs:1024
 msgid "What agents do will be listed here"
 msgstr "エージェントが行ったことがここに表示されます"
 
