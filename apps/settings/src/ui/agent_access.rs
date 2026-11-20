@@ -925,20 +925,62 @@ pub fn activity_page(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         .prefs("org.gnome.desktop.interface")
         .get_enum_nick("clock-format", "24h")
         == "12h";
-    let load: Rc<dyn Fn()> = {
-        let (log, rows) = (log.downgrade(), rows.clone());
+    // The log, and the changes that can still be undone (none without a
+    // shell that answers).
+    let load: Rc<RefCell<Option<Reload>>> = Rc::default();
+    let reload: Rc<dyn Fn()> = {
+        let (log, rows, ctx, load) = (
+            log.downgrade(),
+            rows.clone(),
+            Rc::downgrade(ctx),
+            Rc::downgrade(&load),
+        );
         Rc::new(move || {
-            let (log, rows) = (log.clone(), rows.clone());
+            let (log, rows, ctx, load) = (log.clone(), rows.clone(), ctx.clone(), load.clone());
             spawn_worker(
-                || agents::read_log(&log_dir(), LOG_ROWS),
-                move |(entries, more)| {
-                    let Some(log) = log.upgrade() else { return };
-                    show_log(&log, &rows, &entries, more, twelve);
+                || {
+                    let (entries, more) = agents::read_log(&log_dir(), LOG_ROWS);
+                    let listed = bus::session()
+                        .and_then(|c| agents::changes(&c))
+                        .unwrap_or_default();
+                    (entries, more, listed)
+                },
+                move |(entries, more, listed)| {
+                    let (Some(log), Some(ctx)) = (log.upgrade(), ctx.upgrade()) else {
+                        return;
+                    };
+                    let Some(again) = load.upgrade().and_then(|l| l.borrow().clone()) else {
+                        return;
+                    };
+                    let undo = Undo {
+                        ctx,
+                        reload: again,
+                        listed,
+                    };
+                    show_log(&log, &rows, &entries, more, twelve, &undo);
                 },
             );
         })
     };
-    load();
+    *load.borrow_mut() = Some(reload.clone());
+    reload();
+    // ListChanges follows the settings under the changes (ChangesChanged).
+    let followed = Rc::new(reload.clone());
+    follow(
+        &followed,
+        Duration::from_millis(200),
+        |tell| {
+            if let Ok(conn) = bus::session() {
+                agents::watch_changes(&conn, tell);
+            }
+        },
+        |reload| reload(),
+    );
+    page.connect_destroy(move |_| {
+        // Kept for as long as the page: what the signal reloads.
+        let _ = (&followed, &load);
+    });
+    let load = reload;
 
     let (ctx_weak, load2) = (Rc::downgrade(ctx), load.clone());
     clear.connect_clicked(move |_| {
@@ -1003,12 +1045,24 @@ fn retention_choices() -> Vec<Choice<i64>> {
         .collect()
 }
 
+/// Reads the activity log again.
+type Reload = Rc<dyn Fn()>;
+
+/// What the log's *Undo* buttons need: where to say how it went, how to
+/// read the log again, and the changes `ListChanges` listed.
+struct Undo {
+    ctx: Rc<Ctx>,
+    reload: Reload,
+    listed: Vec<String>,
+}
+
 fn show_log(
     group: &adw::PreferencesGroup,
     rows: &RefCell<Vec<gtk::Widget>>,
     entries: &[Entry],
     more: bool,
     twelve: bool,
+    undo: &Undo,
 ) {
     group.set_description(
         more.then(|| {
@@ -1025,10 +1079,68 @@ fn show_log(
     } else {
         entries
             .iter()
-            .map(|e| log_row(e, twelve).upcast())
+            .map(|e| {
+                let row = log_row(e, twelve);
+                if agents::undoable(e, &undo.listed) {
+                    row.add_suffix(&undo_button(e, undo));
+                }
+                row.upcast()
+            })
             .collect()
     };
     widgets::replace_rows(group, rows, new);
+}
+
+/// *Undo* on a change's line: puts the setting back as it was before the
+/// agent changed it (`AgentAccess1.Undo`), and says why when it cannot.
+fn undo_button(e: &Entry, undo: &Undo) -> gtk::Button {
+    let button = gtk::Button::builder()
+        .label(tr("Undo"))
+        .valign(gtk::Align::Center)
+        .tooltip_text(tr("Put back what this agent changed"))
+        .build();
+    let (id, ctx, reload) = (
+        e.change.clone(),
+        Rc::downgrade(&undo.ctx),
+        undo.reload.clone(),
+    );
+    button.connect_clicked(move |b| {
+        b.set_sensitive(false);
+        let (id, ctx, reload) = (id.clone(), ctx.clone(), reload.clone());
+        spawn_worker(
+            move || match bus::session() {
+                Ok(conn) => agents::undo(&conn, &id),
+                Err(e) => Err(agents::UndoError::Bus(e)),
+            },
+            move |r| {
+                if let Some(ctx) = ctx.upgrade() {
+                    match r {
+                        Ok(()) => ctx.toast(tr("Change undone")),
+                        Err(agents::UndoError::Changed) => {
+                            ctx.toast(tr("Not undone: the setting was changed since"))
+                        }
+                        Err(agents::UndoError::Unavailable) => {
+                            ctx.toast(tr("Not undone: the old value is no longer available"))
+                        }
+                        Err(agents::UndoError::Gone) => {
+                            ctx.toast(tr("This change can no longer be undone"))
+                        }
+                        Err(agents::UndoError::Bus(bus::Error::Missing)) => ctx.toast(tr(
+                            "The desktop shell is not running, so the change cannot be undone",
+                        )),
+                        Err(agents::UndoError::Bus(bus::Error::Denied)) => {
+                            ctx.toast(tr("Only the installed Settings app can undo changes"))
+                        }
+                        Err(agents::UndoError::Bus(e)) => {
+                            ctx.toast(&trf!("Could not undo the change: {e}", e = e))
+                        }
+                    }
+                }
+                reload();
+            },
+        );
+    });
+    button
 }
 
 fn log_row(e: &Entry, twelve: bool) -> adw::ActionRow {

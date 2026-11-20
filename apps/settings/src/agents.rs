@@ -232,6 +232,72 @@ pub fn cancel_reminder(conn: &Connection, id: &str) -> Result<()> {
     ACCESS.run(conn, "CancelReminder", &(id,))
 }
 
+/// The ids of the agents' changes that can still be undone
+/// (`ListChanges`: the latest of their setting, still at the value the
+/// agent set), newest first.
+pub fn changes(conn: &Connection) -> Result<Vec<String>> {
+    let records: Vec<HashMap<String, OwnedValue>> = ACCESS.call(conn, "ListChanges", &())?;
+    Ok(records
+        .iter()
+        .map(|r| text(r, "id"))
+        .filter(|id| !id.is_empty())
+        .collect())
+}
+
+/// Why `Undo` did not undo a change.
+#[derive(Debug, Clone, PartialEq)]
+pub enum UndoError {
+    /// No longer undoable: undone, put back, or another change of the
+    /// setting came since.
+    Gone,
+    /// The setting no longer has the value the agent set.
+    Changed,
+    /// The old value cannot be set any more (the picture, the power mode
+    /// or the device is gone).
+    Unavailable,
+    Bus(bus::Error),
+}
+
+/// Puts a change's old value back (`Undo`).
+pub fn undo(conn: &Connection, id: &str) -> std::result::Result<(), UndoError> {
+    let Err(err) = conn.call_method(
+        Some(ACCESS.dest),
+        ACCESS.path,
+        Some(ACCESS.iface),
+        "Undo",
+        &(id,),
+    ) else {
+        return Ok(());
+    };
+    if let zbus::Error::MethodError(name, message, _) = &err {
+        match (name.as_str(), message.as_deref().unwrap_or("").trim()) {
+            ("org.helixdesktop.Agent1.Error.NotFound", _) => return Err(UndoError::Gone),
+            ("org.helixdesktop.Agent1.Error.Failed", "changed") => return Err(UndoError::Changed),
+            ("org.helixdesktop.Agent1.Error.Failed", "unavailable") => {
+                return Err(UndoError::Unavailable)
+            }
+            _ => {}
+        }
+    }
+    Err(UndoError::Bus(err.into()))
+}
+
+/// Whether log line `e` is a change Settings offers to undo, given the
+/// changes `ListChanges` listed: an allowed change of an agent's that is
+/// still listed.
+pub fn undoable(e: &Entry, listed: &[String]) -> bool {
+    !e.change.is_empty()
+        && e.outcome == "allowed"
+        && e.error.is_empty()
+        && CHANGE_METHODS.contains(&e.method.as_str())
+        && listed.contains(&e.change)
+}
+
+/// As [`watch`], for `ChangesChanged`.
+pub fn watch_changes(conn: &Connection, changed: impl FnMut() -> bool) {
+    watch_signal(conn, "ChangesChanged", changed)
+}
+
 /// Calls `changed` for every `AgentsChanged` and whenever the shell
 /// comes or goes; returns when `changed` returns false or the bus goes
 /// away.
@@ -346,6 +412,25 @@ pub struct Entry {
     pub scroll_count: Option<u64>,
     pub key_count: Option<u64>,
     pub shortcut_count: Option<u64>,
+    /// A change (`SetWallpaper`, `SetAccent`, …), its `Restore` and its
+    /// `Undo`: the change's id, and the value before and after (for the
+    /// background also its dark style's picture and placement).
+    pub change: String,
+    pub old: String,
+    pub new: String,
+    pub old_dark: String,
+    pub new_dark: String,
+    pub old_fit: String,
+    pub new_fit: String,
+    /// `SetWallpaper`: `light`, `dark` or `both`.
+    pub variant: String,
+    /// A temporary change: when it will be put back.
+    pub restore_at: Option<i64>,
+    /// `Restore`: why (`expired`, `stopped`, `session-ended`,
+    /// `restore-now`).
+    pub cause: String,
+    /// `SetToggle`: `on` or `off`.
+    pub state: String,
 }
 
 /// A time: Unix seconds, or ISO 8601 text (0 when unreadable).
@@ -404,6 +489,17 @@ impl Entry {
             scroll_count: n("scroll-count"),
             key_count: n("key-count"),
             shortcut_count: n("shortcut-count"),
+            change: s("change"),
+            old: s("old"),
+            new: s("new"),
+            old_dark: s("old-dark"),
+            new_dark: s("new-dark"),
+            old_fit: s("old-fit"),
+            new_fit: s("new-fit"),
+            variant: s("variant"),
+            restore_at: obj.get("restore-at").and_then(|v| v.as_i64()),
+            cause: s("cause"),
+            state: s("state"),
         })
     }
 
@@ -441,8 +537,28 @@ impl Entry {
     }
 }
 
-/// The `AgentAccess1` methods (Settings' own; `target` is the agent).
-const SETTINGS_METHODS: [&str; 5] = ["ListAgents", "Revoke", "Forget", "StopAll", "ClearLog"];
+/// The `AgentAccess1` methods (Settings' own; `target` is the agent, or
+/// for `Undo` the setting).
+const SETTINGS_METHODS: [&str; 7] = [
+    "ListAgents",
+    "Revoke",
+    "Forget",
+    "StopAll",
+    "ClearLog",
+    "ListChanges",
+    "Undo",
+];
+
+/// The methods whose lines are changes Settings may offer to undo
+/// (contract "Changes, undo and restoring").
+pub const CHANGE_METHODS: [&str; 6] = [
+    "SetWallpaper",
+    "SetAccent",
+    "SetPowerMode",
+    "SetToggle",
+    "StarFile",
+    "SetFavorite",
+];
 /// Methods of both `Agent1` and `AgentAccess1`.
 const SHARED_METHODS: [&str; 2] = ["ListReminders", "CancelReminder"];
 
@@ -488,18 +604,29 @@ pub fn method_label(method: &str) -> Option<&'static str> {
         "A11ySetValue" => n_("Filled in a field in an app"),
         "Screenshot" => n_("Took a screenshot"),
         "Input" => n_("Typed or clicked"),
+        "SetWallpaper" => n_("Changed the background"),
+        "SetAccent" => n_("Changed the accent color"),
+        "SetPowerMode" => n_("Changed the power mode"),
+        "StarFile" => n_("Starred or unstarred a file"),
+        "SetFavorite" => n_("Changed the dock"),
+        "DismissNotification" => n_("Dismissed a notification"),
+        "NotificationAction" => n_("Pressed a notification button"),
+        "RevealFile" => n_("Showed a file in the file manager"),
         // AgentAccess1, as Settings did it.
         "ListAgents" => n_("Listed agents"),
         "Revoke" => n_("Access revoked"),
         "Forget" => n_("Access revoked and forgotten"),
         "StopAll" => n_("All access revoked"),
         "ClearLog" => n_("Activity log cleared"),
+        "ListChanges" => n_("Listed changes"),
+        "Undo" => n_("Undid a change"),
         // Events.
         "ConsentPrompt" => n_("Asked for access"),
         "SensitivePrompt" => n_("Asked to confirm an action"),
         "Stop" => n_("Stopped by you"),
         "Reminder" => n_("Reminder due"),
         "LogFull" => n_("Activity log full"),
+        "Restore" => n_("Put a temporary change back"),
         _ => return None,
     })
 }
@@ -509,6 +636,7 @@ pub fn method_label(method: &str) -> Option<&'static str> {
 pub fn settings_method_label(method: &str) -> Option<&'static str> {
     Some(match method {
         "CancelReminder" => n_("Reminder cancelled"),
+        "Undo" => n_("Change undone"),
         _ => return None,
     })
 }
@@ -524,6 +652,8 @@ pub fn settings_method_refused_label(method: &str) -> Option<&'static str> {
         "Forget" => n_("Tried to forget an agent"),
         "StopAll" => n_("Tried to revoke all access"),
         "ClearLog" => n_("Tried to clear the activity log"),
+        "ListChanges" => n_("Tried to list changes"),
+        "Undo" => n_("Tried to undo a change"),
         _ => return None,
     })
 }
@@ -637,6 +767,83 @@ pub fn media_action_label(action: &str) -> Option<&'static str> {
     })
 }
 
+/// A setting a change changed (a Change's `name`, a toggle's name: the
+/// `target` of a change, `Restore` or `Undo` line), untranslated; `None`
+/// for a starred file or a favorite (their target is the file or app).
+pub fn setting_label(setting: &str) -> Option<&'static str> {
+    Some(match setting {
+        "wallpaper" => nc_!("changed setting", "Background"),
+        "accent" => nc_!("changed setting", "Accent color"),
+        "power-mode" => nc_!("changed setting", "Power mode"),
+        "dark-style" => nc_!("changed setting", "Dark style"),
+        "do-not-disturb" => nc_!("changed setting", "Do Not Disturb"),
+        "night-light" => nc_!("changed setting", "Night Light"),
+        "wifi" => nc_!("changed setting", "Wi-Fi"),
+        "airplane-mode" => nc_!("changed setting", "Airplane mode"),
+        "mute" => nc_!("changed setting", "Sound muted"),
+        _ => return None,
+    })
+}
+
+/// A change's `old` or `new` value as Settings shows it: an accent color
+/// or power mode by name, a picture by its file's name, a star or a
+/// favorite in words, a switch as on or off.
+pub fn change_value(method: &str, target: &str, value: &str) -> String {
+    let star = method == "StarFile"
+        || (matches!(method, "Restore" | "Undo") && target.starts_with("file://"));
+    let favorite = method == "SetFavorite"
+        || (matches!(method, "Restore" | "Undo")
+            && setting_label(target).is_none()
+            && !target.starts_with("file://"));
+    let label = match (value, star, favorite) {
+        ("on", true, _) => Some(nc_!("star", "Starred")),
+        ("off", true, _) => Some(nc_!("star", "Not starred")),
+        ("on", _, true) => Some(nc_!("dock", "In the dock")),
+        ("off", _, true) => Some(nc_!("dock", "Not in the dock")),
+        ("on", ..) => Some(nc_!("switch", "On")),
+        ("off", ..) => Some(nc_!("switch", "Off")),
+        ("blue", ..) => Some(nc_!("accent color", "Blue")),
+        ("teal", ..) => Some(nc_!("accent color", "Teal")),
+        ("green", ..) => Some(nc_!("accent color", "Green")),
+        ("yellow", ..) => Some(nc_!("accent color", "Yellow")),
+        ("orange", ..) => Some(nc_!("accent color", "Orange")),
+        ("red", ..) => Some(nc_!("accent color", "Red")),
+        ("pink", ..) => Some(nc_!("accent color", "Pink")),
+        ("purple", ..) => Some(nc_!("accent color", "Purple")),
+        ("slate", ..) => Some(nc_!("accent color", "Slate")),
+        ("power-saver", ..) => Some(nc_!("power mode", "Power Saver")),
+        ("balanced", ..) => Some(nc_!("power mode", "Balanced")),
+        ("performance", ..) => Some(nc_!("power mode", "Performance")),
+        ("", ..) if target == "wallpaper" || method == "SetWallpaper" => {
+            Some(nc_!("background", "None"))
+        }
+        _ => None,
+    };
+    if let Some(label) = label {
+        return tr_dyn(label);
+    }
+    // A picture by its file's name.
+    if value.starts_with("file://") {
+        if let Ok((path, _)) = gtk::glib::filename_from_uri(value) {
+            if let Some(name) = path.file_name() {
+                return name.to_string_lossy().into_owned();
+            }
+        }
+    }
+    value.to_string()
+}
+
+/// Why a temporary change was put back (`cause`), untranslated.
+pub fn cause_label(cause: &str) -> Option<&'static str> {
+    Some(match cause {
+        "expired" => n_("Its time was up"),
+        "stopped" => n_("The agent was stopped"),
+        "session-ended" => n_("The session ended"),
+        "restore-now" => n_("Put back from the top bar"),
+        _ => return None,
+    })
+}
+
 /// What a line says about what was done, beyond its title and target, in
 /// people's words: the role and action of a control, how many nodes,
 /// characters or choices. Only what the line holds.
@@ -652,6 +859,43 @@ pub fn details(e: &Entry) -> Vec<String> {
     }
     if !e.action.is_empty() && e.method == "MediaControl" {
         out.push(media_action_label(&e.action).map_or_else(|| e.action.clone(), tr_dyn));
+    }
+    if e.method == "NotificationAction" {
+        match e.action.as_str() {
+            "button" => out.push(tr("One of its buttons").to_string()),
+            "default" => out.push(tr("The notification itself").to_string()),
+            _ => {}
+        }
+    }
+    // A change: from what to what (never more than setting values).
+    if !e.old.is_empty() || !e.new.is_empty() {
+        let (old, new) = (
+            change_value(&e.method, &e.target, &e.old),
+            change_value(&e.method, &e.target, &e.new),
+        );
+        out.push(if old == new {
+            trf!("Already {value}", value = new)
+        } else {
+            trf!("{old} → {new}", old = old, new = new)
+        });
+    }
+    match e.variant.as_str() {
+        "light" => out.push(tr("Light style only").to_string()),
+        "dark" => out.push(tr("Dark style only").to_string()),
+        _ => {}
+    }
+    if let Some(at) = e
+        .restore_at
+        .and_then(|t| gtk::glib::DateTime::from_unix_local(t).ok())
+    {
+        let time = at
+            .format("%H:%M")
+            .map(|s| s.to_string())
+            .unwrap_or_default();
+        out.push(trf!("Until {time}", time = time));
+    }
+    if let Some(cause) = cause_label(&e.cause) {
+        out.push(tr_dyn(cause));
     }
     if let Some(n) = e.node_count {
         out.push(if e.method == "A11yFind" {
@@ -752,6 +996,7 @@ pub fn method_refusal_label(method: &str, error: &str) -> Option<&'static str> {
         ("GetClipboard", "Excluded") => n_("Copied from a protected app, or a password"),
         ("SetClipboard", "Excluded") => n_("A system prompt was open"),
         ("GetClipboard" | "SetClipboard", "FeatureOff") => n_("Clipboard access was off"),
+        ("NotificationAction", "FeatureOff") => n_("Notification access was off"),
         ("Screenshot", "Excluded") => n_("A protected window or a system prompt"),
         ("Input", "Excluded") => n_("A protected window, a password field or a system prompt"),
         _ => return refusal_label(error),
@@ -770,6 +1015,10 @@ pub fn reason_label(method: &str, reason: &str) -> Option<&'static str> {
         (_, "settings") => n_("Settings"),
         (_, "app") => n_("An excluded app"),
         (_, "clipboard") => n_("Clipboard access was off"),
+        (_, "notifications") => n_("Notification access was off"),
+        (_, "private-file") => n_("A file in a hidden or system folder"),
+        (_, "changed") => n_("Not put back: it was changed since"),
+        (_, "unavailable") => n_("Not put back: the old value is gone"),
         (_, "user-input") => n_("Stopped: you used the keyboard or pointer"),
         (_, "cooldown") => n_("Refused: you had just used the keyboard or pointer"),
         (_, "stopped") => n_("Stopped from the indicator or Settings"),
@@ -811,6 +1060,24 @@ pub fn target_label(method: &str, target: &str) -> String {
             return trf!("Display {name}", name = &t["monitor:".len()..]);
         }
         _ => {}
+    }
+    // A notification by its app when the line names it.
+    if let Some(note) = target.strip_prefix("notification:") {
+        return match note.split_once(" (") {
+            Some((_, app)) if app.ends_with(')') && app.len() > 1 => {
+                trf!("A notification of {app}", app = &app[..app.len() - 1])
+            }
+            _ => tr("A notification").to_string(),
+        };
+    }
+    // A changed setting by its name.
+    if matches!(
+        method,
+        "SetToggle" | "SetWallpaper" | "SetAccent" | "SetPowerMode" | "Restore" | "Undo"
+    ) {
+        if let Some(label) = setting_label(target) {
+            return tr_dyn(label);
+        }
     }
     // A media player by its app when the line names it, else by its id.
     if let Some(player) = target.strip_prefix("player:") {
@@ -900,6 +1167,14 @@ pub fn describe(e: &Entry) -> Described {
             }
             _ => status.push(raw(outcome)),
         },
+        ("Restore", "allowed") => status.push(tr("Put back").to_string()),
+        // Settings' Undo that did nothing.
+        ("Undo", "allowed") if settings && !e.error.is_empty() => {
+            status.push(match e.error.as_str() {
+                "NotFound" => tr("Not undone: it could no longer be undone").to_string(),
+                _ => tr("Not undone").to_string(),
+            })
+        }
         ("LogFull", _) => match e.dropped.as_str() {
             "refusals" => status.push(tr("Refused calls are no longer recorded today").to_string()),
             "all" => status.push(tr("Nothing more is recorded today").to_string()),
@@ -1130,7 +1405,7 @@ pub mod tests {
 
     /// Every method of the contract's interfaces
     /// (`contracts/agent-access/*.xml`) and the log's events.
-    const METHODS: [&str; 41] = [
+    const METHODS: [&str; 51] = [
         "GetStatus",
         "RequestAccess",
         "GetState",
@@ -1172,10 +1447,6 @@ pub mod tests {
         "Forget",
         "StopAll",
         "ClearLog",
-    ];
-    /// The contract's methods of the scoped actions' second batch
-    /// (helixdesktop/desktop#157), labelled when the shell has them.
-    const LATER: [&str; 10] = [
         "SetWallpaper",
         "SetAccent",
         "SetPowerMode",
@@ -1187,12 +1458,16 @@ pub mod tests {
         "ListChanges",
         "Undo",
     ];
-    const EVENTS: [&str; 5] = [
+    /// The contract's methods this version does not label yet (a later
+    /// stage of the contract lists them here until Settings has them).
+    const LATER: [&str; 0] = [];
+    const EVENTS: [&str; 6] = [
         "ConsentPrompt",
         "SensitivePrompt",
         "Stop",
         "Reminder",
         "LogFull",
+        "Restore",
     ];
 
     #[test]
@@ -1965,6 +2240,146 @@ pub mod tests {
         );
     }
 
+    /// The scoped actions' changes (helixdesktop/desktop#157): what changed
+    /// from what to what, until when, why it was put back or not, and
+    /// Settings' Undo.
+    #[test]
+    fn change_lines() {
+        let full = |line: &str| {
+            let d = describe(&Entry::parse(line).expect(line));
+            (
+                d.title,
+                d.target,
+                d.details.join(" · "),
+                d.status.join(" · "),
+            )
+        };
+        let four = |a: &str, b: &str, c: &str, d: &str| {
+            (a.to_string(), b.to_string(), c.to_string(), d.to_string())
+        };
+        let until = gtk::glib::DateTime::from_unix_local(1795086200)
+            .unwrap()
+            .format("%H:%M")
+            .unwrap()
+            .to_string();
+        assert_eq!(
+            full(
+                r#"{"time":1795082600,"agent":"/usr/bin/node /home/me/agent.js","name":"Example","method":"SetAccent","target":"accent","level":"desktop","outcome":"allowed","change":"9c1d0e2f4a6b8c3d","old":"blue","new":"red","restore-at":1795086200}"#
+            ),
+            four(
+                "Changed the accent color",
+                "Accent color",
+                &format!("Blue → Red · Until {until}"),
+                "Allowed"
+            )
+        );
+        assert_eq!(
+            full(
+                r#"{"time":1795082610,"agent":"/usr/bin/node /home/me/agent.js","name":"Example","method":"SetToggle","target":"dark-style","level":"desktop","outcome":"allowed","state":"on","change":"5e7f9a1b3c2d4e6f","old":"off","new":"on"}"#
+            ),
+            four(
+                "Turned a setting on or off",
+                "Dark style",
+                "Off → On",
+                "Allowed"
+            )
+        );
+        assert_eq!(
+            full(
+                r#"{"time":1795082620,"agent":"/usr/bin/node /home/me/agent.js","name":"Example","method":"SetWallpaper","target":"wallpaper","level":"desktop","outcome":"refused:Excluded","reason":"private-file","variant":"both"}"#
+            ),
+            four(
+                "Changed the background",
+                "Background",
+                "",
+                "Refused · A file in a hidden or system folder"
+            )
+        );
+        assert_eq!(
+            full(r#"{"time":1,"agent":"/opt/bot","name":"","method":"SetWallpaper","target":"wallpaper","level":"desktop","outcome":"allowed","variant":"dark","change":"1","old":"","new":"file:///home/me/.local/share/backgrounds/2026-11-20-10-00-00-sea.png","old-dark":"","new-dark":"file:///home/me/.local/share/backgrounds/2026-11-20-10-00-00-sea.png"}"#).2,
+            "None → 2026-11-20-10-00-00-sea.png · Dark style only"
+        );
+        assert_eq!(
+            full(
+                r#"{"time":1795082630,"agent":"/usr/bin/node /home/me/agent.js","name":"Example","method":"NotificationAction","target":"notification:42 (org.gnome.Fractal)","level":"desktop","outcome":"refused:FeatureOff","reason":"notifications","action":"button"}"#
+            ),
+            four(
+                "Pressed a notification button",
+                "A notification of org.gnome.Fractal",
+                "One of its buttons",
+                "Refused · Notification access was off"
+            )
+        );
+        assert_eq!(
+            full(
+                r#"{"time":1795082650,"agent":"/usr/bin/helix-settings-app","name":"","method":"Undo","target":"dark-style","outcome":"allowed","change":"5e7f9a1b3c2d4e6f","old":"on","new":"off"}"#
+            ),
+            four("Change undone", "Dark style", "On → Off", "")
+        );
+        assert_eq!(
+            full(r#"{"time":1795082650,"agent":"/usr/bin/helix-settings-app","name":"","method":"Undo","target":"accent","outcome":"allowed","change":"5e7f9a1b3c2d4e6f","old":"red","new":"blue","error":"Failed"}"#).3,
+            "Not undone"
+        );
+        assert_eq!(
+            full(
+                r#"{"time":1795086200,"agent":"/usr/bin/node /home/me/agent.js","name":"Example","method":"Restore","target":"accent","outcome":"allowed","change":"9c1d0e2f4a6b8c3d","old":"red","new":"blue","cause":"expired"}"#
+            ),
+            four(
+                "Put a temporary change back",
+                "Accent color",
+                "Red → Blue · Its time was up",
+                "Put back"
+            )
+        );
+        assert_eq!(
+            full(
+                r#"{"time":1,"agent":"/opt/bot","name":"Bot","method":"Restore","target":"power-mode","outcome":"cancelled","reason":"changed","change":"2","old":"performance","new":"balanced","cause":"stopped"}"#
+            ),
+            four(
+                "Put a temporary change back",
+                "Power mode",
+                "Performance → Balanced · The agent was stopped",
+                "Not put back: it was changed since"
+            )
+        );
+        assert_eq!(
+            full(
+                r#"{"time":1,"agent":"/opt/bot","name":"Bot","method":"StarFile","target":"file:///home/me/report.pdf","level":"desktop","outcome":"allowed","change":"3","old":"off","new":"on"}"#
+            ),
+            four(
+                "Starred or unstarred a file",
+                "/home/me/report.pdf",
+                "Not starred → Starred",
+                "Allowed"
+            )
+        );
+        assert_eq!(
+            full(r#"{"time":1,"agent":"/opt/bot","name":"Bot","method":"SetFavorite","target":"org.gnome.Maps","level":"desktop","outcome":"allowed","old":"on","new":"on"}"#).2,
+            "Already In the dock"
+        );
+        assert_eq!(
+            full(r#"{"time":1,"agent":"/opt/bot","name":"Bot","method":"Undo","target":"org.gnome.Maps","outcome":"allowed","change":"4","old":"on","new":"off"}"#).2,
+            "In the dock → Not in the dock"
+        );
+        // Offered Undo while ListChanges lists it.
+        let e = Entry::parse(r#"{"time":1,"agent":"/opt/bot","name":"Bot","method":"SetAccent","target":"accent","level":"desktop","outcome":"allowed","change":"abc","old":"blue","new":"red"}"#).unwrap();
+        assert!(undoable(&e, &["abc".into()]));
+        assert!(!undoable(&e, &[]));
+        let restore = Entry {
+            method: "Restore".into(),
+            ..e.clone()
+        };
+        assert!(
+            !undoable(&restore, &["abc".into()]),
+            "only the change's own line"
+        );
+        let failed = Entry {
+            error: "Failed".into(),
+            ..e
+        };
+        assert!(!undoable(&failed, &["abc".into()]));
+    }
+
     #[test]
     fn other_line_shapes() {
         let line =
@@ -2214,6 +2629,18 @@ pub mod tests {
         pub agents: Arc<Mutex<Vec<Agent>>>,
         pub reminders: Arc<Mutex<Vec<Reminder>>>,
         pub calls: Arc<Mutex<Vec<String>>>,
+        /// The changes `ListChanges` lists, by id.
+        pub changes: Arc<Mutex<Vec<String>>>,
+    }
+
+    /// `Undo`'s errors, as the shell names them.
+    #[derive(Debug, zbus::DBusError)]
+    #[zbus(prefix = "org.helixdesktop.Agent1.Error")]
+    pub enum UndoFailure {
+        #[zbus(error)]
+        ZBus(zbus::Error),
+        NotFound(String),
+        Failed(String),
     }
 
     fn reminder_record(r: &Reminder) -> HashMap<String, OwnedValue> {
@@ -2301,10 +2728,58 @@ pub mod tests {
             self.reminders.lock().unwrap().retain(|r| r.id != id);
             let _ = Self::reminders_changed(&e).await;
         }
+        fn list_changes(&self) -> Vec<HashMap<String, OwnedValue>> {
+            self.changes
+                .lock()
+                .unwrap()
+                .iter()
+                .map(|id| {
+                    record(&[
+                        ("id", Value::from(id.as_str())),
+                        ("setting", Value::from("accent")),
+                    ])
+                })
+                .collect()
+        }
+        /// Ids `changed-…` and `gone-…` fail as the shell's would.
+        async fn undo(
+            &self,
+            id: String,
+            #[zbus(signal_emitter)] e: SignalEmitter<'_>,
+        ) -> std::result::Result<(), UndoFailure> {
+            self.calls.lock().unwrap().push(format!("Undo {id}"));
+            if id.starts_with("changed") {
+                return Err(UndoFailure::Failed("changed".into()));
+            }
+            if id.starts_with("gone") {
+                return Err(UndoFailure::Failed("unavailable".into()));
+            }
+            let found = {
+                let mut changes = self.changes.lock().unwrap();
+                let at = changes.iter().position(|c| *c == id);
+                at.map(|at| changes.remove(at))
+            };
+            if found.is_none() {
+                return Err(UndoFailure::NotFound("no such change".into()));
+            }
+            let _ = Self::changes_changed(&e).await;
+            Ok(())
+        }
         #[zbus(signal)]
         async fn agents_changed(e: &SignalEmitter<'_>) -> zbus::Result<()>;
         #[zbus(signal)]
         async fn reminders_changed(e: &SignalEmitter<'_>) -> zbus::Result<()>;
+        #[zbus(signal)]
+        async fn changes_changed(e: &SignalEmitter<'_>) -> zbus::Result<()>;
+    }
+
+    /// Example changes `ListChanges` lists.
+    pub fn sample_changes() -> Vec<String> {
+        vec![
+            "9c1d0e2f4a6b8c3d".into(),
+            "changed-1".into(),
+            "gone-1".into(),
+        ]
     }
 
     /// Example agents for the tests and for looking at the page.
@@ -2370,6 +2845,7 @@ pub mod tests {
                     agents: Arc::new(Mutex::new(agents)),
                     reminders: Arc::new(Mutex::new(sample_reminders())),
                     calls: calls.clone(),
+                    changes: Arc::new(Mutex::new(sample_changes())),
                 },
             )
             .unwrap();
@@ -2445,6 +2921,25 @@ pub mod tests {
         assert_eq!(reminders(&app).unwrap().len(), 1);
         // Unknown ids are not an error.
         cancel_reminder(&app, "nowhere").unwrap();
+
+        // Changes: listed, undone (ChangesChanged), and why not.
+        let changed = Arc::new(AtomicUsize::new(0));
+        let c = changed.clone();
+        let watcher = testbus::connect(&bus);
+        std::thread::spawn(move || {
+            watch_changes(&watcher, || {
+                c.fetch_add(1, Ordering::SeqCst);
+                true
+            })
+        });
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        assert_eq!(super::changes(&app).unwrap(), sample_changes());
+        undo(&app, "9c1d0e2f4a6b8c3d").unwrap();
+        assert!(testbus::eventually(|| changed.load(Ordering::SeqCst) >= 1));
+        assert_eq!(undo(&app, "9c1d0e2f4a6b8c3d"), Err(UndoError::Gone));
+        assert_eq!(undo(&app, "changed-1"), Err(UndoError::Changed));
+        assert_eq!(undo(&app, "gone-1"), Err(UndoError::Unavailable));
+        assert_eq!(super::changes(&app).unwrap().len(), 2);
         assert_eq!(
             *calls.lock().unwrap(),
             [
@@ -2454,7 +2949,11 @@ pub mod tests {
                 "Revoke /nowhere",
                 "ClearLog",
                 "CancelReminder 3f9a0c2e7b1d4a56",
-                "CancelReminder nowhere"
+                "CancelReminder nowhere",
+                "Undo 9c1d0e2f4a6b8c3d",
+                "Undo 9c1d0e2f4a6b8c3d",
+                "Undo changed-1",
+                "Undo gone-1"
             ]
         );
     }
