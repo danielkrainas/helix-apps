@@ -1143,8 +1143,8 @@ msgstr "_Обчислити"
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
 #: apps/help/src/ui.rs:196 apps/music/src/pages.rs:2129
 #: apps/music/src/pages.rs:2232 apps/music/src/pages.rs:2317
-#: apps/settings/src/ui/agent_access.rs:267
-#: apps/settings/src/ui/agent_access.rs:787 apps/settings/src/ui/apps.rs:553
+#: apps/settings/src/ui/agent_access.rs:280
+#: apps/settings/src/ui/agent_access.rs:953 apps/settings/src/ui/apps.rs:553
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
 #: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
 #: apps/system-monitor/src/dialogs.rs:142
@@ -1487,7 +1487,7 @@ msgstr "Повторення"
 msgid "Repeat Until"
 msgstr "Повторювати до"
 
-#: apps/calendar/src/editor.rs:596
+#: apps/calendar/src/editor.rs:596 apps/settings/src/ui/agent_access.rs:605
 msgid "Reminders"
 msgstr "Нагадування"
 
@@ -3072,7 +3072,7 @@ msgid "Current Location"
 msgstr "Поточне розташування"
 
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
-#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:655
+#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:821
 #: apps/settings/src/ui/input.rs:367 apps/weather/src/ui.rs:902
 #: apps/web/src/dialogs.rs:198 apps/web/src/dialogs.rs:656
 #: apps/web/src/dialogs.rs:1043 apps/web/src/dialogs.rs:1198
@@ -4219,7 +4219,7 @@ msgid "{} on disk, {} apparent"
 msgstr "{} на диску, {} фактично"
 
 #: apps/disk-usage/src/ui.rs:816 apps/disk-usage/src/ui.rs:1150
-#: apps/files/src/fmt.rs:12
+#: apps/files/src/fmt.rs:12 apps/settings/src/agents.rs:596
 msgid "{n} item"
 msgid_plural "{n} items"
 msgstr[0] "{n} елемент"
@@ -7057,7 +7057,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr "Не вдалося обробити «{file}»: {error}"
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/settings/src/agents.rs:501 apps/web/src/window.rs:2341
+#: apps/settings/src/agents.rs:723 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "Скасовано"
 
@@ -8266,7 +8266,7 @@ msgstr "Неможливо показати таблицю символів ць
 msgid "Info"
 msgstr "Інформація"
 
-#: apps/fonts/src/ui.rs:1067
+#: apps/fonts/src/ui.rs:1067 apps/settings/src/agents.rs:600
 msgid "{n} character"
 msgid_plural "{n} characters"
 msgstr[0] "{n} символ"
@@ -10949,309 +10949,590 @@ msgstr "Керування робочим столом"
 msgid "Control Apps"
 msgstr "Керування застосунками"
 
-#: apps/settings/src/agents.rs:55 apps/settings/src/ui/agent_access.rs:195
+#: apps/settings/src/agents.rs:55 apps/settings/src/ui/agent_access.rs:208
 msgid "Screen and Input"
 msgstr "Екран і введення"
 
-#: apps/settings/src/agents.rs:316
+#: apps/settings/src/agents.rs:413
 msgid "Checked its access"
 msgstr "Перевірив свій доступ"
 
-#: apps/settings/src/agents.rs:317 apps/settings/src/agents.rs:354
+#: apps/settings/src/agents.rs:414 apps/settings/src/agents.rs:452
 msgid "Asked for access"
 msgstr "Запросив доступ"
 
-#: apps/settings/src/agents.rs:318
+#: apps/settings/src/agents.rs:415
 msgid "Read the desktop state"
 msgstr "Прочитав стан стільниці"
 
-#: apps/settings/src/agents.rs:319
+#: apps/settings/src/agents.rs:416
 msgid "Listed windows"
 msgstr "Отримав список вікон"
 
-#: apps/settings/src/agents.rs:320
+#: apps/settings/src/agents.rs:417
 msgid "Listed apps"
 msgstr "Отримав список застосунків"
 
-#: apps/settings/src/agents.rs:321
+#: apps/settings/src/agents.rs:418
 msgid "Listed workspaces"
 msgstr "Отримав список робочих просторів"
 
-#: apps/settings/src/agents.rs:322
+#: apps/settings/src/agents.rs:419
 msgid "Listed displays"
 msgstr "Отримав список дисплеїв"
 
-#: apps/settings/src/agents.rs:323
+#: apps/settings/src/agents.rs:420
 msgid "Listed notifications"
 msgstr "Отримав список сповіщень"
 
-#: apps/settings/src/agents.rs:324
+#: apps/settings/src/agents.rs:421
 msgid "Listed recent files"
 msgstr "Отримав список недавніх файлів"
 
-#: apps/settings/src/agents.rs:325
+#: apps/settings/src/agents.rs:422
 msgid "Searched files"
 msgstr "Шукав файли"
 
-#: apps/settings/src/agents.rs:326
+#: apps/settings/src/agents.rs:423
 msgid "Waited for a window"
 msgstr "Чекав на вікно"
 
-#: apps/settings/src/agents.rs:327
+#: apps/settings/src/agents.rs:424
 msgid "Waited for a window to close"
 msgstr "Чекав на закриття вікна"
 
-#: apps/settings/src/agents.rs:328
+#: apps/settings/src/agents.rs:425
 msgid "Asked you a question"
 msgstr "Поставив вам запитання"
 
-#: apps/settings/src/agents.rs:329
+#: apps/settings/src/agents.rs:426
 msgid "Asked you to confirm"
 msgstr "Попросив вас підтвердити"
 
-#: apps/settings/src/agents.rs:330
+#: apps/settings/src/agents.rs:427
 msgid "Added a reminder"
 msgstr "Додав нагадування"
 
-#: apps/settings/src/agents.rs:331
+#: apps/settings/src/agents.rs:428
 msgid "Listed reminders"
 msgstr "Отримав список нагадувань"
 
-#: apps/settings/src/agents.rs:332
+#: apps/settings/src/agents.rs:429
 msgid "Cancelled a reminder"
 msgstr "Скасував нагадування"
 
-#: apps/settings/src/agents.rs:333
+#: apps/settings/src/agents.rs:430
 msgid "Opened a file or link"
 msgstr "Відкрив файл або посилання"
 
-#: apps/settings/src/agents.rs:334
+#: apps/settings/src/agents.rs:431
 msgid "Started an app"
 msgstr "Запустив застосунок"
 
-#: apps/settings/src/agents.rs:335
+#: apps/settings/src/agents.rs:432
 msgid "Changed a window"
 msgstr "Змінив вікно"
 
-#: apps/settings/src/agents.rs:336
+#: apps/settings/src/agents.rs:433
 msgid "Switched workspace"
 msgstr "Перемкнув робочий простір"
 
-#: apps/settings/src/agents.rs:337
+#: apps/settings/src/agents.rs:434
 msgid "Turned a setting on or off"
 msgstr "Увімкнув або вимкнув параметр"
 
-#: apps/settings/src/agents.rs:338
+#: apps/settings/src/agents.rs:435
 msgid "Adjusted a setting"
 msgstr "Змінив значення параметра"
 
-#: apps/settings/src/agents.rs:339
+#: apps/settings/src/agents.rs:436
 msgid "Sent a notification"
 msgstr "Надіслав сповіщення"
 
-#: apps/settings/src/agents.rs:340
+#: apps/settings/src/agents.rs:437
 msgid "Read the clipboard"
 msgstr "Прочитав буфер обміну"
 
-#: apps/settings/src/agents.rs:341
+#: apps/settings/src/agents.rs:438
 msgid "Changed the clipboard"
 msgstr "Змінив буфер обміну"
 
-#: apps/settings/src/agents.rs:342
+#: apps/settings/src/agents.rs:439
 msgid "Read an app’s contents"
 msgstr "Прочитав вміст застосунку"
 
-#: apps/settings/src/agents.rs:343
+#: apps/settings/src/agents.rs:440
+msgid "Searched an app’s controls"
+msgstr "Шукав елементи керування застосунку"
+
+#: apps/settings/src/agents.rs:441
 msgid "Used a control in an app"
 msgstr "Використав елемент керування в застосунку"
 
-#: apps/settings/src/agents.rs:344
+#: apps/settings/src/agents.rs:442
 msgid "Filled in a field in an app"
 msgstr "Заповнив поле в застосунку"
 
-#: apps/settings/src/agents.rs:345
+#: apps/settings/src/agents.rs:443
 msgid "Took a screenshot"
 msgstr "Зробив знімок екрана"
 
-#: apps/settings/src/agents.rs:346
+#: apps/settings/src/agents.rs:444
 msgid "Typed or clicked"
 msgstr "Ввів текст або клацнув"
 
-#: apps/settings/src/agents.rs:348
+#: apps/settings/src/agents.rs:446
 msgid "Listed agents"
 msgstr "Отримав список агентів"
 
-#: apps/settings/src/agents.rs:349
+#: apps/settings/src/agents.rs:447
 msgid "Access revoked"
 msgstr "Доступ відкликано"
 
-#: apps/settings/src/agents.rs:350
+#: apps/settings/src/agents.rs:448
 msgid "Access revoked and forgotten"
 msgstr "Доступ відкликано й забуто"
 
-#: apps/settings/src/agents.rs:351
+#: apps/settings/src/agents.rs:449
 msgid "All access revoked"
 msgstr "Увесь доступ відкликано"
 
-#: apps/settings/src/agents.rs:352
+#: apps/settings/src/agents.rs:450
 msgid "Activity log cleared"
 msgstr "Журнал активності очищено"
 
-#: apps/settings/src/agents.rs:355
+#: apps/settings/src/agents.rs:453
 msgid "Asked to confirm an action"
 msgstr "Запросив підтвердження дії"
 
-#: apps/settings/src/agents.rs:356
+#: apps/settings/src/agents.rs:454
 msgid "Stopped by you"
 msgstr "Зупинено вами"
 
-#: apps/settings/src/agents.rs:357
+#: apps/settings/src/agents.rs:455
+msgid "Reminder due"
+msgstr "Нагадування настало"
+
+#: apps/settings/src/agents.rs:456
 msgid "Activity log full"
 msgstr "Журнал активності заповнено"
 
-#: apps/settings/src/agents.rs:366
+#: apps/settings/src/agents.rs:465
+msgid "Reminder cancelled"
+msgstr "Нагадування скасовано"
+
+#: apps/settings/src/agents.rs:474
 msgid "Tried to list agents"
 msgstr "Намагався отримати список агентів"
 
-#: apps/settings/src/agents.rs:367
+#: apps/settings/src/agents.rs:475
+msgid "Tried to list reminders"
+msgstr "Намагався отримати список нагадувань"
+
+#: apps/settings/src/agents.rs:476
+msgid "Tried to cancel a reminder"
+msgstr "Намагався скасувати нагадування"
+
+#: apps/settings/src/agents.rs:477
 msgid "Tried to revoke access"
 msgstr "Намагався відкликати доступ"
 
-#: apps/settings/src/agents.rs:368
+#: apps/settings/src/agents.rs:478
 msgid "Tried to forget an agent"
 msgstr "Намагався забути агента"
 
-#: apps/settings/src/agents.rs:369
+#: apps/settings/src/agents.rs:479
 msgid "Tried to revoke all access"
 msgstr "Намагався відкликати весь доступ"
 
-#: apps/settings/src/agents.rs:370
+#: apps/settings/src/agents.rs:480
 msgid "Tried to clear the activity log"
 msgstr "Намагався очистити журнал активності"
 
-#: apps/settings/src/agents.rs:378
+#: apps/settings/src/agents.rs:488
 msgid "From a sandboxed app"
 msgstr "Із ізольованого застосунку"
 
-#: apps/settings/src/agents.rs:379
+#: apps/settings/src/agents.rs:489
 msgid "Agent Access was off"
 msgstr "Доступ агентів був вимкнений"
 
-#: apps/settings/src/agents.rs:380
+#: apps/settings/src/agents.rs:490
 msgid "From a remote session"
 msgstr "Із віддаленого сеансу"
 
-#: apps/settings/src/agents.rs:381
+#: apps/settings/src/agents.rs:491
 msgid "The screen was locked"
 msgstr "Екран був заблокований"
 
-#: apps/settings/src/agents.rs:382
+#: apps/settings/src/agents.rs:492
 msgid "Needs a higher access level"
 msgstr "Потрібен вищий рівень доступу"
 
-#: apps/settings/src/agents.rs:383
+#: apps/settings/src/agents.rs:493
 msgid "That feature was turned off"
 msgstr "Цю функцію було вимкнено"
 
-#: apps/settings/src/agents.rs:384
+#: apps/settings/src/agents.rs:494
 msgid "Not allowed yet"
 msgstr "Ще не дозволено"
 
-#: apps/settings/src/agents.rs:385
+#: apps/settings/src/agents.rs:495
 msgid "Denied by you"
 msgstr "Заборонено вами"
 
-#: apps/settings/src/agents.rs:386
+#: apps/settings/src/agents.rs:496
 msgid "Excluded app"
 msgstr "Виключений застосунок"
 
-#: apps/settings/src/agents.rs:387
+#: apps/settings/src/agents.rs:497
 msgid "Needed your confirmation"
 msgstr "Потребувало вашого підтвердження"
 
-#: apps/settings/src/agents.rs:388
+#: apps/settings/src/agents.rs:498
 msgid "Only Settings may do this"
 msgstr "Це можуть робити лише Параметри"
 
-#: apps/settings/src/agents.rs:396
+#: apps/settings/src/agents.rs:506
 msgid "Failed: timed out"
 msgstr "Помилка: час очікування вичерпано"
 
-#: apps/settings/src/agents.rs:397
+#: apps/settings/src/agents.rs:507
 msgid "Failed: not found"
 msgstr "Помилка: не знайдено"
 
-#: apps/settings/src/agents.rs:398
+#: apps/settings/src/agents.rs:508
 msgid "Failed: not supported"
 msgstr "Помилка: не підтримується"
 
-#: apps/settings/src/agents.rs:399
+#: apps/settings/src/agents.rs:509
 msgid "Failed: invalid request"
 msgstr "Помилка: неприпустимий запит"
 
-#: apps/settings/src/agents.rs:400
+#: apps/settings/src/agents.rs:510
 msgid "Failed: cancelled"
 msgstr "Помилка: скасовано"
 
-#: apps/settings/src/agents.rs:401
+#: apps/settings/src/agents.rs:511
 msgid "Failed"
 msgstr "Помилка"
 
-#: apps/settings/src/agents.rs:427
+#: apps/settings/src/agents.rs:520
+msgctxt "accessible role"
+msgid "Button"
+msgstr "Кнопка"
+
+#: apps/settings/src/agents.rs:521
+msgctxt "accessible role"
+msgid "Toggle button"
+msgstr "Кнопка-перемикач"
+
+#: apps/settings/src/agents.rs:522
+msgctxt "accessible role"
+msgid "Menu button"
+msgstr "Кнопка меню"
+
+#: apps/settings/src/agents.rs:523
+msgctxt "accessible role"
+msgid "Check box"
+msgstr "Прапорець"
+
+#: apps/settings/src/agents.rs:524
+msgctxt "accessible role"
+msgid "Option button"
+msgstr "Радіокнопка"
+
+#: apps/settings/src/agents.rs:525
+msgctxt "accessible role"
+msgid "Switch"
+msgstr "Перемикач"
+
+#: apps/settings/src/agents.rs:526
+msgctxt "accessible role"
+msgid "Text field"
+msgstr "Текстове поле"
+
+#: apps/settings/src/agents.rs:527
+msgctxt "accessible role"
+msgid "Password field"
+msgstr "Поле пароля"
+
+#: apps/settings/src/agents.rs:528
+msgctxt "accessible role"
+msgid "Drop-down list"
+msgstr "Розкривний список"
+
+#: apps/settings/src/agents.rs:529
+msgctxt "accessible role"
+msgid "Slider"
+msgstr "Повзунок"
+
+#: apps/settings/src/agents.rs:530
+msgctxt "accessible role"
+msgid "Number field"
+msgstr "Числове поле"
+
+#: apps/settings/src/agents.rs:531
+msgctxt "accessible role"
+msgid "Link"
+msgstr "Посилання"
+
+#: apps/settings/src/agents.rs:532
+msgctxt "accessible role"
+msgid "Menu item"
+msgstr "Пункт меню"
+
+#: apps/settings/src/agents.rs:533
+msgctxt "accessible role"
+msgid "Tab"
+msgstr "Вкладка"
+
+#: apps/settings/src/agents.rs:534
+msgctxt "accessible role"
+msgid "List item"
+msgstr "Елемент списку"
+
+#: apps/settings/src/agents.rs:535
+msgctxt "accessible role"
+msgid "Table cell"
+msgstr "Комірка таблиці"
+
+#: apps/settings/src/agents.rs:536
+msgctxt "accessible role"
+msgid "Label"
+msgstr "Підпис"
+
+#: apps/settings/src/agents.rs:537
+msgctxt "accessible role"
+msgid "Heading"
+msgstr "Заголовок"
+
+#: apps/settings/src/agents.rs:538
+msgctxt "accessible role"
+msgid "Image"
+msgstr "Зображення"
+
+#: apps/settings/src/agents.rs:539
+msgctxt "accessible role"
+msgid "Dialog"
+msgstr "Діалог"
+
+#: apps/settings/src/agents.rs:540
+msgctxt "accessible role"
+msgid "Window"
+msgstr "Вікно"
+
+#: apps/settings/src/agents.rs:549
+msgctxt "control action"
+msgid "Clicked"
+msgstr "Натиснуто"
+
+#: apps/settings/src/agents.rs:550
+msgctxt "control action"
+msgid "Activated"
+msgstr "Активовано"
+
+#: apps/settings/src/agents.rs:551
+msgctxt "control action"
+msgid "Toggled"
+msgstr "Перемкнуто"
+
+#: apps/settings/src/agents.rs:552
+msgctxt "control action"
+msgid "Selected"
+msgstr "Вибрано"
+
+#: apps/settings/src/agents.rs:553
+msgctxt "control action"
+msgid "Focused"
+msgstr "Отримано фокус"
+
+#: apps/settings/src/agents.rs:554
+msgctxt "control action"
+msgid "Expanded"
+msgstr "Розгорнуто"
+
+#: apps/settings/src/agents.rs:555
+msgctxt "control action"
+msgid "Collapsed"
+msgstr "Згорнуто"
+
+#: apps/settings/src/agents.rs:556
+msgctxt "control action"
+msgid "Opened"
+msgstr "Відкрито"
+
+#: apps/settings/src/agents.rs:557
+msgctxt "control action"
+msgid "Followed a link"
+msgstr "Перейшов за посиланням"
+
+#: apps/settings/src/agents.rs:558
+msgctxt "control action"
+msgid "Opened a menu"
+msgstr "Відкрив меню"
+
+#: apps/settings/src/agents.rs:559
+msgctxt "control action"
+msgid "Increased"
+msgstr "Збільшено"
+
+#: apps/settings/src/agents.rs:560
+msgctxt "control action"
+msgid "Decreased"
+msgstr "Зменшено"
+
+#: apps/settings/src/agents.rs:561
+msgctxt "control action"
+msgid "Closed the window"
+msgstr "Закрив вікно"
+
+#: apps/settings/src/agents.rs:562
+msgctxt "control action"
+msgid "Minimized the window"
+msgstr "Згорнув вікно"
+
+#: apps/settings/src/agents.rs:563
+msgctxt "control action"
+msgid "Maximized or restored the window"
+msgstr "Розгорнув або відновив вікно"
+
+#: apps/settings/src/agents.rs:564
+msgctxt "control action"
+msgid "Selected all"
+msgstr "Виділив усе"
+
+#: apps/settings/src/agents.rs:565
+msgctxt "control action"
+msgid "Deleted the selection"
+msgstr "Видалив виділене"
+
+#: apps/settings/src/agents.rs:566
+msgctxt "control action"
+msgid "Cleared the text"
+msgstr "Очистив текст"
+
+#: apps/settings/src/agents.rs:567
+msgctxt "control action"
+msgid "Copied"
+msgstr "Скопійовано"
+
+#: apps/settings/src/agents.rs:568
+msgctxt "control action"
+msgid "Cut"
+msgstr "Вирізано"
+
+#: apps/settings/src/agents.rs:569
+msgctxt "control action"
+msgid "Pasted"
+msgstr "Вставлено"
+
+#: apps/settings/src/agents.rs:570
+msgctxt "control action"
+msgid "Copied a link"
+msgstr "Скопіював посилання"
+
+#: apps/settings/src/agents.rs:571
+msgctxt "control action"
+msgid "Inserted an emoji"
+msgstr "Вставив емодзі"
+
+#: apps/settings/src/agents.rs:572
+msgctxt "control action"
+msgid "Another action"
+msgstr "Інша дія"
+
+#: apps/settings/src/agents.rs:573
+msgctxt "control action"
+msgid "Set text"
+msgstr "Задав текст"
+
+#: apps/settings/src/agents.rs:574
+msgctxt "control action"
+msgid "Set a value"
+msgstr "Задав значення"
+
+#: apps/settings/src/agents.rs:594 apps/web/src/window.rs:2157
+msgid "{n} match"
+msgid_plural "{n} matches"
+msgstr[0] "{n} збіг"
+msgstr[1] "{n} збіги"
+msgstr[2] "{n} збігів"
+
+#: apps/settings/src/agents.rs:603
+msgid "{n} choice"
+msgid_plural "{n} choices"
+msgstr[0] "{n} варіант"
+msgstr[1] "{n} варіанти"
+msgstr[2] "{n} варіантів"
+
+#: apps/settings/src/agents.rs:635
 msgid "A window of {app}"
 msgstr "Вікно застосунку {app}"
 
-#: apps/settings/src/agents.rs:429
+#: apps/settings/src/agents.rs:637
 msgid "A window"
 msgstr "Вікно"
 
-#: apps/settings/src/agents.rs:455 apps/settings/src/ui/mod.rs:165
+#: apps/settings/src/agents.rs:666 apps/settings/src/ui/mod.rs:165
 #: apps/settings/src/ui/mod.rs:245 apps/settings/src/ui/mod.rs:509
 msgid "Settings"
 msgstr "Параметри"
 
-#: apps/settings/src/agents.rs:470
+#: apps/settings/src/agents.rs:681
 msgid "Allowed for this session"
 msgstr "Дозволено на цей сеанс"
 
-#: apps/settings/src/agents.rs:471 apps/settings/src/ui/agent_access.rs:462
+#: apps/settings/src/agents.rs:682 apps/settings/src/ui/agent_access.rs:475
 msgid "Always allowed"
 msgstr "Завжди дозволено"
 
-#: apps/settings/src/agents.rs:472 apps/settings/src/agents.rs:479
-#: apps/settings/src/agents.rs:493 apps/web/src/window.rs:1948
+#: apps/settings/src/agents.rs:683 apps/settings/src/agents.rs:690
+#: apps/settings/src/agents.rs:715 apps/web/src/window.rs:1948
 msgid "Allowed"
 msgstr "Дозволено"
 
-#: apps/settings/src/agents.rs:473 apps/settings/src/agents.rs:480
+#: apps/settings/src/agents.rs:684 apps/settings/src/agents.rs:691
 #: apps/web/src/window.rs:1948
 msgid "Denied"
 msgstr "Заборонено"
 
-#: apps/settings/src/agents.rs:474 apps/settings/src/agents.rs:481
+#: apps/settings/src/agents.rs:685 apps/settings/src/agents.rs:692
 msgid "Not answered"
 msgstr "Без відповіді"
 
-#: apps/settings/src/agents.rs:487
+#: apps/settings/src/agents.rs:698
+msgid "Shown"
+msgstr "Показано"
+
+#: apps/settings/src/agents.rs:699
+msgid "Cancelled by you"
+msgstr "Скасовано вами"
+
+#: apps/settings/src/agents.rs:701
+msgid "Not shown"
+msgstr "Не показано"
+
+#: apps/settings/src/agents.rs:709
 msgid "Refused calls are no longer recorded today"
 msgstr "Відхилені виклики сьогодні більше не записуються"
 
-#: apps/settings/src/agents.rs:488
+#: apps/settings/src/agents.rs:710
 msgid "Nothing more is recorded today"
 msgstr "Сьогодні більше нічого не записується"
 
-#: apps/settings/src/agents.rs:497
+#: apps/settings/src/agents.rs:719
 msgid "Failed: {error}"
 msgstr "Помилка: {error}"
 
-#: apps/settings/src/agents.rs:505
+#: apps/settings/src/agents.rs:727
 msgid "Refused {n} time"
 msgid_plural "Refused {n} times"
 msgstr[0] "Відмовлено {n} раз"
 msgstr[1] "Відмовлено {n} рази"
 msgstr[2] "Відмовлено {n} разів"
 
-#: apps/settings/src/agents.rs:506
+#: apps/settings/src/agents.rs:728
 msgid "Refused"
 msgstr "Відмовлено"
 
@@ -11752,11 +12033,11 @@ msgstr ""
 "name;hostname;memory;processor;disk;os;version;kernel;hardware;"
 
 #: apps/settings/src/panels.rs:281 apps/settings/src/ui/agent_access.rs:70
-#: apps/settings/src/ui/agent_access.rs:170 apps/settings/src/ui/privacy.rs:189
+#: apps/settings/src/ui/agent_access.rs:183 apps/settings/src/ui/privacy.rs:189
 msgid "Agent Access"
 msgstr "Доступ агентів"
 
-#: apps/settings/src/panels.rs:289 apps/settings/src/ui/agent_access.rs:816
+#: apps/settings/src/panels.rs:289 apps/settings/src/ui/agent_access.rs:982
 msgid "Agent Activity"
 msgstr "Активність агентів"
 
@@ -12309,15 +12590,15 @@ msgstr "Доступ"
 msgid "Asking"
 msgstr "Запити"
 
-#: apps/settings/src/ui/agent_access.rs:94
+#: apps/settings/src/ui/agent_access.rs:96
 msgid "Information"
 msgstr "Відомості"
 
-#: apps/settings/src/ui/agent_access.rs:100
+#: apps/settings/src/ui/agent_access.rs:102
 msgid "Notifications Access"
 msgstr "Доступ до сповіщень"
 
-#: apps/settings/src/ui/agent_access.rs:101
+#: apps/settings/src/ui/agent_access.rs:103
 msgid ""
 "Agents can read the text of notifications, which can include messages and "
 "sign-in codes"
@@ -12325,11 +12606,11 @@ msgstr ""
 "Агенти можуть читати текст сповіщень, у якому можуть бути повідомлення та "
 "коди входу"
 
-#: apps/settings/src/ui/agent_access.rs:108
+#: apps/settings/src/ui/agent_access.rs:110
 msgid "Clipboard Access"
 msgstr "Доступ до буфера обміну"
 
-#: apps/settings/src/ui/agent_access.rs:109
+#: apps/settings/src/ui/agent_access.rs:111
 msgid ""
 "Agents can read and change the clipboard, which can hold passwords and other "
 "copied text"
@@ -12337,54 +12618,64 @@ msgstr ""
 "Агенти можуть читати й змінювати буфер обміну, у якому можуть бути паролі та "
 "інший скопійований текст"
 
-#: apps/settings/src/ui/agent_access.rs:114
+#: apps/settings/src/ui/agent_access.rs:120
+msgid "Read Text Fields"
+msgstr "Читання текстових полів"
+
+#: apps/settings/src/ui/agent_access.rs:121
+msgid ""
+"Agents controlling apps can see what is typed in fields; password fields are "
+"never shown"
+msgstr "Агенти, що керують застосунками, бачать, що вводиться в поля; поля паролів ніколи не показуються"
+
+#: apps/settings/src/ui/agent_access.rs:127
 msgid "Safeguards"
 msgstr "Запобіжники"
 
-#: apps/settings/src/ui/agent_access.rs:120
+#: apps/settings/src/ui/agent_access.rs:133
 msgid "Confirm Sensitive Actions"
 msgstr "Підтверджувати важливі дії"
 
-#: apps/settings/src/ui/agent_access.rs:121
+#: apps/settings/src/ui/agent_access.rs:134
 msgid ""
 "Ask before an agent deletes files, sends messages or changes network settings"
 msgstr ""
 "Запитувати, перш ніж агент видалить файли, надішле повідомлення або змінить "
 "мережеві налаштування"
 
-#: apps/settings/src/ui/agent_access.rs:128
+#: apps/settings/src/ui/agent_access.rs:141
 msgid "Allow From Remote Sessions"
 msgstr "Дозволити з віддалених сеансів"
 
-#: apps/settings/src/ui/agent_access.rs:129
+#: apps/settings/src/ui/agent_access.rs:142
 msgid "Agents running in a remote login (SSH) can ask for access"
 msgstr ""
 "Агенти, що працюють у віддаленому вході (SSH), можуть запитувати доступ"
 
-#: apps/settings/src/ui/agent_access.rs:140
+#: apps/settings/src/ui/agent_access.rs:153
 msgid "View Activity"
 msgstr "Переглянути активність"
 
-#: apps/settings/src/ui/agent_access.rs:141
+#: apps/settings/src/ui/agent_access.rs:154
 msgid "What agents did, and how long it is kept"
 msgstr "Що робили агенти та як довго це зберігається"
 
-#: apps/settings/src/ui/agent_access.rs:188
+#: apps/settings/src/ui/agent_access.rs:201
 msgid "Access Level"
 msgstr "Рівень доступу"
 
-#: apps/settings/src/ui/agent_access.rs:196
+#: apps/settings/src/ui/agent_access.rs:209
 msgid ""
 "Also take screenshots and use the pointer and keyboard as if they were you"
 msgstr ""
 "Також робити знімки екрана й користуватися вказівником і клавіатурою так, "
 "ніби це ви"
 
-#: apps/settings/src/ui/agent_access.rs:262
+#: apps/settings/src/ui/agent_access.rs:275
 msgid "Allow Screen and Input?"
 msgstr "Дозволити екран і введення?"
 
-#: apps/settings/src/ui/agent_access.rs:263
+#: apps/settings/src/ui/agent_access.rs:276
 msgid ""
 "Agents you allow will be able to see everything on the screen and type and "
 "click anywhere, as if they were you. Only turn this on for agents you trust."
@@ -12392,31 +12683,31 @@ msgstr ""
 "Агенти, яким ви це дозволите, зможуть бачити все на екрані, друкувати й "
 "клацати будь-де, ніби це ви. Вмикайте це лише для агентів, яким довіряєте."
 
-#: apps/settings/src/ui/agent_access.rs:268
+#: apps/settings/src/ui/agent_access.rs:281
 msgid "_Allow"
 msgstr "_Дозволити"
 
-#: apps/settings/src/ui/agent_access.rs:288
+#: apps/settings/src/ui/agent_access.rs:301
 msgid "Ask Each Session"
 msgstr "Запитувати в кожному сеансі"
 
-#: apps/settings/src/ui/agent_access.rs:289
+#: apps/settings/src/ui/agent_access.rs:302
 msgid "Agents are asked for again in every session"
 msgstr "Агентів запитують знову в кожному сеансі"
 
-#: apps/settings/src/ui/agent_access.rs:293
+#: apps/settings/src/ui/agent_access.rs:306
 msgid "Remember"
 msgstr "Запам’ятовувати"
 
-#: apps/settings/src/ui/agent_access.rs:294
+#: apps/settings/src/ui/agent_access.rs:307
 msgid "Agents you always allow are not asked again"
 msgstr "Агентів, яким ви завжди дозволяєте, більше не запитують"
 
-#: apps/settings/src/ui/agent_access.rs:345
+#: apps/settings/src/ui/agent_access.rs:358
 msgid "Allowed Agents"
 msgstr "Дозволені агенти"
 
-#: apps/settings/src/ui/agent_access.rs:346
+#: apps/settings/src/ui/agent_access.rs:359
 msgid ""
 "While an agent is active, an indicator is always shown in the top bar, with "
 "Stop in its menu."
@@ -12424,98 +12715,134 @@ msgstr ""
 "Поки агент активний, на верхній панелі завжди показано індикатор із пунктом "
 "«Зупинити» в меню."
 
-#: apps/settings/src/ui/agent_access.rs:350
+#: apps/settings/src/ui/agent_access.rs:363
 msgid "Revoke All"
 msgstr "Відкликати в усіх"
 
-#: apps/settings/src/ui/agent_access.rs:355
+#: apps/settings/src/ui/agent_access.rs:368
 msgid "Revoke Access of All Agents"
 msgstr "Відкликати доступ усіх агентів"
 
-#: apps/settings/src/ui/agent_access.rs:417
+#: apps/settings/src/ui/agent_access.rs:430
 msgid "Only the installed Settings app can change agents' access"
 msgstr ""
 "Лише встановлений застосунок «Налаштування» може змінювати доступ агентів"
 
-#: apps/settings/src/ui/agent_access.rs:419
+#: apps/settings/src/ui/agent_access.rs:432
 msgid "Could not change the agent's access: {e}"
 msgstr "Не вдалося змінити доступ агента: {e}"
 
-#: apps/settings/src/ui/agent_access.rs:445
+#: apps/settings/src/ui/agent_access.rs:458
 msgid "Not active this session"
 msgstr "Не активний у цьому сеансі"
 
-#: apps/settings/src/ui/agent_access.rs:446
+#: apps/settings/src/ui/agent_access.rs:459
 msgid "Active just now"
 msgstr "Активний щойно"
 
-#: apps/settings/src/ui/agent_access.rs:447
+#: apps/settings/src/ui/agent_access.rs:460
 msgid "Active {n} minute ago"
 msgid_plural "Active {n} minutes ago"
 msgstr[0] "Активний {n} хвилину тому"
 msgstr[1] "Активний {n} хвилини тому"
 msgstr[2] "Активний {n} хвилин тому"
 
-#: apps/settings/src/ui/agent_access.rs:448
+#: apps/settings/src/ui/agent_access.rs:461
 msgid "Active {n} hour ago"
 msgid_plural "Active {n} hours ago"
 msgstr[0] "Активний {n} годину тому"
 msgstr[1] "Активний {n} години тому"
 msgstr[2] "Активний {n} годин тому"
 
-#: apps/settings/src/ui/agent_access.rs:449
+#: apps/settings/src/ui/agent_access.rs:462
 msgid "Active {n} day ago"
 msgid_plural "Active {n} days ago"
 msgstr[0] "Активний {n} день тому"
 msgstr[1] "Активний {n} дні тому"
 msgstr[2] "Активний {n} днів тому"
 
-#: apps/settings/src/ui/agent_access.rs:460
+#: apps/settings/src/ui/agent_access.rs:473
 msgid "Denied this session"
 msgstr "Заборонено в цьому сеансі"
 
-#: apps/settings/src/ui/agent_access.rs:464
+#: apps/settings/src/ui/agent_access.rs:477
 msgid "Allowed this session"
 msgstr "Дозволено в цьому сеансі"
 
-#: apps/settings/src/ui/agent_access.rs:485
+#: apps/settings/src/ui/agent_access.rs:498
 msgid "The desktop shell is not running, so agents cannot be listed"
 msgstr "Оболонка робочого столу не запущена, тому список агентів недоступний"
 
-#: apps/settings/src/ui/agent_access.rs:487
+#: apps/settings/src/ui/agent_access.rs:500
 msgid "Only the installed Settings app can list agents"
 msgstr ""
 "Лише встановлений застосунок «Налаштування» може показувати список агентів"
 
-#: apps/settings/src/ui/agent_access.rs:488
+#: apps/settings/src/ui/agent_access.rs:501
 msgid "Agents could not be listed"
 msgstr "Не вдалося отримати список агентів"
 
-#: apps/settings/src/ui/agent_access.rs:490
+#: apps/settings/src/ui/agent_access.rs:503
 msgid "Agents that ask for access are listed here"
 msgstr "Тут буде показано агентів, які запитують доступ"
 
-#: apps/settings/src/ui/agent_access.rs:544
+#: apps/settings/src/ui/agent_access.rs:557
 msgid "Revoke"
 msgstr "Відкликати"
 
-#: apps/settings/src/ui/agent_access.rs:545
+#: apps/settings/src/ui/agent_access.rs:558
 msgid "Revoke Access of {agent}"
 msgstr "Відкликати доступ {agent}"
 
-#: apps/settings/src/ui/agent_access.rs:550
+#: apps/settings/src/ui/agent_access.rs:563
 msgid "Forget"
 msgstr "Забути"
 
-#: apps/settings/src/ui/agent_access.rs:551
+#: apps/settings/src/ui/agent_access.rs:564
 msgid "Forget {agent}"
 msgstr "Забути {agent}"
 
-#: apps/settings/src/ui/agent_access.rs:583
+#: apps/settings/src/ui/agent_access.rs:606
+msgid ""
+"Reminders agents have set for you. They are shown as notifications when they "
+"are due."
+msgstr "Нагадування, які агенти створили для вас. Вони показуються як сповіщення в призначений час."
+
+#: apps/settings/src/ui/agent_access.rs:661
+msgid "No reminders"
+msgstr "Немає нагадувань"
+
+#: apps/settings/src/ui/agent_access.rs:678
+msgctxt "agent reminder without text"
+msgid "Reminder"
+msgstr "Нагадування"
+
+#: apps/settings/src/ui/agent_access.rs:688
+msgid "Due {time}"
+msgstr "Термін: {time}"
+
+#: apps/settings/src/ui/agent_access.rs:711
+msgctxt "cancel an agent's reminder"
+msgid "Cancel"
+msgstr "Скасувати"
+
+#: apps/settings/src/ui/agent_access.rs:714
+msgid "Cancel Reminder “{text}”"
+msgstr "Скасувати нагадування «{text}»"
+
+#: apps/settings/src/ui/agent_access.rs:728
+msgid "Only the installed Settings app can cancel reminders"
+msgstr "Лише встановлений застосунок «Параметри» може скасовувати нагадування"
+
+#: apps/settings/src/ui/agent_access.rs:730
+msgid "Could not cancel the reminder: {e}"
+msgstr "Не вдалося скасувати нагадування: {e}"
+
+#: apps/settings/src/ui/agent_access.rs:749
 msgid "Excluded Apps"
 msgstr "Виключені застосунки"
 
-#: apps/settings/src/ui/agent_access.rs:584
+#: apps/settings/src/ui/agent_access.rs:750
 msgid ""
 "Agents can never read or control these apps. Password fields, the lock "
 "screen, system password prompts and Settings are always excluded."
@@ -12523,92 +12850,92 @@ msgstr ""
 "Агенти ніколи не можуть читати ці застосунки чи керувати ними. Поля паролів, "
 "екран блокування, системні запити пароля та «Налаштування» виключено завжди."
 
-#: apps/settings/src/ui/agent_access.rs:588
+#: apps/settings/src/ui/agent_access.rs:754
 msgid "Add App…"
 msgstr "Додати застосунок…"
 
-#: apps/settings/src/ui/agent_access.rs:607
+#: apps/settings/src/ui/agent_access.rs:773
 msgid "No apps excluded"
 msgstr "Немає виключених застосунків"
 
-#: apps/settings/src/ui/agent_access.rs:659
+#: apps/settings/src/ui/agent_access.rs:825
 msgid "Remove {app}"
 msgstr "Вилучити {app}"
 
-#: apps/settings/src/ui/agent_access.rs:672
+#: apps/settings/src/ui/agent_access.rs:838
 msgid "Exclude an App"
 msgstr "Виключити застосунок"
 
-#: apps/settings/src/ui/agent_access.rs:673
+#: apps/settings/src/ui/agent_access.rs:839
 msgid "Search apps"
 msgstr "Шукати застосунки"
 
-#: apps/settings/src/ui/agent_access.rs:674
+#: apps/settings/src/ui/agent_access.rs:840
 msgid "Search Apps"
 msgstr "Пошук застосунків"
 
-#: apps/settings/src/ui/agent_access.rs:675
+#: apps/settings/src/ui/agent_access.rs:841
 msgid "Loading Apps…"
 msgstr "Завантаження застосунків…"
 
-#: apps/settings/src/ui/agent_access.rs:743
+#: apps/settings/src/ui/agent_access.rs:909
 msgid "Keep Activity For"
 msgstr "Зберігати активність"
 
-#: apps/settings/src/ui/agent_access.rs:746
+#: apps/settings/src/ui/agent_access.rs:912
 msgid "Clear Activity"
 msgstr "Очистити активність"
 
-#: apps/settings/src/ui/agent_access.rs:747
+#: apps/settings/src/ui/agent_access.rs:913
 msgid "Remove everything agents have done from the log"
 msgstr "Вилучити з журналу все, що робили агенти"
 
-#: apps/settings/src/ui/agent_access.rs:748
+#: apps/settings/src/ui/agent_access.rs:914
 msgid "Clear…"
 msgstr "Очистити…"
 
-#: apps/settings/src/ui/agent_access.rs:754
+#: apps/settings/src/ui/agent_access.rs:920
 msgid "Recent Activity"
 msgstr "Нещодавня активність"
 
-#: apps/settings/src/ui/agent_access.rs:782
+#: apps/settings/src/ui/agent_access.rs:948
 msgid "Clear Agent Activity?"
 msgstr "Очистити активність агентів?"
 
-#: apps/settings/src/ui/agent_access.rs:783
+#: apps/settings/src/ui/agent_access.rs:949
 msgid "The record of what agents did is removed. This cannot be undone."
 msgstr ""
 "Запис про те, що робили агенти, буде вилучено. Цю дію неможливо скасувати."
 
-#: apps/settings/src/ui/agent_access.rs:788
+#: apps/settings/src/ui/agent_access.rs:954
 msgid "_Clear"
 msgstr "_Очистити"
 
-#: apps/settings/src/ui/agent_access.rs:800
+#: apps/settings/src/ui/agent_access.rs:966
 msgid "Agent activity cleared"
 msgstr "Активність агентів очищено"
 
-#: apps/settings/src/ui/agent_access.rs:801
+#: apps/settings/src/ui/agent_access.rs:967
 msgid "The desktop shell is not running, so the activity cannot be cleared"
 msgstr ""
 "Оболонка робочого столу не запущена, тому активність неможливо очистити"
 
-#: apps/settings/src/ui/agent_access.rs:805
+#: apps/settings/src/ui/agent_access.rs:971
 msgid "Only the installed Settings app can clear the activity"
 msgstr "Лише встановлений застосунок «Налаштування» може очищати активність"
 
-#: apps/settings/src/ui/agent_access.rs:807
+#: apps/settings/src/ui/agent_access.rs:973
 msgid "Could not clear the activity: {e}"
 msgstr "Не вдалося очистити активність: {e}"
 
-#: apps/settings/src/ui/agent_access.rs:848
+#: apps/settings/src/ui/agent_access.rs:1014
 msgid "Showing the latest {n} entry."
 msgid_plural "Showing the latest {n} entries."
 msgstr[0] "Показано останній {n} запис."
 msgstr[1] "Показано останні {n} записи."
 msgstr[2] "Показано останні {n} записів."
 
-#: apps/settings/src/ui/agent_access.rs:857
+#: apps/settings/src/ui/agent_access.rs:1023
 msgid "What agents do will be listed here"
 msgstr "Тут буде показано, що роблять агенти"
 
@@ -18075,13 +18402,6 @@ msgstr "Вилучити закладку {title}"
 #: apps/web/src/window.rs:2156
 msgid "Not found"
 msgstr "Не знайдено"
-
-#: apps/web/src/window.rs:2157
-msgid "{n} match"
-msgid_plural "{n} matches"
-msgstr[0] "{n} збіг"
-msgstr[1] "{n} збіги"
-msgstr[2] "{n} збігів"
 
 #: apps/web/src/window.rs:2225
 msgid "Cancel {name}"

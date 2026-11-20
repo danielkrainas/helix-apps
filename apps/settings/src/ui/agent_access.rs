@@ -1,8 +1,8 @@
 //! Privacy & Security › Agent Access (helixdesktop/apps#192): the
 //! `org.helixdesktop.agent-access` settings, the agents the shell knows
-//! (`org.helixdesktop.AgentAccess1`, which can only take access away)
-//! and the activity log. Contract: helixdesktop/spec
-//! `contracts/agent-access/`.
+//! and their reminders (`org.helixdesktop.AgentAccess1`, which can only
+//! take access away and cancel reminders) and the activity log.
+//! Contract: helixdesktop/spec `contracts/agent-access/`.
 
 use adw::prelude::*;
 use gtk::{gio, glib};
@@ -12,13 +12,13 @@ use std::rc::Rc;
 use std::time::Duration;
 
 use super::picker::{self, Picker};
-use super::widgets::{self, switch, watch, Num};
+use super::widgets::{self, has_key, switch, watch, Num};
 use super::{follow, spawn_worker, Ctx};
-use crate::agents::{self, Agent, Entry};
+use crate::agents::{self, Agent, Entry, Reminder};
 use crate::bus;
 use crate::values::Choice;
 use helix_app_common::i18n::{n_, tr, tr_dyn};
-use helix_app_common::{trf, trnf};
+use helix_app_common::{nc_, trf, trnf};
 
 /// The page's navigation tag and command-line name.
 pub const TAG: &str = "agent-access";
@@ -90,6 +90,8 @@ pub fn page(ctx: &Rc<Ctx>, nav: &adw::NavigationView) -> adw::NavigationPage {
 
     let state = agents_group(ctx);
     page.add(&state.group);
+    let reminders = reminders_group(ctx);
+    page.add(&reminders.group);
 
     let data = widgets::group(tr("Information"));
     data.add(&switch(
@@ -108,6 +110,17 @@ pub fn page(ctx: &Rc<Ctx>, nav: &adw::NavigationView) -> adw::NavigationPage {
         tr("Clipboard Access"),
         tr("Agents can read and change the clipboard, which can hold passwords and other copied text"),
     ));
+    // A newer key: hidden while the installed schema lacks it.
+    if has_key(&prefs, "read-text-fields") {
+        data.add(&switch(
+            &prefs,
+            "read-text-fields",
+            false,
+            false,
+            tr("Read Text Fields"),
+            tr("Agents controlling apps can see what is typed in fields; password fields are never shown"),
+        ));
+    }
     page.add(&data);
     dependent.push(data);
 
@@ -165,7 +178,7 @@ pub fn page(ctx: &Rc<Ctx>, nav: &adw::NavigationView) -> adw::NavigationPage {
     enabled.connect_active_notify(move |_| sync());
 
     page.connect_destroy(move |_| {
-        let _ = &state;
+        let _ = (&state, &reminders);
     });
     widgets::nav_page(tr("Agent Access"), &page, Some(TAG))
 }
@@ -574,6 +587,160 @@ fn agent_row(state: &Rc<State>, a: &Agent) -> adw::ActionRow {
     row
 }
 
+struct Reminders {
+    ctx: Rc<Ctx>,
+    group: adw::PreferencesGroup,
+    rows: RefCell<Vec<gtk::Widget>>,
+    /// What the rows show, so they are rebuilt only on a change.
+    shown: RefCell<Option<bus::Result<Vec<Reminder>>>>,
+    twelve: bool,
+}
+
+/// Every agent's reminders not yet shown (`ListReminders`), each with a
+/// Cancel button (`CancelReminder`). Read when the page is shown, on
+/// `RemindersChanged` and the shell coming or going, and after a cancel.
+/// Hidden when the shell does not answer (not running, or too old to
+/// have reminders).
+fn reminders_group(ctx: &Rc<Ctx>) -> Rc<Reminders> {
+    let group = widgets::group(tr("Reminders"));
+    group.set_description(Some(tr(
+        "Reminders agents have set for you. They are shown as notifications when they are due.",
+    )));
+    group.set_visible(false);
+    let twelve = ctx
+        .prefs("org.gnome.desktop.interface")
+        .get_enum_nick("clock-format", "24h")
+        == "12h";
+    let state = Rc::new(Reminders {
+        ctx: ctx.clone(),
+        group,
+        rows: RefCell::default(),
+        shown: RefCell::default(),
+        twelve,
+    });
+    load_reminders(&state);
+    // Back from another page, or another panel.
+    let weak = Rc::downgrade(&state);
+    state.group.connect_map(move |_| {
+        if let Some(state) = weak.upgrade() {
+            load_reminders(&state);
+        }
+    });
+    follow(
+        &state,
+        Duration::from_millis(200),
+        |tell| {
+            if let Ok(conn) = bus::session() {
+                agents::watch_reminders(&conn, tell);
+            }
+        },
+        load_reminders,
+    );
+    state
+}
+
+fn load_reminders(state: &Rc<Reminders>) {
+    let weak = Rc::downgrade(state);
+    spawn_worker(
+        || bus::session().and_then(|c| agents::reminders(&c)),
+        move |r| {
+            if let Some(state) = weak.upgrade() {
+                show_reminders(&state, r);
+            }
+        },
+    );
+}
+
+fn show_reminders(state: &Rc<Reminders>, r: bus::Result<Vec<Reminder>>) {
+    if state.shown.borrow().as_ref() == Some(&r) {
+        return;
+    }
+    // Hidden without a shell that answers; the shell coming back is
+    // followed.
+    state.group.set_visible(r.is_ok());
+    let new: Vec<gtk::Widget> = match &r {
+        Ok(list) if list.is_empty() => vec![placeholder(tr("No reminders"))],
+        Ok(list) => list
+            .iter()
+            .map(|x| reminder_row(state, x).upcast())
+            .collect(),
+        Err(_) => Vec::new(),
+    };
+    let group = state.group.clone();
+    helix_app_common::focus::rebuild_keeping_focus(&group, None, || {
+        widgets::replace_rows(&state.group, &state.rows, new)
+    });
+    *state.shown.borrow_mut() = Some(r);
+}
+
+fn reminder_row(state: &Rc<Reminders>, r: &Reminder) -> adw::ActionRow {
+    let who = r.who();
+    let text = if r.text.is_empty() {
+        tr(nc_!("agent reminder without text", "Reminder")).to_string()
+    } else {
+        r.text.clone()
+    };
+    let mut parts: Vec<String> = Vec::new();
+    if let Some(due) = glib::DateTime::from_unix_local(r.time)
+        .ok()
+        .filter(|_| r.time > 0)
+    {
+        let when = super::datetime::format_time(&due, state.twelve);
+        parts.push(trf!("Due {time}", time = when.replace(' ', "\u{a0}")));
+    }
+    if !who.title().is_empty() {
+        parts.push(who.title().to_string());
+    }
+    let row = adw::ActionRow::builder()
+        .use_markup(false)
+        .title(&text)
+        .subtitle(parts.join(" · "))
+        .subtitle_lines(0)
+        .build();
+    // A display name proves nothing: the program on hover.
+    if !who.name.is_empty() && !who.program().is_empty() {
+        row.set_tooltip_text(Some(who.program()));
+    }
+    row.add_prefix(
+        &gtk::Image::builder()
+            .icon_name("alarm-symbolic")
+            .accessible_role(gtk::AccessibleRole::Presentation)
+            .build(),
+    );
+    helix_app_common::focus::set_key(&row, &r.id);
+    let cancel = gtk::Button::builder()
+        .label(tr(nc_!("cancel an agent's reminder", "Cancel")))
+        .valign(gtk::Align::Center)
+        .build()
+        .labelled(&trf!("Cancel Reminder “{text}”", text = text));
+    helix_app_common::focus::set_part(&cancel, "cancel");
+    let (weak, id) = (Rc::downgrade(state), r.id.clone());
+    cancel.connect_clicked(move |b| {
+        let Some(state) = weak.upgrade() else { return };
+        b.set_sensitive(false);
+        let (weak, id) = (Rc::downgrade(&state), id.clone());
+        spawn_worker(
+            move || bus::session().and_then(|c| agents::cancel_reminder(&c, &id)),
+            move |r| {
+                let Some(state) = weak.upgrade() else { return };
+                if let Err(e) = r {
+                    state.ctx.toast(&match e {
+                        bus::Error::Denied => {
+                            tr("Only the installed Settings app can cancel reminders").to_string()
+                        }
+                        e => trf!("Could not cancel the reminder: {e}", e = e),
+                    });
+                    // The row comes back usable.
+                    *state.shown.borrow_mut() = None;
+                }
+                load_reminders(&state);
+            },
+        );
+    });
+    row.add_suffix(&cancel);
+    row
+}
+
 /// An app's name and icon, from its desktop file when installed.
 fn app_info(id: &str) -> Option<gio::DesktopAppInfo> {
     gio::DesktopAppInfo::new(&format!("{id}.desktop"))
@@ -873,17 +1040,31 @@ fn log_row(e: &Entry, twelve: bool) -> adw::ActionRow {
     parts.extend(d.status);
     // The time wraps as a whole, not in the middle of the date.
     parts.push(log_time(e, twelve).replace(' ', "\u{a0}"));
-    let mut subtitle = parts.join(" · ");
-    if !d.target.is_empty() {
-        subtitle = format!("{}\n{subtitle}", d.target);
-    }
+    let what: Vec<String> = std::iter::once(d.target)
+        .filter(|t| !t.is_empty())
+        .chain(d.details)
+        .collect();
     adw::ActionRow::builder()
-        .use_markup(false)
-        .title(&d.title)
+        .use_markup(true)
+        .title(glib::markup_escape_text(&d.title))
         .title_lines(2)
-        .subtitle(&subtitle)
+        .subtitle(log_subtitle(&what.join(" · "), &parts.join(" · ")))
         .subtitle_lines(0)
         .build()
+}
+
+/// A log row's subtitle as markup: what was acted on (when anything),
+/// then who · how it went · when, a little apart so the two do not read
+/// as one wrapped line.
+fn log_subtitle(what: &str, rest: &str) -> String {
+    let rest = glib::markup_escape_text(rest);
+    if what.is_empty() {
+        return rest.to_string();
+    }
+    format!(
+        "{}\n<span size=\"35%\"> </span>\n{rest}",
+        glib::markup_escape_text(what)
+    )
 }
 
 /// When a line's call came: "19 November 2026, 14:02", and for coalesced

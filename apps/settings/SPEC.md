@@ -283,9 +283,9 @@ shell's agent indicator opens it).
 
 - Top: a description, then the master switch *Agent Access* (`enabled`,
   default off). While it is off the Access, Asking, Information,
-  Safeguards and Excluded Apps groups are insensitive (Allowed Agents and
-  View Activity stay usable: they only take access away or show
-  history).
+  Safeguards and Excluded Apps groups are insensitive (Allowed Agents,
+  Reminders and View Activity stay usable: they only take access away,
+  cancel or show history).
 - Access: *Access Level* combo over the first three levels of
   `access-level` (*Read Only* `read-only`, *Control the Desktop*
   `desktop`, *Control Apps* `apps`; the choice shown as the row's
@@ -315,9 +315,23 @@ shell's agent indicator opens it).
   no agents, shell not running, and `AccessDenied` (the shell only
   accepts `helix-settings-app` beside its own binary or in `/usr/bin`:
   "Only the installed Settings app can list agents").
+- Reminders: every agent's reminders not yet shown, from
+  `AgentAccess1.ListReminders`, soonest first. Each row: the reminder's
+  text as the shell returns it (*Reminder* when empty) as title; *Due
+  19 November 2026, 14:30* · the agent (display name, else the program;
+  the program as the tooltip under a display name); a *Cancel* button
+  (accessible name *Cancel Reminder “text”*) calling `CancelReminder`,
+  then reading the list again (a failure is a toast). The list is read
+  when the page is shown, on `RemindersChanged` and when the shell comes
+  or goes. Empty: *No reminders*. The group is hidden while the shell
+  does not answer (not running, or one without reminders).
 - Information: *Notifications Access* (`notifications`) and *Clipboard
   Access* (`clipboard`), both off by default, subtitles saying what they
-  expose (messages and sign-in codes; passwords and copied text).
+  expose (messages and sign-in codes; passwords and copied text); *Read
+  Text Fields* (`read-text-fields`, default off: "Agents controlling apps
+  can see what is typed in fields; password fields are never shown"),
+  shown only when the installed schema has the key (older desktops lack
+  it). It is not tied to the access level (no switch on the page is).
 - Safeguards: *Confirm Sensitive Actions* (`confirm-sensitive`, default
   on), *Allow From Remote Sessions* (`allow-remote`, SSH, default off).
 - Excluded Apps (`excluded-apps`, app ids without `.desktop`): one row
@@ -336,21 +350,35 @@ shell's agent indicator opens it).
   read directly and sorted by `time`, as the contract's "Activity log"
   pins the lines (keys `time` (Unix seconds or ISO 8601), `agent`,
   `name`, `method`, `target`, `level`, `outcome`, `error`, `grant`,
-  `count`/`until`, `dropped`; unknown keys, `*-length` keys and lines
-  that are not a JSON object are ignored). Each row:
+  `count`/`until`, `dropped`, `role`, `action`, `node-count`,
+  `text-length`, `choice-count`; unknown keys, the other `*-length` keys
+  and lines that are not a JSON object are ignored). Each row:
   - title: what happened, as a short translated phrase for every
     `Agent1` and `AgentAccess1` method (also those the shell does not
     implement yet) and for the events: *Listed windows*, *Searched
     files*, *Asked for access* (`RequestAccess`, `ConsentPrompt`),
     *Asked to confirm an action* (`SensitivePrompt`), *Stopped by you*
-    (`Stop`), *Activity log full* (`LogFull`), *Activity log cleared*
+    (`Stop`), *Reminder due* (`Reminder`), *Searched an app’s
+    controls* (`A11yFind`), *Activity log full* (`LogFull`), *Activity log cleared*
     (`ClearLog`), *Access revoked* (`Revoke`), *Access revoked and
-    forgotten* (`Forget`), *All access revoked* (`StopAll`); a refused
-    `AgentAccess1` call (another program) reads *Tried to clear the
-    activity log* and the like. Unknown names show as they are.
+    forgotten* (`Forget`), *All access revoked* (`StopAll`), *Reminder
+    cancelled* (Settings' `CancelReminder`); a refused `AgentAccess1`
+    call (another program) reads *Tried to clear the activity log*,
+    *Tried to list reminders* and the like. `ListReminders` and
+    `CancelReminder` are in both interfaces: a line without `level`, or
+    refused with `AccessDenied`, is Settings' (`Agent1` lines always
+    have a level). Unknown names show as they are.
   - subtitle line 1 (when there is a target): a window as *A window of
     org.example.App* (*A window* without its app), a `file://` URI as a
-    path, a `SensitivePrompt`'s method by its phrase, else as written.
+    path, a `SensitivePrompt`'s method by its phrase, a reminder
+    (`reminder:<id>`) not at all, else as written; then, from the line's
+    own keys: the control's role (*Button*, *Text field*, *Password
+    field*…, less common AT-SPI roles as named), an `A11yAction`/
+    `A11ySetValue` action (*Clicked*, *Pasted*, *Closed the window*,
+    *Another action* for `other`, *Set text*…, unknown ones raw), *143
+    items* (`A11yTree` `node-count`), *1 match* (`A11yFind`), *17
+    characters* (`text-length`), *2 choices* (`choice-count`). This line
+    is set a little apart from the next so the two do not read as one.
   - subtitle line 2: who (display name, else the agent id; *Settings*
     for Settings' own allowed `AgentAccess1` calls; nothing for
     `LogFull`) · how it went · when. How it went: *Allowed*, plus
@@ -363,7 +391,8 @@ shell's agent indicator opens it).
     prompts: the level asked and *Allowed for this session* / *Always
     allowed* (`grant`) / *Denied* / *Not answered*; sensitive prompts
     *Allowed* / *Denied* / *Not answered*; `Stop` and Settings' own
-    calls nothing; `LogFull` *Refused calls are no longer recorded
+    calls nothing; `Reminder` *Shown*, *Not shown* · the reason, or
+    *Cancelled by you*; `LogFull` *Refused calls are no longer recorded
     today* (`dropped` `refusals`) or *Nothing more is recorded today*
     (`all`). When: date and time, and for a coalesced line the end
     (*19 November 2026, 14:02–14:03*, the date again on another day).

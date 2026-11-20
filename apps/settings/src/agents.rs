@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use helix_app_common::i18n::{n_, tr, tr_dyn};
-use helix_app_common::{trf, trnf};
+use helix_app_common::{nc_, trf, trnf};
 use zbus::blocking::Connection;
 use zbus::zvariant::OwnedValue;
 
@@ -175,10 +175,76 @@ pub fn clear_log(conn: &Connection) -> Result<()> {
     ACCESS.run(conn, "ClearLog", &())
 }
 
+/// One reminder of `ListReminders` (`contracts/agent-access/README.md`,
+/// "Settings' interface"): every agent's reminders not yet shown.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Reminder {
+    pub id: String,
+    /// When it is due, Unix seconds.
+    pub time: i64,
+    /// What the agent asked to be reminded of, as the shell returns it.
+    pub text: String,
+    /// The agent that set it: its id, executable and display name.
+    pub agent: String,
+    pub executable: String,
+    pub name: String,
+}
+
+impl Reminder {
+    /// From a record; `None` without an id. Keys this version does not
+    /// know are ignored.
+    pub fn from_record(record: &HashMap<String, OwnedValue>) -> Option<Reminder> {
+        let id = text(record, "id");
+        if id.is_empty() {
+            return None;
+        }
+        Some(Reminder {
+            time: bus::get::<i64>(record, "time").unwrap_or(0),
+            text: text(record, "text"),
+            agent: text(record, "agent"),
+            executable: text(record, "executable"),
+            name: text(record, "name"),
+            id,
+        })
+    }
+
+    /// The agent that set it, as the agents list names it.
+    pub fn who(&self) -> Agent {
+        Agent {
+            id: self.agent.clone(),
+            executable: self.executable.clone(),
+            name: self.name.clone(),
+            ..Agent::default()
+        }
+    }
+}
+
+/// Every agent's waiting reminders, soonest first.
+pub fn reminders(conn: &Connection) -> Result<Vec<Reminder>> {
+    let records: Vec<HashMap<String, OwnedValue>> = ACCESS.call(conn, "ListReminders", &())?;
+    let mut list: Vec<Reminder> = records.iter().filter_map(Reminder::from_record).collect();
+    list.sort_by(|a, b| a.time.cmp(&b.time).then_with(|| a.id.cmp(&b.id)));
+    Ok(list)
+}
+
+/// Cancels any agent's reminder (an unknown id is not an error).
+pub fn cancel_reminder(conn: &Connection, id: &str) -> Result<()> {
+    ACCESS.run(conn, "CancelReminder", &(id,))
+}
+
 /// Calls `changed` for every `AgentsChanged` and whenever the shell
 /// comes or goes; returns when `changed` returns false or the bus goes
 /// away.
-pub fn watch(conn: &Connection, mut changed: impl FnMut() -> bool) {
+pub fn watch(conn: &Connection, changed: impl FnMut() -> bool) {
+    watch_signal(conn, "AgentsChanged", changed)
+}
+
+/// As [`watch`], for `RemindersChanged`.
+pub fn watch_reminders(conn: &Connection, changed: impl FnMut() -> bool) {
+    watch_signal(conn, "RemindersChanged", changed)
+}
+
+fn watch_signal(conn: &Connection, signal: &str, mut changed: impl FnMut() -> bool) {
     let Ok(dbus) = zbus::blocking::fdo::DBusProxy::new(conn) else {
         return;
     };
@@ -187,7 +253,7 @@ pub fn watch(conn: &Connection, mut changed: impl FnMut() -> bool) {
             .msg_type(zbus::message::Type::Signal)
             .sender(SHELL)
             .and_then(|b| b.interface(IFACE))
-            .and_then(|b| b.member("AgentsChanged"))
+            .and_then(|b| b.member(signal))
             .map(|b| b.build()),
         zbus::MatchRule::builder()
             .msg_type(zbus::message::Type::Signal)
@@ -204,7 +270,7 @@ pub fn watch(conn: &Connection, mut changed: impl FnMut() -> bool) {
         let header = message.header();
         let wanted = message.message_type() == zbus::message::Type::Signal
             && match header.member().map(|m| m.as_str()) {
-                Some("AgentsChanged") => header.interface().is_some_and(|i| i.as_str() == IFACE),
+                Some(m) if m == signal => header.interface().is_some_and(|i| i.as_str() == IFACE),
                 Some("NameOwnerChanged") => true,
                 _ => false,
             };
@@ -216,8 +282,10 @@ pub fn watch(conn: &Connection, mut changed: impl FnMut() -> bool) {
 
 /// One line of the activity log (`$XDG_STATE_HOME/helix/agent-activity/
 /// YYYY-MM-DD.jsonl`, contract "Activity log"). Missing keys are empty
-/// (0); keys this version does not know are ignored, and so are lengths
-/// (`query-length` and the like), which say little to the user.
+/// (0, `None`); keys this version does not know are ignored, and so are
+/// most lengths (`query-length` and the like), which say little to the
+/// user: only `text-length` (what an agent typed into a field or a
+/// reminder) is kept.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Entry {
     /// Unix seconds (0 when unreadable).
@@ -240,6 +308,18 @@ pub struct Entry {
     pub until: i64,
     /// `LogFull`: `refusals` or `all`.
     pub dropped: String,
+    /// `A11yAction`, `A11ySetValue`: the node's role; `A11yFind`: the
+    /// role looked for.
+    pub role: String,
+    /// What a call did (`A11yAction`'s `click`, `A11ySetValue`'s
+    /// `set-text`, …).
+    pub action: String,
+    /// `A11yTree`: nodes returned; `A11yFind`: nodes matched.
+    pub node_count: Option<u64>,
+    /// Characters of text an agent set (`A11ySetValue`, `AddReminder`).
+    pub text_length: Option<u64>,
+    /// `Ask` with choices: how many.
+    pub choice_count: Option<u64>,
 }
 
 /// A time: Unix seconds, or ISO 8601 text (0 when unreadable).
@@ -277,6 +357,11 @@ impl Entry {
             count: obj.get("count").and_then(|v| v.as_u64()).unwrap_or(0),
             until: json_time(obj.get("until")),
             dropped: s("dropped"),
+            role: s("role"),
+            action: s("action"),
+            node_count: obj.get("node-count").and_then(|v| v.as_u64()),
+            text_length: obj.get("text-length").and_then(|v| v.as_u64()),
+            choice_count: obj.get("choice-count").and_then(|v| v.as_u64()),
         })
     }
 
@@ -302,10 +387,22 @@ impl Entry {
     pub fn coalesced(&self) -> Option<(u64, i64)> {
         (self.count >= 2).then_some((self.count, self.until.max(self.time)))
     }
+
+    /// A call to Settings' `AgentAccess1` rather than to `Agent1`: its
+    /// own methods, and `ListReminders`/`CancelReminder`, which both
+    /// interfaces have, without a `level` (every `Agent1` line has one)
+    /// or refused with `AccessDenied` (only `AgentAccess1` refuses so).
+    pub fn is_settings_call(&self) -> bool {
+        SETTINGS_METHODS.contains(&self.method.as_str())
+            || (SHARED_METHODS.contains(&self.method.as_str())
+                && (self.level.is_empty() || self.refusal() == Some("AccessDenied")))
+    }
 }
 
 /// The `AgentAccess1` methods (Settings' own; `target` is the agent).
 const SETTINGS_METHODS: [&str; 5] = ["ListAgents", "Revoke", "Forget", "StopAll", "ClearLog"];
+/// Methods of both `Agent1` and `AgentAccess1`.
+const SHARED_METHODS: [&str; 2] = ["ListReminders", "CancelReminder"];
 
 /// What a method or event did, as a short untranslated phrase (`None`
 /// for a name this version does not know). Every method of `Agent1` and
@@ -340,6 +437,7 @@ pub fn method_label(method: &str) -> Option<&'static str> {
         "GetClipboard" => n_("Read the clipboard"),
         "SetClipboard" => n_("Changed the clipboard"),
         "A11yTree" => n_("Read an app’s contents"),
+        "A11yFind" => n_("Searched an app’s controls"),
         "A11yAction" => n_("Used a control in an app"),
         "A11ySetValue" => n_("Filled in a field in an app"),
         "Screenshot" => n_("Took a screenshot"),
@@ -354,7 +452,17 @@ pub fn method_label(method: &str) -> Option<&'static str> {
         "ConsentPrompt" => n_("Asked for access"),
         "SensitivePrompt" => n_("Asked to confirm an action"),
         "Stop" => n_("Stopped by you"),
+        "Reminder" => n_("Reminder due"),
         "LogFull" => n_("Activity log full"),
+        _ => return None,
+    })
+}
+
+/// An allowed `AgentAccess1` call Settings made, where it reads other
+/// than the `Agent1` method of the same name.
+pub fn settings_method_label(method: &str) -> Option<&'static str> {
+    Some(match method {
+        "CancelReminder" => n_("Reminder cancelled"),
         _ => return None,
     })
 }
@@ -364,6 +472,8 @@ pub fn method_label(method: &str) -> Option<&'static str> {
 pub fn settings_method_refused_label(method: &str) -> Option<&'static str> {
     Some(match method {
         "ListAgents" => n_("Tried to list agents"),
+        "ListReminders" => n_("Tried to list reminders"),
+        "CancelReminder" => n_("Tried to cancel a reminder"),
         "Revoke" => n_("Tried to revoke access"),
         "Forget" => n_("Tried to forget an agent"),
         "StopAll" => n_("Tried to revoke all access"),
@@ -403,6 +513,98 @@ pub fn failure_label(error: &str) -> Option<&'static str> {
     })
 }
 
+/// An accessible role (`role`, AT-SPI's name) for people, untranslated
+/// (`None` for the less common ones, shown as they are).
+pub fn role_label(role: &str) -> Option<&'static str> {
+    Some(match role {
+        "button" => nc_!("accessible role", "Button"),
+        "toggle button" => nc_!("accessible role", "Toggle button"),
+        "push button menu" => nc_!("accessible role", "Menu button"),
+        "check box" => nc_!("accessible role", "Check box"),
+        "radio button" => nc_!("accessible role", "Option button"),
+        "switch" => nc_!("accessible role", "Switch"),
+        "text" | "entry" => nc_!("accessible role", "Text field"),
+        "password text" => nc_!("accessible role", "Password field"),
+        "combo box" => nc_!("accessible role", "Drop-down list"),
+        "slider" => nc_!("accessible role", "Slider"),
+        "spin button" => nc_!("accessible role", "Number field"),
+        "link" => nc_!("accessible role", "Link"),
+        "menu item" | "check menu item" | "radio menu item" => nc_!("accessible role", "Menu item"),
+        "page tab" => nc_!("accessible role", "Tab"),
+        "list item" | "tree item" => nc_!("accessible role", "List item"),
+        "table cell" => nc_!("accessible role", "Table cell"),
+        "label" => nc_!("accessible role", "Label"),
+        "heading" => nc_!("accessible role", "Heading"),
+        "image" | "icon" => nc_!("accessible role", "Image"),
+        "dialog" => nc_!("accessible role", "Dialog"),
+        "window" | "frame" => nc_!("accessible role", "Window"),
+        _ => return None,
+    })
+}
+
+/// What an `A11yAction` or `A11ySetValue` did (`action`), untranslated
+/// (`None` for a name this version does not know).
+pub fn control_action_label(action: &str) -> Option<&'static str> {
+    Some(match action {
+        "click" | "press" => nc_!("control action", "Clicked"),
+        "activate" | "default" | "default.activate" => nc_!("control action", "Activated"),
+        "toggle" => nc_!("control action", "Toggled"),
+        "select" => nc_!("control action", "Selected"),
+        "focus" => nc_!("control action", "Focused"),
+        "expand" => nc_!("control action", "Expanded"),
+        "collapse" => nc_!("control action", "Collapsed"),
+        "open" => nc_!("control action", "Opened"),
+        "jump" | "link.open" => nc_!("control action", "Followed a link"),
+        "menu" | "showmenu" | "menu.popup" => nc_!("control action", "Opened a menu"),
+        "increment" => nc_!("control action", "Increased"),
+        "decrement" => nc_!("control action", "Decreased"),
+        "window.close" => nc_!("control action", "Closed the window"),
+        "window.minimize" => nc_!("control action", "Minimized the window"),
+        "window.toggle-maximized" => nc_!("control action", "Maximized or restored the window"),
+        "selection.select-all" => nc_!("control action", "Selected all"),
+        "selection.delete" => nc_!("control action", "Deleted the selection"),
+        "text.clear" => nc_!("control action", "Cleared the text"),
+        "clipboard.copy" => nc_!("control action", "Copied"),
+        "clipboard.cut" => nc_!("control action", "Cut"),
+        "clipboard.paste" => nc_!("control action", "Pasted"),
+        "link.copy" => nc_!("control action", "Copied a link"),
+        "misc.insert-emoji" => nc_!("control action", "Inserted an emoji"),
+        "other" => nc_!("control action", "Another action"),
+        "set-text" => nc_!("control action", "Set text"),
+        "set-value" => nc_!("control action", "Set a value"),
+        _ => return None,
+    })
+}
+
+/// What a line says about what was done, beyond its title and target, in
+/// people's words: the role and action of a control, how many nodes,
+/// characters or choices. Only what the line holds.
+pub fn details(e: &Entry) -> Vec<String> {
+    let mut out = Vec::new();
+    if !e.role.is_empty() {
+        out.push(role_label(&e.role).map_or_else(|| e.role.clone(), tr_dyn));
+    }
+    // Other methods' actions (WindowAction's, a SensitivePrompt's) are
+    // said by the title and target.
+    if !e.action.is_empty() && matches!(e.method.as_str(), "A11yAction" | "A11ySetValue") {
+        out.push(control_action_label(&e.action).map_or_else(|| e.action.clone(), tr_dyn));
+    }
+    if let Some(n) = e.node_count {
+        out.push(if e.method == "A11yFind" {
+            trnf!("{n} match", "{n} matches", n)
+        } else {
+            trnf!("{n} item", "{n} items", n)
+        });
+    }
+    if let Some(n) = e.text_length {
+        out.push(trnf!("{n} character", "{n} characters", n));
+    }
+    if let Some(n) = e.choice_count {
+        out.push(trnf!("{n} choice", "{n} choices", n));
+    }
+    out
+}
+
 /// A log line as the page shows it, translated: what happened, what it
 /// was done to, who did it, and how it went.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -410,16 +612,22 @@ pub struct Described {
     pub title: String,
     /// Empty for none.
     pub target: String,
+    /// More about what was done ([`details`]).
+    pub details: Vec<String>,
     /// Empty for none (`LogFull`).
     pub who: String,
     pub status: Vec<String>,
 }
 
 /// A target for people: a window by its app, a `file://` URI as a path;
-/// a `SensitivePrompt`'s method by what it does.
+/// a `SensitivePrompt`'s method by what it does; nothing for a reminder
+/// (`reminder:<id>`: the title says it is one, the id says nothing).
 pub fn target_label(method: &str, target: &str) -> String {
     if method == "SensitivePrompt" {
         return method_label(target).map_or_else(|| target.to_string(), tr_dyn);
+    }
+    if target.starts_with("reminder:") {
+        return String::new();
     }
     if let Some(window) = target.strip_prefix("window:") {
         return match window.split_once(" (") {
@@ -441,10 +649,13 @@ pub fn target_label(method: &str, target: &str) -> String {
 pub fn describe(e: &Entry) -> Described {
     let method = e.method.as_str();
     let raw = |s: &str| s.to_string();
-    let settings = SETTINGS_METHODS.contains(&method);
+    let settings = e.is_settings_call();
     let refusal = e.refusal();
-    let title = match (settings && refusal.is_some())
-        .then(|| settings_method_refused_label(method))
+    let title = match settings
+        .then(|| match refusal {
+            Some(_) => settings_method_refused_label(method),
+            None => settings_method_label(method),
+        })
         .flatten()
         .or_else(|| method_label(method))
     {
@@ -483,6 +694,17 @@ pub fn describe(e: &Entry) -> Described {
         }),
         // The title says it all.
         ("Stop", "cancelled") => {}
+        ("Reminder", outcome) => match (outcome, refusal) {
+            ("allowed", _) => status.push(tr("Shown").to_string()),
+            ("cancelled", _) => status.push(tr("Cancelled by you").to_string()),
+            (_, Some(why)) => {
+                status.push(tr("Not shown").to_string());
+                if !why.is_empty() {
+                    status.push(reason(why));
+                }
+            }
+            _ => status.push(raw(outcome)),
+        },
         ("LogFull", _) => match e.dropped.as_str() {
             "refusals" => status.push(tr("Refused calls are no longer recorded today").to_string()),
             "all" => status.push(tr("Nothing more is recorded today").to_string()),
@@ -515,6 +737,7 @@ pub fn describe(e: &Entry) -> Described {
     Described {
         title,
         target: target_label(method, &e.target),
+        details: details(e),
         who,
         status,
     }
@@ -693,7 +916,7 @@ pub mod tests {
 
     /// Every method of the contract's interfaces
     /// (`contracts/agent-access/*.xml`) and the log's events.
-    const METHODS: [&str; 36] = [
+    const METHODS: [&str; 37] = [
         "GetStatus",
         "RequestAccess",
         "GetState",
@@ -721,6 +944,7 @@ pub mod tests {
         "GetClipboard",
         "SetClipboard",
         "A11yTree",
+        "A11yFind",
         "A11yAction",
         "A11ySetValue",
         "Screenshot",
@@ -731,7 +955,13 @@ pub mod tests {
         "StopAll",
         "ClearLog",
     ];
-    const EVENTS: [&str; 4] = ["ConsentPrompt", "SensitivePrompt", "Stop", "LogFull"];
+    const EVENTS: [&str; 5] = [
+        "ConsentPrompt",
+        "SensitivePrompt",
+        "Stop",
+        "Reminder",
+        "LogFull",
+    ];
 
     #[test]
     fn every_method_and_event_has_a_label() {
@@ -754,9 +984,21 @@ pub mod tests {
                 assert!(METHODS.contains(&name), "{name} from {file}");
             }
         }
-        for m in SETTINGS_METHODS {
+        for m in SETTINGS_METHODS.iter().chain(&SHARED_METHODS) {
             assert!(settings_method_refused_label(m).is_some(), "{m}");
         }
+        // AgentAccess1's methods are all Settings' or shared with Agent1.
+        if let Ok(xml) = std::fs::read_to_string(spec.join("org.helixdesktop.AgentAccess1.xml")) {
+            for part in xml.split("<method name=\"").skip(1) {
+                let name = part.split('"').next().unwrap();
+                assert!(
+                    SETTINGS_METHODS.contains(&name) || SHARED_METHODS.contains(&name),
+                    "{name}"
+                );
+            }
+        }
+        assert_eq!(method_label("A11yFind"), Some("Searched an app’s controls"));
+        assert_eq!(method_label("Reminder"), Some("Reminder due"));
         assert_eq!(method_label("FutureMethod"), None);
         assert_eq!(method_label("ListWindows"), Some("Listed windows"));
         assert_eq!(method_label("SearchFiles"), Some("Searched files"));
@@ -796,6 +1038,209 @@ pub mod tests {
         (d.title, d.target, d.who, d.status.join(" · "))
     }
 
+    fn details_of(line: &str) -> String {
+        describe(&Entry::parse(line).expect(line))
+            .details
+            .join(" · ")
+    }
+
+    #[test]
+    fn levels_three_and_four_lines() {
+        let agent =
+            r#""time":1795082462,"agent":"/usr/bin/node /home/me/agent.js","name":"Example""#;
+        let line = |rest: &str| format!("{{{agent},{rest}}}");
+        // The contract's examples.
+        let ask = line(
+            r#""method":"Ask","level":"read-only","outcome":"allowed","question-length":29,"choice-count":2"#,
+        );
+        assert_eq!(
+            shown(&ask),
+            four("Asked you a question", "", "Example", "Allowed")
+        );
+        assert_eq!(details_of(&ask), "2 choices", "no question length");
+        let add = line(
+            r#""method":"AddReminder","target":"reminder:3f9a0c2e7b1d4a56","level":"read-only","outcome":"allowed","text-length":16"#,
+        );
+        assert_eq!(
+            shown(&add),
+            four("Added a reminder", "", "Example", "Allowed")
+        );
+        assert_eq!(details_of(&add), "16 characters");
+        let due =
+            line(r#""method":"Reminder","target":"reminder:3f9a0c2e7b1d4a56","outcome":"allowed""#);
+        assert_eq!(shown(&due), four("Reminder due", "", "Example", "Shown"));
+        assert_eq!(
+            shown(&line(
+                r#""method":"Reminder","target":"reminder:1","outcome":"refused:AccessOff""#
+            ))
+            .3,
+            "Not shown · Agent Access was off"
+        );
+        assert_eq!(
+            shown(&line(
+                r#""method":"Reminder","target":"reminder:1","outcome":"cancelled""#
+            ))
+            .3,
+            "Cancelled by you"
+        );
+        let tree = line(
+            r#""method":"A11yTree","target":"window:21 (org.gnome.TextEditor)","level":"apps","outcome":"allowed","node-count":143"#,
+        );
+        assert_eq!(
+            shown(&tree),
+            four(
+                "Read an app’s contents",
+                "A window of org.gnome.TextEditor",
+                "Example",
+                "Allowed"
+            )
+        );
+        assert_eq!(details_of(&tree), "143 items");
+        let set = line(
+            r#""method":"A11ySetValue","target":"window:21 (org.gnome.TextEditor)","level":"apps","outcome":"allowed","text-length":17,"role":"text","action":"set-text""#,
+        );
+        assert_eq!(details_of(&set), "Text field · Set text · 17 characters");
+        let password = line(
+            r#""method":"A11ySetValue","target":"window:21 (org.gnome.TextEditor)","level":"apps","outcome":"refused:Excluded","text-length":5,"role":"password text""#,
+        );
+        assert_eq!(shown(&password).3, "Refused · Excluded app");
+        assert_eq!(details_of(&password), "Password field · 5 characters");
+        // A11yFind: the role looked for and how many matched.
+        let find = line(
+            r#""method":"A11yFind","target":"window:21","level":"apps","outcome":"allowed","role":"button","name-length":4,"node-count":1"#,
+        );
+        assert_eq!(
+            shown(&find),
+            four(
+                "Searched an app’s controls",
+                "A window",
+                "Example",
+                "Allowed"
+            )
+        );
+        assert_eq!(details_of(&find), "Button · 1 match");
+        assert_eq!(
+            details_of(&line(
+                r#""method":"A11yFind","outcome":"allowed","node-count":0"#
+            )),
+            "0 matches"
+        );
+        // Actions: known ones in words, `other` too, unknown ones raw;
+        // roles this version does not name, raw.
+        let act = |action: &str, role: &str| {
+            details_of(&line(&format!(
+                r#""method":"A11yAction","target":"window:3","level":"apps","outcome":"allowed","action":"{action}","role":"{role}""#
+            )))
+        };
+        assert_eq!(act("click", "button"), "Button · Clicked");
+        assert_eq!(act("clipboard.paste", "text"), "Text field · Pasted");
+        assert_eq!(act("window.close", "frame"), "Window · Closed the window");
+        assert_eq!(
+            act("other", "toggle button"),
+            "Toggle button · Another action"
+        );
+        assert_eq!(act("later", "tree table"), "tree table · later");
+        // Other methods' actions are not repeated.
+        assert_eq!(
+            details_of(&line(
+                r#""method":"WindowAction","target":"window:21","level":"desktop","outcome":"allowed","action":"tile-left""#
+            )),
+            ""
+        );
+        for role in [
+            "button",
+            "text",
+            "entry",
+            "password text",
+            "check box",
+            "link",
+            "window",
+        ] {
+            assert!(role_label(role).is_some(), "{role}");
+        }
+        for action in [
+            "click",
+            "press",
+            "activate",
+            "toggle",
+            "select",
+            "focus",
+            "default",
+            "expand",
+            "collapse",
+            "open",
+            "jump",
+            "menu",
+            "showmenu",
+            "increment",
+            "decrement",
+            "window.close",
+            "window.minimize",
+            "window.toggle-maximized",
+            "default.activate",
+            "menu.popup",
+            "selection.select-all",
+            "selection.delete",
+            "text.clear",
+            "clipboard.copy",
+            "clipboard.cut",
+            "clipboard.paste",
+            "link.open",
+            "link.copy",
+            "misc.insert-emoji",
+            "other",
+            "set-text",
+            "set-value",
+        ] {
+            assert!(control_action_label(action).is_some(), "{action}");
+        }
+
+        // Settings' own reminder calls, and another program trying.
+        let settings = r#"{"time":1795082470,"agent":"/usr/bin/helix-settings-app","name":"","#;
+        assert_eq!(
+            shown(&format!(
+                r#"{settings}"method":"CancelReminder","target":"reminder:3f9a","outcome":"allowed"}}"#
+            )),
+            four("Reminder cancelled", "", "Settings", "")
+        );
+        assert_eq!(
+            shown(&line(
+                r#""method":"ListReminders","outcome":"refused:AccessDenied""#
+            )),
+            four(
+                "Tried to list reminders",
+                "",
+                "Example",
+                "Refused · Only Settings may do this"
+            )
+        );
+        assert_eq!(
+            shown(&line(
+                r#""method":"CancelReminder","outcome":"refused:AccessDenied""#
+            ))
+            .0,
+            "Tried to cancel a reminder"
+        );
+        // An agent's own reminder calls (Agent1, with a level).
+        assert_eq!(
+            shown(&line(
+                r#""method":"CancelReminder","target":"reminder:3f9a","level":"read-only","outcome":"allowed""#
+            )),
+            four("Cancelled a reminder", "", "Example", "Allowed")
+        );
+        assert_eq!(
+            shown(&line(
+                r#""method":"ListReminders","level":"read-only","outcome":"refused:AccessOff""#
+            )),
+            four(
+                "Listed reminders",
+                "",
+                "Example",
+                "Refused · Agent Access was off"
+            )
+        );
+    }
+
     fn four(a: &str, b: &str, c: &str, d: &str) -> (String, String, String, String) {
         (a.into(), b.into(), c.into(), d.into())
     }
@@ -815,6 +1260,7 @@ pub mod tests {
                 target: "org.gnome.TextEditor".into(),
                 who: "Example".into(),
                 status: vec!["Allowed".into()],
+                details: Vec::new(),
             }
         );
         // Lengths are not shown.
@@ -1032,6 +1478,31 @@ pub mod tests {
     }
 
     #[test]
+    fn reminders_from_records() {
+        let r = Reminder::from_record(&record(&[
+            ("id", Value::from("3f9a0c2e7b1d4a56")),
+            ("time", Value::from(1795084200i64)),
+            ("text", Value::from("Stretch")),
+            ("agent", Value::from("/usr/bin/node /home/me/agent.js")),
+            ("executable", Value::from("/usr/bin/node")),
+            ("name", Value::from("Example")),
+            ("future-key", Value::from(7u32)),
+        ]))
+        .unwrap();
+        assert_eq!((r.time, r.text.as_str()), (1795084200, "Stretch"));
+        assert_eq!(r.who().title(), "Example");
+        assert_eq!(r.who().program(), "/usr/bin/node /home/me/agent.js");
+        let bare = Reminder::from_record(&record(&[("id", Value::from("1"))])).unwrap();
+        assert_eq!((bare.time, bare.text.as_str()), (0, ""));
+        assert_eq!(bare.who().title(), "", "no agent: nothing made up");
+        assert_eq!(
+            Reminder::from_record(&record(&[("text", Value::from("x"))])),
+            None,
+            "no id"
+        );
+    }
+
+    #[test]
     fn times() {
         assert_eq!(ago(100, 0), None);
         assert_eq!(ago(100, 90), Some((0, 's')));
@@ -1095,7 +1566,19 @@ pub mod tests {
     /// caller check).
     pub struct FakeShell {
         pub agents: Arc<Mutex<Vec<Agent>>>,
+        pub reminders: Arc<Mutex<Vec<Reminder>>>,
         pub calls: Arc<Mutex<Vec<String>>>,
+    }
+
+    fn reminder_record(r: &Reminder) -> HashMap<String, OwnedValue> {
+        record(&[
+            ("id", Value::from(r.id.as_str())),
+            ("time", Value::from(r.time)),
+            ("text", Value::from(r.text.as_str())),
+            ("agent", Value::from(r.agent.as_str())),
+            ("executable", Value::from(r.executable.as_str())),
+            ("name", Value::from(r.name.as_str())),
+        ])
     }
 
     fn to_record(a: &Agent) -> HashMap<String, OwnedValue> {
@@ -1154,8 +1637,28 @@ pub mod tests {
         fn clear_log(&self) {
             self.calls.lock().unwrap().push("ClearLog".into());
         }
+        fn list_reminders(&self) -> Vec<HashMap<String, OwnedValue>> {
+            // Not by time: Settings sorts.
+            self.reminders
+                .lock()
+                .unwrap()
+                .iter()
+                .rev()
+                .map(reminder_record)
+                .collect()
+        }
+        async fn cancel_reminder(&self, id: String, #[zbus(signal_emitter)] e: SignalEmitter<'_>) {
+            self.calls
+                .lock()
+                .unwrap()
+                .push(format!("CancelReminder {id}"));
+            self.reminders.lock().unwrap().retain(|r| r.id != id);
+            let _ = Self::reminders_changed(&e).await;
+        }
         #[zbus(signal)]
         async fn agents_changed(e: &SignalEmitter<'_>) -> zbus::Result<()>;
+        #[zbus(signal)]
+        async fn reminders_changed(e: &SignalEmitter<'_>) -> zbus::Result<()>;
     }
 
     /// Example agents for the tests and for looking at the page.
@@ -1182,6 +1685,29 @@ pub mod tests {
         ]
     }
 
+    /// Example reminders, due at fixed times.
+    pub fn sample_reminders() -> Vec<Reminder> {
+        let agent = &sample_agents()[0];
+        vec![
+            Reminder {
+                id: "3f9a0c2e7b1d4a56".into(),
+                time: 1795084200,
+                text: "Check that the nightly build passed".into(),
+                agent: agent.id.clone(),
+                executable: agent.executable.clone(),
+                name: agent.name.clone(),
+            },
+            Reminder {
+                id: "0b7e5d1c9a2f8e34".into(),
+                time: 1795170600,
+                text: "Stand-up meeting in 5 minutes".into(),
+                agent: "/opt/bot/bin/bot".into(),
+                executable: "/opt/bot/bin/bot".into(),
+                name: String::new(),
+            },
+        ]
+    }
+
     pub fn serve(conn: &Connection, agents: Vec<Agent>) -> Arc<Mutex<Vec<String>>> {
         let calls = serve_object(conn, agents);
         conn.request_name(SHELL).unwrap();
@@ -1196,6 +1722,7 @@ pub mod tests {
                 "/org/helixdesktop/Agent1",
                 FakeShell {
                     agents: Arc::new(Mutex::new(agents)),
+                    reminders: Arc::new(Mutex::new(sample_reminders())),
                     calls: calls.clone(),
                 },
             )
@@ -1250,6 +1777,28 @@ pub mod tests {
         // Unknown agents are not an error.
         revoke(&app, "/nowhere").unwrap();
         clear_log(&app).unwrap();
+
+        // Reminders, soonest first, and RemindersChanged after a cancel.
+        let reminded = Arc::new(AtomicUsize::new(0));
+        let r = reminded.clone();
+        let watcher = testbus::connect(&bus);
+        std::thread::spawn(move || {
+            watch_reminders(&watcher, || {
+                r.fetch_add(1, Ordering::SeqCst);
+                true
+            })
+        });
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        let list = reminders(&app).unwrap();
+        let ids: Vec<&str> = list.iter().map(|r| r.id.as_str()).collect();
+        assert_eq!(ids, ["3f9a0c2e7b1d4a56", "0b7e5d1c9a2f8e34"]);
+        assert_eq!(list[0].text, "Check that the nightly build passed");
+        assert_eq!(list[1].who().title(), "/opt/bot/bin/bot");
+        cancel_reminder(&app, "3f9a0c2e7b1d4a56").unwrap();
+        assert!(testbus::eventually(|| reminded.load(Ordering::SeqCst) >= 1));
+        assert_eq!(reminders(&app).unwrap().len(), 1);
+        // Unknown ids are not an error.
+        cancel_reminder(&app, "nowhere").unwrap();
         assert_eq!(
             *calls.lock().unwrap(),
             [
@@ -1257,7 +1806,9 @@ pub mod tests {
                 "StopAll",
                 "Forget /usr/bin/node /home/me/.local/lib/assistant/cli.js",
                 "Revoke /nowhere",
-                "ClearLog"
+                "ClearLog",
+                "CancelReminder 3f9a0c2e7b1d4a56",
+                "CancelReminder nowhere"
             ]
         );
     }

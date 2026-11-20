@@ -1127,8 +1127,8 @@ msgstr "计算(_A)"
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
 #: apps/help/src/ui.rs:196 apps/music/src/pages.rs:2129
 #: apps/music/src/pages.rs:2232 apps/music/src/pages.rs:2317
-#: apps/settings/src/ui/agent_access.rs:267
-#: apps/settings/src/ui/agent_access.rs:787 apps/settings/src/ui/apps.rs:553
+#: apps/settings/src/ui/agent_access.rs:280
+#: apps/settings/src/ui/agent_access.rs:953 apps/settings/src/ui/apps.rs:553
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
 #: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
 #: apps/system-monitor/src/dialogs.rs:142
@@ -1467,7 +1467,7 @@ msgstr "重复次数"
 msgid "Repeat Until"
 msgstr "重复直到"
 
-#: apps/calendar/src/editor.rs:596
+#: apps/calendar/src/editor.rs:596 apps/settings/src/ui/agent_access.rs:605
 msgid "Reminders"
 msgstr "提醒"
 
@@ -3010,7 +3010,7 @@ msgid "Current Location"
 msgstr "当前位置"
 
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
-#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:655
+#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:821
 #: apps/settings/src/ui/input.rs:367 apps/weather/src/ui.rs:902
 #: apps/web/src/dialogs.rs:198 apps/web/src/dialogs.rs:656
 #: apps/web/src/dialogs.rs:1043 apps/web/src/dialogs.rs:1198
@@ -4131,7 +4131,7 @@ msgid "{} on disk, {} apparent"
 msgstr "占用磁盘 {}，表观大小 {}"
 
 #: apps/disk-usage/src/ui.rs:816 apps/disk-usage/src/ui.rs:1150
-#: apps/files/src/fmt.rs:12
+#: apps/files/src/fmt.rs:12 apps/settings/src/agents.rs:596
 msgid "{n} item"
 msgid_plural "{n} items"
 msgstr[0] "{n} 个项目"
@@ -6900,7 +6900,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr "无法处理“{file}”：{error}"
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/settings/src/agents.rs:501 apps/web/src/window.rs:2341
+#: apps/settings/src/agents.rs:723 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "已取消"
 
@@ -8085,7 +8085,7 @@ msgstr "无法显示此字体格式的字符映射表"
 msgid "Info"
 msgstr "信息"
 
-#: apps/fonts/src/ui.rs:1067
+#: apps/fonts/src/ui.rs:1067 apps/settings/src/agents.rs:600
 msgid "{n} character"
 msgid_plural "{n} characters"
 msgstr[0] "{n} 个字符"
@@ -10720,307 +10720,584 @@ msgstr "控制桌面"
 msgid "Control Apps"
 msgstr "控制应用"
 
-#: apps/settings/src/agents.rs:55 apps/settings/src/ui/agent_access.rs:195
+#: apps/settings/src/agents.rs:55 apps/settings/src/ui/agent_access.rs:208
 msgid "Screen and Input"
 msgstr "屏幕和输入"
 
-#: apps/settings/src/agents.rs:316
+#: apps/settings/src/agents.rs:413
 msgid "Checked its access"
 msgstr "检查了自身访问权限"
 
-#: apps/settings/src/agents.rs:317 apps/settings/src/agents.rs:354
+#: apps/settings/src/agents.rs:414 apps/settings/src/agents.rs:452
 msgid "Asked for access"
 msgstr "请求了访问权限"
 
-#: apps/settings/src/agents.rs:318
+#: apps/settings/src/agents.rs:415
 msgid "Read the desktop state"
 msgstr "读取了桌面状态"
 
-#: apps/settings/src/agents.rs:319
+#: apps/settings/src/agents.rs:416
 msgid "Listed windows"
 msgstr "列出了窗口"
 
-#: apps/settings/src/agents.rs:320
+#: apps/settings/src/agents.rs:417
 msgid "Listed apps"
 msgstr "列出了应用"
 
-#: apps/settings/src/agents.rs:321
+#: apps/settings/src/agents.rs:418
 msgid "Listed workspaces"
 msgstr "列出了工作区"
 
-#: apps/settings/src/agents.rs:322
+#: apps/settings/src/agents.rs:419
 msgid "Listed displays"
 msgstr "列出了显示器"
 
-#: apps/settings/src/agents.rs:323
+#: apps/settings/src/agents.rs:420
 msgid "Listed notifications"
 msgstr "列出了通知"
 
-#: apps/settings/src/agents.rs:324
+#: apps/settings/src/agents.rs:421
 msgid "Listed recent files"
 msgstr "列出了最近的文件"
 
-#: apps/settings/src/agents.rs:325
+#: apps/settings/src/agents.rs:422
 msgid "Searched files"
 msgstr "搜索了文件"
 
-#: apps/settings/src/agents.rs:326
+#: apps/settings/src/agents.rs:423
 msgid "Waited for a window"
 msgstr "等待了一个窗口"
 
-#: apps/settings/src/agents.rs:327
+#: apps/settings/src/agents.rs:424
 msgid "Waited for a window to close"
 msgstr "等待了一个窗口关闭"
 
-#: apps/settings/src/agents.rs:328
+#: apps/settings/src/agents.rs:425
 msgid "Asked you a question"
 msgstr "向你提出了问题"
 
-#: apps/settings/src/agents.rs:329
+#: apps/settings/src/agents.rs:426
 msgid "Asked you to confirm"
 msgstr "请你确认"
 
-#: apps/settings/src/agents.rs:330
+#: apps/settings/src/agents.rs:427
 msgid "Added a reminder"
 msgstr "添加了提醒"
 
-#: apps/settings/src/agents.rs:331
+#: apps/settings/src/agents.rs:428
 msgid "Listed reminders"
 msgstr "列出了提醒"
 
-#: apps/settings/src/agents.rs:332
+#: apps/settings/src/agents.rs:429
 msgid "Cancelled a reminder"
 msgstr "取消了提醒"
 
-#: apps/settings/src/agents.rs:333
+#: apps/settings/src/agents.rs:430
 msgid "Opened a file or link"
 msgstr "打开了文件或链接"
 
-#: apps/settings/src/agents.rs:334
+#: apps/settings/src/agents.rs:431
 msgid "Started an app"
 msgstr "启动了应用"
 
-#: apps/settings/src/agents.rs:335
+#: apps/settings/src/agents.rs:432
 msgid "Changed a window"
 msgstr "更改了窗口"
 
-#: apps/settings/src/agents.rs:336
+#: apps/settings/src/agents.rs:433
 msgid "Switched workspace"
 msgstr "切换了工作区"
 
-#: apps/settings/src/agents.rs:337
+#: apps/settings/src/agents.rs:434
 msgid "Turned a setting on or off"
 msgstr "开启或关闭了一项设置"
 
-#: apps/settings/src/agents.rs:338
+#: apps/settings/src/agents.rs:435
 msgid "Adjusted a setting"
 msgstr "调整了一项设置"
 
-#: apps/settings/src/agents.rs:339
+#: apps/settings/src/agents.rs:436
 msgid "Sent a notification"
 msgstr "发送了通知"
 
-#: apps/settings/src/agents.rs:340
+#: apps/settings/src/agents.rs:437
 msgid "Read the clipboard"
 msgstr "读取了剪贴板"
 
-#: apps/settings/src/agents.rs:341
+#: apps/settings/src/agents.rs:438
 msgid "Changed the clipboard"
 msgstr "更改了剪贴板"
 
-#: apps/settings/src/agents.rs:342
+#: apps/settings/src/agents.rs:439
 msgid "Read an app’s contents"
 msgstr "读取了应用内容"
 
-#: apps/settings/src/agents.rs:343
+#: apps/settings/src/agents.rs:440
+msgid "Searched an app’s controls"
+msgstr "搜索了应用的控件"
+
+#: apps/settings/src/agents.rs:441
 msgid "Used a control in an app"
 msgstr "使用了应用中的控件"
 
-#: apps/settings/src/agents.rs:344
+#: apps/settings/src/agents.rs:442
 msgid "Filled in a field in an app"
 msgstr "填写了应用中的字段"
 
-#: apps/settings/src/agents.rs:345
+#: apps/settings/src/agents.rs:443
 msgid "Took a screenshot"
 msgstr "截取了屏幕"
 
-#: apps/settings/src/agents.rs:346
+#: apps/settings/src/agents.rs:444
 msgid "Typed or clicked"
 msgstr "进行了输入或点击"
 
-#: apps/settings/src/agents.rs:348
+#: apps/settings/src/agents.rs:446
 msgid "Listed agents"
 msgstr "列出了智能体"
 
-#: apps/settings/src/agents.rs:349
+#: apps/settings/src/agents.rs:447
 msgid "Access revoked"
 msgstr "访问权限已撤销"
 
-#: apps/settings/src/agents.rs:350
+#: apps/settings/src/agents.rs:448
 msgid "Access revoked and forgotten"
 msgstr "访问权限已撤销并遗忘"
 
-#: apps/settings/src/agents.rs:351
+#: apps/settings/src/agents.rs:449
 msgid "All access revoked"
 msgstr "所有访问权限已撤销"
 
-#: apps/settings/src/agents.rs:352
+#: apps/settings/src/agents.rs:450
 msgid "Activity log cleared"
 msgstr "活动日志已清除"
 
-#: apps/settings/src/agents.rs:355
+#: apps/settings/src/agents.rs:453
 msgid "Asked to confirm an action"
 msgstr "请求确认一项操作"
 
-#: apps/settings/src/agents.rs:356
+#: apps/settings/src/agents.rs:454
 msgid "Stopped by you"
 msgstr "已被你停止"
 
-#: apps/settings/src/agents.rs:357
+#: apps/settings/src/agents.rs:455
+msgid "Reminder due"
+msgstr "提醒到期"
+
+#: apps/settings/src/agents.rs:456
 msgid "Activity log full"
 msgstr "活动日志已满"
 
-#: apps/settings/src/agents.rs:366
+#: apps/settings/src/agents.rs:465
+msgid "Reminder cancelled"
+msgstr "提醒已取消"
+
+#: apps/settings/src/agents.rs:474
 msgid "Tried to list agents"
 msgstr "试图列出智能体"
 
-#: apps/settings/src/agents.rs:367
+#: apps/settings/src/agents.rs:475
+msgid "Tried to list reminders"
+msgstr "试图列出提醒"
+
+#: apps/settings/src/agents.rs:476
+msgid "Tried to cancel a reminder"
+msgstr "试图取消提醒"
+
+#: apps/settings/src/agents.rs:477
 msgid "Tried to revoke access"
 msgstr "试图撤销访问权限"
 
-#: apps/settings/src/agents.rs:368
+#: apps/settings/src/agents.rs:478
 msgid "Tried to forget an agent"
 msgstr "试图遗忘智能体"
 
-#: apps/settings/src/agents.rs:369
+#: apps/settings/src/agents.rs:479
 msgid "Tried to revoke all access"
 msgstr "试图撤销所有访问权限"
 
-#: apps/settings/src/agents.rs:370
+#: apps/settings/src/agents.rs:480
 msgid "Tried to clear the activity log"
 msgstr "试图清除活动日志"
 
-#: apps/settings/src/agents.rs:378
+#: apps/settings/src/agents.rs:488
 msgid "From a sandboxed app"
 msgstr "来自沙盒应用"
 
-#: apps/settings/src/agents.rs:379
+#: apps/settings/src/agents.rs:489
 msgid "Agent Access was off"
 msgstr "智能体访问已关闭"
 
-#: apps/settings/src/agents.rs:380
+#: apps/settings/src/agents.rs:490
 msgid "From a remote session"
 msgstr "来自远程会话"
 
-#: apps/settings/src/agents.rs:381
+#: apps/settings/src/agents.rs:491
 msgid "The screen was locked"
 msgstr "屏幕已锁定"
 
-#: apps/settings/src/agents.rs:382
+#: apps/settings/src/agents.rs:492
 msgid "Needs a higher access level"
 msgstr "需要更高的访问级别"
 
-#: apps/settings/src/agents.rs:383
+#: apps/settings/src/agents.rs:493
 msgid "That feature was turned off"
 msgstr "该功能已关闭"
 
-#: apps/settings/src/agents.rs:384
+#: apps/settings/src/agents.rs:494
 msgid "Not allowed yet"
 msgstr "尚未允许"
 
-#: apps/settings/src/agents.rs:385
+#: apps/settings/src/agents.rs:495
 msgid "Denied by you"
 msgstr "被你拒绝"
 
-#: apps/settings/src/agents.rs:386
+#: apps/settings/src/agents.rs:496
 msgid "Excluded app"
 msgstr "已排除的应用"
 
-#: apps/settings/src/agents.rs:387
+#: apps/settings/src/agents.rs:497
 msgid "Needed your confirmation"
 msgstr "需要你的确认"
 
-#: apps/settings/src/agents.rs:388
+#: apps/settings/src/agents.rs:498
 msgid "Only Settings may do this"
 msgstr "只有“设置”可以这样做"
 
-#: apps/settings/src/agents.rs:396
+#: apps/settings/src/agents.rs:506
 msgid "Failed: timed out"
 msgstr "失败：超时"
 
-#: apps/settings/src/agents.rs:397
+#: apps/settings/src/agents.rs:507
 msgid "Failed: not found"
 msgstr "失败：未找到"
 
-#: apps/settings/src/agents.rs:398
+#: apps/settings/src/agents.rs:508
 msgid "Failed: not supported"
 msgstr "失败：不支持"
 
-#: apps/settings/src/agents.rs:399
+#: apps/settings/src/agents.rs:509
 msgid "Failed: invalid request"
 msgstr "失败：无效请求"
 
-#: apps/settings/src/agents.rs:400
+#: apps/settings/src/agents.rs:510
 msgid "Failed: cancelled"
 msgstr "失败：已取消"
 
-#: apps/settings/src/agents.rs:401
+#: apps/settings/src/agents.rs:511
 msgid "Failed"
 msgstr "失败"
 
-#: apps/settings/src/agents.rs:427
+#: apps/settings/src/agents.rs:520
+msgctxt "accessible role"
+msgid "Button"
+msgstr "按钮"
+
+#: apps/settings/src/agents.rs:521
+msgctxt "accessible role"
+msgid "Toggle button"
+msgstr "切换按钮"
+
+#: apps/settings/src/agents.rs:522
+msgctxt "accessible role"
+msgid "Menu button"
+msgstr "菜单按钮"
+
+#: apps/settings/src/agents.rs:523
+msgctxt "accessible role"
+msgid "Check box"
+msgstr "复选框"
+
+#: apps/settings/src/agents.rs:524
+msgctxt "accessible role"
+msgid "Option button"
+msgstr "单选按钮"
+
+#: apps/settings/src/agents.rs:525
+msgctxt "accessible role"
+msgid "Switch"
+msgstr "开关"
+
+#: apps/settings/src/agents.rs:526
+msgctxt "accessible role"
+msgid "Text field"
+msgstr "文本框"
+
+#: apps/settings/src/agents.rs:527
+msgctxt "accessible role"
+msgid "Password field"
+msgstr "密码框"
+
+#: apps/settings/src/agents.rs:528
+msgctxt "accessible role"
+msgid "Drop-down list"
+msgstr "下拉列表"
+
+#: apps/settings/src/agents.rs:529
+msgctxt "accessible role"
+msgid "Slider"
+msgstr "滑块"
+
+#: apps/settings/src/agents.rs:530
+msgctxt "accessible role"
+msgid "Number field"
+msgstr "数字框"
+
+#: apps/settings/src/agents.rs:531
+msgctxt "accessible role"
+msgid "Link"
+msgstr "链接"
+
+#: apps/settings/src/agents.rs:532
+msgctxt "accessible role"
+msgid "Menu item"
+msgstr "菜单项"
+
+#: apps/settings/src/agents.rs:533
+msgctxt "accessible role"
+msgid "Tab"
+msgstr "标签页"
+
+#: apps/settings/src/agents.rs:534
+msgctxt "accessible role"
+msgid "List item"
+msgstr "列表项"
+
+#: apps/settings/src/agents.rs:535
+msgctxt "accessible role"
+msgid "Table cell"
+msgstr "表格单元格"
+
+#: apps/settings/src/agents.rs:536
+msgctxt "accessible role"
+msgid "Label"
+msgstr "标签"
+
+#: apps/settings/src/agents.rs:537
+msgctxt "accessible role"
+msgid "Heading"
+msgstr "标题"
+
+#: apps/settings/src/agents.rs:538
+msgctxt "accessible role"
+msgid "Image"
+msgstr "图像"
+
+#: apps/settings/src/agents.rs:539
+msgctxt "accessible role"
+msgid "Dialog"
+msgstr "对话框"
+
+#: apps/settings/src/agents.rs:540
+msgctxt "accessible role"
+msgid "Window"
+msgstr "窗口"
+
+#: apps/settings/src/agents.rs:549
+msgctxt "control action"
+msgid "Clicked"
+msgstr "已点击"
+
+#: apps/settings/src/agents.rs:550
+msgctxt "control action"
+msgid "Activated"
+msgstr "已激活"
+
+#: apps/settings/src/agents.rs:551
+msgctxt "control action"
+msgid "Toggled"
+msgstr "已切换"
+
+#: apps/settings/src/agents.rs:552
+msgctxt "control action"
+msgid "Selected"
+msgstr "已选择"
+
+#: apps/settings/src/agents.rs:553
+msgctxt "control action"
+msgid "Focused"
+msgstr "已聚焦"
+
+#: apps/settings/src/agents.rs:554
+msgctxt "control action"
+msgid "Expanded"
+msgstr "已展开"
+
+#: apps/settings/src/agents.rs:555
+msgctxt "control action"
+msgid "Collapsed"
+msgstr "已折叠"
+
+#: apps/settings/src/agents.rs:556
+msgctxt "control action"
+msgid "Opened"
+msgstr "已打开"
+
+#: apps/settings/src/agents.rs:557
+msgctxt "control action"
+msgid "Followed a link"
+msgstr "打开了链接"
+
+#: apps/settings/src/agents.rs:558
+msgctxt "control action"
+msgid "Opened a menu"
+msgstr "打开了菜单"
+
+#: apps/settings/src/agents.rs:559
+msgctxt "control action"
+msgid "Increased"
+msgstr "已增加"
+
+#: apps/settings/src/agents.rs:560
+msgctxt "control action"
+msgid "Decreased"
+msgstr "已减少"
+
+#: apps/settings/src/agents.rs:561
+msgctxt "control action"
+msgid "Closed the window"
+msgstr "关闭了窗口"
+
+#: apps/settings/src/agents.rs:562
+msgctxt "control action"
+msgid "Minimized the window"
+msgstr "最小化了窗口"
+
+#: apps/settings/src/agents.rs:563
+msgctxt "control action"
+msgid "Maximized or restored the window"
+msgstr "最大化或还原了窗口"
+
+#: apps/settings/src/agents.rs:564
+msgctxt "control action"
+msgid "Selected all"
+msgstr "全选了"
+
+#: apps/settings/src/agents.rs:565
+msgctxt "control action"
+msgid "Deleted the selection"
+msgstr "删除了所选内容"
+
+#: apps/settings/src/agents.rs:566
+msgctxt "control action"
+msgid "Cleared the text"
+msgstr "清除了文本"
+
+#: apps/settings/src/agents.rs:567
+msgctxt "control action"
+msgid "Copied"
+msgstr "已复制"
+
+#: apps/settings/src/agents.rs:568
+msgctxt "control action"
+msgid "Cut"
+msgstr "已剪切"
+
+#: apps/settings/src/agents.rs:569
+msgctxt "control action"
+msgid "Pasted"
+msgstr "已粘贴"
+
+#: apps/settings/src/agents.rs:570
+msgctxt "control action"
+msgid "Copied a link"
+msgstr "复制了链接"
+
+#: apps/settings/src/agents.rs:571
+msgctxt "control action"
+msgid "Inserted an emoji"
+msgstr "插入了表情"
+
+#: apps/settings/src/agents.rs:572
+msgctxt "control action"
+msgid "Another action"
+msgstr "其他操作"
+
+#: apps/settings/src/agents.rs:573
+msgctxt "control action"
+msgid "Set text"
+msgstr "设置了文本"
+
+#: apps/settings/src/agents.rs:574
+msgctxt "control action"
+msgid "Set a value"
+msgstr "设置了值"
+
+#: apps/settings/src/agents.rs:594 apps/web/src/window.rs:2157
+msgid "{n} match"
+msgid_plural "{n} matches"
+msgstr[0] "{n} 个匹配项"
+
+#: apps/settings/src/agents.rs:603
+msgid "{n} choice"
+msgid_plural "{n} choices"
+msgstr[0] "{n} 个选项"
+
+#: apps/settings/src/agents.rs:635
 msgid "A window of {app}"
 msgstr "{app} 的窗口"
 
-#: apps/settings/src/agents.rs:429
+#: apps/settings/src/agents.rs:637
 msgid "A window"
 msgstr "一个窗口"
 
-#: apps/settings/src/agents.rs:455 apps/settings/src/ui/mod.rs:165
+#: apps/settings/src/agents.rs:666 apps/settings/src/ui/mod.rs:165
 #: apps/settings/src/ui/mod.rs:245 apps/settings/src/ui/mod.rs:509
 msgid "Settings"
 msgstr "设置"
 
-#: apps/settings/src/agents.rs:470
+#: apps/settings/src/agents.rs:681
 msgid "Allowed for this session"
 msgstr "本次会话允许"
 
-#: apps/settings/src/agents.rs:471 apps/settings/src/ui/agent_access.rs:462
+#: apps/settings/src/agents.rs:682 apps/settings/src/ui/agent_access.rs:475
 msgid "Always allowed"
 msgstr "始终允许"
 
-#: apps/settings/src/agents.rs:472 apps/settings/src/agents.rs:479
-#: apps/settings/src/agents.rs:493 apps/web/src/window.rs:1948
+#: apps/settings/src/agents.rs:683 apps/settings/src/agents.rs:690
+#: apps/settings/src/agents.rs:715 apps/web/src/window.rs:1948
 msgid "Allowed"
 msgstr "已允许"
 
-#: apps/settings/src/agents.rs:473 apps/settings/src/agents.rs:480
+#: apps/settings/src/agents.rs:684 apps/settings/src/agents.rs:691
 #: apps/web/src/window.rs:1948
 msgid "Denied"
 msgstr "已拒绝"
 
-#: apps/settings/src/agents.rs:474 apps/settings/src/agents.rs:481
+#: apps/settings/src/agents.rs:685 apps/settings/src/agents.rs:692
 msgid "Not answered"
 msgstr "未回答"
 
-#: apps/settings/src/agents.rs:487
+#: apps/settings/src/agents.rs:698
+msgid "Shown"
+msgstr "已显示"
+
+#: apps/settings/src/agents.rs:699
+msgid "Cancelled by you"
+msgstr "被您取消"
+
+#: apps/settings/src/agents.rs:701
+msgid "Not shown"
+msgstr "未显示"
+
+#: apps/settings/src/agents.rs:709
 msgid "Refused calls are no longer recorded today"
 msgstr "今天不再记录被拒绝的调用"
 
-#: apps/settings/src/agents.rs:488
+#: apps/settings/src/agents.rs:710
 msgid "Nothing more is recorded today"
 msgstr "今天不再记录任何内容"
 
-#: apps/settings/src/agents.rs:497
+#: apps/settings/src/agents.rs:719
 msgid "Failed: {error}"
 msgstr "失败：{error}"
 
-#: apps/settings/src/agents.rs:505
+#: apps/settings/src/agents.rs:727
 msgid "Refused {n} time"
 msgid_plural "Refused {n} times"
 msgstr[0] "已拒绝 {n} 次"
 
-#: apps/settings/src/agents.rs:506
+#: apps/settings/src/agents.rs:728
 msgid "Refused"
 msgstr "已拒绝"
 
@@ -11481,11 +11758,11 @@ msgstr ""
 "设备名称;主机名;内存;处理器;cpu;磁盘;操作系统;版本;内核;硬件;hostname;os;"
 
 #: apps/settings/src/panels.rs:281 apps/settings/src/ui/agent_access.rs:70
-#: apps/settings/src/ui/agent_access.rs:170 apps/settings/src/ui/privacy.rs:189
+#: apps/settings/src/ui/agent_access.rs:183 apps/settings/src/ui/privacy.rs:189
 msgid "Agent Access"
 msgstr "智能体访问"
 
-#: apps/settings/src/panels.rs:289 apps/settings/src/ui/agent_access.rs:816
+#: apps/settings/src/panels.rs:289 apps/settings/src/ui/agent_access.rs:982
 msgid "Agent Activity"
 msgstr "智能体活动"
 
@@ -12031,73 +12308,83 @@ msgstr "访问"
 msgid "Asking"
 msgstr "询问"
 
-#: apps/settings/src/ui/agent_access.rs:94
+#: apps/settings/src/ui/agent_access.rs:96
 msgid "Information"
 msgstr "信息"
 
-#: apps/settings/src/ui/agent_access.rs:100
+#: apps/settings/src/ui/agent_access.rs:102
 msgid "Notifications Access"
 msgstr "通知访问"
 
-#: apps/settings/src/ui/agent_access.rs:101
+#: apps/settings/src/ui/agent_access.rs:103
 msgid ""
 "Agents can read the text of notifications, which can include messages and "
 "sign-in codes"
 msgstr "智能体可以读取通知的文本，其中可能包含消息和登录验证码"
 
-#: apps/settings/src/ui/agent_access.rs:108
+#: apps/settings/src/ui/agent_access.rs:110
 msgid "Clipboard Access"
 msgstr "剪贴板访问"
 
-#: apps/settings/src/ui/agent_access.rs:109
+#: apps/settings/src/ui/agent_access.rs:111
 msgid ""
 "Agents can read and change the clipboard, which can hold passwords and other "
 "copied text"
 msgstr "智能体可以读取和更改剪贴板，其中可能包含密码和其他复制的文本"
 
-#: apps/settings/src/ui/agent_access.rs:114
+#: apps/settings/src/ui/agent_access.rs:120
+msgid "Read Text Fields"
+msgstr "读取文本框"
+
+#: apps/settings/src/ui/agent_access.rs:121
+msgid ""
+"Agents controlling apps can see what is typed in fields; password fields are "
+"never shown"
+msgstr "控制应用的代理可以看到在文本框中输入的内容；密码框永远不会显示"
+
+#: apps/settings/src/ui/agent_access.rs:127
 msgid "Safeguards"
 msgstr "安全措施"
 
-#: apps/settings/src/ui/agent_access.rs:120
+#: apps/settings/src/ui/agent_access.rs:133
 msgid "Confirm Sensitive Actions"
 msgstr "确认敏感操作"
 
-#: apps/settings/src/ui/agent_access.rs:121
+#: apps/settings/src/ui/agent_access.rs:134
 msgid ""
 "Ask before an agent deletes files, sends messages or changes network settings"
 msgstr "在智能体删除文件、发送消息或更改网络设置之前询问"
 
-#: apps/settings/src/ui/agent_access.rs:128
+#: apps/settings/src/ui/agent_access.rs:141
 msgid "Allow From Remote Sessions"
 msgstr "允许来自远程会话"
 
-#: apps/settings/src/ui/agent_access.rs:129
+#: apps/settings/src/ui/agent_access.rs:142
 msgid "Agents running in a remote login (SSH) can ask for access"
 msgstr "在远程登录 (SSH) 中运行的智能体可以请求访问"
 
-#: apps/settings/src/ui/agent_access.rs:140
+#: apps/settings/src/ui/agent_access.rs:153
 msgid "View Activity"
 msgstr "查看活动"
 
-#: apps/settings/src/ui/agent_access.rs:141
+#: apps/settings/src/ui/agent_access.rs:154
 msgid "What agents did, and how long it is kept"
 msgstr "智能体做了什么，以及保留多长时间"
 
-#: apps/settings/src/ui/agent_access.rs:188
+#: apps/settings/src/ui/agent_access.rs:201
 msgid "Access Level"
 msgstr "访问级别"
 
-#: apps/settings/src/ui/agent_access.rs:196
+#: apps/settings/src/ui/agent_access.rs:209
 msgid ""
 "Also take screenshots and use the pointer and keyboard as if they were you"
 msgstr "还可以截屏，并像您本人一样使用指针和键盘"
 
-#: apps/settings/src/ui/agent_access.rs:262
+#: apps/settings/src/ui/agent_access.rs:275
 msgid "Allow Screen and Input?"
 msgstr "允许屏幕和输入吗？"
 
-#: apps/settings/src/ui/agent_access.rs:263
+#: apps/settings/src/ui/agent_access.rs:276
 msgid ""
 "Agents you allow will be able to see everything on the screen and type and "
 "click anywhere, as if they were you. Only turn this on for agents you trust."
@@ -12105,120 +12392,156 @@ msgstr ""
 "您允许的智能体将能够看到屏幕上的一切，并像您本人一样在任何地方输入和点击。请"
 "只为您信任的智能体开启此项。"
 
-#: apps/settings/src/ui/agent_access.rs:268
+#: apps/settings/src/ui/agent_access.rs:281
 msgid "_Allow"
 msgstr "允许(_A)"
 
-#: apps/settings/src/ui/agent_access.rs:288
+#: apps/settings/src/ui/agent_access.rs:301
 msgid "Ask Each Session"
 msgstr "每个会话都询问"
 
-#: apps/settings/src/ui/agent_access.rs:289
+#: apps/settings/src/ui/agent_access.rs:302
 msgid "Agents are asked for again in every session"
 msgstr "每个会话都会再次询问智能体"
 
-#: apps/settings/src/ui/agent_access.rs:293
+#: apps/settings/src/ui/agent_access.rs:306
 msgid "Remember"
 msgstr "记住"
 
-#: apps/settings/src/ui/agent_access.rs:294
+#: apps/settings/src/ui/agent_access.rs:307
 msgid "Agents you always allow are not asked again"
 msgstr "您始终允许的智能体不会再被询问"
 
-#: apps/settings/src/ui/agent_access.rs:345
+#: apps/settings/src/ui/agent_access.rs:358
 msgid "Allowed Agents"
 msgstr "已允许的智能体"
 
-#: apps/settings/src/ui/agent_access.rs:346
+#: apps/settings/src/ui/agent_access.rs:359
 msgid ""
 "While an agent is active, an indicator is always shown in the top bar, with "
 "Stop in its menu."
 msgstr "智能体处于活动状态时，顶栏总会显示一个指示器，其菜单中有“停止”。"
 
-#: apps/settings/src/ui/agent_access.rs:350
+#: apps/settings/src/ui/agent_access.rs:363
 msgid "Revoke All"
 msgstr "全部撤销"
 
-#: apps/settings/src/ui/agent_access.rs:355
+#: apps/settings/src/ui/agent_access.rs:368
 msgid "Revoke Access of All Agents"
 msgstr "撤销所有智能体的访问权限"
 
-#: apps/settings/src/ui/agent_access.rs:417
+#: apps/settings/src/ui/agent_access.rs:430
 msgid "Only the installed Settings app can change agents' access"
 msgstr "只有已安装的设置应用才能更改智能体的访问权限"
 
-#: apps/settings/src/ui/agent_access.rs:419
+#: apps/settings/src/ui/agent_access.rs:432
 msgid "Could not change the agent's access: {e}"
 msgstr "无法更改智能体的访问权限：{e}"
 
-#: apps/settings/src/ui/agent_access.rs:445
+#: apps/settings/src/ui/agent_access.rs:458
 msgid "Not active this session"
 msgstr "本次会话中未活动"
 
-#: apps/settings/src/ui/agent_access.rs:446
+#: apps/settings/src/ui/agent_access.rs:459
 msgid "Active just now"
 msgstr "刚刚活动"
 
-#: apps/settings/src/ui/agent_access.rs:447
+#: apps/settings/src/ui/agent_access.rs:460
 msgid "Active {n} minute ago"
 msgid_plural "Active {n} minutes ago"
 msgstr[0] "{n} 分钟前活动"
 
-#: apps/settings/src/ui/agent_access.rs:448
+#: apps/settings/src/ui/agent_access.rs:461
 msgid "Active {n} hour ago"
 msgid_plural "Active {n} hours ago"
 msgstr[0] "{n} 小时前活动"
 
-#: apps/settings/src/ui/agent_access.rs:449
+#: apps/settings/src/ui/agent_access.rs:462
 msgid "Active {n} day ago"
 msgid_plural "Active {n} days ago"
 msgstr[0] "{n} 天前活动"
 
-#: apps/settings/src/ui/agent_access.rs:460
+#: apps/settings/src/ui/agent_access.rs:473
 msgid "Denied this session"
 msgstr "本次会话中已拒绝"
 
-#: apps/settings/src/ui/agent_access.rs:464
+#: apps/settings/src/ui/agent_access.rs:477
 msgid "Allowed this session"
 msgstr "本次会话中允许"
 
-#: apps/settings/src/ui/agent_access.rs:485
+#: apps/settings/src/ui/agent_access.rs:498
 msgid "The desktop shell is not running, so agents cannot be listed"
 msgstr "桌面外壳未运行，因此无法列出智能体"
 
-#: apps/settings/src/ui/agent_access.rs:487
+#: apps/settings/src/ui/agent_access.rs:500
 msgid "Only the installed Settings app can list agents"
 msgstr "只有已安装的设置应用才能列出智能体"
 
-#: apps/settings/src/ui/agent_access.rs:488
+#: apps/settings/src/ui/agent_access.rs:501
 msgid "Agents could not be listed"
 msgstr "无法列出智能体"
 
-#: apps/settings/src/ui/agent_access.rs:490
+#: apps/settings/src/ui/agent_access.rs:503
 msgid "Agents that ask for access are listed here"
 msgstr "请求访问的智能体会列在这里"
 
-#: apps/settings/src/ui/agent_access.rs:544
+#: apps/settings/src/ui/agent_access.rs:557
 msgid "Revoke"
 msgstr "撤销"
 
-#: apps/settings/src/ui/agent_access.rs:545
+#: apps/settings/src/ui/agent_access.rs:558
 msgid "Revoke Access of {agent}"
 msgstr "撤销 {agent} 的访问权限"
 
-#: apps/settings/src/ui/agent_access.rs:550
+#: apps/settings/src/ui/agent_access.rs:563
 msgid "Forget"
 msgstr "忘记"
 
-#: apps/settings/src/ui/agent_access.rs:551
+#: apps/settings/src/ui/agent_access.rs:564
 msgid "Forget {agent}"
 msgstr "忘记 {agent}"
 
-#: apps/settings/src/ui/agent_access.rs:583
+#: apps/settings/src/ui/agent_access.rs:606
+msgid ""
+"Reminders agents have set for you. They are shown as notifications when they "
+"are due."
+msgstr "代理为您设置的提醒。到期时以通知形式显示。"
+
+#: apps/settings/src/ui/agent_access.rs:661
+msgid "No reminders"
+msgstr "没有提醒"
+
+#: apps/settings/src/ui/agent_access.rs:678
+msgctxt "agent reminder without text"
+msgid "Reminder"
+msgstr "提醒"
+
+#: apps/settings/src/ui/agent_access.rs:688
+msgid "Due {time}"
+msgstr "到期时间 {time}"
+
+#: apps/settings/src/ui/agent_access.rs:711
+msgctxt "cancel an agent's reminder"
+msgid "Cancel"
+msgstr "取消"
+
+#: apps/settings/src/ui/agent_access.rs:714
+msgid "Cancel Reminder “{text}”"
+msgstr "取消提醒“{text}”"
+
+#: apps/settings/src/ui/agent_access.rs:728
+msgid "Only the installed Settings app can cancel reminders"
+msgstr "只有已安装的设置应用可以取消提醒"
+
+#: apps/settings/src/ui/agent_access.rs:730
+msgid "Could not cancel the reminder: {e}"
+msgstr "无法取消提醒：{e}"
+
+#: apps/settings/src/ui/agent_access.rs:749
 msgid "Excluded Apps"
 msgstr "排除的应用"
 
-#: apps/settings/src/ui/agent_access.rs:584
+#: apps/settings/src/ui/agent_access.rs:750
 msgid ""
 "Agents can never read or control these apps. Password fields, the lock "
 "screen, system password prompts and Settings are always excluded."
@@ -12226,88 +12549,88 @@ msgstr ""
 "智能体永远无法读取或控制这些应用。密码输入框、锁屏、系统密码提示和设置始终被"
 "排除。"
 
-#: apps/settings/src/ui/agent_access.rs:588
+#: apps/settings/src/ui/agent_access.rs:754
 msgid "Add App…"
 msgstr "添加应用…"
 
-#: apps/settings/src/ui/agent_access.rs:607
+#: apps/settings/src/ui/agent_access.rs:773
 msgid "No apps excluded"
 msgstr "没有排除的应用"
 
-#: apps/settings/src/ui/agent_access.rs:659
+#: apps/settings/src/ui/agent_access.rs:825
 msgid "Remove {app}"
 msgstr "移除 {app}"
 
-#: apps/settings/src/ui/agent_access.rs:672
+#: apps/settings/src/ui/agent_access.rs:838
 msgid "Exclude an App"
 msgstr "排除应用"
 
-#: apps/settings/src/ui/agent_access.rs:673
+#: apps/settings/src/ui/agent_access.rs:839
 msgid "Search apps"
 msgstr "搜索应用"
 
-#: apps/settings/src/ui/agent_access.rs:674
+#: apps/settings/src/ui/agent_access.rs:840
 msgid "Search Apps"
 msgstr "搜索应用"
 
-#: apps/settings/src/ui/agent_access.rs:675
+#: apps/settings/src/ui/agent_access.rs:841
 msgid "Loading Apps…"
 msgstr "正在加载应用…"
 
-#: apps/settings/src/ui/agent_access.rs:743
+#: apps/settings/src/ui/agent_access.rs:909
 msgid "Keep Activity For"
 msgstr "活动保留时长"
 
-#: apps/settings/src/ui/agent_access.rs:746
+#: apps/settings/src/ui/agent_access.rs:912
 msgid "Clear Activity"
 msgstr "清除活动"
 
-#: apps/settings/src/ui/agent_access.rs:747
+#: apps/settings/src/ui/agent_access.rs:913
 msgid "Remove everything agents have done from the log"
 msgstr "从日志中移除智能体所做的一切"
 
-#: apps/settings/src/ui/agent_access.rs:748
+#: apps/settings/src/ui/agent_access.rs:914
 msgid "Clear…"
 msgstr "清除…"
 
-#: apps/settings/src/ui/agent_access.rs:754
+#: apps/settings/src/ui/agent_access.rs:920
 msgid "Recent Activity"
 msgstr "最近活动"
 
-#: apps/settings/src/ui/agent_access.rs:782
+#: apps/settings/src/ui/agent_access.rs:948
 msgid "Clear Agent Activity?"
 msgstr "清除智能体活动吗？"
 
-#: apps/settings/src/ui/agent_access.rs:783
+#: apps/settings/src/ui/agent_access.rs:949
 msgid "The record of what agents did is removed. This cannot be undone."
 msgstr "智能体所做操作的记录将被移除。此操作无法撤销。"
 
-#: apps/settings/src/ui/agent_access.rs:788
+#: apps/settings/src/ui/agent_access.rs:954
 msgid "_Clear"
 msgstr "清除(_C)"
 
-#: apps/settings/src/ui/agent_access.rs:800
+#: apps/settings/src/ui/agent_access.rs:966
 msgid "Agent activity cleared"
 msgstr "已清除智能体活动"
 
-#: apps/settings/src/ui/agent_access.rs:801
+#: apps/settings/src/ui/agent_access.rs:967
 msgid "The desktop shell is not running, so the activity cannot be cleared"
 msgstr "桌面外壳未运行，因此无法清除活动"
 
-#: apps/settings/src/ui/agent_access.rs:805
+#: apps/settings/src/ui/agent_access.rs:971
 msgid "Only the installed Settings app can clear the activity"
 msgstr "只有已安装的设置应用才能清除活动"
 
-#: apps/settings/src/ui/agent_access.rs:807
+#: apps/settings/src/ui/agent_access.rs:973
 msgid "Could not clear the activity: {e}"
 msgstr "无法清除活动：{e}"
 
-#: apps/settings/src/ui/agent_access.rs:848
+#: apps/settings/src/ui/agent_access.rs:1014
 msgid "Showing the latest {n} entry."
 msgid_plural "Showing the latest {n} entries."
 msgstr[0] "显示最新的 {n} 条记录。"
 
-#: apps/settings/src/ui/agent_access.rs:857
+#: apps/settings/src/ui/agent_access.rs:1023
 msgid "What agents do will be listed here"
 msgstr "智能体的操作会列在这里"
 
@@ -17690,11 +18013,6 @@ msgstr "移除书签 {title}"
 #: apps/web/src/window.rs:2156
 msgid "Not found"
 msgstr "未找到"
-
-#: apps/web/src/window.rs:2157
-msgid "{n} match"
-msgid_plural "{n} matches"
-msgstr[0] "{n} 个匹配项"
 
 #: apps/web/src/window.rs:2225
 msgid "Cancel {name}"
