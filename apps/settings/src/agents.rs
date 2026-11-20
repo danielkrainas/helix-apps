@@ -462,6 +462,9 @@ pub fn method_label(method: &str) -> Option<&'static str> {
         "ListNotifications" => n_("Listed notifications"),
         "RecentFiles" => n_("Listed recent files"),
         "SearchFiles" => n_("Searched files"),
+        "StarredFiles" => n_("Listed starred files"),
+        "GetMedia" => n_("Read the media players"),
+        "GetPower" => n_("Read the battery and power mode"),
         "WaitForWindow" => n_("Waited for a window"),
         "WaitForWindowClosed" => n_("Waited for a window to close"),
         "Ask" => n_("Asked you a question"),
@@ -475,6 +478,7 @@ pub fn method_label(method: &str) -> Option<&'static str> {
         "SwitchWorkspace" => n_("Switched workspace"),
         "SetToggle" => n_("Turned a setting on or off"),
         "SetValue" => n_("Adjusted a setting"),
+        "MediaControl" => n_("Controlled a media player"),
         "Notify" => n_("Sent a notification"),
         "GetClipboard" => n_("Read the clipboard"),
         "SetClipboard" => n_("Changed the clipboard"),
@@ -618,6 +622,21 @@ pub fn control_action_label(action: &str) -> Option<&'static str> {
     })
 }
 
+/// What a `MediaControl` did (`action`), untranslated (`None` for a name
+/// this version does not know).
+pub fn media_action_label(action: &str) -> Option<&'static str> {
+    Some(match action {
+        "play" => nc_!("media action", "Played"),
+        "pause" => nc_!("media action", "Paused"),
+        "play-pause" => nc_!("media action", "Played or paused"),
+        "next" => nc_!("media action", "Skipped to the next track"),
+        "previous" => nc_!("media action", "Went back to the previous track"),
+        "stop" => nc_!("media action", "Stopped"),
+        "seek" => nc_!("media action", "Moved in the track"),
+        _ => return None,
+    })
+}
+
 /// What a line says about what was done, beyond its title and target, in
 /// people's words: the role and action of a control, how many nodes,
 /// characters or choices. Only what the line holds.
@@ -630,6 +649,9 @@ pub fn details(e: &Entry) -> Vec<String> {
     // said by the title and target.
     if !e.action.is_empty() && matches!(e.method.as_str(), "A11yAction" | "A11ySetValue") {
         out.push(control_action_label(&e.action).map_or_else(|| e.action.clone(), tr_dyn));
+    }
+    if !e.action.is_empty() && e.method == "MediaControl" {
+        out.push(media_action_label(&e.action).map_or_else(|| e.action.clone(), tr_dyn));
     }
     if let Some(n) = e.node_count {
         out.push(if e.method == "A11yFind" {
@@ -789,6 +811,15 @@ pub fn target_label(method: &str, target: &str) -> String {
             return trf!("Display {name}", name = &t["monitor:".len()..]);
         }
         _ => {}
+    }
+    // A media player by its app when the line names it, else by its id.
+    if let Some(player) = target.strip_prefix("player:") {
+        return match player.split_once(" (") {
+            Some((_, app)) if app.ends_with(')') && app.len() > 1 => {
+                trf!("A media player of {app}", app = &app[..app.len() - 1])
+            }
+            _ => trf!("Media player “{id}”", id = player),
+        };
     }
     if let Some(window) = target.strip_prefix("window:") {
         return match window.split_once(" (") {
@@ -1099,7 +1130,7 @@ pub mod tests {
 
     /// Every method of the contract's interfaces
     /// (`contracts/agent-access/*.xml`) and the log's events.
-    const METHODS: [&str; 37] = [
+    const METHODS: [&str; 41] = [
         "GetStatus",
         "RequestAccess",
         "GetState",
@@ -1110,6 +1141,9 @@ pub mod tests {
         "ListNotifications",
         "RecentFiles",
         "SearchFiles",
+        "StarredFiles",
+        "GetMedia",
+        "GetPower",
         "WaitForWindow",
         "WaitForWindowClosed",
         "Ask",
@@ -1123,6 +1157,7 @@ pub mod tests {
         "SwitchWorkspace",
         "SetToggle",
         "SetValue",
+        "MediaControl",
         "Notify",
         "GetClipboard",
         "SetClipboard",
@@ -1137,6 +1172,20 @@ pub mod tests {
         "Forget",
         "StopAll",
         "ClearLog",
+    ];
+    /// The contract's methods of the scoped actions' second batch
+    /// (helixdesktop/desktop#157), labelled when the shell has them.
+    const LATER: [&str; 10] = [
+        "SetWallpaper",
+        "SetAccent",
+        "SetPowerMode",
+        "StarFile",
+        "SetFavorite",
+        "DismissNotification",
+        "NotificationAction",
+        "RevealFile",
+        "ListChanges",
+        "Undo",
     ];
     const EVENTS: [&str; 5] = [
         "ConsentPrompt",
@@ -1164,7 +1213,10 @@ pub mod tests {
             };
             for part in xml.split("<method name=\"").skip(1) {
                 let name = part.split('"').next().unwrap();
-                assert!(METHODS.contains(&name), "{name} from {file}");
+                assert!(
+                    METHODS.contains(&name) || LATER.contains(&name),
+                    "{name} from {file}"
+                );
             }
         }
         for m in SETTINGS_METHODS.iter().chain(&SHARED_METHODS) {
@@ -1175,7 +1227,9 @@ pub mod tests {
             for part in xml.split("<method name=\"").skip(1) {
                 let name = part.split('"').next().unwrap();
                 assert!(
-                    SETTINGS_METHODS.contains(&name) || SHARED_METHODS.contains(&name),
+                    SETTINGS_METHODS.contains(&name)
+                        || SHARED_METHODS.contains(&name)
+                        || LATER.contains(&name),
                     "{name}"
                 );
             }
@@ -1323,6 +1377,38 @@ pub mod tests {
             "Toggle button · Another action"
         );
         assert_eq!(act("later", "tree table"), "tree table · later");
+        // Media players: the action in words, the player by its app.
+        let media = line(
+            r#""method":"MediaControl","target":"player:vlc (org.videolan.VLC)","level":"desktop","outcome":"allowed","action":"play-pause""#,
+        );
+        assert_eq!(
+            shown(&media),
+            four(
+                "Controlled a media player",
+                "A media player of org.videolan.VLC",
+                "Example",
+                "Allowed"
+            )
+        );
+        assert_eq!(details_of(&media), "Played or paused");
+        let seek = line(
+            r#""method":"MediaControl","target":"player:firefox.instance_1_42","level":"desktop","outcome":"refused:Excluded","reason":"app","action":"seek""#,
+        );
+        assert_eq!(shown(&seek).1, "Media player “firefox.instance_1_42”");
+        assert_eq!(details_of(&seek), "Moved in the track");
+        for action in [
+            "play",
+            "pause",
+            "play-pause",
+            "next",
+            "previous",
+            "stop",
+            "seek",
+        ] {
+            assert!(media_action_label(action).is_some(), "{action}");
+        }
+        assert_eq!(media_action_label("later"), None);
+        assert_eq!(method_label("GetMedia"), Some("Read the media players"));
         // Other methods' actions are not repeated.
         assert_eq!(
             details_of(&line(
