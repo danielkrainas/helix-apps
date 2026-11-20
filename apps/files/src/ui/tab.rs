@@ -6,6 +6,7 @@ use gtk::{gdk, gio, glib, graphene};
 use std::cell::{Cell, RefCell};
 use std::rc::{Rc, Weak};
 
+use super::starred::STARRED;
 use super::{Shared, ViewSettings, Window, FILE_ATTRS, GRID_ZOOM, LIST_ZOOM, OTHER_LOCATIONS};
 use crate::history::History;
 use crate::search;
@@ -14,6 +15,7 @@ use helix_app_common::i18n::tr;
 use helix_app_common::trf;
 
 const ITEM_KEY: &str = "helix-files-item";
+const STAR_URI_KEY: &str = "helix-files-star-uri";
 const INVALID: u32 = u32::MAX;
 
 /// The `GFile` a listed `GFileInfo` describes.
@@ -117,6 +119,26 @@ fn tagged_position(widget: &gtk::Widget) -> Option<u32> {
     (pos != INVALID).then_some(pos)
 }
 
+/// A row's star mark (hidden until its file is starred), known to the
+/// tab so that it follows changes.
+fn star_mark(tab: &Weak<Tab>, class: &str) -> gtk::Image {
+    let star = gtk::Image::from_icon_name("starred-symbolic");
+    star.add_css_class(class);
+    star.set_halign(gtk::Align::End);
+    // In the icon's corner on the grid, centred after a list row's name.
+    star.set_valign(if class == "grid-star" {
+        gtk::Align::Start
+    } else {
+        gtk::Align::Center
+    });
+    star.set_visible(false);
+    helix_app_common::set_accessible_label(&star, tr("Starred"));
+    if let Some(t) = tab.upgrade() {
+        t.star_marks.borrow_mut().push(star.downgrade());
+    }
+    star
+}
+
 /// Shows an item as cut (dimmed) and says so to assistive technology.
 fn mark_cut(item: &impl IsA<gtk::Widget>, cut: bool) {
     let item = item.as_ref();
@@ -141,6 +163,13 @@ pub struct Tab {
     pub history: RefCell<History>,
     dir_list: gtk::DirectoryList,
     search_store: gio::ListStore,
+    /// Starred: the starred files, read when shown and when the stars
+    /// change (`starred_serial` drops late readings).
+    starred_store: gio::ListStore,
+    starred_serial: Cell<u64>,
+    starred_loading: Cell<bool>,
+    /// The list's star marks (each knows its row's URI).
+    star_marks: RefCell<Vec<glib::WeakRef<gtk::Image>>>,
     filter: gtk::CustomFilter,
     filter_model: gtk::FilterListModel,
     sorter: gtk::CustomSorter,
@@ -178,6 +207,7 @@ impl Tab {
         dir_list.set_monitored(true);
         dir_list.set_io_priority(glib::Priority::DEFAULT_IDLE);
         let search_store = gio::ListStore::new::<gio::FileInfo>();
+        let starred_store = gio::ListStore::new::<gio::FileInfo>();
 
         let s = settings.clone();
         let filter = gtk::CustomFilter::new(move |obj| {
@@ -293,6 +323,10 @@ impl Tab {
             history: RefCell::default(),
             dir_list,
             search_store,
+            starred_store,
+            starred_serial: Cell::new(0),
+            starred_loading: Cell::new(false),
+            star_marks: RefCell::default(),
             filter,
             filter_model,
             sorter,
@@ -341,8 +375,13 @@ impl Tab {
         self.location.borrow().uri_scheme().as_deref() == Some("trash")
     }
 
+    /// Whether the tab shows Starred.
+    pub fn is_starred(&self) -> bool {
+        self.location.borrow().uri() == STARRED
+    }
+
     pub fn is_loading(&self) -> bool {
-        self.dir_list.is_loading() || self.searching.get()
+        self.dir_list.is_loading() || self.searching.get() || self.starred_loading.get()
     }
 
     pub fn is_searching(&self) -> bool {
@@ -580,7 +619,7 @@ impl Tab {
             let Some(t) = weak.upgrade() else {
                 return gdk::DragAction::empty();
             };
-            if t.is_other_locations() || t.is_searching() {
+            if t.is_other_locations() || t.is_searching() || t.is_starred() {
                 return gdk::DragAction::empty();
             }
             let dest = t.drop_destination(&v, x, y);
@@ -644,6 +683,7 @@ impl Tab {
     fn grid_factory(self: &Rc<Self>) -> gtk::SignalListItemFactory {
         let f = gtk::SignalListItemFactory::new();
         let size = GRID_ZOOM[self.settings.borrow().grid_zoom].1;
+        let weak = Rc::downgrade(self);
         f.connect_setup(move |_, obj| {
             let item = obj.downcast_ref::<gtk::ListItem>().expect("ListItem");
             let b = gtk::Box::new(gtk::Orientation::Vertical, 4);
@@ -660,7 +700,11 @@ impl Tab {
                 .max_width_chars(if size >= 128 { 18 } else { 12 })
                 .width_chars(if size >= 128 { 14 } else { 9 })
                 .build();
-            b.append(&img);
+            // Starred files are marked in the icon's corner.
+            let icon = gtk::Overlay::new();
+            icon.set_child(Some(&img));
+            icon.add_overlay(&star_mark(&weak, "grid-star"));
+            b.append(&icon);
             b.append(&label);
             item.set_child(Some(&b));
             tag_widget(b.upcast_ref(), obj);
@@ -675,7 +719,11 @@ impl Tab {
             let Some(b) = item.child().and_downcast::<gtk::Box>() else {
                 return;
             };
-            let img = b.first_child().and_downcast::<gtk::Image>().unwrap();
+            let icon = b.first_child().and_downcast::<gtk::Overlay>().unwrap();
+            let img = icon.child().and_downcast::<gtk::Image>().unwrap();
+            if let Some(star) = icon.last_child().and_downcast::<gtk::Image>() {
+                t.show_star(&star, info_file(&info).as_ref());
+            }
             let label = b.last_child().and_downcast::<gtk::Label>().unwrap();
             label.set_text(&info.display_name());
             b.set_tooltip_text(Some(&info.display_name()));
@@ -718,6 +766,7 @@ impl Tab {
         let f = gtk::SignalListItemFactory::new();
         let icon_size = LIST_ZOOM[self.settings.borrow().list_zoom].1;
         let is_name = id == "name";
+        let weak = Rc::downgrade(self);
         f.connect_setup(move |_, obj| {
             let b = gtk::Box::new(gtk::Orientation::Horizontal, 8);
             b.set_hexpand(true);
@@ -736,6 +785,10 @@ impl Tab {
                 label.add_css_class("numeric");
             }
             b.append(&label);
+            if is_name {
+                // Starred files are marked after their name.
+                b.append(&star_mark(&weak, "dim-label"));
+            }
             obj.set_property("child", &b);
             tag_widget(b.upcast_ref(), obj);
         });
@@ -755,7 +808,14 @@ impl Tab {
             else {
                 return;
             };
-            let label = b.last_child().and_downcast::<gtk::Label>().unwrap();
+            let label = if id == "name" {
+                b.first_child()
+                    .and_then(|i| i.next_sibling())
+                    .and_downcast::<gtk::Label>()
+                    .unwrap()
+            } else {
+                b.last_child().and_downcast::<gtk::Label>().unwrap()
+            };
             let text = match id.as_str() {
                 "name" => {
                     let img = b.first_child().and_downcast::<gtk::Image>().unwrap();
@@ -763,7 +823,11 @@ impl Tab {
                         Some(icon) => img.set_from_gicon(&icon),
                         None => img.set_icon_name(Some("text-x-generic")),
                     }
-                    mark_cut(&b, info_file(&info).is_some_and(|f| t.is_cut(&f)));
+                    let file = info_file(&info);
+                    mark_cut(&b, file.as_ref().is_some_and(|f| t.is_cut(f)));
+                    if let Some(star) = b.last_child().and_downcast::<gtk::Image>() {
+                        t.show_star(&star, file.as_ref());
+                    }
                     info.display_name().to_string()
                 }
                 "size" => {
@@ -886,6 +950,14 @@ impl Tab {
             self.dir_list.set_file(None::<&gio::File>);
             self.build_other_locations();
             self.stack.set_visible_child_name("other");
+        } else if file.uri() == STARRED {
+            self.dir_list.set_file(None::<&gio::File>);
+            self.starred_store.remove_all();
+            self.filter_model.set_model(Some(&self.starred_store));
+            self.fill_starred();
+            let list_view = self.settings.borrow().list_view;
+            self.stack
+                .set_visible_child_name(if list_view { "list" } else { "grid" });
         } else {
             self.dir_list.set_file(Some(file));
             let list_view = self.settings.borrow().list_view;
@@ -894,6 +966,72 @@ impl Tab {
         }
         self.update_status();
         self.notify_window();
+    }
+
+    /// Reads the starred files (Starred), keeping the rows that stay.
+    fn fill_starred(self: &Rc<Self>) {
+        let serial = self.starred_serial.get() + 1;
+        self.starred_serial.set(serial);
+        let files = self.shared.stars.listed();
+        self.starred_loading.set(!self.shared.stars.is_loaded());
+        let weak = Rc::downgrade(self);
+        glib::spawn_future_local(async move {
+            let mut infos = Vec::new();
+            for f in files {
+                // Gone files (starred, then deleted elsewhere) are left out.
+                if let Ok(info) = f
+                    .query_info_future(
+                        FILE_ATTRS,
+                        gio::FileQueryInfoFlags::NONE,
+                        glib::Priority::DEFAULT_IDLE,
+                    )
+                    .await
+                {
+                    info.set_attribute_object("standard::file", &f);
+                    infos.push(info);
+                }
+            }
+            let Some(t) = weak.upgrade() else { return };
+            if t.starred_serial.get() != serial || !t.is_starred() {
+                return;
+            }
+            let n = t.starred_store.n_items();
+            t.starred_store.splice(0, n, &infos);
+            t.starred_loading.set(!t.shared.stars.is_loaded());
+            t.update_status();
+            t.notify_window();
+        });
+        self.update_status();
+    }
+
+    /// Shows `star` (a row's mark) when `file` is starred, and keeps the
+    /// file with it for later changes.
+    fn show_star(&self, star: &gtk::Image, file: Option<&gio::File>) {
+        let uri = file.map(|f| f.uri().to_string()).unwrap_or_default();
+        star.set_visible(file.is_some_and(|f| self.shared.stars.is_starred(f)));
+        // SAFETY: the key only ever holds a `String`.
+        unsafe { star.set_data(STAR_URI_KEY, uri) };
+    }
+
+    /// The stars changed: Starred is read again, the marks follow.
+    pub fn stars_changed(self: &Rc<Self>) {
+        if self.is_starred() {
+            self.fill_starred();
+        }
+        let stars = &self.shared.stars;
+        self.star_marks.borrow_mut().retain(|w| match w.upgrade() {
+            Some(star) => {
+                // SAFETY: the key only ever holds a `String`.
+                let uri = unsafe {
+                    star.data::<String>(STAR_URI_KEY)
+                        .map(|p| p.as_ref().clone())
+                }
+                .unwrap_or_default();
+                star.set_visible(!uri.is_empty() && stars.is_starred(&gio::File::for_uri(&uri)));
+                true
+            }
+            None => false,
+        });
     }
 
     pub fn reload(self: &Rc<Self>) {
@@ -987,6 +1125,16 @@ impl Tab {
                 self.status.set_title(tr("No Results Found"));
                 self.status
                     .set_description(Some(tr("Try a different search.")));
+            } else if self.is_starred() && !self.shared.stars.available() {
+                self.status.set_icon_name(Some("starred-symbolic"));
+                self.status.set_title(tr("Starred Files Unavailable"));
+                self.status
+                    .set_description(Some(tr("The stars GNOME Files keeps could not be read.")));
+            } else if self.is_starred() {
+                self.status.set_icon_name(Some("starred-symbolic"));
+                self.status.set_title(tr("No Starred Files"));
+                self.status
+                    .set_description(Some(tr("Files and folders you star appear here.")));
             } else if self.is_trash() {
                 self.status.set_icon_name(Some("user-trash-symbolic"));
                 self.status.set_title(tr("Trash is Empty"));
@@ -1166,9 +1314,13 @@ impl Tab {
         self.cancel_search_worker();
         *self.search_text.borrow_mut() = text.to_string();
         let query = search::Query::new(text);
-        if query.is_empty() || self.is_other_locations() {
+        if query.is_empty() || self.is_other_locations() || self.is_starred() {
             self.search_text.borrow_mut().clear();
-            self.filter_model.set_model(Some(&self.dir_list));
+            if self.is_starred() {
+                self.filter_model.set_model(Some(&self.starred_store));
+            } else {
+                self.filter_model.set_model(Some(&self.dir_list));
+            }
             self.update_status();
             self.notify_window();
             return;

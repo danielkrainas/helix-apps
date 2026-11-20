@@ -10,6 +10,7 @@ mod ops;
 mod pathbar;
 mod search;
 mod sorting;
+mod stars;
 mod ui;
 
 fn main() -> gtk::glib::ExitCode {

@@ -1140,7 +1140,7 @@ msgstr "_Вычислить"
 #: apps/document-scanner/src/ui.rs:1264 apps/document-scanner/src/ui.rs:1379
 #: apps/document-scanner/src/ui.rs:1417 apps/document-viewer/src/dialogs.rs:169
 #: apps/files/src/ui/dialogs.rs:28 apps/files/src/ui/dialogs.rs:74
-#: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
+#: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:684
 #: apps/help/src/ui.rs:196 apps/music/src/pages.rs:2129
 #: apps/music/src/pages.rs:2232 apps/music/src/pages.rs:2317
 #: apps/settings/src/ui/agent_access.rs:280
@@ -1666,7 +1666,7 @@ msgstr "Показывать {display}"
 #: apps/calendar/src/manage.rs:297 apps/clocks/src/ui.rs:1460
 #: apps/contacts/src/editor.rs:302 apps/disk-usage/src/ui.rs:1005
 #: apps/disks/src/ui.rs:1640 apps/files/src/sorting.rs:43
-#: apps/files/src/ui/tab.rs:215 apps/settings/src/ui/netedit.rs:235
+#: apps/files/src/ui/tab.rs:245 apps/settings/src/ui/netedit.rs:235
 #: apps/settings/src/ui/users.rs:81
 msgid "Name"
 msgstr "Имя"
@@ -2018,7 +2018,7 @@ msgid "Search Events"
 msgstr "Поиск событий"
 
 #: apps/calendar/src/ui.rs:371 apps/files/src/ui/dialogs.rs:429
-#: apps/files/src/ui/tab.rs:987 apps/settings/src/ui/mod.rs:244
+#: apps/files/src/ui/tab.rs:1125 apps/settings/src/ui/mod.rs:244
 #: apps/settings/src/ui/picker.rs:115 apps/web/src/dialogs.rs:752
 #: apps/web/src/window.rs:2378
 msgid "No Results Found"
@@ -2411,7 +2411,7 @@ msgid "Countdown cancelled"
 msgstr "Обратный отсчёт отменён"
 
 #: apps/camera/src/ui.rs:859 apps/files/src/ui/dialogs.rs:455
-#: apps/files/src/ui/sidebar.rs:557 apps/files/src/ui/window.rs:1574
+#: apps/files/src/ui/sidebar.rs:564 apps/files/src/ui/window.rs:1633
 #: apps/help/src/ui.rs:197 apps/text-editor/src/window.rs:131
 msgid "_Open"
 msgstr "_Открыть"
@@ -2614,7 +2614,7 @@ msgid "Character map and emoji picker"
 msgstr "Таблица символов и выбор эмодзи"
 
 #: apps/characters/src/ui.rs:199 apps/contacts/src/ui.rs:1102
-#: apps/files/src/ui/tab.rs:1218 apps/logs/src/ui.rs:719
+#: apps/files/src/ui/tab.rs:1370 apps/logs/src/ui.rs:719
 #: apps/text-editor/src/doc.rs:866
 msgid "No results"
 msgstr "Нет результатов"
@@ -3252,7 +3252,7 @@ msgid "{label} deleted"
 msgstr "{label} удалён"
 
 #: apps/clocks/src/ui.rs:1871 apps/files/src/ui/window.rs:228
-#: apps/files/src/ui/window.rs:1308 apps/image-viewer/src/ui.rs:1662
+#: apps/files/src/ui/window.rs:1361 apps/image-viewer/src/ui.rs:1662
 msgid "_Undo"
 msgstr "_Отменить"
 
@@ -4024,7 +4024,7 @@ msgid "storage"
 msgstr "хранилище"
 
 #: apps/disk-usage/src/mounts.rs:155 apps/files/src/pathbar.rs:25
-#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1272
+#: apps/files/src/pathbar.rs:112 apps/files/src/ui/tab.rs:1424
 #: apps/files/src/ui/window.rs:139 apps/settings/src/bluez.rs:229
 msgid "Computer"
 msgstr "Компьютер"
@@ -4097,8 +4097,8 @@ msgstr "Первый или последний элемент"
 msgid "Open the Folder"
 msgstr "Открыть папку"
 
-#: apps/disk-usage/src/shortcuts.rs:43 apps/files/src/ui/properties.rs:150
-#: apps/files/src/ui/properties.rs:254 apps/files/src/ui/shortcuts.rs:24
+#: apps/disk-usage/src/shortcuts.rs:43 apps/files/src/ui/properties.rs:197
+#: apps/files/src/ui/properties.rs:301 apps/files/src/ui/shortcuts.rs:24
 msgid "Parent Folder"
 msgstr "Родительская папка"
 
@@ -4229,20 +4229,20 @@ msgstr[2] "{n} элементов"
 
 #: apps/disk-usage/src/ui.rs:1006 apps/disks/src/ui.rs:358
 #: apps/disks/src/ui.rs:453 apps/files/src/sorting.rs:44
-#: apps/files/src/ui/properties.rs:138 apps/files/src/ui/tab.rs:216
+#: apps/files/src/ui/properties.rs:185 apps/files/src/ui/tab.rs:246
 #: apps/fonts/src/fontinfo.rs:314 apps/music/src/details.rs:137
 msgid "Size"
 msgstr "Размер"
 
 #: apps/disk-usage/src/ui.rs:1007 apps/disks/src/ui.rs:457
-#: apps/files/src/ui/properties.rs:132 apps/files/src/ui/properties.rs:241
+#: apps/files/src/ui/properties.rs:179 apps/files/src/ui/properties.rs:288
 #: apps/help/src/docbook.rs:326 apps/help/src/ui.rs:443
 msgid "Contents"
 msgstr "Содержимое"
 
 #: apps/disk-usage/src/ui.rs:1008 apps/document-viewer/src/dialogs.rs:104
-#: apps/files/src/sorting.rs:46 apps/files/src/ui/properties.rs:187
-#: apps/files/src/ui/tab.rs:218 apps/image-viewer/src/ui.rs:585
+#: apps/files/src/sorting.rs:46 apps/files/src/ui/properties.rs:234
+#: apps/files/src/ui/tab.rs:248 apps/image-viewer/src/ui.rs:585
 msgid "Modified"
 msgstr "Изменено"
 
@@ -4442,7 +4442,7 @@ msgstr[2] "{n} байт"
 msgid "{value} {unit}"
 msgstr "{value} {unit}"
 
-#: apps/disks/src/format.rs:58 apps/files/src/ui/properties.rs:139
+#: apps/disks/src/format.rs:58 apps/files/src/ui/properties.rs:186
 msgid "{size} ({bytes} byte)"
 msgid_plural "{size} ({bytes} bytes)"
 msgstr[0] "{size} ({bytes} байт)"
@@ -4555,7 +4555,7 @@ msgstr "Устройство ZFS"
 #: apps/disks/src/model.rs:303 apps/disks/src/parttypes.rs:171
 #: apps/disks/src/parttypes.rs:203 apps/disks/src/smart.rs:104
 #: apps/disks/src/ui.rs:1872 apps/disks/src/ui.rs:1882
-#: apps/files/src/ui/tab.rs:77 apps/settings/src/ui/about.rs:38
+#: apps/files/src/ui/tab.rs:79 apps/settings/src/ui/about.rs:38
 #: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
 #: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
 #: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
@@ -4638,7 +4638,7 @@ msgstr "не активен"
 msgid "partition type {t}"
 msgstr "тип раздела {t}"
 
-#: apps/disks/src/model.rs:287 apps/files/src/ui/properties.rs:203
+#: apps/disks/src/model.rs:287 apps/files/src/ui/properties.rs:250
 msgid "Free Space"
 msgstr "Свободное место"
 
@@ -5181,7 +5181,7 @@ msgstr "Отключить петлевое устройство"
 msgid "Drive Options"
 msgstr "Параметры накопителя"
 
-#: apps/disks/src/ui.rs:338 apps/files/src/ui/sidebar.rs:475
+#: apps/disks/src/ui.rs:338 apps/files/src/ui/sidebar.rs:481
 msgid "Eject"
 msgstr "Извлечь"
 
@@ -5306,7 +5306,7 @@ msgstr "Отключить подкачку"
 msgid "Activate Swap"
 msgstr "Включить подкачку"
 
-#: apps/disks/src/ui.rs:1033 apps/files/src/ui/sidebar.rs:477
+#: apps/disks/src/ui.rs:1033 apps/files/src/ui/sidebar.rs:483
 msgid "Unmount"
 msgstr "Отмонтировать"
 
@@ -5359,7 +5359,7 @@ msgstr "Имя тома"
 
 #: apps/disks/src/ui.rs:1365 apps/disks/src/ui.rs:1634
 #: apps/disks/src/ui.rs:1906 apps/files/src/sorting.rs:45
-#: apps/files/src/ui/properties.rs:130 apps/files/src/ui/tab.rs:217
+#: apps/files/src/ui/properties.rs:177 apps/files/src/ui/tab.rs:247
 #: apps/settings/src/ui/bluetooth.rs:513 apps/settings/src/ui/network.rs:529
 #: apps/system-monitor/src/fs_view.rs:25
 msgid "Type"
@@ -5444,7 +5444,7 @@ msgid "Delete Partition?"
 msgstr "Удалить раздел?"
 
 #: apps/disks/src/ui.rs:1594 apps/document-scanner/src/ui.rs:228
-#: apps/files/src/ui/window.rs:1393 apps/music/src/pages.rs:2318
+#: apps/files/src/ui/window.rs:1446 apps/music/src/pages.rs:2318
 msgid "_Delete"
 msgstr "_Удалить"
 
@@ -6073,7 +6073,7 @@ msgid "_Crop"
 msgstr "_Обрезка"
 
 #: apps/document-scanner/src/ui.rs:227 apps/document-viewer/src/ui.rs:920
-#: apps/files/src/ui/window.rs:1587 apps/image-viewer/src/ui.rs:305
+#: apps/files/src/ui/window.rs:1659 apps/image-viewer/src/ui.rs:305
 #: apps/image-viewer/src/ui.rs:784 apps/terminal/src/window.rs:738
 msgid "_Copy"
 msgstr "_Копировать"
@@ -6469,7 +6469,7 @@ msgstr "Производитель"
 msgid "Creator"
 msgstr "Создатель"
 
-#: apps/document-viewer/src/dialogs.rs:103 apps/files/src/ui/properties.rs:189
+#: apps/document-viewer/src/dialogs.rs:103 apps/files/src/ui/properties.rs:236
 #: apps/image-viewer/src/ui.rs:584
 msgid "Created"
 msgstr "Создано"
@@ -6501,7 +6501,7 @@ msgid "Yes"
 msgstr "Да"
 
 #: apps/document-viewer/src/dialogs.rs:135
-#: apps/document-viewer/src/shortcuts.rs:13 apps/files/src/ui/properties.rs:266
+#: apps/document-viewer/src/shortcuts.rs:13 apps/files/src/ui/properties.rs:313
 #: apps/files/src/ui/shortcuts.rs:62 apps/image-viewer/src/shortcuts.rs:20
 #: apps/image-viewer/src/ui.rs:615 apps/system-monitor/src/proc_view.rs:438
 #: apps/system-monitor/src/proc_view.rs:441
@@ -6802,8 +6802,9 @@ msgstr ""
 msgid "Caret navigation off"
 msgstr "Навигация с помощью курсора выключена"
 
-#: apps/document-viewer/src/ui.rs:921 apps/files/src/ui/window.rs:1614
-#: apps/files/src/ui/window.rs:1623 apps/terminal/src/window.rs:740
+#: apps/document-viewer/src/ui.rs:921 apps/files/src/ui/window.rs:1685
+#: apps/files/src/ui/window.rs:1692 apps/files/src/ui/window.rs:1701
+#: apps/terminal/src/window.rs:740
 msgid "Select _All"
 msgstr "Выделить _всё"
 
@@ -7015,76 +7016,76 @@ msgid "Trash emptied"
 msgstr "Корзина очищена"
 
 #: apps/files/src/ops.rs:119 apps/files/src/pathbar.rs:108
-#: apps/files/src/ui/sidebar.rs:87 apps/files/src/ui/window.rs:340
+#: apps/files/src/ui/sidebar.rs:93 apps/files/src/ui/window.rs:340
 msgid "Trash"
 msgstr "Корзина"
 
-#: apps/files/src/ops.rs:263
+#: apps/files/src/ops.rs:265
 msgid "Could not replace “{file}”: {error}"
 msgstr "Не удалось заменить «{file}»: {error}"
 
-#: apps/files/src/ops.rs:268
+#: apps/files/src/ops.rs:270
 msgid "Could not move “{file}”: {error}"
 msgstr "Не удалось переместить «{file}»: {error}"
 
-#: apps/files/src/ops.rs:273
+#: apps/files/src/ops.rs:275
 msgid "Could not read “{file}”: {error}"
 msgstr "Не удалось прочитать «{file}»: {error}"
 
-#: apps/files/src/ops.rs:278
+#: apps/files/src/ops.rs:280
 msgid "Could not remove “{file}”: {error}"
 msgstr "Не удалось удалить «{file}»: {error}"
 
-#: apps/files/src/ops.rs:283
+#: apps/files/src/ops.rs:285
 msgid "Could not link to “{file}”: {error}"
 msgstr "Не удалось создать ссылку на «{file}»: {error}"
 
-#: apps/files/src/ops.rs:288
+#: apps/files/src/ops.rs:290
 msgid "Could not move “{file}” to the Trash: {error}"
 msgstr "Не удалось удалить «{file}» в корзину: {error}"
 
-#: apps/files/src/ops.rs:293
+#: apps/files/src/ops.rs:295
 msgid "Could not delete “{file}”: {error}"
 msgstr "Не удалось удалить «{file}»: {error}"
 
-#: apps/files/src/ops.rs:298
+#: apps/files/src/ops.rs:300
 msgid "Could not restore “{file}”: {error}"
 msgstr "Не удалось восстановить «{file}»: {error}"
 
-#: apps/files/src/ops.rs:303
+#: apps/files/src/ops.rs:305
 msgid "Could not empty “{file}”: {error}"
 msgstr "Не удалось очистить «{file}»: {error}"
 
-#: apps/files/src/ops.rs:308
+#: apps/files/src/ops.rs:310
 msgid "Could not process “{file}”: {error}"
 msgstr "Не удалось обработать «{file}»: {error}"
 
-#: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
+#: apps/files/src/ops.rs:367 apps/screenshot/src/shell.rs:79
 #: apps/settings/src/agents.rs:896 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "Отменено"
 
-#: apps/files/src/ops.rs:387
+#: apps/files/src/ops.rs:389
 msgid "“{}” no longer exists"
 msgstr "«{}» больше не существует"
 
-#: apps/files/src/ops.rs:393
+#: apps/files/src/ops.rs:395
 msgid "Cannot move “{}” into itself"
 msgstr "Невозможно переместить «{}» в саму себя"
 
-#: apps/files/src/ops.rs:395
+#: apps/files/src/ops.rs:397
 msgid "Cannot copy “{}” into itself"
 msgstr "Невозможно скопировать «{}» в саму себя"
 
-#: apps/files/src/ops.rs:582
+#: apps/files/src/ops.rs:587
 msgid "Cannot create a link to “{}”: not a local file"
 msgstr "Невозможно создать ссылку на «{}»: это не локальный файл"
 
-#: apps/files/src/ops.rs:656
+#: apps/files/src/ops.rs:661
 msgid "“{}” has no original location"
 msgstr "У «{}» нет исходного расположения"
 
-#: apps/files/src/ops.rs:715
+#: apps/files/src/ops.rs:720
 msgid "{n} item could not be found in the Trash"
 msgid_plural "{n} items could not be found in the Trash"
 msgstr[0] "{n} объект не найден в корзине"
@@ -7095,17 +7096,19 @@ msgstr[2] "{n} объектов не найдено в корзине"
 msgid "Recent"
 msgstr "Недавние"
 
-#: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:116
-#: apps/files/src/ui/tab.rs:1282 apps/settings/src/bluez.rs:235
+#: apps/files/src/pathbar.rs:110 apps/files/src/ui/sidebar.rs:122
+#: apps/files/src/ui/tab.rs:1434 apps/settings/src/bluez.rs:235
 #: apps/settings/src/panels.rs:63 apps/system-monitor/src/res_view.rs:385
 msgid "Network"
 msgstr "Сеть"
 
-#: apps/files/src/pathbar.rs:111
+#: apps/files/src/pathbar.rs:111 apps/files/src/ui/properties.rs:95
+#: apps/files/src/ui/sidebar.rs:87 apps/files/src/ui/tab.rs:135
+#: apps/files/src/ui/window.rs:748
 msgid "Starred"
 msgstr "Избранное"
 
-#: apps/files/src/pathbar.rs:113 apps/files/src/ui/sidebar.rs:122
+#: apps/files/src/pathbar.rs:113 apps/files/src/ui/sidebar.rs:128
 #: apps/files/src/ui/window.rs:132
 msgid "Other Locations"
 msgstr "Другие места"
@@ -7393,23 +7396,23 @@ msgstr "…и ещё {}"
 msgid "Some Items Could Not Be Processed"
 msgstr "Некоторые объекты не удалось обработать"
 
-#: apps/files/src/ui/mod.rs:357
+#: apps/files/src/ui/mod.rs:369
 msgid "Always open a new window"
 msgstr "Всегда открывать новое окно"
 
-#: apps/files/src/ui/mod.rs:365
+#: apps/files/src/ui/mod.rs:377
 msgid "Select the given items in their parent folders"
 msgstr "Выделить указанные объекты в их родительских папках"
 
-#: apps/files/src/ui/mod.rs:373
+#: apps/files/src/ui/mod.rs:385
 msgid "Quit the running instance"
 msgstr "Завершить запущенный экземпляр"
 
-#: apps/files/src/ui/mod.rs:376
+#: apps/files/src/ui/mod.rs:388
 msgid "Access and organize files"
 msgstr "Доступ к файлам и их упорядочивание"
 
-#: apps/files/src/ui/mod.rs:376 apps/files/src/ui/window.rs:156
+#: apps/files/src/ui/mod.rs:388 apps/files/src/ui/window.rs:156
 #: apps/files/src/ui/window.rs:456
 msgid "Files"
 msgstr "Файлы"
@@ -7418,115 +7421,123 @@ msgstr "Файлы"
 msgid "{items}, totalling {bytes}{suffix}"
 msgstr "{items}, всего {bytes}{suffix}"
 
-#: apps/files/src/ui/properties.rs:88
+#: apps/files/src/ui/properties.rs:87
+msgid "Star"
+msgstr "Добавить в избранное"
+
+#: apps/files/src/ui/properties.rs:87
+msgid "Unstar"
+msgstr "Убрать из избранного"
+
+#: apps/files/src/ui/properties.rs:131
 msgid "Could not read properties: {}"
 msgstr "Не удалось прочитать свойства: {}"
 
-#: apps/files/src/ui/properties.rs:132 apps/files/src/ui/properties.rs:241
+#: apps/files/src/ui/properties.rs:179 apps/files/src/ui/properties.rs:288
 #: apps/settings/src/ui/apps.rs:519 apps/settings/src/ui/apps.rs:529
 msgid "Calculating…"
 msgstr "Вычисление…"
 
-#: apps/files/src/ui/properties.rs:155 apps/files/src/ui/properties.rs:158
+#: apps/files/src/ui/properties.rs:202 apps/files/src/ui/properties.rs:205
 msgid "Open Parent Folder"
 msgstr "Открыть родительскую папку"
 
-#: apps/files/src/ui/properties.rs:180
+#: apps/files/src/ui/properties.rs:227
 msgid "Link Target"
 msgstr "Цель ссылки"
 
-#: apps/files/src/ui/properties.rs:184
+#: apps/files/src/ui/properties.rs:231
 msgid "Original Location"
 msgstr "Исходное расположение"
 
-#: apps/files/src/ui/properties.rs:188
+#: apps/files/src/ui/properties.rs:235
 msgid "Accessed"
 msgstr "Доступ"
 
-#: apps/files/src/ui/properties.rs:200 apps/files/src/ui/properties.rs:293
+#: apps/files/src/ui/properties.rs:247 apps/files/src/ui/properties.rs:340
 msgid "Owner"
 msgstr "Владелец"
 
-#: apps/files/src/ui/properties.rs:218
+#: apps/files/src/ui/properties.rs:265
 msgid "{free} of {total}"
 msgstr "{free} из {total}"
 
-#: apps/files/src/ui/properties.rs:236
+#: apps/files/src/ui/properties.rs:283
 msgid "{n} item selected"
 msgid_plural "{n} items selected"
 msgstr[0] "Выбран {n} объект"
 msgstr[1] "Выбрано {n} объекта"
 msgstr[2] "Выбрано {n} объектов"
 
-#: apps/files/src/ui/properties.rs:281 apps/settings/src/ui/apps.rs:404
+#: apps/files/src/ui/properties.rs:328 apps/settings/src/ui/apps.rs:404
 #: apps/web/src/window.rs:1936
 msgid "Permissions"
 msgstr "Права доступа"
 
-#: apps/files/src/ui/properties.rs:294
+#: apps/files/src/ui/properties.rs:341
 msgid "Group"
 msgstr "Группа"
 
-#: apps/files/src/ui/properties.rs:295
+#: apps/files/src/ui/properties.rs:342
 msgid "Others"
 msgstr "Остальные"
 
-#: apps/files/src/ui/properties.rs:301
+#: apps/files/src/ui/properties.rs:348
 msgctxt "file permission"
 msgid "Read"
 msgstr "Чтение"
 
-#: apps/files/src/ui/properties.rs:302
+#: apps/files/src/ui/properties.rs:349
 msgctxt "file permission"
 msgid "Write"
 msgstr "Запись"
 
-#: apps/files/src/ui/properties.rs:303
+#: apps/files/src/ui/properties.rs:350
 msgctxt "file permission"
 msgid "Execute"
 msgstr "Выполнение"
 
-#: apps/files/src/ui/properties.rs:308
+#: apps/files/src/ui/properties.rs:355
 msgid "Owner can read"
 msgstr "Владелец может читать"
 
-#: apps/files/src/ui/properties.rs:309
+#: apps/files/src/ui/properties.rs:356
 msgid "Owner can write"
 msgstr "Владелец может записывать"
 
-#: apps/files/src/ui/properties.rs:310
+#: apps/files/src/ui/properties.rs:357
 msgid "Owner can execute"
 msgstr "Владелец может выполнять"
 
-#: apps/files/src/ui/properties.rs:311
+#: apps/files/src/ui/properties.rs:358
 msgid "Group can read"
 msgstr "Группа может читать"
 
-#: apps/files/src/ui/properties.rs:312
+#: apps/files/src/ui/properties.rs:359
 msgid "Group can write"
 msgstr "Группа может записывать"
 
-#: apps/files/src/ui/properties.rs:313
+#: apps/files/src/ui/properties.rs:360
 msgid "Group can execute"
 msgstr "Группа может выполнять"
 
-#: apps/files/src/ui/properties.rs:314
+#: apps/files/src/ui/properties.rs:361
 msgid "Others can read"
 msgstr "Остальные могут читать"
 
-#: apps/files/src/ui/properties.rs:315
+#: apps/files/src/ui/properties.rs:362
 msgid "Others can write"
 msgstr "Остальные могут записывать"
 
-#: apps/files/src/ui/properties.rs:316
+#: apps/files/src/ui/properties.rs:363
 msgid "Others can execute"
 msgstr "Остальные могут выполнять"
 
-#: apps/files/src/ui/properties.rs:352
+#: apps/files/src/ui/properties.rs:399
 msgid "Could not change permissions: {}"
 msgstr "Не удалось изменить права доступа: {}"
 
-#: apps/files/src/ui/properties.rs:368
+#: apps/files/src/ui/properties.rs:415
 msgid "You are not the owner, so you cannot change these permissions."
 msgstr "Вы не являетесь владельцем и не можете изменить эти права доступа."
 
@@ -7572,11 +7583,11 @@ msgstr "Назад или вперёд"
 msgid "Extra mouse buttons"
 msgstr "Дополнительные кнопки мыши"
 
-#: apps/files/src/ui/shortcuts.rs:41 apps/files/src/ui/window.rs:784
+#: apps/files/src/ui/shortcuts.rs:41 apps/files/src/ui/window.rs:829
 msgid "Grid View"
 msgstr "Сетка"
 
-#: apps/files/src/ui/shortcuts.rs:42 apps/files/src/ui/window.rs:786
+#: apps/files/src/ui/shortcuts.rs:42 apps/files/src/ui/window.rs:831
 msgid "List View"
 msgstr "Список"
 
@@ -7592,7 +7603,7 @@ msgstr "Файлы и папки"
 msgid "Open in New Tab"
 msgstr "Открыть в новой вкладке"
 
-#: apps/files/src/ui/shortcuts.rs:58 apps/files/src/ui/window.rs:1505
+#: apps/files/src/ui/shortcuts.rs:58 apps/files/src/ui/window.rs:1564
 msgid "New Folder"
 msgstr "Новая папка"
 
@@ -7612,7 +7623,7 @@ msgstr "Правка"
 msgid "Invert Selection"
 msgstr "Инвертировать выделение"
 
-#: apps/files/src/ui/shortcuts.rs:71 apps/files/src/ui/tab.rs:125
+#: apps/files/src/ui/shortcuts.rs:71 apps/files/src/ui/tab.rs:147
 msgid "Cut"
 msgstr "Вырезать"
 
@@ -7621,135 +7632,155 @@ msgid "Paste"
 msgstr "Вставить"
 
 #: apps/files/src/ui/sidebar.rs:75 apps/files/src/ui/window.rs:136
-#: apps/files/src/ui/window.rs:813
+#: apps/files/src/ui/window.rs:858
 msgctxt "home folder"
 msgid "Home"
 msgstr "Домашняя папка"
 
-#: apps/files/src/ui/sidebar.rs:475
+#: apps/files/src/ui/sidebar.rs:481
 msgid "Eject {name}"
 msgstr "Извлечь {name}"
 
-#: apps/files/src/ui/sidebar.rs:477
+#: apps/files/src/ui/sidebar.rs:483
 msgid "Unmount {name}"
 msgstr "Отмонтировать {name}"
 
-#: apps/files/src/ui/sidebar.rs:558 apps/files/src/ui/window.rs:1576
+#: apps/files/src/ui/sidebar.rs:565 apps/files/src/ui/window.rs:1635
 msgid "Open in New _Tab"
 msgstr "Открыть в новой _вкладке"
 
-#: apps/files/src/ui/sidebar.rs:559 apps/files/src/ui/window.rs:1577
+#: apps/files/src/ui/sidebar.rs:566 apps/files/src/ui/window.rs:1636
 msgid "Open in New _Window"
 msgstr "Открыть в новом _окне"
 
-#: apps/files/src/ui/sidebar.rs:564 apps/files/src/ui/window.rs:1593
+#: apps/files/src/ui/sidebar.rs:571 apps/files/src/ui/window.rs:1665
 msgid "Rena_me…"
 msgstr "_Переименовать…"
 
-#: apps/files/src/ui/sidebar.rs:565
+#: apps/files/src/ui/sidebar.rs:572
 msgid "_Remove from Bookmarks"
 msgstr "_Удалить из закладок"
 
-#: apps/files/src/ui/sidebar.rs:568
+#: apps/files/src/ui/sidebar.rs:575
 msgid "_Eject"
 msgstr "_Извлечь"
 
-#: apps/files/src/ui/sidebar.rs:571
+#: apps/files/src/ui/sidebar.rs:578
 msgid "_Unmount"
 msgstr "_Отмонтировать"
 
-#: apps/files/src/ui/sidebar.rs:574 apps/files/src/ui/window.rs:1613
+#: apps/files/src/ui/sidebar.rs:581 apps/files/src/ui/window.rs:1691
 msgid "_Empty Trash…"
 msgstr "_Очистить корзину…"
 
-#: apps/files/src/ui/sidebar.rs:579 apps/files/src/ui/window.rs:1569
-#: apps/files/src/ui/window.rs:1604 apps/files/src/ui/window.rs:1628
+#: apps/files/src/ui/sidebar.rs:586 apps/files/src/ui/window.rs:1628
+#: apps/files/src/ui/window.rs:1676 apps/files/src/ui/window.rs:1706
 #: apps/system-monitor/src/proc_view.rs:156
 msgid "_Properties"
 msgstr "_Свойства"
 
-#: apps/files/src/ui/sidebar.rs:643 apps/files/src/ui/sidebar.rs:688
-#: apps/files/src/ui/window.rs:1544
+#: apps/files/src/ui/sidebar.rs:650 apps/files/src/ui/sidebar.rs:695
+#: apps/files/src/ui/window.rs:1603
 msgid "Could not save bookmarks: {e}"
 msgstr "Не удалось сохранить закладки: {e}"
 
-#: apps/files/src/ui/sidebar.rs:661
+#: apps/files/src/ui/sidebar.rs:668
 msgid "Bookmark _Name"
 msgstr "_Имя закладки"
 
-#: apps/files/src/ui/sidebar.rs:672
+#: apps/files/src/ui/sidebar.rs:679
 msgid "Rename Bookmark"
 msgstr "Переименование закладки"
 
-#: apps/files/src/ui/sidebar.rs:677 apps/files/src/ui/window.rs:1465
+#: apps/files/src/ui/sidebar.rs:684 apps/files/src/ui/window.rs:1520
 #: apps/music/src/pages.rs:2131
 msgid "_Rename"
 msgstr "_Переименовать"
 
-#: apps/files/src/ui/tab.rs:75 apps/image-viewer/src/ui.rs:583
+#: apps/files/src/ui/starred.rs:95
+msgid "Could not change stars: {}"
+msgstr "Не удалось изменить избранное: {}"
+
+#: apps/files/src/ui/tab.rs:77 apps/image-viewer/src/ui.rs:583
 msgid "Folder"
 msgstr "Папка"
 
-#: apps/files/src/ui/tab.rs:258
+#: apps/files/src/ui/tab.rs:288
 msgid "_Try Again"
 msgstr "_Повторить"
 
-#: apps/files/src/ui/tab.rs:268
+#: apps/files/src/ui/tab.rs:298
 msgid "Loading folder"
 msgstr "Загрузка папки"
 
-#: apps/files/src/ui/tab.rs:931
+#: apps/files/src/ui/tab.rs:1069
 msgid "Unable to access location: {}"
 msgstr "Не удаётся получить доступ к месту: {}"
 
-#: apps/files/src/ui/tab.rs:964
+#: apps/files/src/ui/tab.rs:1102
 msgid "Unable to Open Folder"
 msgstr "Не удаётся открыть папку"
 
-#: apps/files/src/ui/tab.rs:972
+#: apps/files/src/ui/tab.rs:1110
 msgid "Unable to open folder: {}"
 msgstr "Не удаётся открыть папку: {}"
 
-#: apps/files/src/ui/tab.rs:989
+#: apps/files/src/ui/tab.rs:1127
 msgid "Try a different search."
 msgstr "Попробуйте изменить запрос."
 
-#: apps/files/src/ui/tab.rs:992
+#: apps/files/src/ui/tab.rs:1130
+msgid "Starred Files Unavailable"
+msgstr "Избранное недоступно"
+
+#: apps/files/src/ui/tab.rs:1132
+msgid "The stars GNOME Files keeps could not be read."
+msgstr "Не удалось прочитать избранное, которое хранят Файлы GNOME."
+
+#: apps/files/src/ui/tab.rs:1135
+msgid "No Starred Files"
+msgstr "Нет избранных файлов"
+
+#: apps/files/src/ui/tab.rs:1137
+msgid "Files and folders you star appear here."
+msgstr "Здесь появятся файлы и папки, добавленные в избранное."
+
+#: apps/files/src/ui/tab.rs:1140
 msgid "Trash is Empty"
 msgstr "Корзина пуста"
 
-#: apps/files/src/ui/tab.rs:996
+#: apps/files/src/ui/tab.rs:1144
 msgid "Folder is Empty"
 msgstr "Папка пуста"
 
-#: apps/files/src/ui/tab.rs:1220
+#: apps/files/src/ui/tab.rs:1372
 msgid "Search finished: {n} item found"
 msgid_plural "Search finished: {n} items found"
 msgstr[0] "Поиск завершён: найден {n} объект"
 msgstr[1] "Поиск завершён: найдено {n} объекта"
 msgstr[2] "Поиск завершён: найдено {n} объектов"
 
-#: apps/files/src/ui/tab.rs:1246
+#: apps/files/src/ui/tab.rs:1398
 msgid "On This Computer"
 msgstr "На этом компьютере"
 
-#: apps/files/src/ui/tab.rs:1278
+#: apps/files/src/ui/tab.rs:1430
 msgid "Networks"
 msgstr "Сети"
 
-#: apps/files/src/ui/tab.rs:1283
+#: apps/files/src/ui/tab.rs:1435
 msgid "Browse the local network"
 msgstr "Обзор локальной сети"
 
-#: apps/files/src/ui/tab.rs:1308
+#: apps/files/src/ui/tab.rs:1460
 msgid "Not mounted"
 msgstr "Не смонтировано"
 
-#: apps/files/src/ui/tab.rs:1321
+#: apps/files/src/ui/tab.rs:1473
 msgid "Connect to Server"
 msgstr "Подключиться к серверу"
 
-#: apps/files/src/ui/tab.rs:1325
+#: apps/files/src/ui/tab.rs:1477
 msgid "Server Address"
 msgstr "Адрес сервера"
 
@@ -7787,7 +7818,7 @@ msgstr "_Уменьшить"
 msgid "_Reset Size"
 msgstr "_Сбросить размер"
 
-#: apps/files/src/ui/window.rs:259 apps/files/src/ui/window.rs:1627
+#: apps/files/src/ui/window.rs:259 apps/files/src/ui/window.rs:1705
 msgid "Show _Hidden Files"
 msgstr "Показывать _скрытые файлы"
 
@@ -7812,177 +7843,189 @@ msgstr "_Очистить…"
 msgid "Search: {}"
 msgstr "Поиск: {}"
 
-#: apps/files/src/ui/window.rs:720
+#: apps/files/src/ui/window.rs:748
+msgid "Unstarred"
+msgstr "Убрано из избранного"
+
+#: apps/files/src/ui/window.rs:765
 msgid "{base} — Searching…"
 msgstr "{base} — поиск…"
 
-#: apps/files/src/ui/window.rs:722
+#: apps/files/src/ui/window.rs:767
 msgid "{base} — Loading…"
 msgstr "{base} — загрузка…"
 
-#: apps/files/src/ui/window.rs:731
+#: apps/files/src/ui/window.rs:776
 msgid "“{}” selected"
 msgstr "Выбрано «{}»"
 
-#: apps/files/src/ui/window.rs:733
+#: apps/files/src/ui/window.rs:778
 msgid "“{}” selected ({})"
 msgstr "Выбрано «{}» ({})"
 
-#: apps/files/src/ui/window.rs:748
+#: apps/files/src/ui/window.rs:793
 msgid "{n} folder selected"
 msgid_plural "{n} folders selected"
 msgstr[0] "Выбрана {n} папка"
 msgstr[1] "Выбрано {n} папки"
 msgstr[2] "Выбрано {n} папок"
 
-#: apps/files/src/ui/window.rs:750
+#: apps/files/src/ui/window.rs:795
 msgid "{n} item selected ({bytes})"
 msgid_plural "{n} items selected ({bytes})"
 msgstr[0] "Выбран {n} объект ({bytes})"
 msgstr[1] "Выбрано {n} объекта ({bytes})"
 msgstr[2] "Выбрано {n} объектов ({bytes})"
 
-#: apps/files/src/ui/window.rs:1070
+#: apps/files/src/ui/window.rs:1115
 msgid "Could not open file: {}"
 msgstr "Не удалось открыть файл: {}"
 
-#: apps/files/src/ui/window.rs:1098
+#: apps/files/src/ui/window.rs:1143
 msgid "Unable to mount “{}”: {}"
 msgstr "Не удаётся смонтировать «{}»: {}"
 
-#: apps/files/src/ui/window.rs:1123
+#: apps/files/src/ui/window.rs:1168
 msgid "Unable to eject “{name}”: {error}"
 msgstr "Не удаётся извлечь «{name}»: {error}"
 
-#: apps/files/src/ui/window.rs:1238
+#: apps/files/src/ui/window.rs:1283
 msgid "Nothing to paste"
 msgstr "Нечего вставить"
 
-#: apps/files/src/ui/window.rs:1295
+#: apps/files/src/ui/window.rs:1348
 msgid "“{}” moved to Trash"
 msgstr "«{}» удалён в корзину"
 
-#: apps/files/src/ui/window.rs:1300
+#: apps/files/src/ui/window.rs:1353
 msgid "{n} item moved to Trash"
 msgid_plural "{n} items moved to Trash"
 msgstr[0] "{n} объект удалён в корзину"
 msgstr[1] "{n} объекта удалены в корзину"
 msgstr[2] "{n} объектов удалено в корзину"
 
-#: apps/files/src/ui/window.rs:1378
+#: apps/files/src/ui/window.rs:1431
 msgid "Permanently Delete “{}”?"
 msgstr "Удалить «{}» безвозвратно?"
 
-#: apps/files/src/ui/window.rs:1383
+#: apps/files/src/ui/window.rs:1436
 msgid "Permanently Delete {n} Item?"
 msgid_plural "Permanently Delete {n} Items?"
 msgstr[0] "Удалить {n} объект безвозвратно?"
 msgstr[1] "Удалить {n} объекта безвозвратно?"
 msgstr[2] "Удалить {n} объектов безвозвратно?"
 
-#: apps/files/src/ui/window.rs:1392
+#: apps/files/src/ui/window.rs:1445
 msgid "If you delete an item, it will be permanently lost."
 msgstr "Удалённый объект будет безвозвратно утерян."
 
-#: apps/files/src/ui/window.rs:1406
+#: apps/files/src/ui/window.rs:1459
 msgid "Empty Trash?"
 msgstr "Очистить корзину?"
 
-#: apps/files/src/ui/window.rs:1407
+#: apps/files/src/ui/window.rs:1460
 msgid "All items in the Trash will be permanently deleted."
 msgstr "Все объекты в корзине будут безвозвратно удалены."
 
-#: apps/files/src/ui/window.rs:1408
+#: apps/files/src/ui/window.rs:1461
 msgid "_Empty Trash"
 msgstr "_Очистить корзину"
 
-#: apps/files/src/ui/window.rs:1419
+#: apps/files/src/ui/window.rs:1472
 msgid "Nothing to undo"
 msgstr "Нечего отменять"
 
-#: apps/files/src/ui/window.rs:1434
+#: apps/files/src/ui/window.rs:1489
 msgid "Could not undo rename: {}"
 msgstr "Не удалось отменить переименование: {}"
 
-#: apps/files/src/ui/window.rs:1461
+#: apps/files/src/ui/window.rs:1516
 msgid "Rename Folder"
 msgstr "Переименование папки"
 
-#: apps/files/src/ui/window.rs:1463
+#: apps/files/src/ui/window.rs:1518
 msgid "Rename File"
 msgstr "Переименование файла"
 
-#: apps/files/src/ui/window.rs:1486
+#: apps/files/src/ui/window.rs:1545
 msgid "Could not rename: {}"
 msgstr "Не удалось переименовать: {}"
 
-#: apps/files/src/ui/window.rs:1506 apps/music/src/pages.rs:2133
+#: apps/files/src/ui/window.rs:1565 apps/music/src/pages.rs:2133
 msgid "_Create"
 msgstr "_Создать"
 
-#: apps/files/src/ui/window.rs:1517
+#: apps/files/src/ui/window.rs:1576
 msgid "Could not create folder: {}"
 msgstr "Не удалось создать папку: {}"
 
-#: apps/files/src/ui/window.rs:1538
+#: apps/files/src/ui/window.rs:1597
 msgid "Location is already bookmarked"
 msgstr "Место уже есть в закладках"
 
-#: apps/files/src/ui/window.rs:1543
+#: apps/files/src/ui/window.rs:1602
 msgid "“{}” added to bookmarks"
 msgstr "«{}» добавлено в закладки"
 
-#: apps/files/src/ui/window.rs:1565
+#: apps/files/src/ui/window.rs:1624
 msgid "_Restore From Trash"
 msgstr "_Восстановить из корзины"
 
-#: apps/files/src/ui/window.rs:1566
+#: apps/files/src/ui/window.rs:1625
 msgid "_Delete From Trash…"
 msgstr "_Удалить из корзины…"
 
-#: apps/files/src/ui/window.rs:1579 apps/image-viewer/src/ui.rs:301
+#: apps/files/src/ui/window.rs:1638 apps/image-viewer/src/ui.rs:301
 #: apps/image-viewer/src/ui.rs:787
 msgid "Open _With…"
 msgstr "Открыть с _помощью…"
 
-#: apps/files/src/ui/window.rs:1582
+#: apps/files/src/ui/window.rs:1644
 msgid "Open Item _Location"
 msgstr "Открыть _расположение объекта"
 
-#: apps/files/src/ui/window.rs:1586
+#: apps/files/src/ui/window.rs:1651
+msgid "_Star"
+msgstr "Добавить в _избранное"
+
+#: apps/files/src/ui/window.rs:1653
+msgid "_Unstar"
+msgstr "Убрать из _избранного"
+
+#: apps/files/src/ui/window.rs:1658
 msgid "Cu_t"
 msgstr "_Вырезать"
 
-#: apps/files/src/ui/window.rs:1589
+#: apps/files/src/ui/window.rs:1661
 msgid "Paste Into Folder"
 msgstr "Вставить в папку"
 
-#: apps/files/src/ui/window.rs:1595
+#: apps/files/src/ui/window.rs:1667
 msgid "Create _Link"
 msgstr "Создать _ссылку"
 
-#: apps/files/src/ui/window.rs:1597
+#: apps/files/src/ui/window.rs:1669
 msgid "Mo_ve to Trash"
 msgstr "Удалить в _корзину"
 
-#: apps/files/src/ui/window.rs:1599
+#: apps/files/src/ui/window.rs:1671
 msgid "_Delete Permanently…"
 msgstr "Удалить _безвозвратно…"
 
-#: apps/files/src/ui/window.rs:1603 apps/maps/src/ui.rs:440
+#: apps/files/src/ui/window.rs:1675 apps/maps/src/ui.rs:440
 #: apps/maps/src/ui.rs:2271
 msgid "Copy Location"
 msgstr "Копировать адрес"
 
-#: apps/files/src/ui/window.rs:1619
+#: apps/files/src/ui/window.rs:1697
 msgid "New _Folder…"
 msgstr "Новая _папка…"
 
-#: apps/files/src/ui/window.rs:1622 apps/terminal/src/window.rs:739
+#: apps/files/src/ui/window.rs:1700 apps/terminal/src/window.rs:739
 msgid "_Paste"
 msgstr "Вст_авить"
 
-#: apps/files/src/ui/window.rs:1626
+#: apps/files/src/ui/window.rs:1704
 msgid "Add to _Bookmarks"
 msgstr "Добавить в _закладки"
 

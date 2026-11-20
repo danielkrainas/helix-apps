@@ -87,6 +87,8 @@ overrides:
       - pkexec
       - dconf-service
       - sound-theme-freedesktop
+      # Starred files (GNOME Files' star store), loaded at run time.
+      - libtinysparql-3.0-0 | libtracker-sparql-3.0-0
     suggests:
       - tracker
       - gstreamer1.0-plugins-bad
@@ -113,6 +115,8 @@ overrides:
       - polkit
       - dconf
       - sound-theme-freedesktop
+      # Starred files (GNOME Files' star store), loaded at run time.
+      - tinysparql
     suggests:
       - localsearch
   archlinux:
@@ -138,5 +142,7 @@ overrides:
       - polkit
       - dconf
       - sound-theme-freedesktop
+      # Starred files (GNOME Files' star store), loaded at run time.
+      - tinysparql
 archlinux:
   packager: Helix release workflow

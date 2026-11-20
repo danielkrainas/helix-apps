@@ -82,6 +82,7 @@ apps/files/src/ui/mod.rs
 apps/files/src/ui/properties.rs
 apps/files/src/ui/shortcuts.rs
 apps/files/src/ui/sidebar.rs
+apps/files/src/ui/starred.rs
 apps/files/src/ui/tab.rs
 apps/files/src/ui/window.rs
 apps/fonts/src/fclist.rs

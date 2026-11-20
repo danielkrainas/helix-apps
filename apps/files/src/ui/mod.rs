@@ -10,6 +10,7 @@ mod properties;
 mod sandbox;
 mod shortcuts;
 mod sidebar;
+mod starred;
 mod tab;
 mod thumbnailer;
 mod thumbs;
@@ -97,6 +98,8 @@ pub struct Shared {
     pub clipboard: RefCell<Option<ClipState>>,
     pub undo: RefCell<Vec<Undo>>,
     pub windows: RefCell<Vec<Rc<Window>>>,
+    /// Starred files (GNOME Files' stars).
+    pub stars: Rc<starred::Stars>,
 }
 
 fn zoom_index(table: &[(&str, i32)], nick: &str, default: usize) -> usize {
@@ -155,6 +158,14 @@ impl Shared {
         let windows: Vec<Rc<Window>> = self.windows.borrow().clone();
         for w in windows {
             w.apply_settings();
+        }
+    }
+
+    /// The stars changed (here or in the store): every window shows it.
+    pub fn stars_changed(&self) {
+        let windows: Vec<Rc<Window>> = self.windows.borrow().clone();
+        for w in windows {
+            w.stars_changed();
         }
     }
 
@@ -260,6 +271,7 @@ fn load_css() {
          .grid-item label { margin-top: 2px; }
          .files-status { padding: 3px 12px; }
          .cut-item { opacity: 0.5; }
+         .grid-star { margin: 2px; padding: 3px; border-radius: 999px; background-color: alpha(@window_bg_color, 0.85); }
          .drop-highlight { background-color: alpha(@accent_bg_color, 0.25); border-radius: 6px; }
          .sidebar-eject { padding: 0; min-height: 24px; min-width: 24px; }",
         ".cut-item { opacity: 0.75; }
@@ -391,7 +403,9 @@ pub fn run() -> glib::ExitCode {
             clipboard: RefCell::default(),
             undo: RefCell::default(),
             windows: RefCell::default(),
+            stars: starred::Stars::new(),
         });
+        s.stars.start(Rc::downgrade(&s));
         // External changes (e.g. `gsettings set`) apply live.
         for p in [&s.prefs, &s.list_prefs, &s.icon_prefs, &s.chooser_prefs] {
             if let Some(g) = p.gsettings() {

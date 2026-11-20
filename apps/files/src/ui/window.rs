@@ -647,7 +647,10 @@ impl Window {
             self.action_set_enabled("back", h.can_go_back());
             self.action_set_enabled("forward", h.can_go_forward());
         }
-        self.action_set_enabled("up", loc.parent().is_some() && !tab.is_other_locations());
+        self.action_set_enabled(
+            "up",
+            loc.parent().is_some() && !tab.is_other_locations() && !tab.is_starred(),
+        );
         self.rebuild_crumbs(&loc);
         if self.path_stack.visible_child_name().as_deref() == Some("entry")
             && !self.location_entry.has_focus()
@@ -687,7 +690,7 @@ impl Window {
         let infos = tab.selected_infos();
         let any = !infos.is_empty();
         let in_trash = tab.is_trash();
-        let other = tab.is_other_locations();
+        let other = tab.is_other_locations() || tab.is_starred();
         for a in ["open", "open-with", "copy", "copy-location"] {
             self.action_set_enabled(a, any);
         }
@@ -700,9 +703,51 @@ impl Window {
         self.action_set_enabled("properties", true);
         self.action_set_enabled("new-folder", !in_trash && !other && !tab.is_searching());
         self.action_set_enabled("paste", !in_trash && !other && !tab.is_searching());
+        let (star, unstar) = self.star_choices(&tab.selected_files());
+        self.action_set_enabled("star", star && !in_trash);
+        self.action_set_enabled("unstar", unstar && !in_trash);
         let dirs = any && infos.iter().all(info_is_dir);
         self.action_set_enabled("open-new-tab", dirs);
         self.action_set_enabled("open-new-window", dirs);
+    }
+
+    /// Whether `files` can be starred (some are not yet) and unstarred
+    /// (all are).
+    fn star_choices(&self, files: &[gio::File]) -> (bool, bool) {
+        let stars = &self.shared.stars;
+        if files.is_empty() || !files.iter().all(|f| stars.can_star(f)) {
+            return (false, false);
+        }
+        let all = files.iter().all(|f| stars.is_starred(f));
+        (!all, all)
+    }
+
+    /// The stars changed: the views, Starred and the menus follow.
+    pub fn stars_changed(self: &Rc<Self>) {
+        let tabs: Vec<Rc<Tab>> = self.tabs.borrow().iter().map(|(_, t)| t.clone()).collect();
+        for t in &tabs {
+            t.stars_changed();
+        }
+        if let Some(t) = self.current_tab() {
+            self.update_selection_actions(&t);
+        }
+    }
+
+    /// Stars (`on`) or unstars the selection.
+    fn star_selection(self: &Rc<Self>, on: bool) {
+        let Some(tab) = self.current_tab() else {
+            return;
+        };
+        let files = tab.selected_files();
+        if files.is_empty() {
+            return;
+        }
+        self.shared.stars.set(&self.shared, &files, on);
+        helix_app_common::announce(
+            &tab.root,
+            if on { tr("Starred") } else { tr("Unstarred") },
+            helix_app_common::Urgency::Polite,
+        );
     }
 
     fn update_status(&self, tab: &Tab) {
@@ -1286,6 +1331,14 @@ impl Window {
                     }
                 }
             }
+            if !out.moved.is_empty() {
+                w.shared.stars.moved(&out.moved);
+            }
+            // Starred has no folder to watch: read it again.
+            let tabs: Vec<Rc<Tab>> = w.tabs.borrow().iter().map(|(_, t)| t.clone()).collect();
+            for t in tabs.iter().filter(|t| t.is_starred()) {
+                t.reload();
+            }
             if is_trash && !out.trashed.is_empty() {
                 w.shared
                     .undo
@@ -1430,11 +1483,13 @@ impl Window {
                     let res = file
                         .set_display_name_future(&old_name, glib::Priority::DEFAULT)
                         .await;
-                    if let (Some(w), Err(e)) = (weak.upgrade(), res) {
-                        w.toast(&trf!(
+                    let Some(w) = weak.upgrade() else { return };
+                    match res {
+                        Ok(back) => w.shared.stars.moved(&[(file, back)]),
+                        Err(e) => w.toast(&trf!(
                             "Could not undo rename: {}",
                             helix_app_common::errors::glib_detail(&e)
-                        ));
+                        )),
                     }
                 });
             }
@@ -1477,6 +1532,10 @@ impl Window {
                         .await
                     {
                         Ok(new_file) => {
+                            w.shared.stars.moved(&[(file.clone(), new_file.clone())]);
+                            if tab.is_starred() {
+                                tab.reload();
+                            }
                             w.shared.undo.borrow_mut().push(Undo::Rename {
                                 file: new_file.clone(),
                                 old_name: old,
@@ -1578,10 +1637,23 @@ impl Window {
         } else {
             sec.append(Some(tr("Open _With…")), Some("win.open-with"));
         }
-        if tab.is_searching() || tab.location().uri_scheme().as_deref() == Some("recent") {
+        if tab.is_searching()
+            || tab.is_starred()
+            || tab.location().uri_scheme().as_deref() == Some("recent")
+        {
             sec.append(Some(tr("Open Item _Location")), Some("win.open-location"));
         }
         menu.append_section(None, &sec);
+        let (star, unstar) = self.star_choices(&tab.selected_files());
+        if star || unstar {
+            let sec = gio::Menu::new();
+            if star {
+                sec.append(Some(tr("_Star")), Some("win.star"));
+            } else {
+                sec.append(Some(tr("_Unstar")), Some("win.unstar"));
+            }
+            menu.append_section(None, &sec);
+        }
         let sec = gio::Menu::new();
         sec.append(Some(tr("Cu_t")), Some("win.cut"));
         sec.append(Some(tr("_Copy")), Some("win.copy"));
@@ -1608,6 +1680,12 @@ impl Window {
 
     pub fn background_menu(&self, tab: &Tab) -> gio::Menu {
         let menu = gio::Menu::new();
+        if tab.is_starred() {
+            let sec = gio::Menu::new();
+            sec.append(Some(tr("Select _All")), Some("win.select-all"));
+            menu.append_section(None, &sec);
+            return menu;
+        }
         if tab.is_trash() {
             let sec = gio::Menu::new();
             sec.append(Some(tr("_Empty Trash…")), Some("win.empty-trash"));
@@ -1689,6 +1767,8 @@ impl Window {
         add("delete", |w| w.delete_selection());
         add("empty-trash", |w| w.empty_trash());
         add("undo", |w| w.undo());
+        add("star", |w| w.star_selection(true));
+        add("unstar", |w| w.star_selection(false));
         add("show-shortcuts", |w| super::shortcuts::show(&w.window));
         add("restore", |w| {
             if let Some(t) = w.current_tab() {
@@ -1812,7 +1892,7 @@ impl Window {
             let Some(t) = w.current_tab() else { return };
             let files = t.selected_files();
             if files.is_empty() {
-                if !t.is_other_locations() {
+                if !t.is_other_locations() && !t.is_starred() {
                     properties::show(w, vec![t.location()]);
                 }
             } else {

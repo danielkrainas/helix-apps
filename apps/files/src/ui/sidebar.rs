@@ -66,7 +66,7 @@ fn location(label: &str, icon: &str, file: gio::File, section: u8) -> Place {
     }
 }
 
-/// The places that are always there: Home, Recent, Trash and the user
+/// The places that are always there: Home, Recent, Starred, Trash and the user
 /// folders, then Network and Other Locations (the last two).
 fn fixed_places(trash_full: bool) -> Vec<Place> {
     let home = glib::home_dir();
@@ -81,6 +81,12 @@ fn fixed_places(trash_full: bool) -> Vec<Place> {
             tr("Recent"),
             "document-open-recent-symbolic",
             gio::File::for_uri("recent:///"),
+            0,
+        ),
+        location(
+            tr("Starred"),
+            "starred-symbolic",
+            gio::File::for_uri(super::starred::STARRED),
             0,
         ),
         location(
@@ -500,6 +506,7 @@ impl Sidebar {
             if let (Some(w), Some(f)) = (self.win.upgrade(), p.file()) {
                 if f.uri() != OTHER_LOCATIONS
                     && f.uri_scheme().as_deref() != Some("recent")
+                    && f.uri_scheme().as_deref() != Some("starred")
                     && f.uri_scheme().as_deref() != Some("network")
                 {
                     w.attach_drop(row.upcast_ref(), move || f.clone());

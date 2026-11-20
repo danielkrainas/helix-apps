@@ -19,6 +19,9 @@ File manager for local and remote locations.
 - GSettings: `org.gnome.nautilus.preferences`, `org.gnome.nautilus.window-state`, `org.gnome.nautilus.list-view`.
 - GVFS for remote and virtual locations.
 - Standard freedesktop trash and recent-files specs.
+- GNOME Files' (Nautilus's) star store, `$XDG_DATA_HOME/nautilus/tags`:
+  helixdesktop/spec `contracts/files/starred.md` (`src/stars.rs`, the
+  same file as helix-desktop's `crates/helix-settings/src/stars.rs`).
 
 ## Non-goals
 - Exact visual clone of current Nautilus.
@@ -37,7 +40,8 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
 - `AdwApplicationWindow` containing an `AdwOverlaySplitView`:
   - **Sidebar** (collapses into an overlay below 600sp; a toggle button
     appears in the content header; `F9` toggles): a list of places:
-    1. *Home*, *Recent* (`recent:///`), *Trash* (`trash:///`).
+    1. *Home*, *Recent* (`recent:///`), *Starred* (`starred:///`, see
+       "Starred"), *Trash* (`trash:///`).
     2. XDG user directories that exist and are not `$HOME`: Desktop,
        Documents, Downloads, Music, Pictures, Videos.
     3. GTK bookmarks from `$XDG_CONFIG_HOME/gtk-3.0/bookmarks`
@@ -189,7 +193,8 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
 - Item context menu: Open, Open With…, Open in New Tab / Window (folders),
   Cut, Copy, Rename…, Move to Trash, Delete Permanently (if
   `show-delete-permanently`), Create Link (if `show-create-link`),
-  Restore / Delete Permanently (in Trash), Copy Location, Properties.
+  Restore / Delete Permanently (in Trash), *Star* or *Unstar* (see
+  "Starred"), Copy Location, Properties.
 - Background menu: New Folder…, Paste, Select All, Add to Bookmarks,
   Properties (of the current folder).
 
@@ -257,13 +262,37 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
   unless hidden files are shown. Closing the search returns to the folder
   listing.
 
+### Starred
+Stars are GNOME Files' own, read and written in Nautilus's store
+(helixdesktop/spec `contracts/files/starred.md`), so both apps share
+them. The store is read on a worker thread, and read again when its
+files change (looked at every 2 s), so stars set in GNOME Files show.
+- *Starred* lists the starred files and folders inside the home folder
+  that still exist, as a folder would (grid or list, sorted the same).
+  It shows "No Starred Files" when there are none, and "Starred Files
+  Unavailable" when the store can't be used. It has no folder to paste
+  or drop into, and no search. Its item menu adds Open Item Location.
+- *Star* is in the item menu when some selected files are not starred,
+  *Unstar* when all are. Neither appears for files outside the home
+  folder (as in Nautilus), in the Trash, or when the stars are read-only
+  (a schema version or collation locale Helix doesn't write). Each change
+  is announced ("Starred", "Unstarred").
+- Starred files have a star after their name in the list and in their
+  icon's corner in the grid, named "Starred".
+- Renaming, moving and undoing a rename move the stars of the file and
+  of the files inside it.
+- Not yet: undo for stars, a clickable star in the list, and search in
+  Starred (helixdesktop/desktop#155).
+
 ### Properties
 - `Alt+Return` / `Ctrl+I`. For one item: icon, name, type, size (for
   folders computed recursively in the background, updating live:
   "N items, totalling X"), parent folder, link target, modified /
   accessed / created times, free space of the filesystem, and
   permissions (owner/group/others read, write, execute switches for
-  files supporting `unix::mode`; changes applied immediately). Each
+  files supporting `unix::mode`; changes applied immediately), and under
+  the name a star toggle (named "Starred", pressed while starred) for
+  files that can be starred. Each
   check box is named with its scope ("Owner read", "Group write",
   "Others execute"). For
   several items: count and combined size.
@@ -364,7 +393,6 @@ Files" lives in the view menu (and the folder background menu), not in
 the main menu.
 
 ## Deferred
-- Starred files (needs Tracker/LocalSearch).
 - Tree (expandable) list view, compressing/extracting archives,
   batch rename, scripts, "Open in Terminal", folder item counts in the
   size column (`show-directory-item-counts`).

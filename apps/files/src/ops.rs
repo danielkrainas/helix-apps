@@ -182,6 +182,8 @@ pub struct Outcome {
     pub created: Vec<gio::File>,
     /// Original locations of successfully trashed items (for undo).
     pub trashed: Vec<gio::File>,
+    /// Moved items: (from, to).
+    pub moved: Vec<(gio::File, gio::File)>,
 }
 
 const NOFOLLOW: gio::FileQueryInfoFlags = gio::FileQueryInfoFlags::NOFOLLOW_SYMLINKS;
@@ -568,6 +570,9 @@ impl Runner<'_> {
                 dest.child(&name)
             };
             if let Some(done) = self.transfer(src, target, is_move) {
+                if is_move {
+                    self.out.moved.push((src.clone(), done.clone()));
+                }
                 self.out.created.push(done);
             }
         }

@@ -66,6 +66,49 @@ fn measure_into(files: Vec<gio::File>, target: adw::ActionRow, cancel: gio::Canc
     });
 }
 
+/// A toggle starring `file`: named "Starred", pressed while it is.
+fn star_button(win: &Rc<Window>, file: &gio::File) -> gtk::ToggleButton {
+    let look = |b: &gtk::ToggleButton, on: bool| {
+        // An outline star where the theme has one (Adwaita has not: a
+        // dimmed star there).
+        let names: &[&str] = if on {
+            &["starred-symbolic"]
+        } else {
+            &["non-starred-symbolic", "starred-symbolic"]
+        };
+        b.set_child(Some(&gtk::Image::from_gicon(&gio::ThemedIcon::from_names(
+            names,
+        ))));
+        if on {
+            b.remove_css_class("dim-label");
+        } else {
+            b.add_css_class("dim-label");
+        }
+        b.set_tooltip_text(Some(if on { tr("Unstar") } else { tr("Star") }));
+    };
+    let btn = gtk::ToggleButton::builder()
+        .active(win.shared.stars.is_starred(file))
+        .halign(gtk::Align::Center)
+        .build();
+    btn.add_css_class("flat");
+    btn.add_css_class("circular");
+    helix_app_common::set_accessible_label(&btn, tr("Starred"));
+    look(&btn, btn.is_active());
+    let weak = Rc::downgrade(win);
+    let file = file.clone();
+    btn.connect_toggled(move |b| {
+        look(b, b.is_active());
+        if let Some(w) = weak.upgrade() {
+            if w.shared.stars.is_starred(&file) != b.is_active() {
+                w.shared
+                    .stars
+                    .set(&w.shared, std::slice::from_ref(&file), b.is_active());
+            }
+        }
+    });
+    btn
+}
+
 /// Shows properties for `files` (one or more).
 pub fn show(win: &Rc<Window>, files: Vec<gio::File>) {
     if files.is_empty() {
@@ -126,6 +169,10 @@ fn build(win: &Rc<Window>, infos: Vec<(gio::File, gio::FileInfo)>) {
             None => img.set_icon_name(Some("text-x-generic")),
         }
         title.set_text(&info.display_name());
+        // A star toggle, as GNOME Files has under the name.
+        if win.shared.stars.can_star(file) {
+            header.append(&star_button(win, file));
+        }
         let is_dir = info.file_type() == gio::FileType::Directory;
         group.add(&row(tr("Type"), &super::tab::type_description(info)));
         if is_dir {
