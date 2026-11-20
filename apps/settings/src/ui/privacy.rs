@@ -29,14 +29,18 @@ impl Panel for PrivacyPanel {
         let Some(nav) = content.downcast_ref::<adw::NavigationView>() else {
             return;
         };
-        if page != agent_access::TAG || !agent_access::available() {
+        let activity = page == agent_access::ACTIVITY_TAG;
+        if (page != agent_access::TAG && !activity) || !agent_access::available() {
             return;
         }
-        if nav.visible_page().and_then(|p| p.tag()).as_deref() == Some(agent_access::TAG) {
+        if nav.visible_page().and_then(|p| p.tag()).as_deref() == Some(page) {
             return;
         }
         nav.pop_to_tag(ROOT_TAG);
         nav.push(&agent_access::page(ctx, nav));
+        if activity {
+            nav.push(&agent_access::activity_page(ctx));
+        }
     }
 
     fn build(&self, ctx: &Rc<Ctx>) -> gtk::Widget {

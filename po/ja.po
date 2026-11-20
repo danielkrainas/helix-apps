@@ -1137,8 +1137,8 @@ msgstr "計算(_A)"
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
 #: apps/help/src/ui.rs:196 apps/music/src/pages.rs:2129
 #: apps/music/src/pages.rs:2232 apps/music/src/pages.rs:2317
-#: apps/settings/src/ui/agent_access.rs:255
-#: apps/settings/src/ui/agent_access.rs:775 apps/settings/src/ui/apps.rs:553
+#: apps/settings/src/ui/agent_access.rs:267
+#: apps/settings/src/ui/agent_access.rs:787 apps/settings/src/ui/apps.rs:553
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
 #: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
 #: apps/system-monitor/src/dialogs.rs:142
@@ -1420,7 +1420,7 @@ msgstr "カレンダー"
 
 #: apps/calendar/src/editor.rs:504 apps/document-viewer/src/dialogs.rs:112
 #: apps/files/src/ui/window.rs:211 apps/image-viewer/src/ui.rs:592
-#: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:151
+#: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:155
 #: apps/web/src/permissions.rs:24
 msgid "Location"
 msgstr "場所"
@@ -2293,7 +2293,7 @@ msgstr "最後に撮影したものを開く"
 #: apps/camera/src/ui.rs:110 apps/camera/src/ui.rs:200
 #: apps/image-viewer/src/ui.rs:576 apps/image-viewer/src/ui.rs:587
 #: apps/settings/src/bluez.rs:230 apps/settings/src/permissions.rs:52
-#: apps/settings/src/ui/privacy.rs:168 apps/web/src/permissions.rs:27
+#: apps/settings/src/ui/privacy.rs:172 apps/web/src/permissions.rs:27
 msgid "Camera"
 msgstr "カメラ"
 
@@ -2304,7 +2304,7 @@ msgstr "写真やビデオを撮影します"
 #: apps/camera/src/ui.rs:162 apps/disks/src/ui.rs:937
 #: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:155
 #: apps/settings/src/ui/network.rs:26 apps/settings/src/ui/network.rs:188
-#: apps/settings/src/ui/network.rs:467 apps/settings/src/ui/privacy.rs:194
+#: apps/settings/src/ui/network.rs:467 apps/settings/src/ui/privacy.rs:198
 msgid "Off"
 msgstr "オフ"
 
@@ -3035,7 +3035,7 @@ msgid "Current Location"
 msgstr "現在地"
 
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
-#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:643
+#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:655
 #: apps/settings/src/ui/input.rs:367 apps/weather/src/ui.rs:902
 #: apps/web/src/dialogs.rs:198 apps/web/src/dialogs.rs:656
 #: apps/web/src/dialogs.rs:1043 apps/web/src/dialogs.rs:1198
@@ -4489,13 +4489,13 @@ msgstr "ZFS デバイス"
 #: apps/disks/src/model.rs:303 apps/disks/src/parttypes.rs:171
 #: apps/disks/src/parttypes.rs:203 apps/disks/src/smart.rs:104
 #: apps/disks/src/ui.rs:1872 apps/disks/src/ui.rs:1882
-#: apps/files/src/ui/tab.rs:77 apps/settings/src/agents.rs:277
-#: apps/settings/src/ui/about.rs:38 apps/settings/src/ui/about.rs:42
-#: apps/settings/src/ui/about.rs:58 apps/settings/src/ui/about.rs:64
-#: apps/settings/src/ui/about.rs:113 apps/settings/src/ui/about.rs:186
-#: apps/settings/src/ui/about.rs:197 apps/settings/src/ui/about.rs:230
-#: apps/settings/src/ui/apps.rs:526 apps/settings/src/values.rs:283
-#: apps/system-monitor/src/format.rs:107 apps/weather/src/wmo.rs:37
+#: apps/files/src/ui/tab.rs:77 apps/settings/src/ui/about.rs:38
+#: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
+#: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
+#: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
+#: apps/settings/src/ui/about.rs:230 apps/settings/src/ui/apps.rs:526
+#: apps/settings/src/values.rs:283 apps/system-monitor/src/format.rs:107
+#: apps/weather/src/wmo.rs:37
 msgid "Unknown"
 msgstr "不明"
 
@@ -5216,7 +5216,7 @@ msgstr "メディアなし"
 msgid "No volume selected"
 msgstr "ボリュームが選択されていません"
 
-#: apps/disks/src/ui.rs:937 apps/settings/src/ui/privacy.rs:192
+#: apps/disks/src/ui.rs:937 apps/settings/src/ui/privacy.rs:196
 msgid "On"
 msgstr "オン"
 
@@ -6962,7 +6962,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr "「{file}」を処理できませんでした: {error}"
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/settings/src/agents.rs:276 apps/web/src/window.rs:2341
+#: apps/settings/src/agents.rs:501 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "キャンセルしました"
 
@@ -10812,29 +10812,321 @@ msgstr "設定"
 msgid "settings"
 msgstr "設定"
 
-#: apps/settings/src/agents.rs:51 apps/settings/src/ui/agent_access.rs:32
+#: apps/settings/src/agents.rs:52 apps/settings/src/ui/agent_access.rs:33
 msgid "Read Only"
 msgstr "読み取りのみ"
 
-#: apps/settings/src/agents.rs:52 apps/settings/src/ui/agent_access.rs:36
+#: apps/settings/src/agents.rs:53 apps/settings/src/ui/agent_access.rs:37
 msgid "Control the Desktop"
 msgstr "デスクトップの操作"
 
-#: apps/settings/src/agents.rs:53 apps/settings/src/ui/agent_access.rs:40
+#: apps/settings/src/agents.rs:54 apps/settings/src/ui/agent_access.rs:41
 msgid "Control Apps"
 msgstr "アプリの操作"
 
-#: apps/settings/src/agents.rs:54 apps/settings/src/ui/agent_access.rs:186
+#: apps/settings/src/agents.rs:55 apps/settings/src/ui/agent_access.rs:195
 msgid "Screen and Input"
 msgstr "画面と入力"
 
-#: apps/settings/src/agents.rs:273 apps/settings/src/agents.rs:274
-msgid "Refused"
-msgstr "拒否"
+#: apps/settings/src/agents.rs:316
+msgid "Checked its access"
+msgstr "アクセス状態を確認"
 
-#: apps/settings/src/agents.rs:275 apps/web/src/window.rs:1948
+#: apps/settings/src/agents.rs:317 apps/settings/src/agents.rs:354
+msgid "Asked for access"
+msgstr "アクセスを要求"
+
+#: apps/settings/src/agents.rs:318
+msgid "Read the desktop state"
+msgstr "デスクトップの状態を読み取り"
+
+#: apps/settings/src/agents.rs:319
+msgid "Listed windows"
+msgstr "ウィンドウを一覧表示"
+
+#: apps/settings/src/agents.rs:320
+msgid "Listed apps"
+msgstr "アプリを一覧表示"
+
+#: apps/settings/src/agents.rs:321
+msgid "Listed workspaces"
+msgstr "ワークスペースを一覧表示"
+
+#: apps/settings/src/agents.rs:322
+msgid "Listed displays"
+msgstr "ディスプレイを一覧表示"
+
+#: apps/settings/src/agents.rs:323
+msgid "Listed notifications"
+msgstr "通知を一覧表示"
+
+#: apps/settings/src/agents.rs:324
+msgid "Listed recent files"
+msgstr "最近使ったファイルを一覧表示"
+
+#: apps/settings/src/agents.rs:325
+msgid "Searched files"
+msgstr "ファイルを検索"
+
+#: apps/settings/src/agents.rs:326
+msgid "Waited for a window"
+msgstr "ウィンドウを待機"
+
+#: apps/settings/src/agents.rs:327
+msgid "Waited for a window to close"
+msgstr "ウィンドウが閉じるのを待機"
+
+#: apps/settings/src/agents.rs:328
+msgid "Asked you a question"
+msgstr "あなたに質問"
+
+#: apps/settings/src/agents.rs:329
+msgid "Asked you to confirm"
+msgstr "あなたに確認を要求"
+
+#: apps/settings/src/agents.rs:330
+msgid "Added a reminder"
+msgstr "リマインダーを追加"
+
+#: apps/settings/src/agents.rs:331
+msgid "Listed reminders"
+msgstr "リマインダーを一覧表示"
+
+#: apps/settings/src/agents.rs:332
+msgid "Cancelled a reminder"
+msgstr "リマインダーを取り消し"
+
+#: apps/settings/src/agents.rs:333
+msgid "Opened a file or link"
+msgstr "ファイルまたはリンクを開いた"
+
+#: apps/settings/src/agents.rs:334
+msgid "Started an app"
+msgstr "アプリを起動"
+
+#: apps/settings/src/agents.rs:335
+msgid "Changed a window"
+msgstr "ウィンドウを変更"
+
+#: apps/settings/src/agents.rs:336
+msgid "Switched workspace"
+msgstr "ワークスペースを切り替え"
+
+#: apps/settings/src/agents.rs:337
+msgid "Turned a setting on or off"
+msgstr "設定をオン/オフ"
+
+#: apps/settings/src/agents.rs:338
+msgid "Adjusted a setting"
+msgstr "設定を調整"
+
+#: apps/settings/src/agents.rs:339
+msgid "Sent a notification"
+msgstr "通知を送信"
+
+#: apps/settings/src/agents.rs:340
+msgid "Read the clipboard"
+msgstr "クリップボードを読み取り"
+
+#: apps/settings/src/agents.rs:341
+msgid "Changed the clipboard"
+msgstr "クリップボードを変更"
+
+#: apps/settings/src/agents.rs:342
+msgid "Read an app’s contents"
+msgstr "アプリの内容を読み取り"
+
+#: apps/settings/src/agents.rs:343
+msgid "Used a control in an app"
+msgstr "アプリのコントロールを操作"
+
+#: apps/settings/src/agents.rs:344
+msgid "Filled in a field in an app"
+msgstr "アプリの欄に入力"
+
+#: apps/settings/src/agents.rs:345
+msgid "Took a screenshot"
+msgstr "スクリーンショットを撮影"
+
+#: apps/settings/src/agents.rs:346
+msgid "Typed or clicked"
+msgstr "入力またはクリック"
+
+#: apps/settings/src/agents.rs:348
+msgid "Listed agents"
+msgstr "エージェントを一覧表示"
+
+#: apps/settings/src/agents.rs:349
+msgid "Access revoked"
+msgstr "アクセスを取り消しました"
+
+#: apps/settings/src/agents.rs:350
+msgid "Access revoked and forgotten"
+msgstr "アクセスを取り消して記憶を削除しました"
+
+#: apps/settings/src/agents.rs:351
+msgid "All access revoked"
+msgstr "すべてのアクセスを取り消しました"
+
+#: apps/settings/src/agents.rs:352
+msgid "Activity log cleared"
+msgstr "アクティビティログを消去しました"
+
+#: apps/settings/src/agents.rs:355
+msgid "Asked to confirm an action"
+msgstr "操作の確認を要求"
+
+#: apps/settings/src/agents.rs:356
+msgid "Stopped by you"
+msgstr "あなたが停止"
+
+#: apps/settings/src/agents.rs:357
+msgid "Activity log full"
+msgstr "アクティビティログが満杯"
+
+#: apps/settings/src/agents.rs:366
+msgid "Tried to list agents"
+msgstr "エージェントの一覧表示を試行"
+
+#: apps/settings/src/agents.rs:367
+msgid "Tried to revoke access"
+msgstr "アクセスの取り消しを試行"
+
+#: apps/settings/src/agents.rs:368
+msgid "Tried to forget an agent"
+msgstr "エージェントの削除を試行"
+
+#: apps/settings/src/agents.rs:369
+msgid "Tried to revoke all access"
+msgstr "すべてのアクセスの取り消しを試行"
+
+#: apps/settings/src/agents.rs:370
+msgid "Tried to clear the activity log"
+msgstr "アクティビティログの消去を試行"
+
+#: apps/settings/src/agents.rs:378
+msgid "From a sandboxed app"
+msgstr "サンドボックス化されたアプリから"
+
+#: apps/settings/src/agents.rs:379
+msgid "Agent Access was off"
+msgstr "エージェントのアクセスがオフでした"
+
+#: apps/settings/src/agents.rs:380
+msgid "From a remote session"
+msgstr "リモートセッションから"
+
+#: apps/settings/src/agents.rs:381
+msgid "The screen was locked"
+msgstr "画面がロックされていました"
+
+#: apps/settings/src/agents.rs:382
+msgid "Needs a higher access level"
+msgstr "より高いアクセスレベルが必要"
+
+#: apps/settings/src/agents.rs:383
+msgid "That feature was turned off"
+msgstr "その機能はオフでした"
+
+#: apps/settings/src/agents.rs:384
+msgid "Not allowed yet"
+msgstr "まだ許可されていません"
+
+#: apps/settings/src/agents.rs:385
+msgid "Denied by you"
+msgstr "あなたが拒否"
+
+#: apps/settings/src/agents.rs:386
+msgid "Excluded app"
+msgstr "除外されたアプリ"
+
+#: apps/settings/src/agents.rs:387
+msgid "Needed your confirmation"
+msgstr "あなたの確認が必要でした"
+
+#: apps/settings/src/agents.rs:388
+msgid "Only Settings may do this"
+msgstr "これができるのは設定だけです"
+
+#: apps/settings/src/agents.rs:396
+msgid "Failed: timed out"
+msgstr "失敗: タイムアウト"
+
+#: apps/settings/src/agents.rs:397
+msgid "Failed: not found"
+msgstr "失敗: 見つかりません"
+
+#: apps/settings/src/agents.rs:398
+msgid "Failed: not supported"
+msgstr "失敗: 未対応"
+
+#: apps/settings/src/agents.rs:399
+msgid "Failed: invalid request"
+msgstr "失敗: 無効な要求"
+
+#: apps/settings/src/agents.rs:400
+msgid "Failed: cancelled"
+msgstr "失敗: キャンセル"
+
+#: apps/settings/src/agents.rs:401
+msgid "Failed"
+msgstr "失敗"
+
+#: apps/settings/src/agents.rs:427
+msgid "A window of {app}"
+msgstr "{app} のウィンドウ"
+
+#: apps/settings/src/agents.rs:429
+msgid "A window"
+msgstr "ウィンドウ"
+
+#: apps/settings/src/agents.rs:455 apps/settings/src/ui/mod.rs:165
+#: apps/settings/src/ui/mod.rs:245 apps/settings/src/ui/mod.rs:509
+msgid "Settings"
+msgstr "設定"
+
+#: apps/settings/src/agents.rs:470
+msgid "Allowed for this session"
+msgstr "このセッションで許可"
+
+#: apps/settings/src/agents.rs:471 apps/settings/src/ui/agent_access.rs:462
+msgid "Always allowed"
+msgstr "常に許可"
+
+#: apps/settings/src/agents.rs:472 apps/settings/src/agents.rs:479
+#: apps/settings/src/agents.rs:493 apps/web/src/window.rs:1948
 msgid "Allowed"
 msgstr "許可"
+
+#: apps/settings/src/agents.rs:473 apps/settings/src/agents.rs:480
+#: apps/web/src/window.rs:1948
+msgid "Denied"
+msgstr "拒否"
+
+#: apps/settings/src/agents.rs:474 apps/settings/src/agents.rs:481
+msgid "Not answered"
+msgstr "未回答"
+
+#: apps/settings/src/agents.rs:487
+msgid "Refused calls are no longer recorded today"
+msgstr "拒否された呼び出しは今日はもう記録されません"
+
+#: apps/settings/src/agents.rs:488
+msgid "Nothing more is recorded today"
+msgstr "今日はこれ以上記録されません"
+
+#: apps/settings/src/agents.rs:497
+msgid "Failed: {error}"
+msgstr "失敗: {error}"
+
+#: apps/settings/src/agents.rs:505
+msgid "Refused {n} time"
+msgid_plural "Refused {n} times"
+msgstr[0] "{n} 回拒否"
+
+#: apps/settings/src/agents.rs:506
+msgid "Refused"
+msgstr "拒否"
 
 #: apps/settings/src/bluez.rs:66 apps/settings/src/ui/network.rs:181
 #: apps/settings/src/ui/network.rs:464 apps/settings/src/ui/wifi.rs:470
@@ -11283,7 +11575,7 @@ msgstr ""
 "ウンスキー;マウスキー;スクロールバー;スクリーンキーボード;ダブルクリック;ポイ"
 "ンターの位置;"
 
-#: apps/settings/src/panels.rs:216 apps/settings/src/ui/privacy.rs:222
+#: apps/settings/src/panels.rs:216 apps/settings/src/ui/privacy.rs:226
 msgid "Privacy & Security"
 msgstr "プライバシーとセキュリティ"
 
@@ -11335,16 +11627,20 @@ msgstr ""
 "バイス名;ホスト名;メモリ;プロセッサー;ディスク;バージョン;カーネル;ハードウェ"
 "ア;"
 
-#: apps/settings/src/panels.rs:280 apps/settings/src/ui/agent_access.rs:69
-#: apps/settings/src/ui/agent_access.rs:169 apps/settings/src/ui/privacy.rs:185
+#: apps/settings/src/panels.rs:281 apps/settings/src/ui/agent_access.rs:70
+#: apps/settings/src/ui/agent_access.rs:170 apps/settings/src/ui/privacy.rs:189
 msgid "Agent Access"
 msgstr "エージェントのアクセス"
+
+#: apps/settings/src/panels.rs:289 apps/settings/src/ui/agent_access.rs:816
+msgid "Agent Activity"
+msgstr "エージェントのアクティビティ"
 
 #: apps/settings/src/permissions.rs:31
 msgid "Run in Background"
 msgstr "バックグラウンドで実行"
 
-#: apps/settings/src/permissions.rs:59 apps/settings/src/ui/privacy.rs:176
+#: apps/settings/src/permissions.rs:59 apps/settings/src/ui/privacy.rs:180
 #: apps/web/src/permissions.rs:26
 msgid "Microphone"
 msgstr "マイク"
@@ -11854,20 +12150,20 @@ msgstr "文字のサイズを大きくします"
 msgid "Cursor Size"
 msgstr "カーソルのサイズ"
 
-#: apps/settings/src/ui/agent_access.rs:33
+#: apps/settings/src/ui/agent_access.rs:34
 msgid "See windows, apps and recent files, and ask you questions"
 msgstr "ウィンドウ、アプリ、最近使用したファイルを見て、あなたに質問する"
 
-#: apps/settings/src/ui/agent_access.rs:37
+#: apps/settings/src/ui/agent_access.rs:38
 msgid "Also open apps and files, manage windows and change quick settings"
 msgstr ""
 "さらに、アプリやファイルを開き、ウィンドウを管理し、クイック設定を変更する"
 
-#: apps/settings/src/ui/agent_access.rs:41
+#: apps/settings/src/ui/agent_access.rs:42
 msgid "Also read and use the buttons and fields inside apps"
 msgstr "さらに、アプリ内のボタンや入力欄を読み取って使う"
 
-#: apps/settings/src/ui/agent_access.rs:66
+#: apps/settings/src/ui/agent_access.rs:67
 msgid ""
 "Agents are programs, such as AI assistants, that read and control your "
 "session through the desktop. Each agent must ask you before it gets access."
@@ -11876,23 +12172,23 @@ msgstr ""
 "り操作するプログラムです。各エージェントはアクセスを得る前にあなたに確認する"
 "必要があります。"
 
-#: apps/settings/src/ui/agent_access.rs:76
+#: apps/settings/src/ui/agent_access.rs:77
 msgid "Access"
 msgstr "アクセス"
 
-#: apps/settings/src/ui/agent_access.rs:83
+#: apps/settings/src/ui/agent_access.rs:84
 msgid "Asking"
 msgstr "確認"
 
-#: apps/settings/src/ui/agent_access.rs:93
+#: apps/settings/src/ui/agent_access.rs:94
 msgid "Information"
 msgstr "情報"
 
-#: apps/settings/src/ui/agent_access.rs:99
+#: apps/settings/src/ui/agent_access.rs:100
 msgid "Notifications Access"
 msgstr "通知へのアクセス"
 
-#: apps/settings/src/ui/agent_access.rs:100
+#: apps/settings/src/ui/agent_access.rs:101
 msgid ""
 "Agents can read the text of notifications, which can include messages and "
 "sign-in codes"
@@ -11900,11 +12196,11 @@ msgstr ""
 "エージェントが通知の本文を読めるようになります。本文にはメッセージやサインイ"
 "ンコードが含まれることがあります"
 
-#: apps/settings/src/ui/agent_access.rs:107
+#: apps/settings/src/ui/agent_access.rs:108
 msgid "Clipboard Access"
 msgstr "クリップボードへのアクセス"
 
-#: apps/settings/src/ui/agent_access.rs:108
+#: apps/settings/src/ui/agent_access.rs:109
 msgid ""
 "Agents can read and change the clipboard, which can hold passwords and other "
 "copied text"
@@ -11912,55 +12208,55 @@ msgstr ""
 "エージェントがクリップボードを読み取り変更できるようになります。クリップボー"
 "ドにはパスワードなどのコピーしたテキストが入っていることがあります"
 
-#: apps/settings/src/ui/agent_access.rs:113
+#: apps/settings/src/ui/agent_access.rs:114
 msgid "Safeguards"
 msgstr "安全対策"
 
-#: apps/settings/src/ui/agent_access.rs:119
+#: apps/settings/src/ui/agent_access.rs:120
 msgid "Confirm Sensitive Actions"
 msgstr "重要な操作を確認する"
 
-#: apps/settings/src/ui/agent_access.rs:120
+#: apps/settings/src/ui/agent_access.rs:121
 msgid ""
 "Ask before an agent deletes files, sends messages or changes network settings"
 msgstr ""
 "エージェントがファイルを削除する、メッセージを送信する、ネットワーク設定を変"
 "更する前に確認します"
 
-#: apps/settings/src/ui/agent_access.rs:127
+#: apps/settings/src/ui/agent_access.rs:128
 msgid "Allow From Remote Sessions"
 msgstr "リモートセッションから許可する"
 
-#: apps/settings/src/ui/agent_access.rs:128
+#: apps/settings/src/ui/agent_access.rs:129
 msgid "Agents running in a remote login (SSH) can ask for access"
 msgstr ""
 "リモートログイン (SSH) で動作するエージェントがアクセスを求められるようになり"
 "ます"
 
-#: apps/settings/src/ui/agent_access.rs:139
+#: apps/settings/src/ui/agent_access.rs:140
 msgid "View Activity"
 msgstr "アクティビティを表示"
 
-#: apps/settings/src/ui/agent_access.rs:140
+#: apps/settings/src/ui/agent_access.rs:141
 msgid "What agents did, and how long it is kept"
 msgstr "エージェントが行ったことと、その保存期間"
 
-#: apps/settings/src/ui/agent_access.rs:181
+#: apps/settings/src/ui/agent_access.rs:188
 msgid "Access Level"
 msgstr "アクセスレベル"
 
-#: apps/settings/src/ui/agent_access.rs:187
+#: apps/settings/src/ui/agent_access.rs:196
 msgid ""
 "Also take screenshots and use the pointer and keyboard as if they were you"
 msgstr ""
 "さらに、スクリーンショットを撮り、あなたと同じようにポインターとキーボードを"
 "使う"
 
-#: apps/settings/src/ui/agent_access.rs:250
+#: apps/settings/src/ui/agent_access.rs:262
 msgid "Allow Screen and Input?"
 msgstr "画面と入力を許可しますか?"
 
-#: apps/settings/src/ui/agent_access.rs:251
+#: apps/settings/src/ui/agent_access.rs:263
 msgid ""
 "Agents you allow will be able to see everything on the screen and type and "
 "click anywhere, as if they were you. Only turn this on for agents you trust."
@@ -11969,31 +12265,31 @@ msgstr ""
 "やクリックができるようになります。信頼できるエージェントにだけ有効にしてくだ"
 "さい。"
 
-#: apps/settings/src/ui/agent_access.rs:256
+#: apps/settings/src/ui/agent_access.rs:268
 msgid "_Allow"
 msgstr "許可(_A)"
 
-#: apps/settings/src/ui/agent_access.rs:276
+#: apps/settings/src/ui/agent_access.rs:288
 msgid "Ask Each Session"
 msgstr "セッションごとに確認"
 
-#: apps/settings/src/ui/agent_access.rs:277
+#: apps/settings/src/ui/agent_access.rs:289
 msgid "Agents are asked for again in every session"
 msgstr "エージェントにはセッションごとに改めて確認します"
 
-#: apps/settings/src/ui/agent_access.rs:281
+#: apps/settings/src/ui/agent_access.rs:293
 msgid "Remember"
 msgstr "記憶する"
 
-#: apps/settings/src/ui/agent_access.rs:282
+#: apps/settings/src/ui/agent_access.rs:294
 msgid "Agents you always allow are not asked again"
 msgstr "常に許可したエージェントには再び確認しません"
 
-#: apps/settings/src/ui/agent_access.rs:333
+#: apps/settings/src/ui/agent_access.rs:345
 msgid "Allowed Agents"
 msgstr "許可したエージェント"
 
-#: apps/settings/src/ui/agent_access.rs:334
+#: apps/settings/src/ui/agent_access.rs:346
 msgid ""
 "While an agent is active, an indicator is always shown in the top bar, with "
 "Stop in its menu."
@@ -12001,96 +12297,92 @@ msgstr ""
 "エージェントが動作している間は、トップバーに必ずインジケーターが表示され、そ"
 "のメニューから停止できます。"
 
-#: apps/settings/src/ui/agent_access.rs:338
+#: apps/settings/src/ui/agent_access.rs:350
 msgid "Revoke All"
 msgstr "すべて取り消す"
 
-#: apps/settings/src/ui/agent_access.rs:343
+#: apps/settings/src/ui/agent_access.rs:355
 msgid "Revoke Access of All Agents"
 msgstr "すべてのエージェントのアクセスを取り消す"
 
-#: apps/settings/src/ui/agent_access.rs:405
+#: apps/settings/src/ui/agent_access.rs:417
 msgid "Only the installed Settings app can change agents' access"
 msgstr ""
 "エージェントのアクセスを変更できるのは、インストールされた設定アプリだけです"
 
-#: apps/settings/src/ui/agent_access.rs:407
+#: apps/settings/src/ui/agent_access.rs:419
 msgid "Could not change the agent's access: {e}"
 msgstr "エージェントのアクセスを変更できませんでした: {e}"
 
-#: apps/settings/src/ui/agent_access.rs:433
+#: apps/settings/src/ui/agent_access.rs:445
 msgid "Not active this session"
 msgstr "このセッションでは未使用"
 
-#: apps/settings/src/ui/agent_access.rs:434
+#: apps/settings/src/ui/agent_access.rs:446
 msgid "Active just now"
 msgstr "たった今使用"
 
-#: apps/settings/src/ui/agent_access.rs:435
+#: apps/settings/src/ui/agent_access.rs:447
 msgid "Active {n} minute ago"
 msgid_plural "Active {n} minutes ago"
 msgstr[0] "{n} 分前に使用"
 
-#: apps/settings/src/ui/agent_access.rs:436
+#: apps/settings/src/ui/agent_access.rs:448
 msgid "Active {n} hour ago"
 msgid_plural "Active {n} hours ago"
 msgstr[0] "{n} 時間前に使用"
 
-#: apps/settings/src/ui/agent_access.rs:437
+#: apps/settings/src/ui/agent_access.rs:449
 msgid "Active {n} day ago"
 msgid_plural "Active {n} days ago"
 msgstr[0] "{n} 日前に使用"
 
-#: apps/settings/src/ui/agent_access.rs:448
+#: apps/settings/src/ui/agent_access.rs:460
 msgid "Denied this session"
 msgstr "このセッションでは拒否"
 
-#: apps/settings/src/ui/agent_access.rs:450
-msgid "Always allowed"
-msgstr "常に許可"
-
-#: apps/settings/src/ui/agent_access.rs:452
+#: apps/settings/src/ui/agent_access.rs:464
 msgid "Allowed this session"
 msgstr "このセッションで許可"
 
-#: apps/settings/src/ui/agent_access.rs:473
+#: apps/settings/src/ui/agent_access.rs:485
 msgid "The desktop shell is not running, so agents cannot be listed"
 msgstr ""
 "デスクトップシェルが動作していないため、エージェントを一覧表示できません"
 
-#: apps/settings/src/ui/agent_access.rs:475
+#: apps/settings/src/ui/agent_access.rs:487
 msgid "Only the installed Settings app can list agents"
 msgstr "エージェントを一覧表示できるのは、インストールされた設定アプリだけです"
 
-#: apps/settings/src/ui/agent_access.rs:476
+#: apps/settings/src/ui/agent_access.rs:488
 msgid "Agents could not be listed"
 msgstr "エージェントを一覧表示できませんでした"
 
-#: apps/settings/src/ui/agent_access.rs:478
+#: apps/settings/src/ui/agent_access.rs:490
 msgid "Agents that ask for access are listed here"
 msgstr "アクセスを求めたエージェントがここに表示されます"
 
-#: apps/settings/src/ui/agent_access.rs:532
+#: apps/settings/src/ui/agent_access.rs:544
 msgid "Revoke"
 msgstr "取り消す"
 
-#: apps/settings/src/ui/agent_access.rs:533
+#: apps/settings/src/ui/agent_access.rs:545
 msgid "Revoke Access of {agent}"
 msgstr "{agent} のアクセスを取り消す"
 
-#: apps/settings/src/ui/agent_access.rs:538
+#: apps/settings/src/ui/agent_access.rs:550
 msgid "Forget"
 msgstr "忘れる"
 
-#: apps/settings/src/ui/agent_access.rs:539
+#: apps/settings/src/ui/agent_access.rs:551
 msgid "Forget {agent}"
 msgstr "{agent} を忘れる"
 
-#: apps/settings/src/ui/agent_access.rs:571
+#: apps/settings/src/ui/agent_access.rs:583
 msgid "Excluded Apps"
 msgstr "除外するアプリ"
 
-#: apps/settings/src/ui/agent_access.rs:572
+#: apps/settings/src/ui/agent_access.rs:584
 msgid ""
 "Agents can never read or control these apps. Password fields, the lock "
 "screen, system password prompts and Settings are always excluded."
@@ -12098,93 +12390,89 @@ msgstr ""
 "エージェントはこれらのアプリを読み取ることも操作することもできません。パス"
 "ワード欄、ロック画面、システムのパスワード入力、設定は常に除外されます。"
 
-#: apps/settings/src/ui/agent_access.rs:576
+#: apps/settings/src/ui/agent_access.rs:588
 msgid "Add App…"
 msgstr "アプリを追加…"
 
-#: apps/settings/src/ui/agent_access.rs:595
+#: apps/settings/src/ui/agent_access.rs:607
 msgid "No apps excluded"
 msgstr "除外しているアプリはありません"
 
-#: apps/settings/src/ui/agent_access.rs:647
+#: apps/settings/src/ui/agent_access.rs:659
 msgid "Remove {app}"
 msgstr "{app} を削除"
 
-#: apps/settings/src/ui/agent_access.rs:660
+#: apps/settings/src/ui/agent_access.rs:672
 msgid "Exclude an App"
 msgstr "アプリを除外"
 
-#: apps/settings/src/ui/agent_access.rs:661
+#: apps/settings/src/ui/agent_access.rs:673
 msgid "Search apps"
 msgstr "アプリを検索"
 
-#: apps/settings/src/ui/agent_access.rs:662
+#: apps/settings/src/ui/agent_access.rs:674
 msgid "Search Apps"
 msgstr "アプリの検索"
 
-#: apps/settings/src/ui/agent_access.rs:663
+#: apps/settings/src/ui/agent_access.rs:675
 msgid "Loading Apps…"
 msgstr "アプリを読み込んでいます…"
 
-#: apps/settings/src/ui/agent_access.rs:731
+#: apps/settings/src/ui/agent_access.rs:743
 msgid "Keep Activity For"
 msgstr "アクティビティの保存期間"
 
-#: apps/settings/src/ui/agent_access.rs:734
+#: apps/settings/src/ui/agent_access.rs:746
 msgid "Clear Activity"
 msgstr "アクティビティを消去"
 
-#: apps/settings/src/ui/agent_access.rs:735
+#: apps/settings/src/ui/agent_access.rs:747
 msgid "Remove everything agents have done from the log"
 msgstr "エージェントが行ったことをすべてログから削除します"
 
-#: apps/settings/src/ui/agent_access.rs:736
+#: apps/settings/src/ui/agent_access.rs:748
 msgid "Clear…"
 msgstr "消去…"
 
-#: apps/settings/src/ui/agent_access.rs:742
+#: apps/settings/src/ui/agent_access.rs:754
 msgid "Recent Activity"
 msgstr "最近のアクティビティ"
 
-#: apps/settings/src/ui/agent_access.rs:770
+#: apps/settings/src/ui/agent_access.rs:782
 msgid "Clear Agent Activity?"
 msgstr "エージェントのアクティビティを消去しますか?"
 
-#: apps/settings/src/ui/agent_access.rs:771
+#: apps/settings/src/ui/agent_access.rs:783
 msgid "The record of what agents did is removed. This cannot be undone."
 msgstr ""
 "エージェントが行ったことの記録が削除されます。元に戻すことはできません。"
 
-#: apps/settings/src/ui/agent_access.rs:776
+#: apps/settings/src/ui/agent_access.rs:788
 msgid "_Clear"
 msgstr "消去(_C)"
 
-#: apps/settings/src/ui/agent_access.rs:788
+#: apps/settings/src/ui/agent_access.rs:800
 msgid "Agent activity cleared"
 msgstr "エージェントのアクティビティを消去しました"
 
-#: apps/settings/src/ui/agent_access.rs:789
+#: apps/settings/src/ui/agent_access.rs:801
 msgid "The desktop shell is not running, so the activity cannot be cleared"
 msgstr "デスクトップシェルが動作していないため、アクティビティを消去できません"
 
-#: apps/settings/src/ui/agent_access.rs:793
+#: apps/settings/src/ui/agent_access.rs:805
 msgid "Only the installed Settings app can clear the activity"
 msgstr "アクティビティを消去できるのは、インストールされた設定アプリだけです"
 
-#: apps/settings/src/ui/agent_access.rs:795
+#: apps/settings/src/ui/agent_access.rs:807
 msgid "Could not clear the activity: {e}"
 msgstr "アクティビティを消去できませんでした: {e}"
 
-#: apps/settings/src/ui/agent_access.rs:804
-msgid "Agent Activity"
-msgstr "エージェントのアクティビティ"
-
-#: apps/settings/src/ui/agent_access.rs:836
+#: apps/settings/src/ui/agent_access.rs:848
 msgid "Showing the latest {n} entry."
 msgid_plural "Showing the latest {n} entries."
 msgstr[0] "最新の {n} 件を表示しています。"
 
-#: apps/settings/src/ui/agent_access.rs:845
+#: apps/settings/src/ui/agent_access.rs:857
 msgid "What agents do will be listed here"
 msgstr "エージェントが行ったことがここに表示されます"
 
@@ -12422,7 +12710,7 @@ msgstr "コンピューターのスイッチまたはキーでオンにしてく
 msgid "Visible Name"
 msgstr "表示名"
 
-#: apps/settings/src/ui/bluetooth.rs:112 apps/settings/src/ui/privacy.rs:162
+#: apps/settings/src/ui/bluetooth.rs:112 apps/settings/src/ui/privacy.rs:166
 msgid "Devices"
 msgstr "デバイス"
 
@@ -13110,11 +13398,6 @@ msgstr "{source} を下へ移動"
 msgid "Remove {source}"
 msgstr "{source} を削除"
 
-#: apps/settings/src/ui/mod.rs:165 apps/settings/src/ui/mod.rs:245
-#: apps/settings/src/ui/mod.rs:509
-msgid "Settings"
-msgstr "設定"
-
 #: apps/settings/src/ui/mod.rs:183
 msgid "Search settings"
 msgstr "設定を検索"
@@ -13568,7 +13851,7 @@ msgstr "通知のミュート"
 msgid "Notification banners are hidden"
 msgstr "通知バナーは表示されません"
 
-#: apps/settings/src/ui/notifications.rs:89 apps/settings/src/ui/privacy.rs:95
+#: apps/settings/src/ui/notifications.rs:89 apps/settings/src/ui/privacy.rs:99
 msgid "Lock Screen Notifications"
 msgstr "ロック画面の通知"
 
@@ -13642,91 +13925,91 @@ msgstr "トップバーに正確な充電レベルを表示します"
 msgid "Power Button Behavior"
 msgstr "電源ボタンの動作"
 
-#: apps/settings/src/ui/privacy.rs:51
+#: apps/settings/src/ui/privacy.rs:55
 msgid "Screen Lock"
 msgstr "画面ロック"
 
-#: apps/settings/src/ui/privacy.rs:52
+#: apps/settings/src/ui/privacy.rs:56
 msgid "Automatically lock the screen when you are not using the device"
 msgstr "デバイスを使用していないときに自動的に画面をロックします"
 
-#: apps/settings/src/ui/privacy.rs:62
+#: apps/settings/src/ui/privacy.rs:66
 msgid "Blank Screen Delay"
 msgstr "ブランクスクリーンまでの時間"
 
-#: apps/settings/src/ui/privacy.rs:64
+#: apps/settings/src/ui/privacy.rs:68
 msgid "Period of inactivity after which the screen will go blank"
 msgstr "画面がブランクになるまでの操作のない時間"
 
-#: apps/settings/src/ui/privacy.rs:73
+#: apps/settings/src/ui/privacy.rs:77
 msgid "Automatic Screen Lock"
 msgstr "画面の自動ロック"
 
-#: apps/settings/src/ui/privacy.rs:74
+#: apps/settings/src/ui/privacy.rs:78
 msgid "Locks the screen after it goes blank"
 msgstr "画面がブランクになった後にロックします"
 
-#: apps/settings/src/ui/privacy.rs:84
+#: apps/settings/src/ui/privacy.rs:88
 msgid "Automatic Screen Lock Delay"
 msgstr "画面の自動ロックまでの時間"
 
-#: apps/settings/src/ui/privacy.rs:100
+#: apps/settings/src/ui/privacy.rs:104
 msgid "File History & Trash"
 msgstr "ファイル履歴とゴミ箱"
 
-#: apps/settings/src/ui/privacy.rs:106
+#: apps/settings/src/ui/privacy.rs:110
 msgid "File History"
 msgstr "ファイル履歴"
 
-#: apps/settings/src/ui/privacy.rs:107
+#: apps/settings/src/ui/privacy.rs:111
 msgid "Remember recently used files"
 msgstr "最近使用したファイルを記録します"
 
-#: apps/settings/src/ui/privacy.rs:117
+#: apps/settings/src/ui/privacy.rs:121
 msgid "File History Duration"
 msgstr "ファイル履歴の保持期間"
 
-#: apps/settings/src/ui/privacy.rs:129
+#: apps/settings/src/ui/privacy.rs:133
 msgid "Automatically Delete Trash Content"
 msgstr "ゴミ箱の中身を自動的に削除"
 
-#: apps/settings/src/ui/privacy.rs:137
+#: apps/settings/src/ui/privacy.rs:141
 msgid "Automatically Delete Temporary Files"
 msgstr "一時ファイルを自動的に削除"
 
-#: apps/settings/src/ui/privacy.rs:147
+#: apps/settings/src/ui/privacy.rs:151
 msgid "Automatically Delete Period"
 msgstr "自動削除までの期間"
 
-#: apps/settings/src/ui/privacy.rs:157
+#: apps/settings/src/ui/privacy.rs:161
 msgid "Location Services"
 msgstr "位置情報サービス"
 
-#: apps/settings/src/ui/privacy.rs:158
+#: apps/settings/src/ui/privacy.rs:162
 msgid "Let apps determine your geographical location"
 msgstr "アプリによる地理的な位置の特定を許可します"
 
-#: apps/settings/src/ui/privacy.rs:169
+#: apps/settings/src/ui/privacy.rs:173
 msgid "Allow apps to use the camera"
 msgstr "アプリによるカメラの使用を許可します"
 
-#: apps/settings/src/ui/privacy.rs:177
+#: apps/settings/src/ui/privacy.rs:181
 msgid "Allow apps to use the microphone"
 msgstr "アプリによるマイクの使用を許可します"
 
-#: apps/settings/src/ui/privacy.rs:184
+#: apps/settings/src/ui/privacy.rs:188
 msgid "Agents"
 msgstr "エージェント"
 
-#: apps/settings/src/ui/privacy.rs:211
+#: apps/settings/src/ui/privacy.rs:215
 msgid "Diagnostics"
 msgstr "診断"
 
-#: apps/settings/src/ui/privacy.rs:217
+#: apps/settings/src/ui/privacy.rs:221
 msgid "Automatic Problem Reporting"
 msgstr "問題の自動報告"
 
-#: apps/settings/src/ui/privacy.rs:218
+#: apps/settings/src/ui/privacy.rs:222
 msgid "Send technical reports when problems occur"
 msgstr "問題が発生したときに技術レポートを送信します"
 
@@ -17621,10 +17904,6 @@ msgstr "有効期限: {d}"
 #: apps/web/src/window.rs:1920
 msgid "Problems: {list}"
 msgstr "問題: {list}"
-
-#: apps/web/src/window.rs:1948
-msgid "Denied"
-msgstr "拒否"
 
 #: apps/web/src/window.rs:1954
 msgid "Reset {} Permission"

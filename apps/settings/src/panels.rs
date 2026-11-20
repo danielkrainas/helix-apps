@@ -271,15 +271,25 @@ pub struct PageInfo {
     pub schema: Option<&'static str>,
 }
 
-pub const PAGES: &[PageInfo] = &[PageInfo {
-    // Privacy & Security › Agent Access; the shell's agent indicator
-    // opens it. Without the shell's settings it opens Privacy & Security.
-    name: "agent-access",
-    aliases: &["agents"],
-    panel: PanelId::Privacy,
-    title: n_("Agent Access"),
-    schema: Some("org.helixdesktop.agent-access"),
-}];
+pub const PAGES: &[PageInfo] = &[
+    PageInfo {
+        // Privacy & Security › Agent Access; the shell's agent indicator
+        // opens it. Without the shell's settings it opens Privacy & Security.
+        name: "agent-access",
+        aliases: &["agents"],
+        panel: PanelId::Privacy,
+        title: n_("Agent Access"),
+        schema: Some("org.helixdesktop.agent-access"),
+    },
+    PageInfo {
+        // Agent Access › View Activity.
+        name: "agent-activity",
+        aliases: &[],
+        panel: PanelId::Privacy,
+        title: n_("Agent Activity"),
+        schema: Some("org.helixdesktop.agent-access"),
+    },
+];
 
 /// Resolves a command-line name: a panel ([`lookup`]) or a page in one.
 pub fn lookup_target(name: &str) -> Option<(PanelId, Option<&'static str>)> {
@@ -446,6 +456,10 @@ mod tests {
         assert_eq!(
             lookup_target(" Agents "),
             Some((PanelId::Privacy, Some("agent-access")))
+        );
+        assert_eq!(
+            lookup_target("agent-activity"),
+            Some((PanelId::Privacy, Some("agent-activity")))
         );
         assert_eq!(lookup("agent-access"), None, "not a panel");
         assert_eq!(lookup_target("nonsense"), None);

@@ -22,7 +22,8 @@ use helix_app_common::{trf, trnf};
 
 /// The page's navigation tag and command-line name.
 pub const TAG: &str = "agent-access";
-const ACTIVITY_TAG: &str = "agent-activity";
+/// The View Activity page's tag and command-line name.
+pub const ACTIVITY_TAG: &str = "agent-activity";
 /// The activity subpage lists at most this many entries.
 const LOG_ROWS: usize = 300;
 
@@ -727,7 +728,7 @@ fn add_app_dialog(ctx: &Rc<Ctx>, prefs: &Prefs, rebuild: Rc<dyn Fn()>) {
 }
 
 /// View Activity: retention, Clear, and what agents did.
-fn activity_page(ctx: &Rc<Ctx>) -> adw::NavigationPage {
+pub fn activity_page(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let prefs = ctx.prefs(agents::SCHEMA);
     let page = widgets::page();
 
@@ -864,25 +865,49 @@ fn show_log(
 }
 
 fn log_row(e: &Entry, twelve: bool) -> adw::ActionRow {
-    let (outcome, why) = agents::outcome_label(&e.outcome);
-    let outcome = match why {
-        Some(why) => format!("{} ({why})", tr_dyn(outcome)),
-        None => tr_dyn(outcome).to_string(),
-    };
-    let what = if e.target.is_empty() {
-        e.method.clone()
-    } else {
-        format!("{} {}", e.method, e.target)
-    };
-    let when = glib::DateTime::from_unix_local(e.time)
-        .map(|d| super::datetime::format_time(&d, twelve))
-        .unwrap_or_default();
-    let row = adw::ActionRow::builder()
+    let d = agents::describe(e);
+    let mut parts: Vec<String> = Vec::new();
+    if !d.who.is_empty() {
+        parts.push(d.who);
+    }
+    parts.extend(d.status);
+    // The time wraps as a whole, not in the middle of the date.
+    parts.push(log_time(e, twelve).replace(' ', "\u{a0}"));
+    let mut subtitle = parts.join(" · ");
+    if !d.target.is_empty() {
+        subtitle = format!("{}\n{subtitle}", d.target);
+    }
+    adw::ActionRow::builder()
         .use_markup(false)
-        .title(&what)
+        .title(&d.title)
         .title_lines(2)
-        .subtitle([e.who(), &outcome, &when].join(" · "))
+        .subtitle(&subtitle)
         .subtitle_lines(0)
-        .build();
-    row
+        .build()
+}
+
+/// When a line's call came: "19 November 2026, 14:02", and for coalesced
+/// refusals until when ("…, 14:02–14:03", the date again on another day).
+fn log_time(e: &Entry, twelve: bool) -> String {
+    let at = |t: i64| glib::DateTime::from_unix_local(t).ok();
+    let Some(start) = at(e.time) else {
+        return String::new();
+    };
+    let first = super::datetime::format_time(&start, twelve);
+    let Some(end) = e
+        .coalesced()
+        .map(|(_, until)| until)
+        .filter(|&u| u / 60 != e.time / 60)
+        .and_then(at)
+    else {
+        return first;
+    };
+    let last = if end.ymd() == start.ymd() {
+        end.format(if twelve { "%l:%M %p" } else { "%H:%M" })
+            .map(|s| s.trim().to_string())
+            .unwrap_or_default()
+    } else {
+        super::datetime::format_time(&end, twelve)
+    };
+    format!("{first}–{last}")
 }

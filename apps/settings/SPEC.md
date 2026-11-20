@@ -327,17 +327,47 @@ shell's agent indicator opens it).
   left out). The description names the hard exclusions in one line:
   password fields, the lock screen, system password prompts and
   Settings (the shell excludes every Settings window from agents).
-- *View Activity* row → *Agent Activity* page (tag `agent-activity`):
+- *View Activity* row → *Agent Activity* page (tag and command-line
+  name `agent-activity`, `helix-settings-app agent-activity`):
   *Keep Activity For* (`log-retention-days`: 1, 7, 30, 90, 365 days, a
   stored non-preset is added), *Clear Activity* (*Clear…*, confirmed by
   an alert, then `ClearLog`), and *Recent Activity*: the newest 300
-  entries of `$XDG_STATE_HOME/helix/agent-activity/YYYY-MM-DD.jsonl`
-  (read directly, as the contract says; keys `time` (Unix seconds or ISO
-  8601), `agent`, `name`, `method`, `target`, `level`, `outcome`, the
-  same `helix-agent log` reads; unknown keys and bad lines ignored), each
-  row "method target" over "who · Allowed / Refused (error) / Cancelled ·
-  time". Empty: "What agents do will be listed here". Until the shell
-  writes the file (helixdesktop/desktop#144) the list stays empty.
+  entries of `$XDG_STATE_HOME/helix/agent-activity/YYYY-MM-DD.jsonl`,
+  read directly and sorted by `time`, as the contract's "Activity log"
+  pins the lines (keys `time` (Unix seconds or ISO 8601), `agent`,
+  `name`, `method`, `target`, `level`, `outcome`, `error`, `grant`,
+  `count`/`until`, `dropped`; unknown keys, `*-length` keys and lines
+  that are not a JSON object are ignored). Each row:
+  - title: what happened, as a short translated phrase for every
+    `Agent1` and `AgentAccess1` method (also those the shell does not
+    implement yet) and for the events: *Listed windows*, *Searched
+    files*, *Asked for access* (`RequestAccess`, `ConsentPrompt`),
+    *Asked to confirm an action* (`SensitivePrompt`), *Stopped by you*
+    (`Stop`), *Activity log full* (`LogFull`), *Activity log cleared*
+    (`ClearLog`), *Access revoked* (`Revoke`), *Access revoked and
+    forgotten* (`Forget`), *All access revoked* (`StopAll`); a refused
+    `AgentAccess1` call (another program) reads *Tried to clear the
+    activity log* and the like. Unknown names show as they are.
+  - subtitle line 1 (when there is a target): a window as *A window of
+    org.example.App* (*A window* without its app), a `file://` URI as a
+    path, a `SensitivePrompt`'s method by its phrase, else as written.
+  - subtitle line 2: who (display name, else the agent id; *Settings*
+    for Settings' own allowed `AgentAccess1` calls; nothing for
+    `LogFull`) · how it went · when. How it went: *Allowed*, plus
+    *Failed: timed out* / *not found* / *not supported* / *invalid
+    request* / *cancelled* / *Failed* for an `error` (*Failed: Name*
+    for others); *Refused* (*Refused 37 times* for a coalesced line)
+    and the reason (*Agent Access was off*, *Needs a higher access
+    level*, *Excluded app*, *Denied by you*, *Only Settings may do
+    this*, …, the raw name for unknown ones); *Cancelled*. Consent
+    prompts: the level asked and *Allowed for this session* / *Always
+    allowed* (`grant`) / *Denied* / *Not answered*; sensitive prompts
+    *Allowed* / *Denied* / *Not answered*; `Stop` and Settings' own
+    calls nothing; `LogFull` *Refused calls are no longer recorded
+    today* (`dropped` `refusals`) or *Nothing more is recorded today*
+    (`all`). When: date and time, and for a coalesced line the end
+    (*19 November 2026, 14:02–14:03*, the date again on another day).
+  Empty: "What agents do will be listed here".
 - Settings never grants anything: the interface has no such method.
 
 #### Notifications
@@ -934,7 +964,7 @@ registered accelerators.
 ### Command line
 - `helix-settings-app [PANEL]` opens (or raises the running instance on)
   the given panel; ids and aliases as in the registry table. A page name
-  (`agent-access`) opens its panel on that page.
+  (`agent-access`, `agent-activity`) opens its panel on that page.
 - `helix-settings-app --list` prints `id<TAB>title<TAB>available|unavailable`
   for every panel, then every page (unavailable when its schema is not
   installed), and exits.

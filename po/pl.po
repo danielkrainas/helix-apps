@@ -1145,8 +1145,8 @@ msgstr "_Oblicz"
 #: apps/files/src/ui/dialogs.rs:220 apps/files/src/ui/sidebar.rs:677
 #: apps/help/src/ui.rs:196 apps/music/src/pages.rs:2129
 #: apps/music/src/pages.rs:2232 apps/music/src/pages.rs:2317
-#: apps/settings/src/ui/agent_access.rs:255
-#: apps/settings/src/ui/agent_access.rs:775 apps/settings/src/ui/apps.rs:553
+#: apps/settings/src/ui/agent_access.rs:267
+#: apps/settings/src/ui/agent_access.rs:787 apps/settings/src/ui/apps.rs:553
 #: apps/settings/src/ui/bluetooth.rs:647 apps/settings/src/ui/netedit.rs:389
 #: apps/settings/src/ui/users.rs:642 apps/settings/src/ui/wifi.rs:587
 #: apps/system-monitor/src/dialogs.rs:142
@@ -1429,7 +1429,7 @@ msgstr "Kalendarz"
 
 #: apps/calendar/src/editor.rs:504 apps/document-viewer/src/dialogs.rs:112
 #: apps/files/src/ui/window.rs:211 apps/image-viewer/src/ui.rs:592
-#: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:151
+#: apps/settings/src/permissions.rs:45 apps/settings/src/ui/privacy.rs:155
 #: apps/web/src/permissions.rs:24
 msgid "Location"
 msgstr "Położenie"
@@ -2323,7 +2323,7 @@ msgstr "Otwarcie ostatniego ujęcia"
 #: apps/camera/src/ui.rs:110 apps/camera/src/ui.rs:200
 #: apps/image-viewer/src/ui.rs:576 apps/image-viewer/src/ui.rs:587
 #: apps/settings/src/bluez.rs:230 apps/settings/src/permissions.rs:52
-#: apps/settings/src/ui/privacy.rs:168 apps/web/src/permissions.rs:27
+#: apps/settings/src/ui/privacy.rs:172 apps/web/src/permissions.rs:27
 msgid "Camera"
 msgstr "Aparat"
 
@@ -2334,7 +2334,7 @@ msgstr "Robienie zdjęć i nagrywanie filmów"
 #: apps/camera/src/ui.rs:162 apps/disks/src/ui.rs:937
 #: apps/music/src/player.rs:54 apps/settings/src/extensions.rs:155
 #: apps/settings/src/ui/network.rs:26 apps/settings/src/ui/network.rs:188
-#: apps/settings/src/ui/network.rs:467 apps/settings/src/ui/privacy.rs:194
+#: apps/settings/src/ui/network.rs:467 apps/settings/src/ui/privacy.rs:198
 msgid "Off"
 msgstr "Wyłączone"
 
@@ -3076,7 +3076,7 @@ msgid "Current Location"
 msgstr "Bieżące położenie"
 
 #: apps/clocks/src/ui.rs:835 apps/disk-usage/src/ui.rs:1862
-#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:643
+#: apps/disk-usage/src/ui.rs:1866 apps/settings/src/ui/agent_access.rs:655
 #: apps/settings/src/ui/input.rs:367 apps/weather/src/ui.rs:902
 #: apps/web/src/dialogs.rs:198 apps/web/src/dialogs.rs:656
 #: apps/web/src/dialogs.rs:1043 apps/web/src/dialogs.rs:1198
@@ -4560,13 +4560,13 @@ msgstr "Urządzenie ZFS"
 #: apps/disks/src/model.rs:303 apps/disks/src/parttypes.rs:171
 #: apps/disks/src/parttypes.rs:203 apps/disks/src/smart.rs:104
 #: apps/disks/src/ui.rs:1872 apps/disks/src/ui.rs:1882
-#: apps/files/src/ui/tab.rs:77 apps/settings/src/agents.rs:277
-#: apps/settings/src/ui/about.rs:38 apps/settings/src/ui/about.rs:42
-#: apps/settings/src/ui/about.rs:58 apps/settings/src/ui/about.rs:64
-#: apps/settings/src/ui/about.rs:113 apps/settings/src/ui/about.rs:186
-#: apps/settings/src/ui/about.rs:197 apps/settings/src/ui/about.rs:230
-#: apps/settings/src/ui/apps.rs:526 apps/settings/src/values.rs:283
-#: apps/system-monitor/src/format.rs:107 apps/weather/src/wmo.rs:37
+#: apps/files/src/ui/tab.rs:77 apps/settings/src/ui/about.rs:38
+#: apps/settings/src/ui/about.rs:42 apps/settings/src/ui/about.rs:58
+#: apps/settings/src/ui/about.rs:64 apps/settings/src/ui/about.rs:113
+#: apps/settings/src/ui/about.rs:186 apps/settings/src/ui/about.rs:197
+#: apps/settings/src/ui/about.rs:230 apps/settings/src/ui/apps.rs:526
+#: apps/settings/src/values.rs:283 apps/system-monitor/src/format.rs:107
+#: apps/weather/src/wmo.rs:37
 msgid "Unknown"
 msgstr "Nieznane"
 
@@ -5295,7 +5295,7 @@ msgstr "Brak nośnika"
 msgid "No volume selected"
 msgstr "Nie wybrano woluminu"
 
-#: apps/disks/src/ui.rs:937 apps/settings/src/ui/privacy.rs:192
+#: apps/disks/src/ui.rs:937 apps/settings/src/ui/privacy.rs:196
 msgid "On"
 msgstr "Włączone"
 
@@ -7065,7 +7065,7 @@ msgid "Could not process “{file}”: {error}"
 msgstr "Nie można przetworzyć „{file}”: {error}"
 
 #: apps/files/src/ops.rs:365 apps/screenshot/src/shell.rs:79
-#: apps/settings/src/agents.rs:276 apps/web/src/window.rs:2341
+#: apps/settings/src/agents.rs:501 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "Anulowano"
 
@@ -10953,29 +10953,323 @@ msgstr "preferencje"
 msgid "settings"
 msgstr "ustawienia"
 
-#: apps/settings/src/agents.rs:51 apps/settings/src/ui/agent_access.rs:32
+#: apps/settings/src/agents.rs:52 apps/settings/src/ui/agent_access.rs:33
 msgid "Read Only"
 msgstr "Tylko odczyt"
 
-#: apps/settings/src/agents.rs:52 apps/settings/src/ui/agent_access.rs:36
+#: apps/settings/src/agents.rs:53 apps/settings/src/ui/agent_access.rs:37
 msgid "Control the Desktop"
 msgstr "Sterowanie pulpitem"
 
-#: apps/settings/src/agents.rs:53 apps/settings/src/ui/agent_access.rs:40
+#: apps/settings/src/agents.rs:54 apps/settings/src/ui/agent_access.rs:41
 msgid "Control Apps"
 msgstr "Sterowanie aplikacjami"
 
-#: apps/settings/src/agents.rs:54 apps/settings/src/ui/agent_access.rs:186
+#: apps/settings/src/agents.rs:55 apps/settings/src/ui/agent_access.rs:195
 msgid "Screen and Input"
 msgstr "Ekran i wprowadzanie"
 
-#: apps/settings/src/agents.rs:273 apps/settings/src/agents.rs:274
-msgid "Refused"
-msgstr "Odrzucono"
+#: apps/settings/src/agents.rs:316
+msgid "Checked its access"
+msgstr "Sprawdzono dostęp"
 
-#: apps/settings/src/agents.rs:275 apps/web/src/window.rs:1948
+#: apps/settings/src/agents.rs:317 apps/settings/src/agents.rs:354
+msgid "Asked for access"
+msgstr "Poproszono o dostęp"
+
+#: apps/settings/src/agents.rs:318
+msgid "Read the desktop state"
+msgstr "Odczytano stan pulpitu"
+
+#: apps/settings/src/agents.rs:319
+msgid "Listed windows"
+msgstr "Wyświetlono listę okien"
+
+#: apps/settings/src/agents.rs:320
+msgid "Listed apps"
+msgstr "Wyświetlono listę aplikacji"
+
+#: apps/settings/src/agents.rs:321
+msgid "Listed workspaces"
+msgstr "Wyświetlono listę obszarów roboczych"
+
+#: apps/settings/src/agents.rs:322
+msgid "Listed displays"
+msgstr "Wyświetlono listę ekranów"
+
+#: apps/settings/src/agents.rs:323
+msgid "Listed notifications"
+msgstr "Wyświetlono listę powiadomień"
+
+#: apps/settings/src/agents.rs:324
+msgid "Listed recent files"
+msgstr "Wyświetlono listę ostatnich plików"
+
+#: apps/settings/src/agents.rs:325
+msgid "Searched files"
+msgstr "Przeszukano pliki"
+
+#: apps/settings/src/agents.rs:326
+msgid "Waited for a window"
+msgstr "Oczekiwano na okno"
+
+#: apps/settings/src/agents.rs:327
+msgid "Waited for a window to close"
+msgstr "Oczekiwano na zamknięcie okna"
+
+#: apps/settings/src/agents.rs:328
+msgid "Asked you a question"
+msgstr "Zadano ci pytanie"
+
+#: apps/settings/src/agents.rs:329
+msgid "Asked you to confirm"
+msgstr "Poproszono cię o potwierdzenie"
+
+#: apps/settings/src/agents.rs:330
+msgid "Added a reminder"
+msgstr "Dodano przypomnienie"
+
+#: apps/settings/src/agents.rs:331
+msgid "Listed reminders"
+msgstr "Wyświetlono listę przypomnień"
+
+#: apps/settings/src/agents.rs:332
+msgid "Cancelled a reminder"
+msgstr "Anulowano przypomnienie"
+
+#: apps/settings/src/agents.rs:333
+msgid "Opened a file or link"
+msgstr "Otwarto plik lub odnośnik"
+
+#: apps/settings/src/agents.rs:334
+msgid "Started an app"
+msgstr "Uruchomiono aplikację"
+
+#: apps/settings/src/agents.rs:335
+msgid "Changed a window"
+msgstr "Zmieniono okno"
+
+#: apps/settings/src/agents.rs:336
+msgid "Switched workspace"
+msgstr "Przełączono obszar roboczy"
+
+#: apps/settings/src/agents.rs:337
+msgid "Turned a setting on or off"
+msgstr "Włączono lub wyłączono ustawienie"
+
+#: apps/settings/src/agents.rs:338
+msgid "Adjusted a setting"
+msgstr "Dostosowano ustawienie"
+
+#: apps/settings/src/agents.rs:339
+msgid "Sent a notification"
+msgstr "Wysłano powiadomienie"
+
+#: apps/settings/src/agents.rs:340
+msgid "Read the clipboard"
+msgstr "Odczytano schowek"
+
+#: apps/settings/src/agents.rs:341
+msgid "Changed the clipboard"
+msgstr "Zmieniono schowek"
+
+#: apps/settings/src/agents.rs:342
+msgid "Read an app’s contents"
+msgstr "Odczytano zawartość aplikacji"
+
+#: apps/settings/src/agents.rs:343
+msgid "Used a control in an app"
+msgstr "Użyto elementu sterującego aplikacji"
+
+#: apps/settings/src/agents.rs:344
+msgid "Filled in a field in an app"
+msgstr "Wypełniono pole w aplikacji"
+
+#: apps/settings/src/agents.rs:345
+msgid "Took a screenshot"
+msgstr "Wykonano zrzut ekranu"
+
+#: apps/settings/src/agents.rs:346
+msgid "Typed or clicked"
+msgstr "Wpisano tekst lub kliknięto"
+
+#: apps/settings/src/agents.rs:348
+msgid "Listed agents"
+msgstr "Wyświetlono listę agentów"
+
+#: apps/settings/src/agents.rs:349
+msgid "Access revoked"
+msgstr "Cofnięto dostęp"
+
+#: apps/settings/src/agents.rs:350
+msgid "Access revoked and forgotten"
+msgstr "Cofnięto i zapomniano dostęp"
+
+#: apps/settings/src/agents.rs:351
+msgid "All access revoked"
+msgstr "Cofnięto cały dostęp"
+
+#: apps/settings/src/agents.rs:352
+msgid "Activity log cleared"
+msgstr "Wyczyszczono dziennik aktywności"
+
+#: apps/settings/src/agents.rs:355
+msgid "Asked to confirm an action"
+msgstr "Poproszono o potwierdzenie działania"
+
+#: apps/settings/src/agents.rs:356
+msgid "Stopped by you"
+msgstr "Zatrzymane przez ciebie"
+
+#: apps/settings/src/agents.rs:357
+msgid "Activity log full"
+msgstr "Dziennik aktywności jest pełny"
+
+#: apps/settings/src/agents.rs:366
+msgid "Tried to list agents"
+msgstr "Próba wyświetlenia listy agentów"
+
+#: apps/settings/src/agents.rs:367
+msgid "Tried to revoke access"
+msgstr "Próba cofnięcia dostępu"
+
+#: apps/settings/src/agents.rs:368
+msgid "Tried to forget an agent"
+msgstr "Próba zapomnienia agenta"
+
+#: apps/settings/src/agents.rs:369
+msgid "Tried to revoke all access"
+msgstr "Próba cofnięcia całego dostępu"
+
+#: apps/settings/src/agents.rs:370
+msgid "Tried to clear the activity log"
+msgstr "Próba wyczyszczenia dziennika aktywności"
+
+#: apps/settings/src/agents.rs:378
+msgid "From a sandboxed app"
+msgstr "Z aplikacji w piaskownicy"
+
+#: apps/settings/src/agents.rs:379
+msgid "Agent Access was off"
+msgstr "Dostęp agentów był wyłączony"
+
+#: apps/settings/src/agents.rs:380
+msgid "From a remote session"
+msgstr "Z sesji zdalnej"
+
+#: apps/settings/src/agents.rs:381
+msgid "The screen was locked"
+msgstr "Ekran był zablokowany"
+
+#: apps/settings/src/agents.rs:382
+msgid "Needs a higher access level"
+msgstr "Wymaga wyższego poziomu dostępu"
+
+#: apps/settings/src/agents.rs:383
+msgid "That feature was turned off"
+msgstr "Ta funkcja była wyłączona"
+
+#: apps/settings/src/agents.rs:384
+msgid "Not allowed yet"
+msgstr "Jeszcze niedozwolone"
+
+#: apps/settings/src/agents.rs:385
+msgid "Denied by you"
+msgstr "Odmówione przez ciebie"
+
+#: apps/settings/src/agents.rs:386
+msgid "Excluded app"
+msgstr "Wykluczona aplikacja"
+
+#: apps/settings/src/agents.rs:387
+msgid "Needed your confirmation"
+msgstr "Wymagało twojego potwierdzenia"
+
+#: apps/settings/src/agents.rs:388
+msgid "Only Settings may do this"
+msgstr "Tylko Ustawienia mogą to zrobić"
+
+#: apps/settings/src/agents.rs:396
+msgid "Failed: timed out"
+msgstr "Niepowodzenie: przekroczono czas"
+
+#: apps/settings/src/agents.rs:397
+msgid "Failed: not found"
+msgstr "Niepowodzenie: nie znaleziono"
+
+#: apps/settings/src/agents.rs:398
+msgid "Failed: not supported"
+msgstr "Niepowodzenie: nieobsługiwane"
+
+#: apps/settings/src/agents.rs:399
+msgid "Failed: invalid request"
+msgstr "Niepowodzenie: nieprawidłowe żądanie"
+
+#: apps/settings/src/agents.rs:400
+msgid "Failed: cancelled"
+msgstr "Niepowodzenie: anulowano"
+
+#: apps/settings/src/agents.rs:401
+msgid "Failed"
+msgstr "Niepowodzenie"
+
+#: apps/settings/src/agents.rs:427
+msgid "A window of {app}"
+msgstr "Okno aplikacji {app}"
+
+#: apps/settings/src/agents.rs:429
+msgid "A window"
+msgstr "Okno"
+
+#: apps/settings/src/agents.rs:455 apps/settings/src/ui/mod.rs:165
+#: apps/settings/src/ui/mod.rs:245 apps/settings/src/ui/mod.rs:509
+msgid "Settings"
+msgstr "Ustawienia"
+
+#: apps/settings/src/agents.rs:470
+msgid "Allowed for this session"
+msgstr "Dozwolone w tej sesji"
+
+#: apps/settings/src/agents.rs:471 apps/settings/src/ui/agent_access.rs:462
+msgid "Always allowed"
+msgstr "Zawsze dozwolony"
+
+#: apps/settings/src/agents.rs:472 apps/settings/src/agents.rs:479
+#: apps/settings/src/agents.rs:493 apps/web/src/window.rs:1948
 msgid "Allowed"
 msgstr "Zezwolono"
+
+#: apps/settings/src/agents.rs:473 apps/settings/src/agents.rs:480
+#: apps/web/src/window.rs:1948
+msgid "Denied"
+msgstr "Odmówiono"
+
+#: apps/settings/src/agents.rs:474 apps/settings/src/agents.rs:481
+msgid "Not answered"
+msgstr "Bez odpowiedzi"
+
+#: apps/settings/src/agents.rs:487
+msgid "Refused calls are no longer recorded today"
+msgstr "Odrzucone wywołania nie są już dziś zapisywane"
+
+#: apps/settings/src/agents.rs:488
+msgid "Nothing more is recorded today"
+msgstr "Dziś nic więcej nie jest zapisywane"
+
+#: apps/settings/src/agents.rs:497
+msgid "Failed: {error}"
+msgstr "Niepowodzenie: {error}"
+
+#: apps/settings/src/agents.rs:505
+msgid "Refused {n} time"
+msgid_plural "Refused {n} times"
+msgstr[0] "Odrzucono {n} raz"
+msgstr[1] "Odrzucono {n} razy"
+msgstr[2] "Odrzucono {n} razy"
+
+#: apps/settings/src/agents.rs:506
+msgid "Refused"
+msgstr "Odrzucono"
 
 #: apps/settings/src/bluez.rs:66 apps/settings/src/ui/network.rs:181
 #: apps/settings/src/ui/network.rs:464 apps/settings/src/ui/wifi.rs:470
@@ -11411,7 +11705,7 @@ msgstr ""
 "odbijane;klawisze myszy;paski przewijania;klawiatura ekranowa;podwójne "
 "kliknięcie;położenie kursora;accessibility;"
 
-#: apps/settings/src/panels.rs:216 apps/settings/src/ui/privacy.rs:222
+#: apps/settings/src/panels.rs:216 apps/settings/src/ui/privacy.rs:226
 msgid "Privacy & Security"
 msgstr "Prywatność i bezpieczeństwo"
 
@@ -11459,16 +11753,20 @@ msgstr ""
 "nazwa urządzenia;nazwa komputera;hostname;pamięć;procesor;cpu;dysk;system "
 "operacyjny;os;wersja;jądro;kernel;sprzęt;"
 
-#: apps/settings/src/panels.rs:280 apps/settings/src/ui/agent_access.rs:69
-#: apps/settings/src/ui/agent_access.rs:169 apps/settings/src/ui/privacy.rs:185
+#: apps/settings/src/panels.rs:281 apps/settings/src/ui/agent_access.rs:70
+#: apps/settings/src/ui/agent_access.rs:170 apps/settings/src/ui/privacy.rs:189
 msgid "Agent Access"
 msgstr "Dostęp agentów"
+
+#: apps/settings/src/panels.rs:289 apps/settings/src/ui/agent_access.rs:816
+msgid "Agent Activity"
+msgstr "Aktywność agentów"
 
 #: apps/settings/src/permissions.rs:31
 msgid "Run in Background"
 msgstr "Działanie w tle"
 
-#: apps/settings/src/permissions.rs:59 apps/settings/src/ui/privacy.rs:176
+#: apps/settings/src/permissions.rs:59 apps/settings/src/ui/privacy.rs:180
 #: apps/web/src/permissions.rs:26
 msgid "Microphone"
 msgstr "Mikrofon"
@@ -11983,21 +12281,21 @@ msgstr "Zwiększenie rozmiaru tekstu"
 msgid "Cursor Size"
 msgstr "Rozmiar kursora"
 
-#: apps/settings/src/ui/agent_access.rs:33
+#: apps/settings/src/ui/agent_access.rs:34
 msgid "See windows, apps and recent files, and ask you questions"
 msgstr "Widzenie okien, aplikacji i ostatnich plików oraz zadawanie pytań"
 
-#: apps/settings/src/ui/agent_access.rs:37
+#: apps/settings/src/ui/agent_access.rs:38
 msgid "Also open apps and files, manage windows and change quick settings"
 msgstr ""
 "Także otwieranie aplikacji i plików, zarządzanie oknami i zmiana szybkich "
 "ustawień"
 
-#: apps/settings/src/ui/agent_access.rs:41
+#: apps/settings/src/ui/agent_access.rs:42
 msgid "Also read and use the buttons and fields inside apps"
 msgstr "Także odczytywanie i używanie przycisków i pól w aplikacjach"
 
-#: apps/settings/src/ui/agent_access.rs:66
+#: apps/settings/src/ui/agent_access.rs:67
 msgid ""
 "Agents are programs, such as AI assistants, that read and control your "
 "session through the desktop. Each agent must ask you before it gets access."
@@ -12005,23 +12303,23 @@ msgstr ""
 "Agenci to programy, takie jak asystenci SI, które odczytują sesję i sterują "
 "nią za pośrednictwem pulpitu. Każdy agent musi zapytać, zanim uzyska dostęp."
 
-#: apps/settings/src/ui/agent_access.rs:76
+#: apps/settings/src/ui/agent_access.rs:77
 msgid "Access"
 msgstr "Dostęp"
 
-#: apps/settings/src/ui/agent_access.rs:83
+#: apps/settings/src/ui/agent_access.rs:84
 msgid "Asking"
 msgstr "Pytanie"
 
-#: apps/settings/src/ui/agent_access.rs:93
+#: apps/settings/src/ui/agent_access.rs:94
 msgid "Information"
 msgstr "Informacje"
 
-#: apps/settings/src/ui/agent_access.rs:99
+#: apps/settings/src/ui/agent_access.rs:100
 msgid "Notifications Access"
 msgstr "Dostęp do powiadomień"
 
-#: apps/settings/src/ui/agent_access.rs:100
+#: apps/settings/src/ui/agent_access.rs:101
 msgid ""
 "Agents can read the text of notifications, which can include messages and "
 "sign-in codes"
@@ -12029,11 +12327,11 @@ msgstr ""
 "Agenci mogą odczytywać treść powiadomień, która może zawierać wiadomości i "
 "kody logowania"
 
-#: apps/settings/src/ui/agent_access.rs:107
+#: apps/settings/src/ui/agent_access.rs:108
 msgid "Clipboard Access"
 msgstr "Dostęp do schowka"
 
-#: apps/settings/src/ui/agent_access.rs:108
+#: apps/settings/src/ui/agent_access.rs:109
 msgid ""
 "Agents can read and change the clipboard, which can hold passwords and other "
 "copied text"
@@ -12041,53 +12339,53 @@ msgstr ""
 "Agenci mogą odczytywać i zmieniać schowek, który może zawierać hasła i inny "
 "skopiowany tekst"
 
-#: apps/settings/src/ui/agent_access.rs:113
+#: apps/settings/src/ui/agent_access.rs:114
 msgid "Safeguards"
 msgstr "Zabezpieczenia"
 
-#: apps/settings/src/ui/agent_access.rs:119
+#: apps/settings/src/ui/agent_access.rs:120
 msgid "Confirm Sensitive Actions"
 msgstr "Potwierdzanie wrażliwych działań"
 
-#: apps/settings/src/ui/agent_access.rs:120
+#: apps/settings/src/ui/agent_access.rs:121
 msgid ""
 "Ask before an agent deletes files, sends messages or changes network settings"
 msgstr ""
 "Pytanie, zanim agent usunie pliki, wyśle wiadomości lub zmieni ustawienia "
 "sieci"
 
-#: apps/settings/src/ui/agent_access.rs:127
+#: apps/settings/src/ui/agent_access.rs:128
 msgid "Allow From Remote Sessions"
 msgstr "Zezwalanie z sesji zdalnych"
 
-#: apps/settings/src/ui/agent_access.rs:128
+#: apps/settings/src/ui/agent_access.rs:129
 msgid "Agents running in a remote login (SSH) can ask for access"
 msgstr "Agenci działający w zdalnym logowaniu (SSH) mogą prosić o dostęp"
 
-#: apps/settings/src/ui/agent_access.rs:139
+#: apps/settings/src/ui/agent_access.rs:140
 msgid "View Activity"
 msgstr "Wyświetl aktywność"
 
-#: apps/settings/src/ui/agent_access.rs:140
+#: apps/settings/src/ui/agent_access.rs:141
 msgid "What agents did, and how long it is kept"
 msgstr "Co robili agenci i jak długo jest to przechowywane"
 
-#: apps/settings/src/ui/agent_access.rs:181
+#: apps/settings/src/ui/agent_access.rs:188
 msgid "Access Level"
 msgstr "Poziom dostępu"
 
-#: apps/settings/src/ui/agent_access.rs:187
+#: apps/settings/src/ui/agent_access.rs:196
 msgid ""
 "Also take screenshots and use the pointer and keyboard as if they were you"
 msgstr ""
 "Także robienie zrzutów ekranu oraz używanie wskaźnika i klawiatury tak, "
 "jakby to był użytkownik"
 
-#: apps/settings/src/ui/agent_access.rs:250
+#: apps/settings/src/ui/agent_access.rs:262
 msgid "Allow Screen and Input?"
 msgstr "Zezwolić na ekran i wprowadzanie?"
 
-#: apps/settings/src/ui/agent_access.rs:251
+#: apps/settings/src/ui/agent_access.rs:263
 msgid ""
 "Agents you allow will be able to see everything on the screen and type and "
 "click anywhere, as if they were you. Only turn this on for agents you trust."
@@ -12096,31 +12394,31 @@ msgstr ""
 "i klikać w dowolnym miejscu, tak jakby to był użytkownik. Włącz to tylko dla "
 "zaufanych agentów."
 
-#: apps/settings/src/ui/agent_access.rs:256
+#: apps/settings/src/ui/agent_access.rs:268
 msgid "_Allow"
 msgstr "_Zezwól"
 
-#: apps/settings/src/ui/agent_access.rs:276
+#: apps/settings/src/ui/agent_access.rs:288
 msgid "Ask Each Session"
 msgstr "Pytanie w każdej sesji"
 
-#: apps/settings/src/ui/agent_access.rs:277
+#: apps/settings/src/ui/agent_access.rs:289
 msgid "Agents are asked for again in every session"
 msgstr "Agenci są pytani ponownie w każdej sesji"
 
-#: apps/settings/src/ui/agent_access.rs:281
+#: apps/settings/src/ui/agent_access.rs:293
 msgid "Remember"
 msgstr "Zapamiętywanie"
 
-#: apps/settings/src/ui/agent_access.rs:282
+#: apps/settings/src/ui/agent_access.rs:294
 msgid "Agents you always allow are not asked again"
 msgstr "Agenci, na których zawsze zezwalasz, nie są pytani ponownie"
 
-#: apps/settings/src/ui/agent_access.rs:333
+#: apps/settings/src/ui/agent_access.rs:345
 msgid "Allowed Agents"
 msgstr "Dozwoleni agenci"
 
-#: apps/settings/src/ui/agent_access.rs:334
+#: apps/settings/src/ui/agent_access.rs:346
 msgid ""
 "While an agent is active, an indicator is always shown in the top bar, with "
 "Stop in its menu."
@@ -12128,100 +12426,96 @@ msgstr ""
 "Gdy agent jest aktywny, na górnym pasku zawsze wyświetlany jest wskaźnik z "
 "poleceniem Zatrzymaj w menu."
 
-#: apps/settings/src/ui/agent_access.rs:338
+#: apps/settings/src/ui/agent_access.rs:350
 msgid "Revoke All"
 msgstr "Odbierz wszystkim"
 
-#: apps/settings/src/ui/agent_access.rs:343
+#: apps/settings/src/ui/agent_access.rs:355
 msgid "Revoke Access of All Agents"
 msgstr "Odbierz dostęp wszystkim agentom"
 
-#: apps/settings/src/ui/agent_access.rs:405
+#: apps/settings/src/ui/agent_access.rs:417
 msgid "Only the installed Settings app can change agents' access"
 msgstr "Tylko zainstalowana aplikacja Ustawienia może zmieniać dostęp agentów"
 
-#: apps/settings/src/ui/agent_access.rs:407
+#: apps/settings/src/ui/agent_access.rs:419
 msgid "Could not change the agent's access: {e}"
 msgstr "Nie można zmienić dostępu agenta: {e}"
 
-#: apps/settings/src/ui/agent_access.rs:433
+#: apps/settings/src/ui/agent_access.rs:445
 msgid "Not active this session"
 msgstr "Nieaktywny w tej sesji"
 
-#: apps/settings/src/ui/agent_access.rs:434
+#: apps/settings/src/ui/agent_access.rs:446
 msgid "Active just now"
 msgstr "Aktywny przed chwilą"
 
-#: apps/settings/src/ui/agent_access.rs:435
+#: apps/settings/src/ui/agent_access.rs:447
 msgid "Active {n} minute ago"
 msgid_plural "Active {n} minutes ago"
 msgstr[0] "Aktywny {n} minutę temu"
 msgstr[1] "Aktywny {n} minuty temu"
 msgstr[2] "Aktywny {n} minut temu"
 
-#: apps/settings/src/ui/agent_access.rs:436
+#: apps/settings/src/ui/agent_access.rs:448
 msgid "Active {n} hour ago"
 msgid_plural "Active {n} hours ago"
 msgstr[0] "Aktywny {n} godzinę temu"
 msgstr[1] "Aktywny {n} godziny temu"
 msgstr[2] "Aktywny {n} godzin temu"
 
-#: apps/settings/src/ui/agent_access.rs:437
+#: apps/settings/src/ui/agent_access.rs:449
 msgid "Active {n} day ago"
 msgid_plural "Active {n} days ago"
 msgstr[0] "Aktywny {n} dzień temu"
 msgstr[1] "Aktywny {n} dni temu"
 msgstr[2] "Aktywny {n} dni temu"
 
-#: apps/settings/src/ui/agent_access.rs:448
+#: apps/settings/src/ui/agent_access.rs:460
 msgid "Denied this session"
 msgstr "Odmówiono w tej sesji"
 
-#: apps/settings/src/ui/agent_access.rs:450
-msgid "Always allowed"
-msgstr "Zawsze dozwolony"
-
-#: apps/settings/src/ui/agent_access.rs:452
+#: apps/settings/src/ui/agent_access.rs:464
 msgid "Allowed this session"
 msgstr "Dozwolony w tej sesji"
 
-#: apps/settings/src/ui/agent_access.rs:473
+#: apps/settings/src/ui/agent_access.rs:485
 msgid "The desktop shell is not running, so agents cannot be listed"
 msgstr "Powłoka pulpitu nie działa, więc nie można wyświetlić agentów"
 
-#: apps/settings/src/ui/agent_access.rs:475
+#: apps/settings/src/ui/agent_access.rs:487
 msgid "Only the installed Settings app can list agents"
 msgstr "Tylko zainstalowana aplikacja Ustawienia może wyświetlać agentów"
 
-#: apps/settings/src/ui/agent_access.rs:476
+#: apps/settings/src/ui/agent_access.rs:488
 msgid "Agents could not be listed"
 msgstr "Nie można wyświetlić agentów"
 
-#: apps/settings/src/ui/agent_access.rs:478
+#: apps/settings/src/ui/agent_access.rs:490
 msgid "Agents that ask for access are listed here"
 msgstr "Tutaj są wyświetlani agenci, którzy proszą o dostęp"
 
-#: apps/settings/src/ui/agent_access.rs:532
+#: apps/settings/src/ui/agent_access.rs:544
 msgid "Revoke"
 msgstr "Odbierz"
 
-#: apps/settings/src/ui/agent_access.rs:533
+#: apps/settings/src/ui/agent_access.rs:545
 msgid "Revoke Access of {agent}"
 msgstr "Odbierz dostęp agentowi {agent}"
 
-#: apps/settings/src/ui/agent_access.rs:538
+#: apps/settings/src/ui/agent_access.rs:550
 msgid "Forget"
 msgstr "Zapomnij"
 
-#: apps/settings/src/ui/agent_access.rs:539
+#: apps/settings/src/ui/agent_access.rs:551
 msgid "Forget {agent}"
 msgstr "Zapomnij agenta {agent}"
 
-#: apps/settings/src/ui/agent_access.rs:571
+#: apps/settings/src/ui/agent_access.rs:583
 msgid "Excluded Apps"
 msgstr "Wykluczone aplikacje"
 
-#: apps/settings/src/ui/agent_access.rs:572
+#: apps/settings/src/ui/agent_access.rs:584
 msgid ""
 "Agents can never read or control these apps. Password fields, the lock "
 "screen, system password prompts and Settings are always excluded."
@@ -12230,95 +12524,91 @@ msgstr ""
 "haseł, ekran blokady, systemowe pytania o hasło i Ustawienia są zawsze "
 "wykluczone."
 
-#: apps/settings/src/ui/agent_access.rs:576
+#: apps/settings/src/ui/agent_access.rs:588
 msgid "Add App…"
 msgstr "Dodaj aplikację…"
 
-#: apps/settings/src/ui/agent_access.rs:595
+#: apps/settings/src/ui/agent_access.rs:607
 msgid "No apps excluded"
 msgstr "Brak wykluczonych aplikacji"
 
-#: apps/settings/src/ui/agent_access.rs:647
+#: apps/settings/src/ui/agent_access.rs:659
 msgid "Remove {app}"
 msgstr "Usuń {app}"
 
-#: apps/settings/src/ui/agent_access.rs:660
+#: apps/settings/src/ui/agent_access.rs:672
 msgid "Exclude an App"
 msgstr "Wyklucz aplikację"
 
-#: apps/settings/src/ui/agent_access.rs:661
+#: apps/settings/src/ui/agent_access.rs:673
 msgid "Search apps"
 msgstr "Wyszukaj aplikacje"
 
-#: apps/settings/src/ui/agent_access.rs:662
+#: apps/settings/src/ui/agent_access.rs:674
 msgid "Search Apps"
 msgstr "Wyszukiwanie aplikacji"
 
-#: apps/settings/src/ui/agent_access.rs:663
+#: apps/settings/src/ui/agent_access.rs:675
 msgid "Loading Apps…"
 msgstr "Wczytywanie aplikacji…"
 
-#: apps/settings/src/ui/agent_access.rs:731
+#: apps/settings/src/ui/agent_access.rs:743
 msgid "Keep Activity For"
 msgstr "Przechowywanie aktywności przez"
 
-#: apps/settings/src/ui/agent_access.rs:734
+#: apps/settings/src/ui/agent_access.rs:746
 msgid "Clear Activity"
 msgstr "Wyczyść aktywność"
 
-#: apps/settings/src/ui/agent_access.rs:735
+#: apps/settings/src/ui/agent_access.rs:747
 msgid "Remove everything agents have done from the log"
 msgstr "Usuń z dziennika wszystko, co zrobili agenci"
 
-#: apps/settings/src/ui/agent_access.rs:736
+#: apps/settings/src/ui/agent_access.rs:748
 msgid "Clear…"
 msgstr "Wyczyść…"
 
-#: apps/settings/src/ui/agent_access.rs:742
+#: apps/settings/src/ui/agent_access.rs:754
 msgid "Recent Activity"
 msgstr "Ostatnia aktywność"
 
-#: apps/settings/src/ui/agent_access.rs:770
+#: apps/settings/src/ui/agent_access.rs:782
 msgid "Clear Agent Activity?"
 msgstr "Wyczyścić aktywność agentów?"
 
-#: apps/settings/src/ui/agent_access.rs:771
+#: apps/settings/src/ui/agent_access.rs:783
 msgid "The record of what agents did is removed. This cannot be undone."
 msgstr ""
 "Zapis tego, co robili agenci, zostanie usunięty. Tego nie można cofnąć."
 
-#: apps/settings/src/ui/agent_access.rs:776
+#: apps/settings/src/ui/agent_access.rs:788
 msgid "_Clear"
 msgstr "_Wyczyść"
 
-#: apps/settings/src/ui/agent_access.rs:788
+#: apps/settings/src/ui/agent_access.rs:800
 msgid "Agent activity cleared"
 msgstr "Wyczyszczono aktywność agentów"
 
-#: apps/settings/src/ui/agent_access.rs:789
+#: apps/settings/src/ui/agent_access.rs:801
 msgid "The desktop shell is not running, so the activity cannot be cleared"
 msgstr "Powłoka pulpitu nie działa, więc nie można wyczyścić aktywności"
 
-#: apps/settings/src/ui/agent_access.rs:793
+#: apps/settings/src/ui/agent_access.rs:805
 msgid "Only the installed Settings app can clear the activity"
 msgstr "Tylko zainstalowana aplikacja Ustawienia może czyścić aktywność"
 
-#: apps/settings/src/ui/agent_access.rs:795
+#: apps/settings/src/ui/agent_access.rs:807
 msgid "Could not clear the activity: {e}"
 msgstr "Nie można wyczyścić aktywności: {e}"
 
-#: apps/settings/src/ui/agent_access.rs:804
-msgid "Agent Activity"
-msgstr "Aktywność agentów"
-
-#: apps/settings/src/ui/agent_access.rs:836
+#: apps/settings/src/ui/agent_access.rs:848
 msgid "Showing the latest {n} entry."
 msgid_plural "Showing the latest {n} entries."
 msgstr[0] "Wyświetlono najnowszy {n} wpis."
 msgstr[1] "Wyświetlono najnowsze {n} wpisy."
 msgstr[2] "Wyświetlono najnowszych {n} wpisów."
 
-#: apps/settings/src/ui/agent_access.rs:845
+#: apps/settings/src/ui/agent_access.rs:857
 msgid "What agents do will be listed here"
 msgstr "Tutaj będzie wyświetlane to, co robią agenci"
 
@@ -12560,7 +12850,7 @@ msgstr "Można go włączyć przełącznikiem lub klawiszem na komputerze."
 msgid "Visible Name"
 msgstr "Widoczna nazwa"
 
-#: apps/settings/src/ui/bluetooth.rs:112 apps/settings/src/ui/privacy.rs:162
+#: apps/settings/src/ui/bluetooth.rs:112 apps/settings/src/ui/privacy.rs:166
 msgid "Devices"
 msgstr "Urządzenia"
 
@@ -13249,11 +13539,6 @@ msgstr "Przesuń {source} w dół"
 msgid "Remove {source}"
 msgstr "Usuń {source}"
 
-#: apps/settings/src/ui/mod.rs:165 apps/settings/src/ui/mod.rs:245
-#: apps/settings/src/ui/mod.rs:509
-msgid "Settings"
-msgstr "Ustawienia"
-
 #: apps/settings/src/ui/mod.rs:183
 msgid "Search settings"
 msgstr "Wyszukiwanie ustawień"
@@ -13711,7 +13996,7 @@ msgstr "Nie przeszkadzać"
 msgid "Notification banners are hidden"
 msgstr "Banery powiadomień są ukryte"
 
-#: apps/settings/src/ui/notifications.rs:89 apps/settings/src/ui/privacy.rs:95
+#: apps/settings/src/ui/notifications.rs:89 apps/settings/src/ui/privacy.rs:99
 msgid "Lock Screen Notifications"
 msgstr "Powiadomienia na ekranie blokady"
 
@@ -13786,91 +14071,91 @@ msgstr "Wyświetlanie dokładnego poziomu naładowania na górnym pasku"
 msgid "Power Button Behavior"
 msgstr "Działanie przycisku zasilania"
 
-#: apps/settings/src/ui/privacy.rs:51
+#: apps/settings/src/ui/privacy.rs:55
 msgid "Screen Lock"
 msgstr "Blokada ekranu"
 
-#: apps/settings/src/ui/privacy.rs:52
+#: apps/settings/src/ui/privacy.rs:56
 msgid "Automatically lock the screen when you are not using the device"
 msgstr "Automatyczne blokowanie ekranu, kiedy urządzenie nie jest używane"
 
-#: apps/settings/src/ui/privacy.rs:62
+#: apps/settings/src/ui/privacy.rs:66
 msgid "Blank Screen Delay"
 msgstr "Opóźnienie wygaszenia ekranu"
 
-#: apps/settings/src/ui/privacy.rs:64
+#: apps/settings/src/ui/privacy.rs:68
 msgid "Period of inactivity after which the screen will go blank"
 msgstr "Okres bezczynności, po którym ekran zostanie wygaszony"
 
-#: apps/settings/src/ui/privacy.rs:73
+#: apps/settings/src/ui/privacy.rs:77
 msgid "Automatic Screen Lock"
 msgstr "Automatyczna blokada ekranu"
 
-#: apps/settings/src/ui/privacy.rs:74
+#: apps/settings/src/ui/privacy.rs:78
 msgid "Locks the screen after it goes blank"
 msgstr "Blokuje ekran po jego wygaszeniu"
 
-#: apps/settings/src/ui/privacy.rs:84
+#: apps/settings/src/ui/privacy.rs:88
 msgid "Automatic Screen Lock Delay"
 msgstr "Opóźnienie automatycznej blokady ekranu"
 
-#: apps/settings/src/ui/privacy.rs:100
+#: apps/settings/src/ui/privacy.rs:104
 msgid "File History & Trash"
 msgstr "Historia plików i kosz"
 
-#: apps/settings/src/ui/privacy.rs:106
+#: apps/settings/src/ui/privacy.rs:110
 msgid "File History"
 msgstr "Historia plików"
 
-#: apps/settings/src/ui/privacy.rs:107
+#: apps/settings/src/ui/privacy.rs:111
 msgid "Remember recently used files"
 msgstr "Zapamiętywanie ostatnio używanych plików"
 
-#: apps/settings/src/ui/privacy.rs:117
+#: apps/settings/src/ui/privacy.rs:121
 msgid "File History Duration"
 msgstr "Czas przechowywania historii plików"
 
-#: apps/settings/src/ui/privacy.rs:129
+#: apps/settings/src/ui/privacy.rs:133
 msgid "Automatically Delete Trash Content"
 msgstr "Automatyczne usuwanie zawartości kosza"
 
-#: apps/settings/src/ui/privacy.rs:137
+#: apps/settings/src/ui/privacy.rs:141
 msgid "Automatically Delete Temporary Files"
 msgstr "Automatyczne usuwanie plików tymczasowych"
 
-#: apps/settings/src/ui/privacy.rs:147
+#: apps/settings/src/ui/privacy.rs:151
 msgid "Automatically Delete Period"
 msgstr "Okres automatycznego usuwania"
 
-#: apps/settings/src/ui/privacy.rs:157
+#: apps/settings/src/ui/privacy.rs:161
 msgid "Location Services"
 msgstr "Usługi położenia"
 
-#: apps/settings/src/ui/privacy.rs:158
+#: apps/settings/src/ui/privacy.rs:162
 msgid "Let apps determine your geographical location"
 msgstr "Zezwolenie programom na ustalanie położenia geograficznego"
 
-#: apps/settings/src/ui/privacy.rs:169
+#: apps/settings/src/ui/privacy.rs:173
 msgid "Allow apps to use the camera"
 msgstr "Zezwolenie programom na używanie kamery"
 
-#: apps/settings/src/ui/privacy.rs:177
+#: apps/settings/src/ui/privacy.rs:181
 msgid "Allow apps to use the microphone"
 msgstr "Zezwolenie programom na używanie mikrofonu"
 
-#: apps/settings/src/ui/privacy.rs:184
+#: apps/settings/src/ui/privacy.rs:188
 msgid "Agents"
 msgstr "Agenci"
 
-#: apps/settings/src/ui/privacy.rs:211
+#: apps/settings/src/ui/privacy.rs:215
 msgid "Diagnostics"
 msgstr "Diagnostyka"
 
-#: apps/settings/src/ui/privacy.rs:217
+#: apps/settings/src/ui/privacy.rs:221
 msgid "Automatic Problem Reporting"
 msgstr "Automatyczne zgłaszanie problemów"
 
-#: apps/settings/src/ui/privacy.rs:218
+#: apps/settings/src/ui/privacy.rs:222
 msgid "Send technical reports when problems occur"
 msgstr "Wysyłanie raportów technicznych w przypadku wystąpienia problemów"
 
@@ -17780,10 +18065,6 @@ msgstr "Wygasa: {d}"
 #: apps/web/src/window.rs:1920
 msgid "Problems: {list}"
 msgstr "Problemy: {list}"
-
-#: apps/web/src/window.rs:1948
-msgid "Denied"
-msgstr "Odmówiono"
 
 #: apps/web/src/window.rs:1954
 msgid "Reset {} Permission"

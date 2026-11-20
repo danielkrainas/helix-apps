@@ -6,7 +6,8 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use helix_app_common::i18n::n_;
+use helix_app_common::i18n::{n_, tr, tr_dyn};
+use helix_app_common::{trf, trnf};
 use zbus::blocking::Connection;
 use zbus::zvariant::OwnedValue;
 
@@ -214,23 +215,48 @@ pub fn watch(conn: &Connection, mut changed: impl FnMut() -> bool) {
 }
 
 /// One line of the activity log (`$XDG_STATE_HOME/helix/agent-activity/
-/// YYYY-MM-DD.jsonl`). The contract names what a line records; the key
-/// names are those `helix-agent log` reads. Missing keys are empty.
+/// YYYY-MM-DD.jsonl`, contract "Activity log"). Missing keys are empty
+/// (0); keys this version does not know are ignored, and so are lengths
+/// (`query-length` and the like), which say little to the user.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Entry {
     /// Unix seconds (0 when unreadable).
     pub time: i64,
     pub agent: String,
     pub name: String,
+    /// An `Agent1` method, an `AgentAccess1` one or an event.
     pub method: String,
     pub target: String,
     pub level: String,
     /// `allowed`, `refused:<error>` or `cancelled`.
     pub outcome: String,
+    /// An allowed call that then failed: the error's short name.
+    pub error: String,
+    /// Consent prompts: `session` or `always`.
+    pub grant: String,
+    /// Coalesced refusals: how many calls the line stands for (0 or 1
+    /// for one) and the last one's time.
+    pub count: u64,
+    pub until: i64,
+    /// `LogFull`: `refusals` or `all`.
+    pub dropped: String,
+}
+
+/// A time: Unix seconds, or ISO 8601 text (0 when unreadable).
+fn json_time(v: Option<&serde_json::Value>) -> i64 {
+    match v {
+        Some(serde_json::Value::Number(n)) => n.as_i64().unwrap_or(0),
+        Some(serde_json::Value::String(t)) => gtk::glib::DateTime::from_iso8601(t, None)
+            .map(|d| d.to_unix())
+            .unwrap_or(0),
+        _ => 0,
+    }
 }
 
 impl Entry {
-    fn from_json(v: &serde_json::Value) -> Option<Entry> {
+    /// From one line; `None` for one that is not a JSON object.
+    pub fn parse(line: &str) -> Option<Entry> {
+        let v = serde_json::from_str::<serde_json::Value>(line.trim()).ok()?;
         let obj = v.as_object()?;
         let s = |k: &str| {
             obj.get(k)
@@ -238,21 +264,19 @@ impl Entry {
                 .unwrap_or_default()
                 .to_string()
         };
-        let time = match obj.get("time") {
-            Some(serde_json::Value::Number(n)) => n.as_i64().unwrap_or(0),
-            Some(serde_json::Value::String(t)) => gtk::glib::DateTime::from_iso8601(t, None)
-                .map(|d| d.to_unix())
-                .unwrap_or(0),
-            _ => 0,
-        };
         Some(Entry {
-            time,
+            time: json_time(obj.get("time")),
             agent: s("agent"),
             name: s("name"),
             method: s("method"),
             target: s("target"),
             level: s("level"),
             outcome: s("outcome"),
+            error: s("error"),
+            grant: s("grant"),
+            count: obj.get("count").and_then(|v| v.as_u64()).unwrap_or(0),
+            until: json_time(obj.get("until")),
+            dropped: s("dropped"),
         })
     }
 
@@ -264,17 +288,235 @@ impl Entry {
             &self.name
         }
     }
+
+    /// The refusal's error name for `refused:<Error>`.
+    pub fn refusal(&self) -> Option<&str> {
+        match self.outcome.split_once(':') {
+            Some(("refused", why)) => Some(why),
+            _ if self.outcome == "refused" => Some(""),
+            _ => None,
+        }
+    }
+
+    /// The last call a coalesced line stands for, when it is one.
+    pub fn coalesced(&self) -> Option<(u64, i64)> {
+        (self.count >= 2).then_some((self.count, self.until.max(self.time)))
+    }
 }
 
-/// How an outcome is described: (untranslated label, error token for
-/// refusals).
-pub fn outcome_label(outcome: &str) -> (&'static str, Option<&str>) {
-    match outcome.split_once(':') {
-        Some(("refused", why)) => (n_("Refused"), Some(why)),
-        _ if outcome == "refused" => (n_("Refused"), None),
-        _ if outcome == "allowed" => (n_("Allowed"), None),
-        _ if outcome == "cancelled" => (n_("Cancelled"), None),
-        _ => (n_("Unknown"), None),
+/// The `AgentAccess1` methods (Settings' own; `target` is the agent).
+const SETTINGS_METHODS: [&str; 5] = ["ListAgents", "Revoke", "Forget", "StopAll", "ClearLog"];
+
+/// What a method or event did, as a short untranslated phrase (`None`
+/// for a name this version does not know). Every method of `Agent1` and
+/// `AgentAccess1`, and the log's events.
+pub fn method_label(method: &str) -> Option<&'static str> {
+    Some(match method {
+        // Agent1.
+        "GetStatus" => n_("Checked its access"),
+        "RequestAccess" => n_("Asked for access"),
+        "GetState" => n_("Read the desktop state"),
+        "ListWindows" => n_("Listed windows"),
+        "ListApps" => n_("Listed apps"),
+        "ListWorkspaces" => n_("Listed workspaces"),
+        "ListMonitors" => n_("Listed displays"),
+        "ListNotifications" => n_("Listed notifications"),
+        "RecentFiles" => n_("Listed recent files"),
+        "SearchFiles" => n_("Searched files"),
+        "WaitForWindow" => n_("Waited for a window"),
+        "WaitForWindowClosed" => n_("Waited for a window to close"),
+        "Ask" => n_("Asked you a question"),
+        "Confirm" => n_("Asked you to confirm"),
+        "AddReminder" => n_("Added a reminder"),
+        "ListReminders" => n_("Listed reminders"),
+        "CancelReminder" => n_("Cancelled a reminder"),
+        "Open" => n_("Opened a file or link"),
+        "Launch" => n_("Started an app"),
+        "WindowAction" => n_("Changed a window"),
+        "SwitchWorkspace" => n_("Switched workspace"),
+        "SetToggle" => n_("Turned a setting on or off"),
+        "SetValue" => n_("Adjusted a setting"),
+        "Notify" => n_("Sent a notification"),
+        "GetClipboard" => n_("Read the clipboard"),
+        "SetClipboard" => n_("Changed the clipboard"),
+        "A11yTree" => n_("Read an app’s contents"),
+        "A11yAction" => n_("Used a control in an app"),
+        "A11ySetValue" => n_("Filled in a field in an app"),
+        "Screenshot" => n_("Took a screenshot"),
+        "Input" => n_("Typed or clicked"),
+        // AgentAccess1, as Settings did it.
+        "ListAgents" => n_("Listed agents"),
+        "Revoke" => n_("Access revoked"),
+        "Forget" => n_("Access revoked and forgotten"),
+        "StopAll" => n_("All access revoked"),
+        "ClearLog" => n_("Activity log cleared"),
+        // Events.
+        "ConsentPrompt" => n_("Asked for access"),
+        "SensitivePrompt" => n_("Asked to confirm an action"),
+        "Stop" => n_("Stopped by you"),
+        "LogFull" => n_("Activity log full"),
+        _ => return None,
+    })
+}
+
+/// An `AgentAccess1` call that was refused (a program other than
+/// Settings tried it).
+pub fn settings_method_refused_label(method: &str) -> Option<&'static str> {
+    Some(match method {
+        "ListAgents" => n_("Tried to list agents"),
+        "Revoke" => n_("Tried to revoke access"),
+        "Forget" => n_("Tried to forget an agent"),
+        "StopAll" => n_("Tried to revoke all access"),
+        "ClearLog" => n_("Tried to clear the activity log"),
+        _ => return None,
+    })
+}
+
+/// Why the policy refused a call (`refused:<Error>`), untranslated.
+pub fn refusal_label(error: &str) -> Option<&'static str> {
+    Some(match error {
+        "Sandboxed" => n_("From a sandboxed app"),
+        "AccessOff" => n_("Agent Access was off"),
+        "Remote" => n_("From a remote session"),
+        "Locked" => n_("The screen was locked"),
+        "LevelTooLow" => n_("Needs a higher access level"),
+        "FeatureOff" => n_("That feature was turned off"),
+        "NotGranted" => n_("Not allowed yet"),
+        "DeniedByUser" => n_("Denied by you"),
+        "Excluded" => n_("Excluded app"),
+        "NeedsConfirmation" => n_("Needed your confirmation"),
+        "AccessDenied" => n_("Only Settings may do this"),
+        _ => return None,
+    })
+}
+
+/// How an allowed call then failed (`error`), untranslated.
+pub fn failure_label(error: &str) -> Option<&'static str> {
+    Some(match error {
+        "TimedOut" => n_("Failed: timed out"),
+        "NotFound" => n_("Failed: not found"),
+        "NotSupported" => n_("Failed: not supported"),
+        "InvalidArgs" => n_("Failed: invalid request"),
+        "Cancelled" => n_("Failed: cancelled"),
+        "Failed" => n_("Failed"),
+        _ => return None,
+    })
+}
+
+/// A log line as the page shows it, translated: what happened, what it
+/// was done to, who did it, and how it went.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Described {
+    pub title: String,
+    /// Empty for none.
+    pub target: String,
+    /// Empty for none (`LogFull`).
+    pub who: String,
+    pub status: Vec<String>,
+}
+
+/// A target for people: a window by its app, a `file://` URI as a path;
+/// a `SensitivePrompt`'s method by what it does.
+pub fn target_label(method: &str, target: &str) -> String {
+    if method == "SensitivePrompt" {
+        return method_label(target).map_or_else(|| target.to_string(), tr_dyn);
+    }
+    if let Some(window) = target.strip_prefix("window:") {
+        return match window.split_once(" (") {
+            Some((_, app)) if app.ends_with(')') && app.len() > 1 => {
+                trf!("A window of {app}", app = &app[..app.len() - 1])
+            }
+            _ => tr("A window").to_string(),
+        };
+    }
+    if target.starts_with("file://") {
+        if let Ok((path, _)) = gtk::glib::filename_from_uri(target) {
+            return path.display().to_string();
+        }
+    }
+    target.to_string()
+}
+
+/// Describes `e` (contract "Activity log": lines, outcomes and events).
+pub fn describe(e: &Entry) -> Described {
+    let method = e.method.as_str();
+    let raw = |s: &str| s.to_string();
+    let settings = SETTINGS_METHODS.contains(&method);
+    let refusal = e.refusal();
+    let title = match (settings && refusal.is_some())
+        .then(|| settings_method_refused_label(method))
+        .flatten()
+        .or_else(|| method_label(method))
+    {
+        Some(t) => tr_dyn(t),
+        None => raw(method),
+    };
+    let who = if settings && e.outcome == "allowed" {
+        tr("Settings").to_string()
+    } else {
+        raw(e.who())
+    };
+    let reason = |why: &str| match refusal_label(why) {
+        Some(t) => tr_dyn(t),
+        None => raw(why),
+    };
+    let mut status: Vec<String> = Vec::new();
+    match (method, e.outcome.as_str()) {
+        ("ConsentPrompt", outcome) => {
+            if let Some(level) = level_label(&e.level) {
+                status.push(tr_dyn(level));
+            }
+            status.push(match (outcome, e.grant.as_str()) {
+                ("allowed", "session") => tr("Allowed for this session").to_string(),
+                ("allowed", "always") => tr("Always allowed").to_string(),
+                ("allowed", _) => tr("Allowed").to_string(),
+                ("refused:DeniedByUser", _) => tr("Denied").to_string(),
+                ("cancelled", _) => tr("Not answered").to_string(),
+                _ => raw(outcome),
+            });
+        }
+        ("SensitivePrompt", outcome) => status.push(match outcome {
+            "allowed" => tr("Allowed").to_string(),
+            "refused:DeniedByUser" => tr("Denied").to_string(),
+            "cancelled" => tr("Not answered").to_string(),
+            _ => raw(outcome),
+        }),
+        // The title says it all.
+        ("Stop", "cancelled") => {}
+        ("LogFull", _) => match e.dropped.as_str() {
+            "refusals" => status.push(tr("Refused calls are no longer recorded today").to_string()),
+            "all" => status.push(tr("Nothing more is recorded today").to_string()),
+            _ => {}
+        },
+        (_, "allowed") if settings => {}
+        (_, "allowed") => {
+            status.push(tr("Allowed").to_string());
+            if !e.error.is_empty() {
+                status.push(match failure_label(&e.error) {
+                    Some(t) => tr_dyn(t),
+                    None => trf!("Failed: {error}", error = e.error),
+                });
+            }
+        }
+        (_, "cancelled") => status.push(tr("Cancelled").to_string()),
+        (_, outcome) => match refusal {
+            Some(why) => {
+                status.push(match e.coalesced() {
+                    Some((n, _)) => trnf!("Refused {n} time", "Refused {n} times", n),
+                    None => tr("Refused").to_string(),
+                });
+                if !why.is_empty() {
+                    status.push(reason(why));
+                }
+            }
+            None => status.push(raw(outcome)),
+        },
+    }
+    Described {
+        title,
+        target: target_label(method, &e.target),
+        who,
+        status,
     }
 }
 
@@ -300,8 +542,7 @@ pub fn read_log(dir: &Path, limit: usize) -> (Vec<Entry>, bool) {
         let mut of_day: Vec<Entry> = text
             .lines()
             .filter(|l| !l.trim().is_empty())
-            .filter_map(|l| serde_json::from_str::<serde_json::Value>(l).ok())
-            .filter_map(|v| Entry::from_json(&v))
+            .filter_map(Entry::parse)
             .collect();
         of_day.sort_by_key(|e| std::cmp::Reverse(e.time));
         for e in of_day {
@@ -450,15 +691,348 @@ pub mod tests {
         assert_eq!(ids, ["/c", "/a", "/b"]);
     }
 
+    /// Every method of the contract's interfaces
+    /// (`contracts/agent-access/*.xml`) and the log's events.
+    const METHODS: [&str; 36] = [
+        "GetStatus",
+        "RequestAccess",
+        "GetState",
+        "ListWindows",
+        "ListApps",
+        "ListWorkspaces",
+        "ListMonitors",
+        "ListNotifications",
+        "RecentFiles",
+        "SearchFiles",
+        "WaitForWindow",
+        "WaitForWindowClosed",
+        "Ask",
+        "Confirm",
+        "AddReminder",
+        "ListReminders",
+        "CancelReminder",
+        "Open",
+        "Launch",
+        "WindowAction",
+        "SwitchWorkspace",
+        "SetToggle",
+        "SetValue",
+        "Notify",
+        "GetClipboard",
+        "SetClipboard",
+        "A11yTree",
+        "A11yAction",
+        "A11ySetValue",
+        "Screenshot",
+        "Input",
+        "ListAgents",
+        "Revoke",
+        "Forget",
+        "StopAll",
+        "ClearLog",
+    ];
+    const EVENTS: [&str; 4] = ["ConsentPrompt", "SensitivePrompt", "Stop", "LogFull"];
+
     #[test]
-    fn outcomes_and_times() {
-        assert_eq!(outcome_label("allowed"), ("Allowed", None));
+    fn every_method_and_event_has_a_label() {
+        for m in METHODS.iter().chain(&EVENTS) {
+            let label = method_label(m).unwrap_or_else(|| panic!("{m}"));
+            assert_ne!(label, *m, "{m}: a phrase, not the name");
+        }
+        // The contract's XML, when it is next to this repository.
+        let spec = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../helix-desktop-spec/contracts/agent-access");
+        for file in [
+            "org.helixdesktop.Agent1.xml",
+            "org.helixdesktop.AgentAccess1.xml",
+        ] {
+            let Ok(xml) = std::fs::read_to_string(spec.join(file)) else {
+                continue;
+            };
+            for part in xml.split("<method name=\"").skip(1) {
+                let name = part.split('"').next().unwrap();
+                assert!(METHODS.contains(&name), "{name} from {file}");
+            }
+        }
+        for m in SETTINGS_METHODS {
+            assert!(settings_method_refused_label(m).is_some(), "{m}");
+        }
+        assert_eq!(method_label("FutureMethod"), None);
+        assert_eq!(method_label("ListWindows"), Some("Listed windows"));
+        assert_eq!(method_label("SearchFiles"), Some("Searched files"));
+        assert_eq!(method_label("Stop"), Some("Stopped by you"));
+        assert_eq!(method_label("Revoke"), Some("Access revoked"));
+        for why in [
+            "Sandboxed",
+            "AccessOff",
+            "Remote",
+            "Locked",
+            "LevelTooLow",
+            "FeatureOff",
+            "NotGranted",
+            "DeniedByUser",
+            "Excluded",
+            "NeedsConfirmation",
+            "AccessDenied",
+        ] {
+            assert!(refusal_label(why).is_some(), "{why}");
+        }
+        assert_eq!(refusal_label("Later"), None);
+        for error in [
+            "TimedOut",
+            "NotFound",
+            "NotSupported",
+            "Failed",
+            "InvalidArgs",
+        ] {
+            assert!(failure_label(error).is_some(), "{error}");
+        }
+        assert_eq!(failure_label("TimedOut"), Some("Failed: timed out"));
+        assert_eq!(failure_label("Later"), None);
+    }
+
+    fn shown(line: &str) -> (String, String, String, String) {
+        let d = describe(&Entry::parse(line).expect(line));
+        (d.title, d.target, d.who, d.status.join(" · "))
+    }
+
+    fn four(a: &str, b: &str, c: &str, d: &str) -> (String, String, String, String) {
+        (a.into(), b.into(), c.into(), d.into())
+    }
+
+    #[test]
+    fn the_contracts_example_lines() {
+        let e = Entry::parse(r#"{"time":1795082400,"agent":"/usr/bin/node /home/me/agent.js","name":"Example","method":"ListWindows","target":"org.gnome.TextEditor","level":"read-only","outcome":"allowed"}"#).unwrap();
         assert_eq!(
-            outcome_label("refused:LevelTooLow"),
-            ("Refused", Some("LevelTooLow"))
+            (e.time, e.level.as_str(), e.count),
+            (1795082400, "read-only", 0)
         );
-        assert_eq!(outcome_label("cancelled"), ("Cancelled", None));
-        assert_eq!(outcome_label("odd"), ("Unknown", None));
+        assert_eq!(e.coalesced(), None);
+        assert_eq!(
+            describe(&e),
+            Described {
+                title: "Listed windows".into(),
+                target: "org.gnome.TextEditor".into(),
+                who: "Example".into(),
+                status: vec!["Allowed".into()],
+            }
+        );
+        // Lengths are not shown.
+        assert_eq!(
+            shown(
+                r#"{"time":1795082410,"agent":"/usr/bin/node /home/me/agent.js","name":"Example","method":"SearchFiles","target":"file:///home/me","level":"read-only","outcome":"allowed","query-length":6}"#
+            ),
+            four("Searched files", "/home/me", "Example", "Allowed")
+        );
+        assert_eq!(
+            shown(
+                r#"{"time":1795082420,"agent":"/usr/bin/node /home/me/agent.js","name":"Example","method":"WaitForWindowClosed","target":"window:21 (org.example.Vault)","level":"read-only","outcome":"refused:Excluded"}"#
+            ),
+            four(
+                "Waited for a window to close",
+                "A window of org.example.Vault",
+                "Example",
+                "Refused · Excluded app"
+            )
+        );
+        assert_eq!(
+            shown(
+                r#"{"time":1795082430,"agent":"/usr/bin/node /home/me/agent.js","name":"Example","method":"WaitForWindow","level":"read-only","outcome":"allowed","error":"TimedOut","title-length":5}"#
+            ),
+            four(
+                "Waited for a window",
+                "",
+                "Example",
+                "Allowed · Failed: timed out"
+            )
+        );
+        assert_eq!(
+            shown(
+                r#"{"time":1795082440,"agent":"/usr/bin/node /home/me/agent.js","name":"Example","method":"ConsentPrompt","level":"read-only","outcome":"allowed","grant":"session"}"#
+            ),
+            four(
+                "Asked for access",
+                "",
+                "Example",
+                "Read Only · Allowed for this session"
+            )
+        );
+        let line = r#"{"time":1795082501,"agent":"/opt/bot","name":"","method":"GetState","level":"read-only","outcome":"refused:AccessOff","count":120,"until":1795082559}"#;
+        assert_eq!(
+            Entry::parse(line).unwrap().coalesced(),
+            Some((120, 1795082559))
+        );
+        assert_eq!(
+            shown(line),
+            four(
+                "Read the desktop state",
+                "",
+                "/opt/bot",
+                "Refused 120 times · Agent Access was off"
+            )
+        );
+    }
+
+    #[test]
+    fn other_line_shapes() {
+        let line =
+            |rest: &str| format!(r#"{{"time":1795082400,"agent":"/opt/bot","name":"Bot",{rest}}}"#);
+        // Consent prompts.
+        assert_eq!(
+            shown(&line(
+                r#""method":"ConsentPrompt","level":"desktop","outcome":"allowed","grant":"always""#
+            ))
+            .3,
+            "Control the Desktop · Always allowed"
+        );
+        assert_eq!(
+            shown(&line(
+                r#""method":"ConsentPrompt","level":"read-only","outcome":"refused:DeniedByUser""#
+            ))
+            .3,
+            "Read Only · Denied"
+        );
+        assert_eq!(
+            shown(&line(r#""method":"ConsentPrompt","outcome":"cancelled""#)).3,
+            "Not answered"
+        );
+        // Sensitive-action prompts name the method by what it does.
+        assert_eq!(
+            shown(&line(
+                r#""method":"SensitivePrompt","target":"Open","outcome":"refused:DeniedByUser""#
+            )),
+            four(
+                "Asked to confirm an action",
+                "Opened a file or link",
+                "Bot",
+                "Denied"
+            )
+        );
+        assert_eq!(
+            shown(&line(
+                r#""method":"SensitivePrompt","target":"Later","outcome":"allowed""#
+            ))
+            .1,
+            "Later"
+        );
+        assert_eq!(
+            shown(&line(
+                r#""method":"Stop","level":"apps","outcome":"cancelled""#
+            )),
+            four("Stopped by you", "", "Bot", "")
+        );
+        assert_eq!(
+            shown(
+                r#"{"time":1795082400,"agent":"","name":"","method":"LogFull","outcome":"allowed","dropped":"refusals"}"#
+            ),
+            four(
+                "Activity log full",
+                "",
+                "",
+                "Refused calls are no longer recorded today"
+            )
+        );
+        assert_eq!(
+            shown(r#"{"time":1795082400,"agent":"","name":"","method":"LogFull","outcome":"allowed","dropped":"all"}"#).3,
+            "Nothing more is recorded today"
+        );
+        // Settings' own calls.
+        let settings = r#"{"time":1795082400,"agent":"/usr/bin/helix-settings-app","name":"","#;
+        assert_eq!(
+            shown(&format!(
+                r#"{settings}"method":"ClearLog","outcome":"allowed"}}"#
+            )),
+            four("Activity log cleared", "", "Settings", "")
+        );
+        assert_eq!(
+            shown(&format!(
+                r#"{settings}"method":"Revoke","target":"/opt/bot","outcome":"allowed"}}"#
+            )),
+            four("Access revoked", "/opt/bot", "Settings", "")
+        );
+        assert_eq!(
+            shown(&format!(
+                r#"{settings}"method":"Forget","target":"/opt/bot","outcome":"allowed"}}"#
+            ))
+            .0,
+            "Access revoked and forgotten"
+        );
+        assert_eq!(
+            shown(&format!(
+                r#"{settings}"method":"StopAll","outcome":"allowed"}}"#
+            ))
+            .0,
+            "All access revoked"
+        );
+        // Another program trying.
+        assert_eq!(
+            shown(&line(
+                r#""method":"ClearLog","outcome":"refused:AccessDenied""#
+            )),
+            four(
+                "Tried to clear the activity log",
+                "",
+                "Bot",
+                "Refused · Only Settings may do this"
+            )
+        );
+        // Failures and refusals this version does not know, unknown
+        // methods and outcomes: the raw names.
+        assert_eq!(
+            shown(&line(
+                r#""method":"Open","target":"file:///tmp/a%20b","outcome":"allowed","error":"Busy""#
+            )),
+            four(
+                "Opened a file or link",
+                "/tmp/a b",
+                "Bot",
+                "Allowed · Failed: Busy"
+            )
+        );
+        assert_eq!(
+            shown(&line(
+                r#""method":"Teleport","outcome":"refused:TooFar","count":1"#
+            )),
+            four("Teleport", "", "Bot", "Refused · TooFar")
+        );
+        assert_eq!(
+            shown(&line(r#""method":"Open","outcome":"refused""#)).3,
+            "Refused"
+        );
+        assert_eq!(
+            shown(&line(r#""method":"Open","outcome":"maybe""#)).3,
+            "maybe"
+        );
+        assert_eq!(
+            shown(&line(r#""method":"Ask","outcome":"cancelled""#)).3,
+            "Cancelled"
+        );
+        assert_eq!(
+            shown(&line(
+                r#""method":"WindowAction","target":"window:7","outcome":"allowed""#
+            ))
+            .1,
+            "A window"
+        );
+        // No name: the agent id.
+        assert_eq!(
+            shown(r#"{"time":1,"agent":"/usr/bin/foot","method":"ListApps","outcome":"allowed"}"#)
+                .2,
+            "/usr/bin/foot"
+        );
+        // Tolerance: other types, unknown keys, ISO times.
+        let e = Entry::parse(r#"{"time":"2026-11-19T10:00:00Z","method":7,"count":"x","until":"2026-11-19T10:00:30Z","new":{"a":1}}"#).unwrap();
+        assert_eq!((e.time, e.until, e.count), (1795082400, 1795082430, 0));
+        assert_eq!(e.method, "");
+        assert_eq!(Entry::parse("[1,2]"), None);
+        assert_eq!(Entry::parse("{\"time\":1"), None);
+        // A coalesced line's end is never before its start.
+        let e = Entry::parse(r#"{"time":100,"count":3}"#).unwrap();
+        assert_eq!(e.coalesced(), Some((3, 100)));
+    }
+
+    #[test]
+    fn times() {
         assert_eq!(ago(100, 0), None);
         assert_eq!(ago(100, 90), Some((0, 's')));
         assert_eq!(ago(1000, 100), Some((15, 'm')));
