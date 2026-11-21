@@ -321,7 +321,7 @@ pub struct App {
     /// Shown during the first scan, with a running count.
     pub scanning_page: adw::StatusPage,
     /// In the header while a later scan runs.
-    pub scan_spinner: adw::Spinner,
+    pub scan_spinner: gtk::Spinner,
     pub search_bar: gtk::SearchBar,
     pub search_entry: gtk::SearchEntry,
     pub search_box: gtk::Box,
@@ -576,14 +576,16 @@ impl App {
         let scanning_page = adw::StatusPage::builder()
             .title(tr("Scanning Library…"))
             .build();
-        let spinner = adw::Spinner::builder()
+        let spinner = gtk::Spinner::builder()
+            .spinning(true)
             .width_request(32)
             .height_request(32)
             .halign(gtk::Align::Center)
             .build();
         scanning_page.set_child(Some(&spinner));
         // Later scans run in the background: a spinner in the header.
-        let scan_spinner = adw::Spinner::builder()
+        let scan_spinner = gtk::Spinner::builder()
+            .spinning(true)
             .visible(false)
             .tooltip_text(tr("Scanning Library…"))
             .build()
