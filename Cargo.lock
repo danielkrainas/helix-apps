@@ -1236,7 +1236,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "helix-app-common"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "gettext-rs",
  "gio",
@@ -1247,7 +1247,7 @@ dependencies = [
 
 [[package]]
 name = "helix-audio-player"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gstreamer",
@@ -1261,7 +1261,7 @@ dependencies = [
 
 [[package]]
 name = "helix-calculator"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "gtk4",
  "helix-app-common",
@@ -1272,7 +1272,7 @@ dependencies = [
 
 [[package]]
 name = "helix-calendar"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "chrono",
@@ -1285,7 +1285,7 @@ dependencies = [
 
 [[package]]
 name = "helix-camera"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gio",
@@ -1305,7 +1305,7 @@ dependencies = [
 
 [[package]]
 name = "helix-characters"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "emojis",
  "gtk4",
@@ -1317,7 +1317,7 @@ dependencies = [
 
 [[package]]
 name = "helix-clocks"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -1331,7 +1331,7 @@ dependencies = [
 
 [[package]]
 name = "helix-contacts"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gtk4",
@@ -1344,7 +1344,7 @@ dependencies = [
 
 [[package]]
 name = "helix-disk-usage"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "gtk4",
  "helix-app-common",
@@ -1358,7 +1358,7 @@ dependencies = [
 
 [[package]]
 name = "helix-disks"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gtk4",
@@ -1372,7 +1372,7 @@ dependencies = [
 
 [[package]]
 name = "helix-document-scanner"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "flate2",
@@ -1388,7 +1388,7 @@ dependencies = [
 
 [[package]]
 name = "helix-document-viewer"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "cairo-rs",
@@ -1403,7 +1403,7 @@ dependencies = [
 
 [[package]]
 name = "helix-eds"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "base64",
@@ -1417,7 +1417,7 @@ dependencies = [
 
 [[package]]
 name = "helix-files"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gtk4",
@@ -1428,7 +1428,7 @@ dependencies = [
 
 [[package]]
 name = "helix-fonts"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "gtk4",
  "helix-app-common",
@@ -1442,7 +1442,7 @@ dependencies = [
 
 [[package]]
 name = "helix-help"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "gtk4",
  "helix-app-common",
@@ -1454,7 +1454,7 @@ dependencies = [
 
 [[package]]
 name = "helix-image-viewer"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gtk4",
@@ -1469,7 +1469,7 @@ dependencies = [
 
 [[package]]
 name = "helix-logs"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gtk4",
@@ -1481,7 +1481,7 @@ dependencies = [
 
 [[package]]
 name = "helix-maps"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gtk4",
@@ -1497,7 +1497,7 @@ dependencies = [
 
 [[package]]
 name = "helix-music"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gio",
@@ -1517,7 +1517,7 @@ dependencies = [
 
 [[package]]
 name = "helix-screenshot"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "gtk4",
  "helix-app-common",
@@ -1529,7 +1529,7 @@ dependencies = [
 
 [[package]]
 name = "helix-settings-app"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gtk4",
@@ -1545,7 +1545,7 @@ dependencies = [
 
 [[package]]
 name = "helix-system-monitor"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gtk4",
@@ -1557,7 +1557,7 @@ dependencies = [
 
 [[package]]
 name = "helix-terminal"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "gtk4",
  "helix-app-common",
@@ -1568,14 +1568,14 @@ dependencies = [
 
 [[package]]
 name = "helix-test-audio"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "serde_json",
 ]
 
 [[package]]
 name = "helix-test-ime"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "glib",
  "gtk4",
@@ -1588,7 +1588,7 @@ dependencies = [
 
 [[package]]
 name = "helix-text-editor"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "chardetng",
  "encoding_rs",
@@ -1602,7 +1602,7 @@ dependencies = [
 
 [[package]]
 name = "helix-tour"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "gtk4",
  "helix-app-common",
@@ -1613,7 +1613,7 @@ dependencies = [
 
 [[package]]
 name = "helix-video-player"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "gstreamer",
@@ -1631,7 +1631,7 @@ dependencies = [
 
 [[package]]
 name = "helix-weather"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "gtk4",
  "helix-app-common",
@@ -1646,7 +1646,7 @@ dependencies = [
 
 [[package]]
 name = "helix-web"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "aes",
  "cbc",

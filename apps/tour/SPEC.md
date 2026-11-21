@@ -82,7 +82,7 @@ Welcome and feature tour for new users.
 
 ### First-run state
 - Stored as JSON at `$XDG_CONFIG_HOME/helix-tour/state.json`:
-  `{"completed": true, "outcome": "completed"|"skipped", "version": "0.1.0"}`.
+  `{"completed": true, "outcome": "completed"|"skipped", "version": "0.8.0"}`.
   `version` is the **last-seen version**: the helix-tour/Helix version that
   was running when the tour last ended (any outcome).
 - Finishing the tour (Close on the last page) records `completed`;
