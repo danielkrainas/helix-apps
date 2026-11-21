@@ -48,5 +48,11 @@ done
 rc=$?
 kill $PIDS 2>/dev/null
 wait 2>/dev/null
+if [ $rc -ne 0 ]; then
+    # What the daemons said (a crashed or refused daemon shows up here).
+    for log in "$S"/registry.log "$S"/addressbook.log "$S"/calendar.log; do
+        echo "--- ${log##*/}"; tail -n 40 "$log"
+    done
+fi
 rm -rf "$S"
 exit $rc
