@@ -13,6 +13,24 @@ These apps are intended as a drop-in replacement for the GNOME core application 
 
 The core desktop (session, compositor, shell, portals) lives in [helixdesktop/desktop](https://github.com/helixdesktop/desktop). The living specification lives in [helixdesktop/spec](https://github.com/helixdesktop/spec).
 
+## Installing
+
+The apps are installed with the desktop: add Helix's package repository
+and install `helix-desktop-full`, which pulls in `helix-apps` (see
+[Installing and using Helix](https://github.com/helixdesktop/desktop#installing-and-using-helix)).
+To install only the apps, for example to use them under GNOME, add the
+repository the same way and install `helix-apps`:
+
+```sh
+sudo apt install helix-apps      # Debian and Ubuntu
+sudo dnf install helix-apps      # Fedora and RHEL
+sudo pacman -Syu helix-apps      # Arch Linux
+```
+
+The repository, [packages.dakr.io/helix](https://packages.dakr.io/helix/),
+serves the packages of every [release](https://github.com/helixdesktop/apps/releases);
+they can also be downloaded from there and installed by hand.
+
 ## Target suite
 
 The list below matches the current GNOME core apps (as published on apps.gnome.org). Each entry is a candidate for a Helix implementation.
@@ -95,7 +113,9 @@ development packages. `.github/workflows/ci.yml` lists the Ubuntu names.
 - **Release** (`.github/workflows/release.yml`): a `vX.Y.Z` tag that matches
   the workspace version builds the `helix-apps` package as .deb, .rpm and
   tarball (x86_64, aarch64) and as an Arch Linux package (x86_64), and
-  publishes them as a GitHub release.
+  publishes them as a GitHub release. The package repository at
+  [packages.dakr.io/helix](https://packages.dakr.io/helix/) (omnirelease,
+  group `helix`) serves them to apt, dnf and pacman from there.
 - **Installed layout** (`packaging/stage.sh`):
   - binaries in `/usr/bin`, plus System Monitor's privileged helper in
     `/usr/libexec/helix-system-monitor/`;
