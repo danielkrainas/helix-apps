@@ -2368,7 +2368,7 @@ msgid "Countdown cancelled"
 msgstr ""
 
 #: apps/camera/src/ui.rs:859 apps/files/src/ui/dialogs.rs:455
-#: apps/files/src/ui/sidebar.rs:564 apps/files/src/ui/window.rs:1633
+#: apps/files/src/ui/sidebar.rs:564 apps/files/src/ui/window.rs:1665
 #: apps/help/src/ui.rs:197 apps/text-editor/src/window.rs:131
 msgid "_Open"
 msgstr ""
@@ -5349,7 +5349,8 @@ msgid "Delete Partition?"
 msgstr ""
 
 #: apps/disks/src/ui.rs:1594 apps/document-scanner/src/ui.rs:228
-#: apps/files/src/ui/window.rs:1446 apps/music/src/pages.rs:2318
+#: apps/files/src/ui/window.rs:1393 apps/files/src/ui/window.rs:1478
+#: apps/music/src/pages.rs:2318
 msgid "_Delete"
 msgstr ""
 
@@ -5966,7 +5967,7 @@ msgid "_Crop"
 msgstr ""
 
 #: apps/document-scanner/src/ui.rs:227 apps/document-viewer/src/ui.rs:920
-#: apps/files/src/ui/window.rs:1659 apps/image-viewer/src/ui.rs:305
+#: apps/files/src/ui/window.rs:1691 apps/image-viewer/src/ui.rs:305
 #: apps/image-viewer/src/ui.rs:784 apps/terminal/src/window.rs:738
 msgid "_Copy"
 msgstr ""
@@ -6678,8 +6679,8 @@ msgstr ""
 msgid "Caret navigation off"
 msgstr ""
 
-#: apps/document-viewer/src/ui.rs:921 apps/files/src/ui/window.rs:1685
-#: apps/files/src/ui/window.rs:1692 apps/files/src/ui/window.rs:1701
+#: apps/document-viewer/src/ui.rs:921 apps/files/src/ui/window.rs:1717
+#: apps/files/src/ui/window.rs:1724 apps/files/src/ui/window.rs:1733
 #: apps/terminal/src/window.rs:740
 msgid "Select _All"
 msgstr ""
@@ -6878,72 +6879,72 @@ msgstr ""
 msgid "Trash"
 msgstr ""
 
-#: apps/files/src/ops.rs:265
+#: apps/files/src/ops.rs:268
 msgid "Could not replace “{file}”: {error}"
 msgstr ""
 
-#: apps/files/src/ops.rs:270
+#: apps/files/src/ops.rs:273
 msgid "Could not move “{file}”: {error}"
 msgstr ""
 
-#: apps/files/src/ops.rs:275
+#: apps/files/src/ops.rs:278
 msgid "Could not read “{file}”: {error}"
 msgstr ""
 
-#: apps/files/src/ops.rs:280
+#: apps/files/src/ops.rs:283
 msgid "Could not remove “{file}”: {error}"
 msgstr ""
 
-#: apps/files/src/ops.rs:285
+#: apps/files/src/ops.rs:288
 msgid "Could not link to “{file}”: {error}"
 msgstr ""
 
-#: apps/files/src/ops.rs:290
+#: apps/files/src/ops.rs:293
 msgid "Could not move “{file}” to the Trash: {error}"
 msgstr ""
 
-#: apps/files/src/ops.rs:295
+#: apps/files/src/ops.rs:298
 msgid "Could not delete “{file}”: {error}"
 msgstr ""
 
-#: apps/files/src/ops.rs:300
+#: apps/files/src/ops.rs:303
 msgid "Could not restore “{file}”: {error}"
 msgstr ""
 
-#: apps/files/src/ops.rs:305
+#: apps/files/src/ops.rs:308
 msgid "Could not empty “{file}”: {error}"
 msgstr ""
 
-#: apps/files/src/ops.rs:310
+#: apps/files/src/ops.rs:313
 msgid "Could not process “{file}”: {error}"
 msgstr ""
 
-#: apps/files/src/ops.rs:367 apps/screenshot/src/shell.rs:79
+#: apps/files/src/ops.rs:370 apps/screenshot/src/shell.rs:79
 #: apps/settings/src/agents.rs:1202 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr ""
 
-#: apps/files/src/ops.rs:389
+#: apps/files/src/ops.rs:392
 msgid "“{}” no longer exists"
 msgstr ""
 
-#: apps/files/src/ops.rs:395
+#: apps/files/src/ops.rs:398
 msgid "Cannot move “{}” into itself"
 msgstr ""
 
-#: apps/files/src/ops.rs:397
+#: apps/files/src/ops.rs:400
 msgid "Cannot copy “{}” into itself"
 msgstr ""
 
-#: apps/files/src/ops.rs:587
+#: apps/files/src/ops.rs:590
 msgid "Cannot create a link to “{}”: not a local file"
 msgstr ""
 
-#: apps/files/src/ops.rs:661
+#: apps/files/src/ops.rs:669
 msgid "“{}” has no original location"
 msgstr ""
 
-#: apps/files/src/ops.rs:720
+#: apps/files/src/ops.rs:728
 msgid "{n} item could not be found in the Trash"
 msgid_plural "{n} items could not be found in the Trash"
 msgstr[0] ""
@@ -7452,7 +7453,7 @@ msgstr ""
 msgid "Open in New Tab"
 msgstr ""
 
-#: apps/files/src/ui/shortcuts.rs:58 apps/files/src/ui/window.rs:1564
+#: apps/files/src/ui/shortcuts.rs:58 apps/files/src/ui/window.rs:1596
 msgid "New Folder"
 msgstr ""
 
@@ -7494,15 +7495,15 @@ msgstr ""
 msgid "Unmount {name}"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:565 apps/files/src/ui/window.rs:1635
+#: apps/files/src/ui/sidebar.rs:565 apps/files/src/ui/window.rs:1667
 msgid "Open in New _Tab"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:566 apps/files/src/ui/window.rs:1636
+#: apps/files/src/ui/sidebar.rs:566 apps/files/src/ui/window.rs:1668
 msgid "Open in New _Window"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:571 apps/files/src/ui/window.rs:1665
+#: apps/files/src/ui/sidebar.rs:571 apps/files/src/ui/window.rs:1697
 msgid "Rena_me…"
 msgstr ""
 
@@ -7518,18 +7519,18 @@ msgstr ""
 msgid "_Unmount"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:581 apps/files/src/ui/window.rs:1691
+#: apps/files/src/ui/sidebar.rs:581 apps/files/src/ui/window.rs:1723
 msgid "_Empty Trash…"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:586 apps/files/src/ui/window.rs:1628
-#: apps/files/src/ui/window.rs:1676 apps/files/src/ui/window.rs:1706
+#: apps/files/src/ui/sidebar.rs:586 apps/files/src/ui/window.rs:1660
+#: apps/files/src/ui/window.rs:1708 apps/files/src/ui/window.rs:1738
 #: apps/system-monitor/src/proc_view.rs:156
 msgid "_Properties"
 msgstr ""
 
 #: apps/files/src/ui/sidebar.rs:650 apps/files/src/ui/sidebar.rs:695
-#: apps/files/src/ui/window.rs:1603
+#: apps/files/src/ui/window.rs:1635
 msgid "Could not save bookmarks: {e}"
 msgstr ""
 
@@ -7541,7 +7542,7 @@ msgstr ""
 msgid "Rename Bookmark"
 msgstr ""
 
-#: apps/files/src/ui/sidebar.rs:684 apps/files/src/ui/window.rs:1520
+#: apps/files/src/ui/sidebar.rs:684 apps/files/src/ui/window.rs:1552
 #: apps/music/src/pages.rs:2131
 msgid "_Rename"
 msgstr ""
@@ -7666,7 +7667,7 @@ msgstr ""
 msgid "_Reset Size"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:259 apps/files/src/ui/window.rs:1705
+#: apps/files/src/ui/window.rs:259 apps/files/src/ui/window.rs:1737
 msgid "Show _Hidden Files"
 msgstr ""
 
@@ -7749,127 +7750,143 @@ msgid_plural "{n} items moved to Trash"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/files/src/ui/window.rs:1431
+#: apps/files/src/ui/window.rs:1378
+msgid "“{}” Can’t Be Put in the Trash"
+msgstr ""
+
+#: apps/files/src/ui/window.rs:1383
+msgid "{n} Item Can’t Be Put in the Trash"
+msgid_plural "{n} Items Can’t Be Put in the Trash"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/files/src/ui/window.rs:1392
+msgid ""
+"This location has no Trash. Delete permanently instead? Deleted items will "
+"be permanently lost."
+msgstr ""
+
+#: apps/files/src/ui/window.rs:1463
 msgid "Permanently Delete “{}”?"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1436
+#: apps/files/src/ui/window.rs:1468
 msgid "Permanently Delete {n} Item?"
 msgid_plural "Permanently Delete {n} Items?"
 msgstr[0] ""
 msgstr[1] ""
 
-#: apps/files/src/ui/window.rs:1445
+#: apps/files/src/ui/window.rs:1477
 msgid "If you delete an item, it will be permanently lost."
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1459
+#: apps/files/src/ui/window.rs:1491
 msgid "Empty Trash?"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1460
+#: apps/files/src/ui/window.rs:1492
 msgid "All items in the Trash will be permanently deleted."
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1461
+#: apps/files/src/ui/window.rs:1493
 msgid "_Empty Trash"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1472
+#: apps/files/src/ui/window.rs:1504
 msgid "Nothing to undo"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1489
+#: apps/files/src/ui/window.rs:1521
 msgid "Could not undo rename: {}"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1516
+#: apps/files/src/ui/window.rs:1548
 msgid "Rename Folder"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1518
+#: apps/files/src/ui/window.rs:1550
 msgid "Rename File"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1545
+#: apps/files/src/ui/window.rs:1577
 msgid "Could not rename: {}"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1565 apps/music/src/pages.rs:2133
+#: apps/files/src/ui/window.rs:1597 apps/music/src/pages.rs:2133
 msgid "_Create"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1576
+#: apps/files/src/ui/window.rs:1608
 msgid "Could not create folder: {}"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1597
+#: apps/files/src/ui/window.rs:1629
 msgid "Location is already bookmarked"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1602
+#: apps/files/src/ui/window.rs:1634
 msgid "“{}” added to bookmarks"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1624
+#: apps/files/src/ui/window.rs:1656
 msgid "_Restore From Trash"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1625
+#: apps/files/src/ui/window.rs:1657
 msgid "_Delete From Trash…"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1638 apps/image-viewer/src/ui.rs:301
+#: apps/files/src/ui/window.rs:1670 apps/image-viewer/src/ui.rs:301
 #: apps/image-viewer/src/ui.rs:787
 msgid "Open _With…"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1644
+#: apps/files/src/ui/window.rs:1676
 msgid "Open Item _Location"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1651
+#: apps/files/src/ui/window.rs:1683
 msgid "_Star"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1653
+#: apps/files/src/ui/window.rs:1685
 msgid "_Unstar"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1658
+#: apps/files/src/ui/window.rs:1690
 msgid "Cu_t"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1661
+#: apps/files/src/ui/window.rs:1693
 msgid "Paste Into Folder"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1667
+#: apps/files/src/ui/window.rs:1699
 msgid "Create _Link"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1669
+#: apps/files/src/ui/window.rs:1701
 msgid "Mo_ve to Trash"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1671
+#: apps/files/src/ui/window.rs:1703
 msgid "_Delete Permanently…"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1675 apps/maps/src/ui.rs:440
+#: apps/files/src/ui/window.rs:1707 apps/maps/src/ui.rs:440
 #: apps/maps/src/ui.rs:2271
 msgid "Copy Location"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1697
+#: apps/files/src/ui/window.rs:1729
 msgid "New _Folder…"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1700 apps/terminal/src/window.rs:739
+#: apps/files/src/ui/window.rs:1732 apps/terminal/src/window.rs:739
 msgid "_Paste"
 msgstr ""
 
-#: apps/files/src/ui/window.rs:1704
+#: apps/files/src/ui/window.rs:1736
 msgid "Add to _Bookmarks"
 msgstr ""
 

@@ -182,6 +182,9 @@ pub struct Outcome {
     pub created: Vec<gio::File>,
     /// Original locations of successfully trashed items (for undo).
     pub trashed: Vec<gio::File>,
+    /// Items that could not be trashed because their filesystem has no
+    /// usable trash (offered for permanent deletion instead).
+    pub untrashable: Vec<gio::File>,
     /// Moved items: (from, to).
     pub moved: Vec<(gio::File, gio::File)>,
 }
@@ -613,6 +616,11 @@ impl Runner<'_> {
             self.report(false);
             match f.trash(Some(self.cancel)) {
                 Ok(()) => self.out.trashed.push(f.clone()),
+                // No trash on that filesystem (none, or one GIO will not
+                // use, e.g. not owned by the user on NTFS or FAT).
+                Err(e) if e.matches(gio::IOErrorEnum::NotSupported) => {
+                    self.out.untrashable.push(f.clone())
+                }
                 Err(e) => self.error("move to the Trash", f, &e),
             }
             self.progress.done_items += 1;
@@ -1058,6 +1066,27 @@ pub(crate) mod tests {
         );
         assert_eq!(out.errors.len(), 1);
         assert!(!t.path("a/sub/a").exists());
+    }
+
+    #[test]
+    fn untrashable_items_are_offered_not_reported() {
+        // GIO has no trash on system internal mounts such as /dev/shm: it
+        // answers "not supported", as for an NTFS trash the user does not own.
+        let path = PathBuf::from(format!(
+            "/dev/shm/helix-files-untrashable-{}",
+            std::process::id()
+        ));
+        if fs::write(&path, "x").is_err() {
+            return;
+        }
+        let mut h = Canned::new(Choice::Cancel, false);
+        let out = go(Job::Trash(vec![gio::File::for_path(&path)]), &mut h);
+        let kept = path.exists();
+        let _ = fs::remove_file(&path);
+        assert!(out.errors.is_empty(), "{:?}", out.errors);
+        assert!(out.trashed.is_empty());
+        assert_eq!(out.untrashable.len(), 1);
+        assert!(kept, "left in place for the user to decide");
     }
 
     #[test]

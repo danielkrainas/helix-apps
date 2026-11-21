@@ -1364,7 +1364,39 @@ impl Window {
                     .build();
                 w.add_toast(toast);
             }
+            if !out.untrashable.is_empty() {
+                w.offer_delete(out.untrashable.clone());
+            }
         });
+    }
+
+    /// `files` could not be put in the Trash (their filesystem has none):
+    /// offer to delete them permanently, as Nautilus does.
+    fn offer_delete(self: &Rc<Self>, files: Vec<gio::File>) {
+        let weak = Rc::downgrade(self);
+        let heading = if files.len() == 1 {
+            trf!(
+                "“{}” Can’t Be Put in the Trash",
+                crate::ops::display_name(&files[0])
+            )
+        } else {
+            trnf!(
+                "{n} Item Can’t Be Put in the Trash",
+                "{n} Items Can’t Be Put in the Trash",
+                files.len()
+            )
+        };
+        dialogs::confirm(
+            &self.window,
+            &heading,
+            tr("This location has no Trash. Delete permanently instead? Deleted items will be permanently lost."),
+            tr("_Delete"),
+            move || {
+                if let Some(w) = weak.upgrade() {
+                    w.start_job(Job::Delete(files.clone()), None);
+                }
+            },
+        );
     }
 
     pub fn drop_files(

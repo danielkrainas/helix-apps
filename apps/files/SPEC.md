@@ -212,7 +212,11 @@ handle (`sftp://`, `smb://`, `dav://`, `mtp://`, `trash:///`, `recent:///`,
 - **Move to Trash** (`Delete`): `g_file_trash`; a toast "N items moved to
   Trash" offers *Undo* (also `Ctrl+Z`), which restores the most recently
   trashed entries whose `trash::orig-path` matches. If the filesystem has
-  no trash the job fails for those items and reports it.
+  no usable trash (GIO answers "not supported": none, or a `.Trash-$UID`
+  the user does not own, as on NTFS or FAT mounted for root), those items
+  are not reported as errors: a dialog "“NAME” Can’t Be Put in the Trash"
+  ("N Items …") offers *Delete* to delete them permanently (as Nautilus
+  does) or *Cancel*.
 - **Delete Permanently** (`Shift+Delete`): confirmation dialog, then
   recursive delete.
 - **Restore** (in Trash): moves back to `trash::orig-path`, creating

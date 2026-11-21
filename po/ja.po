@@ -2385,7 +2385,7 @@ msgid "Countdown cancelled"
 msgstr "カウントダウンをキャンセルしました"
 
 #: apps/camera/src/ui.rs:859 apps/files/src/ui/dialogs.rs:455
-#: apps/files/src/ui/sidebar.rs:564 apps/files/src/ui/window.rs:1633
+#: apps/files/src/ui/sidebar.rs:564 apps/files/src/ui/window.rs:1665
 #: apps/help/src/ui.rs:197 apps/text-editor/src/window.rs:131
 msgid "_Open"
 msgstr "開く(_O)"
@@ -5376,7 +5376,8 @@ msgid "Delete Partition?"
 msgstr "パーティションを削除しますか?"
 
 #: apps/disks/src/ui.rs:1594 apps/document-scanner/src/ui.rs:228
-#: apps/files/src/ui/window.rs:1446 apps/music/src/pages.rs:2318
+#: apps/files/src/ui/window.rs:1393 apps/files/src/ui/window.rs:1478
+#: apps/music/src/pages.rs:2318
 msgid "_Delete"
 msgstr "削除(_D)"
 
@@ -6005,7 +6006,7 @@ msgid "_Crop"
 msgstr "トリミング(_C)"
 
 #: apps/document-scanner/src/ui.rs:227 apps/document-viewer/src/ui.rs:920
-#: apps/files/src/ui/window.rs:1659 apps/image-viewer/src/ui.rs:305
+#: apps/files/src/ui/window.rs:1691 apps/image-viewer/src/ui.rs:305
 #: apps/image-viewer/src/ui.rs:784 apps/terminal/src/window.rs:738
 msgid "_Copy"
 msgstr "コピー(_C)"
@@ -6731,8 +6732,8 @@ msgstr ""
 msgid "Caret navigation off"
 msgstr "キャレットナビゲーション オフ"
 
-#: apps/document-viewer/src/ui.rs:921 apps/files/src/ui/window.rs:1685
-#: apps/files/src/ui/window.rs:1692 apps/files/src/ui/window.rs:1701
+#: apps/document-viewer/src/ui.rs:921 apps/files/src/ui/window.rs:1717
+#: apps/files/src/ui/window.rs:1724 apps/files/src/ui/window.rs:1733
 #: apps/terminal/src/window.rs:740
 msgid "Select _All"
 msgstr "すべて選択(_A)"
@@ -6925,72 +6926,72 @@ msgstr "ゴミ箱を空にしました"
 msgid "Trash"
 msgstr "ゴミ箱"
 
-#: apps/files/src/ops.rs:265
+#: apps/files/src/ops.rs:268
 msgid "Could not replace “{file}”: {error}"
 msgstr "「{file}」を置き換えられませんでした: {error}"
 
-#: apps/files/src/ops.rs:270
+#: apps/files/src/ops.rs:273
 msgid "Could not move “{file}”: {error}"
 msgstr "「{file}」を移動できませんでした: {error}"
 
-#: apps/files/src/ops.rs:275
+#: apps/files/src/ops.rs:278
 msgid "Could not read “{file}”: {error}"
 msgstr "「{file}」を読み取れませんでした: {error}"
 
-#: apps/files/src/ops.rs:280
+#: apps/files/src/ops.rs:283
 msgid "Could not remove “{file}”: {error}"
 msgstr "「{file}」を削除できませんでした: {error}"
 
-#: apps/files/src/ops.rs:285
+#: apps/files/src/ops.rs:288
 msgid "Could not link to “{file}”: {error}"
 msgstr "「{file}」へのリンクを作成できませんでした: {error}"
 
-#: apps/files/src/ops.rs:290
+#: apps/files/src/ops.rs:293
 msgid "Could not move “{file}” to the Trash: {error}"
 msgstr "「{file}」をゴミ箱へ移動できませんでした: {error}"
 
-#: apps/files/src/ops.rs:295
+#: apps/files/src/ops.rs:298
 msgid "Could not delete “{file}”: {error}"
 msgstr "「{file}」を削除できませんでした: {error}"
 
-#: apps/files/src/ops.rs:300
+#: apps/files/src/ops.rs:303
 msgid "Could not restore “{file}”: {error}"
 msgstr "「{file}」を復元できませんでした: {error}"
 
-#: apps/files/src/ops.rs:305
+#: apps/files/src/ops.rs:308
 msgid "Could not empty “{file}”: {error}"
 msgstr "「{file}」を空にできませんでした: {error}"
 
-#: apps/files/src/ops.rs:310
+#: apps/files/src/ops.rs:313
 msgid "Could not process “{file}”: {error}"
 msgstr "「{file}」を処理できませんでした: {error}"
 
-#: apps/files/src/ops.rs:367 apps/screenshot/src/shell.rs:79
+#: apps/files/src/ops.rs:370 apps/screenshot/src/shell.rs:79
 #: apps/settings/src/agents.rs:1202 apps/web/src/window.rs:2341
 msgid "Cancelled"
 msgstr "キャンセルしました"
 
-#: apps/files/src/ops.rs:389
+#: apps/files/src/ops.rs:392
 msgid "“{}” no longer exists"
 msgstr "「{}」はもう存在しません"
 
-#: apps/files/src/ops.rs:395
+#: apps/files/src/ops.rs:398
 msgid "Cannot move “{}” into itself"
 msgstr "「{}」をそれ自身の中に移動することはできません"
 
-#: apps/files/src/ops.rs:397
+#: apps/files/src/ops.rs:400
 msgid "Cannot copy “{}” into itself"
 msgstr "「{}」をそれ自身の中にコピーすることはできません"
 
-#: apps/files/src/ops.rs:587
+#: apps/files/src/ops.rs:590
 msgid "Cannot create a link to “{}”: not a local file"
 msgstr "「{}」へのリンクを作成できません: ローカルファイルではありません"
 
-#: apps/files/src/ops.rs:661
+#: apps/files/src/ops.rs:669
 msgid "“{}” has no original location"
 msgstr "「{}」には元の場所がありません"
 
-#: apps/files/src/ops.rs:720
+#: apps/files/src/ops.rs:728
 msgid "{n} item could not be found in the Trash"
 msgid_plural "{n} items could not be found in the Trash"
 msgstr[0] "{n} 個の項目がゴミ箱に見つかりませんでした"
@@ -7499,7 +7500,7 @@ msgstr "ファイルとフォルダー"
 msgid "Open in New Tab"
 msgstr "新しいタブで開く"
 
-#: apps/files/src/ui/shortcuts.rs:58 apps/files/src/ui/window.rs:1564
+#: apps/files/src/ui/shortcuts.rs:58 apps/files/src/ui/window.rs:1596
 msgid "New Folder"
 msgstr "新しいフォルダー"
 
@@ -7541,15 +7542,15 @@ msgstr "{name} を取り出す"
 msgid "Unmount {name}"
 msgstr "{name} をアンマウント"
 
-#: apps/files/src/ui/sidebar.rs:565 apps/files/src/ui/window.rs:1635
+#: apps/files/src/ui/sidebar.rs:565 apps/files/src/ui/window.rs:1667
 msgid "Open in New _Tab"
 msgstr "新しいタブで開く(_T)"
 
-#: apps/files/src/ui/sidebar.rs:566 apps/files/src/ui/window.rs:1636
+#: apps/files/src/ui/sidebar.rs:566 apps/files/src/ui/window.rs:1668
 msgid "Open in New _Window"
 msgstr "新しいウィンドウで開く(_W)"
 
-#: apps/files/src/ui/sidebar.rs:571 apps/files/src/ui/window.rs:1665
+#: apps/files/src/ui/sidebar.rs:571 apps/files/src/ui/window.rs:1697
 msgid "Rena_me…"
 msgstr "名前の変更(_M)…"
 
@@ -7565,18 +7566,18 @@ msgstr "取り出す(_E)"
 msgid "_Unmount"
 msgstr "アンマウント(_U)"
 
-#: apps/files/src/ui/sidebar.rs:581 apps/files/src/ui/window.rs:1691
+#: apps/files/src/ui/sidebar.rs:581 apps/files/src/ui/window.rs:1723
 msgid "_Empty Trash…"
 msgstr "ゴミ箱を空にする(_E)…"
 
-#: apps/files/src/ui/sidebar.rs:586 apps/files/src/ui/window.rs:1628
-#: apps/files/src/ui/window.rs:1676 apps/files/src/ui/window.rs:1706
+#: apps/files/src/ui/sidebar.rs:586 apps/files/src/ui/window.rs:1660
+#: apps/files/src/ui/window.rs:1708 apps/files/src/ui/window.rs:1738
 #: apps/system-monitor/src/proc_view.rs:156
 msgid "_Properties"
 msgstr "プロパティ(_P)"
 
 #: apps/files/src/ui/sidebar.rs:650 apps/files/src/ui/sidebar.rs:695
-#: apps/files/src/ui/window.rs:1603
+#: apps/files/src/ui/window.rs:1635
 msgid "Could not save bookmarks: {e}"
 msgstr "ブックマークを保存できませんでした: {e}"
 
@@ -7588,7 +7589,7 @@ msgstr "ブックマーク名(_N)"
 msgid "Rename Bookmark"
 msgstr "ブックマークの名前を変更"
 
-#: apps/files/src/ui/sidebar.rs:684 apps/files/src/ui/window.rs:1520
+#: apps/files/src/ui/sidebar.rs:684 apps/files/src/ui/window.rs:1552
 #: apps/music/src/pages.rs:2131
 msgid "_Rename"
 msgstr "名前を変更(_R)"
@@ -7712,7 +7713,7 @@ msgstr "縮小(_O)"
 msgid "_Reset Size"
 msgstr "サイズをリセット(_R)"
 
-#: apps/files/src/ui/window.rs:259 apps/files/src/ui/window.rs:1705
+#: apps/files/src/ui/window.rs:259 apps/files/src/ui/window.rs:1737
 msgid "Show _Hidden Files"
 msgstr "隠しファイルを表示(_H)"
 
@@ -7792,126 +7793,141 @@ msgid "{n} item moved to Trash"
 msgid_plural "{n} items moved to Trash"
 msgstr[0] "{n} 個の項目をゴミ箱へ移動しました"
 
-#: apps/files/src/ui/window.rs:1431
+#: apps/files/src/ui/window.rs:1378
+msgid "“{}” Can’t Be Put in the Trash"
+msgstr "「{}」をゴミ箱に移動できません"
+
+#: apps/files/src/ui/window.rs:1383
+msgid "{n} Item Can’t Be Put in the Trash"
+msgid_plural "{n} Items Can’t Be Put in the Trash"
+msgstr[0] "{n} 個の項目をゴミ箱に移動できません"
+
+#: apps/files/src/ui/window.rs:1392
+msgid ""
+"This location has no Trash. Delete permanently instead? Deleted items will "
+"be permanently lost."
+msgstr "この場所にはゴミ箱がありません。代わりに完全に削除しますか？削除した項目は完全に失われます。"
+
+#: apps/files/src/ui/window.rs:1463
 msgid "Permanently Delete “{}”?"
 msgstr "「{}」を完全に削除しますか?"
 
-#: apps/files/src/ui/window.rs:1436
+#: apps/files/src/ui/window.rs:1468
 msgid "Permanently Delete {n} Item?"
 msgid_plural "Permanently Delete {n} Items?"
 msgstr[0] "{n} 個の項目を完全に削除しますか?"
 
-#: apps/files/src/ui/window.rs:1445
+#: apps/files/src/ui/window.rs:1477
 msgid "If you delete an item, it will be permanently lost."
 msgstr "項目を削除すると、完全に失われます。"
 
-#: apps/files/src/ui/window.rs:1459
+#: apps/files/src/ui/window.rs:1491
 msgid "Empty Trash?"
 msgstr "ゴミ箱を空にしますか?"
 
-#: apps/files/src/ui/window.rs:1460
+#: apps/files/src/ui/window.rs:1492
 msgid "All items in the Trash will be permanently deleted."
 msgstr "ゴミ箱内のすべての項目が完全に削除されます。"
 
-#: apps/files/src/ui/window.rs:1461
+#: apps/files/src/ui/window.rs:1493
 msgid "_Empty Trash"
 msgstr "ゴミ箱を空にする(_E)"
 
-#: apps/files/src/ui/window.rs:1472
+#: apps/files/src/ui/window.rs:1504
 msgid "Nothing to undo"
 msgstr "元に戻す操作がありません"
 
-#: apps/files/src/ui/window.rs:1489
+#: apps/files/src/ui/window.rs:1521
 msgid "Could not undo rename: {}"
 msgstr "名前の変更を元に戻せませんでした: {}"
 
-#: apps/files/src/ui/window.rs:1516
+#: apps/files/src/ui/window.rs:1548
 msgid "Rename Folder"
 msgstr "フォルダー名の変更"
 
-#: apps/files/src/ui/window.rs:1518
+#: apps/files/src/ui/window.rs:1550
 msgid "Rename File"
 msgstr "ファイル名の変更"
 
-#: apps/files/src/ui/window.rs:1545
+#: apps/files/src/ui/window.rs:1577
 msgid "Could not rename: {}"
 msgstr "名前を変更できませんでした: {}"
 
-#: apps/files/src/ui/window.rs:1565 apps/music/src/pages.rs:2133
+#: apps/files/src/ui/window.rs:1597 apps/music/src/pages.rs:2133
 msgid "_Create"
 msgstr "作成(_C)"
 
-#: apps/files/src/ui/window.rs:1576
+#: apps/files/src/ui/window.rs:1608
 msgid "Could not create folder: {}"
 msgstr "フォルダーを作成できませんでした: {}"
 
-#: apps/files/src/ui/window.rs:1597
+#: apps/files/src/ui/window.rs:1629
 msgid "Location is already bookmarked"
 msgstr "この場所はすでにブックマークされています"
 
-#: apps/files/src/ui/window.rs:1602
+#: apps/files/src/ui/window.rs:1634
 msgid "“{}” added to bookmarks"
 msgstr "「{}」をブックマークに追加しました"
 
-#: apps/files/src/ui/window.rs:1624
+#: apps/files/src/ui/window.rs:1656
 msgid "_Restore From Trash"
 msgstr "ゴミ箱から復元(_R)"
 
-#: apps/files/src/ui/window.rs:1625
+#: apps/files/src/ui/window.rs:1657
 msgid "_Delete From Trash…"
 msgstr "ゴミ箱から削除(_D)…"
 
-#: apps/files/src/ui/window.rs:1638 apps/image-viewer/src/ui.rs:301
+#: apps/files/src/ui/window.rs:1670 apps/image-viewer/src/ui.rs:301
 #: apps/image-viewer/src/ui.rs:787
 msgid "Open _With…"
 msgstr "アプリケーションで開く(_W)…"
 
-#: apps/files/src/ui/window.rs:1644
+#: apps/files/src/ui/window.rs:1676
 msgid "Open Item _Location"
 msgstr "項目の場所を開く(_L)"
 
-#: apps/files/src/ui/window.rs:1651
+#: apps/files/src/ui/window.rs:1683
 msgid "_Star"
 msgstr "星を付ける(_S)"
 
-#: apps/files/src/ui/window.rs:1653
+#: apps/files/src/ui/window.rs:1685
 msgid "_Unstar"
 msgstr "星を外す(_U)"
 
-#: apps/files/src/ui/window.rs:1658
+#: apps/files/src/ui/window.rs:1690
 msgid "Cu_t"
 msgstr "切り取り(_T)"
 
-#: apps/files/src/ui/window.rs:1661
+#: apps/files/src/ui/window.rs:1693
 msgid "Paste Into Folder"
 msgstr "フォルダーに貼り付け"
 
-#: apps/files/src/ui/window.rs:1667
+#: apps/files/src/ui/window.rs:1699
 msgid "Create _Link"
 msgstr "リンクを作成(_L)"
 
-#: apps/files/src/ui/window.rs:1669
+#: apps/files/src/ui/window.rs:1701
 msgid "Mo_ve to Trash"
 msgstr "ゴミ箱へ移動(_V)"
 
-#: apps/files/src/ui/window.rs:1671
+#: apps/files/src/ui/window.rs:1703
 msgid "_Delete Permanently…"
 msgstr "完全に削除(_D)…"
 
-#: apps/files/src/ui/window.rs:1675 apps/maps/src/ui.rs:440
+#: apps/files/src/ui/window.rs:1707 apps/maps/src/ui.rs:440
 #: apps/maps/src/ui.rs:2271
 msgid "Copy Location"
 msgstr "場所をコピー"
 
-#: apps/files/src/ui/window.rs:1697
+#: apps/files/src/ui/window.rs:1729
 msgid "New _Folder…"
 msgstr "新しいフォルダー(_F)…"
 
-#: apps/files/src/ui/window.rs:1700 apps/terminal/src/window.rs:739
+#: apps/files/src/ui/window.rs:1732 apps/terminal/src/window.rs:739
 msgid "_Paste"
 msgstr "貼り付け(_P)"
 
-#: apps/files/src/ui/window.rs:1704
+#: apps/files/src/ui/window.rs:1736
 msgid "Add to _Bookmarks"
 msgstr "ブックマークに追加(_B)"
 
